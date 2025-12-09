@@ -156,6 +156,7 @@ function AppContent() {
     // console.log("Check mirroring");
     console.log("App initialized - VendorContext user:", vendorUser);
     console.log("App initialized - UserContext user:", userContextUser);
+    console.log("Added GitHub Actions");
   }, []);
 
   return (
