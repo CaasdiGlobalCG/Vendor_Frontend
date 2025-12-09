@@ -42,6 +42,7 @@ const InvoiceToolReplica = ({ onClose, workspaceId, workspaceName, selectedTask,
     recentActivity: [],
     upcomingPayments: []
   });
+  const [poSourceQuote, setPoSourceQuote] = useState(null);
 
   // Fetch dashboard data
   useEffect(() => {
@@ -104,6 +105,12 @@ const InvoiceToolReplica = ({ onClose, workspaceId, workspaceName, selectedTask,
 
   const handleStatusFilterChange = (status) => {
     setStatusFilter(status);
+  };
+
+  const handleRaisePOFromQuote = (quote) => {
+    if (!quote) return;
+    setPoSourceQuote(quote);
+    setActiveTab('purchase-orders');
   };
 
   const handleRowClick = (item, type) => {
@@ -581,6 +588,7 @@ const InvoiceToolReplica = ({ onClose, workspaceId, workspaceName, selectedTask,
             workspaceName={workspaceName}
             selectedTask={selectedTask}
             selectedSubtask={selectedSubtask}
+            onRaisePOFromQuote={handleRaisePOFromQuote}
           />
         );
       case 'invoices':
@@ -599,7 +607,16 @@ const InvoiceToolReplica = ({ onClose, workspaceId, workspaceName, selectedTask,
       case 'purchase-requisitions':
         return <PurchaseRequisitionsPage />;
       case 'purchase-orders':
-        return <PurchaseOrdersPage />;
+        return (
+          <PurchaseOrdersPage
+            workspaceId={workspaceId}
+            workspaceName={workspaceName}
+            selectedTask={selectedTask}
+            selectedSubtask={selectedSubtask}
+            sourceQuote={poSourceQuote}
+            onSourceConsumed={() => setPoSourceQuote(null)}
+          />
+        );
       default:
         return (
           <div className="p-6">

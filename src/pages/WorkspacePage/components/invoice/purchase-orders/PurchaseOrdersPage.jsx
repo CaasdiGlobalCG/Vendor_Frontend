@@ -17,73 +17,116 @@ import {
 } from 'lucide-react';
 import { VendorContext } from '../../../../../context/VendorContext.jsx';
 import config from "../../../../../config/env";
+import StandardPreview from '../shared/StandardPreview.jsx';
 
-const PurchaseOrdersPage = () => {
+const PurchaseOrdersPage = ({ workspaceId, workspaceName, selectedTask, selectedSubtask, sourceQuote, onSourceConsumed }) => {
   const { currentUser } = useContext(VendorContext);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedStatus, setSelectedStatus] = useState('all');
   const [purchaseOrdersData, setPurchaseOrdersData] = useState([]);
+  const [nextPoNumber, setNextPoNumber] = useState(2026001);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [highlightedQuote, setHighlightedQuote] = useState(sourceQuote || null);
+  const [sendingPo, setSendingPo] = useState(false);
+
+  // Sync highlighted quote when sourceQuote prop changes
+  useEffect(() => {
+    if (sourceQuote) {
+      setHighlightedQuote(sourceQuote);
+    }
+  }, [sourceQuote]);
 
   // Using relative paths - no API_BASE_URL needed
 
+  const fetchPurchaseOrders = async () => {
+    if (!currentUser?.vendorId) {
+      console.log('⏳ Waiting for user authentication...');
+      return;
+    }
+
+    try {
+      setLoading(true);
+      console.log('📋 Fetching purchase orders from backend...');
+
+      const vendorId = currentUser.vendorId;
+      const headers = {
+        'Content-Type': 'application/json',
+        'x-user-info': JSON.stringify({
+          vendorId: vendorId,
+          email: currentUser?.email,
+          role: 'vendor',
+          name: currentUser?.name
+        })
+      };
+
+      const response = await fetch(`/api/workspace/purchase-orders?vendorId=${vendorId}`, {
+        headers: headers
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const result = await response.json();
+
+      if (result.success) {
+        setPurchaseOrdersData(result.data || []);
+        console.log(`✅ Successfully loaded ${result.data?.length || 0} purchase orders`);
+
+        // Compute the next PO number starting from 2026001.
+        // We only consider customPoId values that are purely numeric to avoid
+        // clashing with older string-based IDs.
+        const START_PO_NUMBER = 2026001;
+        const numericPoNumbers = (result.data || [])
+          .map((po) => {
+            const raw = po.customPoId;
+            if (!raw) return null;
+            const str = String(raw).trim();
+            if (!/^\d+$/.test(str)) return null;
+            const num = parseInt(str, 10);
+            return Number.isNaN(num) ? null : num;
+          })
+          .filter((n) => n !== null);
+
+        const maxExisting =
+          numericPoNumbers.length > 0 ? Math.max(...numericPoNumbers) : START_PO_NUMBER - 1;
+        const computedNext = maxExisting >= START_PO_NUMBER ? maxExisting + 1 : START_PO_NUMBER;
+        setNextPoNumber(computedNext);
+      } else {
+        throw new Error(result.message || 'Failed to fetch purchase orders');
+      }
+    } catch (error) {
+      console.error('❌ Error fetching purchase orders:', error);
+      setError(error.message);
+      setPurchaseOrdersData([]); // Empty array instead of placeholder data
+    } finally {
+      setLoading(false);
+    }
+  };
+
   // Fetch purchase orders from backend
   useEffect(() => {
-    const fetchPurchaseOrders = async () => {
-      if (!currentUser?.vendorId) {
-        console.log('⏳ Waiting for user authentication...');
-        return;
-      }
-
-      try {
-        setLoading(true);
-        console.log('📋 Fetching purchase orders from backend...');
-
-        const vendorId = currentUser.vendorId;
-        const headers = {
-          'Content-Type': 'application/json',
-          'x-user-info': JSON.stringify({
-            vendorId: vendorId,
-            email: currentUser?.email,
-            role: 'vendor',
-            name: currentUser?.name
-          })
-        };
-
-        const response = await fetch(`/api/workspace/purchase-orders?vendorId=${vendorId}`, {
-          headers: headers
-        });
-
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-
-        const result = await response.json();
-
-        if (result.success) {
-          setPurchaseOrdersData(result.data || []);
-          console.log(`✅ Successfully loaded ${result.data?.length || 0} purchase orders`);
-        } else {
-          throw new Error(result.message || 'Failed to fetch purchase orders');
-        }
-      } catch (error) {
-        console.error('❌ Error fetching purchase orders:', error);
-        setError(error.message);
-        setPurchaseOrdersData([]); // Empty array instead of placeholder data
-      } finally {
-        setLoading(false);
-      }
-    };
-
     fetchPurchaseOrders();
   }, [currentUser?.vendorId]);
 
-  const filteredOrders = purchaseOrdersData.filter(order => {
-    const matchesSearch = order.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         order.project.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         order.vendor.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesStatus = selectedStatus === 'all' || order.statusType.toLowerCase() === selectedStatus.toLowerCase();
+  const filteredOrders = purchaseOrdersData.filter((order) => {
+    const normalizedSearch = searchTerm.trim().toLowerCase();
+
+    const idStr = order.id != null ? String(order.id).toLowerCase() : '';
+    const projectStr = order.project ? order.project.toLowerCase() : '';
+    const vendorStr = order.vendor ? order.vendor.toLowerCase() : '';
+
+    const matchesSearch =
+      !normalizedSearch ||
+      idStr.includes(normalizedSearch) ||
+      projectStr.includes(normalizedSearch) ||
+      vendorStr.includes(normalizedSearch);
+
+    const statusTypeStr = (order.statusType || '').toLowerCase();
+    const matchesStatus =
+      selectedStatus === 'all' || statusTypeStr === selectedStatus.toLowerCase();
+
     return matchesSearch && matchesStatus;
   });
 
@@ -117,6 +160,101 @@ const PurchaseOrdersPage = () => {
           border: 'border-gray-200',
           dot: 'bg-gray-400'
         };
+    }
+  };
+
+  const handleSendPOToPM = async () => {
+    if (!highlightedQuote || !currentUser?.vendorId) return;
+
+    try {
+      setSendingPo(true);
+
+      const vendorId = currentUser.vendorId;
+      const headers = {
+        'Content-Type': 'application/json',
+        'x-user-info': JSON.stringify({
+          vendorId: vendorId,
+          email: currentUser?.email,
+          role: 'vendor',
+          name: currentUser?.name
+        })
+      };
+
+      const rawTotal =
+        highlightedQuote.total ??
+        (typeof highlightedQuote.totalAmount === 'string'
+          ? parseFloat(highlightedQuote.totalAmount.replace(/[₹,]/g, ''))
+          : highlightedQuote.totalAmount) ??
+        0;
+
+      const body = {
+        vendorId,
+        quotationId: highlightedQuote.quotationId || highlightedQuote.id,
+        // Use a dedicated numeric PO sequence starting from 2026001
+        customPoId: nextPoNumber,
+        referenceQuoteNumber:
+          highlightedQuote.customQuoteId ||
+          highlightedQuote.quoteNumber ||
+          highlightedQuote.displayQuoteId ||
+          highlightedQuote.id,
+        customerId: highlightedQuote.customerDetails?.customerId || highlightedQuote.customerId || null,
+        customerName: highlightedQuote.customer || highlightedQuote.customerName,
+        customerDetails: highlightedQuote.customerDetails || {},
+        items: highlightedQuote.items || [],
+        subtotal: highlightedQuote.subTotal || highlightedQuote.subtotal || 0,
+        totalCgst:
+          highlightedQuote.cgst?.amount ??
+          highlightedQuote.totalCgst ??
+          highlightedQuote.cgstAmount ??
+          0,
+        totalSgst:
+          highlightedQuote.sgst?.amount ??
+          highlightedQuote.totalSgst ??
+          highlightedQuote.sgstAmount ??
+          0,
+        totalIgst: highlightedQuote.igst ?? highlightedQuote.totalIgst ?? 0,
+        total: rawTotal || 0,
+        workspaceId: highlightedQuote.workspaceId || workspaceId || null,
+        workspaceName: highlightedQuote.workspaceName || workspaceName || '',
+        projectId: highlightedQuote.projectId || null,
+        projectName: highlightedQuote.projectName || '',
+        taskId: highlightedQuote.taskId || selectedTask?.id || null,
+        taskName: highlightedQuote.taskName || selectedTask?.name || '',
+        subtaskId: highlightedQuote.subtaskId || selectedSubtask?.id || null,
+        subtaskName: highlightedQuote.subtaskName || selectedSubtask?.name || '',
+        clientId: highlightedQuote.clientId || null,
+        pdfUrl: highlightedQuote.pdfUrl || null
+      };
+
+      console.log('📤 Creating purchase order from quote:', body);
+
+      const response = await fetch('/api/workspace/purchase-orders', {
+        method: 'POST',
+        headers,
+        body: JSON.stringify(body)
+      });
+
+      const result = await response.json();
+
+      if (!response.ok || !result.success) {
+        throw new Error(result.message || 'Failed to create purchase order');
+      }
+
+      console.log('✅ Purchase order created:', result.data);
+      // Increment PO number locally for the next PO only after a successful creation
+      setNextPoNumber((prev) => (prev ? prev + 1 : 2026001));
+      alert('Purchase Order sent to PM successfully!');
+
+      if (onSourceConsumed) {
+        onSourceConsumed();
+      }
+      setHighlightedQuote(null);
+      fetchPurchaseOrders();
+    } catch (err) {
+      console.error('❌ Error creating purchase order from quote:', err);
+      alert('Failed to send PO to PM: ' + err.message);
+    } finally {
+      setSendingPo(false);
     }
   };
 
@@ -223,6 +361,74 @@ const PurchaseOrdersPage = () => {
         </div>
       </div>
 
+      {/* Quote preview section when coming from Quotes dashboard */}
+      {highlightedQuote && (
+        <div className="px-8 pb-4">
+          <div className="bg-white border border-emerald-200 rounded-lg shadow-sm p-4">
+            <div className="flex items-center justify-between mb-4">
+              <div>
+                <h2 className="text-lg font-semibold text-gray-900">
+                  Raise Purchase Order for Quote{' '}
+                  {highlightedQuote.customQuoteId ||
+                    highlightedQuote.displayQuoteId ||
+                    highlightedQuote.id}
+                </h2>
+                <p className="text-sm text-gray-500">
+                  Review the quote details below, then click{' '}
+                  <span className="font-semibold">Send PO to PM</span>.
+                </p>
+              </div>
+              <div className="flex items-center space-x-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setHighlightedQuote(null);
+                    if (onSourceConsumed) {
+                      onSourceConsumed();
+                    }
+                  }}
+                  className="px-3 py-1.5 text-xs text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200"
+                >
+                  Dismiss
+                </button>
+                <button
+                  type="button"
+                  onClick={handleSendPOToPM}
+                  disabled={sendingPo}
+                  className="px-4 py-2 text-sm bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {sendingPo ? 'Sending...' : 'Send PO to PM'}
+                </button>
+              </div>
+            </div>
+            <div className="bg-gray-50 rounded-md p-4 max-h-[480px] overflow-auto">
+              <StandardPreview
+                quote={highlightedQuote}
+                docType="purchaseorder"
+                poNumber={nextPoNumber}
+                referenceNumber={
+                  highlightedQuote.customQuoteId ||
+                  highlightedQuote.quoteNumber ||
+                  highlightedQuote.displayQuoteId ||
+                  highlightedQuote.id
+                }
+                company={{
+                  logo: 'https://dummyimage.com/80x80/0d6b5c/ffffff.png&text=CG',
+                  name: 'Caasdi Ventures LLP',
+                  address:
+                    '262, 80 FEET ROAD, SRINIVASANAGAR, Banashankari Stage 1, Bengaluru, Karnataka, 560050',
+                  gstin: '29AATFC6608I2ZB',
+                  email: 'corp@caasdiglobal.in',
+                  country: 'India'
+                }}
+                terms={highlightedQuote.termsAndConditions}
+                notes={highlightedQuote.customerNotes}
+              />
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Purchase Orders Cards Grid */}
       <div className="px-8 py-8">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -251,10 +457,16 @@ const PurchaseOrdersPage = () => {
                 <Package className="w-10 h-10 text-gray-400" />
               </div>
               <h3 className="text-lg font-semibold text-gray-900 mb-2">No purchase orders found</h3>
-              <p className="text-gray-500 mb-6">Try adjusting your search or filter criteria</p>
-              <button className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors duration-200">
-                Create New Purchase Order
-              </button>
+              <p className="text-gray-500 mb-6">
+                {highlightedQuote
+                  ? 'Once you send the PO to PM, it will appear here.'
+                  : 'Try adjusting your search or filter criteria.'}
+              </p>
+              {!highlightedQuote && (
+                <button className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors duration-200">
+                  Create New Purchase Order
+                </button>
+              )}
             </div>
           ) : (
             filteredOrders.map((order, index) => {

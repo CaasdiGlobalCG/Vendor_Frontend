@@ -9,6 +9,42 @@ import html2pdf from 'html2pdf.js';
 import StandardPreview from '../shared/StandardPreview.jsx';
 import { createRoot } from 'react-dom/client';
 
+// Fixed Caasdi Global customer used for all quotations
+const CAASDI_GLOBAL_CUSTOMER = {
+  id: 'caasdi-global',
+  customerId: 'caasdi-global',
+  name: 'Caasdi Global',
+  displayName: 'Caasdi Global',
+  companyName: 'Caasdi Global',
+  email: '',
+  phone: '',
+  gstin: '29AATFC6640B1ZB',
+  billingAddress:
+    'Caasdi Global,\n262, 2nd floor, Srinivasa Nagar,\nBanashankari 1st Stage,\nBengaluru, Karnataka, 560050',
+  shippingAddress:
+    'Caasdi Global,\n262, 2nd floor, Srinivasa Nagar,\nBanashankari 1st Stage,\nBengaluru, Karnataka, 560050',
+  address: {
+    billing: {
+      street1: '262, 2nd floor, Srinivasa Nagar',
+      street2: 'Banashankari 1st Stage',
+      city: 'Bengaluru',
+      state: 'Karnataka',
+      country: 'India',
+      pinCode: '560050',
+    },
+    shipping: {
+      street1: '262, 2nd floor, Srinivasa Nagar',
+      street2: 'Banashankari 1st Stage',
+      city: 'Bengaluru',
+      state: 'Karnataka',
+      country: 'India',
+      pinCode: '560050',
+    },
+  },
+  customerType: 'Organization',
+  isCaasdiGlobal: true,
+};
+
 const CustomerSearchModal = ({ open, onClose, onSelect }) => {
   const { currentUser } = useContext(VendorContext);
   const [search, setSearch] = useState('');
@@ -98,173 +134,25 @@ const CustomerSearchModal = ({ open, onClose, onSelect }) => {
 };
 
 const CustomerDropdown = ({ value, onChange }) => {
-  const { currentUser } = useContext(VendorContext);
-  const [open, setOpen] = useState(false);
-  const [customers, setCustomers] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [showSearchModal, setShowSearchModal] = useState(false);
-
-
-  const fetchCustomers = async () => {
-    setLoading(true);
-    try {
-      const vendorId = currentUser?.vendorId;
-      if (!vendorId) {
-        console.error('No vendor ID found');
-        setCustomers([]);
-        return;
-      }
-
-      const headers = {
-        'Content-Type': 'application/json',
-        'x-user-info': JSON.stringify({
-          vendorId: vendorId,
-          email: currentUser?.email,
-          role: 'vendor',
-          name: currentUser?.name
-        })
-      };
-
-      console.log('Fetching customers from:', `/api/workspace/customers?vendorId=${vendorId}`);
-      const response = await fetch(`/api/workspace/customers?vendorId=${vendorId}`, {
-        headers: headers
-      });
-      
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-      
-      const result = await response.json();
-      console.log('API Response:', result);
-      
-      if (result.success && Array.isArray(result.data)) {
-        // Transform the data to match the expected format
-        const transformedCustomers = result.data.map(customer => {
-          // Log the raw customer data for debugging
-          console.log('Processing customer:', customer);
-          
-          // Format address if it exists in the customer object
-          const formatAddress = (addr) => {
-            if (!addr) return '';
-            if (typeof addr === 'string') return addr;
-            
-            const parts = [];
-            if (addr.street1) parts.push(addr.street1);
-            if (addr.street2) parts.push(addr.street2);
-            
-            const cityState = [];
-            if (addr.city) cityState.push(addr.city);
-            if (addr.state) cityState.push(addr.state);
-            if (addr.pinCode) cityState.push(addr.pinCode);
-            
-            if (cityState.length > 0) {
-              parts.push(cityState.join(', '));
-            }
-            
-            if (addr.country && addr.country !== 'IN') {
-              parts.push(addr.country);
-            }
-            
-            return parts.join('\n');
-          };
-
-          return {
-            ...customer,
-            customerId: customer.id || customer.customerId,
-            name: customer.name || customer.displayName || customer.companyName || customer.company || 'Unknown',
-            companyName: customer.company || customer.companyName || customer.name || 'Unknown',
-            email: customer.email || '',
-            phone: customer.phone || customer.mobile || customer.workPhone || '',
-            workPhone: customer.workPhone || customer.phone || customer.mobile || '',
-            gstin: customer.gstin || customer.gstNumber || '',
-            billingAddress: customer.billingAddress || formatAddress(customer.address?.billing || customer.billing),
-            shippingAddress: customer.shippingAddress || formatAddress(customer.address?.shipping || customer.shipping) || 
-                            formatAddress(customer.address?.billing || customer.billing),
-            address: {
-              billing: customer.address?.billing || customer.billing || {
-                street1: '',
-                street2: '',
-                city: '',
-                state: '',
-                country: 'India',
-                pinCode: ''
-              },
-              shipping: customer.address?.shipping || customer.shipping || customer.address?.billing || customer.billing || {
-                street1: '',
-                street2: '',
-                city: '',
-                state: '',
-                country: 'India',
-                pinCode: ''
-              }
-            }
-          };
-        });
-        
-        console.log('Transformed customers:', transformedCustomers);
-        setCustomers(transformedCustomers);
-      } else {
-        console.error('Unexpected API response format:', result);
-        setCustomers([]);
-      }
-    } catch (e) {
-      setCustomers([]);
+  // Always lock quotations to Caasdi Global and do not expose the full customer list
+  useEffect(() => {
+    if (!value && typeof onChange === 'function') {
+      onChange(CAASDI_GLOBAL_CUSTOMER);
     }
-    setLoading(false);
-  };
-
-  const handleDropdownClick = () => {
-    setOpen(!open);
-    if (!open && customers.length === 0) {
-      fetchCustomers();
-    }
-  };
+  }, [value, onChange]);
 
   return (
     <div className="relative w-full font-poppins">
-      <div
-        className="border-2 border-cg rounded-lg px-6 py-4 flex items-center cursor-pointer text-lg bg-white"
-        onClick={handleDropdownClick}
-      >
-        {value ? value.name || value.displayName || value.companyName || value.company : 'Select or add a customer'}
-        <span className="ml-auto flex items-center gap-2">
-          <button
-            type="button"
-            className="p-1 rounded hover:bg-blue-50 text-blue-600 focus:outline-none"
-            onClick={(e) => {
-              e.stopPropagation();
-              setShowSearchModal(true);
-            }}
-          >
-            <Search size={16} />
-          </button>
-          <ChevronDown size={16} className={`transition-transform ${open ? 'rotate-180' : ''}`} />
-        </span>
-      </div>
-      {open && (
-        <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg z-50 max-h-60 overflow-y-auto">
-          {loading ? (
-            <div className="p-4 text-center text-gray-500">Loading...</div>
-          ) : !Array.isArray(customers) || customers.length === 0 ? (
-            <div className="p-4 text-center text-gray-500">No customers found</div>
-          ) : (
-            customers.map((customer) => (
-              <div
-                key={customer.customerId}
-                className="px-4 py-3 hover:bg-blue-50 cursor-pointer border-b border-gray-100 last:border-b-0"
-                onClick={() => {
-                  onChange(customer);
-                  setOpen(false);
-                }}
-              >
-                <div className="font-medium">{customer.name || customer.displayName || customer.companyName || customer.company}</div>
-                <div className="text-sm text-gray-500">{customer.email}</div>
-              </div>
-            ))
-          )}
+      <div className="border-2 border-cg rounded-lg px-6 py-4 flex items-center text-lg bg-gray-50 cursor-not-allowed">
+        <div>
+          <div className="font-semibold text-gray-900">Caasdi Global</div>
+          <div className="text-xs text-gray-600 mt-1">
+            262, 2nd floor, Srinivasa Nagar, Banashankari 1st Stage, Bengaluru, Karnataka, 560050
+          </div>
+          <div className="text-xs text-gray-600 mt-0.5">GSTIN: 29AATFC6640B1ZB</div>
         </div>
-      )}
-      <CustomerSearchModal open={showSearchModal} onClose={() => setShowSearchModal(false)} onSelect={onChange} />
+        <span className="ml-auto text-xs text-gray-400">Fixed bill-to</span>
+      </div>
     </div>
   );
 };
@@ -635,7 +523,10 @@ const NewQuoteComponentInner = ({
         { selectedItem: null, description: '', quantity: '', rate: '', amount: 0, hsn: '', cgstRate: '', sgstRate: '', igstRate: '', cgstAmount: 0, sgstAmount: 0, igstAmount: 0, ratePerSqft: '', measurements: '' },
     ]);
     const [showTotalSummary, setShowTotalSummary] = useState(false);
-    const [selectedCustomer, setSelectedCustomer] = useState(null);
+    const [selectedCustomer, setSelectedCustomer] = useState(() => {
+        // For new quotes, default to Caasdi Global; editing/duplicate will override via initialData effect
+        return initialData?.customerDetails || initialData?.selectedCustomer || CAASDI_GLOBAL_CUSTOMER;
+    });
     const [customerDetails, setCustomerDetails] = useState(null);
     const [addressLoading, setAddressLoading] = useState(false);
     const [addressEditMode, setAddressEditMode] = useState(null);
@@ -877,14 +768,14 @@ const NewQuoteComponentInner = ({
 
     // Initialize editable customer details when customer is selected
     useEffect(() => {
-        if (selectedCustomer && (selectedCustomer.customerId || selectedCustomer.id)) {
+        if (selectedCustomer && !selectedCustomer.isCaasdiGlobal && (selectedCustomer.customerId || selectedCustomer.id)) {
             console.log('Selected customer data:', selectedCustomer);
             
             // Always fetch complete customer details since the list API doesn't include addresses
             console.log('Fetching complete customer details for:', selectedCustomer.customerId || selectedCustomer.id);
             fetchCompleteCustomerDetails(selectedCustomer.customerId || selectedCustomer.id);
         }
-    }, [selectedCustomer?.customerId, selectedCustomer?.id]);
+    }, [selectedCustomer?.customerId, selectedCustomer?.id, selectedCustomer?.isCaasdiGlobal]);
 
     // Determine intra-state based on customer GSTIN
     useEffect(() => {
