@@ -1,0 +1,27 @@
+diff --git a/node_modules/axios/lib/adapters/fetch.js b/node_modules/axios/lib/adapters/fetch.js
+index e2e90f6..15a7bd6 100644
+--- a/node_modules/axios/lib/adapters/fetch.js
++++ b/node_modules/axios/lib/adapters/fetch.js
+@@ -9,16 +9,15 @@ import resolveConfig from "../helpers/resolveConfig.js";
+ import settle from "../core/settle.js";
+ 
+ const DEFAULT_CHUNK_SIZE = 64 * 1024;
++const { isFunction } = utils;
+ 
+-const {isFunction} = utils;
++// ✅ 1. Define a truly safe global fallback
++const safeGlobal = utils.global || globalThis || window || {};
+ 
+-const globalFetchAPI = (({Request, Response}) => ({
+-  Request, Response
+-}))(utils.global);
++// ✅ 2. Use that for both destructures
++const globalFetchAPI = (({ Request, Response }) => ({ Request, Response }))(safeGlobal);
+ 
+-const {
+-  ReadableStream, TextEncoder
+-} = utils.global;
++const { ReadableStream, TextEncoder } = safeGlobal; // 👈 fixed
+ 
+ 
+ const test = (fn, ...args) => {

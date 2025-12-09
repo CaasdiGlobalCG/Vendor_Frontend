@@ -1,0 +1,21 @@
+diff --git a/node_modules/motion-utils/dist/es/globalThis-config.mjs b/node_modules/motion-utils/dist/es/globalThis-config.mjs
+new file mode 100644
+index 0000000..42eb8d0
+--- /dev/null
++++ b/node_modules/motion-utils/dist/es/globalThis-config.mjs
+@@ -0,0 +1,15 @@
++// Patched to break Rollup circular re-export loop
++// This file only ensures globalThis exists. It does NOT re-export MotionGlobalConfig.
++
++if (typeof globalThis === 'undefined') {
++  try {
++    // eslint-disable-next-line no-undef
++    window.globalThis = window;
++  } catch (_) {
++    // ignore
++  }
++}
++
++// Export a harmless placeholder so imports succeed
++export const MotionGlobalConfig = {};
++export default MotionGlobalConfig;

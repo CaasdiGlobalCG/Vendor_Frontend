@@ -1,0 +1,95 @@
+.stay-tuned-section {
+    position: relative;
+    width: 100%;
+    padding: 80px 0;
+    background: #000000;
+  }
+  
+  .stay-tuned-section .stay-tuned-content {
+    max-width: 1200px; /* Match other sections */
+    margin: 0 auto;
+    padding: 0 20px;
+  }
+  
+  .stay-tuned-section .stay-tuned-row {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: center;
+    gap: 40px;
+  }
+  
+  .stay-tuned-section .stay-tuned-heading {
+    font-family: Poppins, sans-serif;
+    font-size: 64px;
+    font-weight: 500;
+    line-height: 1.5;
+  }
+  
+  .stay-tuned-section .stay-tuned-8c {
+    color: #ffffff;
+  }
+  
+  .stay-tuned-section .smiley-face {
+    color: #fadc01;
+  }
+  
+  .stay-tuned-section .ecosystem-info {
+    max-width: 850px;
+    font-family: Poppins, sans-serif;
+    font-size: 32px;
+    font-weight: 500;
+    line-height: 1.5;
+  }
+  
+  .stay-tuned-section .saas-ecosystem {
+    color: #ffffff;
+  }
+  
+  .stay-tuned-section .saas-ecosystem-8d {
+    color: #21be9c;
+  }
+  
+  .stay-tuned-section .global-operations {
+    color: #ffffff;
+  }
+  
+  @media (max-width: 1200px) {
+    .stay-tuned-section .stay-tuned-heading {
+      font-size: 54px;
+    }
+    
+    .stay-tuned-section .ecosystem-info {
+      font-size: 28px;
+    }
+  }
+  
+  @media (max-width: 768px) {
+    .stay-tuned-section .stay-tuned-row {
+      flex-direction: column;
+      align-items: center;
+      gap: 30px;
+    }
+    
+    .stay-tuned-section .stay-tuned-heading {
+      font-size: 30px;
+    }
+    
+    .stay-tuned-section .ecosystem-info {
+      font-size: 16px;
+    }
+
+    .stay-tuned-section{
+      text-align: center;
+    }
+  }
+  
+  @media (max-width: 480px) {
+    .stay-tuned-section .stay-tuned-heading {
+      font-size: 36px;
+    }
+    
+    .stay-tuned-section .ecosystem-info {
+      font-size: 20px;
+    }
+  }

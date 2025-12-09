@@ -1,0 +1,758 @@
+/* Import Poppins Font */
+@import url("https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap");
+
+:root {
+  --default-font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+    Ubuntu, "Helvetica Neue", Helvetica, Arial, "PingFang SC",
+    "Hiragino Sans GB", "Microsoft Yahei UI", "Microsoft Yahei",
+    "Source Han Sans CN", sans-serif;
+  --primary-font: Poppins, var(--default-font-family);
+  --secondary-font: Inter, var(--default-font-family);
+  --primary-gradient: linear-gradient(90deg, #b9258f, #1bf6c6);
+  --text-color: #ffffff;
+  --bg-color: #000000;
+  --opacity-text: 0.4;
+}
+
+/* Apply Global Font */
+body {
+  font-family: "Poppins", sans-serif;
+  background: var(--bg-color);
+  margin: 0;
+  padding: 0;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+.workflow-section-wrapper {
+  width: 100%;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 13rem 1rem;
+  background-color: var(--bg-color);
+  color: var(--text-color);
+  position: relative;
+}
+
+.page-wrapper {
+  width: 100%;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 2rem 1rem;
+  background-color: var(--bg-color);
+}
+
+.header {
+  text-align: center;
+  margin-bottom: 4rem;
+  width: 100%;
+  max-width: 1200px;
+}
+
+.how-we-work {
+  font-family: var(--primary-font);
+  font-size: clamp(2.5rem, 5vw, 4rem);
+  font-weight: 500;
+  line-height: 1.2;
+  text-align: center;
+  background: var(--primary-gradient);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  margin-bottom: 1rem;
+}
+
+.transform-business {
+  font-family: var(--secondary-font);
+  font-size: clamp(1rem, 2vw, 1.5rem);
+  font-weight: 400;
+  line-height: 1.5;
+  text-align: center;
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.workflow-container {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-width: 1200px;
+  position: relative;
+  padding-bottom: 6rem;
+  left: 0vh;
+}
+
+.workflow-section {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 4rem;
+  position: relative;
+  width: 100%;
+  height: 38vh;
+}
+
+/* Workflow Step Container */
+.workflow-step {
+  display: flex;
+  position: relative;
+  width: 100%;
+}
+
+.step-content {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  position: relative;
+}
+
+/* Rectangle Styles with Increased Specificity */
+.workflow-section .rectangle {
+ 
+background: #000000;
+border-radius: 0 50px 50px 0;
+padding: 1.5rem 2rem;
+border: 3px solid rgba(255, 255, 255, 0.15);
+position: relative;
+height: 140%;
+display: flex;
+align-items: center;
+justify-content: center;
+display: flex;
+/* min-width: 250px; */
+width: 40%;
+max-width: 455px;
+transition: border-color 0.5s ease-in-out;
+animation: fadeSlideIn 0.8s ease-out forwards;
+opacity: 1 !important; /* Ensure it stays visible */
+transform: translateX(0) !important;
+}
+
+.workflow-section .rectangle.right {
+  border-radius: 50px 0px 0px 50px;
+  justify-content: center;
+  transform: translateX(50px); /* Initial offset for right */
+  height: 140%;
+  width: 40%;
+}
+
+.step-title {
+  color: #ffffff;
+  font-family: Poppins, var(--default-font-family);
+  font-size: 1.35rem;
+  font-weight: 400;
+  position: center;
+}
+
+.material-symbols-target {
+  width: 50%;
+  height: 50%;
+  background: url("../assets/target.svg")
+    no-repeat center;
+  background-size: contain;
+  z-index: 1;
+  position: absolute;
+  left: 10.9%;
+  top: calc(100% + 2rem);
+  transform: translateX(-50%);
+}
+.horizontal-parent {
+  position: relative;
+  width: 100%;
+  
+}
+
+
+.horizontal-line {
+  flex-grow: 1;
+  height: 3px;
+  /* border-top: 3px solid rgba(255, 255, 255, 0.5); */
+  position: relative;
+  transition: border-color 0.5s ease-in-out;
+  width: 80.6%;
+}
+
+.horizontal-parent-right {
+  position: relative;
+  width: 100%;
+  
+}
+
+.horizontal-line-right {
+  flex-grow: 1;
+  height: 8px;
+  /* border-top: 3px solid rgba(255, 255, 255, 0.5); */
+  position: relative;
+  transition: border-color 0.5s ease-in-out;
+  width: 90%;
+  left: 16%;
+}
+
+.vertical-line {
+  /* position: absolute; */
+  width: 13.3%;
+  height: 200%;
+  /* border-left: 3px solid rgba(255, 255, 255, 0.5); */
+  right: 0;
+  top: 49%;
+  transition: border-color 0.5s ease-in-out;
+}
+
+/* New Animations */
+@keyframes fadeSlideIn {
+  from {
+    opacity: 0;
+    transform: translateX(-50px); /* For left */
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes fadeSlideInRight {
+  from {
+    opacity: 0;
+    transform: translateX(50px); /* For right */
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* Apply animation on load with delay based on section index */
+.workflow-section .rectangle {
+  animation: fadeSlideIn 0.8s ease-out forwards;
+  animation-delay: calc(var(--section-index) * 0.2s); /* Staggered animation */
+}
+
+.workflow-section .rectangle.right {
+  animation: fadeSlideInRight 0.8s ease-out forwards;
+  animation-delay: calc(var(--section-index) * 0.2s);
+}
+
+/* Lock final state */
+.workflow-section .rectangle,
+.workflow-section .rectangle.right {
+  border-color: #21be9c;
+}
+ 
+
+
+
+
+/* Initially Hidden */
+.horizontal-line,
+.horizontal-line-right,
+.vertical-line {
+  opacity: 0;
+  width: 0; /* Horizontal lines */
+  height: 0; /* Vertical line */
+}
+
+/* Animate when in view */
+.horizontal-line.animate {
+  width: 0;
+  height: 3px;
+  /* border-top: 3px solid rgba(255, 255, 255, 0.5); */
+  background-image: linear-gradient(90deg, rgba(33,190,156,0) 0%, #21BE9C 100%);
+  position: relative;
+  transition: border-color 0.5s ease-in-out;
+  animation: drawHorizontal 1.5s ease-out forwards;
+}
+
+.horizontal-line-right.animate {
+  width: 0;
+  height: 3px;
+  /* border-top: 3px solid rgba(255, 255, 255, 0.5); */
+  background-image: linear-gradient(90deg, #21BE9C 0%, rgba(33,190,156,0) 100%);
+  position: relative;
+  transition: border-color 0.5s ease-in-out;
+  left: 16%;
+  animation: drawHorizontalRight 1.5s ease-out  forwards;
+}
+
+.vertical-line.animate {
+  height: 200%;
+  width: 4px;
+  /* border-left: 3px solid rgba(255, 255, 255, 0.5); */
+  background-image: linear-gradient(180deg, #21BE9C 0%, rgba(33,190,156,0) 100%);
+  position: absolute;
+  right: 0;
+  top: 49%;
+  transition: border-color 0.5s ease-in-out;
+  animation: drawVertical 1.5s ease-out forwards;
+  animation-delay: 1.5s;
+
+}
+
+/* Animation Keyframes */
+@keyframes drawHorizontal {
+  0% {
+    width: 0;
+    opacity: 0;
+  }
+  10% {
+    opacity: 1;
+  }
+  100% {
+    width: 80.6%;
+    opacity: 1;
+  }
+}
+
+@keyframes drawHorizontalRight {
+  0% {
+    width: 0;
+    opacity: 0;
+  }
+  10% {
+    opacity: 1;
+  }
+  100% {
+    width: 90%;
+    opacity: 1;
+  }
+}
+
+@keyframes drawVertical {
+  0% {
+    height: 0;
+    opacity: 0;
+  }
+  10% {
+    opacity: 1;
+  }
+  100% {
+    height: 180%;
+    opacity: 1;
+  }
+}
+
+
+
+
+
+
+@media (max-width: 768px) {
+  /* General Adjustments */
+  .workflow-section-wrapper {
+    padding: 8rem 1rem; /* Reduce padding for better spacing */
+  }
+
+  .how-we-work {
+    font-size: clamp(2rem, 4vw, 3rem); /* Slightly reduce font size */
+  }
+
+  .transform-business {
+    font-size: clamp(0.875rem, 2vw, 1.25rem); /* Slightly reduce font size */
+  }
+
+  /* Rectangle Adjustments */
+  .workflow-section .rectangle {
+    width: 50%; /* Increase width slightly for better readability */
+    padding: 1rem 1.5rem; /* Reduce padding */
+  }
+
+  /* Line Adjustments */
+  .horizontal-line,
+  .horizontal-line-right {
+    width: 70%; /* Reduce line length for smaller screens */
+  }
+
+  .vertical-line {
+    height: 150%; /* Reduce vertical line height */
+  }
+
+  /* Icon Adjustments */
+  .icon {
+    width: 60px;
+    height: 60px;
+  }
+
+  /* Description Adjustments */
+  .workflow-description {
+    max-width: 90%; /* Allow descriptions to take more space */
+    margin-top: 1rem;
+  }
+}
+
+
+
+
+
+
+
+
+@media (max-width: 320px) {
+  /* General Adjustments */
+  .workflow-section-wrapper {
+    padding: 4rem 1rem; /* Further reduce padding */
+  }
+
+  .how-we-work {
+    font-size: 1.5rem; /* Further reduce font size */
+  }
+
+  .transform-business {
+    font-size: 0.8rem; /* Further reduce font size */
+  }
+
+  /* Rectangle Adjustments */
+  .workflow-section .rectangle {
+    padding: 0.75rem; /* Reduce padding further */
+  }
+
+  /* Line Adjustments */
+  .horizontal-line,
+  .horizontal-line-right {
+    width: 40%; /* Further reduce line length */
+  }
+
+  .vertical-line {
+    height: 80%; /* Further reduce vertical line height */
+  }
+
+  /* Icon Adjustments */
+  .icon {
+    width: 40px;
+    height: 40px;
+  }
+
+  /* Description Adjustments */
+  .workflow-description {
+    font-size: 0.875rem; /* Reduce font size further */
+  }
+}
+
+
+
+
+@media (max-width: 768px) {
+  /* General Adjustments */
+  .workflow-section-wrapper {
+    padding: 8rem 1rem; /* Reduce padding for better spacing */
+  }
+
+  .how-we-work {
+    font-size: clamp(2rem, 4vw, 3rem); /* Slightly reduce font size */
+  }
+
+  .transform-business {
+    font-size: clamp(0.875rem, 2vw, 1.25rem); /* Slightly reduce font size */
+  }
+
+  /* Rectangle Adjustments */
+  .workflow-section .rectangle {
+    width: 50%; /* Increase width slightly for better readability */
+    padding: 1rem 1.5rem; /* Reduce padding */
+  }
+
+  /* Line Adjustments */
+  .horizontal-line,
+  .horizontal-line-right {
+    width: 70%; /* Reduce line length for smaller screens */
+  }
+
+  .vertical-line {
+    height: 150%; /* Reduce vertical line height */
+  }
+
+  /* Icon Adjustments */
+  .icon {
+    width: 60px;
+    height: 60px;
+  }
+
+  /* Description Adjustments */
+  .workflow-description {
+    max-width: 90%; /* Allow descriptions to take more space */
+    margin-top: 1rem;
+  }
+}
+
+
+.workflow-step.left .vertical-line {
+  right: 13.6%;
+}
+
+.workflow-step.right .vertical-line {
+  left: 11.2%;
+}
+
+.icon {
+  width: 80px;
+  height: 80px;
+  background-size: contain;
+  background-position: center;
+  background-repeat: no-repeat;
+  flex-shrink: 0;
+}
+
+/* Workflow Description */
+.workflow-description {
+  margin-top: 1.5rem;
+  max-width: 364px;
+  opacity: 0;
+  transform: translateY(20px);
+  transition: opacity 0.6s ease-out, transform 0.6s ease-out;
+  transition-delay: calc(var(--section-index) * 0.2s + 0.4s); /* Delay after rectangle */
+}
+
+.workflow-description.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.workflow-description.left {
+  align-self: flex-start;
+  margin-left: 2rem;
+}
+
+.workflow-description.right {
+  align-self: flex-end;
+  margin-right: 2rem;
+  text-align: right;
+}
+
+.description-text {
+  color: #ffffff;
+  font-family: Poppins, var(--default-font-family);
+  font-size: clamp(0.875rem, 1.5vw, 1.25rem);
+  font-weight: 500;
+  line-height: 1.5;
+  opacity: 0.4;
+}
+
+/* Responsive Adjustments */
+@media (max-width: 768px) {
+  .page-wrapper {
+    padding: 1rem;
+  }
+
+  .workflow-section {
+    margin-bottom: 3rem;
+  }
+
+  .workflow-description {
+    margin-top: 1rem;
+  }
+
+  .workflow-description.left {
+    margin-left: 1rem;
+  }
+
+  .workflow-description.right {
+    margin-right: 1rem;
+  }
+
+  .workflow-section .rectangle {
+    min-width: 200px;
+    height: 100px;
+    padding: 1rem 1.5rem;
+  }
+
+  .icon {
+    width: 60px;
+    height: 60px;
+  }
+
+  .material-symbols-target {
+    top: calc(100% + 1.5rem);
+  }
+
+  .workflow-container {
+    padding-bottom: 5rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .how-we-work {
+    font-size: 2rem;
+  }
+
+  .transform-business {
+    font-size: 1rem;
+  }
+
+  .workflow-section {
+    margin-bottom: 2.5rem;
+  }
+
+  .step-content {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .workflow-step.right .step-content {
+    align-items: flex-end;
+  }
+
+  .workflow-section .rectangle {
+    min-width: 180px;
+    height: 80px;
+    margin-bottom: 1rem;
+  }
+
+  .horizontal-line {
+    width: 3px;
+    height: 40px;
+    margin: 0.5rem 0;
+    border-left: 3px dotted rgba(255, 255, 255, 0.5);
+  }
+
+  .vertical-line {
+    height: calc(100%  2rem);
+  }
+
+  .icon {
+    width: 50px;
+    height: 50px;
+  }
+
+  .workflow-description {
+    max-width: 100%;
+    width: 100%;
+  }
+
+  .workflow-description.left,
+  .workflow-description.right {
+    margin-left: 0;
+    margin-right: 0;
+    text-align: center;
+  }
+
+  .material-symbols-target {
+    left: 50%;
+    transform: translateX(-50%);
+    top: calc(100% + 1rem);
+  }
+
+  .workflow-container {
+    padding-bottom: 4rem;
+  }
+}
+
+/* MODIFIED: Enhanced mobile-first responsive approach */
+@media (max-width: 1024px) {
+  .workflow-section-wrapper {
+    padding: 8rem 1rem;
+  }
+
+  .workflow-section {
+    height: auto; /* NEW: Allow height to adjust */
+    margin-bottom: 6rem; /* MODIFIED: Increase spacing */
+  }
+
+  .workflow-step {
+    flex-direction: column; /* NEW: Stack elements vertically */
+  }
+
+  .workflow-step .rectangle {
+    width: 80% !important; /* MODIFIED: Make rectangles wider */
+    height: auto !important;
+    min-height: 100px;
+    border-radius: 25px !important; /* NEW: Consistent rounded corners */
+    margin: 0 auto; /* NEW: Center align */
+    transform: none !important;
+  }
+
+  .workflow-step .rectangle.right {
+    border-radius: 25px !important; /* NEW: Remove directional rounding */
+    transform: none !important;
+    margin-left: auto; /* NEW: Keep right alignment */
+  }
+
+  .horizontal-parent,
+  .horizontal-parent-right {
+    display: none; /* NEW: Hide complex lines on mobile */
+  }
+
+  .vertical-line {
+    display: block; /* NEW: Hide vertical lines */
+  }
+  .workflow-step.left .vertical-line {
+    right: 50%;
+    top: 103%;
+}
+.workflow-step.right .vertical-line {
+  left: 50%;
+  top: 103%;
+}
+
+  .workflow-description {
+    max-width: 100% !important;
+    text-align: center !important;
+    margin: 1.5rem 0 !important; /* NEW: Adjust spacing */
+    padding: 0 1rem; /* NEW: Add padding */
+  }
+
+  .material-symbols-target {
+    position: relative !important;
+    left: 50% !important;
+    top: 7rem !important;
+    transform: translateX(-50%) !important;
+    width: 40px; /* NEW: Adjust icon size */
+    height: 40px;
+  }
+}
+
+/* NEW: Added specific mobile adjustments */
+@media (max-width: 480px) {
+  .workflow-section-wrapper {
+    padding: 4rem 1rem;
+  }
+
+  .how-we-work {
+    font-size: 2rem !important;
+    margin-bottom: 0.5rem;
+  }
+
+  .transform-business {
+    font-size: 1rem !important;
+    max-width: 90%;
+  }
+
+  .workflow-section .rectangle {
+    width: 90% !important;
+    padding: 1rem !important;
+    border-radius: 20px !important;
+  }
+
+  .step-title {
+    font-size: 1.1rem; /* MODIFIED: Smaller text */
+  }
+
+  .description-text {
+    font-size: 0.9rem; /* MODIFIED: Smaller text */
+  }
+
+  .workflow-container {
+    padding-bottom: 2rem; /* MODIFIED: Reduce bottom padding */
+  }
+
+  .material-symbols-target {
+    top: 7.5rem !important;
+    width: 30px;
+    height: 30px;
+  }
+}
+
+/* NEW: Added landscape orientation support */
+@media (max-width: 768px) and (orientation: landscape) {
+  .workflow-section {
+    height: 50vh;
+    margin-bottom: 4rem;
+  }
+  
+  .workflow-section .rectangle {
+    min-height: 80px;
+  }
+}

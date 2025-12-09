@@ -1,0 +1,1399 @@
+
+.f2-img {
+  flex-shrink: 0;
+  position: relative;
+  left: 35px;
+  top: -18px;
+  width: 24px;
+  height: 24px;
+  background: url(https://static.codia.ai/custom_image/2025-03-28/082932/check-icon.svg)
+    no-repeat center;
+  background-size: cover;
+  z-index: 17;
+  overflow: hidden;
+}
+
+.form2-text-4 {
+  flex-shrink: 0;
+  position: relative;
+  height: 30px;
+  top: -48px;
+  left: 66px;
+  color: #000000;
+  font-family: Poppins, var(--default-font-family);
+  font-size: 16px;
+  font-weight: 500;
+  line-height: 30px;
+  text-align: left;
+  white-space: nowrap;
+  z-index: 11;
+}
+
+.f2-text-5 {
+  display: block;
+  position: relative;
+  height: 24px;
+  top: -52px;
+  left: 66px;
+  color: #000000;
+  font-family: Poppins, var(--default-font-family);
+  font-size: 14px;
+  font-weight: 300;
+  line-height: 24px;
+  text-align: left;
+  white-space: nowrap;
+  z-index: 1;
+}
+  .f2-main-container {
+    position: relative;
+    width: 100%;
+    height: 100vh     ;
+    margin: 0 auto;
+    background: #ffffff;
+    overflow: hidden;
+  }
+
+  .form-section {
+    position: absolute;
+    width: 100vw;
+    height: 100vh;
+    top: 0;
+    left: 25px;
+    overflow-y: auto;
+    padding-bottom: 20px;
+  }
+  .wrapperr {
+    position: absolute;
+    width: 481px;
+    height: 100vh;
+    top: 0;
+    left: 0;
+    font-size: 0px;
+    background: #f6fffd;
+    z-index: 100; /* Ensure it stays above other content */
+  }
+  .f2-text-3 {
+    display: flex;
+    align-items: flex-start;
+    justify-content: flex-start;
+    position: relative;
+    top: -42px;
+    left: 38px;
+    width: 435px;
+    height: 72px;
+    color: #000000;
+    font-family: Poppins, var(--default-font-family);
+    font-size: 14px;
+    font-weight: 300;
+    line-height: 24px;
+    text-align: left;
+    opacity: 0.5;
+    z-index: 10;
+  }
+
+  .f2-text-4 {
+    flex-shrink: 0;
+    position: relative;
+    height: 30px;
+    top: 2px;
+    left: -12px;
+    color: #000000;
+    font-family: Poppins, var(--default-font-family);
+    font-size: 16px;
+    font-weight: 500;
+    line-height: 30px;
+    text-align: left;
+    white-space: nowrap;
+    z-index: 11;
+  }
+  
+  .f2-text-5 {
+    display: block;
+    position: relative;
+    height: 24px;
+    top: -60px;
+    left: 70px;
+    color: #000000;
+    font-family: Poppins, var(--default-font-family);
+    font-size: 14px;
+    font-weight: 300;
+    line-height: 24px;
+    text-align: left;
+    white-space: nowrap;
+    z-index: 1;
+  }
+
+
+  .f2-text-6 {
+    /* flex-shrink: 0;
+    position: relative;
+    height: 30px;
+    top: 4px;
+    left: -24px;
+    color: #000000;
+    font-family: Poppins, var(--default-font-family);
+    font-size: 16px;
+    font-weight: 500;
+    line-height: 30px;
+    text-align: left;
+    white-space: nowrap;
+    z-index: 11; */
+    flex-shrink: 0;
+    position: relative;
+    height: 30px;
+    top: 5px;
+    left: -8px;
+    color: #000000;
+    font-family: Poppins, var(--default-font-family);
+    font-size: 16px;
+    font-weight: 500;
+    line-height: 30px;
+    text-align: left;
+    white-space: nowrap;
+    z-index: 11;
+  }
+  
+  .f2-text-7 {
+    /* display: block;
+    position: relative;
+    height: 24px;
+    top: -45px;
+    left: 68px;
+    color: #000000;
+    font-family: Poppins, var(--default-font-family);
+    font-size: 14px;
+    font-weight: 300;
+    line-height: 24px;
+    text-align: left;
+    white-space: nowrap;
+    z-index: 1; */
+    display: block;
+    position: relative;
+    height: 24px;
+    top: -48px;
+    left: 66px;
+    color: #000000;
+    font-family: Poppins, var(--default-font-family);
+    font-size: 14px;
+    font-weight: 300;
+    line-height: 24px;
+    text-align: left;
+    white-space: nowrap;
+    z-index: 1;
+  }
+  .img-2 {
+    flex-shrink: 0;
+    position: relative;
+    left: 35px;
+    top: 4px;
+    width: 24px;
+    height: 24px;
+    background: url(https://static.codia.ai/custom_image/2025-03-28/082932/check-icon.svg)
+      no-repeat center;
+    background-size: cover;
+    z-index: 17;
+    overflow: hidden;
+  }
+  .f2-company-details-6 {
+    display: flex;
+    align-items: flex-start;
+    justify-content: flex-start;
+    position: absolute;
+    height: 48px;
+    top: 41px;
+    left: 525px;
+    color: #000000;
+    font-family: Poppins, var(--default-font-family);
+    font-size: 32px;
+    font-weight: 500;
+    line-height: 48px;
+    text-align: left;
+    white-space: nowrap;
+    z-index: 23;
+  }
+
+
+ /* Animation keyframes for sliding in and out */
+@keyframes slideInFromRight {
+    0% {
+      transform: translateX(100%);
+      opacity: 0;
+    }
+    100% {
+      transform: translateX(0);
+      opacity: 1;
+    }
+  }
+  
+  @keyframes slideOutToRight {
+    0% {
+      transform: translateX(0);
+      opacity: 1;
+    }
+    100% {
+      transform: translateX(100%);
+      opacity: 0;
+    }
+  }
+  
+  .f2-save-changes {
+    display: flex;
+    align-items: flex-start;
+    justify-content: flex-start;
+    position: absolute;
+    height: 24px;
+    top: 53px;
+    right: -100px;
+    color: #21be9c;
+    font-family: Poppins, sans-serif;
+    font-size: 16px;
+    font-weight: 400;
+    line-height: 24px;
+    text-align: left;
+    white-space: nowrap;
+    z-index: 58;
+  }
+  
+  .f2-save-changes.slide-in {
+    animation: slideInFromRight 0.5s ease-in forwards;
+  }
+  
+  .f2-save-changes.slide-out {
+    animation: slideOutToRight 0.5s ease-out forwards 2s;
+  }
+  
+  .f2-check-o {
+    position: absolute;
+    width: 24px;
+    height: 24px;
+    top: 53px;
+    right: -136px;
+    background: url(https://static.codia.ai/custom_image/2025-03-28/082932/save-icon.svg)
+      no-repeat center;
+    background-size: cover;
+    z-index: 57;
+    overflow: hidden;
+  }
+  
+  .f2-check-o.slide-in {
+    animation: slideInFromRight 0.5s ease-in forwards;
+  }
+  
+  .f2-check-o.slide-out {
+    animation: slideOutToRight 0.5s ease-out forwards 2s;
+  }
+
+  .f2-company-verification {
+    display: flex;
+    align-items: flex-start;
+    justify-content: flex-start;
+    position: absolute;
+    height: 24px;
+    top: 87px;
+    left: 527px;
+    color: #000000;
+    font-family: Poppins, var(--default-font-family);
+    font-size: 16px;
+    font-weight: 400;
+    line-height: 24px;
+    text-align: left;
+    white-space: nowrap;
+    opacity: 0.5;
+    z-index: 2;
+  }
+  .f2-rectangle-7 {
+    position: absolute;
+    width: 491px;
+    height: 58px;
+    top: 163px;
+    left: 916px;
+    background: #ffffff;
+    border: 1px solid #c9c9c9;
+    z-index: 29;
+    border-radius: 9px;
+  }
+  .f2-arrow-down-light {
+    position: absolute;
+    width: 30px;
+    height: 30px;
+    top: 13px;
+    left: 434px;
+    background: url(https://static.codia.ai/custom_image/2025-04-01/043248/arrow-down-light-icon.svg)
+      no-repeat center;
+    background-size: cover;
+    z-index: 53;
+    overflow: hidden;
+  }
+  .f2-select-one {
+    display: flex;
+    align-items: flex-start;
+    justify-content: flex-start;
+    position: absolute;
+    height: 27px;
+    top: 16px;
+    left: 18px;
+    color: #555555;
+    font-family: Poppins, var(--default-font-family);
+    font-size: 18px;
+    font-weight: 500;
+    line-height: 27px;
+    text-align: left;
+    white-space: nowrap;
+    opacity: 0.5;
+    z-index: 34;
+  }
+
+  .box {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: relative;
+    width: 213px;
+    height: 30px;
+    top: -42px;
+    z-index: 18;
+  }
+
+  .f2-business-type {
+    display: flex;
+    align-items: flex-start;
+    justify-content: flex-start;
+    position: absolute;
+    height: 30px;
+    top: 177px;
+    left: 525px;
+    color: #000000;
+    font-family: Poppins, var(--default-font-family);
+    font-size: 20px;
+    font-weight: 500;
+    line-height: 30px;
+    text-align: left;
+    white-space: nowrap;
+    z-index: 24;
+  }
+  .f2-line {
+    position: absolute;
+    width: 881px;
+    height: 1.195px;
+    top: 235px;
+    left: 525px;
+    background: url(https://static.codia.ai/custom_image/2025-04-01/043248/horizontal-line-1.svg)
+      no-repeat center;
+    background-size: cover;
+    z-index: 37;
+  }
+  .f2-rectangle-8 {
+    position: absolute;
+    width: 491px;
+    height: 58px;
+    top: 251px;
+    left: 916px;
+    background: #ffffff;
+    border: 1px solid #c9c9c9;
+    z-index: 30;
+    border-radius: 9px;
+  }
+  .f2-select-one-9 {
+    display: flex;
+    align-items: flex-start;
+    justify-content: flex-start;
+    position: absolute;
+    height: 27px;
+    top: 13px;
+    left: 22px;
+    color: #555555;
+    font-family: Poppins, var(--default-font-family);
+    font-size: 18px;
+    font-weight: 500;
+    line-height: 27px;
+    text-align: left;
+    white-space: nowrap;
+    opacity: 0.5;
+    z-index: 35;
+  }
+  .f2-arrow-down-light-a {
+    position: absolute;
+    width: 30px;
+    height: 30px;
+    top: 13px;
+    left: 434px;
+    background: url(https://static.codia.ai/custom_image/2025-04-01/043248/arrow-down-light-icon-2.svg)
+      no-repeat center;
+    background-size: cover;
+    z-index: 54;
+    overflow: hidden;
+  }
+  .f2-asterisk {
+    display: flex;
+    align-items: flex-start;
+    justify-content: flex-start;
+    position: absolute;
+    height: 24px;
+    top: 260px;
+    left: 659px;
+    color: #ff3d00;
+    font-family: Poppins, var(--default-font-family);
+    font-size: 16px;
+    font-weight: 400;
+    line-height: 24px;
+    text-align: left;
+    white-space: nowrap;
+    z-index: 49;
+  }
+  .f2-industry-type {
+    display: flex;
+    align-items: flex-start;
+    justify-content: flex-start;
+    position: absolute;
+    height: 30px;
+    top: 265px;
+    left: 525px;
+    color: #000000;
+    font-family: Poppins, var(--default-font-family);
+    font-size: 20px;
+    font-weight: 500;
+    line-height: 30px;
+    text-align: left;
+    white-space: nowrap;
+    z-index: 25;
+  }
+  .f2-line-b {
+    position: absolute;
+    width: 881px;
+    height: 1.195px;
+    top: 323px;
+    left: 525px;
+    background: url(https://static.codia.ai/custom_image/2025-04-01/043248/horizontal-line-2.svg)
+      no-repeat center;
+    background-size: cover;
+    z-index: 38;
+  }
+  .f2-rectangle-c {
+    position: absolute;
+    width: 491px;
+    height: 58px;
+    top: 339px;
+    left: 915px;
+    background: #ffffff;
+    border: 1px solid #c9c9c9;
+    z-index: 31;
+    border-radius: 9px;
+  }
+  .f2-year {
+    display: flex;
+    align-items: flex-start;
+    justify-content: flex-start;
+    position: absolute;
+    height: 30px;
+    top: 11px;
+    left: 19px;
+    color: #555555;
+    font-family: Poppins, var(--default-font-family);
+    font-size: 20px;
+    font-weight: 500;
+    line-height: 30px;
+    text-align: left;
+    white-space: nowrap;
+    opacity: 0.5;
+    z-index: 41;
+  }
+  .f2-asterisk-d {
+    display: flex;
+    align-items: flex-start;
+    justify-content: flex-start;
+    position: absolute;
+    height: 24px;
+    top: 342px;
+    left: 740px;
+    color: #ff3d00;
+    font-family: Poppins, var(--default-font-family);
+    font-size: 16px;
+    font-weight: 400;
+    line-height: 24px;
+    text-align: left;
+    white-space: nowrap;
+    z-index: 50;
+  }
+  .f2-year-of-establishment {
+    display: flex;
+    align-items: flex-start;
+    justify-content: flex-start;
+    position: absolute;
+    height: 30px;
+    top: 353px;
+    left: 525px;
+    color: #000000;
+    font-family: Poppins, var(--default-font-family);
+    font-size: 20px;
+    font-weight: 500;
+    line-height: 30px;
+    text-align: left;
+    white-space: nowrap;
+    z-index: 26;
+  }
+  .f2-line-e {
+    position: absolute;
+    width: 881px;
+    height: 1.195px;
+    top: 411px;
+    left: 518px;
+    background: url(https://static.codia.ai/custom_image/2025-04-01/043248/horizontal-line-3.svg)
+      no-repeat center;
+    background-size: cover;
+    z-index: 39;
+  }
+  .f2-asterisk-f {
+    display: flex;
+    align-items: flex-start;
+    justify-content: flex-start;
+    position: absolute;
+    height: 24px;
+    top: 429px;
+    left: 788px;
+    color: #ff3d00;
+    font-family: Poppins, var(--default-font-family);
+    font-size: 16px;
+    font-weight: 400;
+    line-height: 24px;
+    text-align: left;
+    white-space: nowrap;
+    z-index: 51;
+  }
+  .f2-rectangle-10 {
+    position: absolute;
+    width: 491px;
+    height: 58px;
+    top: 432px;
+    left: 919px;
+    background: #ffffff;
+    border: 1px solid #c9c9c9;
+    z-index: 32;
+    border-radius: 9px;
+  }
+  .f2-ti-number {
+    display: flex;
+    align-items: flex-start;
+    justify-content: flex-start;
+    position: absolute;
+    height: 27px;
+    top: 14px;
+    left: 15px;
+    color: #555555;
+    font-family: Poppins, var(--default-font-family);
+    font-size: 18px;
+    font-weight: 500;
+    line-height: 27px;
+    text-align: left;
+    white-space: nowrap;
+    opacity: 0.5;
+    z-index: 36;
+  }
+  .f2-tax-identification-number {
+    display: flex;
+    align-items: flex-start;
+    justify-content: flex-start;
+    position: absolute;
+    height: 30px;
+    top: 439px;
+    left: 529px;
+    color: #000000;
+    font-family: Poppins, var(--default-font-family);
+    font-size: 20px;
+    font-weight: 500;
+    line-height: 30px;
+    text-align: left;
+    white-space: nowrap;
+    z-index: 27;
+  }
+  .f2-line-11 {
+    position: absolute;
+    width: 881px;
+    height: 1.195px;
+    top: 504px;
+    left: 529px;
+    background: url(https://static.codia.ai/custom_image/2025-04-01/043248/horizontal-line-4.svg)
+      no-repeat center;
+    background-size: cover;
+    z-index: 40;
+  }
+  .f2-rectangle-12 {
+    position: absolute;
+    width: 491px;
+    height: 58px;
+    top: 524px;
+    left: 919px;
+    background: #ffffff;
+    border: 1px solid #c9c9c9;
+    z-index: 33;
+    border-radius: 9px;
+  }
+  .f2-signature {
+    display: flex;
+    align-items: flex-start;
+    justify-content: flex-start;
+    position: absolute;
+    height: 27px;
+    top: 15px;
+    left: 15px;
+    color: #555555;
+    font-family: Poppins, var(--default-font-family);
+    font-size: 18px;
+    font-weight: 500;
+    line-height: 27px;
+    text-align: left;
+    white-space: nowrap;
+    opacity: 0.5;
+    z-index: 42;
+  }
+  .f2-asterisk-13 {
+    display: flex;
+    align-items: flex-start;
+    justify-content: flex-start;
+    position: absolute;
+    height: 24px;
+    top: 531px;
+    left: 808px;
+    color: #ff3d00;
+    font-family: Poppins, var(--default-font-family);
+    font-size: 16px;
+    font-weight: 400;
+    line-height: 24px;
+    text-align: left;
+    white-space: nowrap;
+    z-index: 52;
+  }
+  .f2-authorized-signatory-name {
+    display: flex;
+    align-items: flex-start;
+    justify-content: flex-start;
+    position: absolute;
+    height: 30px;
+    top: 540px;
+    left: 531px;
+    color: #000000;
+    font-family: Poppins, var(--default-font-family);
+    font-size: 20px;
+    font-weight: 500;
+    line-height: 30px;
+    text-align: left;
+    white-space: nowrap;
+    z-index: 28;
+  }
+  .f2-bank-details{
+    flex-shrink: 0;
+    position: relative;
+    height: 30px;
+    color: #000000;
+    font-family: Poppins, var(--default-font-family);
+    font-size: 16px;
+    left: -0px;
+    font-weight: 500;
+    line-height: 30px;
+    text-align: left;
+    white-space: nowrap;
+    opacity: 0.5;
+    z-index: 14;
+  }
+  .f2-provide-bank-details{
+    display: block;
+    position: relative;
+    height: 24px;
+    top: -30px;
+    left: 60px;
+    color: #000000;
+    font-family: Poppins, var(--default-font-family);
+    font-size: 14px;
+    font-weight: 300;
+    line-height: 24px;
+    text-align: left;
+    white-space: nowrap;
+    opacity: 0.5;
+    z-index: 5;
+  }
+  .f2-rectangle-14 {
+    position: absolute;
+    width: 157px;
+    height: 65px;
+    top: 615px;
+    left: 1264px;
+    background: url(https://static.codia.ai/custom_image/2025-04-01/043248/next-button-background.png)
+      no-repeat center;
+    background-size: cover;
+    z-index: 43;
+    border-radius: 12px;
+    cursor: pointer;
+  }
+  .f2-next {
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    position: absolute;
+    width: 54px;
+    height: 36px;
+    top: 14px;
+    left: 52px;
+    color: #ffffff;
+    font-family: Poppins, var(--default-font-family);
+    font-size: 24px;
+    font-weight: 500;
+    line-height: 36px;
+    text-align: center;
+    white-space: nowrap;
+    z-index: 45;
+  }
+  .f2-rectangle-15 {
+    position: absolute;
+    width: 157px;
+    height: 65px;
+    top: 615px;
+    left: 1082px;
+    border: 2px solid #00c298;
+    z-index: 44;
+    border-radius: 12px;
+    cursor: pointer;
+  }
+  .f2-save {
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    position: absolute;
+    width: 60px;
+    height: 36px;
+    top: 12px;
+    left: 47px;
+    color: #21be9c;
+    font-family: Poppins, var(--default-font-family);
+    font-size: 24px;
+    font-weight: 500;
+    line-height: 36px;
+    text-align: center;
+    white-space: nowrap;
+    z-index: 46;
+    cursor: pointer;
+  }
+
+  
+  @media screen and (max-width:1366px) {
+    
+    .wrapperr{
+      width: 38%; /* Slightly narrower sidebar */
+      padding: 20px;
+    }
+    .f2-company-details-6,.f2-business-type{
+      font-size: medium;
+      position: absolute;
+      left: 44.5%;
+    }
+
+    .f2-text-3{
+      width: 361px;
+    }
+    .f2-business-type{
+      font-size: medium;
+      position: absolute;
+      top: 100px;
+      left: 44.6vw;
+    }
+    .f2-rectangle-7{
+      position: absolute;
+      top: 133px;
+      left: 44.6vw;
+      height: 38px;
+      width: 51%;
+    }
+    .f2-select-one{
+      position: absolute;
+      top: 6px;
+      
+    }
+    .f2-arrow-down-light{
+      position: absolute;
+      left: 536px;
+      top: 4px;
+    }
+    .f2-company-verification{
+      font-size: 75%;
+      position: absolute;
+      top: 74px;
+      left: 44.6vw;
+    }
+    .f2-industry-type{
+      font-size: medium;
+      position: absolute;
+      top: 195px;
+      left: 44.6vw;
+    }
+    .f2-asterisk{
+      top: 194px;
+      left: 620px;
+    }
+    .f2-asterisk-d{
+      top: 297px;
+      left: 685px;
+    }
+    .f2-asterisk-f{
+      top: 386px;
+      left: 715px;
+    }
+    .f2-asterisk-13{
+      top: 475px;
+      left: 730px;
+    }
+    .f2-rectangle-8{
+      position: absolute;
+      top: 235px;
+      left: 44.6vw;
+      height: 38px;
+      width: 51%;
+    }
+    .f2-line{
+      display: none;
+    }
+    .f2-line-b{
+      display: none;
+    }
+    .f2-line-e{
+      display: none;
+    }
+    .f2-line-11{
+      display: none;
+    }
+    .f2-select-one-9{
+      position: absolute;
+      top: 6px;
+    }
+    .f2-year{
+      position: absolute;
+      top:4px;
+    }
+    .f2-ti-number{
+      position: absolute;
+      top: 4px;
+    }
+    .f2-signature{
+      position: absolute;
+      top: 4px;
+    }
+    .f2-arrow-down-light-a{
+      position: absolute;
+      left: 536px;
+      top: 4px;
+    }
+    .f2-year-of-establishment{
+      font-size: medium;
+      position: absolute;
+      top: 300px;
+      left: 44.6vw;
+    }
+    .f2-rectangle-c{
+      position: absolute;
+      top: 335px;
+      left: 44.6vw;
+      height: 38px;
+      width: 51%;
+    }
+    .f2-tax-identification-number{
+      font-size: medium;
+      position: absolute;
+      top: 390px;
+      left: 44.6vw;
+    }
+    .f2-rectangle-10{
+      position: absolute;
+      top: 425px;
+      left: 44.6vw;
+      height: 38px;
+      width: 51%;
+    }
+    .f2-authorized-signatory-name{
+      font-size: medium;
+      position: absolute;
+      top: 480px;
+      left: 44.6vw;
+    }
+    .f2-rectangle-12{
+      position: absolute;
+      top: 515px;
+      left: 44.6vw;
+      height: 38px;
+      width: 51%;
+    }
+    .f2-rectangle-14{
+      position: relative; /* Override absolute */
+      width: 51%;
+      left: 44.6vw;
+      right: auto;
+      top: 583px;
+      margin-top: 15px; /* Space between buttons */
+      height: 46px;
+    }
+    .f2-rectangle-15{
+      position: relative; /* Override absolute */
+      width: 51%;
+      left: 44.6vw;
+      right: auto;
+      top: 575px;
+      margin-top: 15px; /* Space between buttons */
+      height: 46px; /* Adjust height */
+    }
+    .f2-save{
+      font-size: medium;
+      position: absolute;
+      top: 0px;
+      left: 22.6vw;
+    }
+    .f2-next{
+      font-size: medium;
+      position: absolute;
+      top: 0px;
+      left: 22.6vw;
+    }
+  }
+
+  @media screen and (max-width:1024px) {
+    
+    .wrapperr{
+      width: 42%; /* Slightly narrower sidebar */
+      padding: 20px;
+    }
+    .f2-company-details-6,.f2-business-type{
+      font-size: medium;
+      position: absolute;
+      left: 44.5%;
+    }
+    .f2-text-3{
+      width: 294px;
+    }
+    .f2-text-4{
+      top: 14px;
+    }
+
+    .f2-text-5{
+      top: -49px;
+    }
+
+    .f2-text-7{
+      top: -35px;
+    }
+
+    .f2-text-6{
+      top: 14px;
+    }
+
+    .service-product-offered{
+      height: 21px;
+    }
+
+    .provide-details-service{
+      width: 0px;
+      top: -33px;
+    }
+
+    .check-fill{
+      top: 5px;
+    }
+
+    .img{
+      top: 17px;
+    }
+
+
+    .f2-business-type{
+      font-size: medium;
+      position: absolute;
+      top: 100px;
+      left: 44.6vw;
+    }
+    .f2-rectangle-7{
+      position: absolute;
+      top: 133px;
+      left: 44.6vw;
+      height: 38px;
+      width: 51%;
+    }
+    .f2-select-one{
+      position: absolute;
+      top: 4px;
+      
+    }
+    .f2-arrow-down-light{
+      position: absolute;
+      left: 414px;
+      top: 4px;
+    }
+    .f2-company-verification{
+      font-size: 75%;
+      position: absolute;
+      top: 74px;
+      left: 44.6vw;
+    }
+    .f2-industry-type{
+      font-size: medium;
+      position: absolute;
+      top: 195px;
+      left: 44.6vw;
+    }
+    .f2-asterisk{
+      top: 194px;
+      left: 516px;
+    }
+    .f2-asterisk-d{
+      top: 297px;
+      left: 585px;
+    }
+    .f2-asterisk-f{
+      top: 386px;
+      left: 616px;
+    }
+    .f2-asterisk-13{
+      top: 475px;
+      left: 629px;
+    }
+    .f2-rectangle-8{
+      position: absolute;
+      top: 235px;
+      left: 44.6vw;
+      height: 38px;
+      width: 51%;
+    }
+    .f2-line{
+      top:186px;
+      left: 330px;
+      width: 820px;
+    }
+    .f2-line-b{
+      top:289px;
+      left: 330px;
+      width: 820px;
+    }
+    .f2-line-e{
+      top:386px;
+      left: 330px;
+      width: 820px;
+    }
+    .f2-line-11{
+      top:475px;
+      left: 330px;
+      width: 820px;
+    }
+    .f2-select-one-9{
+      position: absolute;
+      top: 4px;
+    }
+    .f2-year{
+      position: absolute;
+      top:4px;
+    }
+    .f2-ti-number{
+      position: absolute;
+      top:4px;
+    }
+    .f2-signature{
+      position: absolute;
+      top:4px;
+    }
+    .f2-arrow-down-light-a{
+      position: absolute;
+      left: 414px;
+      top: 4px;
+    }
+    .f2-year-of-establishment{
+      font-size: medium;
+      position: absolute;
+      top: 300px;
+      left: 44.6vw;
+    }
+    .f2-rectangle-c{
+      position: absolute;
+      top: 335px;
+      left: 44.6vw;
+      height: 38px;
+      width: 51%;
+    }
+    .f2-tax-identification-number{
+      font-size: medium;
+      position: absolute;
+      top: 390px;
+      left: 44.6vw;
+    }
+    .f2-rectangle-10{
+      position: absolute;
+      top: 425px;
+      left: 44.6vw;
+      height: 38px;
+      width: 51%;
+    }
+    .f2-authorized-signatory-name{
+      font-size: medium;
+      position: absolute;
+      top: 480px;
+      left: 44.6vw;
+    }
+    .f2-rectangle-12{
+      position: absolute;
+      top: 515px;
+      left: 44.6vw;
+      height: 38px;
+      width: 51%;
+    }
+    .f2-rectangle-14{
+      position: relative; /* Override absolute */
+      width: 51%;
+      left: 44.6vw;
+      right: auto;
+      top: 583px;
+      margin-top: 15px; /* Space between buttons */
+      height: 46px;
+    }
+    .f2-rectangle-15{
+      position: relative; /* Override absolute */
+      width: 51%;
+      left: 44.6vw;
+      right: auto;
+      top: 575px;
+      margin-top: 15px; /* Space between buttons */
+      height: 46px; /* Adjust height */
+    }
+    .f2-save{
+      font-size: medium;
+      position: absolute;
+      top: 0px;
+      left: 22.6vw;
+    }
+    .f2-next{
+      font-size: medium;
+      position: absolute;
+      top: 0px;
+      left: 22.6vw;
+    }
+  }
+
+  @media screen and (max-width:768px)
+  {
+    .f2-asterisk{
+      top: 194px;
+      left: 447px;
+    }
+    .f2-asterisk-d{
+      top: 297px;
+      left: 502px;
+    }
+    .f2-asterisk-f{
+      top: 386px;
+      left: 531px;
+    }
+    .f2-asterisk-13{
+      top: 475px;
+      left: 545px;
+    }
+
+    .f1-text{
+      top: -22px;
+      left: 8px;
+    }
+    .f1-text-2{
+      top: -58px;
+      left: 9px;
+    }
+    .f1-text-3{
+      width: 283px;
+      left: 8px;
+    }
+    .form2-text-4{
+      top: -62px;
+      left: 28px;
+    }
+    .f2-img{
+      top: -35px;
+      left: 0px;
+    }
+    .f2-text-5{
+      top: -65px;
+      left: 29px;
+    }
+
+    .img{
+      left: -1px;
+      top: -4px;
+    }
+    .f2-text-6{
+      top: -4px;
+      left: -44px;
+    }
+    .f2-text-7{
+      left: 29px;
+      top: -51px;
+    }
+    .check-fill{
+      left: -40px;
+      top: 0px;
+    }
+  }
+
+
+  @media screen and (max-width:576px) {
+    .f2-main-container{
+      width: 100vw;
+    }
+    .text{
+      font-size: medium;
+      position: absolute;
+      left: 3.5%;
+    }
+    .wrapperr{
+      display: none;
+    }
+    .f2-company-details-6,.f2-business-type{
+      font-size: medium;
+      position: absolute;
+      left: 34%;
+    }
+    .f2-business-type{
+      font-size: medium;
+      position: absolute;
+      top: 100px;
+      left: 8vw;
+    }
+    .f2-asterisk{
+      left: 141px;
+    }
+    .f2-rectangle-7{
+      position: absolute;
+      top: 133px;
+      left: 8vw;
+      height: 38px;
+      width: 84%;
+    }
+    .f2-select-one{
+      position: absolute;
+      top: 6px;
+      
+    }
+    .f2-arrow-down-light{
+      position: absolute;
+      left: 275px;
+      top: 4px;
+    }
+    .f2-company-verification{
+      font-size: 82%;
+      position: absolute;
+      top: 74px;
+      left: 12%;
+    }
+    .f2-industry-type{
+      font-size: medium;
+      position: absolute;
+      top: 195px;
+      left: 8vw;
+    }
+    .f2-asterisk-d{
+      left: 213px;
+    }
+    .f2-rectangle-8{
+      position: absolute;
+      top: 235px;
+      left: 8vw;
+      height: 38px;
+      width: 84%;
+    }
+    .f2-select-one-9{
+      position: absolute;
+      top: 6px;
+    }
+    .f2-arrow-down-light-a{
+      position: absolute;
+      left: 275px;
+      top: 4px;
+    }
+    .f2-year-of-establishment{
+      font-size: medium;
+      position: absolute;
+      top: 300px;
+      left: 8vw;
+    }
+    .f2-year{
+      position: absolute;
+      top:4px;
+      font-size: 12px;
+    }
+    .f2-asterisk-f{
+      left: 242px;
+    }
+    .f2-ti-number{
+      position: absolute;
+      top:4px;
+    }
+    .f2-signature{
+      position: absolute;
+      top: 4px;
+    }
+
+    .f2-asterisk-13{
+      left: 254px;
+    }
+    .f2-rectangle-c{
+      position: absolute;
+      top: 335px;
+      left: 8vw;
+      height: 38px;
+      width: 84%;
+    }
+    .f2-tax-identification-number{
+      font-size: medium;
+      position: absolute;
+      top: 390px;
+      left: 8vw;
+    }
+    .f2-rectangle-10{
+      position: absolute;
+      top: 425px;
+      left: 8vw;
+      height: 38px;
+      width: 84%;
+    }
+    .f2-authorized-signatory-name{
+      font-size: medium;
+      position: absolute;
+      top: 480px;
+      left: 8vw;
+    }
+    .f2-rectangle-12{
+      position: absolute;
+      top: 515px;
+      left: 8vw;
+      height: 38px;
+      width: 84%;
+    }
+    .f2-rectangle-14{
+      position: relative; /* Override absolute */
+      width: 83%;
+      left: 8vw;
+      right: auto;
+      top: 559px;
+      margin-top: 15px; /* Space between buttons */
+      height: 46px;
+    }
+    .f2-rectangle-15{
+      position: relative; /* Override absolute */
+      width: 83%;
+      left: 8vw;
+      right: auto;
+      top: 562px;
+      margin-top: 15px; /* Space between buttons */
+      height: 46px; /* Adjust height */
+    }
+    .f2-save{
+      font-size: medium;
+      position: absolute;
+      top: 0px;
+      left: 39.5%;
+    }
+    .f2-next{
+      font-size: medium;
+      position: absolute;
+      top: 0px;
+      left: 39.5%;
+    }
+  }
+
+  

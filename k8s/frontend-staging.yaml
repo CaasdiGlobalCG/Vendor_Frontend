@@ -1,0 +1,42 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: vendor-frontend-staging
+  namespace: vendor-staging
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: vendor-frontend-staging
+  template:
+    metadata:
+      labels:
+        app: vendor-frontend-staging
+    spec:
+      containers:
+        - name: vendor-frontend-staging
+          image: 286757679229.dkr.ecr.ap-south-1.amazonaws.com/vendor-frontend-staging:latest
+          ports:
+            - containerPort: 80
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: 250m
+              memory: 256Mi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: vendor-frontend-staging
+  namespace: vendor-staging
+spec:
+  type: ClusterIP
+  selector:
+    app: vendor-frontend-staging
+  ports:
+    - port: 80
+      targetPort: 80
+
+

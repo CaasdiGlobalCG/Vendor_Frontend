@@ -1,0 +1,214 @@
+/* Hero Section */
+.hero-section {
+  position: relative;
+  width: 100%;
+  height: 80vh;
+  min-height: 745px;
+  background-color: #000000;
+  /* Removed overflow: hidden to allow scrolling */
+}
+
+.hero-content {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  height: 100%;
+  padding: 0 2rem;
+  max-width: 1440px;
+  margin: 0 auto;
+  position: relative;
+  z-index: 2;
+  bottom: 10rem;
+}
+
+.title-container {
+  text-align: center;
+  margin-top: 4rem;
+}
+
+.title {
+  font-size: 6rem;
+  font-weight: 400;
+  line-height: 1.5;
+  margin-bottom: 0;
+  background: linear-gradient(90deg, #21be9c, #8ff8e1);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  white-space: nowrap;
+}
+
+.intro {
+  background: linear-gradient(90deg, #ffffff, #000000);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  font-size: 2rem;
+}
+
+.subtitle {
+  font-size: 2rem;
+  font-weight: 300;
+  height: 40px;
+  color: #ffffff;
+  max-width: 775px;
+  margin: 0 auto;
+  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* 🔹 Rotating Text Animation (Like Instagram Reel Captions) */
+.rotating-text-container {
+  display: inline-block;
+  width: 150px; /* Fixed width for visibility */
+  height: 40px; /* Fixed height */
+  overflow: hidden;
+  position: relative;
+  text-align: center;
+  margin-right: 8px;
+}
+
+.rotating-text {
+  display: inline-block;
+  flex-direction: column;
+  position: absolute;
+  animation: slideUp 3s ease-in-out infinite; /* 6s duration for delay */
+}
+
+/* 🔹 Smooth Continuous Slide-Up Effect with 1s Pause */
+@keyframes slideUp {
+  0%,
+  20% {
+    transform: translateY(0);
+  }
+  25%,
+  45% {
+    transform: translateY(-40px);
+  }
+  50%,
+  70% {
+    transform: translateY(-80px);
+  }
+  75%,
+  95% {
+    transform: translateY(-120px);
+  }
+  100% {
+    transform: translateY(0); /* Reset to loop again */
+  }
+}
+
+/* 🔹 Styling for Each Rotating Text Line */
+.rotating-text span {
+  display: inline-block;
+  text-align: center;
+  background: linear-gradient(90deg, #fb65b5, #8ff8e1);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  font-weight: bold;
+  text-transform: uppercase;
+  height: 40px;
+  line-height: 40px;
+}
+
+/* 🔹 Background Ellipse */
+.ellipse-bg {
+  position: absolute;
+  width: 120%;
+  height: 1048px;
+  top: -632px;
+  left: -10%;
+  background: url("../assets/hero-1.svg") no-repeat center;
+  background-size: cover;
+  filter: blur(120.2px);
+  z-index: 1;
+}
+
+/* 🔹 Responsive Adjustments */
+@media (max-width: 1200px) {
+  .title {
+    font-size: 5rem;
+  }
+  .subtitle {
+    font-size: 1.75rem;
+  }
+}
+
+@media (max-width: 576px) {
+  .title {
+    font-size: 3.5rem;
+  }
+  .subtitle {
+    font-size: 1.5rem;
+  }
+
+  .intro {
+    font-size: 1.5rem;
+    top: 0%;
+  }
+  .rotating-text-container {
+    width: 100px;
+    height: 30px;
+    line-height: 30px;
+    position: relative;
+    bottom: 1%;
+  }
+  @keyframes slideUp {
+    0%,
+    20% {
+      transform: translateY(-10px);
+    }
+    25%,
+    45% {
+      transform: translateY(-50px);
+    }
+    50%,
+    70% {
+      transform: translateY(-90px);
+    }
+    75%,
+    95% {
+      transform: translateY(-130px);
+    }
+    100% {
+      transform: translateY(0);
+    }
+  }
+}
+
+@media (max-width: 480px) {
+  .title {
+    font-size: 2.5rem;
+  }
+  .subtitle {
+    font-size: 1.25rem;
+  }
+  .rotating-text-container {
+    width: 5.5rem;
+    height: 17px;
+    line-height: 25px;
+  }
+
+  @keyframes slideUp {
+    0%,
+    20% {
+      transform: translateY(-10px);
+    }
+    25%,
+    45% {
+      transform: translateY(-50px);
+    }
+    50%,
+    70% {
+      transform: translateY(-90px);
+    }
+    75%,
+    95% {
+      transform: translateY(-130px);
+    }
+    100% {
+      transform: translateY(0);
+    }
+  }
+}

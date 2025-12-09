@@ -1,0 +1,387 @@
+:root {
+    --default-font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+      Ubuntu, "Helvetica Neue", Helvetica, Arial, "PingFang SC",
+      "Hiragino Sans GB", "Microsoft Yahei UI", "Microsoft Yahei",
+      "Source Han Sans CN", sans-serif;
+  }
+  
+  .a-main-container {
+    overflow: hidden;
+  }
+  
+  .a-main-container,
+  .a-main-container * {
+    box-sizing: border-box;
+  }
+  
+  input,
+  select,
+  textarea,
+  button {
+    outline: 0;
+  }
+  
+  .a-main-container {
+    position: relative;
+    width: 100vw;
+    height: 100vh;
+    margin: 0 auto;
+    background: #ffffff;
+    overflow: hidden;
+  }
+  .a-box {
+    position: relative;
+    width: 549px;
+    height: 48px;
+    margin: 75px 0 0 87px;
+    font-family: Poppins, var(--default-font-family);
+    font-size: 32px;
+    font-weight: 500;
+    line-height: 48px;
+    text-align: left;
+    text-overflow: initial;
+    white-space: nowrap;
+  }
+  .a-text {
+    position: relative;
+    color: #00c298;
+    font-family: Poppins, var(--default-font-family);
+    font-size: 32px;
+    font-weight: 500;
+    line-height: 48px;
+    text-align: left;
+    top:-30px;
+  }
+  .a-text-2 {
+    position: relative;
+    color: #000000;
+    font-family: Poppins, var(--default-font-family);
+    font-size: 32px;
+    font-weight: 500;
+    line-height: 48px;
+    text-align: left;
+    top:-30px;
+  }
+  .a-text-3 {
+    display: flex;
+    align-items: flex-start;
+    justify-content: flex-start;
+    position: relative;
+    width: 937px;
+    height: 144px;
+    color: #000000;
+    font-family: Poppins, var(--default-font-family);
+    font-size: 24px;
+    font-weight: 400;
+    line-height: 36px;
+    top:-10px;
+    left:86px;
+    text-align: left;
+    opacity: 0.5;
+    z-index: 1;
+  }
+  .a-text-4 {
+    display: block;
+    position: relative;
+    top:10px;
+    height: 48px;
+    color: #000000;
+    font-family: Poppins, var(--default-font-family);
+    font-size: 32px;
+    font-weight: 500;
+    line-height: 48px;
+    text-align: center;
+    white-space: nowrap;
+    z-index: 3;
+  }
+  .a-flex-row-cac {
+    position: relative;
+    width: 1091px;
+    height: 79px;
+    top:50px;
+    left:200px;
+    z-index: 18;
+  }
+  .a-rectangle {
+    position: absolute;
+    width: 79px;
+    height: 79px;
+    top: 0;
+    left: 0;
+    border: 1px solid #000000;
+    z-index: 6;
+    border-radius: 8px;
+  }
+  .a-qlementine-icons-preview {
+    position: relative;
+    width: 40px;
+    height: 40px;
+    margin: 19px 0 0 20px;
+    background: url(https://static.codia.ai/custom_image/2025-04-03/090824/qlementine-icon.svg)
+      no-repeat center;
+    background-size: cover;
+    z-index: 5;
+    overflow: hidden;
+  }
+  .a-rectangle-1 {
+    position: absolute;
+    width: 79px;
+    height: 79px;
+    top: 0;
+    left: 506px;
+    border: 1px solid #000000;
+    z-index: 7;
+    border-radius: 8px;
+  }
+  .a-mdi-clock-outline {
+    position: relative;
+    width: 40px;
+    height: 40px;
+    margin: 19px 0 0 20px;
+    background: url(https://static.codia.ai/custom_image/2025-04-03/090824/clock-outline-icon.svg)
+      no-repeat center;
+    background-size: cover;
+    z-index: 15;
+    overflow: hidden;
+  }
+  .a-rectangle-2 {
+    position: absolute;
+    width: 79px;
+    height: 79px;
+    top: 0;
+    left: 1012px;
+    border: 1px solid #000000;
+    z-index: 8;
+    border-radius: 8px;
+  }
+  .a-mdi-approve {
+    position: relative;
+    width: 40px;
+    height: 40px;
+    margin: 19px 0 0 19px;
+    background: url(https://static.codia.ai/custom_image/2025-04-03/090824/approve-icon.svg)
+      no-repeat center;
+    background-size: cover;
+    z-index: 16;
+    overflow: hidden;
+  }
+  /* .a-rectangle-3 {
+    position: absolute;
+    width: 297px;
+    height: 8px;
+    top: 40px;
+    left: 152px;
+    background: #21be9c;
+    z-index: 17;
+    border-radius: 50px;
+  } */
+
+  .a-rectangle-3 {
+    position: absolute;
+    width: 297px; /* Final width */
+    height: 8px;
+    top: 40px;
+    left: 152px;
+    background: #21be9c;
+    z-index: 17;
+    border-radius: 50px;
+    animation: grow 2s ease-in-out forwards; /* Apply the animation */
+  }
+  
+  @keyframes grow {
+    0% {
+      width: 0; /* Start at 0 width */
+    }
+    100% {
+      width: 297px; /* End at full width */
+    }
+  }
+  .a-rectangle-4 {
+    position: absolute;
+    width: 297px;
+    height: 8px;
+    top: 40px;
+    left: 642px;
+    background: #d9d9d9;
+    z-index: 18;
+    border-radius: 50px;
+  }
+  .a-flex-row-d {
+    position: relative;
+    width: 1235px;
+    height: 78px;
+    
+    z-index: 11;
+  }
+  .a-review-process {
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    position: absolute;
+    width: 187px;
+    height: 36px;
+    top: 46px;
+    left: 152px;
+    color: #000000;
+    font-family: Poppins, var(--default-font-family);
+    font-size: 24px;
+    font-weight: 500;
+    line-height: 36px;
+    text-align: center;
+    white-space: nowrap;
+    z-index: 9;
+  }
+  .a-processing-time {
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    position: absolute;
+    width: 194px;
+    height: 36px;
+    top: 46px;
+    left: 658px;
+    color: #000000;
+    font-family: Poppins, var(--default-font-family);
+    font-size: 24px;
+    font-weight: 500;
+    line-height: 36px;
+    text-align: center;
+    white-space: nowrap;
+    z-index: 10;
+  }
+  .a-approval-rejection {
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    position: absolute;
+    width: 259px;
+    height: 36px;
+    top: 46px;
+    left: 1126px;
+    color: #000000;
+    font-family: Poppins, var(--default-font-family);
+    font-size: 24px;
+    font-weight: 500;
+    line-height: 36px;
+    text-align: center;
+    white-space: nowrap;
+    z-index: 11;
+  }
+  .a-flex-row-aa {
+    position: relative;
+    width: 1260px;
+    height: 63px;
+    left: 116px;
+    z-index: 14;
+  }
+  .a-verification-team {
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    position: absolute;
+    width: 248px;
+    height: 42px;
+    top: 0;
+    left: 0;
+    color: #000000;
+    font-family: Poppins, var(--default-font-family);
+    font-size: 14px;
+    font-weight: 400;
+    line-height: 21px;
+    text-align: center;
+    opacity: 0.5;
+    z-index: 12;
+  }
+  .a-verification-process {
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    position: absolute;
+    width: 248px;
+    height: 42px;
+    top: 0;
+    left: 503px;
+    color: #000000;
+    font-family: Poppins, var(--default-font-family);
+    font-size: 14px;
+    font-weight: 400;
+    line-height: 21px;
+    text-align: center;
+    opacity: 0.5;
+    z-index: 13;
+  }
+  .a-approval-notification {
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    position: absolute;
+    width: 248px;
+    height: 63px;
+    top: 0;
+    left: 1012px;
+    color: #000000;
+    font-family: Poppins, var(--default-font-family);
+    font-size: 14px;
+    font-weight: 400;
+    line-height: 21px;
+    text-align: center;
+    opacity: 0.5;
+    z-index: 14;
+  }
+  .a-need-assistance {
+    display: block;
+    position: relative;
+    height: 36px;
+    margin: 232px 0 0 613px;
+    color: #000000;
+    font-family: Poppins, var(--default-font-family);
+    font-size: 24px;
+    font-weight: 500;
+    line-height: 36px;
+    text-align: left;
+    white-space: nowrap;
+    z-index: 4;
+  }
+  .a-contact-support-team {
+    position: relative;
+    width: 937px;
+    height: 24px;
+    margin: 0 0 0 237px;
+    font-family: Poppins, var(--default-font-family);
+    font-size: 16px;
+    font-weight: 400;
+    line-height: 24px;
+    text-align: center;
+    text-overflow: initial;
+    white-space: nowrap;
+    opacity: 0.5;
+    z-index: 2;
+  }
+  .a-contact-support-team-5 {
+    position: relative;
+    color: #000000;
+    font-family: Poppins, var(--default-font-family);
+    font-size: 16px;
+    font-weight: 400;
+    line-height: 24px;
+    text-align: center;
+  }
+  .a-support-email {
+    position: relative;
+    color: #21be9c;
+    font-family: Poppins, var(--default-font-family);
+    font-size: 16px;
+    font-weight: 400;
+    line-height: 24px;
+    text-align: center;
+  }
+  .a-contact-support-team-6 {
+    position: relative;
+    color: #000000;
+    font-family: Poppins, var(--default-font-family);
+    font-size: 16px;
+    font-weight: 400;
+    line-height: 24px;
+    text-align: center;
+  }
+  

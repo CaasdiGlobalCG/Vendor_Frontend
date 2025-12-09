@@ -1,0 +1,15 @@
+.home-page {
+  position: relative;
+  width: 100%;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background-color: var(--text-dark);
+}
+
+@media (max-width: 768px) {
+  .home-page {
+    overflow-x: hidden;
+    overflow-y: auto;
+  }
+}

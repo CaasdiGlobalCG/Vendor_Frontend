@@ -1,0 +1,395 @@
+.contact-section {
+    position: relative;
+    width: 100%;
+    min-height: 100vh;
+    padding: 80px 0;
+    background: linear-gradient(135deg, #000000, #000000, rgba(33, 190, 156, 0.5));
+    overflow: hidden;
+  }
+  
+  .contact-section .contact-content {
+    max-width: 1200px; /* Match other sections */
+    margin: 0 auto;
+    padding: 0 20px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 60px;
+  }
+  
+  .contact-section .contact-info {
+    flex: 1;
+    min-width: 300px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+  
+  .contact-section .contact-heading {
+    font-family: Poppins, sans-serif;
+    font-size: 60px;
+    font-weight: 600;
+    line-height: 1.5;
+    margin: 0 0 60px;
+    max-width: 500px;
+    color: #ffffff;
+    text-align: left;
+  }
+  
+  .contact-section .get-in-touch-81 {
+    position: relative;
+    color: #ffffff;
+    font-family: "Poppins", sans-serif;
+    font-size: 60px;
+    font-weight: 600;
+    /* line-height: 72px; */
+    text-align: left;
+    display: inline-flex;
+    align-items: center;
+    overflow: hidden;
+    white-space: nowrap;
+    border-right: 3px solid white;
+    animation: typing 2.5s steps(20, end) forwards, blink 0.7s infinite;
+  }
+  
+  @keyframes typing {
+    from {
+      width: 0;
+    }
+    to {
+      width: 80%;
+    }
+  }
+  
+  @keyframes blink {
+    50% {
+      border-color: transparent;
+    }
+  }
+  
+  .contact-section .answer-questions-82 {
+    background: linear-gradient(200.35deg, #21be9c, #f88feb);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  
+  .contact-section .book-consultant-btn {
+    position: relative;
+    width: 100%;
+    max-width: 498px;
+    height: 62px;
+    background-color: transparent;
+    border-radius: 50px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-family: Poppins, sans-serif;
+    font-size: 20px;
+    font-weight: 500;
+    overflow: hidden;
+    z-index: 1;
+    transition: transform 0.2s ease-out;
+  }
+  
+  .contact-section .book-consultant-btn::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: 50px;
+    padding: 2px;
+    background: linear-gradient(90deg, #21be9c, #0f5848);
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    z-index: -1;
+  }
+  
+  .contact-section .book-consultant-btn:active {
+    transform: scale(0.95);
+  }
+  
+  .contact-section .book-free-consultant {
+    color: #ffffff;
+    font-family: Poppins, sans-serif;
+    font-size: 24px;
+    font-weight: 400;
+    line-height: 1.5;
+  }
+  
+  .contact-section .contact-form-container {
+    flex: 1;
+    min-width: 300px;
+    border-radius: 21px;
+    padding: 40px;
+    background-color: transparent;
+    background-size: cover;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+  }
+  
+  .contact-section .contact-form {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    padding: 50px;
+    background: linear-gradient(135deg, #0f5848, #21be9c);
+    border-radius: 30px;
+  }
+  
+  .contact-section .get-in-touch-form {
+    font-family: Poppins, sans-serif;
+    padding-bottom: 16px;
+    text-align: center;
+  }
+  
+  .contact-section .get-in-content {
+    font-size: 45px;
+    font-weight: 500;
+    
+  }
+
+  .reach-us-content{
+    color: #ffffff;
+  }
+  
+  .contact-section .get-in-touch-7e {
+    color: #ffffff;
+    font-family: Poppins, sans-serif;
+    font-size: 32px;
+    font-weight: 500;
+    line-height: 1.5;
+    text-align: center;
+    margin: 0 0 10px;
+  }
+  
+  .contact-section .reach-us-anytime {
+    color: #ffffff;
+    font-family: Poppins, sans-serif;
+    font-size: 20px;
+    font-weight: 400;
+    line-height: 1.5;
+    text-align: center;
+    margin: 0 0 30px;
+  }
+  
+  .contact-section .form-row {
+    display: flex;
+    gap: 20px;
+    margin-bottom: 0%;
+  }
+  
+  .contact-section .form-group {
+    flex: 1;
+    margin-bottom: 8px;
+  }
+  
+  .contact-section .form-control {
+    width: 100%;
+    height: 56px;
+    background-color: transparent;
+    border: 1px solid #ffffff;
+    border-radius: 30px;
+    padding: 0 20px;
+    color: #ffffff;
+    font-family: Poppins, sans-serif;
+    font-size: 16px;
+    padding: 24px;
+  }
+  
+  .contact-section .form-control::placeholder {
+    color: #c9c9c9;
+    font-family: Poppins, sans-serif;
+    font-size: 16px;
+    font-weight: 300;
+  }
+  
+  .contact-section textarea.form-control {
+    height: 166px;
+    padding: 20px;
+    resize: none;
+  }
+  
+  .contact-section .submit-btn {
+    width: 114px;
+    height: 52px;
+    background: linear-gradient(90deg, #21be9c, #0f5848);
+    border: none;
+    border-radius: 16px;
+    cursor: pointer;
+    align-self: flex-end;
+    position: relative;
+    transition: transform 0.15s ease-in-out;
+  }
+  
+  .contact-section .submit-btn:active {
+    transform: scale(0.9);
+  }
+  
+  .contact-section .landing-submit {
+    color: #ffffff;
+    font-family: Poppins, sans-serif;
+    font-size: 20px;
+    font-weight: 500;
+    line-height: 1.5;
+    position: relative;
+    z-index: 2;
+  }
+  
+  /* Responsive Styles */
+  /* @media (max-width: 1200px) {
+    .contact-section .contact-heading {
+      font-size: 42px;
+    }
+  
+    .contact-section .book-free-consultant {
+      font-size: 22px;
+    }
+  
+    .contact-section .get-in-touch-7e {
+      font-size: 28px;
+    }
+  
+    .contact-section .reach-us-anytime {
+      font-size: 18px;
+    }
+  } */
+  
+  @media (max-width: 576px) {
+    .contact-section .contact-content {
+      flex-direction: column;
+    }
+  
+    .contact-section .contact-heading {
+      font-size: 36px;
+      text-align: center;
+      max-width: 100%;
+      margin-bottom: 8px;
+    }
+  
+    .contact-section .contact-info {
+      align-items: center;
+    }
+  
+    .contact-section .get-in-touch-81 {
+/*       font-size: 30px;
+      /* line-height: 72px; 
+      animation: typing 2.5s steps(20, end) forwards, blink 0.7s infinite; */
+        font-size: 30px;
+        animation: none !important; /* Remove typing animation */
+        border-right: none !important; /* Remove blinking cursor */
+        white-space: normal !important;
+    }
+  
+    @keyframes typing {
+      from {
+        width: 0;
+      }
+      to {
+        width: 63%;
+      }
+    }
+  
+    @keyframes blink {
+      50% {
+        border-color: transparent;
+      }
+    }
+
+    .contact-section .book-free-consultant {
+      font-size: 1.4rem;
+    }
+  
+    .contact-section .book-consultant-btn {
+      font-size: 20px;
+      max-width: 75%;
+    }
+  
+    .contact-section .form-row {
+      flex-direction: column;
+    }
+
+    .contact-section.get-in-touch-form{
+      max-width: 100%;
+      
+    
+    }
+    .reach-us-content{
+      color: #ffffff;
+    }
+
+
+    .contact-section .submit-btn{
+      width: 75px;
+    height: 45px;
+
+    }
+
+    .contact-section .landing-submit {
+      color: #ffffff;
+      font-family: Poppins, sans-serif;
+      font-size: 14px;
+      font-weight: 300;
+      line-height: 1.5;
+      position: relative;
+      z-index: 2;
+    }
+
+  
+    .contact-section .get-in-content {
+      font-size: 24px;
+      font-weight: 500;
+      color: #ffffff;
+    }
+
+    .contact-section .contact-form-container {
+      min-width: 100%;
+      padding: 3vw;
+    }
+  
+    .contact-section .contact-form {
+      padding: 3vw;
+      gap: 10px;
+      border-radius: 20px;
+    }
+
+    .answer-questions-82{
+      font-size: 30px;
+      /* line-height: 0%; */
+    }
+
+    
+  }
+  
+  /* @media (max-width: 480px) {
+    .contact-section .contact-heading {
+      font-size: 28px;
+    }
+  
+    
+  
+    .contact-section .book-consultant-btn {
+      font-size: 20px;
+    }
+  
+    .contact-section .get-in-touch-7e {
+      font-size: 24px;
+    }
+  
+    .contact-section .reach-us-anytime {
+      font-size: 16px;
+    }
+  
+    .contact-section .contact-form-container {
+      padding: 30px 20px;
+    }
+  
+    .contact-section .submit {
+      font-size: 18px;
+    }
+  } */

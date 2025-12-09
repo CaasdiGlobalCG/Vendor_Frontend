@@ -1,0 +1,39 @@
+:root {
+  --default-font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+    Ubuntu, "Helvetica Neue", Helvetica, Arial, "PingFang SC",
+    "Hiragino Sans GB", "Microsoft Yahei UI", "Microsoft Yahei",
+    "Source Han Sans CN", sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  overflow-y: auto; /*Enable this to ensure scrolling happens */
+}
+
+body {
+  font-family: Poppins, var(--default-font-family);
+  overflow-x: hidden;
+  overflow-y: auto;
+  background-color: #000000;
+}
+
+input,
+select,
+textarea,
+button {
+  outline: 0;
+}
+
+@media (max-width: 1440px) {
+  html {
+    font-size: 14px;
+  }
+}
+
+@media (max-width: 768px) {
+  html {
+    font-size: 12px;
+  }
+}

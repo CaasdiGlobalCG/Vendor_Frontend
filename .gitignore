@@ -1,0 +1,21 @@
+# Node
+node_modules/
+dist/
+.vite/
+.cache/
+build/
+.next/
+
+# Python
+venv/
+__pycache__/
+
+# Mac
+.DS_Store
+
+# Logs
+*.log
+
+# Env
+.env
+.env.*

@@ -1,0 +1,14 @@
+version: '3.9'
+
+services:
+  frontend:
+    build:
+      context: .
+    container_name: vendor_frontend
+    ports:
+      - "8080:80"
+    environment:
+      # Point this at your backend API (local or remote)
+      - VITE_API_URL=http://localhost:5001
+
+

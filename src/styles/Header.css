@@ -1,0 +1,131 @@
+/* *{
+  overflow-y: auto;
+} */
+.site-header {
+  position: relative;
+  top: 0;
+  left: 0;
+  width: 100%;
+  z-index: 1000;
+  transition: background-color 0.3s ease;
+}
+
+.site-header.scrolled {
+  background-color: rgba(0, 0, 0, 0.9);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+}
+
+.header-container {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  max-width: 1440px;
+  margin: 0 auto;
+  padding: 1.5rem 2rem;
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+}
+
+.logo .image {
+  width: 108.669px;
+  height: 52px;
+  background: url("../assets/main_logo.png") no-repeat center;
+  background-size: cover;
+}
+
+.main-nav ul {
+  display: flex;
+  list-style: none;
+  gap: 2rem;
+}
+
+.main-nav a {
+  color: #ffffff;
+  font-size: 1.25rem;
+  font-weight: 200;
+  text-decoration: none;
+  transition: color 0.3s ease;
+}
+
+.main-nav li.active a {
+  font-weight: 200;
+}
+
+.main-nav a:hover {
+  color: #21be9c;
+}
+
+.mobile-menu-button {
+  display: none;
+  flex-direction: column;
+  justify-content: space-between;
+  width: 30px;
+  height: 21px;
+  cursor: pointer;
+}
+
+.mobile-menu-button span {
+  display: block;
+  height: 3px;
+  width: 100%;
+  background-color: #ffffff;
+  border-radius: 3px;
+}
+
+@media (max-width: 768px) {
+  .main-nav {
+    position: fixed;
+    right: -25%;
+    top: 0%;
+    width: 100%;
+    height: auto;
+    padding: 40px;
+    background-color: rgba(9, 9, 9, 0.95);
+    transition: right 0.5s ease-in-out;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    opacity: 0;
+    visibility: hidden;
+  }
+
+  .main-nav.open {
+    right: 0;
+    opacity: 1;
+    visibility: visible;
+  }
+
+  .main-nav ul {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    gap: 1.5rem;
+  }
+
+  .main-nav a {
+    color: #ffffff;
+    font-size: 1.5rem;
+    text-decoration: none;
+  }
+
+  .mobile-menu-button {
+    display: flex;
+  }
+
+  .close-menu-button {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    background: none;
+    border: none;
+    font-size: 2rem;
+    color: #fff;
+    cursor: pointer;
+  }
+}

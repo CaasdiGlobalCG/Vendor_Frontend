@@ -1,0 +1,42 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: vendor-frontend
+  namespace: vendor
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: vendor-frontend
+  template:
+    metadata:
+      labels:
+        app: vendor-frontend
+    spec:
+      containers:
+        - name: vendor-frontend
+          image: 286757679229.dkr.ecr.ap-south-1.amazonaws.com/vendor-frontend:latest
+          ports:
+            - containerPort: 80
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: vendor-frontend
+  namespace: vendor
+spec:
+  type: LoadBalancer
+  selector:
+    app: vendor-frontend
+  ports:
+    - port: 80
+      targetPort: 80
+
+

@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <link rel="icon" href="./src/assets/logo-favicon.jpg">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Caasdi Global</title>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500&display=swap" />
+  </head>
+  <script>
+     window.global ||= window;
+      if (typeof globalThis.Request === 'undefined' && typeof window !== 'undefined') {
+          globalThis.Request = window.Request;
+          globalThis.Response = window.Response;
+          globalThis.fetch = window.fetch;
+      }
+      if (typeof globalThis.ReadableStream === 'undefined' && typeof window !== 'undefined') {
+        globalThis.ReadableStream = window.ReadableStream;
+        globalThis.TextEncoder = window.TextEncoder;
+        globalThis.TextDecoder = window.TextDecoder;
+      }
+  </script>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.jsx">
+      
+    </script>
+  </body>
+</html>

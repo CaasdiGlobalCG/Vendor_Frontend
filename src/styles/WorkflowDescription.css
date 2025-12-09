@@ -1,0 +1,64 @@
+.workflow-description {
+    margin-top: 1.5rem;
+    max-width: 364px;
+    opacity: 0;
+    transform: translateY(20px);
+    transition: opacity 0.6s ease-out, transform 0.6s ease-out;
+  }
+  
+  .workflow-description.visible {
+    opacity: 1 !important;
+    transform: translateY(0) !important;
+  }
+  
+  .workflow-description.left {
+    align-self: flex-start;
+    margin-left: 2rem;
+  }
+  
+  .workflow-description.right {
+    align-self: flex-end;
+    margin-right: 2rem;
+    text-align: right;
+  }
+  
+  .description-text {
+    color: #ffffff;
+    font-family: Poppins, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+      Ubuntu, "Helvetica Neue", Helvetica, Arial, "PingFang SC",
+      "Hiragino Sans GB", "Microsoft Yahei UI", "Microsoft Yahei",
+      "Source Han Sans CN", sans-serif;
+    font-size: clamp(0.875rem, 1.5vw, 1.25rem);
+    font-weight: 500;
+    line-height: 1.5;
+    opacity: 0.7; /* Increased from 0.4 to make it more visible */
+  }
+  
+  /* Responsive adjustments */
+  @media (max-width: 768px) {
+    .workflow-description {
+      margin-top: 1rem;
+    }
+  
+    .workflow-description.left {
+      margin-left: 1rem;
+    }
+  
+    .workflow-description.right {
+      margin-right: 1rem;
+    }
+  }
+  
+  @media (max-width: 480px) {
+    .workflow-description {
+      max-width: 100%;
+      width: 100%;
+    }
+  
+    .workflow-description.left,
+    .workflow-description.right {
+      margin-left: 0;
+      margin-right: 0;
+      text-align: center;
+    }
+  }
