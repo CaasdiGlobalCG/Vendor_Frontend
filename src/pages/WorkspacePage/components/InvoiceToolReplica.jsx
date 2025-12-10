@@ -43,6 +43,7 @@ const InvoiceToolReplica = ({ onClose, workspaceId, workspaceName, selectedTask,
     upcomingPayments: []
   });
   const [poSourceQuote, setPoSourceQuote] = useState(null);
+  const [invoiceSourcePo, setInvoiceSourcePo] = useState(null);
 
   // Fetch dashboard data
   useEffect(() => {
@@ -111,6 +112,12 @@ const InvoiceToolReplica = ({ onClose, workspaceId, workspaceName, selectedTask,
     if (!quote) return;
     setPoSourceQuote(quote);
     setActiveTab('purchase-orders');
+  };
+
+  const handleConvertPOToInvoice = (purchaseOrder) => {
+    if (!purchaseOrder) return;
+    setInvoiceSourcePo(purchaseOrder);
+    setActiveTab('invoices');
   };
 
   const handleRowClick = (item, type) => {
@@ -598,6 +605,8 @@ const InvoiceToolReplica = ({ onClose, workspaceId, workspaceName, selectedTask,
             workspaceName={workspaceName}
             selectedTask={selectedTask}
             selectedSubtask={selectedSubtask}
+            sourcePo={invoiceSourcePo}
+            onSourceConsumed={() => setInvoiceSourcePo(null)}
           />
         );
       case 'subscriptions':
@@ -615,6 +624,7 @@ const InvoiceToolReplica = ({ onClose, workspaceId, workspaceName, selectedTask,
             selectedSubtask={selectedSubtask}
             sourceQuote={poSourceQuote}
             onSourceConsumed={() => setPoSourceQuote(null)}
+            onConvertToInvoice={handleConvertPOToInvoice}
           />
         );
       default:

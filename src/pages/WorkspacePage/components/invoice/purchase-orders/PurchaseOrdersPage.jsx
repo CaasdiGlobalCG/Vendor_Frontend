@@ -19,7 +19,7 @@ import { VendorContext } from '../../../../../context/VendorContext.jsx';
 import config from "../../../../../config/env";
 import StandardPreview from '../shared/StandardPreview.jsx';
 
-const PurchaseOrdersPage = ({ workspaceId, workspaceName, selectedTask, selectedSubtask, sourceQuote, onSourceConsumed }) => {
+const PurchaseOrdersPage = ({ workspaceId, workspaceName, selectedTask, selectedSubtask, sourceQuote, onSourceConsumed, onConvertToInvoice }) => {
   const { currentUser } = useContext(VendorContext);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedStatus, setSelectedStatus] = useState('all');
@@ -535,6 +535,14 @@ const PurchaseOrdersPage = ({ workspaceId, workspaceName, selectedTask, selected
                     </button>
                     
                     <div className="flex items-center space-x-2">
+                      {order.status && order.status.toLowerCase().includes('requested for invoice') && onConvertToInvoice && (
+                        <button
+                          className="px-3 py-1.5 text-xs bg-emerald-600 text-white rounded hover:bg-emerald-700 transition-colors duration-200"
+                          onClick={() => onConvertToInvoice(order)}
+                        >
+                          Convert to Invoice
+                        </button>
+                      )}
                       {order.statusType === 'pending' && (
                         <>
                           <button className="p-1.5 text-green-600 hover:bg-green-50 rounded transition-colors duration-200" title="Accept">

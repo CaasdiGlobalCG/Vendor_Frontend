@@ -293,6 +293,30 @@ export default function StandardPreview({
                                     <span className="font-semibold">{referenceLabel}:</span>
                                     <span className="ml-2">{invoiceNumber}</span>
                                 </div>
+                                {/* References for invoices: show both quote and PO if available */}
+                                {isInvoice && (quote.referenceQuoteNumber || quote.referencePoNumber) && (
+                                  <>
+                                    {quote.referenceQuoteNumber && (
+                                      <div className="text-xs">
+                                        <span className="font-semibold">Reference Quote # :</span>
+                                        <span className="ml-2">{quote.referenceQuoteNumber}</span>
+                                      </div>
+                                    )}
+                                    {quote.referencePoNumber && (
+                                      <div className="text-xs">
+                                        <span className="font-semibold">Reference PO # :</span>
+                                        <span className="ml-2">{quote.referencePoNumber}</span>
+                                      </div>
+                                    )}
+                                  </>
+                                )}
+                                {/* For purchase orders, show linked quote reference */}
+                                {isPurchaseOrder && linkedReferenceNumber && (
+                                  <div className="text-xs">
+                                      <span className="font-semibold">Reference Quote # :</span>
+                                      <span className="ml-2">{linkedReferenceNumber}</span>
+                                  </div>
+                                )}
                                 <div className="text-xs">
                                     <span className="font-semibold">
                                         {isCreditNote
@@ -305,12 +329,6 @@ export default function StandardPreview({
                                     </span>
                                     <span className="ml-2">{invoiceDate}</span>
                                 </div>
-                                {isPurchaseOrder && linkedReferenceNumber && (
-                                    <div className="text-xs">
-                                        <span className="font-semibold">Reference Quote # :</span>
-                                        <span className="ml-2">{linkedReferenceNumber}</span>
-                                    </div>
-                                )}
                             </td>
                             <td className="p-3 align-top text-right font-bold text-4xl" style={{ border: '1px solid #ccc', width: '40%' }}>
                                 {displayDocType}

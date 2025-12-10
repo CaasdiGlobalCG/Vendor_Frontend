@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useContext } from 'react';
+import React, { useState, useEffect, useContext, useCallback } from 'react';
 import { Search, Plus, MoreHorizontal, Eye, Edit, Download, Send, Trash2, FileText, Calendar, DollarSign, TrendingUp, ArrowLeft, Copy, Check, AlertCircle, Clock } from 'lucide-react';
 import RecordPaymentForm from '../shared/RecordPaymentForm';
 import { VendorContext } from "../../../../../context/VendorContext.jsx";
@@ -6,7 +6,7 @@ import NewInvoiceComponent from './NewInvoiceComponent';
 import InvoicesPreviewPanel from './InvoicesPreviewPanel';
 import config from '../../../../../config/env';
 
-const InvoicesPage = () => {
+const InvoicesPage = (props) => {
   const { currentUser } = useContext(VendorContext);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedStatus, setSelectedStatus] = useState('all');
@@ -26,6 +26,52 @@ const InvoicesPage = () => {
   const [selectedInvoice, setSelectedInvoice] = useState(null);
   const [paymentHistory, setPaymentHistory] = useState({});
 
+  // When navigating from Purchase Orders, we may receive a sourcePo
+  // containing the purchase order that should be converted to an invoice.
+  useEffect(() => {
+    if (props?.sourcePo) {
+      const po = props.sourcePo;
+      console.log('🧾 Converting Purchase Order to Invoice form:', po);
+
+      const customer = po.customerDetails || {};
+      const itemsFromPo = Array.isArray(po.itemsList) ? po.itemsList : [];
+
+      const initialFromPo = {
+        // Treat this as a "template" for a new invoice, not an edit
+        fromPo: true,
+        customerDetails: customer,
+        selectedCustomer: customer,
+        items: itemsFromPo,
+        discount: { type: 'percentage', value: 0 },
+        tdsType: '',
+        tdsValue: 0,
+        // Workspace / project context carried over from the PO
+        projectId: po.projectId || null,
+        projectName: po.project || po.projectName || po.workspaceName || '',
+        workspaceId: po.workspaceId || props.workspaceId || null,
+        workspaceName: po.workspaceName || props.workspaceName || '',
+        taskId: po.taskId || props.selectedTask?.id || null,
+        taskName: po.taskName || props.selectedTask?.name || '',
+        subtaskId: po.subtaskId || props.selectedSubtask?.id || null,
+        subtaskName: po.subtaskName || props.selectedSubtask?.name || '',
+        clientId: po.clientId || null,
+        // Dates
+        quoteDate: po.purchaseOrderDate || po.date || new Date().toISOString().split('T')[0],
+        expiryDate: null,
+        // Reference numbers for downstream display
+        referenceQuoteNumber: po.referenceQuoteNumber || null,
+        referencePoNumber: po.id || po.customPoId || po.purchaseOrderId || null
+      };
+
+      setEditingInvoice(initialFromPo);
+      setShowNewInvoice(true);
+
+      if (props.onSourceConsumed) {
+        props.onSourceConsumed();
+      }
+    }
+  }, [props?.sourcePo]);
+
   // API Base URL
   // Using relative paths - no API_BASE_URL needed
 
@@ -34,80 +80,75 @@ const InvoicesPage = () => {
   console.log('🔍 InvoicesPage - Vendor ID:', currentUser?.vendorId);
 
   // Fetch invoices from backend
-  useEffect(() => {
-    // Only fetch if we have a current user with vendorId
+  const fetchInvoices = useCallback(async () => {
     if (!currentUser?.vendorId) {
       console.log('⏳ Waiting for user authentication...');
       return;
     }
 
-    const fetchInvoices = async () => {
-      try {
-        setLoading(true);
-        console.log('📋 Fetching invoices from backend...');
-        
-        // Get vendorId from authentication context
-        const vendorId = currentUser.vendorId;
-        
-        console.log('🔑 Using vendor ID from auth context:', vendorId);
-        
-        // Send user info in headers for authentication
-        const headers = {
-          'Content-Type': 'application/json',
-          'x-user-info': JSON.stringify({
-            vendorId: vendorId,
-            email: currentUser?.email,
-            role: 'vendor',
-            name: currentUser?.name
-          })
-        };
+    try {
+      setLoading(true);
+      console.log('📋 Fetching invoices from backend...');
 
-        // Build query params: always vendorId; optionally workspace/task/subtask if provided via props
-        const params = new URLSearchParams();
-        params.append('vendorId', vendorId);
-        if (props?.workspaceId) params.append('workspaceId', props.workspaceId);
-        if (props?.selectedTask?.id) params.append('taskId', props.selectedTask.id);
-        if (props?.selectedSubtask?.id) params.append('subtaskId', props.selectedSubtask.id);
+      const vendorId = currentUser.vendorId;
+      console.log('🔑 Using vendor ID from auth context:', vendorId);
 
-        const response = await fetch(`/api/workspace/invoices?${params.toString()}`, {
+      const headers = {
+        'Content-Type': 'application/json',
+        'x-user-info': JSON.stringify({
+          vendorId: vendorId,
+          email: currentUser?.email,
+          role: 'vendor',
+          name: currentUser?.name
+        })
+      };
+
+      // Build query params: always vendorId; optionally workspace/task/subtask if provided via props
+      const params = new URLSearchParams();
+      params.append('vendorId', vendorId);
+      if (props?.workspaceId) params.append('workspaceId', props.workspaceId);
+      if (props?.selectedTask?.id) params.append('taskId', props.selectedTask.id);
+      if (props?.selectedSubtask?.id) params.append('subtaskId', props.selectedSubtask.id);
+
+      const response = await fetch(`/api/workspace/invoices?${params.toString()}`, {
+        headers: headers
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const result = await response.json();
+
+      if (result.success) {
+        setInvoicesData(result.data || []);
+        console.log(`✅ Successfully loaded ${result.data?.length || 0} invoices`);
+
+        // Fetch stats
+        const statsResponse = await fetch(`/api/workspace/invoices/stats?vendorId=${vendorId}`, {
           headers: headers
         });
-        
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        
-        const result = await response.json();
-        
-        if (result.success) {
-          setInvoicesData(result.data || []);
-          console.log(`✅ Successfully loaded ${result.data?.length || 0} invoices`);
-          
-          // Fetch stats
-          const statsResponse = await fetch(`/api/workspace/invoices/stats?vendorId=${vendorId}`, {
-            headers: headers
-          });
-          if (statsResponse.ok) {
-            const statsResult = await statsResponse.json();
-            if (statsResult.success) {
-              setStats(statsResult.data);
-            }
+        if (statsResponse.ok) {
+          const statsResult = await statsResponse.json();
+          if (statsResult.success) {
+            setStats(statsResult.data);
           }
-        } else {
-          throw new Error(result.message || 'Failed to fetch invoices');
         }
-      } catch (error) {
-        console.error('❌ Error fetching invoices:', error);
-        setError(error.message);
-        // Fallback to empty array if API fails
-        setInvoicesData([]);
-      } finally {
-        setLoading(false);
+      } else {
+        throw new Error(result.message || 'Failed to fetch invoices');
       }
-    };
+    } catch (error) {
+      console.error('❌ Error fetching invoices:', error);
+      setError(error.message);
+      setInvoicesData([]);
+    } finally {
+      setLoading(false);
+    }
+  }, [currentUser?.vendorId, currentUser?.email, currentUser?.name, props?.workspaceId, props?.selectedTask, props?.selectedSubtask]);
 
+  useEffect(() => {
     fetchInvoices();
-  }, [currentUser?.vendorId]);
+  }, [fetchInvoices]);
 
   const filteredInvoices = invoicesData.filter(invoice => {
     const matchesSearch = invoice.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -352,6 +393,41 @@ const InvoicesPage = () => {
     setShowNewInvoice(true);
   };
 
+  const handleSendToPM = async (invoice) => {
+    try {
+      const vendorId = currentUser?.vendorId;
+      if (!vendorId) throw new Error('Missing vendorId');
+
+      const headers = {
+        'Content-Type': 'application/json',
+        'x-user-info': JSON.stringify({
+          vendorId: vendorId,
+          email: currentUser?.email,
+          role: 'vendor',
+          name: currentUser?.name
+        })
+      };
+
+      const invoiceId = invoice.invoiceId || invoice.id;
+      if (!invoiceId) throw new Error('Missing invoiceId');
+
+      await sendInvoiceToPm(invoiceId, vendorId, headers);
+
+      // Update local state to reflect new status
+      setInvoicesData((prev) =>
+        prev.map((inv) =>
+          (inv.invoiceId === invoiceId || inv.id === invoiceId)
+            ? { ...inv, status: 'Sent to pm for review' }
+            : inv
+        )
+      );
+      alert('Invoice sent to PM for review');
+    } catch (err) {
+      console.error('❌ Error sending invoice to PM:', err);
+      alert(`Failed to send invoice to PM: ${err.message}`);
+    }
+  };
+
   // If showing new invoice form, render that instead
   if (showNewInvoice) {
     return (
@@ -359,7 +435,9 @@ const InvoicesPage = () => {
         onBack={handleBackToInvoices}
         onQuoteCreated={handleInvoiceCreated}
         initialData={editingInvoice}
-        duplicateMode={false}
+        // When coming from a PO, treat it like a "duplicate" so we create
+        // a brand new invoice instead of trying to edit an existing one.
+        duplicateMode={!!editingInvoice?.fromPo}
       />
     );
   }
@@ -466,7 +544,8 @@ const InvoicesPage = () => {
 
       {/* Invoices Table */}
       <div className="px-8 py-8">
-        <div className="bg-white border border-gray-200 rounded-lg overflow-hidden shadow-sm">
+        {/* Use overflow-visible so row dropdown menus are not clipped */}
+        <div className="bg-white border border-gray-200 rounded-lg overflow-visible shadow-sm">
           <table className="w-full">
             <thead className="bg-gray-50 border-b border-gray-200">
               <tr>
@@ -632,7 +711,11 @@ const InvoicesPage = () => {
                           >
                             <Edit className="w-4 h-4" />
                           </button>
-                          <button className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all duration-200 hover:scale-105" title="Send">
+                            <button
+                            onClick={() => handleSendToPM(invoice)}
+                            className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all duration-200 hover:scale-105"
+                            title="Send to PM"
+                          >
                             <Send className="w-4 h-4" />
                           </button>
                           <div className="relative group">
@@ -680,6 +763,25 @@ const InvoicesPage = () => {
       )}
     </div>
   );
+};
+
+// Send invoice to PM (status update)
+const sendInvoiceToPm = async (invoiceId, vendorId, headers) => {
+  const url = `/api/workspace/invoices/${invoiceId}/status`;
+  const body = {
+    status: 'sent to pm for review',
+    vendorId
+  };
+  const res = await fetch(url, {
+    method: 'PUT',
+    headers,
+    body: JSON.stringify(body)
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.message || `Failed to send invoice to PM (status ${res.status})`);
+  }
+  return res.json();
 };
 
 export default InvoicesPage;
