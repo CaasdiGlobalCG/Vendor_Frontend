@@ -42,6 +42,8 @@ const InvoiceToolReplica = ({ onClose, workspaceId, workspaceName, selectedTask,
     recentActivity: [],
     upcomingPayments: []
   });
+  const [poSourceQuote, setPoSourceQuote] = useState(null);
+  const [invoiceSourcePo, setInvoiceSourcePo] = useState(null);
 
   // Fetch dashboard data
   useEffect(() => {
@@ -104,6 +106,18 @@ const InvoiceToolReplica = ({ onClose, workspaceId, workspaceName, selectedTask,
 
   const handleStatusFilterChange = (status) => {
     setStatusFilter(status);
+  };
+
+  const handleRaisePOFromQuote = (quote) => {
+    if (!quote) return;
+    setPoSourceQuote(quote);
+    setActiveTab('purchase-orders');
+  };
+
+  const handleConvertPOToInvoice = (purchaseOrder) => {
+    if (!purchaseOrder) return;
+    setInvoiceSourcePo(purchaseOrder);
+    setActiveTab('invoices');
   };
 
   const handleRowClick = (item, type) => {
@@ -581,6 +595,7 @@ const InvoiceToolReplica = ({ onClose, workspaceId, workspaceName, selectedTask,
             workspaceName={workspaceName}
             selectedTask={selectedTask}
             selectedSubtask={selectedSubtask}
+            onRaisePOFromQuote={handleRaisePOFromQuote}
           />
         );
       case 'invoices':
@@ -590,6 +605,8 @@ const InvoiceToolReplica = ({ onClose, workspaceId, workspaceName, selectedTask,
             workspaceName={workspaceName}
             selectedTask={selectedTask}
             selectedSubtask={selectedSubtask}
+            sourcePo={invoiceSourcePo}
+            onSourceConsumed={() => setInvoiceSourcePo(null)}
           />
         );
       case 'subscriptions':
@@ -599,7 +616,17 @@ const InvoiceToolReplica = ({ onClose, workspaceId, workspaceName, selectedTask,
       case 'purchase-requisitions':
         return <PurchaseRequisitionsPage />;
       case 'purchase-orders':
-        return <PurchaseOrdersPage />;
+        return (
+          <PurchaseOrdersPage
+            workspaceId={workspaceId}
+            workspaceName={workspaceName}
+            selectedTask={selectedTask}
+            selectedSubtask={selectedSubtask}
+            sourceQuote={poSourceQuote}
+            onSourceConsumed={() => setPoSourceQuote(null)}
+            onConvertToInvoice={handleConvertPOToInvoice}
+          />
+        );
       default:
         return (
           <div className="p-6">

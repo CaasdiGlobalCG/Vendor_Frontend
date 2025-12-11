@@ -1,11 +1,11 @@
 import React, { useState, useEffect, useContext } from 'react';
-import { Search, Plus, MoreHorizontal, Eye, Edit, Download, Trash2, FileText, Calendar, DollarSign, TrendingUp, ArrowLeft, Send } from 'lucide-react';
+import { Search, Plus, MoreHorizontal, Eye, Edit, Download, Trash2, FileText, Calendar, DollarSign, TrendingUp, ArrowLeft, Send, Package2 } from 'lucide-react';
 import { VendorContext } from "../../../../../context/VendorContext.jsx";
 import NewQuoteComponent from './NewQuoteComponent';
 import QuotesPreviewPanel from './QuotesPreviewPanel';
 import config from '../../../../../config/env';
 
-const QuotesPage = ({ workspaceId, workspaceName, selectedTask, selectedSubtask }) => {
+const QuotesPage = ({ workspaceId, workspaceName, selectedTask, selectedSubtask, onRaisePOFromQuote }) => {
   const { currentUser } = useContext(VendorContext);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedStatus, setSelectedStatus] = useState('all');
@@ -388,7 +388,7 @@ const QuotesPage = ({ workspaceId, workspaceName, selectedTask, selectedSubtask 
 
       {/* Beautiful Table */}
       <div className="px-8 pb-8">
-        <div className="bg-white/90 backdrop-blur-sm border border-gray-200/50 rounded-2xl overflow-hidden shadow-sm">
+        <div className="bg-white/90 backdrop-blur-sm border border-gray-200/50 rounded-2xl shadow-sm">
           <table className="w-full">
             <thead className="bg-gradient-to-r from-gray-50/90 to-slate-50/90 backdrop-blur-sm">
               <tr>
@@ -415,6 +415,7 @@ const QuotesPage = ({ workspaceId, workspaceName, selectedTask, selectedSubtask 
             <tbody className="divide-y divide-gray-100/50">
               {filteredQuotes.map((quote, index) => {
                 const statusConfig = getStatusConfig(quote.status);
+                const isPoRequested = !!(quote.status && quote.status.toLowerCase().includes('requested po'));
                 return (
                   <tr key={quote.id} className="hover:bg-gradient-to-r hover:from-slate-50/40 hover:to-gray-50/40 transition-all duration-300 group">
                     <td className="py-5 px-6">
@@ -471,6 +472,16 @@ const QuotesPage = ({ workspaceId, workspaceName, selectedTask, selectedSubtask 
                             title="Send to PM"
                           >
                             <Send className="w-4 h-4" />
+                          </button>
+                        )}
+                        {/* Raise PO button - only show when PM has requested a PO */}
+                        {isPoRequested && onRaisePOFromQuote && (
+                          <button
+                            onClick={() => onRaisePOFromQuote(quote)}
+                            className="p-2 text-gray-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-xl transition-all duration-200 hover:scale-105"
+                            title="Raise Purchase Order"
+                          >
+                            <Package2 className="w-4 h-4" />
                           </button>
                         )}
                         <button className="p-2 text-gray-400 hover:text-green-600 hover:bg-green-50 rounded-xl transition-all duration-200 hover:scale-105" title="Download">

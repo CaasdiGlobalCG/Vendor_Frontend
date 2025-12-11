@@ -109,12 +109,6 @@ export const Header = () => {
   const vendorFetchOnceRef = useRef(false);
   useEffect(() => {
     const fetchVendorInfo = async () => {
-      // Gate by role selection
-      const rs = localStorage.getItem('roleSelected');
-      if (rs !== 'true') {
-        console.log("Header: roleSelected is false, skipping vendor fetch");
-        return;
-      }
       // Avoid duplicate fetch loops
       if (vendorFetchOnceRef.current) {
         return;
@@ -146,19 +140,31 @@ export const Header = () => {
           const vendorDetail = await detailResponse.json();
           console.log("Header: Vendor detail response:", vendorDetail);
           if (vendorDetail) {
+            const vd = vendorDetail.vendorDetails || {};
+
             setVendorData({
-              vendorDetails: vendorDetail.vendorDetails || {},
+              vendorDetails: vd,
               companyDetails: vendorDetail.companyDetails || {},
               serviceProductDetails: vendorDetail.serviceProductDetails || {},
               bankDetails: vendorDetail.bankDetails || {},
               complianceCertifications: vendorDetail.complianceCertifications || {},
               additionalDetails: vendorDetail.additionalDetails || {}
             });
-            if (currentUser && !currentUser.name && vendorDetail.vendorDetails?.primaryContactName) {
+
+            // Derive a human-friendly display name from vendorDetails instead of using primaryContactName ID
+            const fullName = [vd.firstName, vd.lastName].filter(Boolean).join(" ").trim();
+            const displayName =
+              fullName ||
+              vd.vendorName ||
+              vd.companyName ||
+              currentUser?.name ||
+              currentUser?.email;
+
+            if (currentUser && (!currentUser.name || currentUser.name === vd.primaryContactName)) {
               setUser({
                 ...currentUser,
                 vendorId: vendorId,
-                name: vendorDetail.vendorDetails.primaryContactName
+                name: displayName
               });
             }
             vendorFetchOnceRef.current = true;
@@ -838,7 +844,7 @@ export const Header = () => {
                setIsVendor(next);
                if (!next) {
                  // Switching to Client: redirect to client app
-                 const clientBase = (import.meta?.env?.VITE_CLIENT_DASH || 'https://client.caasdiglobal.in');
+                 const clientBase = (import.meta?.env?.VITE_CLIENT_DASH || 'http://localhost:5174'||'https://client.caasdiglobal.in');
                  const authToken = localStorage.getItem('authToken');
                  const email = (currentUser?.email) || localStorage.getItem('email');
                  const qp = new URLSearchParams();

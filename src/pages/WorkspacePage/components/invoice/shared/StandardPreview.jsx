@@ -1,5 +1,6 @@
-import React from 'react';
+import React, { useContext } from 'react';
 import { toWords } from 'number-to-words';
+import { VendorContext } from '../../../../../context/VendorContext.jsx';
 
 function formatAddress(addr) {
     if (!addr) return '-';
@@ -54,18 +55,102 @@ const formatTermsAndConditions = (terms) => {
   return formattedTerms;
 };
 
-export default function StandardPreview({ colors, quote, company, terms, notes, docType = 'quote' }) {
+export default function StandardPreview({
+    colors,
+    quote,
+    company,
+    terms,
+    notes,
+    docType = 'quote',
+    // Optional overrides for purchase orders and other docs
+    poNumber,
+    referenceNumber
+}) {
     if (!quote) {
         return <div className="p-8 text-gray-400">No data to preview.</div>;
     }
 
-    const invoiceNumber = quote?.customQuoteId || quote?.customInvoiceId || quote?.customCreditNoteId || quote?.quotationId?.toUpperCase() || quote?.invoiceId?.toUpperCase() || quote?.creditNoteId?.toUpperCase() || 'XXX';
+    // Vendor context - used for quote-specific branding and signatures
+    const { currentUser, vendorData } = useContext(VendorContext) || {};
+
+    const vendorDetails = vendorData?.vendorDetails || {};
+    const detailsName =
+      vendorDetails.primaryContactName ||
+      [vendorDetails.firstName, vendorDetails.lastName].filter(Boolean).join(' ').trim() ||
+      vendorDetails.vendorName ||
+      vendorDetails.companyName ||
+      '';
+
+    const resolvedVendorName =
+      detailsName ||
+      currentUser?.name ||
+      currentUser?.companyName ||
+      currentUser?.fullName ||
+      currentUser?.displayName ||
+      currentUser?.email ||
+      '';
+
+    // Avoid showing internal IDs (UUIDs or vendorIds) as the display name
+    const possibleIds = [
+      vendorDetails.vendorId,
+      vendorDetails.id,
+      currentUser?.vendorId,
+    ].filter(Boolean);
+
+    const uuidLikeRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+    const vendorName =
+      !resolvedVendorName ||
+      uuidLikeRegex.test(resolvedVendorName.trim()) ||
+      possibleIds.includes(resolvedVendorName.trim())
+        ? 'Vendor'
+        : resolvedVendorName;
+    const vendorEmail = currentUser?.email || '';
+
+    const isInvoice = docType === 'invoice';
+    const isCreditNote = docType === 'creditnote';
+    const isPurchaseOrder = docType === 'purchaseorder' || docType === 'po';
+
+    // Base document/transaction number derived from the quote-like object
+    const baseNumber =
+        quote?.customQuoteId ||
+        quote?.customInvoiceId ||
+        quote?.customCreditNoteId ||
+        quote?.quotationId?.toUpperCase() ||
+        quote?.invoiceId?.toUpperCase() ||
+        quote?.creditNoteId?.toUpperCase() ||
+        'XXX';
+
+    // For purchase orders, prefer explicit PO number overrides or PO-specific fields
+    const invoiceNumber = isPurchaseOrder
+        ? poNumber ||
+          quote?.customPoId ||
+          quote?.purchaseOrderNumber ||
+          quote?.purchaseOrderId ||
+          baseNumber
+        : baseNumber;
+
     const invoiceDate = quote?.createdAt ? new Date(quote.createdAt).toLocaleDateString('en-GB') : quote?.quoteDate ? new Date(quote.quoteDate).toLocaleDateString('en-GB') : quote?.invoiceDate ? new Date(quote.invoiceDate).toLocaleDateString('en-GB') : quote?.creditNoteDate ? new Date(quote.creditNoteDate).toLocaleDateString('en-GB') : 'N/A';
     const customerName = quote?.customerDetails?.name || quote?.customerDetails?.displayName || quote?.customerName || 'Customer';
     const items = quote?.items || [];
-    const isInvoice = docType === 'invoice';
-    const isCreditNote = docType === 'creditnote';
-    const displayDocType = isCreditNote ? 'CREDIT NOTE' : isInvoice ? 'TAX INVOICE' : 'QUOTE';
+    const displayDocType = isCreditNote ? 'CREDIT NOTE' : isInvoice ? 'TAX INVOICE' : isPurchaseOrder ? 'PURCHASE ORDER' : 'QUOTE';
+    const referenceLabel = isCreditNote
+        ? 'Credit Note #'
+        : isInvoice
+        ? 'Invoice #'
+        : isPurchaseOrder
+        ? 'Purchase Order #'
+        : 'Custom Quote #';
+
+    // Reference number for linked documents (e.g., reference quote for PO)
+    const linkedReferenceNumber =
+        referenceNumber ||
+        quote?.referenceQuoteNumber ||
+        quote?.referenceNumber ||
+        quote?.customQuoteId ||
+        quote?.quoteNumber ||
+        quote?.displayQuoteId ||
+        quote?.quotationId;
     
     // Add styles to handle page breaks elegantly
     const pdfStyles = `
@@ -132,10 +217,26 @@ export default function StandardPreview({ colors, quote, company, terms, notes, 
     console.log('📋 StandardPreview - shipTo address:', shipTo);
 
 
-    const subTotal = Number(quote.subTotal) || 0;
-    const totalCgst = Number(quote.totalCgst) || 0;
-    const totalSgst = Number(quote.totalSgst) || 0;
-    const totalIgst = Number(quote.totalIgst) || 0;
+    // Safely derive totals; fall back to summing item-level amounts when header-level totals are missing
+    const subTotal =
+      typeof quote.subTotal !== 'undefined'
+        ? Number(quote.subTotal) || 0
+        : items.reduce((sum, item) => sum + (Number(item.amount) || 0), 0);
+
+    const totalCgst =
+      typeof quote.totalCgst !== 'undefined'
+        ? Number(quote.totalCgst) || 0
+        : items.reduce((sum, item) => sum + (Number(item.cgstAmount) || 0), 0);
+
+    const totalSgst =
+      typeof quote.totalSgst !== 'undefined'
+        ? Number(quote.totalSgst) || 0
+        : items.reduce((sum, item) => sum + (Number(item.sgstAmount) || 0), 0);
+
+    const totalIgst =
+      typeof quote.totalIgst !== 'undefined'
+        ? Number(quote.totalIgst) || 0
+        : items.reduce((sum, item) => sum + (Number(item.igstAmount) || 0), 0);
     const discount = quote.discount?.value ? (subTotal * Number(quote.discount.value) / 100) : 0;
     const tdsValue = quote.tdsValue ? (subTotal * Number(quote.tdsValue) / 100) : 0;
 
@@ -143,7 +244,7 @@ export default function StandardPreview({ colors, quote, company, terms, notes, 
       ? subTotal + totalCgst + totalSgst - discount - tdsValue
       : subTotal + totalIgst - discount - tdsValue;
     const amountWithheld = parseFloat(quote.amountWithheld) || 0;
-    const isQuote = !quote?.invoiceId && !quote?.creditNoteId;
+    const isQuote = !isInvoice && !isCreditNote && !isPurchaseOrder;
 
     const totalInWords = grandTotal ? `Indian Rupees ${toWords(Math.floor(grandTotal)).replace(/(^\w|\s\w)/g, m => m.toUpperCase())} Only` : '';
     
@@ -164,20 +265,68 @@ export default function StandardPreview({ colors, quote, company, terms, notes, 
                         {/* Row 1: Company Info & Doc Type */}
                         <tr>
                             <td className="p-2 align-top" style={{ border: '1px solid #ccc', width: '60%' }}>
-                                <div className="flex items-center gap-4 mb-2">
-                                  {company.logo && <img src={company.logo} alt="Logo" className="h-12 w-12 object-contain rounded bg-gray-100 border" />}
-                                  <div className="font-bold text-xl">{company.name}</div>
-                                </div>
-                                <div className="text-xs">{company.address}</div>
-                                <div className="text-xs">{company.country}</div>
-                                {company.gstin && <div className="text-xs">GSTIN: {company.gstin}</div>}
-                                <div className="text-xs">{company.email}</div>
+                                {/* For quotes, show vendor identity instead of company branding */}
+                                {isQuote ? (
+                                  <div className="flex flex-col gap-1 mb-2">
+                                    <div className="font-bold text-xl">{vendorName}</div>
+                                    {vendorEmail && <div className="text-xs">{vendorEmail}</div>}
+                                  </div>
+                                ) : (
+                                  <>
+                                    <div className="flex items-center gap-4 mb-2">
+                                      {company.logo && (
+                                        <img
+                                          src={company.logo}
+                                          alt="Logo"
+                                          className="h-12 w-12 object-contain rounded bg-gray-100 border"
+                                        />
+                                      )}
+                                      <div className="font-bold text-xl">{company.name}</div>
+                                    </div>
+                                    <div className="text-xs">{company.address}</div>
+                                    <div className="text-xs">{company.country}</div>
+                                    {company.gstin && <div className="text-xs">GSTIN: {company.gstin}</div>}
+                                    <div className="text-xs">{company.email}</div>
+                                  </>
+                                )}
                                 <div className="mt-4 text-xs">
-                                    <span className="font-semibold"># :</span>
+                                    <span className="font-semibold">{referenceLabel}:</span>
                                     <span className="ml-2">{invoiceNumber}</span>
                                 </div>
+                                {/* References for invoices: show both quote and PO if available */}
+                                {isInvoice && (quote.referenceQuoteNumber || quote.referencePoNumber) && (
+                                  <>
+                                    {quote.referenceQuoteNumber && (
+                                      <div className="text-xs">
+                                        <span className="font-semibold">Reference Quote # :</span>
+                                        <span className="ml-2">{quote.referenceQuoteNumber}</span>
+                                      </div>
+                                    )}
+                                    {quote.referencePoNumber && (
+                                      <div className="text-xs">
+                                        <span className="font-semibold">Reference PO # :</span>
+                                        <span className="ml-2">{quote.referencePoNumber}</span>
+                                      </div>
+                                    )}
+                                  </>
+                                )}
+                                {/* For purchase orders, show linked quote reference */}
+                                {isPurchaseOrder && linkedReferenceNumber && (
+                                  <div className="text-xs">
+                                      <span className="font-semibold">Reference Quote # :</span>
+                                      <span className="ml-2">{linkedReferenceNumber}</span>
+                                  </div>
+                                )}
                                 <div className="text-xs">
-                                    <span className="font-semibold">{isCreditNote ? 'Credit Note Date' : isQuote ? 'Date' : 'Invoice Date'} :</span>
+                                    <span className="font-semibold">
+                                        {isCreditNote
+                                            ? 'Credit Note Date'
+                                            : isInvoice
+                                            ? 'Invoice Date'
+                                            : isPurchaseOrder
+                                            ? 'PO Date'
+                                            : 'Date'} :
+                                    </span>
                                     <span className="ml-2">{invoiceDate}</span>
                                 </div>
                             </td>
@@ -255,24 +404,24 @@ export default function StandardPreview({ colors, quote, company, terms, notes, 
                                     <tfoot style={{ display: 'table-footer-group' }}>
                                         <tr>
                                             <td colSpan={getColspan()} className="text-right p-2 border font-semibold">Sub Total</td>
-                                            <td className="text-right p-2 border">{formatCurrency(quote.subTotal)}</td>
+                                            <td className="text-right p-2 border">{formatCurrency(subTotal)}</td>
                                         </tr>
                                         {showCgstSgst && (
                                             <>
                                                 <tr>
                                                     <td colSpan={getColspan()} className="text-right p-2 border font-semibold">CGST</td>
-                                                    <td className="text-right p-2 border">{formatCurrency(quote.totalCgst)}</td>
+                                                    <td className="text-right p-2 border">{formatCurrency(totalCgst)}</td>
                                                 </tr>
                                                 <tr>
                                                     <td colSpan={getColspan()} className="text-right p-2 border font-semibold">SGST</td>
-                                                    <td className="text-right p-2 border">{formatCurrency(quote.totalSgst)}</td>
+                                                    <td className="text-right p-2 border">{formatCurrency(totalSgst)}</td>
                                                 </tr>
                                             </>
                                         )}
                                         {showIgst && (
                                             <tr>
                                                 <td colSpan={getColspan()} className="text-right p-2 border font-semibold">IGST</td>
-                                                <td className="text-right p-2 border">{formatCurrency(quote.totalIgst)}</td>
+                                                <td className="text-right p-2 border">{formatCurrency(totalIgst)}</td>
                                             </tr>
                                         )}
                                         {quote.discount?.value > 0 && (
@@ -316,7 +465,7 @@ export default function StandardPreview({ colors, quote, company, terms, notes, 
                                 </div>
                                 <div className="mt-8 text-right text-xs text-gray-700 signature-section" style={{borderTop: '1px solid #ccc', paddingTop: '4px'}}>
                                     <div>Authorized Signature</div>
-                                    <div className="mt-2 font-semibold text-sm">Sankeerth KM</div>
+                                    <div className="mt-2 font-semibold text-sm">{vendorName}</div>
                                     <div className="mt-8">
                                         <div className="border-t border-gray-400 w-32 ml-auto mb-2"></div>
                                         <div className="text-xs text-gray-500">Vendor/Client Signature</div>

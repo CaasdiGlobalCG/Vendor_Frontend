@@ -696,7 +696,7 @@ const NewInvoiceComponentInner = ({ onBack, projectId, initialData, duplicateMod
         }
     }, [projectId]);
 
-    // Handle initialData for editing existing quote or duplicating
+    // Handle initialData for editing existing invoice, duplicating, or creating from PO
     useEffect(() => {
         if (initialData) {
             const customer = initialData.customerDetails || initialData.selectedCustomer;
@@ -736,7 +736,13 @@ const NewInvoiceComponentInner = ({ onBack, projectId, initialData, duplicateMod
             if (!duplicateMode && (initialData.quotationId || initialData.id)) {
                 setCustomQuoteNumber(initialData.quotationId || initialData.id);
             }
-            if (!duplicateMode && initialData.referenceNumber) {
+
+            // Reference numbers:
+            // - For normal edit: keep any existing reference numbers on the invoice
+            // - For PO->Invoice flow: use initialData.referenceQuoteNumber / referencePoNumber
+            if (initialData.referenceQuoteNumber) {
+                setCustomReferenceNumber(initialData.referenceQuoteNumber);
+            } else if (!duplicateMode && initialData.referenceNumber) {
                 setCustomReferenceNumber(initialData.referenceNumber);
             }
             // For duplicate mode, new numbers will be set by the config loading effects
@@ -1424,7 +1430,7 @@ const NewInvoiceComponentInner = ({ onBack, projectId, initialData, duplicateMod
             // Dates
             invoiceDate: quoteDate,
             expiryDate: expiryDate,
-            
+
             // Addresses
             billingAddress: {},
             shippingAddress: {},
@@ -1442,15 +1448,26 @@ const NewInvoiceComponentInner = ({ onBack, projectId, initialData, duplicateMod
             tdsType: tdsType,
             tdsValue: parseFloat(tdsValue) || 0,
             
-            // Dates
+            // Dates (duplicate for compatibility)
             createdAt: new Date().toISOString(),
             invoiceDate: quoteDate,
             expiryDate: expiryDate,
-            
-            // Additional information
+
+            // References
+            referenceQuoteNumber: initialData?.referenceQuoteNumber || null,
+            referencePoNumber: initialData?.referencePoNumber || null,
+
+            // Additional information & workspace context
             status: 'draft',
-            projectId,
-            projectName,
+            projectId: initialData?.projectId || projectId,
+            projectName: initialData?.projectName || projectName,
+            workspaceId: initialData?.workspaceId || null,
+            workspaceName: initialData?.workspaceName || '',
+            taskId: initialData?.taskId || null,
+            taskName: initialData?.taskName || '',
+            subtaskId: initialData?.subtaskId || null,
+            subtaskName: initialData?.subtaskName || '',
+            clientId: initialData?.clientId || null,
             notes: customerNotes,
             termsAndConditions: termsAndConditions,
             vendorId: currentUser?.vendorId,
