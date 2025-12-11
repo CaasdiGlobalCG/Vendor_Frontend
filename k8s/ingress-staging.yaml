@@ -8,9 +8,11 @@ metadata:
     alb.ingress.kubernetes.io/scheme: internet-facing
     alb.ingress.kubernetes.io/target-type: ip
     alb.ingress.kubernetes.io/listen-ports: '[{"HTTP":80,"HTTPS":443}]'
-    alb.ingress.kubernetes.io/certificate-arn: arn:aws:acm:ap-south-1:286757679229:certificate/5202447b-7f76-4419-a0bc-edf100107520
     alb.ingress.kubernetes.io/ssl-redirect: "443"
+    alb.ingress.kubernetes.io/group.name: sales-app
+    alb.ingress.kubernetes.io/certificate-arn: arn:aws:acm:us-east-1:286757679229:certificate/d177e09f-e457-4d3d-8b65-4e21e3fdb9d6
 spec:
+  ingressClassName: alb
   rules:
     - host: vendorstaging.caasdiglobal.in
       http:
