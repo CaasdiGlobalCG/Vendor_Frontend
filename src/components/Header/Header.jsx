@@ -844,7 +844,7 @@ export const Header = () => {
                setIsVendor(next);
                if (!next) {
                  // Switching to Client: redirect to client app
-                 const clientBase = (import.meta?.env?.VITE_CLIENT_DASH || 'http://localhost:5174'||'https://client.caasdiglobal.in');
+                 const clientBase = (import.meta?.env?.VITE_CLIENT_DASH || 'https://client.caasdiglobal.in');
                  const authToken = localStorage.getItem('authToken');
                  const email = (currentUser?.email) || localStorage.getItem('email');
                  const qp = new URLSearchParams();

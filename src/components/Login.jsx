@@ -254,7 +254,7 @@ function Login() {
           // If role is client, start client onboarding; else Form1
         if ((userInfo.role || '').toLowerCase() === 'client') {
           const authToken = localStorage.getItem('authToken');
-          const clientBase = (import.meta?.env?.VITE_CLIENT_DASH || 'http://localhost:5174' ||'https://client.caasdiglobal.in');
+          const clientBase = (import.meta?.env?.VITE_CLIENT_DASH || 'https://client.caasdiglobal.in');
             const qp = new URLSearchParams();
             if (authToken) qp.set('authToken', authToken);
             qp.set('email', userEmail);
@@ -515,7 +515,7 @@ function Login() {
             } else {
               if ((userData.role || '').toLowerCase() === 'client') {
                 const authToken = localStorage.getItem('authToken');
-                const clientBase = (import.meta?.env?.VITE_CLIENT_DASH ||'http://localhost:5174' ||'https://client.caasdiglobal.in');
+                const clientBase = (import.meta?.env?.VITE_CLIENT_DASH ||'https://client.caasdiglobal.in');
                 const qp = new URLSearchParams();
                 if (authToken) qp.set('authToken', authToken);
                 qp.set('email', email);

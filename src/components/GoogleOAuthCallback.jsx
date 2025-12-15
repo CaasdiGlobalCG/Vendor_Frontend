@@ -104,7 +104,7 @@ export default function GoogleOAuthCallback() {
           // Client persona: hand off to client dashboard with query params
           if (effectiveRole === 'client') {
             const authToken = localStorage.getItem('authToken');
-            const clientBase = (import.meta?.env?.VITE_CLIENT_DASH || 'http://localhost:5174' ||'https://client.caasdiglobal.in');
+            const clientBase = (import.meta?.env?.VITE_CLIENT_DASH ||'https://client.caasdiglobal.in');
             const qp = new URLSearchParams();
             if (authToken) qp.set('authToken', authToken);
             qp.set('email', email);
