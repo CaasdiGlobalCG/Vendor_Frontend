@@ -133,14 +133,14 @@ export default function StandardPreview({
     const invoiceDate = quote?.createdAt ? new Date(quote.createdAt).toLocaleDateString('en-GB') : quote?.quoteDate ? new Date(quote.quoteDate).toLocaleDateString('en-GB') : quote?.invoiceDate ? new Date(quote.invoiceDate).toLocaleDateString('en-GB') : quote?.creditNoteDate ? new Date(quote.creditNoteDate).toLocaleDateString('en-GB') : 'N/A';
     const customerName = quote?.customerDetails?.name || quote?.customerDetails?.displayName || quote?.customerName || 'Customer';
     const items = quote?.items || [];
-    const displayDocType = isCreditNote ? 'CREDIT NOTE' : isInvoice ? 'TAX INVOICE' : isPurchaseOrder ? 'PURCHASE ORDER' : 'QUOTE';
+    const displayDocType = isCreditNote ? 'CREDIT NOTE' : isInvoice ? 'TAX INVOICE' : isPurchaseOrder ? 'PURCHASE ORDER' : 'QUOTATION';
     const referenceLabel = isCreditNote
         ? 'Credit Note #'
         : isInvoice
-        ? 'Invoice #'
+        ? 'Tax Invoice #'
         : isPurchaseOrder
         ? 'Purchase Order #'
-        : 'Custom Quote #';
+        : 'Quotation #';
 
     // Reference number for linked documents (e.g., reference quote for PO)
     const linkedReferenceNumber =
@@ -265,8 +265,8 @@ export default function StandardPreview({
                         {/* Row 1: Company Info & Doc Type */}
                         <tr>
                             <td className="p-2 align-top" style={{ border: '1px solid #ccc', width: '60%' }}>
-                                {/* For quotes, show vendor identity instead of company branding */}
-                                {isQuote ? (
+                                {/* Show vendor identity for both quotes and invoices */}
+                                {isQuote || isInvoice ? (
                                   <div className="flex flex-col gap-1 mb-2">
                                     <div className="font-bold text-xl">{vendorName}</div>
                                     {vendorEmail && <div className="text-xs">{vendorEmail}</div>}
@@ -298,7 +298,7 @@ export default function StandardPreview({
                                   <>
                                     {quote.referenceQuoteNumber && (
                                       <div className="text-xs">
-                                        <span className="font-semibold">Reference Quote # :</span>
+                                        <span className="font-semibold">Reference Quotation # :</span>
                                         <span className="ml-2">{quote.referenceQuoteNumber}</span>
                                       </div>
                                     )}
@@ -313,7 +313,7 @@ export default function StandardPreview({
                                 {/* For purchase orders, show linked quote reference */}
                                 {isPurchaseOrder && linkedReferenceNumber && (
                                   <div className="text-xs">
-                                      <span className="font-semibold">Reference Quote # :</span>
+                                      <span className="font-semibold">Reference Quotation # :</span>
                                       <span className="ml-2">{linkedReferenceNumber}</span>
                                   </div>
                                 )}

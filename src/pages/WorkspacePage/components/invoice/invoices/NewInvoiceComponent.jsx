@@ -5,6 +5,9 @@ import { AuthProvider } from '../../../../../context/AuthContext';
 import { convertMeasurementToFeet, needsConversion } from '../../../../../utils/unitConverter';
 import { calculateRatePerSqft, calculateTotalRate, checkRateConsistency, determineCalculationTarget, formatCurrency } from '../../../../../utils/rateCalculator';
 import config from '../../../../../config/env';
+import html2pdf from 'html2pdf.js';
+import { createRoot } from 'react-dom/client';
+import StandardPreview from '../shared/StandardPreview.jsx';
 
 const CustomerSearchModal = ({ open, onClose, onSelect }) => {
   const { currentUser } = useContext(VendorContext);
@@ -1293,6 +1296,135 @@ const NewInvoiceComponentInner = ({ onBack, projectId, initialData, duplicateMod
         }
     };
 
+    // Function to generate PDF using StandardPreview
+    const generateInvoicePDF = async (invoiceData) => {
+        try {
+            console.log('Starting PDF generation with invoice data:', invoiceData);
+
+            // Build company details
+            const company = {
+                logo: null,
+                name: currentUser?.companyName || currentUser?.name || 'Your Company',
+                address: currentUser?.address || '',
+                gstin: currentUser?.gstin || '',
+                email: currentUser?.email || '',
+                country: 'India'
+            };
+
+            // Adapt invoice shape into what StandardPreview expects
+            const standardInvoice = {
+                ...invoiceData,
+                subTotal: invoiceData.subtotal ?? invoiceData.subTotal ?? 0,
+                totalCgst: invoiceData.totalCgst ?? invoiceData.cgst ?? 0,
+                totalSgst: invoiceData.totalSgst ?? invoiceData.sgst ?? 0,
+                totalIgst: invoiceData.totalIgst ?? invoiceData.igst ?? 0,
+                discount: invoiceData.discount || { type: 'percentage', value: 0 }
+            };
+
+            // Container that will hold StandardPreview
+            const container = document.createElement('div');
+            container.style.position = 'relative';
+            container.style.width = '900px';
+            container.style.margin = '40px auto';
+            container.style.backgroundColor = '#ffffff';
+            container.style.zIndex = '9999';
+
+            document.body.appendChild(container);
+
+            // Render StandardPreview into the container
+            const root = createRoot(container);
+            root.render(
+                <StandardPreview
+                    quote={standardInvoice}
+                    company={company}
+                    terms={invoiceData.termsAndConditions}
+                    notes={invoiceData.notes || customerNotes}
+                    docType="invoice"
+                />
+            );
+
+            // Wait for React + layout to settle
+            await new Promise((resolve) => setTimeout(resolve, 1000));
+
+            const element = container.firstElementChild || container;
+
+            console.log('StandardPreview container dimensions before html2pdf:', {
+                offsetWidth: element.offsetWidth,
+                offsetHeight: element.offsetHeight,
+                scrollHeight: element.scrollHeight
+            });
+            
+            const opt = {
+                margin: 10,
+                filename: `Tax-Invoice-${invoiceData.customInvoiceId || invoiceData.invoiceId}.pdf`,
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: {
+                    scale: 2,
+                    useCORS: true,
+                    allowTaint: true,
+                    backgroundColor: '#ffffff'
+                },
+                jsPDF: { orientation: 'portrait', unit: 'mm', format: 'a4' }
+            };
+
+            console.log('Starting html2pdf conversion from StandardPreview element');
+            const pdfBlob = await html2pdf().set(opt).from(element).outputPdf('blob');
+            console.log('PDF generated successfully from StandardPreview, blob size:', pdfBlob.size);
+
+            // Clean up
+            root.unmount();
+            document.body.removeChild(container);
+
+            return pdfBlob;
+        } catch (error) {
+            console.error('Error generating styled PDF with html2pdf:', error);
+            throw error;
+        }
+    };
+    
+    // Function to upload PDF to S3 via backend (avoids CORS issues)
+    const uploadPDFToS3 = async (pdfBlob, fileName) => {
+        try {
+            // Convert Blob to File object
+            const file = new File([pdfBlob], fileName, { type: 'application/pdf' });
+            
+            const formData = new FormData();
+            formData.append('file', file);
+            formData.append('email', currentUser?.email || 'vendor@example.com');
+            formData.append('documentType', 'invoicePDF');
+            formData.append('section', 'invoices');
+            
+            console.log('Uploading PDF to S3 via backend:', { fileName, fileSize: pdfBlob.size });
+            
+            // Use backend endpoint to avoid CORS issues
+            const response = await fetch(`/api/files/upload`, {
+                method: 'POST',
+                body: formData,
+                credentials: 'include'
+            });
+            
+            if (!response.ok) {
+                const error = await response.json();
+                throw new Error(error.message || 'Failed to upload PDF');
+            }
+            
+            const result = await response.json();
+            console.log('\ud83d\udce6 Backend upload response:', result);
+            const fileUrl = result?.data?.url || result?.url || result?.fileUrl || result?.data?.fileUrl;
+            console.log('\ud83d\udd17 Extracted fileUrl:', fileUrl);
+            
+            if (!fileUrl) {
+                throw new Error('No URL returned from upload');
+            }
+            
+            console.log('✅ PDF uploaded successfully:', fileUrl);
+            return fileUrl;
+        } catch (error) {
+            console.error('Error uploading PDF to S3:', error);
+            throw error;
+        }
+    };
+
     // Save quote
     const handleSaveQuote = async () => {
         setMessage(null);
@@ -1515,13 +1647,52 @@ const NewInvoiceComponentInner = ({ onBack, projectId, initialData, duplicateMod
                 return;
             }
             
+            // Generate PDF BEFORE saving so we can include the URL in the save
+            let pdfUrl = null;
+            try {
+                console.log('Generating PDF before save...');
+                const pdfBlob = await generateInvoicePDF(invoiceData);
+                const fileName = `tax-invoice_${invoiceData.customInvoiceId}_${new Date().toISOString().split('T')[0]}.pdf`;
+                console.log('PDF file name:', fileName);
+                pdfUrl = await uploadPDFToS3(pdfBlob, fileName);
+                console.log('PDF generated and uploaded successfully:', pdfUrl);
+            } catch (pdfError) {
+                console.error('Error generating/uploading PDF:', pdfError);
+                setMessage({ type: 'warning', text: 'Invoice saved successfully, but PDF generation failed. You can regenerate it later.' });
+                // Continue with save even if PDF fails
+            }
+            
+            // Add PDF URL to the invoice data if generated
+            if (pdfUrl) {
+                invoiceData.pdfUrl = pdfUrl;
+                console.log('✅ Added pdfUrl to invoiceData:', invoiceData.pdfUrl);
+            } else {
+                console.log('⚠️ No pdfUrl generated - PDF upload may have failed');
+            }
+            
+            console.log('📤 Final invoiceData being saved:', {
+                hasInvoiceId: !!invoiceData.invoiceId,
+                hasPdfUrl: !!invoiceData.pdfUrl,
+                pdfUrlValue: invoiceData.pdfUrl,
+                dataKeys: Object.keys(invoiceData)
+            });
+            
             const url = isEdit ? `/api/workspace/invoices/${invoiceId}` : `/api/workspace/invoices`;
             const method = isEdit ? 'PUT' : 'POST';
+            
+            const jsonPayload = JSON.stringify(invoiceData);
+            console.log('📨 Sending to backend:', {
+                url,
+                method,
+                pdfUrlInPayload: invoiceData.pdfUrl,
+                payloadSize: jsonPayload.length,
+                firstChars: jsonPayload.substring(0, 200)
+            });
             
             const res = await fetch(url, {
                 method: method,
                 headers: headers,
-                body: JSON.stringify(invoiceData),
+                body: jsonPayload,
             });
 
             if (res.ok) {
@@ -1581,7 +1752,7 @@ const NewInvoiceComponentInner = ({ onBack, projectId, initialData, duplicateMod
             {/* Main Invoice Form */}
             <div className="flex-1 p-8 flex flex-col min-h-full">
                 <header className="flex justify-between items-center mb-6">
-                    <h1 className="text-2xl font-bold text-gray-800">{initialData ? (duplicateMode ? 'Duplicate Invoice' : 'Edit Invoice') : 'New Invoice'}</h1>
+                    <h1 className="text-2xl font-bold text-gray-800">{initialData ? (duplicateMode ? 'Duplicate Tax Invoice' : 'Edit Tax Invoice') : 'New Tax Invoice'}</h1>
                     <div className="flex items-center">
                          <button onClick={onBack} className="p-2 text-gray-500 hover:bg-gray-200 rounded-full">
                             <X size={20} />
@@ -1738,7 +1909,7 @@ const NewInvoiceComponentInner = ({ onBack, projectId, initialData, duplicateMod
                             
                             <div className="grid grid-cols-2 gap-6">
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">Invoice#*</label>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">Tax Invoice#*</label>
                                     <div className="relative">
                                         <input 
                                             type="text" 
@@ -1757,7 +1928,7 @@ const NewInvoiceComponentInner = ({ onBack, projectId, initialData, duplicateMod
                                             <Settings size={16} />
                                             {showTooltip && (
                                                 <div className="absolute bottom-full right-0 mb-2 px-3 py-2 bg-gray-900 text-white text-sm rounded-lg whitespace-nowrap z-50">
-                                                    Click here to enable or disable auto-generation of Invoice numbers.
+                                                    Click here to enable or disable auto-generation of Tax Invoice numbers.
                                                     <div className="absolute top-full right-2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-gray-900"></div>
                                                 </div>
                                             )}
@@ -1805,7 +1976,7 @@ const NewInvoiceComponentInner = ({ onBack, projectId, initialData, duplicateMod
                             
                              <div className="grid grid-cols-2 gap-6">
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">Invoice Date*</label>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">Tax Invoice Date*</label>
                                     <input 
                                         type="date" 
                                         value={quoteDate}

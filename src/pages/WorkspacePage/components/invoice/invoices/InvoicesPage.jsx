@@ -462,16 +462,16 @@ const InvoicesPage = (props) => {
           <div className="flex items-center justify-between mb-8">
             <div>
               <h1 className="text-3xl font-bold bg-gradient-to-r from-slate-800 via-gray-700 to-stone-700 bg-clip-text text-transparent">
-                Invoices Dashboard
+                Tax Invoices Dashboard
               </h1>
-              <p className="text-gray-600 mt-2">Manage and track all your business invoices</p>
+              <p className="text-gray-600 mt-2">Manage and track all your business tax invoices</p>
             </div>
             <button 
               onClick={() => setShowNewInvoice(true)}
               className="bg-gradient-to-r from-slate-700 to-gray-700 text-white px-6 py-3 rounded-xl hover:from-slate-800 hover:to-gray-800 transition-all duration-300 flex items-center space-x-2 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
             >
               <Plus className="w-5 h-5" />
-              <span className="font-medium">Create Invoice</span>
+              <span className="font-medium">Create Tax Invoice</span>
             </button>
           </div>
 
@@ -480,7 +480,7 @@ const InvoicesPage = (props) => {
             <div className="bg-white border border-gray-200 rounded-lg p-6 shadow-sm hover:shadow-md transition-shadow">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-gray-600 mb-1">Total Invoices</p>
+                  <p className="text-sm font-medium text-gray-600 mb-1">Total Tax Invoices</p>
                   <p className="text-2xl font-bold text-gray-900">{stats.totalInvoices || invoicesData.length}</p>
                   <p className="text-xs text-green-600 mt-1">↗ +8% this month</p>
                 </div>

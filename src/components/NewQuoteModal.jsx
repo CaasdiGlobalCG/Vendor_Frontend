@@ -331,7 +331,7 @@ const NewQuoteModal = ({ isOpen, onClose, onQuoteCreated }) => {
             </div>
             <div>
               <h2 className="text-2xl font-bold">Create New Quotation</h2>
-              <p className="text-blue-200 text-sm mt-1">Quote #{quoteNumber}</p>
+              <p className="text-blue-200 text-sm mt-1">Quotation #{quoteNumber}</p>
             </div>
           </div>
           <button

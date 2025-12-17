@@ -1276,48 +1276,48 @@ const NewQuoteComponentInner = ({
         }
     };
     
-    // Function to upload PDF to S3
-        const uploadPDFToS3 = async (pdfBlob, fileName) => {
-          try {
-            // 1. Get pre-signed URL from backend
-            const response = await fetch(
-              `/api/s3/generate-upload-url?filename=${encodeURIComponent(fileName)}`,
-              {
-                headers: {
-                  'Content-Type': 'application/json',
-                  // Add authentication headers if needed
-                  // 'Authorization': `Bearer ${userToken}`
-                }
-              }
-            );
+    // Function to upload PDF to S3 via backend (avoids CORS issues)
+    const uploadPDFToS3 = async (pdfBlob, fileName) => {
+        try {
+            // Convert Blob to File object
+            const file = new File([pdfBlob], fileName, { type: 'application/pdf' });
             
-            if (!response.ok) {
-              const error = await response.json();
-              throw new Error(error.message || 'Failed to get upload URL');
-            }
-
-            const { url, fileUrl } = await response.json();
+            const formData = new FormData();
+            formData.append('file', file);
+            formData.append('email', currentUser?.email || 'vendor@example.com');
+            formData.append('documentType', 'quotationPDF');
+            formData.append('section', 'quotations');
             
-            // 2. Upload the file directly to S3 using the pre-signed URL
-            const uploadResponse = await fetch(url, {
-              method: 'PUT',
-              body: pdfBlob,
-              headers: {
-                'Content-Type': 'application/pdf'
-              }
+            console.log('Uploading PDF to S3 via backend:', { fileName, fileSize: pdfBlob.size });
+            
+            // Use backend endpoint to avoid CORS issues
+            const response = await fetch(`/api/files/upload`, {
+                method: 'POST',
+                body: formData,
+                credentials: 'include'
             });
             
-            if (!uploadResponse.ok) {
-              throw new Error('Upload failed');
+            if (!response.ok) {
+                const error = await response.json();
+                throw new Error(error.message || 'Failed to upload PDF');
             }
             
-            // 3. Return the public URL of the uploaded file
+            const result = await response.json();
+            console.log('\ud83d\udce6 Backend upload response:', result);
+            const fileUrl = result?.data?.url || result?.url || result?.fileUrl || result?.data?.fileUrl;
+            console.log('\ud83d\udd17 Extracted fileUrl:', fileUrl);
+            
+            if (!fileUrl) {
+                throw new Error('No URL returned from upload');
+            }
+            
+            console.log('✅ PDF uploaded successfully:', fileUrl);
             return fileUrl;
-          } catch (error) {
+        } catch (error) {
             console.error('Error uploading PDF to S3:', error);
             throw error;
-          }
-        };
+        }
+    };
             // Save quote
             const handleSaveQuote = async () => {
                 setMessage(null);
@@ -1523,13 +1523,52 @@ const NewQuoteComponentInner = ({
                 return;
             }
             
+            // Generate PDF BEFORE saving so we can include the URL in the save
+            let pdfUrl = null;
+            try {
+                console.log('Generating PDF before save...');
+                const pdfBlob = await generateQuotePDF(quotationData);
+                const fileName = `quote_${quotationData.customQuoteId || quotationData.quotationId}_${new Date().toISOString().split('T')[0]}.pdf`;
+                console.log('PDF file name:', fileName);
+                pdfUrl = await uploadPDFToS3(pdfBlob, fileName);
+                console.log('PDF generated and uploaded successfully:', pdfUrl);
+            } catch (pdfError) {
+                console.error('Error generating/uploading PDF:', pdfError);
+                setMessage({ type: 'warning', text: 'Quote saved successfully, but PDF generation failed. You can regenerate it later.' });
+                // Continue with save even if PDF fails
+            }
+            
+            // Add PDF URL to the quote data if generated
+            if (pdfUrl) {
+                quotationData.pdfUrl = pdfUrl;
+                console.log('✅ Added pdfUrl to quotationData:', quotationData.pdfUrl);
+            } else {
+                console.log('⚠️ No pdfUrl generated - PDF upload may have failed');
+            }
+            
+            console.log('📤 Final quotationData being saved:', {
+                hasQuotationId: !!quotationData.quotationId,
+                hasPdfUrl: !!quotationData.pdfUrl,
+                pdfUrlValue: quotationData.pdfUrl,
+                dataKeys: Object.keys(quotationData)
+            });
+            
             const url = isEdit ? `/api/workspace/quotations/${quotationId}` : `/api/workspace/quotations`;
             const method = isEdit ? 'PUT' : 'POST';
+            
+            const jsonPayload = JSON.stringify(quotationData);
+            console.log('📨 Sending to backend:', {
+                url,
+                method,
+                pdfUrlInPayload: quotationData.pdfUrl,
+                payloadSize: jsonPayload.length,
+                firstChars: jsonPayload.substring(0, 200)
+            });
             
             const res = await fetch(url, {
                 method: method,
                 headers: headers,
-                body: JSON.stringify(quotationData),
+                body: jsonPayload,
             });
 
             if (res.ok) {
@@ -1539,42 +1578,6 @@ const NewQuoteComponentInner = ({
                   saved?.data?.id ||
                   quotationId ||
                   quotationData.quotationId;
-                
-                try {
-                    // Generate PDF
-                    const pdfBlob = await generateQuotePDF(quotationData);
-                    
-                    // Create a filename with quote number and date
-                    const fileName = `quotes/quote_${quotationData.quotationId}_${new Date().toISOString().split('T')[0]}.pdf`;
-                    
-                    // Upload to S3
-                    const fileUrl = await uploadPDFToS3(pdfBlob, fileName);
-                    
-                    // Update the quote with the PDF URL
-                    const updateRes = await fetch(`/api/workspace/quotations/${savedQuotationId}`, {
-                        method: 'PATCH',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'x-user-info': JSON.stringify({
-                                vendorId: currentUser?.vendorId,
-                                email: currentUser?.email,
-                                role: 'vendor',
-                                name: currentUser?.name
-                            })
-                        },
-                        body: JSON.stringify({
-                            pdfUrl: fileUrl
-                        })
-                    });
-                    
-                    if (!updateRes.ok) {
-                        console.error('Failed to update quote with PDF URL');
-                    }
-                    
-                } catch (error) {
-                    console.error('Error generating/uploading PDF:', error);
-                    // Don't fail the save operation if PDF generation/upload fails
-                }
                 
                 setMessage({ type: 'success', text: isEdit ? 'Quotation updated successfully!' : 'Quotation saved successfully!' });
                 
@@ -1631,9 +1634,9 @@ const NewQuoteComponentInner = ({
             {/* Main Quote Form */}
             <div className="flex-1 p-8 flex flex-col min-h-full">
                 <header className="flex justify-between items-center mb-6">
-                    <h1 className="text-2xl font-bold text-gray-800">{initialData ? (duplicateMode ? 'Duplicate Quote' : 'Edit Quote') : 'New Quote'}</h1>
+                    <h1 className="text-2xl font-bold text-gray-800">{initialData ? (duplicateMode ? 'Duplicate Quotation' : 'Edit Quotation') : 'New Quotation'}</h1>
                     <div className="flex items-center">
-                         <button onClick={onBack} className="p-2 text-gray-500 hover:bg-gray-200 rounded-full">
+                         <button onClick={onBack} className="p-2 text-gray-500 hover:bg-gray-200 rounded-full\">
                             <X size={20} />
                         </button>
                     </div>
@@ -1788,7 +1791,7 @@ const NewQuoteComponentInner = ({
                             
                             <div className="grid grid-cols-2 gap-6">
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">Quote#*</label>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">Quotation#*</label>
                                     <div className="relative">
                                         <input 
                                             type="text" 
@@ -1807,7 +1810,7 @@ const NewQuoteComponentInner = ({
                                             <Settings size={16} />
                                             {showTooltip && (
                                                 <div className="absolute bottom-full right-0 mb-2 px-3 py-2 bg-gray-900 text-white text-sm rounded-lg whitespace-nowrap z-50">
-                                                    Click here to enable or disable auto-generation of Quote numbers.
+                                                    Click here to enable or disable auto-generation of Quotation numbers.
                                                     <div className="absolute top-full right-2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-gray-900"></div>
                                                 </div>
                                             )}

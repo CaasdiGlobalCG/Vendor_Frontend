@@ -134,7 +134,7 @@ export default function QuotesPreviewPanel({ quotes, selectedQuoteId, onSelectQu
         {/* Action Header */}
         {selectedQuote && (
           <div className="sticky top-0 bg-white border-b border-gray-200 p-4 flex items-center justify-between shadow-sm z-10">
-            <h3 className="font-semibold text-gray-900">Quote #{selectedQuote.customQuoteId || selectedQuote.id}</h3>
+            <h3 className="font-semibold text-gray-900">Tax Invoice #{selectedQuote.customQuoteId || selectedQuote.id}</h3>
             <div className="flex items-center space-x-3">
               {/* Settings Dropdown */}
               <div className="relative">
