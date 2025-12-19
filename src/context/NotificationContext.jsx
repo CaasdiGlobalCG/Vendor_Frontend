@@ -587,6 +587,152 @@ export const NotificationProvider = ({ children }) => {
       });
     }
   };
+
+  // Create notifications for quote, PO, and invoice events
+  const triggerDocumentNotification = (documentType, status, documentNumber, details = {}) => {
+    const notificationMap = {
+      // Quote notifications
+      'quote:approved_by_pm': {
+        title: `Quote Approved by PM`,
+        message: `Quote ${documentNumber} has been approved by the Project Manager.`,
+        icon: '✓',
+        color: 'green'
+      },
+      'quote:sent_to_finance': {
+        title: `Quote Sent to Finance`,
+        message: `Quote ${documentNumber} has been sent to Finance for approval.`,
+        icon: '📤',
+        color: 'blue'
+      },
+      'quote:approved_by_finance': {
+        title: `Quote Approved by Finance`,
+        message: `Quote ${documentNumber} has been approved by Finance.`,
+        icon: '✓',
+        color: 'green'
+      },
+      'quote:sent_to_client': {
+        title: `Quote Sent to Client`,
+        message: `Quote ${documentNumber} has been sent to the client for review.`,
+        icon: '📧',
+        color: 'blue'
+      },
+      'quote:approved_by_client': {
+        title: `Quote Approved by Client`,
+        message: `Client has approved quote ${documentNumber}.`,
+        icon: '✓',
+        color: 'green'
+      },
+      'quote:po_requested': {
+        title: `PO Requested`,
+        message: `Purchase Order has been requested for quote ${documentNumber}.`,
+        icon: '📋',
+        color: 'purple'
+      },
+      // PO notifications
+      'po:approved_by_pm': {
+        title: `PO Approved by PM`,
+        message: `Purchase Order ${documentNumber} has been approved by the Project Manager.`,
+        icon: '✓',
+        color: 'green'
+      },
+      'po:sent_to_finance': {
+        title: `PO Sent to Finance`,
+        message: `Purchase Order ${documentNumber} has been sent to Finance for approval.`,
+        icon: '📤',
+        color: 'blue'
+      },
+      'po:approved_by_finance': {
+        title: `PO Approved by Finance`,
+        message: `Purchase Order ${documentNumber} has been approved by Finance.`,
+        icon: '✓',
+        color: 'green'
+      },
+      'po:sent_to_client': {
+        title: `PO Sent to Client`,
+        message: `Purchase Order ${documentNumber} has been sent to the client.`,
+        icon: '📧',
+        color: 'blue'
+      },
+      'po:approved_by_client': {
+        title: `PO Approved by Client`,
+        message: `Client has approved Purchase Order ${documentNumber}.`,
+        icon: '✓',
+        color: 'green'
+      },
+      // Invoice notifications
+      'invoice:approved_by_pm': {
+        title: `Invoice Approved by PM`,
+        message: `Invoice ${documentNumber} has been approved by the Project Manager.`,
+        icon: '✓',
+        color: 'green'
+      },
+      'invoice:sent_to_finance': {
+        title: `Invoice Sent to Finance`,
+        message: `Invoice ${documentNumber} has been sent to Finance for approval.`,
+        icon: '📤',
+        color: 'blue'
+      },
+      'invoice:approved_by_finance': {
+        title: `Invoice Approved by Finance`,
+        message: `Invoice ${documentNumber} has been approved by Finance.`,
+        icon: '✓',
+        color: 'green'
+      },
+      'invoice:sent_to_client': {
+        title: `Invoice Sent to Client`,
+        message: `Invoice ${documentNumber} has been sent to the client.`,
+        icon: '📧',
+        color: 'blue'
+      },
+      'invoice:approved_by_client': {
+        title: `Invoice Approved by Client`,
+        message: `Client has approved Invoice ${documentNumber}.`,
+        icon: '✓',
+        color: 'green'
+      },
+      'invoice:payment_received': {
+        title: `Payment Received`,
+        message: `Payment has been received for Invoice ${documentNumber}.`,
+        icon: '💰',
+        color: 'green'
+      }
+    };
+
+    const key = `${documentType}:${status}`;
+    const notificationData = notificationMap[key];
+
+    if (!notificationData) {
+      console.warn(`NotificationContext - Unknown notification type: ${key}`);
+      return;
+    }
+
+    // Create notification object
+    const notification = {
+      id: `${documentType}-${documentNumber}-${Date.now()}`,
+      title: notificationData.title,
+      message: notificationData.message,
+      time: new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }),
+      icon: notificationData.icon,
+      color: notificationData.color,
+      isRead: false,
+      documentType: documentType,
+      documentNumber: documentNumber,
+      status: status,
+      link: `/VendorDashboard/${documentType}s/${details.id || documentNumber}`,
+      ...details
+    };
+
+    // Add to notifications
+    addNotification(notification);
+
+    // Show browser notification
+    showBrowserNotification({
+      title: notificationData.title,
+      body: notificationData.message
+    });
+
+    console.log(`NotificationContext - Triggered ${key} notification`, notification);
+  };
   
   // Context value
   const contextValue = {
@@ -602,6 +748,7 @@ export const NotificationProvider = ({ children }) => {
     toggleNotificationDropdown,
     closeNotificationDropdown,
     checkForNewNotifications,
+    triggerDocumentNotification,
     refreshNotifications: () => {
       console.log("NotificationContext - Manually refreshing notifications");
       if (currentUser?.vendorId) {

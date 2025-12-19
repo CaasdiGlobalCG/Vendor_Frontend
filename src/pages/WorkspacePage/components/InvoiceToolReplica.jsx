@@ -1,16 +1,17 @@
-import React, { useState, useEffect, useContext } from 'react';
+import React, { useState, useEffect, useContext, useRef } from 'react';
 import { 
   Search, Plus, Bell, User, Home, Users, Package, FileText, Receipt, 
   RotateCcw, History, CreditCard, ShoppingCart, Package2, Truck, 
   Clock, Calendar, Filter, RefreshCw, Download, BarChart2, PieChart, 
   TrendingUp, AlertCircle, CheckCircle, Clock as ClockIcon, Calendar as CalendarIcon,
-  ArrowUpRight, ArrowDownRight, MoreHorizontal, ChevronDown, ChevronUp
+  ArrowUpRight, ArrowDownRight, MoreHorizontal, ChevronDown, ChevronUp, X
 } from 'lucide-react';
 import { DateRange } from 'react-date-range';
 import 'react-date-range/dist/styles.css';
 import 'react-date-range/dist/theme/default.css';
 import { format, subDays, addDays } from 'date-fns';
 import { VendorContext } from '../../../context/VendorContext';
+import { useNotifications } from '../../../hooks/useNotifications';
 import config from '../../../config/env';
 import CustomersPage from './invoice/customers/CustomersPage';
 import ItemsPage from './invoice/shared/ItemsPage';
@@ -23,8 +24,11 @@ import PurchaseOrdersPage from './invoice/purchase-orders/PurchaseOrdersPage';
 
 const InvoiceToolReplica = ({ onClose, workspaceId, workspaceName, selectedTask, selectedSubtask }) => {
   const { currentUser } = useContext(VendorContext);
+  const { notifications, unreadCount, markAsRead } = useNotifications();
   const [activeTab, setActiveTab] = useState('home');
   const [isLoading, setIsLoading] = useState(true);
+  const [showNotificationDropdown, setShowNotificationDropdown] = useState(false);
+  const notificationDropdownRef = useRef(null);
   const [dateRange, setDateRange] = useState([
     {
       startDate: subDays(new Date(), 30),
@@ -104,6 +108,43 @@ const InvoiceToolReplica = ({ onClose, workspaceId, workspaceName, selectedTask,
     setShowDatePicker(false);
   };
 
+  // Close notification dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (notificationDropdownRef.current && !notificationDropdownRef.current.contains(event.target)) {
+        setShowNotificationDropdown(false);
+      }
+    };
+
+    if (showNotificationDropdown) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [showNotificationDropdown]);
+
+  // Test function to simulate a notification (for debugging)
+  const testNotification = () => {
+    // This creates a test notification to verify the system is working
+    const testMsg = {
+      type: 'notification',
+      notification: {
+        id: `test-${Date.now()}`,
+        title: 'Quote Approved by PM',
+        message: 'Your quote #CG-2025001 has been approved by PM',
+        timestamp: new Date().toISOString(),
+        read: false,
+        icon: '✓',
+        color: 'green'
+      }
+    };
+    
+    // Simulate WebSocket message by manually triggering
+    const event = new CustomEvent('test-notification', { detail: testMsg });
+    window.dispatchEvent(event);
+    console.log('📬 Test notification sent:', testMsg);
+  };
+
   const handleStatusFilterChange = (status) => {
     setStatusFilter(status);
   };
@@ -169,6 +210,86 @@ const InvoiceToolReplica = ({ onClose, workspaceId, workspaceName, selectedTask,
     { name: 'Gamma Inc', amount: '₹28,000', orders: 6 },
     { name: 'Delta LLC', amount: '₹21,000', orders: 5 }
   ];
+
+  const renderNotificationDropdown = () => (
+    <div className="absolute right-0 mt-2 w-80 bg-white rounded-lg shadow-xl border border-gray-200 z-50 max-h-96 flex flex-col">
+      {/* Header */}
+      <div className="p-4 border-b border-gray-200 flex justify-between items-center">
+        <h3 className="font-semibold text-gray-900">Notifications</h3>
+        {unreadCount > 0 && (
+          <span className="text-xs bg-teal-100 text-teal-800 px-2 py-1 rounded-full font-medium">
+            {unreadCount} new
+          </span>
+        )}
+      </div>
+
+      {/* Notifications List */}
+      <div className="overflow-y-auto flex-1">
+        {notifications && notifications.length > 0 ? (
+          notifications.slice(0, 10).map((notification, index) => (
+            <div
+              key={notification.id || index}
+              className={`p-4 border-b border-gray-100 hover:bg-gray-50 cursor-pointer transition-colors ${
+                !notification.read ? 'bg-teal-50' : ''
+              }`}
+              onClick={() => {
+                if (!notification.read) {
+                  markAsRead(notification.id);
+                }
+                if (notification.documentLink) {
+                  // Navigate to document if needed
+                }
+              }}
+            >
+              <div className="flex gap-3">
+                <div
+                  className={`p-2 rounded-lg flex-shrink-0 ${
+                    notification.color === 'blue'
+                      ? 'bg-blue-50 text-blue-600'
+                      : notification.color === 'green'
+                      ? 'bg-green-50 text-green-600'
+                      : notification.color === 'purple'
+                      ? 'bg-purple-50 text-purple-600'
+                      : 'bg-amber-50 text-amber-600'
+                  }`}
+                >
+                  {notification.icon || <Bell size={18} />}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex justify-between items-start gap-2">
+                    <p className="font-medium text-gray-900 text-sm">{notification.title}</p>
+                    {!notification.read && (
+                      <div className="w-2 h-2 bg-teal-600 rounded-full flex-shrink-0 mt-1"></div>
+                    )}
+                  </div>
+                  <p className="text-xs text-gray-600 mt-1">{notification.message}</p>
+                  <p className="text-xs text-gray-400 mt-2">
+                    {notification.timestamp
+                      ? new Date(notification.timestamp).toLocaleTimeString()
+                      : 'Just now'}
+                  </p>
+                </div>
+              </div>
+            </div>
+          ))
+        ) : (
+          <div className="p-8 text-center text-gray-500">
+            <Bell size={32} className="mx-auto mb-2 opacity-30" />
+            <p className="text-sm">No notifications yet</p>
+          </div>
+        )}
+      </div>
+
+      {/* Footer */}
+      {notifications && notifications.length > 0 && (
+        <div className="p-3 border-t border-gray-200 text-center">
+          <button className="text-sm text-teal-600 hover:text-teal-700 font-medium">
+            View All Notifications
+          </button>
+        </div>
+      )}
+    </div>
+  );
 
   const maxSalesValue = Math.max(...salesData.map(d => d.value));
 
@@ -703,13 +824,27 @@ const InvoiceToolReplica = ({ onClose, workspaceId, workspaceName, selectedTask,
               </div>
             </div>
             <div className="flex items-center space-x-4">
-              <button className="p-2 text-gray-400 hover:text-gray-600">
+              <button 
+                className="p-2 text-gray-400 hover:text-gray-600"
+                onClick={testNotification}
+                title="Test Notification (Debug)"
+              >
                 <Plus className="w-5 h-5" />
               </button>
-              <button className="p-2 text-gray-400 hover:text-gray-600 relative">
-                <Bell className="w-5 h-5" />
-                <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">3</span>
-              </button>
+              <div className="relative" ref={notificationDropdownRef}>
+                <button 
+                  onClick={() => setShowNotificationDropdown(!showNotificationDropdown)}
+                  className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full transition-colors relative"
+                >
+                  <Bell className="w-5 h-5" />
+                  {unreadCount > 0 && (
+                    <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold">
+                      {unreadCount > 9 ? '9+' : unreadCount}
+                    </span>
+                  )}
+                </button>
+                {showNotificationDropdown && renderNotificationDropdown()}
+              </div>
               <button className="w-8 h-8 bg-teal-600 rounded-full flex items-center justify-center text-white font-semibold">
                 D
               </button>

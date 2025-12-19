@@ -372,6 +372,14 @@ const ItemSelectionModal = ({ open, onClose, onSelect }) => {
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(false);
   const [fetched, setFetched] = useState(false);
+  const [showAddForm, setShowAddForm] = useState(false);
+  const [newItemData, setNewItemData] = useState({
+    name: '',
+    description: '',
+    rate: '',
+    quantity: ''
+  });
+  const [savingItem, setSavingItem] = useState(false);
 
 
   React.useEffect(() => {
@@ -401,6 +409,41 @@ const ItemSelectionModal = ({ open, onClose, onSelect }) => {
     }
   }, [open, fetched, currentUser?.vendorId]);
 
+  const handleAddNewItem = () => {
+    if (!newItemData.name.trim()) {
+      alert('Please enter item name');
+      return;
+    }
+    if (!newItemData.rate.trim()) {
+      alert('Please enter item price');
+      return;
+    }
+
+    // Create a new item object
+    const newItem = {
+      id: `temp-${Date.now()}`,
+      name: newItemData.name,
+      itemName: newItemData.name,
+      description: newItemData.description,
+      rate: parseFloat(newItemData.rate),
+      quantity: newItemData.quantity ? parseInt(newItemData.quantity) : 1,
+      isTemporary: true // Mark as temporary/new item
+    };
+
+    // Select the new item
+    onSelect(newItem);
+    
+    // Reset form
+    setNewItemData({
+      name: '',
+      description: '',
+      rate: '',
+      quantity: ''
+    });
+    setShowAddForm(false);
+    onClose();
+  };
+
   const filtered = items.filter((item) =>
     (item.name || item.itemName || item.description || '').toLowerCase().includes(search.toLowerCase())
   );
@@ -409,67 +452,151 @@ const ItemSelectionModal = ({ open, onClose, onSelect }) => {
   
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-30">
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl p-6 relative animate-fadeIn max-h-[80vh] overflow-hidden">
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl p-6 relative animate-fadeIn max-h-[80vh] overflow-hidden flex flex-col">
         <button onClick={onClose} className="absolute top-4 right-4 text-gray-400 hover:text-gray-700 text-2xl">×</button>
-        <h2 className="text-xl font-bold mb-4 text-gray-800">Select Item</h2>
         
-        <input
-          className="w-full border rounded px-4 py-2 mb-4 focus:outline-none focus:ring-2 focus:ring-blue-200"
-          placeholder="Search items..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-        />
-        
-        <div className="max-h-96 overflow-y-auto">
-          {loading ? (
-            <div className="flex items-center justify-center py-8">
-              <Loader2 className="animate-spin mr-2" size={20} />
-              Loading items...
-            </div>
-          ) : filtered.length === 0 ? (
-            <div className="text-center py-8 text-gray-500">
-              {search ? 'No items found matching your search.' : 'No items available.'}
-            </div>
-          ) : (
-            filtered.map((item, index) => (
-              <div
-                key={item.id || item.itemId || index}
-                className="px-4 py-3 hover:bg-blue-50 cursor-pointer rounded border-b border-gray-100 last:border-b-0"
-                onClick={() => { onSelect(item); onClose(); }}
-              >
-                <div className="flex justify-between items-start">
-                  <div className="flex-1">
-                    <div className="font-medium text-gray-900">
-                      {item.name || item.itemName || 'Unnamed Item'}
-                    </div>
-                    {item.description && (
-                      <div className="text-sm text-gray-600 mt-1">
-                        {item.description}
+        {!showAddForm ? (
+          <>
+            <h2 className="text-xl font-bold mb-4 text-gray-800">Select Item</h2>
+            
+            <input
+              className="w-full border rounded px-4 py-2 mb-4 focus:outline-none focus:ring-2 focus:ring-blue-200"
+              placeholder="Search items..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+            />
+
+            <button
+              onClick={() => setShowAddForm(true)}
+              className="mb-4 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition flex items-center gap-2 w-full justify-center"
+            >
+              <Plus size={16} />
+              Add New Item
+            </button>
+            
+            <div className="max-h-96 overflow-y-auto flex-1">
+              {loading ? (
+                <div className="flex items-center justify-center py-8">
+                  <Loader2 className="animate-spin mr-2" size={20} />
+                  Loading items...
+                </div>
+              ) : filtered.length === 0 ? (
+                <div className="text-center py-8 text-gray-500">
+                  {search ? 'No items found matching your search.' : 'No items available.'}
+                </div>
+              ) : (
+                filtered.map((item, index) => (
+                  <div
+                    key={item.id || item.itemId || index}
+                    className="px-4 py-3 hover:bg-blue-50 cursor-pointer rounded border-b border-gray-100 last:border-b-0"
+                    onClick={() => { onSelect(item); onClose(); }}
+                  >
+                    <div className="flex justify-between items-start">
+                      <div className="flex-1">
+                        <div className="font-medium text-gray-900">
+                          {item.name || item.itemName || 'Unnamed Item'}
+                        </div>
+                        {item.description && (
+                          <div className="text-sm text-gray-600 mt-1">
+                            {item.description}
+                          </div>
+                        )}
+                        <div className="flex gap-4 mt-2 text-xs text-gray-500">
+                          {item.hsn && <span>HSN: {item.hsn}</span>}
+                          {item.unit && <span>Unit: {item.unit}</span>}
+                          {item.category && <span>Category: {item.category}</span>}
+                        </div>
                       </div>
-                    )}
-                    <div className="flex gap-4 mt-2 text-xs text-gray-500">
-                      {item.hsn && <span>HSN: {item.hsn}</span>}
-                      {item.unit && <span>Unit: {item.unit}</span>}
-                      {item.category && <span>Category: {item.category}</span>}
+                      <div className="text-right ml-4">
+                        {item.rate && (
+                          <div className="font-semibold text-green-600">
+                            ₹{parseFloat(item.rate).toLocaleString()}
+                          </div>
+                        )}
+                        {item.sellingPrice && item.sellingPrice !== item.rate && (
+                          <div className="text-sm text-gray-500">
+                            Selling: ₹{parseFloat(item.sellingPrice).toLocaleString()}
+                          </div>
+                        )}
+                      </div>
                     </div>
                   </div>
-                  <div className="text-right ml-4">
-                    {item.rate && (
-                      <div className="font-semibold text-green-600">
-                        ₹{parseFloat(item.rate).toLocaleString()}
-                      </div>
-                    )}
-                    {item.sellingPrice && item.sellingPrice !== item.rate && (
-                      <div className="text-sm text-gray-500">
-                        Selling: ₹{parseFloat(item.sellingPrice).toLocaleString()}
-                      </div>
-                    )}
-                  </div>
+                ))
+              )}
+            </div>
+          </>
+        ) : (
+          <>
+            <h2 className="text-xl font-bold mb-4 text-gray-800">Add New Item</h2>
+            
+            <div className="space-y-4 flex-1 overflow-y-auto">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Item Name*</label>
+                <input
+                  type="text"
+                  value={newItemData.name}
+                  onChange={(e) => setNewItemData({...newItemData, name: e.target.value})}
+                  className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-200"
+                  placeholder="Enter item name..."
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
+                <textarea
+                  value={newItemData.description}
+                  onChange={(e) => setNewItemData({...newItemData, description: e.target.value})}
+                  className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-200"
+                  placeholder="Enter item description..."
+                  rows="3"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Price*</label>
+                  <input
+                    type="number"
+                    value={newItemData.rate}
+                    onChange={(e) => setNewItemData({...newItemData, rate: e.target.value})}
+                    className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-200"
+                    placeholder="Enter price..."
+                    step="0.01"
+                    min="0"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Quantity</label>
+                  <input
+                    type="number"
+                    value={newItemData.quantity}
+                    onChange={(e) => setNewItemData({...newItemData, quantity: e.target.value})}
+                    className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-200"
+                    placeholder="Enter quantity..."
+                    min="1"
+                  />
                 </div>
               </div>
-            ))
-          )}
-        </div>
+            </div>
+
+            <div className="flex gap-3 mt-6">
+              <button
+                onClick={() => setShowAddForm(false)}
+                className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition"
+              >
+                Back
+              </button>
+              <button
+                onClick={handleAddNewItem}
+                disabled={savingItem}
+                className="flex-1 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition disabled:opacity-50"
+              >
+                {savingItem ? 'Saving...' : 'Save Item'}
+              </button>
+            </div>
+          </>
+        )}
       </div>
     </div>
   );
@@ -530,11 +657,17 @@ const NewQuoteComponentInner = ({
     const [customerDetails, setCustomerDetails] = useState(null);
     const [addressLoading, setAddressLoading] = useState(false);
     const [addressEditMode, setAddressEditMode] = useState(null);
-    const [editingCustomerDetails, setEditingCustomerDetails] = useState(false);
+    const [editingBillTo, setEditingBillTo] = useState(false);
+    const [editingShipTo, setEditingShipTo] = useState(false);
     const [editableCustomerDetails, setEditableCustomerDetails] = useState({
-        billingAddress: '',
+        billingAddress: CAASDI_GLOBAL_CUSTOMER.billingAddress,
+        billingPhone: CAASDI_GLOBAL_CUSTOMER.phone || '',
+        billingEmail: CAASDI_GLOBAL_CUSTOMER.email || '',
+        billingGstin: CAASDI_GLOBAL_CUSTOMER.gstin || '',
         shippingAddress: '',
-        gstin: ''
+        shippingPhone: '',
+        shippingEmail: '',
+        shippingGstin: ''
     });
     const [addressForm, setAddressForm] = useState({
         billing: { street1: '', street2: '', city: '', state: '', country: '', pinCode: '', phone: '', fax: '' },
@@ -605,12 +738,17 @@ const NewQuoteComponentInner = ({
             const customer = initialData.customerDetails || initialData.selectedCustomer;
             setSelectedCustomer(customer);
             
-            // Initialize editable customer details
+            // Initialize editable customer details - keep billing as Caasdi Global, allow shipping to be customized
             if (customer) {
                 setEditableCustomerDetails({
-                    billingAddress: customer.billingAddress || '',
+                    billingAddress: CAASDI_GLOBAL_CUSTOMER.billingAddress,
+                    billingPhone: CAASDI_GLOBAL_CUSTOMER.phone || '',
+                    billingEmail: CAASDI_GLOBAL_CUSTOMER.email || '',
+                    billingGstin: CAASDI_GLOBAL_CUSTOMER.gstin || '',
                     shippingAddress: customer.shippingAddress || '',
-                    gstin: customer.gstin || ''
+                    shippingPhone: customer.shippingPhone || '',
+                    shippingEmail: customer.shippingEmail || '',
+                    shippingGstin: customer.shippingGstin || ''
                 });
             }
             
@@ -754,11 +892,16 @@ const NewQuoteComponentInner = ({
                     return updatedCustomer;
                 });
 
-                // Initialize editable details
+                // Initialize editable details - keep billing as Caasdi Global, allow shipping to be customized
                 setEditableCustomerDetails({
-                    billingAddress: billingAddress,
-                    shippingAddress: shippingAddress,
-                    gstin: customerDetails.gstin || ''
+                    billingAddress: CAASDI_GLOBAL_CUSTOMER.billingAddress,
+                    billingPhone: CAASDI_GLOBAL_CUSTOMER.phone || '',
+                    billingEmail: CAASDI_GLOBAL_CUSTOMER.email || '',
+                    billingGstin: CAASDI_GLOBAL_CUSTOMER.gstin || '',
+                    shippingAddress: shippingAddress || '',
+                    shippingPhone: customerDetails.workPhone || customerDetails.mobile || '',
+                    shippingEmail: customerDetails.email || '',
+                    shippingGstin: customerDetails.gstin || ''
                 });
             }
         } catch (error) {
@@ -1028,46 +1171,58 @@ const NewQuoteComponentInner = ({
         setSelectedItemIndex(null);
     };
 
-    // Customer details editing handlers
-    const handleEditCustomerDetails = () => {
+    // Bill To and Ship To editing handlers
+    const handleEditBillTo = () => {
+        // Bill To is always fixed to Caasdi Global, so this button should be disabled
+        // But we keep this for consistency
+    };
+
+    const handleEditShipTo = () => {
         if (selectedCustomer) {
-            setEditableCustomerDetails({
-                billingAddress: selectedCustomer.billingAddress || '',
+            setEditableCustomerDetails(prev => ({
+                ...prev,
                 shippingAddress: selectedCustomer.shippingAddress || '',
-                gstin: selectedCustomer.gstin || ''
-            });
-            setEditingCustomerDetails(true);
+                shippingPhone: selectedCustomer.shippingPhone || selectedCustomer.phone || '',
+                shippingEmail: selectedCustomer.shippingEmail || selectedCustomer.email || '',
+                shippingGstin: selectedCustomer.shippingGstin || selectedCustomer.gstin || ''
+            }));
+            setEditingShipTo(true);
         }
     };
 
-    const handleSaveCustomerDetails = async () => {
+    const handleSaveBillTo = () => {
+        // Bill To is always fixed, no changes to save
+    };
+
+    const handleSaveShipTo = () => {
         try {
-            // Update the selected customer with new details
             const updatedCustomer = {
                 ...selectedCustomer,
-                billingAddress: editableCustomerDetails.billingAddress,
                 shippingAddress: editableCustomerDetails.shippingAddress,
-                gstin: editableCustomerDetails.gstin
+                shippingPhone: editableCustomerDetails.shippingPhone,
+                shippingEmail: editableCustomerDetails.shippingEmail,
+                shippingGstin: editableCustomerDetails.shippingGstin
             };
-            
             setSelectedCustomer(updatedCustomer);
-            setEditingCustomerDetails(false);
-            
-            // Optionally, you can make an API call here to save to backend
-            // await updateCustomerDetails(selectedCustomer.customerId, editableCustomerDetails);
-            
+            setEditingShipTo(false);
         } catch (error) {
-            console.error('Error saving customer details:', error);
+            console.error('Error saving ship to details:', error);
         }
     };
 
-    const handleCancelEditCustomerDetails = () => {
-        setEditingCustomerDetails(false);
-        setEditableCustomerDetails({
-            billingAddress: '',
-            shippingAddress: '',
-            gstin: ''
-        });
+    const handleCancelBillTo = () => {
+        // Bill To is always fixed, no cancel needed
+    };
+
+    const handleCancelShipTo = () => {
+        setEditingShipTo(false);
+        setEditableCustomerDetails(prev => ({
+            ...prev,
+            shippingAddress: selectedCustomer.shippingAddress || '',
+            shippingPhone: selectedCustomer.shippingPhone || '',
+            shippingEmail: selectedCustomer.shippingEmail || '',
+            shippingGstin: selectedCustomer.shippingGstin || ''
+        }));
     };
 
     // Load quote number configuration from localStorage
@@ -1333,24 +1488,21 @@ const NewQuoteComponentInner = ({
             id: selectedCustomer.originalCustomerId || selectedCustomer.id,
             name: selectedCustomer.name || selectedCustomer.displayName || selectedCustomer.companyName,
             companyName: selectedCustomer.companyName || selectedCustomer.name || 'Unknown',
-            email: selectedCustomer.email || '',
-            phone: selectedCustomer.phone || selectedCustomer.mobile || '',
-            gstin: editableCustomerDetails.gstin || selectedCustomer.gstin || '',
+            email: editableCustomerDetails.shippingEmail || selectedCustomer.email || '',
+            phone: editableCustomerDetails.shippingPhone || selectedCustomer.phone || selectedCustomer.mobile || '',
+            gstin: editableCustomerDetails.shippingGstin || selectedCustomer.gstin || '',
             address: {
-                billing: selectedCustomer.address?.billing || {},
-                shipping: selectedCustomer.address?.shipping || { ...(selectedCustomer.address?.billing || {}) }
+                billing: CAASDI_GLOBAL_CUSTOMER.address.billing,
+                shipping: selectedCustomer.address?.shipping || {}
             },
             // Indicate this is a quote-specific copy
             isQuoteSpecific: true
         };
         
-        // If billing/shipping addresses were edited, update them
-        if (editableCustomerDetails.billingAddress) {
-            // Parse the edited address back into the address object if needed
-            // Or keep as is if it's already in the right format
-            quoteCustomer.billingAddress = editableCustomerDetails.billingAddress;
-        }
+        // Always set billing address to Caasdi Global
+        quoteCustomer.billingAddress = CAASDI_GLOBAL_CUSTOMER.billingAddress;
         
+        // Use shipping address from editable details
         if (editableCustomerDetails.shippingAddress) {
             quoteCustomer.shippingAddress = editableCustomerDetails.shippingAddress;
         }
@@ -1362,21 +1514,15 @@ const NewQuoteComponentInner = ({
         setIsLoading(true);
 
         // Format customer details for StandardPreview compatibility
+        // IMPORTANT: Billing address is always Caasdi Global
         const formattedCustomerDetails = {
             ...selectedCustomer,
             gstin: selectedCustomer.gstin || '',
             address: {
-                billing: selectedCustomer.address?.billing || {
-                    street1: selectedCustomer.billingAddress?.split('\n')[0] || '',
-                    street2: selectedCustomer.billingAddress?.split('\n')[1] || '',
-                    city: '',
-                    state: '',
-                    pinCode: '',
-                    country: 'India'
-                },
+                billing: CAASDI_GLOBAL_CUSTOMER.address.billing,
                 shipping: selectedCustomer.address?.shipping || {
-                    street1: selectedCustomer.shippingAddress?.split('\n')[0] || '',
-                    street2: selectedCustomer.shippingAddress?.split('\n')[1] || '',
+                    street1: editableCustomerDetails.shippingAddress?.split('\n')[0] || '',
+                    street2: editableCustomerDetails.shippingAddress?.split('\n')[1] || '',
                     city: '',
                     state: '',
                     pinCode: '',
@@ -1402,7 +1548,7 @@ const NewQuoteComponentInner = ({
                 displayName: quoteCustomer.displayName || quoteCustomer.name || quoteCustomer.companyName || '',
                 gstin: quoteCustomer.gstin || '',
                 address: {
-                    billing: quoteCustomer.address?.billing || quoteCustomer.billingAddress || {},
+                    billing: CAASDI_GLOBAL_CUSTOMER.address.billing,
                     shipping: quoteCustomer.address?.shipping || quoteCustomer.shippingAddress || {}
                 }
             },
@@ -1653,135 +1799,179 @@ const NewQuoteComponentInner = ({
                                 <label className="block mb-2 text-lg font-medium text-gray-700 font-poppins">Customer Name*</label>
                                 <CustomerDropdown value={selectedCustomer} onChange={setSelectedCustomer} />
                                 
-                                {/* Customer Details Section */}
+                                {/* Bill To and Ship To Side by Side */}
                                 {selectedCustomer && (
-                                    <div className="mt-4 p-4 bg-gray-50 rounded-lg border">
-                                        <div className="flex justify-between items-start mb-3">
-                                            <h3 className="text-sm font-semibold text-gray-700">Customer Details</h3>
-                                            {!editingCustomerDetails ? (
-                                                <button
-                                                    type="button"
-                                                    onClick={handleEditCustomerDetails}
-                                                    className="text-blue-600 hover:text-blue-800 text-sm flex items-center gap-1"
-                                                >
-                                                    <Edit2 size={14} />
-                                                    Edit
-                                                </button>
-                                            ) : (
-                                                <div className="flex gap-2">
-                                                    <button
-                                                        type="button"
-                                                        onClick={handleSaveCustomerDetails}
-                                                        className="text-green-600 hover:text-green-800 text-sm flex items-center gap-1"
+                                    <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-0">
+                                        {/* Bill To Section */}
+                                        <div className="p-4 border rounded-l-lg">
+                                            <div className="flex justify-between items-start mb-4">
+                                                <h3 className="text-sm font-semibold text-gray-900">Bill To</h3>
+                                                <span className="text-xs text-gray-500 px-2 py-1 bg-gray-200 rounded">Fixed</span>
+                                            </div>
+                                            
+                                            <div className="space-y-4">
+                                                {/* Billing Address */}
+                                                <div>
+                                                    <label className="block text-xs font-medium text-gray-600 mb-1">Address</label>
+                                                    <div 
+                                                        className="text-sm text-gray-700 bg-gray-100 p-3 rounded border border-gray-300 min-h-[80px] cursor-not-allowed overflow-auto whitespace-pre-wrap"
+                                                        style={{pointerEvents: 'none', userSelect: 'none'}}
                                                     >
-                                                        <Check size={14} />
-                                                        Save
-                                                    </button>
-                                                    <button
-                                                        type="button"
-                                                        onClick={handleCancelEditCustomerDetails}
-                                                        className="text-red-600 hover:text-red-800 text-sm flex items-center gap-1"
-                                                    >
-                                                        <X size={14} />
-                                                        Cancel
-                                                    </button>
-                                                </div>
-                                            )}
-                                        </div>
-                                        
-                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                            {/* Billing Address */}
-                                            <div>
-                                                <label className="block text-xs font-medium text-gray-600 mb-1">Billing Address</label>
-                                                {!editingCustomerDetails ? (
-                                                    <div className="text-sm text-gray-800 bg-white p-2 rounded border min-h-[60px]">
-                                                        {selectedCustomer.billingAddress}
+                                                        {editableCustomerDetails.billingAddress || CAASDI_GLOBAL_CUSTOMER.billingAddress}
                                                     </div>
+                                                </div>
+
+                                                {/* Billing Contact Info */}
+                                                <div>
+                                                    <label className="block text-xs font-medium text-gray-600 mb-1">Contact Information</label>
+                                                    <div className="text-sm text-gray-700 bg-gray-100 p-3 rounded border border-gray-300">
+                                                        <div className="mb-2">
+                                                            <span className="text-xs font-medium text-gray-600">Email:</span>
+                                                            <div className="text-gray-700">{editableCustomerDetails.billingEmail || CAASDI_GLOBAL_CUSTOMER.email || 'N/A'}</div>
+                                                        </div>
+                                                        <div>
+                                                            <span className="text-xs font-medium text-gray-600">Phone:</span>
+                                                            <div className="text-gray-700">{editableCustomerDetails.billingPhone || CAASDI_GLOBAL_CUSTOMER.phone || 'N/A'}</div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                {/* Billing GSTIN */}
+                                                <div>
+                                                    <label className="block text-xs font-medium text-gray-600 mb-1">GSTIN</label>
+                                                    <div 
+                                                        className="text-sm text-gray-700 bg-gray-100 p-3 rounded border border-gray-300 cursor-not-allowed"
+                                                        style={{pointerEvents: 'none', userSelect: 'none'}}
+                                                    >
+                                                        {editableCustomerDetails.billingGstin || CAASDI_GLOBAL_CUSTOMER.gstin}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        {/* Vertical Divider */}
+                                        <div className="hidden md:block absolute left-1/2 transform -translate-x-1/2 h-auto bg-gray-300" style={{width: '1px', marginTop: '4px', marginBottom: '4px'}}></div>
+
+                                        {/* Ship To Section */}
+                                        <div className="p-4  border  rounded-r-lg border-l-0">
+                                            <div className="flex justify-between items-start mb-4">
+                                                <h3 className="text-sm font-semibold text-gray-900">Ship To</h3>
+                                                {!editingShipTo ? (
+                                                    <button
+                                                        type="button"
+                                                        onClick={handleEditShipTo}
+                                                        className="text-blue-600 hover:text-blue-800 text-sm flex items-center gap-1"
+                                                    >
+                                                        <Edit2 size={14} />
+                                                        Edit
+                                                    </button>
                                                 ) : (
-                                                    <textarea
-                                                        value={editableCustomerDetails.billingAddress}
-                                                        onChange={(e) => setEditableCustomerDetails({
-                                                            ...editableCustomerDetails,
-                                                            billingAddress: e.target.value
-                                                        })}
-                                                        className="w-full text-sm p-2 border border-gray-300 rounded resize-none"
-                                                        rows="3"
-                                                        placeholder="Enter billing address..."
-                                                        autoComplete="off"
-                                                        data-form-type="other"
-                                                        data-lpignore="true"
-                                                        data-1p-ignore
-                                                    />
+                                                    <div className="flex gap-2">
+                                                        <button
+                                                            type="button"
+                                                            onClick={handleSaveShipTo}
+                                                            className="text-green-600 hover:text-green-800 text-sm flex items-center gap-1"
+                                                        >
+                                                            <Check size={14} />
+                                                            Save
+                                                        </button>
+                                                        <button
+                                                            type="button"
+                                                            onClick={handleCancelShipTo}
+                                                            className="text-red-600 hover:text-red-800 text-sm flex items-center gap-1"
+                                                        >
+                                                            <X size={14} />
+                                                            Cancel
+                                                        </button>
+                                                    </div>
                                                 )}
                                             </div>
                                             
-                                            {/* Shipping Address */}
-                                            <div>
-                                                <label className="block text-xs font-medium text-gray-600 mb-1">Shipping Address</label>
-                                                {!editingCustomerDetails ? (
-                                                    <div className="text-sm text-gray-800 bg-white p-2 rounded border min-h-[60px]">
-                                                        {selectedCustomer.shippingAddress}
-                                                    </div>
-                                                ) : (
-                                                    <textarea
-                                                        value={editableCustomerDetails.shippingAddress}
-                                                        onChange={(e) => setEditableCustomerDetails({
-                                                            ...editableCustomerDetails,
-                                                            shippingAddress: e.target.value
-                                                        })}
-                                                        className="w-full text-sm p-2 border border-gray-300 rounded resize-none"
-                                                        rows="3"
-                                                        placeholder="Enter shipping address..."
-                                                        autoComplete="off"
-                                                        data-form-type="other"
-                                                        data-lpignore="true"
-                                                        data-1p-ignore
-                                                    />
-                                                )}
-                                            </div>
-                                        </div>
-                                        
-                                        {/* Contact Information */}
-                                        <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
-                                            <div>
-                                                <label className="block text-xs font-medium text-gray-600 mb-1">Email</label>
-                                                <div className="text-sm text-gray-800 bg-white p-2 rounded border">
-                                                    {selectedCustomer.email || 'No email provided'}
+                                            <div className="space-y-4">
+                                                {/* Shipping Address */}
+                                                <div>
+                                                    <label className="block text-xs font-medium text-gray-600 mb-1">Address</label>
+                                                    {!editingShipTo ? (
+                                                        <div className="text-sm text-gray-800 bg-white p-3 rounded border min-h-[80px] whitespace-pre-wrap overflow-auto">
+                                                            {editableCustomerDetails.shippingAddress || 'Enter shipping address...'}
+                                                        </div>
+                                                    ) : (
+                                                        <textarea
+                                                            value={editableCustomerDetails.shippingAddress}
+                                                            onChange={(e) => setEditableCustomerDetails({
+                                                                ...editableCustomerDetails,
+                                                                shippingAddress: e.target.value
+                                                            })}
+                                                            className="w-full text-sm p-3 border border-gray-300 rounded resize-none"
+                                                            rows="4"
+                                                            placeholder="Enter shipping address..."
+                                                            autoComplete="off"
+                                                            data-form-type="other"
+                                                            data-lpignore="true"
+                                                            data-1p-ignore
+                                                        />
+                                                    )}
                                                 </div>
-                                            </div>
-                                            <div>
-                                                <label className="block text-xs font-medium text-gray-600 mb-1">Phone</label>
-                                                <div className="text-sm text-gray-800 bg-white p-2 rounded border">
-                                                    {selectedCustomer.phone || selectedCustomer.mobile || 'No phone provided'}
+
+                                                {/* Shipping Contact Info */}
+                                                <div>
+                                                    <label className="block text-xs font-medium text-gray-600 mb-1">Contact Information</label>
+                                                    {!editingShipTo ? (
+                                                        <div className="text-sm text-gray-800 bg-white p-3 rounded border space-y-2">
+                                                            <div>
+                                                                <span className="text-xs font-medium text-gray-600">Email:</span>
+                                                                <div className="text-gray-700">{editableCustomerDetails.shippingEmail || 'N/A'}</div>
+                                                            </div>
+                                                            <div>
+                                                                <span className="text-xs font-medium text-gray-600">Phone:</span>
+                                                                <div className="text-gray-700">{editableCustomerDetails.shippingPhone || 'N/A'}</div>
+                                                            </div>
+                                                        </div>
+                                                    ) : (
+                                                        <div className="space-y-2">
+                                                            <input
+                                                                type="email"
+                                                                value={editableCustomerDetails.shippingEmail}
+                                                                onChange={(e) => setEditableCustomerDetails({
+                                                                    ...editableCustomerDetails,
+                                                                    shippingEmail: e.target.value
+                                                                })}
+                                                                className="w-full text-sm p-2 border border-gray-300 rounded"
+                                                                placeholder="Enter email..."
+                                                            />
+                                                            <input
+                                                                type="tel"
+                                                                value={editableCustomerDetails.shippingPhone}
+                                                                onChange={(e) => setEditableCustomerDetails({
+                                                                    ...editableCustomerDetails,
+                                                                    shippingPhone: e.target.value
+                                                                })}
+                                                                className="w-full text-sm p-2 border border-gray-300 rounded"
+                                                                placeholder="Enter phone..."
+                                                            />
+                                                        </div>
+                                                    )}
                                                 </div>
-                                            </div>
-                                        </div>
-                                        
-                                        {/* GSTIN and Customer Type */}
-                                        <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
-                                            <div>
-                                                <label className="block text-xs font-medium text-gray-600 mb-1">GSTIN</label>
-                                                {!editingCustomerDetails ? (
-                                                    <div className="text-sm text-gray-800 bg-white p-2 rounded border">
-                                                        {selectedCustomer.gstin || selectedCustomer.gstNumber || 'No GSTIN provided'}
-                                                    </div>
-                                                ) : (
-                                                    <input
-                                                        type="text"
-                                                        value={editableCustomerDetails.gstin}
-                                                        onChange={(e) => setEditableCustomerDetails({
-                                                            ...editableCustomerDetails,
-                                                            gstin: e.target.value
-                                                        })}
-                                                        className="w-full text-sm p-2 border border-gray-300 rounded"
-                                                        placeholder="Enter GSTIN..."
-                                                    />
-                                                )}
-                                            </div>
-                                            <div>
-                                                <label className="block text-xs font-medium text-gray-600 mb-1">Customer Type</label>
-                                                <div className="text-sm text-gray-800 bg-white p-2 rounded border">
-                                                    {selectedCustomer.customerType || selectedCustomer.type || 'Not specified'}
+
+                                                {/* Shipping GSTIN */}
+                                                <div>
+                                                    <label className="block text-xs font-medium text-gray-600 mb-1">GSTIN</label>
+                                                    {!editingShipTo ? (
+                                                        <div className="text-sm text-gray-800 bg-white p-3 rounded border">
+                                                            {editableCustomerDetails.shippingGstin || 'N/A'}
+                                                        </div>
+                                                    ) : (
+                                                        <input
+                                                            type="text"
+                                                            value={editableCustomerDetails.shippingGstin}
+                                                            onChange={(e) => setEditableCustomerDetails({
+                                                                ...editableCustomerDetails,
+                                                                shippingGstin: e.target.value
+                                                            })}
+                                                            className="w-full text-sm p-2 border border-gray-300 rounded"
+                                                            placeholder="Enter GSTIN..."
+                                                        />
+                                                    )}
                                                 </div>
                                             </div>
                                         </div>
