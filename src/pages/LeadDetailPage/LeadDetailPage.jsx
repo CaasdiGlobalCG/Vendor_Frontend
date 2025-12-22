@@ -183,9 +183,9 @@ const LeadDetailPage = () => {
                 throw new Error('File upload succeeded but URL is missing in response.');
             }
 
-            // 2) Store quotation snapshot in vendor_quotes_to_pm table
+            // 2) Update lead_invitations table with quotation pdfUrl and approve lead (vendor_accepted)
             const response = await fetch(`/api/vendor-leads/${leadId}/quotation`, {
-                method: 'POST',
+                method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json'
                 },
@@ -206,8 +206,24 @@ const LeadDetailPage = () => {
                 );
             }
 
+            // Update local state with the new lead data
             setUploadedQuotation(data.quotation || null);
-            alert('Quotation uploaded and sent to PM successfully.');
+            
+            // Update leadDetails in location state to persist the new status
+            if (location.state) {
+                location.state.projectData = {
+                    ...location.state.projectData,
+                    status: 'vendor_accepted',
+                    pdfUrl,
+                    vendorResponse: {
+                        accepted: true,
+                        quotationPdfUrl: pdfUrl,
+                        submittedAt: new Date().toISOString()
+                    }
+                };
+            }
+            
+            alert('Quotation uploaded successfully! Lead status has been approved.');
         } catch (error) {
             console.error('Error uploading quotation:', error);
             setQuotationError(error.message || 'Failed to upload quotation. Please try again.');
