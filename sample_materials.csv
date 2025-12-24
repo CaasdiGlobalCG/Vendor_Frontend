@@ -1,0 +1,11 @@
+Name,Quantity,Unit,Priority,Notes
+Steel Sheets,100,pcs,high,Urgent requirement for production line A
+Plastic Pellets,50,kg,medium,For injection molding batch #234
+Copper Wire,200,m,high,Electrical wiring for main assembly
+Rubber Gaskets,500,pcs,low,Regular stock replenishment
+Aluminum Rods,75,pcs,medium,CNC machining materials
+Lubricant Oil,25,L,low,Maintenance supplies
+Packaging Boxes,1000,box,medium,Product packaging for Q1 shipments
+Safety Gloves,100,pcs,high,PPE requirement - urgent
+Welding Rods,50,pcs,medium,Fabrication department
+Cleaning Solvent,10,gal,low,Workshop cleaning supplies

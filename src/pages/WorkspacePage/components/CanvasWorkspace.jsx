@@ -531,24 +531,7 @@ const edgeTypes = {
     if (pendingTableElement && pendingPosition) {
       const newNode = createElementNode(pendingTableElement, pendingPosition, tableConfig);
       console.log('🆕 Creating table with custom data:', newNode);
-      setNodes((nds) => {
-        const updatedNodes = nds.concat(newNode);
-        // Auto-connect to previous node if one exists
-        if (nds.length > 0) {
-          const prevNode = nds[nds.length - 1];
-          const edgeId = `edge_${prevNode.id}_${newNode.id}`;
-          setEdges((eds) => eds.concat({
-            id: edgeId,
-            source: prevNode.id,
-            target: newNode.id,
-            type: 'custom',
-            animated: true,
-            style: { strokeWidth: 2, stroke: '#6b7280' },
-            data: { label: '' }
-          }));
-        }
-        return updatedNodes;
-      });
+      setNodes((nds) => nds.concat(newNode));
       
       // Track the table creation activity
       await trackActivity(
@@ -2182,20 +2165,6 @@ const edgeTypes = {
         console.log('🔍 Node data:', newNode.data);
         setNodes((nds) => {
           const updatedNodes = nds.concat(newNode);
-          // Auto-connect to previous node if one exists
-          if (nds.length > 0) {
-            const prevNode = nds[nds.length - 1];
-            const edgeId = `edge_${prevNode.id}_${newNode.id}`;
-            setEdges((eds) => eds.concat({
-              id: edgeId,
-              source: prevNode.id,
-              target: newNode.id,
-              type: 'custom',
-              animated: true,
-              style: { strokeWidth: 2, stroke: '#6b7280' },
-              data: { label: '' }
-            }));
-          }
           console.log('📊 Updated nodes array:', updatedNodes);
           return updatedNodes;
         });

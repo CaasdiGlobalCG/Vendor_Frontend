@@ -1,9 +1,11 @@
-import React, { useState, useContext } from 'react';
-import { Plus, Minus, Send, Package, AlertCircle, CheckCircle, Clock } from 'lucide-react';
+import React, { useState, useContext, useEffect, useRef } from 'react';
+import { Plus, Minus, Send, Package, AlertCircle, CheckCircle, Clock, Upload, FileSpreadsheet } from 'lucide-react';
 import { VendorContext } from '../../../../context/VendorContext';
 import config from '../../../../config/env';
+import { getWorkspaceById, updateWorkspace } from '../../utils/workspaceApi';
+import * as XLSX from 'xlsx';
 
-const MaterialsRenderer = ({ data, materialType, workspaceId, currentUser }) => {
+const MaterialsRenderer = ({ data, materialType, workspaceId, currentUser, nodeId }) => {
   // Use data.id as the primary materialType, fallback to materialType prop
   const actualMaterialType = data?.id || materialType;
   
@@ -72,11 +74,46 @@ const MaterialsRenderer = ({ data, materialType, workspaceId, currentUser }) => 
   const category = getMaterialCategory(actualMaterialType);
   const CategoryIcon = category.icon;
 
-  // State for material requests
-  const [materialRequests, setMaterialRequests] = useState([
-    { id: 1, name: '', quantity: '', unit: 'pcs', priority: 'medium', notes: '', status: 'draft' }
-  ]);
-  const [requestTitle, setRequestTitle] = useState(`${category.name} Request`);
+  // State for material requests - initialize from persisted data if available
+  const [materialRequests, setMaterialRequests] = useState(() => {
+    if (data?.procurementData?.materialRequests && data.procurementData.materialRequests.length > 0) {
+      return data.procurementData.materialRequests;
+    }
+    return [{ id: 1, name: '', quantity: '', unit: 'pcs', priority: 'medium', notes: '', status: 'draft' }];
+  });
+  const [requestTitle, setRequestTitle] = useState(() => {
+    return data?.procurementData?.requestTitle || `${category.name} Request`;
+  });
+  const [procurementStatus, setProcurementStatus] = useState(() => {
+    return data?.procurementData?.status || null; // null, 'sent', 'processing', 'completed'
+  });
+  const [submittedAt, setSubmittedAt] = useState(() => {
+    return data?.procurementData?.submittedAt || null;
+  });
+
+  // Persist procurement data to node
+  const persistProcurementData = async (procurementData) => {
+    if (!workspaceId || !nodeId) {
+      console.warn('Cannot persist: missing workspaceId or nodeId');
+      return;
+    }
+    try {
+      const workspace = await getWorkspaceById(workspaceId);
+      const nodes = workspace.nodes || [];
+      const updatedNodes = nodes.map((node) =>
+        node.id === nodeId 
+          ? { ...node, data: { ...node.data, procurementData } } 
+          : node
+      );
+      await updateWorkspace(workspaceId, { nodes: updatedNodes });
+      console.log('✅ Procurement data persisted successfully');
+    } catch (err) {
+      console.error('Failed to persist procurement data:', err);
+    }
+  };
+
+  // File input ref for Excel upload
+  const fileInputRef = useRef(null);
 
   // Add new material request
   const addMaterialRequest = () => {
@@ -104,6 +141,145 @@ const MaterialsRenderer = ({ data, materialType, workspaceId, currentUser }) => 
     setMaterialRequests(materialRequests.map(req => 
       req.id === id ? { ...req, [field]: value } : req
     ));
+  };
+
+  // Handle Excel file upload
+  const handleExcelUpload = (event) => {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    // Check file type
+    const validTypes = [
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', // .xlsx
+      'application/vnd.ms-excel', // .xls
+      'text/csv' // .csv
+    ];
+    
+    if (!validTypes.includes(file.type) && !file.name.match(/\.(xlsx|xls|csv)$/i)) {
+      alert('Please upload a valid Excel file (.xlsx, .xls) or CSV file.');
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      try {
+        const data = new Uint8Array(e.target.result);
+        const workbook = XLSX.read(data, { type: 'array' });
+        
+        // Get the first sheet
+        const sheetName = workbook.SheetNames[0];
+        const worksheet = workbook.Sheets[sheetName];
+        
+        // Convert to JSON
+        const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+        
+        if (jsonData.length < 2) {
+          alert('The Excel file appears to be empty or has no data rows.');
+          return;
+        }
+
+        // Get headers (first row) and normalize them
+        const headers = jsonData[0].map(h => String(h || '').toLowerCase().trim());
+        
+        // Map common column names to our fields
+        const columnMapping = {
+          name: ['name', 'material name', 'item', 'item name', 'material', 'product', 'product name', 'description'],
+          quantity: ['quantity', 'qty', 'amount', 'count', 'no', 'number'],
+          unit: ['unit', 'uom', 'unit of measure', 'measure'],
+          priority: ['priority', 'urgency', 'importance'],
+          notes: ['notes', 'note', 'remarks', 'remark', 'comment', 'comments', 'description', 'details']
+        };
+
+        // Find column indices
+        const findColumnIndex = (fieldMappings) => {
+          for (const mapping of fieldMappings) {
+            const index = headers.findIndex(h => h.includes(mapping) || mapping.includes(h));
+            if (index !== -1) return index;
+          }
+          return -1;
+        };
+
+        const nameIndex = findColumnIndex(columnMapping.name);
+        const quantityIndex = findColumnIndex(columnMapping.quantity);
+        const unitIndex = findColumnIndex(columnMapping.unit);
+        const priorityIndex = findColumnIndex(columnMapping.priority);
+        const notesIndex = findColumnIndex(columnMapping.notes);
+
+        if (nameIndex === -1) {
+          alert('Could not find a "Name" or "Material Name" column in the Excel file.\n\nPlease ensure your Excel has columns like: Name, Quantity, Unit, Priority, Notes');
+          return;
+        }
+
+        // Parse data rows (skip header)
+        const newRequests = [];
+        for (let i = 1; i < jsonData.length; i++) {
+          const row = jsonData[i];
+          if (!row || row.length === 0) continue;
+          
+          const name = row[nameIndex] ? String(row[nameIndex]).trim() : '';
+          if (!name) continue; // Skip rows without a name
+
+          // Parse quantity
+          let quantity = '';
+          if (quantityIndex !== -1 && row[quantityIndex] !== undefined) {
+            quantity = String(row[quantityIndex]).trim();
+          }
+
+          // Parse unit
+          let unit = 'pcs';
+          if (unitIndex !== -1 && row[unitIndex]) {
+            const unitValue = String(row[unitIndex]).toLowerCase().trim();
+            const validUnits = ['pcs', 'kg', 'lbs', 'm', 'ft', 'l', 'gal', 'box', 'roll', 'sheet'];
+            if (validUnits.includes(unitValue)) {
+              unit = unitValue === 'l' ? 'L' : unitValue;
+            }
+          }
+
+          // Parse priority
+          let priority = 'medium';
+          if (priorityIndex !== -1 && row[priorityIndex]) {
+            const priorityValue = String(row[priorityIndex]).toLowerCase().trim();
+            if (['low', 'medium', 'high'].includes(priorityValue)) {
+              priority = priorityValue;
+            }
+          }
+
+          // Parse notes
+          let notes = '';
+          if (notesIndex !== -1 && row[notesIndex]) {
+            notes = String(row[notesIndex]).trim();
+          }
+
+          newRequests.push({
+            id: Date.now() + i,
+            name,
+            quantity,
+            unit,
+            priority,
+            notes,
+            status: 'draft'
+          });
+        }
+
+        if (newRequests.length === 0) {
+          alert('No valid material items found in the Excel file.');
+          return;
+        }
+
+        // Replace or append to existing requests
+        setMaterialRequests(newRequests);
+        alert(`✅ Successfully imported ${newRequests.length} material item(s) from Excel!`);
+
+      } catch (error) {
+        console.error('Error parsing Excel file:', error);
+        alert('Error parsing Excel file. Please ensure it is a valid Excel or CSV file.');
+      }
+    };
+
+    reader.readAsArrayBuffer(file);
+    
+    // Reset file input so the same file can be uploaded again
+    event.target.value = '';
   };
 
   // Get current user from context if not passed as prop
@@ -203,6 +379,20 @@ const MaterialsRenderer = ({ data, materialType, workspaceId, currentUser }) => 
       }));
       
       setMaterialRequests(submittedRequests);
+      
+      // Update procurement status
+      const now = new Date().toISOString();
+      setProcurementStatus('sent');
+      setSubmittedAt(now);
+
+      // Persist the procurement data to the node
+      await persistProcurementData({
+        status: 'sent',
+        submittedAt: now,
+        requestTitle: requestTitle,
+        materialRequests: submittedRequests,
+        itemCount: validRequests.length
+      });
 
       // Show success message
       alert(`✅ Material request sent to procurement!\n\n${validRequests.length} item(s) submitted for ${category.name.toLowerCase()}.\n\nAll requests have been saved to the backend.`);
@@ -234,6 +424,19 @@ const MaterialsRenderer = ({ data, materialType, workspaceId, currentUser }) => 
 
   return (
     <div className="w-full space-y-4">
+      {/* Sent to Procurement Status Banner */}
+      {procurementStatus === 'sent' && (
+        <div className="bg-green-50 border border-green-200 rounded-lg p-3 flex items-center space-x-3">
+          <CheckCircle className="w-5 h-5 text-green-600 flex-shrink-0" />
+          <div className="flex-1">
+            <p className="text-sm font-medium text-green-800">Sent to Procurement Team</p>
+            <p className="text-xs text-green-600">
+              {submittedAt && `Submitted on ${new Date(submittedAt).toLocaleDateString()} at ${new Date(submittedAt).toLocaleTimeString()}`}
+            </p>
+          </div>
+        </div>
+      )}
+
       {/* Header */}
       <div className={`p-4 rounded-lg border-2 ${category.color}`}>
         <div className="flex items-center space-x-3 mb-2">
@@ -252,6 +455,7 @@ const MaterialsRenderer = ({ data, materialType, workspaceId, currentUser }) => 
           className="w-full mt-2 px-3 py-2 bg-white border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 font-medium"
           placeholder="Enter request title"
           onClick={(e) => e.stopPropagation()}
+          disabled={procurementStatus === 'sent'}
         />
       </div>
 
@@ -259,16 +463,50 @@ const MaterialsRenderer = ({ data, materialType, workspaceId, currentUser }) => 
       <div className="space-y-3">
         <div className="flex items-center justify-between">
           <h4 className="font-medium text-gray-900">Material Items ({materialRequests.length})</h4>
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              addMaterialRequest();
-            }}
-            className="flex items-center space-x-2 px-3 py-2 text-sm bg-blue-50 hover:bg-blue-100 text-blue-700 rounded-md transition-colors border border-blue-200"
-          >
-            <Plus className="w-4 h-4" />
-            <span>Add Item</span>
-          </button>
+          <div className="flex items-center space-x-2">
+            {/* Hidden file input for Excel upload */}
+            <input
+              type="file"
+              ref={fileInputRef}
+              onChange={handleExcelUpload}
+              accept=".xlsx,.xls,.csv"
+              className="hidden"
+              onClick={(e) => e.stopPropagation()}
+            />
+            {/* Upload Excel Button */}
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                fileInputRef.current?.click();
+              }}
+              className={`flex items-center space-x-2 px-3 py-2 text-sm rounded-md transition-colors border ${
+                procurementStatus === 'sent' 
+                  ? 'bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed' 
+                  : 'bg-green-50 hover:bg-green-100 text-green-700 border-green-200'
+              }`}
+              disabled={procurementStatus === 'sent'}
+              title="Upload Excel file with material items"
+            >
+              <FileSpreadsheet className="w-4 h-4" />
+              <span>Upload Excel</span>
+            </button>
+            {/* Add Item Button */}
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                addMaterialRequest();
+              }}
+              className={`flex items-center space-x-2 px-3 py-2 text-sm rounded-md transition-colors border ${
+                procurementStatus === 'sent' 
+                  ? 'bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed' 
+                  : 'bg-blue-50 hover:bg-blue-100 text-blue-700 border-blue-200'
+              }`}
+              disabled={procurementStatus === 'sent'}
+            >
+              <Plus className="w-4 h-4" />
+              <span>Add Item</span>
+            </button>
+          </div>
         </div>
 
         {materialRequests.map((request, index) => (
@@ -280,16 +518,18 @@ const MaterialsRenderer = ({ data, materialType, workspaceId, currentUser }) => 
                 {getStatusIcon(request.status)}
                 <span className="text-xs text-gray-500 capitalize">{request.status}</span>
               </div>
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  removeMaterialRequest(request.id);
-                }}
-                className="text-red-500 hover:text-red-700 transition-colors"
-                disabled={materialRequests.length === 1}
-              >
-                <Minus className="w-4 h-4" />
-              </button>
+              {procurementStatus !== 'sent' && (
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    removeMaterialRequest(request.id);
+                  }}
+                  className="text-red-500 hover:text-red-700 transition-colors"
+                  disabled={materialRequests.length === 1}
+                >
+                  <Minus className="w-4 h-4" />
+                </button>
+              )}
             </div>
 
             {/* Item Details */}
@@ -301,9 +541,10 @@ const MaterialsRenderer = ({ data, materialType, workspaceId, currentUser }) => 
                   type="text"
                   value={request.name}
                   onChange={(e) => updateMaterialRequest(request.id, 'name', e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                  className={`w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm ${procurementStatus === 'sent' ? 'bg-gray-100' : ''}`}
                   placeholder={`e.g., ${category.examples[index % category.examples.length]}`}
                   onClick={(e) => e.stopPropagation()}
+                  disabled={procurementStatus === 'sent'}
                 />
               </div>
 
@@ -315,10 +556,11 @@ const MaterialsRenderer = ({ data, materialType, workspaceId, currentUser }) => 
                     type="number"
                     value={request.quantity}
                     onChange={(e) => updateMaterialRequest(request.id, 'quantity', e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                    className={`w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm ${procurementStatus === 'sent' ? 'bg-gray-100' : ''}`}
                     placeholder="0"
                     min="0"
                     onClick={(e) => e.stopPropagation()}
+                    disabled={procurementStatus === 'sent'}
                   />
                 </div>
                 <div className="w-20">
@@ -326,8 +568,9 @@ const MaterialsRenderer = ({ data, materialType, workspaceId, currentUser }) => 
                   <select
                     value={request.unit}
                     onChange={(e) => updateMaterialRequest(request.id, 'unit', e.target.value)}
-                    className="w-full px-2 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                    className={`w-full px-2 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm ${procurementStatus === 'sent' ? 'bg-gray-100' : ''}`}
                     onClick={(e) => e.stopPropagation()}
+                    disabled={procurementStatus === 'sent'}
                   >
                     <option value="pcs">pcs</option>
                     <option value="kg">kg</option>
@@ -349,8 +592,9 @@ const MaterialsRenderer = ({ data, materialType, workspaceId, currentUser }) => 
                 <select
                   value={request.priority}
                   onChange={(e) => updateMaterialRequest(request.id, 'priority', e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                  className={`w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm ${procurementStatus === 'sent' ? 'bg-gray-100' : ''}`}
                   onClick={(e) => e.stopPropagation()}
+                  disabled={procurementStatus === 'sent'}
                 >
                   <option value="low">Low Priority</option>
                   <option value="medium">Medium Priority</option>
@@ -372,10 +616,11 @@ const MaterialsRenderer = ({ data, materialType, workspaceId, currentUser }) => 
               <textarea
                 value={request.notes}
                 onChange={(e) => updateMaterialRequest(request.id, 'notes', e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm resize-none"
+                className={`w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm resize-none ${procurementStatus === 'sent' ? 'bg-gray-100' : ''}`}
                 rows="2"
                 placeholder="Additional specifications, delivery requirements, etc."
                 onClick={(e) => e.stopPropagation()}
+                disabled={procurementStatus === 'sent'}
               />
             </div>
           </div>
@@ -384,21 +629,31 @@ const MaterialsRenderer = ({ data, materialType, workspaceId, currentUser }) => 
 
       {/* Send to Procurement Button */}
       <div className="flex justify-center pt-4">
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            sendToProcurement();
-          }}
-          className="flex items-center space-x-3 px-6 py-3 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-lg hover:from-green-700 hover:to-emerald-700 transition-all duration-200 shadow-md hover:shadow-lg font-medium"
-        >
-          <Send className="w-5 h-5" />
-          <span>Send to Procurement</span>
-        </button>
+        {procurementStatus === 'sent' ? (
+          <div className="flex items-center space-x-3 px-6 py-3 bg-gray-100 text-gray-600 rounded-lg border border-gray-300">
+            <CheckCircle className="w-5 h-5 text-green-600" />
+            <span className="font-medium">Already Sent to Procurement</span>
+          </div>
+        ) : (
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              sendToProcurement();
+            }}
+            className="flex items-center space-x-3 px-6 py-3 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-lg hover:from-green-700 hover:to-emerald-700 transition-all duration-200 shadow-md hover:shadow-lg font-medium"
+          >
+            <Send className="w-5 h-5" />
+            <span>Send to Procurement</span>
+          </button>
+        )}
       </div>
 
       {/* Summary */}
       <div className="text-center text-xs text-gray-500 pt-2 border-t border-gray-200">
-        {materialRequests.filter(req => req.status === 'submitted').length} submitted • {materialRequests.filter(req => req.status === 'draft').length} draft • {category.name}
+        {procurementStatus === 'sent' 
+          ? `✓ ${materialRequests.filter(req => req.status === 'submitted').length} item(s) sent to procurement • ${category.name}`
+          : `${materialRequests.filter(req => req.status === 'submitted').length} submitted • ${materialRequests.filter(req => req.status === 'draft').length} draft • ${category.name}`
+        }
       </div>
     </div>
   );

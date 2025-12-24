@@ -294,6 +294,7 @@ const ElementNode = ({ id, data, isConnectable, selected }) => {
         materialType={data.id}
         workspaceId={data.workspaceId}
         currentUser={currentUser}
+        nodeId={id}
       />
     );
   };
