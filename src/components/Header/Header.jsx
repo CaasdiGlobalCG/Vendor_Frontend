@@ -844,7 +844,7 @@ export const Header = () => {
                setIsVendor(next);
                if (!next) {
                  // Switching to Client: redirect to client app
-                 const clientBase = `${config.CLIENT_APP_URL}`;
+                 const clientBase = config.CLIENT_URL;
                  const authToken = localStorage.getItem('authToken');
                  const email = (currentUser?.email) || localStorage.getItem('email');
                  const qp = new URLSearchParams();
@@ -908,7 +908,7 @@ export const Header = () => {
                       authToken: authToken,
                       vendorId: vendorId
                     });
-                    window.location.href = `${config.SALES_URL}/?${params.toString()}`;
+                    window.location.href = CONFIG.SALES_URL + `/?${params.toString()}`;
                   } else {
                     console.log("Authentication details missing. Cannot redirect to whiteboard-ui.");
                     alert("You need to be logged in as a vendor to access the B2B dashboard.");
