@@ -254,7 +254,16 @@ function Login() {
           // If role is client, start client onboarding; else Form1
         if ((userInfo.role || '').toLowerCase() === 'client') {
           const authToken = localStorage.getItem('authToken');
-          const clientBase = `${config.CLIENT_URL}`;
+          const clientBase = config.CLIENT_URL || '';
+          
+          if (!clientBase) {
+            console.error('CLIENT_URL is not configured');
+            setAlertMessage('Client dashboard URL is not configured. Please contact support.');
+            setAlertType('error');
+            setShowAlert(true);
+            return;
+          }
+          
             const qp = new URLSearchParams();
             if (authToken) qp.set('authToken', authToken);
             qp.set('email', userEmail);
@@ -515,7 +524,16 @@ function Login() {
             } else {
               if ((userData.role || '').toLowerCase() === 'client') {
                 const authToken = localStorage.getItem('authToken');
-                const clientBase = `${config.CLIENT_URL}`;
+                const clientBase = config.CLIENT_URL || '';
+                
+                if (!clientBase) {
+                  console.error('CLIENT_URL is not configured');
+                  setAlertMessage('Client dashboard URL is not configured. Please contact support.');
+                  setAlertType('error');
+                  setShowAlert(true);
+                  return;
+                }
+                
                 const qp = new URLSearchParams();
                 if (authToken) qp.set('authToken', authToken);
                 qp.set('email', email);

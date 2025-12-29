@@ -12,7 +12,7 @@ function Verification() {
   const handleContinue = () => {
     // If they already chose role=client, send to client app; otherwise guide to role selection
     if (role === "client") {
-      const clientBase = `${config.CLIENT_URL}`;
+      const clientBase = config.CLIENT_URL || '';
       const authToken = localStorage.getItem('authToken');
       const qp = new URLSearchParams();
       if (authToken) qp.set('authToken', authToken);
