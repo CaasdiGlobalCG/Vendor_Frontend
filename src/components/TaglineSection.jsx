@@ -55,7 +55,7 @@ const TaglineSection = () => {
   return (
     <section
       id="tagline"
-      className="sticky top-0 z-10 min-h-screen bg-[var(--text-dark)] text-[5rem] font-normal leading-[1.5] mb-4 overflow-x-hidden max-[480px]:text-[3.5rem]"
+      className="sticky top-0 z-10 min-h-screen bg-black text-[5rem] font-normal leading-[1.5] mb-4 overflow-x-hidden max-[480px]:text-[3.5rem]"
     >
       <div className="sticky top-[23vh] h-0 z-0 max-[768px]:top-[20vh] max-[480px]:top-[18vh]">
         <motion.div

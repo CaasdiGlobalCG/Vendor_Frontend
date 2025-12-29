@@ -63,7 +63,7 @@ const ExpertiseSection = ({ scrollY }) => {
           <span className="gradient-text">Our Comprehensive</span> Services
         </h2>
 
-        <div className="flex justify-start mt-[25px] text-xl font-semibold text-white h-6 transition-opacity duration-1000 ease-in-out
+        <div className="flex justify-start mt-[25px] text-xl font-semibold text-[#0f5848] h-6 transition-opacity duration-1000 ease-in-out
                         max-[1024px]:text-base max-[1024px]:py-2 max-[1024px]:px-0 max-[1024px]:justify-center /* Center highlight bar text on tablet */
                         max-[576px]:justify-center max-[576px]:text-[0.9rem] max-[576px]:py-1.5">
           <div className="flex items-center gap-2.5">

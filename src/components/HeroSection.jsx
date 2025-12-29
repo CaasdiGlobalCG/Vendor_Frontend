@@ -70,7 +70,7 @@ const HeroSection = () => {
 
       {/* Background ellipse - using style prop instead of bg-url for better compatibility */}
       <div 
-        className="absolute w-[120%] h-[1048px] -top-[632px] -left-[10%] bg-no-repeat bg-center bg-cover blur-[120.2px] z-[1]"
+        className="absolute w-[120%] h-[1048px] -top-[750px] -left-[10%] bg-no-repeat bg-center bg-cover blur-[120.2px] z-[1]"
         style={{ backgroundImage: `url(${heroSvg})` }}
       />
 

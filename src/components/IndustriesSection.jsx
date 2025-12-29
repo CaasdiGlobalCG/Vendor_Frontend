@@ -6,15 +6,69 @@ import leftArrow from '../assets/left-arrow.png';
 import rightArrow from '../assets/right-arrow.png';
 
 const industriesData = [
-  { id: 1, title: "Manufacturing & Industrial", description: "From raw materials to automation, we've got you covered" },
-  { id: 2, title: "Construction and Infrastructure", description: "Manage commercial builds and facility upkeep seamlessly" },
-  { id: 3, title: "Logistics and Supply chain", description: "Optimize freight, warehousing and 3PL Partnership" },
-  { id: 4, title: "Healthcare & Pharmaceuticals", description: "Streamline medical supplies and equipment procurement" },
-  { id: 5, title: "Retail & E-commerce", description: "Enhance inventory management and fulfillment operations" },
-  { id: 6, title: "Food & Beverage", description: "Manage perishable goods and ensure food safety compliance" },
-  { id: 7, title: "Energy & Utilities", description: "Optimize resource allocation and maintenance scheduling" },
-  { id: 8, title: "Technology & Electronics", description: "Manage component sourcing and production efficiency" },
-  { id: 9, title: "Automotive & Transportation", description: "Streamline parts procurement and assembly operations" },
+  { 
+    id: 1, 
+    title: "Manufacturing & Industrial", 
+    description: "From raw materials to automation, we've got you covered",
+    details: "We provide end-to-end procurement solutions for manufacturers, including raw material sourcing, equipment suppliers, quality control vendors, and automation technology partners.",
+    services: ["Raw Material Sourcing", "Equipment Procurement", "Quality Assurance", "Automation Integration", "Supply Chain Optimization"]
+  },
+  { 
+    id: 2, 
+    title: "Construction and Infrastructure", 
+    description: "Manage commercial builds and facility upkeep seamlessly",
+    details: "Our platform connects you with verified contractors, material suppliers, and facility management experts for projects of any scale.",
+    services: ["Contractor Management", "Material Procurement", "Project Planning", "Facility Maintenance", "Safety Compliance"]
+  },
+  { 
+    id: 3, 
+    title: "Logistics and Supply Chain", 
+    description: "Optimize freight, warehousing and 3PL Partnership",
+    details: "Streamline your logistics operations with our network of freight carriers, warehousing solutions, and third-party logistics providers.",
+    services: ["Freight Management", "Warehouse Solutions", "Last-Mile Delivery", "Inventory Management", "Cross-Border Logistics"]
+  },
+  { 
+    id: 4, 
+    title: "Healthcare & Pharmaceuticals", 
+    description: "Streamline medical supplies and equipment procurement",
+    details: "Access compliant and certified suppliers for medical equipment, pharmaceuticals, and healthcare facility management services.",
+    services: ["Medical Equipment", "Pharmaceutical Supplies", "Lab Services", "Regulatory Compliance", "Healthcare IT Solutions"]
+  },
+  { 
+    id: 5, 
+    title: "Retail & E-commerce", 
+    description: "Enhance inventory management and fulfillment operations",
+    details: "Connect with suppliers, fulfillment centers, and technology partners to scale your retail and e-commerce business efficiently.",
+    services: ["Inventory Management", "Fulfillment Services", "Packaging Solutions", "Returns Management", "Omnichannel Integration"]
+  },
+  { 
+    id: 6, 
+    title: "Food & Beverage", 
+    description: "Manage perishable goods and ensure food safety compliance",
+    details: "Source quality ingredients, packaging, and cold chain logistics while maintaining strict food safety standards.",
+    services: ["Ingredient Sourcing", "Cold Chain Logistics", "Food Safety Audits", "Packaging Solutions", "Quality Testing"]
+  },
+  { 
+    id: 7, 
+    title: "Energy & Utilities", 
+    description: "Optimize resource allocation and maintenance scheduling",
+    details: "Partner with energy suppliers, maintenance contractors, and technology providers to optimize your utility operations.",
+    services: ["Energy Procurement", "Renewable Solutions", "Grid Management", "Maintenance Services", "Sustainability Consulting"]
+  },
+  { 
+    id: 8, 
+    title: "Technology & Electronics", 
+    description: "Manage component sourcing and production efficiency",
+    details: "Access global suppliers for electronic components, assembly services, and technology integration solutions.",
+    services: ["Component Sourcing", "PCB Manufacturing", "Assembly Services", "Quality Testing", "R&D Partnerships"]
+  },
+  { 
+    id: 9, 
+    title: "Automotive & Transportation", 
+    description: "Streamline parts procurement and assembly operations",
+    details: "Connect with OEM suppliers, aftermarket parts vendors, and logistics partners for your automotive needs.",
+    services: ["OEM Parts Supply", "Aftermarket Sourcing", "Fleet Management", "Assembly Solutions", "Compliance & Certification"]
+  },
 ];
 
 const IndustriesSection = ({ scrollY }) => {
@@ -68,10 +122,10 @@ const IndustriesSection = ({ scrollY }) => {
       style={{ transform: `translateY(${scrollY * 0.05}px)` }}
     >
       <div className="w-full max-w-[1440px] flex flex-col items-center">
-        <h2 className={`text-6xl font-medium mb-16 text-center transition-all duration-1000 ease-out ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-[30px]'}`}>
+        <h2 className={`text-6xl font-medium mb-16 text-center transition-all duration-1000 ease-out text-black ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-[30px]'}`}>
           <span className="bg-gradient-to-r from-[#21be9c] to-[#0f5848] bg-clip-text text-transparent">Industries </span>
           We Serve <br />
-          <div className="text-base h-[10%] opacity-100 translate-y-0 italic">
+          <div className="text-base h-[10%] opacity-100 translate-y-0 italic text-black/70">
             <q>Like water, we adapt—flowing seamlessly into every industry's needs.</q>
           </div>
         </h2>
@@ -123,15 +177,35 @@ const IndustriesSection = ({ scrollY }) => {
 
       {modalOpen && (
         <div className="fixed top-0 left-0 w-screen h-screen bg-black/50 flex items-center justify-center z-[1000]">
-          <div className="bg-white p-5 rounded-[10px] max-w-[90vw] min-w-[300px] w-auto max-h-[80vh] overflow-y-auto text-center shadow-[0_5px_15px_rgba(0,0,0,0.3)] relative animate-modalFadeIn">
+          <div className="bg-white p-8 rounded-[20px] max-w-[600px] min-w-[300px] w-[90vw] max-h-[80vh] overflow-y-auto text-left shadow-[0_5px_15px_rgba(0,0,0,0.3)] relative animate-modalFadeIn">
             <button 
-              className="absolute top-[10px] right-[10px] border-none bg-none text-2xl cursor-pointer"
+              className="absolute top-4 right-4 border-none bg-black text-white w-8 h-8 rounded-full text-xl cursor-pointer flex items-center justify-center hover:bg-gray-700 transition-colors"
               onClick={() => setModalOpen(false)}
             >
               ×
             </button>
-            <h2>{selectedIndustry.title}</h2>
-            <p>{selectedIndustry.description}</p>
+            <h2 className="text-2xl font-bold text-black mb-2">{selectedIndustry.title}</h2>
+            <p className="text-base text-gray-600 mb-4 italic">{selectedIndustry.description}</p>
+            <p className="text-base text-black mb-6">{selectedIndustry.details}</p>
+            
+            <h3 className="text-lg font-semibold text-[#21be9c] mb-3">Key Services</h3>
+            <div className="flex flex-wrap gap-2">
+              {selectedIndustry.services?.map((service, index) => (
+                <span 
+                  key={index} 
+                  className="bg-[#21be9c]/10 text-[#0f5848] px-4 py-2 rounded-full text-sm font-medium"
+                >
+                  {service}
+                </span>
+              ))}
+            </div>
+            
+            <button 
+              className="mt-6 w-full bg-black text-white py-3 px-6 rounded-full font-semibold hover:bg-gray-800 transition-colors"
+              onClick={() => setModalOpen(false)}
+            >
+              Get Started
+            </button>
           </div>
         </div>
       )}
