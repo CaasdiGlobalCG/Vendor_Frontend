@@ -845,6 +845,14 @@ export const Header = () => {
                if (!next) {
                  // Switching to Client: redirect to client app
                  const clientBase = config.CLIENT_URL;
+                 
+                 if (!clientBase) {
+                   console.error('CLIENT_URL is not configured');
+                   alert('Client dashboard URL is not configured. Please contact support.');
+                   setIsVendor(true); // Revert toggle
+                   return;
+                 }
+                 
                  const authToken = localStorage.getItem('authToken');
                  const email = (currentUser?.email) || localStorage.getItem('email');
                  const qp = new URLSearchParams();
@@ -902,13 +910,19 @@ export const Header = () => {
                   console.log("  currentUserParsed from localStorage:", currentUserParsed);
                   console.log("  Calculated vendorId:", vendorId);
 
+                  if (!config.SALES_URL) {
+                    console.error('SALES_URL is not configured');
+                    alert('B2B Sales dashboard URL is not configured. Please contact support.');
+                    return;
+                  }
+
                   if (authToken && vendorId) {
                     console.log("Redirecting to B2B sales dashboard with authToken and vendorId");
                     const params = new URLSearchParams({
                       authToken: authToken,
                       vendorId: vendorId
                     });
-                    window.location.href = CONFIG.SALES_URL + `/?${params.toString()}`;
+                    window.location.href = `${config.SALES_URL}/?${params.toString()}`;
                   } else {
                     console.log("Authentication details missing. Cannot redirect to whiteboard-ui.");
                     alert("You need to be logged in as a vendor to access the B2B dashboard.");

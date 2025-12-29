@@ -87,7 +87,7 @@ function RoleSelection() {
           navigate('/Form1', { replace: true });
         } else {
           const authToken = localStorage.getItem('authToken');
-          const clientBase = CONFIG.CLIENT_URL;
+          const clientBase = config.CLIENT_URL;
           const qp = new URLSearchParams();
           if (authToken) qp.set('authToken', authToken);
           if (email) qp.set('email', email);

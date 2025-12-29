@@ -18,7 +18,7 @@ const resolvedFrontendBase =
 export const VENDOR_FRONTEND_URL = resolvedFrontendBase;
 export const VENDOR_BACKEND_URL = ''; // Empty string = relative paths
 export const CLIENT_URL = import.meta.env.VITE_CLIENT_URL;
-export const SALES_URL = import.meta.env.VITE_SALES__URL;
+export const SALES_URL = import.meta.env.VITE_SALES_URL;
 
 
 const config = {

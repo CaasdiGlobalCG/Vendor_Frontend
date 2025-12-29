@@ -104,7 +104,14 @@ export default function GoogleOAuthCallback() {
           // Client persona: hand off to client dashboard with query params
           if (effectiveRole === 'client') {
             const authToken = localStorage.getItem('authToken');
-            const clientBase = CONFIG.CLIENT_URL;
+            const clientBase = config.CLIENT_URL;
+            
+            if (!clientBase) {
+              console.error('CLIENT_URL is not configured');
+              setError('Client dashboard URL is not configured. Please contact support.');
+              return;
+            }
+            
             const qp = new URLSearchParams();
             if (authToken) qp.set('authToken', authToken);
             qp.set('email', email);
