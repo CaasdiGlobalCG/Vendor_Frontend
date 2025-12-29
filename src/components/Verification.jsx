@@ -1,6 +1,7 @@
 import React from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import "../styles/Verification.css";
+import config from "../config/env";
 
 function Verification() {
   const navigate = useNavigate();
@@ -11,7 +12,7 @@ function Verification() {
   const handleContinue = () => {
     // If they already chose role=client, send to client app; otherwise guide to role selection
     if (role === "client") {
-      const clientBase = (import.meta?.env?.VITE_CLIENT_DASH ||  'https://client.caasdiglobal.in');
+      const clientBase = `${config.CLIENT_URL}`;
       const authToken = localStorage.getItem('authToken');
       const qp = new URLSearchParams();
       if (authToken) qp.set('authToken', authToken);
