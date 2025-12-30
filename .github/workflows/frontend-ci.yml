@@ -70,6 +70,13 @@ jobs:
             VITE_SALES_URL=${{secrets.VITE_SALES_PROD_URL}}
           platforms: linux/amd64
 
+      - name: Verify build args (prod)
+        if: steps.target.outputs.ENV == 'prod'
+        run: |
+          echo "Production build completed with:"
+          echo "VITE_CLIENT_URL is set: ${{ secrets.VITE_CLIENT_PROD_URL != '' }}"
+          echo "VITE_SALES_URL is set: ${{ secrets.VITE_SALES_PROD_URL != '' }}"
+
       - name: Build and push image (staging)
         if: steps.target.outputs.ENV == 'staging'
         uses: docker/build-push-action@v5
@@ -83,6 +90,13 @@ jobs:
             VITE_CLIENT_URL=${{secrets.VITE_CLIENT_STAGING_URL}}
             VITE_SALES_URL=${{secrets.VITE_SALES_STAGING_URL}}
           platforms: linux/amd64
+
+      - name: Verify build args (staging)
+        if: steps.target.outputs.ENV == 'staging'
+        run: |
+          echo "Staging build completed with:"
+          echo "VITE_CLIENT_URL is set: ${{ secrets.VITE_CLIENT_STAGING_URL != '' }}"
+          echo "VITE_SALES_URL is set: ${{ secrets.VITE_SALES_STAGING_URL != '' }}"
 
       - name: Setup kubectl
         uses: azure/setup-kubectl@v4

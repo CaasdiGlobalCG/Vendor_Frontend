@@ -23,6 +23,8 @@ const fadingItems = [
 const ExpertiseSection = ({ scrollY }) => {
   const carouselRef = useRef(null);
   const [currentTextIndex, setCurrentTextIndex] = useState(0);
+  const [currentCardIndex, setCurrentCardIndex] = useState(0);
+  const totalCards = 3;
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -32,16 +34,27 @@ const ExpertiseSection = ({ scrollY }) => {
     return () => clearInterval(interval);
   }, []);
 
-  const scrollLeft = () => {
+  const scrollToCard = (index) => {
     if (carouselRef.current) {
-      carouselRef.current.scrollBy({ left: -300, behavior: "smooth" });
+      const cardWidth = carouselRef.current.querySelector('article')?.offsetWidth || 350;
+      const gap = 20; // gap-5 = 1.25rem = 20px
+      carouselRef.current.scrollTo({
+        left: index * (cardWidth + gap),
+        behavior: "smooth"
+      });
     }
   };
 
+  const scrollLeft = () => {
+    const newIndex = currentCardIndex === 0 ? totalCards - 1 : currentCardIndex - 1;
+    setCurrentCardIndex(newIndex);
+    scrollToCard(newIndex);
+  };
+
   const scrollRight = () => {
-    if (carouselRef.current) {
-      carouselRef.current.scrollBy({ left: 300, behavior: "smooth" });
-    }
+    const newIndex = currentCardIndex === totalCards - 1 ? 0 : currentCardIndex + 1;
+    setCurrentCardIndex(newIndex);
+    scrollToCard(newIndex);
   };
 
   const iconClassName = "text-[1.5rem] text-[#21bea2]";
@@ -63,7 +76,7 @@ const ExpertiseSection = ({ scrollY }) => {
           <span className="gradient-text">Our Comprehensive</span> Services
         </h2>
 
-        <div className="flex justify-start mt-[25px] text-xl font-semibold text-white h-6 transition-opacity duration-1000 ease-in-out
+        <div className="flex justify-start mt-[25px] text-xl font-semibold text-[#0f5848] h-6 transition-opacity duration-1000 ease-in-out
                         max-[1024px]:text-base max-[1024px]:py-2 max-[1024px]:px-0 max-[1024px]:justify-center /* Center highlight bar text on tablet */
                         max-[576px]:justify-center max-[576px]:text-[0.9rem] max-[576px]:py-1.5">
           <div className="flex items-center gap-2.5">
@@ -75,11 +88,11 @@ const ExpertiseSection = ({ scrollY }) => {
         </div>
       </div>
 
-      <div className="w-full max-w-[500px] min-h-[300px] rounded-[20px] overflow-hidden bg-black p-8 relative flex flex-col justify-start shadow-[0_4px_23.3px_0_rgba(0,0,0,0.25)]
-                      max-[1024px]:max-w-full max-[1024px]:min-h-[280px] max-[1024px]:flex-initial /* Ensure it doesn't shrink excessively */
-                      max-[576px]:p-6">
-        <div className="flex gap-5 overflow-x-auto snap-x snap-mandatory scroll-smooth p-2.5 w-full" ref={carouselRef}>
-          <article className="flex-none basis-[90%] max-w-[350px] min-h-[250px] rounded-[16px] bg-white text-[rgb(106,106,106)] shadow-[0_4px_23.3px_0_rgba(0,0,0,0.25)] p-8 flex flex-col justify-start snap-center
+      <div className="w-full max-w-[600px] min-h-[300px] overflow-visible relative flex flex-col justify-start
+                      max-[1024px]:max-w-full max-[1024px]:min-h-[280px] max-[1024px]:flex-initial
+                      max-[576px]:w-full">
+        <div className="flex gap-5 overflow-x-auto snap-x snap-mandatory scroll-smooth py-4 px-2 w-full" ref={carouselRef}>
+          <article className="flex-none basis-[90%] max-w-[350px] min-h-[250px] rounded-[16px] bg-white text-[rgb(106,106,106)] shadow-[0_4px_23.3px_0_rgba(0,0,0,0.15)] p-8 flex flex-col justify-start snap-center border border-gray-100
                             max-[1024px]:basis-[80%] max-[1024px]:max-w-[320px]
                             max-[576px]:basis-[100%] max-[576px]:max-w-full max-[576px]:min-h-[240px] max-[576px]:p-6">
             <h3 className="text-2xl font-semibold mb-[0.8rem] text-black max-[576px]:text-xl">Vendor & Project Management</h3>
@@ -91,7 +104,7 @@ const ExpertiseSection = ({ scrollY }) => {
               and automation.
             </p>
           </article>
-          <article className="flex-none basis-[90%] max-w-[350px] min-h-[250px] rounded-[16px] bg-white text-[rgb(106,106,106)] shadow-[0_4px_23.3px_0_rgba(0,0,0,0.25)] p-8 flex flex-col justify-start snap-center
+          <article className="flex-none basis-[90%] max-w-[350px] min-h-[250px] rounded-[16px] bg-white text-[rgb(106,106,106)] shadow-[0_4px_23.3px_0_rgba(0,0,0,0.15)] p-8 flex flex-col justify-start snap-center border border-gray-100
                             max-[1024px]:basis-[80%] max-[1024px]:max-w-[320px]
                             max-[576px]:basis-[100%] max-[576px]:max-w-full max-[576px]:min-h-[240px] max-[576px]:p-6">
             <h3 className="text-2xl font-semibold mb-[0.8rem] text-black max-[576px]:text-xl">B2B E-Commerce</h3>
@@ -103,7 +116,7 @@ const ExpertiseSection = ({ scrollY }) => {
               transactions coming soon through our SaaS platform.
             </p>
           </article>
-          <article className="flex-none basis-[90%] max-w-[350px] min-h-[250px] rounded-[16px] bg-white text-[rgb(106,106,100)] shadow-[0_4px_23.3px_0_rgba(0,0,0,0.25)] p-8 flex flex-col justify-start snap-center
+          <article className="flex-none basis-[90%] max-w-[350px] min-h-[250px] rounded-[16px] bg-white text-[rgb(106,106,100)] shadow-[0_4px_23.3px_0_rgba(0,0,0,0.15)] p-8 flex flex-col justify-start snap-center border border-gray-100
                             max-[1024px]:basis-[80%] max-[1024px]:max-w-[320px]
                             max-[576px]:basis-[100%] max-[576px]:max-w-full max-[576px]:min-h-[240px] max-[576px]:p-6">
             <h3 className="text-2xl font-semibold mb-[0.8rem] text-black max-[576px]:text-xl">Cost Estimation & Business Execution</h3>
@@ -117,11 +130,11 @@ const ExpertiseSection = ({ scrollY }) => {
         </div>
 
         <div className="flex flex-col items-center relative">
-          <div className="flex justify-center gap-2.5 mt-5">
-            <button className="bg-[#0a0a0a] border-none text-white py-3 mb-8 px-4 rounded-full cursor-pointer text-xl transition-all duration-300 hover:bg-[#929394]" onClick={scrollLeft}>
+          <div className="flex justify-center gap-2.5 mt-2">
+            <button className="bg-[#0a0a0a] border-none text-white py-3 px-4 rounded-full cursor-pointer text-xl transition-all duration-300 hover:bg-[#929394]" onClick={scrollLeft}>
               <FaChevronLeft />
             </button>
-            <button className="bg-[#0a0a0a] border-none text-white py-8 mb-8 px-4 rounded-full cursor-pointer text-xl transition-all duration-300 hover:bg-[#929394]" onClick={scrollRight}>
+            <button className="bg-[#0a0a0a] border-none text-white py-3 px-4 rounded-full cursor-pointer text-xl transition-all duration-300 hover:bg-[#929394]" onClick={scrollRight}>
               <FaChevronRight />
             </button>
           </div>

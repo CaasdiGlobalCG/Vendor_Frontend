@@ -16,6 +16,12 @@ import GlobalSearchOverlay from "./GlobalSearchOverlay";
  * Also fetches vendor data once after role selection to populate context.
  */
 export const Header = () => {
+  // Log config values on component mount
+  console.log('Header: config object:', config);
+  console.log('Header: CLIENT_URL:', config.CLIENT_URL);
+  console.log('Header: SALES_URL:', config.SALES_URL);
+  console.log('Header: VENDOR_BACKEND_URL:', config.VENDOR_BACKEND_URL);
+  
   const [isVendor, setIsVendor] = useState(true);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [showNotificationDropdown, setShowNotificationDropdown] = useState(false);
@@ -844,7 +850,17 @@ export const Header = () => {
                setIsVendor(next);
                if (!next) {
                  // Switching to Client: redirect to client app
-                 const clientBase = (import.meta?.env?.VITE_CLIENT_DASH || 'http://localhost:5174'||'https://client.caasdiglobal.in');
+                 const clientBase = config.CLIENT_URL;
+                 console.log('Header Toggle: CLIENT_URL value:', clientBase);
+                 console.log('Header Toggle: Type of CLIENT_URL:', typeof clientBase);
+                 
+                 if (!clientBase) {
+                   console.error('CLIENT_URL is not configured');
+                   alert('Client dashboard URL is not configured. Please contact support.');
+                   setIsVendor(true); // Revert toggle
+                   return;
+                 }
+                 
                  const authToken = localStorage.getItem('authToken');
                  const email = (currentUser?.email) || localStorage.getItem('email');
                  const qp = new URLSearchParams();
@@ -901,6 +917,14 @@ export const Header = () => {
                   console.log("  currentUser object from context:", currentUser);
                   console.log("  currentUserParsed from localStorage:", currentUserParsed);
                   console.log("  Calculated vendorId:", vendorId);
+                  console.log("  SALES_URL from config:", config.SALES_URL);
+                  console.log("  Type of SALES_URL:", typeof config.SALES_URL);
+
+                  if (!config.SALES_URL) {
+                    console.error('SALES_URL is not configured');
+                    alert('B2B Sales dashboard URL is not configured. Please contact support.');
+                    return;
+                  }
 
                   if (authToken && vendorId) {
                     console.log("Redirecting to B2B sales dashboard with authToken and vendorId");
@@ -908,7 +932,7 @@ export const Header = () => {
                       authToken: authToken,
                       vendorId: vendorId
                     });
-                    window.location.href = `https://vendorsales-staging.caasdiglobal.in/?${params.toString()}`;
+                    window.location.href = `${config.SALES_URL}/?${params.toString()}`;
                   } else {
                     console.log("Authentication details missing. Cannot redirect to whiteboard-ui.");
                     alert("You need to be logged in as a vendor to access the B2B dashboard.");

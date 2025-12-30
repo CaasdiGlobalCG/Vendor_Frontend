@@ -36,7 +36,7 @@ function RoleSelection() {
             navigate("/Form1", { replace: true });
           } else if ((data.role || '').toLowerCase() === "client") {
             const authToken = localStorage.getItem('authToken');
-            const clientBase = (import.meta?.env?.VITE_CLIENT_DASH || 'http://localhost:5174' ||'https://client.caasdiglobal.in');
+            const clientBase = CONFIG.CLIENT_URL;
             const qp = new URLSearchParams();
             if (authToken) qp.set('authToken', authToken);
             if (email) qp.set('email', email);
@@ -87,7 +87,7 @@ function RoleSelection() {
           navigate('/Form1', { replace: true });
         } else {
           const authToken = localStorage.getItem('authToken');
-          const clientBase = (import.meta?.env?.VITE_CLIENT_DASH || 'http://localhost:5174' ||'https://client.caasdiglobal.in');
+          const clientBase = config.CLIENT_URL;
           const qp = new URLSearchParams();
           if (authToken) qp.set('authToken', authToken);
           if (email) qp.set('email', email);

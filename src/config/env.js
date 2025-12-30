@@ -17,12 +17,19 @@ const resolvedFrontendBase =
 // Use empty string for relative paths - Vite proxy handles /api in dev, same-origin in prod
 export const VENDOR_FRONTEND_URL = resolvedFrontendBase;
 export const VENDOR_BACKEND_URL = ''; // Empty string = relative paths
-export const SALES_FRONTEND_URL = import.meta.env.VITE_SALES_FRONTEND_URL;
+
+const resolvedClientUrl = resolveEnvValue(import.meta.env.VITE_CLIENT_URL) || '';
+const resolvedSalesUrl = resolveEnvValue(import.meta.env.VITE_SALES_URL) || '';
+
+export const CLIENT_URL = resolvedClientUrl;
+export const SALES_URL = resolvedSalesUrl;
+
 
 const config = {
   VENDOR_FRONTEND_URL,
   VENDOR_BACKEND_URL,
-  SALES_FRONTEND_URL,
+  SALES_URL,
+  CLIENT_URL,
 };
 
 export default config;

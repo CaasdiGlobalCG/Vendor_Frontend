@@ -263,7 +263,7 @@ const WorkspacePage = () => {
   const transformToElementOptions = useCallback((invoices, quotes) => {
     const invoiceItems = (invoices || []).map(invoice => ({
       id: invoice.id || `invoice-${invoice.invoiceId}`,
-      name: invoice.displayInvoiceId ? `Invoice #${invoice.displayInvoiceId}` : `Invoice ${invoice.id}`,
+      name: invoice.displayInvoiceId ? `Tax Invoice #${invoice.displayInvoiceId}` : `Tax Invoice ${invoice.id}`,
       type: 'invoice',
       preview: 'Tax Invoice',
       date: invoice.date || 'N/A',
@@ -275,7 +275,7 @@ const WorkspacePage = () => {
 
     const quoteItems = (quotes || []).map(quote => ({
       id: quote.id || `quote-${quote.quotationId}`,
-      name: quote.displayQuoteId ? `Quote #${quote.displayQuoteId}` : `Quote ${quote.id}`,
+      name: quote.displayQuoteId ? `Quotation #${quote.displayQuoteId}` : `Quotation ${quote.id}`,
       type: 'quotation',
       preview: 'Project Quotation',
       date: quote.date || 'N/A',

@@ -303,16 +303,16 @@ const QuotesPage = ({ workspaceId, workspaceName, selectedTask, selectedSubtask,
           <div className="flex items-center justify-between mb-8">
             <div>
               <h1 className="text-3xl font-bold bg-gradient-to-r from-slate-800 via-gray-700 to-stone-700 bg-clip-text text-transparent">
-                Quotes Dashboard
+                Quotations Dashboard
               </h1>
-              <p className="text-gray-600 mt-2">Manage and track all your business quotes</p>
+              <p className="text-gray-600 mt-2">Manage and track all your business quotations</p>
             </div>
             <button
               onClick={() => setShowNewQuote(true)}
               className="bg-gradient-to-r from-slate-700 to-gray-700 text-white px-6 py-3 rounded-xl hover:from-slate-800 hover:to-gray-800 transition-all duration-300 flex items-center space-x-2 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
             >
               <Plus className="w-5 h-5" />
-              <span className="font-medium">New Quote</span>
+              <span className="font-medium">New Quotation</span>
             </button>
           </div>
 
@@ -321,7 +321,7 @@ const QuotesPage = ({ workspaceId, workspaceName, selectedTask, selectedSubtask,
             <div className="bg-white/80 backdrop-blur-sm border border-gray-200/50 rounded-2xl p-6 shadow-sm hover:shadow-md transition-all duration-300">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-gray-600 mb-1">Total Quotes</p>
+                  <p className="text-sm font-medium text-gray-600 mb-1">Total Quotations</p>
                   <p className="text-2xl font-bold text-gray-900">{stats.totalQuotes || quotesData.length}</p>
                   <p className="text-xs text-green-600 mt-1">↗ +{stats.thisMonthQuotes || 12}% this month</p>
                 </div>
@@ -425,7 +425,7 @@ const QuotesPage = ({ workspaceId, workspaceName, selectedTask, selectedSubtask,
                         </div>
                         <div>
                           <div className="font-semibold text-gray-900 group-hover:text-slate-700 transition-colors">{quote.customQuoteId || quote.quoteNumber || quote.displayQuoteId || quote.id}</div>
-                          <div className="text-xs text-gray-500">Quote #{index + 1}</div>
+                          <div className="text-xs text-gray-500">Quotation #{index + 1}</div>
                         </div>
                       </div>
                     </td>

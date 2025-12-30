@@ -1,4 +1,6 @@
-import React, { useState, useContext } from 'react';
+import React, { useState, useContext, useEffect } from 'react';
+import { useParams } from 'react-router-dom';
+import { getWorkspaceById, updateWorkspace } from '../../utils/workspaceApi';
 import { Handle, Position } from 'reactflow';
 import { Download, Eye, ExternalLink, X, ArrowRight, Check, X as XIcon, Menu, Star, Heart } from 'lucide-react';
 import { VendorContext } from '../../../../context/VendorContext';
@@ -18,7 +20,23 @@ import DocumentBlockRenderer from '../forms/DocumentBlockRenderer';
 import TablePreviewModal from '../modals/TablePreviewModal';
 import { createTableHelpers, defaultTableData } from '../../utils/tableUtils';
 
-const ElementNode = ({ data, isConnectable, selected }) => {
+const ElementNode = ({ id, data, isConnectable, selected }) => {
+  const { workspaceId } = useParams();
+  const [saving, setSaving] = useState(false);
+  // Important state for highlighting
+  const [isImportant, setIsImportant] = useState(false);
+
+  // Deadline state (persisted in backend)
+  const [deadline, setDeadline] = useState(data.deadline || null); // ISO string or null
+  const [showDeadlineInput, setShowDeadlineInput] = useState(false);
+
+  // Sync deadline from backend node data if changed externally
+  useEffect(() => {
+    if (data.deadline !== deadline) {
+      setDeadline(data.deadline || null);
+    }
+    // eslint-disable-next-line
+  }, [data.deadline]);
   // Get current user from context
   const { currentUser } = useContext(VendorContext);
   const [inputValue, setInputValue] = useState('');
@@ -276,6 +294,7 @@ const ElementNode = ({ data, isConnectable, selected }) => {
         materialType={data.id}
         workspaceId={data.workspaceId}
         currentUser={currentUser}
+        nodeId={id}
       />
     );
   };
@@ -652,8 +671,11 @@ const ElementNode = ({ data, isConnectable, selected }) => {
     );
   };
 
-  // Determine border style based on selection state
+  // Determine border style based on selection state and importance
   const getBorderStyle = () => {
+    if (isImportant) {
+      return 'border-yellow-500 ring-4 ring-yellow-200 shadow-yellow-200';
+    }
     if (data.isManuallySelected) {
       return 'border-green-600 ring-4 ring-green-200 shadow-green-200';
     }
@@ -780,6 +802,46 @@ const ElementNode = ({ data, isConnectable, selected }) => {
     }`;
   };
 
+  // Timer calculation
+  const [now, setNow] = useState(Date.now());
+  React.useEffect(() => {
+    if (!deadline) return;
+    const interval = setInterval(() => setNow(Date.now()), 1000);
+    return () => clearInterval(interval);
+  }, [deadline]);
+
+  const getTimeLeft = () => {
+    if (!deadline) return null;
+    const diff = new Date(deadline).getTime() - now;
+    if (diff <= 0) return 'Deadline reached';
+    const hours = Math.floor(diff / (1000 * 60 * 60));
+    const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+    const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+    return `${hours}h ${minutes}m ${seconds}s`;
+  };
+
+  // Save deadline to backend (update node in workspace)
+  const persistDeadline = async (newDeadline) => {
+    if (!workspaceId) return;
+    setSaving(true);
+    try {
+      // Fetch current workspace nodes
+      const workspace = await getWorkspaceById(workspaceId);
+      const nodes = workspace.nodes || [];
+      // Find and update this node's deadline
+      const updatedNodes = nodes.map((node) =>
+        node.id === id ? { ...node, data: { ...node.data, deadline: newDeadline } } : node
+      );
+      await updateWorkspace(workspaceId, { nodes: updatedNodes });
+    } catch (err) {
+      // Optionally show error
+      // eslint-disable-next-line no-console
+      console.error('Failed to persist deadline:', err);
+    } finally {
+      setSaving(false);
+    }
+  };
+
   return (
     <div className={`${getWrapperClasses()} ${getBorderStyle()}`}>
       {/* Connection Handles - All uniform gray, bidirectional */}
@@ -865,8 +927,51 @@ const ElementNode = ({ data, isConnectable, selected }) => {
                 <Eye className="w-4 h-4" />
               </button>
             )}
+            {/* Mark as Important button */}
+            <button
+              onClick={() => setIsImportant((prev) => !prev)}
+              className={`ml-2 px-2 py-1 rounded border text-xs font-medium transition-colors duration-150 ${isImportant ? 'bg-yellow-400 text-white border-yellow-500' : 'bg-white text-yellow-600 border-yellow-400 hover:bg-yellow-50'}`}
+              title={isImportant ? 'Unmark as Important' : 'Mark as Important'}
+            >
+              {isImportant ? '★ Important' : '☆ Mark Important'}
+            </button>
+            {/* Deadline Button */}
+            <button
+              onClick={() => setShowDeadlineInput((v) => !v)}
+              className="ml-2 px-2 py-1 rounded border text-xs font-medium transition-colors duration-150 bg-white text-blue-600 border-blue-400 hover:bg-blue-50"
+              title="Set Deadline"
+            >
+              {deadline ? 'Edit Deadline' : 'Set Deadline'}
+            </button>
           </div>
           <p className="text-sm text-gray-500 mt-2">{data.preview}</p>
+          {/* Deadline Input UI */}
+          {showDeadlineInput && (
+            <div className="mt-2 flex flex-col items-center">
+              <input
+                type="datetime-local"
+                className="border rounded px-2 py-1 text-xs"
+                onChange={e => setDeadline(e.target.value)}
+                value={deadline ? new Date(deadline).toISOString().slice(0,16) : ''}
+                min={new Date().toISOString().slice(0,16)}
+                disabled={saving}
+              />
+              <button
+                className="mt-1 px-2 py-1 text-xs bg-blue-500 text-white rounded"
+                onClick={async () => {
+                  setShowDeadlineInput(false);
+                  await persistDeadline(deadline);
+                }}
+                disabled={saving}
+              >
+                {saving ? 'Saving...' : 'Done'}
+              </button>
+            </div>
+          )}
+          {/* Timer Display */}
+          {deadline && (
+            <div className="mt-2 text-xs text-blue-700 font-semibold">⏰ Time left: {getTimeLeft()}</div>
+          )}
         </div>
       )}
       

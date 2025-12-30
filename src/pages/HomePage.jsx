@@ -31,7 +31,7 @@ const HomePage = () => {
   return (
     <main className="home-page">
       <HeroSection />
-      <div className="relative h-[200vh]"> 
+      <div className="relative h-[200vh] bg-black"> 
         <TaglineSection /> 
         <AboutSection />   
       </div>

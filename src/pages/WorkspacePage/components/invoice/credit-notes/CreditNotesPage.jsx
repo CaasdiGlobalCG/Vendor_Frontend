@@ -319,7 +319,7 @@ const CreditNotesPage = () => {
                   Date
                 </th>
                 <th className="text-left py-4 px-6 text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                  Invoice #
+                  Tax Invoice #
                 </th>
                 <th className="text-left py-4 px-6 text-xs font-semibold text-gray-600 uppercase tracking-wider">
                   Client
