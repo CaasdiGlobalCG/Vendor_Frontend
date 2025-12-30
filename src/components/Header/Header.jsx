@@ -16,6 +16,12 @@ import GlobalSearchOverlay from "./GlobalSearchOverlay";
  * Also fetches vendor data once after role selection to populate context.
  */
 export const Header = () => {
+  // Log config values on component mount
+  console.log('Header: config object:', config);
+  console.log('Header: CLIENT_URL:', config.CLIENT_URL);
+  console.log('Header: SALES_URL:', config.SALES_URL);
+  console.log('Header: VENDOR_BACKEND_URL:', config.VENDOR_BACKEND_URL);
+  
   const [isVendor, setIsVendor] = useState(true);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [showNotificationDropdown, setShowNotificationDropdown] = useState(false);
@@ -845,6 +851,8 @@ export const Header = () => {
                if (!next) {
                  // Switching to Client: redirect to client app
                  const clientBase = config.CLIENT_URL;
+                 console.log('Header Toggle: CLIENT_URL value:', clientBase);
+                 console.log('Header Toggle: Type of CLIENT_URL:', typeof clientBase);
                  
                  if (!clientBase) {
                    console.error('CLIENT_URL is not configured');
@@ -909,6 +917,8 @@ export const Header = () => {
                   console.log("  currentUser object from context:", currentUser);
                   console.log("  currentUserParsed from localStorage:", currentUserParsed);
                   console.log("  Calculated vendorId:", vendorId);
+                  console.log("  SALES_URL from config:", config.SALES_URL);
+                  console.log("  Type of SALES_URL:", typeof config.SALES_URL);
 
                   if (!config.SALES_URL) {
                     console.error('SALES_URL is not configured');
