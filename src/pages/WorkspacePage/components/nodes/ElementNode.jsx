@@ -1,7 +1,7 @@
 import React, { useState, useContext, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { getWorkspaceById, updateWorkspace } from '../../utils/workspaceApi';
-import { Handle, Position } from 'reactflow';
+import { Handle, Position, useReactFlow } from 'reactflow';
 import { Download, Eye, ExternalLink, X, ArrowRight, Check, X as XIcon, Menu, Star, Heart, Info, HelpCircle } from 'lucide-react';
 import { VendorContext } from '../../../../context/VendorContext';
 import FormTemplate from '../forms/FormTemplate';
@@ -22,6 +22,7 @@ import { createTableHelpers, defaultTableData } from '../../utils/tableUtils';
 
 const ElementNode = ({ id, data, isConnectable, selected }) => {
   const { workspaceId } = useParams();
+  const { setNodes } = useReactFlow();
   const [saving, setSaving] = useState(false);
   // Important state for highlighting
   const [isImportant, setIsImportant] = useState(false);
@@ -73,6 +74,12 @@ const ElementNode = ({ id, data, isConnectable, selected }) => {
   
   // Info tooltip state
   const [showInfoTooltip, setShowInfoTooltip] = useState(false);
+  
+  // Approval modal state
+  const [showApprovalModal, setShowApprovalModal] = useState(false);
+  const [approvalAction, setApprovalAction] = useState(null); // 'approve' or 'reject'
+  const [approvalReason, setApprovalReason] = useState('');
+  const [isSubmittingApproval, setIsSubmittingApproval] = useState(false);
   
   // Help tutorial state
   const [showHelpTutorial, setShowHelpTutorial] = useState(false);
@@ -146,6 +153,115 @@ const ElementNode = ({ id, data, isConnectable, selected }) => {
       });
     } catch {
       return 'Unknown';
+    }
+  };
+  
+  // Check if current user can approve/reject this element
+  // User can approve if they have a different role than the element creator
+  const canApprove = () => {
+    const currentUserRole = currentUser?.role || 'vendor';
+    const elementCreatorRole = data.addedByRole || 'vendor';
+    const approvalStatus = data.approvalStatus || 'pending';
+    
+    // Can only approve/reject pending elements
+    if (approvalStatus !== 'pending') return false;
+    
+    // Can approve if roles are different (PM approves vendor elements, vendor approves PM elements)
+    return currentUserRole !== elementCreatorRole;
+  };
+  
+  // Handle opening approval modal
+  const handleApprovalClick = (action) => {
+    setApprovalAction(action);
+    setApprovalReason('');
+    setShowApprovalModal(true);
+  };
+  
+  // Handle submitting approval/rejection
+  const handleApprovalSubmit = async () => {
+    if (!approvalReason.trim()) return;
+    
+    setIsSubmittingApproval(true);
+    
+    // Prepare the new approval data
+    const newApprovalData = {
+      approvalStatus: approvalAction === 'approve' ? 'approved' : 'rejected',
+      approvedBy: currentUser?.name || currentUser?.email || 'Unknown User',
+      approvedByEmail: currentUser?.email || null,
+      approvedByRole: currentUser?.role || 'vendor',
+      approvalTimestamp: new Date().toISOString(),
+      approvalReason: approvalReason.trim(),
+    };
+    
+    try {
+      // Get current workspace data
+      const workspaceData = await getWorkspaceById(workspaceId);
+      
+      if (workspaceData) {
+        // Update the node's approval data
+        const updatedNodes = workspaceData.nodes.map(node => {
+          if (node.id === id) {
+            return {
+              ...node,
+              data: {
+                ...node.data,
+                ...newApprovalData,
+              }
+            };
+          }
+          return node;
+        });
+        
+        // Save to backend
+        await updateWorkspace(workspaceId, { nodes: updatedNodes });
+        
+        // Update local React Flow state immediately so UI reflects the change
+        setNodes((nds) => nds.map((node) => {
+          if (node.id === id) {
+            return {
+              ...node,
+              data: {
+                ...node.data,
+                ...newApprovalData,
+              }
+            };
+          }
+          return node;
+        }));
+        
+        console.log(`✅ Element ${approvalAction}d successfully`);
+      }
+    } catch (error) {
+      console.error('Error updating approval status:', error);
+    } finally {
+      setIsSubmittingApproval(false);
+      setShowApprovalModal(false);
+      setApprovalAction(null);
+      setApprovalReason('');
+    }
+  };
+  
+  // Get approval status color
+  const getApprovalStatusColor = () => {
+    switch (data.approvalStatus) {
+      case 'approved':
+        return 'bg-green-100 text-green-800 border-green-300';
+      case 'rejected':
+        return 'bg-red-100 text-red-800 border-red-300';
+      default:
+        return 'bg-yellow-100 text-yellow-800 border-yellow-300';
+    }
+  };
+  
+  // Get approval status icon
+  const getApprovalStatusIcon = () => {
+    switch (data.approvalStatus) {
+      case 'approved':
+        return '✓';
+      case 'rejected':
+        return '✕';
+      default:
+        return '⏳';
     }
   };
   
@@ -1208,6 +1324,89 @@ const ElementNode = ({ id, data, isConnectable, selected }) => {
         {renderInteractiveElement()}
       </div>
       
+      {/* Approval Status & Buttons Section */}
+      <div className="mt-4 pt-3 border-t border-gray-200">
+        {/* Current Approval Status */}
+        <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center space-x-2">
+            <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium border ${getApprovalStatusColor()}`}>
+              <span className="mr-1">{getApprovalStatusIcon()}</span>
+              {data.approvalStatus === 'approved' ? 'Approved' : 
+               data.approvalStatus === 'rejected' ? 'Rejected' : 'Pending Approval'}
+            </span>
+          </div>
+          
+          {/* Added By Role Badge */}
+          <span className={`text-xs px-2 py-0.5 rounded ${
+            data.addedByRole === 'pm' ? 'bg-purple-100 text-purple-700' : 'bg-blue-100 text-blue-700'
+          }`}>
+            Added by {data.addedByRole === 'pm' ? 'PM' : 'Vendor'}
+          </span>
+        </div>
+        
+        {/* Approval Details (if approved/rejected) */}
+        {data.approvalStatus && data.approvalStatus !== 'pending' && (
+          <div className="mb-3 p-2 rounded-lg bg-gray-50 border border-gray-100">
+            <div className="flex items-center space-x-2 mb-1">
+              <span className={`w-5 h-5 rounded-full flex items-center justify-center text-xs ${
+                data.approvalStatus === 'approved' ? 'bg-green-500 text-white' : 'bg-red-500 text-white'
+              }`}>
+                {data.approvalStatus === 'approved' ? '✓' : '✕'}
+              </span>
+              <span className="text-xs font-medium text-gray-700">
+                {data.approvalStatus === 'approved' ? 'Approved' : 'Rejected'} by {data.approvedBy}
+              </span>
+            </div>
+            
+            {data.approvedByRole && (
+              <p className="text-xs text-gray-500 ml-7">
+                Role: {data.approvedByRole === 'pm' ? 'Project Manager' : 'Vendor'}
+              </p>
+            )}
+            
+            {data.approvalTimestamp && (
+              <p className="text-xs text-gray-500 ml-7">
+                📅 {formatDate(data.approvalTimestamp)}
+              </p>
+            )}
+            
+            {data.approvalReason && (
+              <div className="mt-2 p-2 bg-white rounded border border-gray-100">
+                <p className="text-xs text-gray-500 uppercase tracking-wide mb-1">Reason</p>
+                <p className="text-sm text-gray-700">{data.approvalReason}</p>
+              </div>
+            )}
+          </div>
+        )}
+        
+        {/* Approval/Reject Buttons (only show if user can approve) */}
+        {canApprove() && (
+          <div className="flex space-x-2">
+            <button
+              onClick={() => handleApprovalClick('approve')}
+              className="flex-1 flex items-center justify-center space-x-1 px-3 py-2 bg-green-500 hover:bg-green-600 text-white text-sm font-medium rounded-lg transition-colors shadow-sm"
+            >
+              <Check className="w-4 h-4" />
+              <span>Approve</span>
+            </button>
+            <button
+              onClick={() => handleApprovalClick('reject')}
+              className="flex-1 flex items-center justify-center space-x-1 px-3 py-2 bg-red-500 hover:bg-red-600 text-white text-sm font-medium rounded-lg transition-colors shadow-sm"
+            >
+              <XIcon className="w-4 h-4" />
+              <span>Reject</span>
+            </button>
+          </div>
+        )}
+        
+        {/* Message when user cannot approve */}
+        {!canApprove() && data.approvalStatus === 'pending' && (
+          <p className="text-xs text-center text-gray-500 italic">
+            Waiting for {data.addedByRole === 'pm' ? 'Vendor' : 'PM'} to review this element
+          </p>
+        )}
+      </div>
+      
       {/* Sequence Number Badge - Top left corner, always visible */}
       {data.sequenceNumber && (
         <div className="absolute -top-3 -left-3 z-20 w-6 h-6 bg-gradient-to-br from-green-500 to-emerald-600 text-white rounded-full flex items-center justify-center text-xs font-bold shadow-lg border-2 border-white">
@@ -1261,6 +1460,108 @@ const ElementNode = ({ id, data, isConnectable, selected }) => {
                 className="h-full w-full"
                 loading="lazy"
               />
+            </div>
+          </div>
+        </div>
+      )}
+      
+      {/* Approval/Rejection Modal */}
+      {showApprovalModal && (
+        <div className="fixed inset-0 z-[1000] flex items-center justify-center bg-black/50 backdrop-blur-sm">
+          <div 
+            className="bg-white rounded-2xl shadow-2xl w-full max-w-md mx-4 overflow-hidden"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Modal Header */}
+            <div className={`px-6 py-4 ${approvalAction === 'approve' ? 'bg-gradient-to-r from-green-500 to-emerald-500' : 'bg-gradient-to-r from-red-500 to-rose-500'}`}>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-3">
+                  <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center">
+                    {approvalAction === 'approve' ? (
+                      <Check className="w-6 h-6 text-white" />
+                    ) : (
+                      <XIcon className="w-6 h-6 text-white" />
+                    )}
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-semibold text-white">
+                      {approvalAction === 'approve' ? 'Approve Element' : 'Reject Element'}
+                    </h3>
+                    <p className="text-sm text-white/80">{data.name}</p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setShowApprovalModal(false)}
+                  className="p-2 hover:bg-white/20 rounded-full transition-colors"
+                >
+                  <X className="w-5 h-5 text-white" />
+                </button>
+              </div>
+            </div>
+            
+            {/* Modal Body */}
+            <div className="p-6">
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  {approvalAction === 'approve' ? 'Approval Reason' : 'Rejection Reason'} 
+                  <span className="text-red-500">*</span>
+                </label>
+                <textarea
+                  value={approvalReason}
+                  onChange={(e) => setApprovalReason(e.target.value)}
+                  placeholder={approvalAction === 'approve' 
+                    ? 'Enter reason for approving this element...' 
+                    : 'Enter reason for rejecting this element...'}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none transition-all"
+                  rows={4}
+                />
+              </div>
+              
+              {/* Element Info */}
+              <div className="bg-gray-50 rounded-lg p-3 mb-4">
+                <p className="text-xs text-gray-500 uppercase tracking-wide mb-1">Element Details</p>
+                <p className="text-sm text-gray-700">
+                  <span className="font-medium">Type:</span> {data.type}
+                </p>
+                <p className="text-sm text-gray-700">
+                  <span className="font-medium">Added by:</span> {data.addedBy} ({data.addedByRole === 'pm' ? 'PM' : 'Vendor'})
+                </p>
+              </div>
+            </div>
+            
+            {/* Modal Footer */}
+            <div className="px-6 py-4 bg-gray-50 border-t border-gray-100 flex space-x-3">
+              <button
+                onClick={() => setShowApprovalModal(false)}
+                disabled={isSubmittingApproval}
+                className="flex-1 px-4 py-2.5 border border-gray-300 text-gray-700 rounded-xl hover:bg-gray-100 transition-colors font-medium"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleApprovalSubmit}
+                disabled={!approvalReason.trim() || isSubmittingApproval}
+                className={`flex-1 px-4 py-2.5 text-white rounded-xl font-medium transition-all flex items-center justify-center space-x-2 ${
+                  approvalAction === 'approve' 
+                    ? 'bg-green-500 hover:bg-green-600 disabled:bg-green-300' 
+                    : 'bg-red-500 hover:bg-red-600 disabled:bg-red-300'
+                } disabled:cursor-not-allowed`}
+              >
+                {isSubmittingApproval ? (
+                  <>
+                    <svg className="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    <span>Processing...</span>
+                  </>
+                ) : (
+                  <>
+                    {approvalAction === 'approve' ? <Check className="w-4 h-4" /> : <XIcon className="w-4 h-4" />}
+                    <span>{approvalAction === 'approve' ? 'Approve' : 'Reject'}</span>
+                  </>
+                )}
+              </button>
             </div>
           </div>
         </div>
