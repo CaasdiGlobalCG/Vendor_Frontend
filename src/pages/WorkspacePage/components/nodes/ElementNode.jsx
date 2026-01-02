@@ -2,7 +2,7 @@ import React, { useState, useContext, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { getWorkspaceById, updateWorkspace } from '../../utils/workspaceApi';
 import { Handle, Position } from 'reactflow';
-import { Download, Eye, ExternalLink, X, ArrowRight, Check, X as XIcon, Menu, Star, Heart } from 'lucide-react';
+import { Download, Eye, ExternalLink, X, ArrowRight, Check, X as XIcon, Menu, Star, Heart, Info, HelpCircle } from 'lucide-react';
 import { VendorContext } from '../../../../context/VendorContext';
 import FormTemplate from '../forms/FormTemplate';
 import TableRenderer from '../forms/TableRenderer';
@@ -70,6 +70,148 @@ const ElementNode = ({ id, data, isConnectable, selected }) => {
   // Preview state
   const [showPreview, setShowPreview] = useState(false);
   const [showDocumentPreview, setShowDocumentPreview] = useState(false);
+  
+  // Info tooltip state
+  const [showInfoTooltip, setShowInfoTooltip] = useState(false);
+  
+  // Help tutorial state
+  const [showHelpTutorial, setShowHelpTutorial] = useState(false);
+  const [tutorialStep, setTutorialStep] = useState(0);
+  
+  // Tutorial steps data
+  const tutorialSteps = [
+    {
+      title: "Welcome to the Workspace! 👋",
+      description: "This is your collaborative canvas where you can build workflows, forms, and visualize data. Let's take a quick tour!",
+      icon: "🎯"
+    },
+    {
+      title: "Drag & Drop Elements",
+      description: "Use the Elements panel on the left to drag and drop components like forms, tables, charts, and more onto your canvas.",
+      icon: "📦"
+    },
+    {
+      title: "Connect Elements",
+      description: "Elements automatically connect when dropped near each other. You can also manually drag connections between the gray dots on element edges.",
+      icon: "🔗"
+    },
+    {
+      title: "Edit & Customize",
+      description: "Click on any element to select it. Use the controls to edit content, mark as important, or set deadlines.",
+      icon: "✏️"
+    },
+    {
+      title: "Mark Important",
+      description: "Use the '☆ Mark Important' button to highlight critical elements. Important items get a golden border.",
+      icon: "⭐"
+    },
+    {
+      title: "Set Deadlines",
+      description: "Click 'Set Deadline' to add due dates. A countdown timer will appear showing time remaining.",
+      icon: "⏰"
+    },
+    {
+      title: "Info Button",
+      description: "Hover over the blue 'i' icon to see element details - who added it, when, and what it does.",
+      icon: "ℹ️"
+    },
+    {
+      title: "Zoom & Pan",
+      description: "Use the controls at the bottom to zoom in/out. Hold Space + drag to pan around the canvas.",
+      icon: "🔍"
+    },
+    {
+      title: "Auto-Save",
+      description: "Your work is automatically saved. Look for the save indicator at the top to confirm changes are saved.",
+      icon: "💾"
+    },
+    {
+      title: "You're All Set! 🎉",
+      description: "Start creating by dragging elements from the left panel. Need help? Click the '?' button anytime!",
+      icon: "🚀"
+    }
+  ];
+  
+  // Format date for display
+  const formatDate = (dateString) => {
+    if (!dateString) return 'Unknown';
+    try {
+      const date = new Date(dateString);
+      return date.toLocaleDateString('en-US', {
+        month: 'short',
+        day: 'numeric',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      });
+    } catch {
+      return 'Unknown';
+    }
+  };
+  
+  // Get element description based on type
+  const getElementDescription = (type) => {
+    const descriptions = {
+      // Form elements
+      'textbox': 'A single-line text input field for capturing short text like names, emails, or titles.',
+      'textarea': 'A multi-line text area for longer content like descriptions, comments, or messages.',
+      'input': 'A basic input field for collecting user data such as text, numbers, or dates.',
+      'select': 'A dropdown menu that allows users to choose one option from a predefined list.',
+      'checkbox': 'A toggle control that lets users select multiple options from a group.',
+      'radio': 'A selection control where users can choose only one option from a group.',
+      'button': 'A clickable button that triggers an action like submit, save, or navigate.',
+      'form': 'A complete form template with multiple input fields for data collection.',
+      'form-template': 'A pre-built form layout with common fields ready to customize.',
+      
+      // Table elements
+      'table': 'A data table for displaying structured information in rows and columns.',
+      'basic-table': 'A simple table for displaying data in a grid format.',
+      'sortable-table': 'A table with clickable headers to sort data ascending or descending.',
+      'filterable-table': 'A table with search/filter functionality to find specific data.',
+      'paginated-table': 'A table with pagination controls for browsing large datasets.',
+      'editable-table': 'A table where cell values can be edited directly inline.',
+      'expandable-table': 'A table with expandable rows to show additional details.',
+      
+      // Chart elements
+      'chart': 'A visual representation of data using graphs like bar, line, or pie charts.',
+      'bar-chart': 'A bar chart for comparing quantities across different categories.',
+      'line-chart': 'A line chart for showing trends and changes over time.',
+      'pie-chart': 'A pie chart for displaying proportions and percentages of a whole.',
+      
+      // Layout elements
+      'divider': 'A horizontal line to visually separate sections of content.',
+      'spacer': 'An invisible element that adds vertical spacing between components.',
+      'container': 'A wrapper element to group and organize other components.',
+      'grid': 'A layout grid for arranging elements in rows and columns.',
+      'frame': 'A container with borders to frame and highlight content.',
+      
+      // Media elements
+      'image': 'An image placeholder or uploaded image for visual content.',
+      'file': 'An uploaded file attachment like documents, PDFs, or spreadsheets.',
+      'image-block': 'A block element for displaying images with captions.',
+      
+      // Special elements
+      'calendar': 'A calendar widget for date selection and event display.',
+      'calendar-event': 'A calendar event card showing scheduled items.',
+      'list': 'A list component for displaying items in an ordered or unordered format.',
+      'smart-note': 'An intelligent note-taking element with rich text support.',
+      'approval-board': 'A workflow board for tracking approvals and sign-offs.',
+      'task-card': 'A task card for tracking work items with status and progress.',
+      'task-card-progress': 'A task card with progress bar and completion tracking.',
+      'turnkey-workflow': 'A pre-configured workflow template for common processes.',
+      
+      // Icons
+      'icon': 'A decorative or functional icon element.',
+      
+      // Invoice/Quote elements
+      'invoice': 'An invoice document showing billing details and amounts.',
+      'quotation': 'A quotation document with pricing and terms for proposals.',
+    };
+    
+    return descriptions[type?.toLowerCase()] || 
+           descriptions[type] || 
+           `A ${type || 'custom'} element for your workspace canvas.`;
+  };
   
   // Check if element is a table type
   const isTableElement = () => {
@@ -913,6 +1055,92 @@ const ElementNode = ({ id, data, isConnectable, selected }) => {
         isConnectable={isConnectable}
       />
       
+      {/* Info & Help Icons - Top right corner */}
+      <div className="absolute -top-3 -right-3 z-20 flex items-center space-x-1">
+        {/* Info Button */}
+        <div 
+          className="relative"
+          onMouseEnter={() => setShowInfoTooltip(true)}
+          onMouseLeave={() => setShowInfoTooltip(false)}
+        >
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              setShowInfoTooltip(!showInfoTooltip);
+            }}
+            className="w-5 h-5 bg-blue-500 hover:bg-blue-600 text-white rounded-full flex items-center justify-center shadow-md transition-all duration-200 hover:scale-110 border-2 border-white"
+            title="Element Info"
+          >
+            <Info className="w-3 h-3" />
+          </button>
+          
+          {/* Info Tooltip */}
+          {showInfoTooltip && (
+            <div className="absolute right-7 -top-1 z-50 w-72 bg-white rounded-lg shadow-xl border border-gray-200 p-3 text-left animate-fade-in">
+              {/* Arrow pointer */}
+              <div className="absolute -right-2 top-3 w-0 h-0 border-t-8 border-t-transparent border-b-8 border-b-transparent border-l-8 border-l-white"></div>
+              <div className="absolute -right-[9px] top-3 w-0 h-0 border-t-8 border-t-transparent border-b-8 border-b-transparent border-l-8 border-l-gray-200"></div>
+              
+              {/* Header */}
+              <div className="flex items-center space-x-2 mb-3 pb-2 border-b border-gray-100">
+                <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
+                  <Info className="w-4 h-4 text-blue-600" />
+                </div>
+                <div>
+                  <h4 className="text-sm font-semibold text-gray-800">Element Details</h4>
+                </div>
+              </div>
+              
+              {/* Element Type */}
+              <div className="mb-2">
+                <p className="text-xs text-gray-500 uppercase tracking-wide">Element Type</p>
+                <p className="text-sm font-medium text-gray-800 flex items-center">
+                  <span className="w-2 h-2 bg-blue-500 rounded-full mr-2"></span>
+                  {data.name || data.type || 'Unknown Element'}
+                </p>
+              </div>
+              
+              {/* What it does - Description */}
+              <div className="mb-3 p-2 bg-gray-50 rounded-md border border-gray-100">
+                <p className="text-xs text-gray-500 uppercase tracking-wide mb-1">💡 What it does</p>
+                <p className="text-xs text-gray-700 leading-relaxed">
+                  {getElementDescription(data.type)}
+                </p>
+              </div>
+              
+              {/* Added By */}
+              <div className="mb-2">
+                <p className="text-xs text-gray-500 uppercase tracking-wide">Added By</p>
+                <p className="text-sm font-medium text-gray-800 flex items-center">
+                  <span className="w-6 h-6 bg-green-100 rounded-full flex items-center justify-center mr-2 text-xs font-bold text-green-600">
+                    {(data.addedBy || 'U').charAt(0).toUpperCase()}
+                  </span>
+                  {data.addedBy || 'Unknown User'}
+                </p>
+                {data.addedByEmail && (
+                  <p className="text-xs text-gray-400 ml-8">{data.addedByEmail}</p>
+                )}
+              </div>
+              
+              {/* Added At */}
+              <div className="mb-2">
+                <p className="text-xs text-gray-500 uppercase tracking-wide">Added On</p>
+                <p className="text-sm font-medium text-gray-800">
+                  📅 {formatDate(data.addedAt)}
+                </p>
+              </div>
+              
+              {/* Element ID */}
+              <div className="pt-2 border-t border-gray-100">
+                <p className="text-xs text-gray-400">
+                  ID: <span className="font-mono">{id?.slice(0, 20)}...</span>
+                </p>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+      
       {/* Element Header - Hide for divider, spacer, container, grid */}
       {!['divider', 'spacer', 'container', 'grid'].includes(data.type) && (
         <div className="mb-4 text-center relative">
@@ -980,8 +1208,15 @@ const ElementNode = ({ id, data, isConnectable, selected }) => {
         {renderInteractiveElement()}
       </div>
       
+      {/* Sequence Number Badge - Top left corner, always visible */}
+      {data.sequenceNumber && (
+        <div className="absolute -top-3 -left-3 z-20 w-6 h-6 bg-gradient-to-br from-green-500 to-emerald-600 text-white rounded-full flex items-center justify-center text-xs font-bold shadow-lg border-2 border-white">
+          {data.sequenceNumber}
+        </div>
+      )}
+      
       {/* Element Type Label */}
-      <div className="absolute -top-2 -left-2 px-2 py-1 bg-blue-500 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity">
+      <div className="absolute -top-2 left-5 px-2 py-1 bg-blue-500 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity">
         {data.type.toUpperCase()}
       </div>
       

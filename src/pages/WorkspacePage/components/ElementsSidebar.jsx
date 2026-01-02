@@ -185,7 +185,7 @@ const ElementsSidebar = ({ isOpen, onClose, onElementSelect, userRole, currentUs
       />
       
       {/* Elements Sidebar */}
-      <div className="w-80 bg-white shadow-2xl flex flex-col max-h-screen">
+      <div data-tour="elements-sidebar" className="w-80 bg-white shadow-2xl flex flex-col max-h-screen">
         {/* Header - Fixed */}
         <div className="px-5 py-4 border-b border-gray-200 flex-shrink-0 bg-white">
           <div className="flex items-center justify-between">

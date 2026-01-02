@@ -29,7 +29,7 @@ import TaskCardConfigModal from './modals/TaskCardConfigModal';
 import { getFlowchartTemplate } from '../utils/flowchartTemplates';
 import config from '../../../config/env';
 
-// Custom CSS to ensure controls work properly
+// Custom CSS to ensure controls work properly and add auto-connection effects
 const controlsCSS = `
   .react-flow__controls {
     z-index: 1000 !important;
@@ -40,6 +40,29 @@ const controlsCSS = `
   }
   .react-flow__controls-button:hover {
     background-color: #f3f4f6 !important;
+  }
+  
+  /* Auto-connected edge animations */
+  .auto-connected-edge {
+    animation: connectionGlow 2s ease-in-out infinite;
+  }
+  
+  @keyframes connectionGlow {
+    0%, 100% {
+      filter: drop-shadow(0 0 4px rgba(59, 130, 246, 0.4));
+    }
+    50% {
+      filter: drop-shadow(0 0 12px rgba(59, 130, 246, 0.8));
+    }
+  }
+  
+  @keyframes pulse {
+    0%, 100% {
+      opacity: 0.8;
+    }
+    50% {
+      opacity: 0.3;
+    }
   }
 `;
 
@@ -192,11 +215,28 @@ const edgeTypes = {
   const canvasData = getCanvasData();
   const [nodes, setNodes, onNodesChange] = useNodesState(canvasData.nodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(canvasData.edges);
+  
+  // Element sequence counter - tracks the order elements are added
+  const elementSequenceRef = useRef(() => {
+    // Initialize with the count of existing nodes that have sequence numbers
+    const existingNodes = canvasData.nodes || [];
+    const maxSequence = existingNodes.reduce((max, node) => {
+      const seq = node.data?.sequenceNumber || 0;
+      return Math.max(max, seq);
+    }, 0);
+    return maxSequence;
+  });
+  
+  // Initialize ref value
+  if (typeof elementSequenceRef.current === 'function') {
+    elementSequenceRef.current = elementSequenceRef.current();
+  }
 
   // Function to clear all elements from canvas
   const clearCanvas = () => {
     setNodes([]);
     setEdges([]);
+    elementSequenceRef.current = 0; // Reset sequence when canvas is cleared
     console.log('🧹 Canvas cleared - all elements removed');
   };
   const [reactFlowInstance, setReactFlowInstance] = useState(null);
@@ -248,8 +288,16 @@ const edgeTypes = {
   const [pendingTaskCardInitialData, setPendingTaskCardInitialData] = useState(null);
 
   // Edge labeling state
-  const [edgeLabelModal, setEdgeLabelModal] = useState({ isOpen: false, edgeId: null, initialLabel: '' });
+  const [edgeLabelModal, setEdgeLabelModal] = useState({ 
+    isOpen: false, 
+    edgeId: null, 
+    initialLabel: '',
+    edgeStyle: 'default', // default, dashed, dotted, animated
+    edgeColor: '#3b82f6' // blue default
+  });
   const [edgeLabelInput, setEdgeLabelInput] = useState('');
+  const [edgeStyleInput, setEdgeStyleInput] = useState('default');
+  const [edgeColorInput, setEdgeColorInput] = useState('#3b82f6');
   
   
   // Flowchart extension state
@@ -384,9 +432,83 @@ const edgeTypes = {
     return element.type === 'flowchart';
   };
 
-  // Helper function to create a node
+  // Helper function for smart auto-connection
+  const autoConnectNearbyNodes = (newNode, allNodes, CONNECTION_THRESHOLD = 250) => {
+    console.log('🔗 autoConnectNearbyNodes: Analyzing nodes for auto-connection');
+    
+    // Find nearby nodes based on distance
+    const nearbyNodes = allNodes.filter(node => {
+      if (node.id === newNode.id) return false;
+      
+      const dx = node.position.x - newNode.position.x;
+      const dy = node.position.y - newNode.position.y;
+      const distance = Math.sqrt(dx * dx + dy * dy);
+      
+      return distance < CONNECTION_THRESHOLD;
+    });
+
+    console.log(`🎯 Found ${nearbyNodes.length} nearby nodes for auto-connection`);
+
+    // Determine connection direction based on relative position
+    const connectionsToCreate = [];
+    
+    nearbyNodes.forEach((nearbyNode) => {
+      const dx = newNode.position.x - nearbyNode.position.x;
+      const dy = newNode.position.y - nearbyNode.position.y;
+      const distance = Math.sqrt(dx * dx + dy * dy);
+      
+      // Determine direction
+      let sourceId, targetId;
+      const isToTheLeft = dx > 0; // new node is to the right
+      const isAbove = dy > 0; // new node is below
+      
+      if (Math.abs(dx) > Math.abs(dy)) {
+        // Primarily horizontal layout
+        if (isToTheLeft) {
+          // new node is to the right - connect from old to new
+          sourceId = nearbyNode.id;
+          targetId = newNode.id;
+        } else {
+          // new node is to the left - connect from new to old
+          sourceId = newNode.id;
+          targetId = nearbyNode.id;
+        }
+      } else {
+        // Primarily vertical layout
+        if (isAbove) {
+          // new node is below - connect from old to new
+          sourceId = nearbyNode.id;
+          targetId = newNode.id;
+        } else {
+          // new node is above - connect from new to old
+          sourceId = newNode.id;
+          targetId = nearbyNode.id;
+        }
+      }
+      
+      // Check if connection already exists
+      const connectionExists = false; // We'll check this when adding
+      
+      connectionsToCreate.push({
+        source: sourceId,
+        target: targetId,
+        distance: Math.round(distance),
+        direction: isToTheLeft ? 'left' : isAbove ? 'above' : 'right'
+      });
+      
+      console.log(`➡️ Will connect: ${sourceId} → ${targetId} (distance: ${Math.round(distance)}px, direction: ${isToTheLeft ? 'left' : isAbove ? 'above' : 'right'})`);
+    });
+
+    return connectionsToCreate;
+  };
+
+  // Helper function to create a node with sequence number
   const createElementNode = (element, position, customData = null) => {
-    console.log('🏗️ createElementNode called with:', { element, position, customData });
+    // Auto-increment sequence number for each new element
+    elementSequenceRef.current += 1;
+    const sequenceNum = elementSequenceRef.current;
+    
+    console.log('🏗️ createElementNode called with:', { element, position, customData, sequenceNum });
     
     const isLayout = element.width !== undefined || ['frame', 'rows', 'columns', 'grid', 'image'].includes(element.type);
     const isText = element.type === 'text' || element.content !== undefined;
@@ -498,7 +620,14 @@ const edgeTypes = {
         }),
         // Store workspaceId for all nodes (needed for MaterialsRenderer and other components)
         workspaceId: workspace?.workspaceId || null,
-
+        
+        // Element metadata - who added and when
+        addedBy: currentUser?.name || currentUser?.email || 'Unknown User',
+        addedByEmail: currentUser?.email || null,
+        addedAt: new Date().toISOString(),
+        
+        // Element sequence number - order in which it was added
+        sequenceNumber: sequenceNum,
       },
     };
 
@@ -803,13 +932,28 @@ const edgeTypes = {
 
 
   const openEdgeLabelModal = useCallback((edgeId, currentLabel = '') => {
-    setEdgeLabelModal({ isOpen: true, edgeId, initialLabel: currentLabel });
+    // Find the edge to get its current style
+    const edge = edges.find(e => e.id === edgeId);
+    const currentStyle = edge?.data?.edgeStyle || 'default';
+    const currentColor = edge?.data?.edgeColor || '#3b82f6';
+    
+    setEdgeLabelModal({ 
+      isOpen: true, 
+      edgeId, 
+      initialLabel: currentLabel,
+      edgeStyle: currentStyle,
+      edgeColor: currentColor
+    });
     setEdgeLabelInput(currentLabel);
-  }, []);
+    setEdgeStyleInput(currentStyle);
+    setEdgeColorInput(currentColor);
+  }, [edges]);
 
   const closeEdgeLabelModal = useCallback(() => {
-    setEdgeLabelModal({ isOpen: false, edgeId: null, initialLabel: '' });
+    setEdgeLabelModal({ isOpen: false, edgeId: null, initialLabel: '', edgeStyle: 'default', edgeColor: '#3b82f6' });
     setEdgeLabelInput('');
+    setEdgeStyleInput('default');
+    setEdgeColorInput('#3b82f6');
   }, []);
 
   const handleEdgeLabelSave = useCallback(() => {
@@ -823,17 +967,56 @@ const edgeTypes = {
         return edge;
       }
 
+      // Build style based on edgeStyleInput
+      let strokeDasharray = undefined;
+      let animated = false;
+      
+      switch (edgeStyleInput) {
+        case 'dashed':
+          strokeDasharray = '10,5';
+          break;
+        case 'dotted':
+          strokeDasharray = '2,4';
+          break;
+        case 'animated':
+          animated = true;
+          break;
+        default:
+          break;
+      }
+
       return {
         ...edge,
+        animated,
+        style: {
+          ...(edge.style || {}),
+          stroke: edgeColorInput,
+          strokeWidth: 2,
+          strokeDasharray,
+        },
         data: {
           ...(edge.data || {}),
-          label: edgeLabelInput.trim()
+          label: edgeLabelInput.trim(),
+          edgeStyle: edgeStyleInput,
+          edgeColor: edgeColorInput,
         }
       };
     }));
 
     closeEdgeLabelModal();
-  }, [edgeLabelInput, edgeLabelModal.edgeId, closeEdgeLabelModal, setEdges]);
+  }, [edgeLabelInput, edgeStyleInput, edgeColorInput, edgeLabelModal.edgeId, closeEdgeLabelModal, setEdges]);
+
+  // Delete a specific edge
+  const handleDeleteEdge = useCallback(() => {
+    if (!edgeLabelModal.edgeId) {
+      closeEdgeLabelModal();
+      return;
+    }
+    
+    setEdges((eds) => eds.filter((edge) => edge.id !== edgeLabelModal.edgeId));
+    closeEdgeLabelModal();
+    console.log('🗑️ Edge deleted:', edgeLabelModal.edgeId);
+  }, [edgeLabelModal.edgeId, closeEdgeLabelModal, setEdges]);
 
 
   // Handle node selection changes
@@ -2163,11 +2346,118 @@ const edgeTypes = {
         console.log('🆕 Creating new node:', newNode);
         console.log('🔍 Node type:', newNode.type);
         console.log('🔍 Node data:', newNode.data);
-        setNodes((nds) => {
-          const updatedNodes = nds.concat(newNode);
-          console.log('📊 Updated nodes array:', updatedNodes);
-          return updatedNodes;
+        
+        // Auto-connect to nearby nodes with smart connection direction
+        const CONNECTION_THRESHOLD = 800; // pixels - increased for larger canvas workspaces
+        
+        // Get current nodes BEFORE adding the new one
+        let currentNodesSnapshot = [];
+        setNodes((currentNodes) => {
+          currentNodesSnapshot = [...currentNodes];
+          return currentNodes;
         });
+        
+        // Small delay to ensure state is captured, then add node and create connections
+        setTimeout(() => {
+          // Add the new node
+          setNodes((nds) => {
+            const updatedNodes = nds.concat(newNode);
+            console.log('📊 Updated nodes array:', updatedNodes.length, 'nodes');
+            return updatedNodes;
+          });
+          
+          // Now create auto-connections based on the snapshot
+          console.log('🔗 Checking for auto-connections. Existing nodes:', currentNodesSnapshot.length);
+          
+          if (currentNodesSnapshot.length > 0) {
+            // Find nearby nodes for connection
+            const nearbyNodes = currentNodesSnapshot.filter(node => {
+              const dx = node.position.x - newNode.position.x;
+              const dy = node.position.y - newNode.position.y;
+              const distance = Math.sqrt(dx * dx + dy * dy);
+              
+              console.log(`📏 Distance from ${node.id} to new node: ${Math.round(distance)}px`);
+              return distance < CONNECTION_THRESHOLD;
+            });
+            
+            console.log(`🎯 Found ${nearbyNodes.length} nearby nodes within ${CONNECTION_THRESHOLD}px`);
+            
+            if (nearbyNodes.length > 0) {
+              setEdges((currentEdges) => {
+                const newEdges = [...currentEdges];
+                
+                nearbyNodes.forEach((nearbyNode) => {
+                  // Determine connection direction based on relative position
+                  const dx = newNode.position.x - nearbyNode.position.x;
+                  const dy = newNode.position.y - nearbyNode.position.y;
+                  
+                  let sourceId, targetId;
+                  
+                  // Determine direction - connect from existing to new (workflow flow)
+                  if (Math.abs(dx) > Math.abs(dy)) {
+                    // Horizontal layout
+                    if (dx > 0) {
+                      // New node is to the right - connect existing → new
+                      sourceId = nearbyNode.id;
+                      targetId = newNode.id;
+                    } else {
+                      // New node is to the left - connect new → existing
+                      sourceId = newNode.id;
+                      targetId = nearbyNode.id;
+                    }
+                  } else {
+                    // Vertical layout
+                    if (dy > 0) {
+                      // New node is below - connect existing → new
+                      sourceId = nearbyNode.id;
+                      targetId = newNode.id;
+                    } else {
+                      // New node is above - connect new → existing
+                      sourceId = newNode.id;
+                      targetId = nearbyNode.id;
+                    }
+                  }
+                  
+                  // Check if connection already exists
+                  const connectionExists = newEdges.some(
+                    edge => (edge.source === sourceId && edge.target === targetId) ||
+                            (edge.source === targetId && edge.target === sourceId)
+                  );
+                  
+                  if (!connectionExists) {
+                    const edgeId = `edge_auto_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+                    const newEdge = {
+                      id: edgeId,
+                      source: sourceId,
+                      target: targetId,
+                      sourceHandle: 'right-out',
+                      targetHandle: 'left-in',
+                      type: 'custom',
+                      animated: true,
+                      style: { 
+                        strokeWidth: 3, 
+                        stroke: '#3b82f6',
+                      },
+                      data: { 
+                        label: '',
+                        isAutoConnected: true
+                      }
+                    };
+                    
+                    newEdges.push(newEdge);
+                    console.log(`✅ AUTO-CONNECTED: ${sourceId} → ${targetId}`);
+                  } else {
+                    console.log(`⏭️ Connection already exists: ${sourceId} ↔ ${targetId}`);
+                  }
+                });
+                
+                return newEdges;
+              });
+            }
+          } else {
+            console.log('ℹ️ First element dropped - no nodes to connect to');
+          }
+        }, 50);
         
         // Track the element addition activity
         await trackActivity(
@@ -2186,7 +2476,7 @@ const edgeTypes = {
         );
         
         
-        console.log('✅ Element dropped successfully!');
+        console.log('✅ Element dropped and auto-connected successfully!');
       } catch (error) {
         console.error('❌ Error parsing dropped element:', error);
       }
@@ -2361,6 +2651,7 @@ const edgeTypes = {
 
       {/* React Flow Canvas */}
       <div 
+        data-tour="canvas"
         className="flex-1 relative overflow-hidden" 
         style={{ 
           width: '100%', 
@@ -2722,43 +3013,126 @@ const edgeTypes = {
       />
       {edgeLabelModal.isOpen && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black bg-opacity-50">
-          <div className="bg-white rounded-lg shadow-xl w-full max-w-sm p-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">Name Connection</h3>
-            <p className="text-sm text-gray-500 mb-4">Assign a meaningful name to this connection.</p>
-            <input
-              type="text"
-              autoFocus
-              value={edgeLabelInput}
-              onChange={(e) => setEdgeLabelInput(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter') {
-                  e.preventDefault();
-                  handleEdgeLabelSave();
-                }
-                if (e.key === 'Escape') {
-                  e.preventDefault();
-                  closeEdgeLabelModal();
-                }
-              }}
-              placeholder="Connection name"
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            />
-            <div className="mt-4 flex justify-end gap-3">
+          <div className="bg-white rounded-xl shadow-2xl w-full max-w-md p-6">
+            {/* Header */}
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold text-gray-900">Edit Connection</h3>
               <button
-                type="button"
                 onClick={closeEdgeLabelModal}
-                className="px-3 py-1.5 text-sm rounded-md border border-gray-300 text-gray-700 hover:bg-gray-100"
+                className="p-1 hover:bg-gray-100 rounded-lg transition-colors"
               >
-                Cancel
+                <X className="w-5 h-5 text-gray-500" />
               </button>
+            </div>
+            
+            {/* Connection Name */}
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700 mb-1">Connection Name</label>
+              <input
+                type="text"
+                autoFocus
+                value={edgeLabelInput}
+                onChange={(e) => setEdgeLabelInput(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault();
+                    handleEdgeLabelSave();
+                  }
+                  if (e.key === 'Escape') {
+                    e.preventDefault();
+                    closeEdgeLabelModal();
+                  }
+                }}
+                placeholder="e.g., Data Flow, Approval, Next Step..."
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              />
+            </div>
+            
+            {/* Connection Style */}
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700 mb-2">Line Style</label>
+              <div className="grid grid-cols-4 gap-2">
+                {[
+                  { id: 'default', label: 'Solid', icon: '━' },
+                  { id: 'dashed', label: 'Dashed', icon: '┅' },
+                  { id: 'dotted', label: 'Dotted', icon: '⋯' },
+                  { id: 'animated', label: 'Animated', icon: '⟿' },
+                ].map((style) => (
+                  <button
+                    key={style.id}
+                    onClick={() => setEdgeStyleInput(style.id)}
+                    className={`px-3 py-2 rounded-lg border-2 text-sm font-medium transition-all ${
+                      edgeStyleInput === style.id
+                        ? 'border-blue-500 bg-blue-50 text-blue-700'
+                        : 'border-gray-200 hover:border-gray-300 text-gray-600'
+                    }`}
+                  >
+                    <span className="text-lg block mb-1">{style.icon}</span>
+                    <span className="text-xs">{style.label}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+            
+            {/* Connection Color */}
+            <div className="mb-6">
+              <label className="block text-sm font-medium text-gray-700 mb-2">Line Color</label>
+              <div className="flex flex-wrap gap-2">
+                {[
+                  { color: '#3b82f6', name: 'Blue' },
+                  { color: '#10b981', name: 'Green' },
+                  { color: '#f59e0b', name: 'Orange' },
+                  { color: '#ef4444', name: 'Red' },
+                  { color: '#8b5cf6', name: 'Purple' },
+                  { color: '#6b7280', name: 'Gray' },
+                  { color: '#000000', name: 'Black' },
+                ].map((c) => (
+                  <button
+                    key={c.color}
+                    onClick={() => setEdgeColorInput(c.color)}
+                    className={`w-8 h-8 rounded-full border-2 transition-all ${
+                      edgeColorInput === c.color
+                        ? 'border-gray-900 ring-2 ring-offset-2 ring-blue-500'
+                        : 'border-gray-300 hover:border-gray-400'
+                    }`}
+                    style={{ backgroundColor: c.color }}
+                    title={c.name}
+                  />
+                ))}
+              </div>
+            </div>
+            
+            {/* Action Buttons */}
+            <div className="flex justify-between items-center">
+              {/* Delete Button */}
               <button
                 type="button"
-                onClick={handleEdgeLabelSave}
-                className="px-3 py-1.5 text-sm rounded-md bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50"
-                disabled={!edgeLabelInput.trim()}
+                onClick={handleDeleteEdge}
+                className="px-4 py-2 text-sm rounded-lg border border-red-300 text-red-600 hover:bg-red-50 flex items-center gap-2 transition-colors"
               >
-                Save
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                </svg>
+                Delete Connection
               </button>
+              
+              {/* Save/Cancel Buttons */}
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={closeEdgeLabelModal}
+                  className="px-4 py-2 text-sm rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-100 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={handleEdgeLabelSave}
+                  className="px-4 py-2 text-sm rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition-colors"
+                >
+                  Save Changes
+                </button>
+              </div>
             </div>
           </div>
         </div>
