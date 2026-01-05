@@ -624,19 +624,10 @@ const edgeTypes = {
         // Element metadata - who added and when
         addedBy: currentUser?.name || currentUser?.email || 'Unknown User',
         addedByEmail: currentUser?.email || null,
-        addedByRole: currentUser?.role || 'vendor', // 'vendor' or 'pm'
         addedAt: new Date().toISOString(),
         
         // Element sequence number - order in which it was added
         sequenceNumber: sequenceNum,
-        
-        // Approval workflow - initially pending
-        approvalStatus: 'pending', // 'pending', 'approved', 'rejected'
-        approvedBy: null,
-        approvedByEmail: null,
-        approvedByRole: null,
-        approvalTimestamp: null,
-        approvalReason: null,
       },
     };
 

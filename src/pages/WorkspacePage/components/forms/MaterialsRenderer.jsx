@@ -1,5 +1,5 @@
 import React, { useState, useContext, useEffect, useRef } from 'react';
-import { Plus, Minus, Send, Package, AlertCircle, CheckCircle, Clock, Upload, FileSpreadsheet } from 'lucide-react';
+import { Plus, Minus, Send, Package, AlertCircle, CheckCircle, Clock, Upload, FileSpreadsheet, Edit2, X } from 'lucide-react';
 import { VendorContext } from '../../../../context/VendorContext';
 import config from '../../../../config/env';
 import { getWorkspaceById, updateWorkspace } from '../../utils/workspaceApi';
@@ -89,6 +89,12 @@ const MaterialsRenderer = ({ data, materialType, workspaceId, currentUser, nodeI
   });
   const [submittedAt, setSubmittedAt] = useState(() => {
     return data?.procurementData?.submittedAt || null;
+  });
+
+  // State for change request mode
+  const [isChangeRequestMode, setIsChangeRequestMode] = useState(false);
+  const [originalRequestIds, setOriginalRequestIds] = useState(() => {
+    return data?.procurementData?.requestIds || []; // Store original request IDs for updates
   });
 
   // Persist procurement data to node
@@ -294,7 +300,7 @@ const MaterialsRenderer = ({ data, materialType, workspaceId, currentUser, nodeI
     return `REQ-${timestamp}-${random}`;
   };
 
-  // Send to procurement
+  // Send to procurement (handles both new submissions and change requests/updates)
   const sendToProcurement = async () => {
     // Validate that at least one request has a name
     const validRequests = materialRequests.filter(req => req.name.trim() !== '');
@@ -316,8 +322,12 @@ const MaterialsRenderer = ({ data, materialType, workspaceId, currentUser, nodeI
 
     try {
       // Submit each valid request to backend
-      const submissionPromises = validRequests.map(async (request) => {
-        const requestId = generateRequestId();
+      const submissionPromises = validRequests.map(async (request, index) => {
+        // Use original request ID if updating, generate new one if creating
+        const requestId = isChangeRequestMode && originalRequestIds[index] 
+          ? originalRequestIds[index]
+          : generateRequestId();
+        
         const now = new Date();
         const sentOn = now.toISOString().split('T')[0]; // Format: YYYY-MM-DD
         
@@ -342,10 +352,15 @@ const MaterialsRenderer = ({ data, materialType, workspaceId, currentUser, nodeI
           workspaceId: workspace
         };
 
-        console.log('📦 Submitting procurement request:', payload);
+        console.log(`📦 ${isChangeRequestMode ? 'Updating' : 'Submitting'} procurement request:`, payload);
 
-        const response = await fetch(`/api/procurement-requests`, {
-          method: 'POST',
+        // Determine if this is a new request or an update
+        const isUpdate = isChangeRequestMode && originalRequestIds[index];
+        const method = isUpdate ? 'PUT' : 'POST';
+        const endpoint = isUpdate ? `/api/procurement-requests/${requestId}` : `/api/procurement-requests`;
+
+        const response = await fetch(endpoint, {
+          method: method,
           headers: {
             'Content-Type': 'application/json',
             'x-user-info': JSON.stringify({
@@ -360,16 +375,19 @@ const MaterialsRenderer = ({ data, materialType, workspaceId, currentUser, nodeI
 
         if (!response.ok) {
           const errorData = await response.json().catch(() => ({}));
-          throw new Error(errorData.message || `Failed to submit procurement request (Status: ${response.status})`);
+          throw new Error(errorData.message || `Failed to ${isUpdate ? 'update' : 'submit'} procurement request (Status: ${response.status})`);
         }
 
         const result = await response.json();
-        console.log('✅ Procurement request submitted successfully:', result);
-        return result;
+        console.log(`✅ Procurement request ${isUpdate ? 'updated' : 'submitted'} successfully:`, result);
+        return { ...result, requestId: requestId };
       });
 
       // Wait for all submissions to complete
-      await Promise.all(submissionPromises);
+      const submissionResults = await Promise.all(submissionPromises);
+
+      // Extract request IDs from successful submissions for future updates
+      const newRequestIds = submissionResults.map(result => result.requestId);
 
       // Update status to submitted
       const submittedRequests = materialRequests.map(req => ({
@@ -384,6 +402,12 @@ const MaterialsRenderer = ({ data, materialType, workspaceId, currentUser, nodeI
       const now = new Date().toISOString();
       setProcurementStatus('sent');
       setSubmittedAt(now);
+      
+      // Reset change request mode
+      setIsChangeRequestMode(false);
+      
+      // Store request IDs for future updates
+      setOriginalRequestIds(newRequestIds);
 
       // Persist the procurement data to the node
       await persistProcurementData({
@@ -391,11 +415,13 @@ const MaterialsRenderer = ({ data, materialType, workspaceId, currentUser, nodeI
         submittedAt: now,
         requestTitle: requestTitle,
         materialRequests: submittedRequests,
-        itemCount: validRequests.length
+        itemCount: validRequests.length,
+        requestIds: newRequestIds // Store request IDs for updates
       });
 
       // Show success message
-      alert(`✅ Material request sent to procurement!\n\n${validRequests.length} item(s) submitted for ${category.name.toLowerCase()}.\n\nAll requests have been saved to the backend.`);
+      const actionMsg = isChangeRequestMode ? 'updated and sent' : 'sent';
+      alert(`✅ Material request ${actionMsg} to procurement!\n\n${validRequests.length} item(s) ${actionMsg} for ${category.name.toLowerCase()}.\n\nAll requests have been saved to the backend.`);
     } catch (error) {
       console.error('❌ Error submitting procurement request:', error);
       alert(`❌ Error submitting procurement request: ${error.message}\n\nPlease try again or contact support.`);
@@ -455,7 +481,7 @@ const MaterialsRenderer = ({ data, materialType, workspaceId, currentUser, nodeI
           className="w-full mt-2 px-3 py-2 bg-white border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 font-medium"
           placeholder="Enter request title"
           onClick={(e) => e.stopPropagation()}
-          disabled={procurementStatus === 'sent'}
+          disabled={procurementStatus === 'sent' && !isChangeRequestMode}
         />
       </div>
 
@@ -480,11 +506,11 @@ const MaterialsRenderer = ({ data, materialType, workspaceId, currentUser, nodeI
                 fileInputRef.current?.click();
               }}
               className={`flex items-center space-x-2 px-3 py-2 text-sm rounded-md transition-colors border ${
-                procurementStatus === 'sent' 
+                procurementStatus === 'sent' && !isChangeRequestMode
                   ? 'bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed' 
                   : 'bg-green-50 hover:bg-green-100 text-green-700 border-green-200'
               }`}
-              disabled={procurementStatus === 'sent'}
+              disabled={procurementStatus === 'sent' && !isChangeRequestMode}
               title="Upload Excel file with material items"
             >
               <FileSpreadsheet className="w-4 h-4" />
@@ -497,11 +523,11 @@ const MaterialsRenderer = ({ data, materialType, workspaceId, currentUser, nodeI
                 addMaterialRequest();
               }}
               className={`flex items-center space-x-2 px-3 py-2 text-sm rounded-md transition-colors border ${
-                procurementStatus === 'sent' 
+                procurementStatus === 'sent' && !isChangeRequestMode
                   ? 'bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed' 
                   : 'bg-blue-50 hover:bg-blue-100 text-blue-700 border-blue-200'
               }`}
-              disabled={procurementStatus === 'sent'}
+              disabled={procurementStatus === 'sent' && !isChangeRequestMode}
             >
               <Plus className="w-4 h-4" />
               <span>Add Item</span>
@@ -530,6 +556,9 @@ const MaterialsRenderer = ({ data, materialType, workspaceId, currentUser, nodeI
                   <Minus className="w-4 h-4" />
                 </button>
               )}
+              {procurementStatus === 'sent' && !isChangeRequestMode && (
+                <span className="text-xs text-green-600 font-medium">✓ Submitted</span>
+              )}
             </div>
 
             {/* Item Details */}
@@ -541,10 +570,10 @@ const MaterialsRenderer = ({ data, materialType, workspaceId, currentUser, nodeI
                   type="text"
                   value={request.name}
                   onChange={(e) => updateMaterialRequest(request.id, 'name', e.target.value)}
-                  className={`w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm ${procurementStatus === 'sent' ? 'bg-gray-100' : ''}`}
+                  className={`w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm ${procurementStatus === 'sent' && !isChangeRequestMode ? 'bg-gray-100' : ''}`}
                   placeholder={`e.g., ${category.examples[index % category.examples.length]}`}
                   onClick={(e) => e.stopPropagation()}
-                  disabled={procurementStatus === 'sent'}
+                  disabled={procurementStatus === 'sent' && !isChangeRequestMode}
                 />
               </div>
 
@@ -556,11 +585,11 @@ const MaterialsRenderer = ({ data, materialType, workspaceId, currentUser, nodeI
                     type="number"
                     value={request.quantity}
                     onChange={(e) => updateMaterialRequest(request.id, 'quantity', e.target.value)}
-                    className={`w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm ${procurementStatus === 'sent' ? 'bg-gray-100' : ''}`}
+                    className={`w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm ${procurementStatus === 'sent' && !isChangeRequestMode ? 'bg-gray-100' : ''}`}
                     placeholder="0"
                     min="0"
                     onClick={(e) => e.stopPropagation()}
-                    disabled={procurementStatus === 'sent'}
+                    disabled={procurementStatus === 'sent' && !isChangeRequestMode}
                   />
                 </div>
                 <div className="w-20">
@@ -568,9 +597,9 @@ const MaterialsRenderer = ({ data, materialType, workspaceId, currentUser, nodeI
                   <select
                     value={request.unit}
                     onChange={(e) => updateMaterialRequest(request.id, 'unit', e.target.value)}
-                    className={`w-full px-2 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm ${procurementStatus === 'sent' ? 'bg-gray-100' : ''}`}
+                    className={`w-full px-2 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm ${procurementStatus === 'sent' && !isChangeRequestMode ? 'bg-gray-100' : ''}`}
                     onClick={(e) => e.stopPropagation()}
-                    disabled={procurementStatus === 'sent'}
+                    disabled={procurementStatus === 'sent' && !isChangeRequestMode}
                   >
                     <option value="pcs">pcs</option>
                     <option value="kg">kg</option>
@@ -592,9 +621,9 @@ const MaterialsRenderer = ({ data, materialType, workspaceId, currentUser, nodeI
                 <select
                   value={request.priority}
                   onChange={(e) => updateMaterialRequest(request.id, 'priority', e.target.value)}
-                  className={`w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm ${procurementStatus === 'sent' ? 'bg-gray-100' : ''}`}
+                  className={`w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm ${procurementStatus === 'sent' && !isChangeRequestMode ? 'bg-gray-100' : ''}`}
                   onClick={(e) => e.stopPropagation()}
-                  disabled={procurementStatus === 'sent'}
+                  disabled={procurementStatus === 'sent' && !isChangeRequestMode}
                 >
                   <option value="low">Low Priority</option>
                   <option value="medium">Medium Priority</option>
@@ -616,11 +645,11 @@ const MaterialsRenderer = ({ data, materialType, workspaceId, currentUser, nodeI
               <textarea
                 value={request.notes}
                 onChange={(e) => updateMaterialRequest(request.id, 'notes', e.target.value)}
-                className={`w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm resize-none ${procurementStatus === 'sent' ? 'bg-gray-100' : ''}`}
+                className={`w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm resize-none ${procurementStatus === 'sent' && !isChangeRequestMode ? 'bg-gray-100' : ''}`}
                 rows="2"
                 placeholder="Additional specifications, delivery requirements, etc."
                 onClick={(e) => e.stopPropagation()}
-                disabled={procurementStatus === 'sent'}
+                disabled={procurementStatus === 'sent' && !isChangeRequestMode}
               />
             </div>
           </div>
@@ -628,12 +657,48 @@ const MaterialsRenderer = ({ data, materialType, workspaceId, currentUser, nodeI
       </div>
 
       {/* Send to Procurement Button */}
-      <div className="flex justify-center pt-4">
-        {procurementStatus === 'sent' ? (
-          <div className="flex items-center space-x-3 px-6 py-3 bg-gray-100 text-gray-600 rounded-lg border border-gray-300">
-            <CheckCircle className="w-5 h-5 text-green-600" />
-            <span className="font-medium">Already Sent to Procurement</span>
-          </div>
+      <div className="flex justify-center gap-3 pt-4">
+        {procurementStatus === 'sent' && !isChangeRequestMode ? (
+          <>
+            <div className="flex items-center space-x-3 px-6 py-3 bg-green-50 text-green-700 rounded-lg border border-green-300 flex-1">
+              <CheckCircle className="w-5 h-5 text-green-600 flex-shrink-0" />
+              <span className="font-medium">Sent to Procurement</span>
+            </div>
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                setIsChangeRequestMode(true);
+              }}
+              className="flex items-center space-x-2 px-6 py-3 bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-300 rounded-lg transition-colors font-medium"
+              title="Request for change - modify and resubmit"
+            >
+              <Edit2 className="w-5 h-5" />
+              <span>Request for Change</span>
+            </button>
+          </>
+        ) : procurementStatus === 'sent' && isChangeRequestMode ? (
+          <>
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                setIsChangeRequestMode(false);
+              }}
+              className="flex items-center space-x-2 px-6 py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 border border-gray-300 rounded-lg transition-colors font-medium"
+            >
+              <X className="w-5 h-5" />
+              <span>Cancel Change</span>
+            </button>
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                sendToProcurement();
+              }}
+              className="flex items-center space-x-3 px-6 py-3 bg-gradient-to-r from-blue-600 to-cyan-600 text-white rounded-lg hover:from-blue-700 hover:to-cyan-700 transition-all duration-200 shadow-md hover:shadow-lg font-medium"
+            >
+              <Send className="w-5 h-5" />
+              <span>Send Updated Request</span>
+            </button>
+          </>
         ) : (
           <button
             onClick={(e) => {
