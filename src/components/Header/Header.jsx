@@ -861,6 +861,15 @@ export const Header = () => {
                    return;
                  }
                  
+                 // Clear any stale client-specific data from localStorage
+                 // to ensure fresh client status check based on email only
+                 try {
+                   localStorage.removeItem('clientId');
+                   sessionStorage.removeItem('bootRouted');
+                 } catch (e) {
+                   console.warn('Header Toggle: Error clearing client localStorage:', e);
+                 }
+                 
                  const authToken = localStorage.getItem('authToken');
                  const email = (currentUser?.email) || localStorage.getItem('email');
                  const qp = new URLSearchParams();
