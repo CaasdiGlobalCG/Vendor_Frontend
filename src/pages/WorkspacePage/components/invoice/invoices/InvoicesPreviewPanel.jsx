@@ -38,12 +38,44 @@ export default function QuotesPreviewPanel({ quotes, selectedQuoteId, onSelectQu
     if (!selectedQuote) return;
     
     try {
-      // TODO: Implement send to PM functionality
-      console.log('Sending quote to PM:', selectedQuote);
-      alert('Send to PM functionality will be implemented soon');
-      setShowActionsMenu(false);
+      const currentUser = JSON.parse(localStorage.getItem('vendor') || '{}');
+      const vendorId = currentUser?.vendorId || currentUser?.id;
+      const invoiceId = selectedQuote.invoiceId || selectedQuote.id;
+
+      console.log('📤 Sending invoice to PM:', invoiceId);
+
+      const headers = {
+        'Content-Type': 'application/json',
+        'x-user-info': JSON.stringify({
+          vendorId: vendorId,
+          email: currentUser?.email,
+          role: 'vendor',
+          name: currentUser?.name
+        })
+      };
+
+      const response = await fetch(`/api/workspace/invoices/${invoiceId}/send-to-pm`, {
+        method: 'PUT',
+        headers: headers,
+        body: JSON.stringify({ vendorId })
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        console.log('✅ Invoice sent to PM successfully');
+        alert('Invoice sent to PM for review successfully!');
+        setShowActionsMenu(false);
+        // Refresh data if needed
+        if (window.location.pathname.includes('invoice')) {
+          window.location.reload();
+        }
+      } else {
+        throw new Error(result.message || 'Failed to send invoice to PM');
+      }
     } catch (error) {
-      console.error('Error sending quote to PM:', error);
+      console.error('❌ Error sending invoice to PM:', error);
+      alert('Failed to send invoice to PM: ' + error.message);
     }
   };
 
@@ -58,7 +90,7 @@ export default function QuotesPreviewPanel({ quotes, selectedQuoteId, onSelectQu
       name: 'Caasdi Ventures LLP',
       address: '262, 80 FEET ROAD, SRINIVASANAGAR, Banashankari Stage 1, Bengaluru, Karnataka, 560050',
       gstin: '29AATFC6608I2ZB',
-      email: 'corp@caasdiglobal.in',
+      email: 'corporate@caasdiglobal.in',
       country: 'India'
     });
     setShowEditModal(true);
@@ -199,7 +231,7 @@ export default function QuotesPreviewPanel({ quotes, selectedQuoteId, onSelectQu
                   name: 'Caasdi Ventures LLP',
                   address: '262, 80 FEET ROAD, SRINIVASANAGAR, Banashankari Stage 1, Bengaluru, Karnataka, 560050',
                   gstin: '29AATFC6608I2ZB',
-                  email: 'corp@caasdiglobal.in',
+                  email: 'corporate@caasdiglobal.in',
                   country: 'India'
                 }}
                 terms={selectedQuote.termsAndConditions}

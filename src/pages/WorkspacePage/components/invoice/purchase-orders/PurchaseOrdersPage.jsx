@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useContext } from 'react';
+import html2pdf from 'html2pdf.js';
 import { 
   Search,
   Filter,
@@ -29,6 +30,7 @@ const PurchaseOrdersPage = ({ workspaceId, workspaceName, selectedTask, selected
   const [error, setError] = useState(null);
   const [highlightedQuote, setHighlightedQuote] = useState(sourceQuote || null);
   const [sendingPo, setSendingPo] = useState(false);
+  const previewRef = React.useRef(null);
 
   // Sync highlighted quote when sourceQuote prop changes
   useEffect(() => {
@@ -180,6 +182,83 @@ const PurchaseOrdersPage = ({ workspaceId, workspaceName, selectedTask, selected
         })
       };
 
+      // Generate PO PDF from the preview before sending
+      let poPdfUrl = null;
+      try {
+        console.log('🖨️ Starting PDF generation from preview element');
+        
+        // Get the preview element that's already rendered on the page
+        const previewElement = previewRef.current;
+        if (!previewElement) {
+          throw new Error('Preview element not found - ensure preview is rendered');
+        }
+
+        console.log('Found preview element:', previewElement);
+
+        // Clone the element to avoid affecting the original
+        const clonedElement = previewElement.cloneNode(true);
+        
+        // Remove height constraints from cloned element so the full content is captured
+        clonedElement.style.maxHeight = 'none';
+        clonedElement.style.height = 'auto';
+        clonedElement.style.overflow = 'visible';
+        
+        // Generate PDF from the cloned element
+        const opt = {
+          margin: 10,
+          filename: `PO-${nextPoNumber}.pdf`,
+          image: { type: 'jpeg', quality: 0.98 },
+          html2canvas: { 
+            scale: 2, 
+            useCORS: true, 
+            backgroundColor: '#ffffff',
+            allowTaint: true,
+            logging: false,
+            scrollY: -window.scrollY,
+            scrollX: -window.scrollX
+          },
+          jsPDF: { orientation: 'portrait', unit: 'mm', format: 'a4' }
+        };
+
+        console.log('📄 Generating PDF with options:', opt);
+        
+        const pdfBlob = await html2pdf().set(opt).from(clonedElement).outputPdf('blob');
+        console.log('✅ PDF generated, size:', pdfBlob.size, 'bytes');
+
+        // Get presigned URL for upload
+        console.log('🔐 Getting presigned URL from S3...');
+        const presignResponse = await fetch(
+          `/api/s3/generate-upload-url?filename=po-${nextPoNumber}-${Date.now()}.pdf&contentType=application/pdf`
+        );
+
+        if (!presignResponse.ok) {
+          throw new Error('Failed to get presigned URL: ' + presignResponse.statusText);
+        }
+
+        const { url: presignedUrl, fileUrl } = await presignResponse.json();
+        console.log('✅ Got presigned URL, uploading to S3...');
+
+        // Upload PDF to S3 using presigned URL
+        const uploadResponse = await fetch(presignedUrl, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/pdf'
+          },
+          body: pdfBlob
+        });
+
+        if (uploadResponse.ok) {
+          poPdfUrl = fileUrl;
+          console.log('✅ PO PDF uploaded successfully:', poPdfUrl);
+        } else {
+          throw new Error('Upload failed: ' + uploadResponse.statusText);
+        }
+      } catch (pdfError) {
+        console.error('❌ PDF generation/upload error:', pdfError);
+        // Fall back to quotation PDF if generation fails
+        poPdfUrl = highlightedQuote.pdfUrl || null;
+      }
+
       const rawTotal =
         highlightedQuote.total ??
         (typeof highlightedQuote.totalAmount === 'string'
@@ -223,7 +302,7 @@ const PurchaseOrdersPage = ({ workspaceId, workspaceName, selectedTask, selected
         subtaskId: highlightedQuote.subtaskId || selectedSubtask?.id || null,
         subtaskName: highlightedQuote.subtaskName || selectedSubtask?.name || '',
         clientId: highlightedQuote.clientId || null,
-        pdfUrl: highlightedQuote.pdfUrl || null
+        pdfUrl: poPdfUrl
       };
 
       console.log('📤 Creating purchase order from quote:', body);
@@ -401,7 +480,7 @@ const PurchaseOrdersPage = ({ workspaceId, workspaceName, selectedTask, selected
                 </button>
               </div>
             </div>
-            <div className="bg-gray-50 rounded-md p-4 max-h-[480px] overflow-auto">
+            <div className="bg-gray-50 rounded-md p-4 max-h-[480px] overflow-auto" ref={previewRef}>
               <StandardPreview
                 quote={highlightedQuote}
                 docType="purchaseorder"
@@ -414,11 +493,10 @@ const PurchaseOrdersPage = ({ workspaceId, workspaceName, selectedTask, selected
                 }
                 company={{
                   logo: 'https://dummyimage.com/80x80/0d6b5c/ffffff.png&text=CG',
-                  name: 'Caasdi Ventures LLP',
-                  address:
-                    '262, 80 FEET ROAD, SRINIVASANAGAR, Banashankari Stage 1, Bengaluru, Karnataka, 560050',
-                  gstin: '29AATFC6608I2ZB',
-                  email: 'corp@caasdiglobal.in',
+                  name: currentUser?.vendorName || currentUser?.name || 'Vendor',
+                  address: currentUser?.vendorAddress || '',
+                  gstin: currentUser?.gstin || '',
+                  email: currentUser?.email || '',
                   country: 'India'
                 }}
                 terms={highlightedQuote.termsAndConditions}

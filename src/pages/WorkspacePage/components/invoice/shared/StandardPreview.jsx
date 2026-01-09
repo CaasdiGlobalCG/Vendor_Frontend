@@ -274,13 +274,13 @@ export default function StandardPreview({
                                 ) : (
                                   <>
                                     <div className="flex items-center gap-4 mb-2">
-                                      {company.logo && (
-                                        <img
-                                          src={company.logo}
-                                          alt="Logo"
-                                          className="h-12 w-12 object-contain rounded bg-gray-100 border"
-                                        />
-                                      )}
+                                      {/* {company.logo && (
+                                        // <img
+                                         
+                                        //   alt="Logo"
+                                        //   className="h-12 w-12 object-contain rounded bg-gray-100 border"
+                                        // />
+                                      )} */}
                                       <div className="font-bold text-xl">{company.name}</div>
                                     </div>
                                     <div className="text-xs">{company.address}</div>

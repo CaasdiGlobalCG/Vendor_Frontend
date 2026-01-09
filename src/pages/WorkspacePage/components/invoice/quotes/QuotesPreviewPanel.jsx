@@ -58,7 +58,7 @@ export default function QuotesPreviewPanel({ quotes, selectedQuoteId, onSelectQu
       name: 'Caasdi Ventures LLP',
       address: '262, 80 FEET ROAD, SRINIVASANAGAR, Banashankari Stage 1, Bengaluru, Karnataka, 560050',
       gstin: '29AATFC6608I2ZB',
-      email: 'corp@caasdiglobal.in',
+      email: 'corporate@caasdiglobal.in',
       country: 'India'
     });
     setShowEditModal(true);
@@ -199,7 +199,7 @@ export default function QuotesPreviewPanel({ quotes, selectedQuoteId, onSelectQu
                   name: 'Caasdi Ventures LLP',
                   address: '262, 80 FEET ROAD, SRINIVASANAGAR, Banashankari Stage 1, Bengaluru, Karnataka, 560050',
                   gstin: '29AATFC6608I2ZB',
-                  email: 'corp@caasdiglobal.in',
+                  email: 'corporate@caasdiglobal.in',
                   country: 'India'
                 }}
                 terms={selectedQuote.termsAndConditions}
