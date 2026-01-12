@@ -21,6 +21,7 @@ import SubscriptionsPage from './subscription/SubscriptionsPage';
 import CreditNotesPage from './invoice/credit-notes/CreditNotesPage';
 import PurchaseRequisitionsPage from './invoice/purchase-requisitions/PurchaseRequisitionsPage';
 import PurchaseOrdersPage from './invoice/purchase-orders/PurchaseOrdersPage';
+import ActivityFullScreen from './ActivityFullScreen';
 
 const InvoiceToolReplica = ({ onClose, workspaceId, workspaceName, selectedTask, selectedSubtask }) => {
   const { currentUser } = useContext(VendorContext);
@@ -746,6 +747,14 @@ const InvoiceToolReplica = ({ onClose, workspaceId, workspaceName, selectedTask,
             sourceQuote={poSourceQuote}
             onSourceConsumed={() => setPoSourceQuote(null)}
             onConvertToInvoice={handleConvertPOToInvoice}
+          />
+        );
+      case 'history':
+        return (
+          <ActivityFullScreen
+            isOpen={true}
+            onClose={() => {}}
+            workspaceId={workspaceId}
           />
         );
       default:

@@ -435,9 +435,8 @@ const InvoicesPage = (props) => {
         onBack={handleBackToInvoices}
         onQuoteCreated={handleInvoiceCreated}
         initialData={editingInvoice}
-        // When coming from a PO, treat it like a "duplicate" so we create
-        // a brand new invoice instead of trying to edit an existing one.
-        duplicateMode={!!editingInvoice?.fromPo}
+        // Don't set duplicateMode for PO conversions - show "New Tax Invoice" instead of "Duplicate"
+        duplicateMode={false}
       />
     );
   }

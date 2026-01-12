@@ -703,13 +703,34 @@ const NewInvoiceComponentInner = ({ onBack, projectId, initialData, duplicateMod
     useEffect(() => {
         if (initialData) {
             const customer = initialData.customerDetails || initialData.selectedCustomer;
+            console.log('📦 Setting selected customer from initialData:', customer);
             setSelectedCustomer(customer);
             
             // Initialize editable customer details
             if (customer) {
+                // Format address from nested structure (PO data) or flat structure
+                const formatAddressFromObj = (addressObj) => {
+                    if (!addressObj) return '';
+                    const parts = [];
+                    if (addressObj.street1) parts.push(addressObj.street1);
+                    if (addressObj.street2) parts.push(addressObj.street2);
+                    const cityStateParts = [];
+                    if (addressObj.city) cityStateParts.push(addressObj.city);
+                    if (addressObj.state) cityStateParts.push(addressObj.state);
+                    if (addressObj.pinCode) cityStateParts.push(addressObj.pinCode);
+                    if (cityStateParts.length > 0) parts.push(cityStateParts.join(', '));
+                    if (addressObj.country && addressObj.country !== 'IN') parts.push(addressObj.country);
+                    return parts.join('\n');
+                };
+                
+                const billingAddr = customer.billingAddress || formatAddressFromObj(customer.address?.billing);
+                const shippingAddr = customer.shippingAddress || formatAddressFromObj(customer.address?.shipping);
+                
+                console.log('📍 Setting address from customer:', { billingAddr, shippingAddr });
+                
                 setEditableCustomerDetails({
-                    billingAddress: customer.billingAddress || '',
-                    shippingAddress: customer.shippingAddress || '',
+                    billingAddress: billingAddr || '',
+                    shippingAddress: shippingAddr || '',
                     gstin: customer.gstin || ''
                 });
             }
@@ -877,7 +898,13 @@ const NewInvoiceComponentInner = ({ onBack, projectId, initialData, duplicateMod
         if (selectedCustomer && (selectedCustomer.customerId || selectedCustomer.id)) {
             console.log('Selected customer data:', selectedCustomer);
             
-            // Always fetch complete customer details since the list API doesn't include addresses
+            // If we already have complete address data (e.g., from PO conversion), skip API fetch
+            if (selectedCustomer.address && selectedCustomer.address.billing) {
+                console.log('Customer details already complete (from PO), skipping API fetch');
+                return;
+            }
+            
+            // Otherwise fetch complete customer details since the list API doesn't include addresses
             console.log('Fetching complete customer details for:', selectedCustomer.customerId || selectedCustomer.id);
             fetchCompleteCustomerDetails(selectedCustomer.customerId || selectedCustomer.id);
         }
@@ -895,8 +922,26 @@ const NewInvoiceComponentInner = ({ onBack, projectId, initialData, duplicateMod
                 setIsIntraState(false);
             }
             
-            // Set address form if we have address data
+            // Format address helper
+            const formatAddressFromObj = (addressObj) => {
+                if (!addressObj) return '';
+                const parts = [];
+                if (addressObj.street1) parts.push(addressObj.street1);
+                if (addressObj.street2) parts.push(addressObj.street2);
+                const cityStateParts = [];
+                if (addressObj.city) cityStateParts.push(addressObj.city);
+                if (addressObj.state) cityStateParts.push(addressObj.state);
+                if (addressObj.pinCode) cityStateParts.push(addressObj.pinCode);
+                if (cityStateParts.length > 0) parts.push(cityStateParts.join(', '));
+                if (addressObj.country && addressObj.country !== 'IN') parts.push(addressObj.country);
+                return parts.join('\n');
+            };
+            
+            // Set address form if we have address data (both nested and flat formats supported)
             if (selectedCustomer.address) {
+                const billingAddr = formatAddressFromObj(selectedCustomer.address.billing);
+                const shippingAddr = formatAddressFromObj(selectedCustomer.address.shipping || selectedCustomer.address.billing);
+                console.log('📍 Setting address form from selectedCustomer.address:', { billingAddr, shippingAddr });
                 setAddressForm({
                     billing: { ...(selectedCustomer.address.billing || {}) },
                     shipping: { ...(selectedCustomer.address.shipping || {}) },
@@ -1630,10 +1675,10 @@ const NewInvoiceComponentInner = ({ onBack, projectId, initialData, duplicateMod
                 })
             };
 
-            const isEdit = !!initialData && !duplicateMode;
+            const isEdit = !!initialData && !duplicateMode && !initialData?.fromPo;
             
             // Debug: Check what ID fields are available
-            console.log('Edit mode check:', { isEdit, initialData, duplicateMode });
+            console.log('Edit mode check:', { isEdit, initialData, duplicateMode, fromPo: initialData?.fromPo });
             
             // Try to get the invoice ID from various possible fields
             const invoiceId = initialData?.id || initialData?.invoiceId || initialData?._id || initialData?.invoiceNumber;
@@ -1711,7 +1756,7 @@ const NewInvoiceComponentInner = ({ onBack, projectId, initialData, duplicateMod
                 setMessage({ type: 'error', text: isEdit ? `Failed to update invoice: ${errorData.error || 'Unknown error'}` : `Failed to save invoice: ${errorData.error || 'Unknown error'}` });
             }
         } catch (err) {
-            setMessage({ type: 'error', text: (!!initialData && !duplicateMode) ? 'Failed to update invoice.' : 'Failed to save invoice.' });
+            setMessage({ type: 'error', text: (!!initialData && !duplicateMode && !initialData.fromPo) ? 'Failed to update invoice.' : 'Failed to save invoice.' });
         } finally {
             setSaving(false);
             setIsLoading(false);
@@ -1752,7 +1797,7 @@ const NewInvoiceComponentInner = ({ onBack, projectId, initialData, duplicateMod
             {/* Main Invoice Form */}
             <div className="flex-1 p-8 flex flex-col min-h-full">
                 <header className="flex justify-between items-center mb-6">
-                    <h1 className="text-2xl font-bold text-gray-800">{initialData ? (duplicateMode ? 'Duplicate Tax Invoice' : 'Edit Tax Invoice') : 'New Tax Invoice'}</h1>
+                    <h1 className="text-2xl font-bold text-gray-800">{initialData && !initialData.fromPo ? (duplicateMode ? 'Duplicate Tax Invoice' : 'Edit Tax Invoice') : 'Create Tax Invoice'}</h1>
                     <div className="flex items-center">
                          <button onClick={onBack} className="p-2 text-gray-500 hover:bg-gray-200 rounded-full">
                             <X size={20} />
@@ -1812,8 +1857,8 @@ const NewInvoiceComponentInner = ({ onBack, projectId, initialData, duplicateMod
                                             <div>
                                                 <label className="block text-xs font-medium text-gray-600 mb-1">Billing Address</label>
                                                 {!editingCustomerDetails ? (
-                                                    <div className="text-sm text-gray-800 bg-white p-2 rounded border min-h-[60px]">
-                                                        {selectedCustomer.billingAddress}
+                                                    <div className="text-sm text-gray-800 bg-white p-2 rounded border min-h-[60px] whitespace-pre-wrap">
+                                                        {editableCustomerDetails.billingAddress || selectedCustomer?.billingAddress || 'No address provided'}
                                                     </div>
                                                 ) : (
                                                     <textarea
@@ -1837,8 +1882,8 @@ const NewInvoiceComponentInner = ({ onBack, projectId, initialData, duplicateMod
                                             <div>
                                                 <label className="block text-xs font-medium text-gray-600 mb-1">Shipping Address</label>
                                                 {!editingCustomerDetails ? (
-                                                    <div className="text-sm text-gray-800 bg-white p-2 rounded border min-h-[60px]">
-                                                        {selectedCustomer.shippingAddress}
+                                                    <div className="text-sm text-gray-800 bg-white p-2 rounded border min-h-[60px] whitespace-pre-wrap">
+                                                        {editableCustomerDetails.shippingAddress || selectedCustomer?.shippingAddress || 'No address provided'}
                                                     </div>
                                                 ) : (
                                                     <textarea

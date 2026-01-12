@@ -133,7 +133,7 @@ const SubscriptionsPage = () => {
 
   const totalMonthlyRevenue = stats.totalMonthlyRevenue || subscriptionsData
     .filter(s => s.status.toLowerCase() === 'active')
-    .reduce((sum, s) => sum + (parseFloat(s.amount?.replace('₹', '').replace(/,/g, '')) || 0), 0);
+    .reduce((sum, s) => sum + (parseFloat(String(s.amount || '0').replace('₹', '').replace(/,/g, '')) || 0), 0);
 
   // Loading state for authentication
   if (!currentUser?.vendorId) {

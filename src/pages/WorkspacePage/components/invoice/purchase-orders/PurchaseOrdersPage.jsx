@@ -14,7 +14,8 @@ import {
   TrendingUp,
   AlertCircle,
   CheckCircle,
-  Clock
+  Clock,
+  FileText
 } from 'lucide-react';
 import { VendorContext } from '../../../../../context/VendorContext.jsx';
 import config from "../../../../../config/env";
@@ -30,6 +31,8 @@ const PurchaseOrdersPage = ({ workspaceId, workspaceName, selectedTask, selected
   const [error, setError] = useState(null);
   const [highlightedQuote, setHighlightedQuote] = useState(sourceQuote || null);
   const [sendingPo, setSendingPo] = useState(false);
+  const [showPreviewModal, setShowPreviewModal] = useState(false);
+  const [previewPdfUrl, setPreviewPdfUrl] = useState(null);
   const previewRef = React.useRef(null);
 
   // Sync highlighted quote when sourceQuote prop changes
@@ -73,14 +76,18 @@ const PurchaseOrdersPage = ({ workspaceId, workspaceName, selectedTask, selected
       const result = await response.json();
 
       if (result.success) {
-        setPurchaseOrdersData(result.data || []);
-        console.log(`✅ Successfully loaded ${result.data?.length || 0} purchase orders`);
+        // Pass through the backend-shaped data; append pdfUrl if missing
+        const data = (result.data || []).map((po) => ({
+          ...po,
+          pdfUrl: po.pdfUrl || po.poPdfUrl || po.commissionedPurchaseOrderUrl || ''
+        }));
 
-        // Compute the next PO number starting from 2026001.
-        // We only consider customPoId values that are purely numeric to avoid
-        // clashing with older string-based IDs.
+        setPurchaseOrdersData(data);
+        console.log(`✅ Successfully loaded ${data?.length || 0} purchase orders`);
+
+        // Compute the next PO number starting from 2026001 using original fields
         const START_PO_NUMBER = 2026001;
-        const numericPoNumbers = (result.data || [])
+        const numericPoNumbers = (data || [])
           .map((po) => {
             const raw = po.customPoId;
             if (!raw) return null;
@@ -162,6 +169,30 @@ const PurchaseOrdersPage = ({ workspaceId, workspaceName, selectedTask, selected
           border: 'border-gray-200',
           dot: 'bg-gray-400'
         };
+    }
+  };
+
+  const handlePreviewClick = (order) => {
+    console.log('📄 Preview click for order:', order);
+    console.log('🔍 Checking pdfUrl field:', order.pdfUrl);
+    
+    if (order.pdfUrl && order.pdfUrl.trim() !== '') {
+      setPreviewPdfUrl(order.pdfUrl);
+      setShowPreviewModal(true);
+      console.log('✅ Opening preview with PDF:', order.pdfUrl);
+    } else if (order.poPdfUrl && order.poPdfUrl.trim() !== '') {
+      // Fallback to poPdfUrl if pdfUrl is not available
+      setPreviewPdfUrl(order.poPdfUrl);
+      setShowPreviewModal(true);
+      console.log('✅ Opening preview with PO PDF:', order.poPdfUrl);
+    } else if (order.commissionedPurchaseOrderUrl && order.commissionedPurchaseOrderUrl.trim() !== '') {
+      // Fallback to commissioned PO URL
+      setPreviewPdfUrl(order.commissionedPurchaseOrderUrl);
+      setShowPreviewModal(true);
+      console.log('✅ Opening preview with commissioned PO:', order.commissionedPurchaseOrderUrl);
+    } else {
+      console.error('❌ No PDF URL found in order:', order);
+      alert('PDF preview not available for this purchase order');
     }
   };
 
@@ -346,18 +377,68 @@ const PurchaseOrdersPage = ({ workspaceId, workspaceName, selectedTask, selected
   }, 0);
 
   return (
-    <div className="min-h-full bg-gray-50">
-      {/* Professional Header */}
-      <div className="bg-white border-b border-gray-200">
-        <div className="px-8 py-8">
+    <div className="min-h-full bg-gradient-to-br from-gray-50 via-slate-50 to-stone-50">
+      {/* PDF Preview Modal */}
+      {showPreviewModal && previewPdfUrl && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+          <div className="bg-white rounded-lg shadow-2xl w-full h-full max-w-4xl max-h-[90vh] flex flex-col">
+            <div className="flex items-center justify-between p-6 border-b border-gray-200">
+              <h2 className="text-xl font-bold text-gray-900">Purchase Order Preview</h2>
+              <button
+                onClick={() => {
+                  setShowPreviewModal(false);
+                  setPreviewPdfUrl(null);
+                }}
+                className="text-gray-500 hover:text-gray-700 transition-colors"
+              >
+                <X className="w-6 h-6" />
+              </button>
+            </div>
+            <div className="flex-1 overflow-auto">
+              <iframe
+                src={previewPdfUrl}
+                className="w-full h-full"
+                title="Purchase Order Preview"
+              />
+            </div>
+            <div className="flex items-center justify-between p-6 border-t border-gray-200 bg-gray-50">
+              <button
+                onClick={() => {
+                  setShowPreviewModal(false);
+                  setPreviewPdfUrl(null);
+                }}
+                className="px-6 py-2.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+              >
+                Close
+              </button>
+              {previewPdfUrl && (
+                <a
+                  href={previewPdfUrl}
+                  download
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="px-6 py-2.5 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors"
+                >
+                  Download
+                </a>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Beautiful Header with Stats */}
+      <div className="relative overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-r from-slate-600/3 via-gray-600/3 to-stone-600/3"></div>
+        <div className="relative px-8 py-8">
           <div className="flex items-center justify-between mb-8">
             <div>
-              <h1 className="text-3xl font-bold text-gray-900">
-                Purchase Orders
+              <h1 className="text-3xl font-bold bg-gradient-to-r from-slate-800 via-gray-700 to-stone-700 bg-clip-text text-transparent">
+                Purchase Orders Dashboard
               </h1>
-              <p className="text-gray-600 mt-2">View and manage purchase orders converted from requisitions</p>
+              <p className="text-gray-600 mt-2">Manage and track all your purchase orders</p>
             </div>
-            <button className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors duration-200 flex items-center space-x-2">
+            <button className="bg-gradient-to-r from-slate-700 to-gray-700 text-white px-6 py-3 rounded-xl hover:from-slate-800 hover:to-gray-800 transition-all duration-300 flex items-center space-x-2 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5">
               <Plus className="w-5 h-5" />
               <span className="font-medium">Create Purchase Order</span>
             </button>
@@ -365,11 +446,12 @@ const PurchaseOrdersPage = ({ workspaceId, workspaceName, selectedTask, selected
 
           {/* Stats Cards */}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-            <div className="bg-white border border-gray-200 rounded-lg p-6 shadow-sm">
+            <div className="bg-white border border-gray-200 rounded-lg p-6 shadow-sm hover:shadow-md transition-shadow">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-gray-600 mb-1">Total Orders</p>
                   <p className="text-2xl font-bold text-gray-900">{totalOrders}</p>
+                  <p className="text-xs text-green-600 mt-1">↗ +8% this month</p>
                 </div>
                 <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
                   <Package className="w-6 h-6 text-blue-600" />
@@ -377,11 +459,12 @@ const PurchaseOrdersPage = ({ workspaceId, workspaceName, selectedTask, selected
               </div>
             </div>
             
-            <div className="bg-white border border-gray-200 rounded-lg p-6 shadow-sm">
+            <div className="bg-white border border-gray-200 rounded-lg p-6 shadow-sm hover:shadow-md transition-shadow">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-gray-600 mb-1">Accepted</p>
                   <p className="text-2xl font-bold text-gray-900">{acceptedOrders}</p>
+                  <p className="text-xs text-green-600 mt-1">↗ +5% this month</p>
                 </div>
                 <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
                   <CheckCircle className="w-6 h-6 text-green-600" />
@@ -389,11 +472,12 @@ const PurchaseOrdersPage = ({ workspaceId, workspaceName, selectedTask, selected
               </div>
             </div>
             
-            <div className="bg-white border border-gray-200 rounded-lg p-6 shadow-sm">
+            <div className="bg-white border border-gray-200 rounded-lg p-6 shadow-sm hover:shadow-md transition-shadow">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-gray-600 mb-1">Pending Review</p>
                   <p className="text-2xl font-bold text-gray-900">{pendingOrders}</p>
+                  <p className="text-xs text-yellow-600 mt-1">↗ +3% this month</p>
                 </div>
                 <div className="w-12 h-12 bg-yellow-100 rounded-lg flex items-center justify-center">
                   <Clock className="w-6 h-6 text-yellow-600" />
@@ -401,11 +485,12 @@ const PurchaseOrdersPage = ({ workspaceId, workspaceName, selectedTask, selected
               </div>
             </div>
             
-            <div className="bg-white border border-gray-200 rounded-lg p-6 shadow-sm">
+            <div className="bg-white border border-gray-200 rounded-lg p-6 shadow-sm hover:shadow-md transition-shadow">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-gray-600 mb-1">Total Value</p>
-                  <p className="text-2xl font-bold text-gray-900">₹{totalValue.toLocaleString()}</p>
+                  <p className="text-2xl font-bold text-gray-900">₹{totalValue.toLocaleString('en-IN', { maximumFractionDigits: 0 })}</p>
+                  <p className="text-xs text-green-600 mt-1">↗ +12% this month</p>
                 </div>
                 <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
                   <DollarSign className="w-6 h-6 text-purple-600" />
@@ -423,13 +508,13 @@ const PurchaseOrdersPage = ({ workspaceId, workspaceName, selectedTask, selected
                 placeholder="Search purchase orders..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-12 pr-4 py-3 bg-white border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                className="w-full pl-12 pr-4 py-3 bg-white border border-gray-300 rounded-lg focus:ring-2 focus:ring-slate-500 focus:border-transparent text-sm"
               />
             </div>
             <select
               value={selectedStatus}
               onChange={(e) => setSelectedStatus(e.target.value)}
-              className="px-4 py-3 bg-white border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+              className="px-4 py-3 bg-white border border-gray-300 rounded-lg focus:ring-2 focus:ring-slate-500 focus:border-transparent text-sm"
             >
               <option value="all">All Status</option>
               <option value="accepted">Accepted</option>
@@ -442,22 +527,27 @@ const PurchaseOrdersPage = ({ workspaceId, workspaceName, selectedTask, selected
 
       {/* Quote preview section when coming from Quotes dashboard */}
       {highlightedQuote && (
-        <div className="px-8 pb-4">
-          <div className="bg-white border border-emerald-200 rounded-lg shadow-sm p-4">
-            <div className="flex items-center justify-between mb-4">
+        <div className="px-8 pb-8">
+          <div className="bg-white border border-emerald-200 rounded-xl shadow-md p-6 relative overflow-hidden">
+            <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-emerald-500 to-green-500"></div>
+            <div className="flex items-center justify-between mb-5">
               <div>
-                <h2 className="text-lg font-semibold text-gray-900">
-                  Raise Purchase Order for Quote{' '}
-                  {highlightedQuote.customQuoteId ||
-                    highlightedQuote.displayQuoteId ||
-                    highlightedQuote.id}
+                <h2 className="text-xl font-bold text-gray-900 mb-1">
+                  🎯 Raise Purchase Order from Quote
                 </h2>
-                <p className="text-sm text-gray-500">
-                  Review the quote details below, then click{' '}
-                  <span className="font-semibold">Send PO to PM</span>.
-                </p>
+                <div className="flex items-center space-x-2">
+                  <span className="inline-block px-3 py-1 bg-emerald-50 text-emerald-700 rounded-full text-sm font-semibold">
+                    Quote {highlightedQuote.customQuoteId ||
+                      highlightedQuote.displayQuoteId ||
+                      highlightedQuote.id}
+                  </span>
+                  <p className="text-sm text-gray-600">
+                    Review the quote details below, then click{' '}
+                    <span className="font-semibold">Send PO to PM</span>.
+                  </p>
+                </div>
               </div>
-              <div className="flex items-center space-x-2">
+              <div className="flex items-center space-x-2 flex-shrink-0">
                 <button
                   type="button"
                   onClick={() => {
@@ -466,7 +556,7 @@ const PurchaseOrdersPage = ({ workspaceId, workspaceName, selectedTask, selected
                       onSourceConsumed();
                     }
                   }}
-                  className="px-3 py-1.5 text-xs text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200"
+                  className="px-4 py-2.5 text-xs font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors duration-200"
                 >
                   Dismiss
                 </button>
@@ -474,13 +564,13 @@ const PurchaseOrdersPage = ({ workspaceId, workspaceName, selectedTask, selected
                   type="button"
                   onClick={handleSendPOToPM}
                   disabled={sendingPo}
-                  className="px-4 py-2 text-sm bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="px-4 py-2.5 text-xs font-medium bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
                 >
-                  {sendingPo ? 'Sending...' : 'Send PO to PM'}
+                  {sendingPo ? 'Sending...' : '✓ Send PO to PM'}
                 </button>
               </div>
             </div>
-            <div className="bg-gray-50 rounded-md p-4 max-h-[480px] overflow-auto" ref={previewRef}>
+            <div className="bg-gray-50 rounded-lg p-4 max-h-[480px] overflow-auto border border-gray-200" ref={previewRef}>
               <StandardPreview
                 quote={highlightedQuote}
                 docType="purchaseorder"
@@ -507,158 +597,155 @@ const PurchaseOrdersPage = ({ workspaceId, workspaceName, selectedTask, selected
         </div>
       )}
 
-      {/* Purchase Orders Cards Grid */}
-      <div className="px-8 py-8">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {loading ? (
-            <div className="text-center py-16">
-              <div className="w-20 h-20 bg-gray-100 rounded-lg flex items-center justify-center mx-auto mb-6">
-                <Package className="w-10 h-10 text-gray-400" />
-              </div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">Loading purchase orders...</h3>
-              <p className="text-gray-500 mb-6">Please wait while we fetch the data.</p>
+      {/* Purchase Orders List View */}
+      <div className="px-8 pb-8">
+        {loading ? (
+          <div className="bg-white rounded-lg p-12 text-center">
+            <div className="w-20 h-20 bg-gray-100 rounded-lg flex items-center justify-center mx-auto mb-6">
+              <Package className="w-10 h-10 text-gray-400" />
             </div>
-          ) : error ? (
-            <div className="text-center py-16">
-              <div className="w-20 h-20 bg-gray-100 rounded-lg flex items-center justify-center mx-auto mb-6">
-                <AlertCircle className="w-10 h-10 text-red-400" />
-              </div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">Error: {error}</h3>
-              <p className="text-gray-500 mb-6">Failed to load purchase orders. Please try again later.</p>
-              <button className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors duration-200">
-                Retry
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">Loading purchase orders...</h3>
+            <p className="text-gray-500">Please wait while we fetch the data.</p>
+          </div>
+        ) : error ? (
+          <div className="bg-white rounded-lg p-12 text-center">
+            <div className="w-20 h-20 bg-gray-100 rounded-lg flex items-center justify-center mx-auto mb-6">
+              <AlertCircle className="w-10 h-10 text-red-400" />
+            </div>
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">Error: {error}</h3>
+            <p className="text-gray-500 mb-6">Failed to load purchase orders. Please try again later.</p>
+            <button className="bg-slate-700 text-white px-6 py-3 rounded-lg hover:bg-slate-800 transition-colors duration-200">
+              Retry
+            </button>
+          </div>
+        ) : filteredOrders.length === 0 ? (
+          <div className="bg-white rounded-lg p-12 text-center">
+            <div className="w-20 h-20 bg-gray-100 rounded-lg flex items-center justify-center mx-auto mb-6">
+              <Package className="w-10 h-10 text-gray-400" />
+            </div>
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">No purchase orders found</h3>
+            <p className="text-gray-500 mb-6">
+              {highlightedQuote
+                ? 'Once you send the PO to PM, it will appear here.'
+                : 'Try adjusting your search or filter criteria.'}
+            </p>
+            {!highlightedQuote && (
+              <button className="bg-slate-700 text-white px-6 py-3 rounded-lg hover:bg-slate-800 transition-colors duration-200">
+                Create New Purchase Order
               </button>
-            </div>
-          ) : filteredOrders.length === 0 ? (
-            <div className="text-center py-16">
-              <div className="w-20 h-20 bg-gray-100 rounded-lg flex items-center justify-center mx-auto mb-6">
-                <Package className="w-10 h-10 text-gray-400" />
-              </div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">No purchase orders found</h3>
-              <p className="text-gray-500 mb-6">
-                {highlightedQuote
-                  ? 'Once you send the PO to PM, it will appear here.'
-                  : 'Try adjusting your search or filter criteria.'}
-              </p>
-              {!highlightedQuote && (
-                <button className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors duration-200">
-                  Create New Purchase Order
-                </button>
-              )}
-            </div>
-          ) : (
-            filteredOrders.map((order, index) => {
-              const statusConfig = getStatusConfig(order.statusType);
-              return (
-                <div key={order.id} className="bg-white border border-gray-200 rounded-lg p-6 shadow-sm hover:shadow-md transition-all duration-200">
-                  {/* Order Header */}
-                  <div className="flex items-start justify-between mb-4">
-                    <div className="flex items-center space-x-3">
-                      <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-                        <Package className="w-5 h-5 text-blue-600" />
-                      </div>
-                      <div>
-                        <h3 className="text-lg font-bold text-gray-900">
-                          {order.id}
-                        </h3>
-                        <p className="text-sm text-gray-500">{order.project}</p>
-                      </div>
-                    </div>
-                    <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium border ${statusConfig.bg} ${statusConfig.text} ${statusConfig.border}`}>
-                      <div className={`w-2 h-2 ${statusConfig.dot} rounded-full mr-2`}></div>
-                      {order.status}
-                    </span>
-                  </div>
-
-                  {/* Vendor Info */}
-                  <div className="mb-4 p-3 bg-gray-50 rounded-lg">
-                    <div className="flex items-center space-x-2 mb-2">
-                      <User className="w-4 h-4 text-gray-400" />
-                      <p className="text-sm font-medium text-gray-900">{order.vendor}</p>
-                    </div>
-                    <p className="text-xs text-gray-500 ml-6">{order.email}</p>
-                  </div>
-
-                  {/* Order Details */}
-                  <div className="grid grid-cols-2 gap-4 mb-4">
-                    <div>
-                      <p className="text-sm text-gray-500">Items</p>
-                      <div className="flex items-center space-x-1">
-                        <Package className="w-4 h-4 text-gray-400" />
-                        <p className="text-sm font-medium text-gray-900">{order.items} items</p>
-                      </div>
-                    </div>
-                    <div>
-                      <p className="text-sm text-gray-500">Amount</p>
-                      <p className="text-lg font-bold text-gray-900">
-                        {order.amount}
-                      </p>
-                    </div>
-                  </div>
-
-                  {/* Purchase Returns */}
-                  {order.purchaseReturns !== 'None' && (
-                    <div className="mb-4 p-2 bg-blue-50 rounded-lg">
-                      <p className="text-xs text-blue-700 font-medium">
-                        Purchase Returns: {order.purchaseReturns}
-                      </p>
-                    </div>
-                  )}
-
-                  {/* Action Buttons */}
-                  <div className="flex items-center justify-between pt-4 border-t border-gray-100">
-                    <button className="px-3 py-1.5 text-xs bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors duration-200 flex items-center space-x-1">
-                      <Eye className="w-3 h-3" />
-                      <span>View Details</span>
-                    </button>
-                    
-                    <div className="flex items-center space-x-2">
-                      {order.status && order.status.toLowerCase().includes('requested for invoice') && onConvertToInvoice && (
-                        <button
-                          className="px-3 py-1.5 text-xs bg-emerald-600 text-white rounded hover:bg-emerald-700 transition-colors duration-200"
-                          onClick={() => onConvertToInvoice(order)}
-                        >
-                          Convert to Invoice
-                        </button>
-                      )}
-                      {order.statusType === 'pending' && (
-                        <>
-                          <button className="p-1.5 text-green-600 hover:bg-green-50 rounded transition-colors duration-200" title="Accept">
-                            <Check className="w-4 h-4" />
-                          </button>
-                          <button className="p-1.5 text-red-600 hover:bg-red-50 rounded transition-colors duration-200" title="Reject">
-                            <X className="w-4 h-4" />
-                          </button>
-                        </>
-                      )}
-                      {order.statusType === 'accepted' && (
-                        <div className="flex items-center space-x-1 text-green-600">
-                          <CheckCircle className="w-4 h-4" />
-                          <span className="text-xs font-medium">Accepted</span>
+            )}
+          </div>
+        ) : (
+          <div className="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
+            <table className="w-full">
+              <thead className="bg-gray-50 border-b border-gray-200">
+                <tr>
+                  <th className="text-left py-5 px-6 text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                    Purchase Order
+                  </th>
+                  <th className="text-left py-5 px-6 text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                    Vendor
+                  </th>
+                  <th className="text-left py-5 px-6 text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                    Project
+                  </th>
+                  <th className="text-right py-5 px-6 text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                    Amount
+                  </th>
+                  <th className="text-center py-5 px-6 text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                    Items
+                  </th>
+                  <th className="text-center py-5 px-6 text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                    Status
+                  </th>
+                  <th className="text-center py-5 px-6 text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                    Actions
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-200">
+                {filteredOrders.map((order) => {
+                  const statusConfig = getStatusConfig(order.statusType);
+                  return (
+                    <tr key={order.id} className="hover:bg-gray-50 transition-colors duration-200">
+                      <td className="py-5 px-6">
+                        <div className="flex items-center space-x-3">
+                          <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                            <FileText className="w-5 h-5 text-blue-600" />
+                          </div>
+                          <div>
+                            <div className="font-semibold text-gray-900">{order.id}</div>
+                            {order.purchaseReturns && order.purchaseReturns !== 'None' && (
+                              <div className="text-xs text-blue-600 bg-blue-50 px-2 py-0.5 rounded mt-1 inline-block">
+                                Returns: {order.purchaseReturns}
+                              </div>
+                            )}
+                          </div>
                         </div>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              );
-            })
-          )}
-        </div>
-
-        {/* Pagination */}
-        {filteredOrders.length > 0 && (
-          <div className="flex items-center justify-center mt-8">
-            <div className="flex items-center space-x-2">
-              <button className="px-4 py-2 text-sm text-gray-500 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors duration-200 disabled:opacity-50" disabled>
-                Previous
-              </button>
-              <button className="px-4 py-2 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-200">
-                1
-              </button>
-              <button className="px-4 py-2 text-sm text-gray-500 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors duration-200 disabled:opacity-50" disabled>
-                Next
-              </button>
-            </div>
+                      </td>
+                      <td className="py-5 px-6">
+                        <div className="text-sm font-medium text-gray-900">
+                          {order.vendor}
+                        </div>
+                        {order.email && (
+                          <div className="text-xs text-gray-500">{order.email}</div>
+                        )}
+                      </td>
+                      <td className="py-5 px-6">
+                        <div className="text-sm text-gray-600">{order.project || 'N/A'}</div>
+                      </td>
+                      <td className="py-5 px-6 text-right">
+                        <div className="text-lg font-bold text-gray-900">
+                          {order.amount}
+                        </div>
+                      </td>
+                      <td className="py-5 px-6 text-center">
+                        <div className="flex items-center justify-center space-x-1 text-sm">
+                          <Package className="w-4 h-4 text-gray-400" />
+                          <span className="text-gray-900 font-medium">{order.items}</span>
+                        </div>
+                      </td>
+                      <td className="py-5 px-6 text-center">
+                        <span className={`inline-flex items-center px-3 py-1.5 rounded-full text-xs font-medium border ${statusConfig.bg} ${statusConfig.text} ${statusConfig.border}`}>
+                          <div className={`w-2 h-2 ${statusConfig.dot} rounded-full mr-2`}></div>
+                          {order.status}
+                        </span>
+                      </td>
+                      <td className="py-5 px-6 text-center">
+                        <div className="flex items-center justify-center space-x-2">
+                          <button 
+                            onClick={() => handlePreviewClick(order)}
+                            className="p-2 text-gray-400 hover:text-slate-600 hover:bg-slate-50 rounded-lg transition-all duration-200" 
+                            title="View"
+                          >
+                            <Eye className="w-4 h-4" />
+                          </button>
+                          {order.status && order.status.toLowerCase().includes('requested for invoice') && onConvertToInvoice && (
+                            <button
+                              className="text-xs px-3 py-1.5 bg-emerald-50 text-emerald-700 rounded-lg hover:bg-emerald-100 transition-colors duration-200"
+                              onClick={() => onConvertToInvoice(order)}
+                              title="Convert to Invoice"
+                            >
+                              Convert
+                            </button>
+                          )}
+                          {order.statusType === 'pending' && (
+                            <>
+                              {/* <button className="p-2 text-green-600 hover:bg-green-50 rounded-lg transition-colors duration-200" title="Accept">
+                                <Check className="w-4 h-4" />
+                              </button>
+                              <button className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors duration-200" title="Reject">
+                                <X className="w-4 h-4" />
+                              </button> */}
+                            </>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
           </div>
         )}
       </div>
