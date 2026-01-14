@@ -3,6 +3,7 @@ import { RevenueChart } from "../../components/RevenueChart/RevenueChart";
 import { StatCard } from "../../components/StatCard/StatCard";
 import { ProjectList } from "../../components/ProjectList/ProjectList";
 import TenderCarousel from "../../components/TenderCard/TenderCarousel";
+import PasskeyRegistrationBanner from "../../components/PasskeyRegistrationBanner";
 import { VendorContext } from "../../context/VendorContext";
 import { useLocation, useNavigate } from "react-router-dom";
 import config from '../../config/env';
@@ -83,6 +84,8 @@ export const VendorDashboard = () => {
   const [projects, setProjects] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [userHasPasskey, setUserHasPasskey] = useState(false);
+  const [checkingPasskey, setCheckingPasskey] = useState(true);
   
   // State to track API call status
   const [vendorInfoFetched, setVendorInfoFetched] = useState(false);
@@ -95,6 +98,39 @@ export const VendorDashboard = () => {
   const urlParams = new URLSearchParams(location.search);
   const emailFromUrl = urlParams.get('email');
   const roleFromUrl = urlParams.get('role');
+  
+  // Check if user has passkey registered
+  useEffect(() => {
+    const checkPasskeyStatus = async () => {
+      try {
+        if (!currentUser?.email) {
+          setCheckingPasskey(false);
+          return;
+        }
+
+        const response = await fetch(
+          `${config.VENDOR_BACKEND_URL}/api/auth/passkey/user-status?email=${encodeURIComponent(currentUser.email)}`,
+          {
+            credentials: 'include'
+          }
+        );
+
+        if (response.ok) {
+          const data = await response.json();
+          setUserHasPasskey(data.data?.hasPasskey || false);
+        } else {
+          setUserHasPasskey(false);
+        }
+      } catch (error) {
+        console.error('Error checking passkey status:', error);
+        setUserHasPasskey(false);
+      } finally {
+        setCheckingPasskey(false);
+      }
+    };
+
+    checkPasskeyStatus();
+  }, [currentUser?.email]);
   
   // Effect to set user from URL parameters if available
   useEffect(() => {
@@ -356,6 +392,18 @@ export const VendorDashboard = () => {
   return (
     // Add p-5 here to pad the content area of this specific page
     <div className="p-5">
+      {/* Passkey Registration Banner - Show if user doesn't have a passkey */}
+      {!checkingPasskey && !userHasPasskey && currentUser?.email && (
+        <PasskeyRegistrationBanner
+          userId={currentUser?.vendorId || currentUser?.id}
+          email={currentUser.email}
+          onPasskeyRegistered={() => {
+            // Refresh passkey status after successful registration
+            setUserHasPasskey(true);
+          }}
+        />
+      )}
+      
       <div className="mt-4 grid grid-cols-1 lg:grid-cols-[2fr_1fr] gap-4">
         {/* Left Column */}
         <div>

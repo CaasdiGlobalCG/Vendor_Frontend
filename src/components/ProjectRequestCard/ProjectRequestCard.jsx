@@ -821,10 +821,10 @@ const ProjectRequestCard = ({ project, onApprove, onReject, isCompareMode, isSel
                                 // Disable button in compare mode or while loading
                                 disabled={isCompareMode || isApproving || isRejecting}
                                 title={
-                                    isCompareMode ? "Cancel Compare mode to approve" : 
-                                    isApproving ? "Approving..." : 
+                                    isCompareMode ? "Cancel Compare mode to accept" : 
+                                    isApproving ? "Accepting..." : 
                                     isRejecting ? "Processing reject..." : 
-                                    "Approve this lead"
+                                    "Accept this lead (quotation upload required)"
                                 }
                                 // APPLIED: Gradient, larger size, bolder font, stronger shadow, and hover scale effect
                                 className={`flex items-center justify-center gap-2 bg-gradient-to-r from-emerald-500 to-teal-600 text-white text-sm font-bold px-5 py-3 rounded-xl shadow-lg transition-all duration-200 transform hover:scale-105 ${
@@ -841,7 +841,7 @@ const ProjectRequestCard = ({ project, onApprove, onReject, isCompareMode, isSel
                                     </>
                                 ) : (
                                     <>
-                                        <CheckIcon className="h-4 w-4" /> Approve
+                                        <CheckIcon className="h-4 w-4" /> Accept with Quotation
                                     </>
                                 )}
                             </button>

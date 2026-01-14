@@ -210,9 +210,9 @@ export const ProjectRow = ({ project }) => {
       >
         <td className="py-2 px-2 sm:px-4 whitespace-nowrap">{project.id}</td>
         <td className="py-2 px-2 sm:px-4">{project.name}</td>
-        <td className="py-2 px-2 sm:px-4 whitespace-nowrap">{project.clientId}</td>
-        <td className="py-2 px-2 sm:px-4 whitespace-nowrap">{formatDateForDisplay(project.createdAt)}</td>
-        <td className="py-2 px-2 sm:px-4 whitespace-nowrap">{formatDateForDisplay(project.completedAt)}</td>
+        <td className="py-2 px-2 sm:px-4 whitespace-nowrap">{project.clientId ? project.clientId : 'N/A'}</td>
+        <td className="py-2 px-2 sm:px-4 whitespace-nowrap">{project.createdAt ? formatDateForDisplay(project.createdAt) : 'N/A'}</td>
+        <td className="py-2 px-2 sm:px-4 whitespace-nowrap">{project.completedAt ? formatDateForDisplay(project.completedAt) : 'N/A'}</td>
         <td className="py-2 px-2 sm:px-4 whitespace-nowrap">
           <span className={`inline-block px-2 sm:px-4 py-1 rounded-xl text-[9px] sm:text-[10px] font-semibold ${statusColors[project.status]}`}>
             {project.status}

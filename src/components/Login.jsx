@@ -13,6 +13,35 @@ import Alert from "./ui/Alert";
 import background from "../assets/loginbackground.png";
 import { Eye, EyeOff } from "lucide-react";
 import config from '../config/env';
+import PasskeyMFAVerification from './PasskeyMFAVerification';
+const carouselItems = [
+  {
+    title: "Stay in Control",
+    description: "Track progress, monitor performance, and ensure quality with our smart dashboards.",
+    icon: "📊"
+  },
+  {
+    title: "Real-time Insights",
+    description: "Get instant visibility into your projects with live updates and detailed analytics.",
+    icon: "⚡"
+  },
+  {
+    title: "Seamless Collaboration",
+    description: "Work together with your team effortlessly with integrated communication tools.",
+    icon: "🤝"
+  },
+  {
+    title: "Powerful Analytics",
+    description: "Leverage data-driven insights to make better business decisions faster.",
+    icon: "📈"
+  },
+  {
+    title: "Complete Integration",
+    description: "Connect all your tools and workflows in one unified platform.",
+    icon: "🔗"
+  }
+];
+
 function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -25,11 +54,24 @@ function Login() {
   const [view, setView] = useState('login'); // 'login', 'forgotPassword', 'resetPassword'
   const [verificationCode, setVerificationCode] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [currentCarouselIndex, setCurrentCarouselIndex] = useState(0);
+  const [showMFAVerification, setShowMFAVerification] = useState(false);
+  const [mfaUserId, setMfaUserId] = useState(null);
+  const [mfaUserData, setMfaUserData] = useState(null);
   const navigate = useNavigate();
   const location = useLocation();
   const { role, email: emailFromState, from } = location.state || {};
   const { setUser: setVendorContextUser, logout } = useContext(VendorContext);
   const { setCurrentUser } = useContext(UserContext);
+
+  // Carousel auto-rotation effect
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentCarouselIndex((prevIndex) => (prevIndex + 1) % carouselItems.length);
+    }, 5000); // Change every 5 seconds
+    
+    return () => clearInterval(interval);
+  }, []);
 
   // New useEffect to handle URL parameters after Google redirect
   useEffect(() => {
@@ -219,6 +261,44 @@ function Login() {
       const data = await response.json();
       
       console.log("User status data from login:", data);
+
+      // Check if user has passkey registered
+      let userHasPasskey = false;
+      let userIdForMFA = null;
+      try {
+        const passkeyStatusRes = await fetch(`${config.VENDOR_BACKEND_URL}/api/auth/passkey/user-status?email=${encodeURIComponent(userEmail)}`);
+        if (passkeyStatusRes.ok) {
+          const passkeyStatusData = await passkeyStatusRes.json();
+          userHasPasskey = passkeyStatusData.data?.hasPasskey || false;
+          userIdForMFA = passkeyStatusData.data?.userId;
+          console.log("[DEBUG] Full passkeyStatusData:", passkeyStatusData);
+          console.log("[DEBUG] userHasPasskey:", userHasPasskey, "userIdForMFA:", userIdForMFA);
+        } else {
+          console.warn("[DEBUG] passkeyStatusRes not ok:", passkeyStatusRes.status);
+        }
+      } catch (passkeyError) {
+        console.warn("[DEBUG] Error checking passkey status:", passkeyError);
+      }
+
+      // If user has passkey, show MFA verification
+      if (userHasPasskey && userIdForMFA) {
+        console.log("[DEBUG] Showing MFA verification screen");
+        setMfaUserId(userIdForMFA);
+        setMfaUserData({
+          vendorId: data.data?.vendorId,
+          email: userEmail,
+          name: user.attributes.name || user.username,
+          idToken,
+          userStatus: data.data?.status,
+          hasFilledForm: data.data?.hasFilledForm,
+          role: data.data?.role
+        });
+        setShowMFAVerification(true);
+        setLoading(false);
+        return;
+      } else {
+        console.log("[DEBUG] MFA modal not shown. userHasPasskey:", userHasPasskey, "userIdForMFA:", userIdForMFA);
+      }
       
       // If we have a 'from' location in state, redirect there after login
       if (from) {
@@ -336,6 +416,60 @@ function Login() {
     } finally {
       setLoading(false); // Set loading to false after login attempt (success or failure)
     }
+  };
+
+  const handleMFASuccess = async (mfaResult) => {
+    // MFA verification successful, complete the login flow
+    console.log("MFA verification successful");
+    
+    const userData = {
+      vendorId: mfaUserData.vendorId,
+      email: mfaUserData.email,
+      name: mfaUserData.name
+    };
+    
+    // Store user data in localStorage
+    localStorage.setItem('currentUser', JSON.stringify(userData));
+    localStorage.setItem('authToken', mfaUserData.idToken);
+    
+    // Update contexts
+    setVendorContextUser(userData);
+    setCurrentUser(userData);
+    
+    // Redirect based on user status
+    if (mfaUserData.userStatus === 'approved') {
+      navigate(`/VendorDashboard?email=${encodeURIComponent(mfaUserData.email)}&role=${encodeURIComponent(mfaUserData.role || 'vendor')}`, { replace: true });
+    } else if (mfaUserData.userStatus === 'rejected') {
+      alert("Your vendor application has been rejected. Please contact support.");
+      navigate(`/Form1?email=${encodeURIComponent(mfaUserData.email)}&role=${encodeURIComponent(mfaUserData.role || 'vendor')}`, { replace: true });
+    } else if (mfaUserData.userStatus === 'pending' && mfaUserData.hasFilledForm) {
+      navigate(`/Auditorapprove?email=${encodeURIComponent(mfaUserData.email)}&role=${encodeURIComponent(mfaUserData.role || 'vendor')}`, { replace: true });
+    } else {
+      if ((mfaUserData.role || '').toLowerCase() === 'client') {
+        const clientBase = config.CLIENT_URL || '';
+        if (!clientBase) {
+          console.error('CLIENT_URL is not configured');
+          setAlertMessage('Client dashboard URL is not configured. Please contact support.');
+          setAlertType('error');
+          setShowAlert(true);
+          return;
+        }
+        const qp = new URLSearchParams();
+        if (mfaUserData.idToken) qp.set('authToken', mfaUserData.idToken);
+        qp.set('email', mfaUserData.email);
+        qp.set('role', 'client');
+        window.location.href = `${clientBase}/?${qp.toString()}`;
+      } else {
+        navigate(`/Form1?email=${encodeURIComponent(mfaUserData.email)}&role=vendor`, { replace: true });
+      }
+    }
+  };
+
+  const handleMFACancel = () => {
+    setShowMFAVerification(false);
+    setMfaUserId(null);
+    setMfaUserData(null);
+    setLoading(false);
   };
 
   const handleForgotPassword = async (e) => {
@@ -784,16 +918,60 @@ function Login() {
           </div>
         </div>
 
-        {/* Right: Brand panel */}
-        <div className="hidden md:flex flex-col items-center justify-center text-center text-white p-6">
-          <div className="text-4xl font-extrabold mb-6">CG</div>
-          <h3 className="text-xl font-semibold mb-2">Stay in Control</h3>
-          <p className="text-gray-300/85 max-w-sm">
-            Track progress, monitor performance, and ensure quality with our smart dashboards.
-          </p>
-          <div className="mt-6 h-1 w-24 bg-emerald-500/70 rounded-full" />
+        {/* Right: Brand carousel panel */}
+        <div className="hidden md:flex flex-col items-center justify-center text-center text-white p-6 relative h-96">
+          {/* CG Logo - Always visible */}
+          <div className="text-4xl font-extrabold mb-0">CG</div>
+
+          {/* Carousel Container */}
+          <div className="relative w-full max-w-sm flex-1 flex flex-col items-center justify-center overflow-hidden">
+            {/* Animated carousel content */}
+            <div className="absolute inset-0 flex flex-col items-center justify-center">
+              {carouselItems.map((item, index) => (
+                <div
+                  key={index}
+                  className={`absolute inset-0 flex flex-col items-center justify-center transition-all duration-700 ease-in-out ${
+                    index === currentCarouselIndex
+                      ? 'opacity-100 scale-100'
+                      : 'opacity-0 scale-95'
+                  }`}
+                >
+                  <h3 className="text-2xl font-semibold mb-3">{item.title}</h3>
+                  <p className="text-gray-300/85 max-w-sm text-sm leading-relaxed">
+                    {item.description}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Dot Indicators */}
+          <div className="absolute bottom-6 flex gap-2 z-20">
+            {carouselItems.map((_, index) => (
+              <button
+                key={index}
+                onClick={() => setCurrentCarouselIndex(index)}
+                className={`h-2 rounded-full transition-all duration-300 ${
+                  index === currentCarouselIndex
+                    ? 'w-8 bg-emerald-500'
+                    : 'w-2 bg-white/40 hover:bg-white/70'
+                }`}
+                aria-label={`Go to slide ${index + 1}`}
+              />
+            ))}
+          </div>
         </div>
       </div>
+      
+      {/* Passkey MFA Verification Modal */}
+      {showMFAVerification && (
+        <PasskeyMFAVerification
+          userId={mfaUserId}
+          userEmail={email}
+          onSuccess={handleMFASuccess}
+          onCancel={handleMFACancel}
+        />
+      )}
     </div>
   );
 }

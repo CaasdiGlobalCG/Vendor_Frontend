@@ -718,7 +718,13 @@ const LeadsPage = () => {
             alert("Lead accepted successfully! The PM will review your response.");
         } catch (error) {
             console.error("❌ Error accepting lead:", error);
-            alert(`Failed to accept the lead: ${error.message}`);
+            
+            // Handle specific validation errors
+            if (error.message.includes('Quotation upload is required when accepting a lead')) {
+                alert('Quotation upload is required when accepting a lead. Please go to the lead details page to upload your quotation and accept the lead.');
+            } else {
+                alert(`Failed to accept the lead: ${error.message}`);
+            }
         }
     };
 
