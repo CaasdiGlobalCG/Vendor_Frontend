@@ -20,6 +20,7 @@ import { VendorContext } from '../../context/VendorContext';
 import InvoiceToolReplica from './components/InvoiceToolReplica';
 import RoleBasedHeader from './components/RoleBasedHeader';
 import { PostServicesModal } from './components/modals/PostServices';
+import UpdateProgressModal from './components/modals/UpdateProgressModal';
 import PermissionsModal from './components/PermissionsModal';
 import InviteCASModal from './components/InviteCASModal';
 import useWebSocketNotifications from '../../hooks/useWebSocketNotifications';
@@ -176,10 +177,18 @@ const WorkspacePage = () => {
   const [showInvoiceTool, setShowInvoiceTool] = useState(false);
   const [showManageBOQModal, setShowManageBOQModal] = useState(false);
   const [showPostServicesModal, setShowPostServicesModal] = useState(false);
+  const [showUpdateProgressModal, setShowUpdateProgressModal] = useState(false);
   const [invoices, setInvoices] = useState([]);
   const [quotes, setQuotes] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+
+  // Check if we should show invoice tool based on URL
+  useEffect(() => {
+    if (location.pathname.includes('/invoices')) {
+      setShowInvoiceTool(true);
+    }
+  }, [location.pathname]);
 
   // Fetch invoices and quotes data
   useEffect(() => {
@@ -764,6 +773,31 @@ const WorkspacePage = () => {
     return () => clearInterval(autoSaveInterval);
   }, [workspace, workspaceId]);
 
+  // Handle browser back button when invoice tool overlay is open
+  useEffect(() => {
+    if (!showInvoiceTool) return;
+
+    const handlePopState = (event) => {
+      // Prevent the default back navigation
+      event.preventDefault();
+      // Close the invoice tool overlay instead
+      setShowInvoiceTool(false);
+      // Push the current state back to prevent navigation
+      window.history.pushState(null, '', window.location.href);
+    };
+
+    // Push a new state to the history stack when overlay opens
+    window.history.pushState(null, '', window.location.href);
+    
+    // Add event listener for popstate
+    window.addEventListener('popstate', handlePopState);
+
+    return () => {
+      // Cleanup: remove event listener
+      window.removeEventListener('popstate', handlePopState);
+    };
+  }, [showInvoiceTool]);
+
   // Handler functions for role-based actions
   const handleManagePermissions = () => {
     console.log('🔐 Opening permissions management modal');
@@ -1060,7 +1094,8 @@ const WorkspacePage = () => {
 
   const handleTemplateSelect = (templateId) => {
     if (templateId === 'quotations-invoices') {
-      setShowInvoiceTool(true);
+      // Navigate to invoices route instead of showing overlay
+      navigate(`/VendorDashboard/workspace/${workspaceId}/invoices`);
       setShowTemplatesPanel(false);
       // Close other panels
       setShowTextPanel(false);
@@ -1249,6 +1284,7 @@ const WorkspacePage = () => {
           onTemplatesClick={handleTemplatesClick}
           showPostServicesActions
           onOpenPostServices={() => setShowPostServicesModal(true)}
+          onOpenUpdateProgress={() => setShowUpdateProgressModal(true)}
         />
         
         <div className="flex h-[calc(100vh-160px)]">
@@ -1392,11 +1428,25 @@ const WorkspacePage = () => {
         selectedSubtask={selectedSubtask}
       />
 
+      {/* Update Progress Modal */}
+      <UpdateProgressModal
+        isOpen={showUpdateProgressModal}
+        onClose={() => setShowUpdateProgressModal(false)}
+        workspaceId={workspaceId}
+        projectId={workspace?.projectId || ''}
+        taskId={selectedTask?.id || ''}
+        subtaskId={selectedSubtask?.id || ''}
+        onUpdate={(updatedData) => {
+          // Handle successful update - could refresh workspace data or show success message
+          console.log('Progress updated:', updatedData);
+        }}
+      />
+
       {/* Invoice Tool Full Screen */}
       {showInvoiceTool && (
         <div className="fixed inset-0 z-50 bg-white">
           <InvoiceToolReplica 
-            onClose={() => setShowInvoiceTool(false)} 
+            onClose={() => navigate(location.pathname.replace('/invoices', ''))}
             workspaceId={workspaceId}
             workspaceName={workspaceDisplayName}
             selectedTask={selectedTask}

@@ -90,15 +90,37 @@
 
 
 
-import React, { useState, useContext } from 'react';
+import React, { useState, useContext, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { VendorContext } from '../../context/VendorContext';
 import config from '../../config/env';
 
 export const ProjectRow = ({ project }) => {
   const [isExpanded, setIsExpanded] = useState(false);
+  const [workspaceStatus, setWorkspaceStatus] = useState(project.status || null);
+  const [workspaceCreatedAt, setWorkspaceCreatedAt] = useState(null);
   const navigate = useNavigate();
   const { currentUser } = useContext(VendorContext);
+  // Always fetch authoritative workspace status by projectId (ensure backend normalization is used)
+  useEffect(() => {
+    let cancelled = false;
+    const fetchStatus = async () => {
+      if (!project.id) return;
+      try {
+        const res = await fetch(`/api/workspaces/project/${project.id}`);
+        if (!res.ok) return;
+        const data = await res.json();
+        if (!cancelled && data) {
+          if (data.status) setWorkspaceStatus(data.status);
+          if (data.createdAt) setWorkspaceCreatedAt(data.createdAt);
+        }
+      } catch (err) {
+        // ignore
+      }
+    };
+    fetchStatus();
+    return () => { cancelled = true; };
+  }, [project.id]);
 
   // API Base URL
 
@@ -106,7 +128,7 @@ export const ProjectRow = ({ project }) => {
   const openWorkspace = async (e) => {
     e.preventDefault();
     e.stopPropagation(); // Prevent row expansion
-    
+
     try {
       if (!currentUser || (!currentUser.vendorId && !currentUser.id)) {
         alert('You must be logged in to access the workspace.');
@@ -114,73 +136,80 @@ export const ProjectRow = ({ project }) => {
       }
 
       const vendorId = currentUser.vendorId || currentUser.id;
-      
-      console.log('🔍 Checking for collaborative workspace for project:', project.id);
-      
-      // First, check if this project has a collaborative workspace through PM approval
-      const checkResponse = await fetch(`${config.VENDOR_BACKEND_URL}/api/pm-leads/vendor-leads?vendorId=${vendorId}`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        }
-      });
-
-      if (checkResponse.ok) {
-        const leadsData = await checkResponse.json();
-        
-        // Look for a PM-approved lead that matches this project
-        const collaborativeLead = leadsData.leads.find(lead => 
-          (lead.projectId === project.id || lead.leadId === project.id) && 
-          lead.pmDecision?.approved && 
-          lead.pmDecision?.workspaceAccess
-        );
-        
-        if (collaborativeLead) {
-          console.log('✅ Found collaborative workspace for this project');
-          
-          // Use collaborative workspace
-          const collaborativeResponse = await fetch(`${config.VENDOR_BACKEND_URL}/api/workspace-access/collaborative`, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              projectId: collaborativeLead.projectId,
-              pmId: collaborativeLead.pmId,
-              vendorId: vendorId,
-              leadId: collaborativeLead.leadId
-            })
-          });
-
-          if (collaborativeResponse.ok) {
-            const workspaceData = await collaborativeResponse.json();
-            
-            // Navigate to collaborative workspace
-            navigate(`/VendorDashboard/workspace/${workspaceData.workspace.workspaceId}`, {
-              state: {
-                leadId: collaborativeLead.leadId,
-                leadDetails: {
-                  _id: collaborativeLead.leadId,
-                  name: collaborativeLead.leadTitle,
-                  clientId: collaborativeLead.projectId,
-                  description: collaborativeLead.leadDescription,
-                  status: 'approved'
-                },
-                workspaceId: workspaceData.workspace.workspaceId,
-                isCollaborative: true,
+      // 1. Try collaborative workspace logic
+      let collaborativeWorkspaceId = null;
+      let collaborativeLead = null;
+      try {
+        const checkResponse = await fetch(`/api/pm-leads/vendor-leads?vendorId=${vendorId}`, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${localStorage.getItem('token')}`
+          }
+        });
+        if (checkResponse.ok) {
+          const leadsData = await checkResponse.json();
+          collaborativeLead = leadsData.leads.find(lead =>
+            (lead.projectId === project.id || lead.leadId === project.id) &&
+            lead.pmDecision?.approved &&
+            lead.pmDecision?.workspaceAccess
+          );
+          if (collaborativeLead) {
+            const collaborativeResponse = await fetch(`/api/workspace-access/collaborative`, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                projectId: collaborativeLead.projectId,
                 pmId: collaborativeLead.pmId,
-                vendorId: vendorId
-              }
+                vendorId: vendorId,
+                leadId: collaborativeLead.leadId
+              })
             });
+            if (collaborativeResponse.ok) {
+              const workspaceData = await collaborativeResponse.json();
+              collaborativeWorkspaceId = workspaceData.workspace?.workspaceId;
+            }
+          }
+        }
+      } catch (err) {
+        // ignore, fallback below
+      }
+      if (collaborativeWorkspaceId && collaborativeLead) {
+        navigate(`/VendorDashboard/workspace/${collaborativeWorkspaceId}`, {
+          state: {
+            leadId: collaborativeLead.leadId,
+            leadDetails: {
+              _id: collaborativeLead.leadId,
+              name: collaborativeLead.leadTitle,
+              clientId: collaborativeLead.projectId,
+              description: collaborativeLead.leadDescription,
+              status: 'approved'
+            },
+            workspaceId: collaborativeWorkspaceId,
+            isCollaborative: true,
+            pmId: collaborativeLead.pmId,
+            vendorId: vendorId
+          }
+        });
+        return;
+      }
+      // 2. Fallback: Try direct workspace lookup by projectId
+      try {
+        const wsRes = await fetch(`/api/workspaces/project/${project.id}`);
+        if (wsRes.ok) {
+          const wsData = await wsRes.json();
+          if (wsData && wsData.workspaceId) {
+            navigate(`/VendorDashboard/workspace/${wsData.workspaceId}`);
             return;
           }
         }
+      } catch (err) {
+        // ignore
       }
-      
-      // If no collaborative workspace found, show message instead of creating legacy workspace
-      alert('⚠️ This project does not have a collaborative workspace. Only PM-approved projects with workspace access can be opened. Please check the Leads page for collaborative projects.');
-      
+      // 3. If nothing found, show alert
+      alert('⚠️ This project does not have a collaborative or direct workspace. Only PM-approved projects with workspace access or existing workspaces can be opened. Please check the Leads page for collaborative projects.');
     } catch (error) {
       console.error('❌ Error opening workspace:', error);
       alert('Failed to open workspace. Please try again.');
@@ -193,10 +222,26 @@ export const ProjectRow = ({ project }) => {
   };
 
   const formatDateForDisplay = (date) => {
-    if (date instanceof Date && !isNaN(date.getTime())) {
-      return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+    // Accept Date objects or ISO/date strings and format to a human-friendly date
+    if (!date) return 'N/A';
+    try {
+      // If it's already a Date object
+      if (date instanceof Date && !isNaN(date.getTime())) {
+        return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+      }
+      // If it's a string, try to parse as ISO or common date string
+      if (typeof date === 'string') {
+        const parsed = new Date(date);
+        if (!isNaN(parsed.getTime())) {
+          return parsed.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+        }
+        // Fallback: return the original string trimmed
+        return date;
+      }
+      return 'N/A';
+    } catch (e) {
+      return 'N/A';
     }
-    return typeof date === 'string' ? date : 'N/A';
   };
 
   return (
@@ -211,12 +256,36 @@ export const ProjectRow = ({ project }) => {
         <td className="py-2 px-2 sm:px-4 whitespace-nowrap">{project.id}</td>
         <td className="py-2 px-2 sm:px-4">{project.name}</td>
         <td className="py-2 px-2 sm:px-4 whitespace-nowrap">{project.clientId ? project.clientId : 'N/A'}</td>
-        <td className="py-2 px-2 sm:px-4 whitespace-nowrap">{project.createdAt ? formatDateForDisplay(project.createdAt) : 'N/A'}</td>
-        <td className="py-2 px-2 sm:px-4 whitespace-nowrap">{project.completedAt ? formatDateForDisplay(project.completedAt) : 'N/A'}</td>
+        <td className="py-2 px-2 sm:px-4 whitespace-nowrap">{(workspaceCreatedAt || project.createdAt) ? formatDateForDisplay(workspaceCreatedAt || project.createdAt) : 'N/A'}</td>
+        <td className="py-2 px-2 sm:px-4 whitespace-nowrap">{workspaceStatus ? workspaceStatus : 'N/A'}</td>
         <td className="py-2 px-2 sm:px-4 whitespace-nowrap">
-          <span className={`inline-block px-2 sm:px-4 py-1 rounded-xl text-[9px] sm:text-[10px] font-semibold ${statusColors[project.status]}`}>
-            {project.status}
-          </span>
+          {/* Progress bar derived from normalized workspaceStatus */}
+          {(() => {
+            const status = (workspaceStatus || 'Pending');
+            let percent = 0;
+            if (status === 'Completed') percent = 100;
+            else if (status === 'InProgress') percent = 60;
+            else percent = 0;
+
+            const bgClass = percent === 100 ? 'bg-emerald-300' : 'bg-amber-200';
+            const fillClass = percent === 100 ? 'bg-emerald-500' : 'bg-amber-500';
+
+            // Reduced thickness: outer bar h-2, inner bar h-1
+            return (
+              <div className="w-full">
+                <div className={`w-full h-2 rounded-full ${bgClass} p-0.5`} title={`${status} ${percent}%`}>
+                  <div
+                    className={`${fillClass} h-1 rounded-full`}
+                    style={{ width: `${percent}%`, transition: 'width 400ms ease' }}
+                    aria-valuemin={0}
+                    aria-valuemax={100}
+                    aria-valuenow={percent}
+                    role="progressbar"
+                  />
+                </div>
+              </div>
+            );
+          })()}
         </td>
         <td className="py-2 px-2 sm:px-4 text-right sm:text-left">
           <img

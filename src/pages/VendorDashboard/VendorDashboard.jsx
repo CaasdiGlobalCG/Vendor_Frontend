@@ -84,6 +84,7 @@ export const VendorDashboard = () => {
   const [projects, setProjects] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [workspaceStatuses, setWorkspaceStatuses] = useState({}); // { projectId: status }
   const [userHasPasskey, setUserHasPasskey] = useState(false);
   const [checkingPasskey, setCheckingPasskey] = useState(true);
   
@@ -246,52 +247,30 @@ export const VendorDashboard = () => {
     }
   }, [currentUser, setVendorData, setUser, vendorData, vendorInfoFetched]);
   
-  // Function to fetch projects
+  // Function to fetch projects and their real workspace statuses
   const fetchProjects = useCallback(async () => {
-    // Skip if we've already fetched projects
-    if (projectsFetched) {
-      return;
-    }
-    
+    if (projectsFetched) return;
     try {
       setIsLoading(true);
-      
-      // Get vendorId from currentUser or vendorData
       const vendorId = currentUser?.vendorId || vendorData?.vendorId || currentUser?.id;
-      
       if (!vendorId) {
-        console.log("VendorDashboard: No vendorId available to fetch projects");
         setIsLoading(false);
         return;
       }
-      
-      console.log("VendorDashboard: Fetching approved workspace projects for vendorId:", vendorId);
-
       // Fetch vendor leads and derive only PM-approved leads with workspace access
       const leadsRes = await fetch(`${config.VENDOR_BACKEND_URL}/api/vendor-leads`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ vendorId })
       });
-
-      if (!leadsRes.ok) {
-        throw new Error(`Server responded with status: ${leadsRes.status}`);
-      }
-
+      if (!leadsRes.ok) throw new Error(`Server responded with status: ${leadsRes.status}`);
       const leadsPayload = await leadsRes.json();
-      console.log("VendorDashboard: Vendor leads for workspace projects:", leadsPayload);
-
       let workspaceProjects = [];
-
       if (leadsPayload.success && Array.isArray(leadsPayload.leads)) {
         const approvedLeads = leadsPayload.leads
-          // Only PM-sent collaborative leads
           .filter(lead => lead.pmId)
-          // Only leads where PM approved and granted workspace access
           .filter(lead => lead.pmDecision?.approved && lead.pmDecision?.workspaceAccess)
-          // Ensure this lead belongs to the current vendor
           .filter(lead => String(lead.vendorId) === String(vendorId));
-
         workspaceProjects = approvedLeads.map((lead) => ({
           id: lead.projectId || lead.leadId,
           clientId: lead.projectId,
@@ -307,20 +286,31 @@ export const VendorDashboard = () => {
                 day: 'numeric',
               })
             : '',
-          // Treat these as in-progress projects with workspace access
-          status: 'InProgress',
+          status: 'InProgress', // will be replaced by real status
           fromLead: true,
           leadId: lead.leadId,
           pmId: lead.pmId,
           hasWorkspaceAccess: true,
         }));
       }
-
       setProjects(workspaceProjects);
+      // Fetch real workspace status for each project
+      const statusMap = {};
+      await Promise.all(
+        workspaceProjects.map(async (proj) => {
+          try {
+            const res = await fetch(`/api/workspaces/project/${proj.id}`);
+            if (res.ok) {
+              const data = await res.json();
+              if (data && data.status) statusMap[proj.id] = data.status;
+            }
+          } catch {}
+        })
+      );
+      setWorkspaceStatuses(statusMap);
       setProjectsFetched(true);
       setIsLoading(false);
     } catch (error) {
-      console.error("VendorDashboard: Error fetching workspace projects:", error);
       setError("Failed to fetch projects");
       setIsLoading(false);
     }
@@ -371,14 +361,11 @@ export const VendorDashboard = () => {
     return status;
   };
   
-  // Calculate project counts from real data
+  // Calculate project counts using real workspace statuses if available
   const totalProjects = projects.length;
-  
-  // Count projects by standardized status
-  const completedProjects = projects.filter(project => getStandardStatus(project.status) === "Completed").length;
-  const pendingProjects = projects.filter(project => getStandardStatus(project.status) === "Pending").length;
-  const inProgressProjects = projects.filter(project => getStandardStatus(project.status) === "InProgress").length;
-  
+  const completedProjects = projects.filter(project => getStandardStatus(workspaceStatuses[project.id] || project.status) === "Completed").length;
+  const pendingProjects = projects.filter(project => getStandardStatus(workspaceStatuses[project.id] || project.status) === "Pending").length;
+  const inProgressProjects = projects.filter(project => getStandardStatus(workspaceStatuses[project.id] || project.status) === "InProgress").length;
   const completionPercentage = totalProjects > 0 
     ? Math.round((completedProjects / totalProjects) * 100) 
     : 0;
@@ -430,7 +417,7 @@ export const VendorDashboard = () => {
               <ProjectList 
                 projects={projects.map(project => ({
                   ...project,
-                  status: getStandardStatus(project.status)
+                  status: getStandardStatus(workspaceStatuses[project.id] || project.status)
                 }))} 
               />
             )}

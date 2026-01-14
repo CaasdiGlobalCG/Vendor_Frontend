@@ -38,6 +38,18 @@ export const usePermissions = (workspace, userRole) => {
     const userId = currentUser.vendorId || currentUser.id;
     const workspacePermissions = workspace.accessControl?.permissions || {};
 
+    // If workspace is marked completed, vendors should have no edit/create permissions
+    if (workspace.status === 'project completed') {
+      return {
+        canEdit: false,
+        canComment: false,
+        canViewFiles: true, // still allow viewing files
+        canCreateTasks: false,
+        canAssignTasks: false,
+        canUpdateTaskStatus: false
+      };
+    }
+
     // Permission debug removed for production
 
     // Check if permissions are arrays (correct format) or need conversion

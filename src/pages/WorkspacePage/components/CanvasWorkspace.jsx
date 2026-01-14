@@ -143,7 +143,9 @@ const edgeTypes = {
 
   
   // Check if user can edit canvas
-  const canEdit = userRole === 'pm' || userPermissions?.canEdit || false;
+  // Lock canvas if workspace is marked completed, regardless of userPermissions
+  const isWorkspaceCompleted = workspace?.status === 'project completed';
+  const canEdit = userRole === 'pm' ? true : (!isWorkspaceCompleted && userPermissions?.canEdit);
   
   // Canvas permissions check complete
 

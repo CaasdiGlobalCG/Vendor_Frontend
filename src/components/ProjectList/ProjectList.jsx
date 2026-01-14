@@ -2,14 +2,42 @@
 
 
 import React, { useState } from "react";
+// Standardize status values (copied from dashboard logic)
+const getStandardStatus = (status) => {
+  if (!status) return "Pending";
+  const lowercaseStatus = status.toLowerCase();
+  if (lowercaseStatus.includes('complete') || lowercaseStatus === 'done' || lowercaseStatus === 'finished') {
+    return "Completed";
+  } else if (lowercaseStatus.includes('progress') || lowercaseStatus === 'ongoing' || lowercaseStatus === 'inprogress') {
+    return "InProgress";
+  } else if (lowercaseStatus.includes('pend') || lowercaseStatus === 'new' || lowercaseStatus === 'waiting') {
+    return "Pending";
+  }
+  return status;
+};
 import clsx from 'clsx';
 import { ProjectRow } from './ProjectRow';
 
 const parseDateString = (dateString) => {
   if (typeof dateString !== 'string') return null;
   try {
+    // Try native Date first
+    let date = new Date(dateString);
+    if (!isNaN(date.getTime())) return date;
+    // Try to parse 'MMM dd, yyyy' (e.g., 'Dec 30, 2025')
+    const mmmDdYyyy = /^(\w{3,}) (\d{1,2}), (\d{4})$/;
+    const match = dateString.match(mmmDdYyyy);
+    if (match) {
+      const [_, monthStr, day, year] = match;
+      const months = ['jan','feb','mar','apr','may','jun','jul','aug','sep','oct','nov','dec'];
+      const monthIdx = months.findIndex(m => monthStr.toLowerCase().startsWith(m));
+      if (monthIdx !== -1) {
+        return new Date(Number(year), monthIdx, Number(day));
+      }
+    }
+    // Remove ordinal suffixes and try again
     const cleanedString = dateString.replace(/(\d+)(st|nd|rd|th)/, "$1");
-    const date = new Date(cleanedString);
+    date = new Date(cleanedString);
     return isNaN(date.getTime()) ? null : date;
   } catch (error) {
     console.error("Error parsing date string:", dateString, error);
@@ -33,7 +61,8 @@ export const ProjectList = ({ projects }) => {
 
   // Filtering logic remains the same
   const filteredProjects = projects.filter(project => {
-    const statusMatch = filter.status === "All" || project.status === filter.status;
+    const standardizedStatus = getStandardStatus(project.status);
+    const statusMatch = filter.status === "All" || standardizedStatus === filter.status;
     let projectDate = null;
     if (project.createdAt instanceof Date && !isNaN(project.createdAt.getTime())) { projectDate = project.createdAt; }
     else if (typeof project.createdAt === 'string') { projectDate = parseDateString(project.createdAt); }
@@ -154,8 +183,8 @@ export const ProjectList = ({ projects }) => {
               <th className="py-2 px-2 sm:px-4 text-left">Project name</th>
               <th className="py-2 px-2 sm:px-4 text-left whitespace-nowrap">Client Id</th>
               <th className="py-2 px-2 sm:px-4 text-left whitespace-nowrap">CreatedAt</th>
-              <th className="py-2 px-2 sm:px-4 text-left whitespace-nowrap">CompletedAt</th>
               <th className="py-2 px-2 sm:px-4 text-left whitespace-nowrap">Status</th>
+              <th className="py-2 px-2 sm:px-4 text-left whitespace-nowrap">Progress</th>
               <th className="py-2 px-2 sm:px-4 text-left"></th>{/* Actions */}
             </tr>
           </thead>

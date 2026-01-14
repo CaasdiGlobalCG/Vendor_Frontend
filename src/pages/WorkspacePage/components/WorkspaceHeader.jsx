@@ -77,7 +77,8 @@ const WorkspaceHeader = ({
   onTextClick,
   onTemplatesClick,
   showPostServicesActions = false,
-  onOpenPostServices
+  onOpenPostServices,
+  onOpenUpdateProgress
 }) => {
   const navigate = useNavigate();
   const { currentUser } = useContext(VendorContext);
@@ -335,14 +336,25 @@ const WorkspaceHeader = ({
         {/* Right side actions */}
         <div className="flex items-center space-x-3">
           {showPostServicesActions && (
-            <button
-              onClick={onOpenPostServices}
-              className="p-2 hover:bg-gray-100 rounded-lg transition-colors flex flex-col items-center space-y-1"
-              title="Post Services"
-            >
-              <MessageCircle className="w-4 h-4 text-gray-600" />
-              <span className="text-[10px] font-medium text-gray-500">Post Service</span>
-            </button>
+            <>
+              <button
+                onClick={onOpenPostServices}
+                className="p-2 hover:bg-gray-100 rounded-lg transition-colors flex flex-col items-center space-y-1"
+                title="Post Services"
+              >
+                <MessageCircle className="w-4 h-4 text-gray-600" />
+                <span className="text-[10px] font-medium text-gray-500">Post Service</span>
+              </button>
+              
+              <button
+                onClick={onOpenUpdateProgress}
+                className="p-2 hover:bg-gray-100 rounded-lg transition-colors flex flex-col items-center space-y-1"
+                title="Update Progress"
+              >
+                <Zap className="w-4 h-4 text-gray-600" />
+                <span className="text-[10px] font-medium text-gray-500">Update Progress</span>
+              </button>
+            </>
           )}
 
           {/* Help Button - Small icon style */}
