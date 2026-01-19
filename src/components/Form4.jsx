@@ -4,8 +4,10 @@ import { UserContext } from "../context/UserContext";
 import { useNavigate } from "react-router-dom";
 import { uploadFileToS3, deleteFileFromS3 } from "../utils/fileUpload";
 import { searchIFSCCode } from "../utils/ifscData";
+import { processChequeOCR } from "../utils/textractOCR";
 import StepIndicator from "./StepIndicator";
 import SidebarContent from "./SidebarContent";
+import OCRPreviewModal from "./OCRPreviewModal";
 
 export default function Form4() {
   const navigate = useNavigate();
@@ -28,6 +30,12 @@ export default function Form4() {
   const [isVerifying, setIsVerifying] = useState(false);
   const [verificationMessage, setVerificationMessage] = useState("");
   const [verificationStatus, setVerificationStatus] = useState(null); // 'success' or 'error'
+  
+  // OCR states
+  const [ocrProcessing, setOcrProcessing] = useState(false);
+  const [ocrModalOpen, setOcrModalOpen] = useState(false);
+  const [ocrData, setOcrData] = useState(null);
+  const [pendingChequeFile, setPendingChequeFile] = useState(null);
 
   useEffect(() => {
     if (currentUser) {
@@ -47,6 +55,15 @@ export default function Form4() {
     const { name, files } = e.target;
     if (files && files.length > 0) {
       const file = files[0];
+
+      // If this is a blank cheque, trigger OCR processing
+      if (name === "blankCheque") {
+        setPendingChequeFile(file);
+        await processBlankChequeOCR(file);
+        return;
+      }
+
+      // For other files, proceed with normal upload
       setFormData((prev) => ({
         ...prev,
         [name]: { file, name: file.name, uploading: true },
@@ -79,6 +96,117 @@ export default function Form4() {
         alert(`Failed to upload file: ${error.message}. Please try again.`);
       }
     }
+  };
+
+  const processBlankChequeOCR = async (file) => {
+    setOcrProcessing(true);
+    
+    try {
+      if (!currentUser?.email) {
+        throw new Error("User email not available");
+      }
+
+      const result = await processChequeOCR(file, currentUser.email);
+
+      if (result.success && result.data.success) {
+        setOcrData(result.data);
+        setOcrModalOpen(true);
+      } else {
+        // Show error but still allow manual entry
+        alert(
+          `OCR Processing: ${result.error || "Failed to extract data"}\n\nYou can still enter the details manually.`
+        );
+        
+        // Store the file for upload anyway
+        setFormData((prev) => ({
+          ...prev,
+          blankCheque: { 
+            file, 
+            name: file.name, 
+            uploading: true,
+            ocrAttempted: true 
+          },
+        }));
+        
+        // Upload the file
+        uploadChequeFile(file);
+      }
+    } catch (error) {
+      console.error("OCR Error:", error);
+      alert(`Error: ${error.message}\n\nYou can enter details manually.`);
+      
+      // Still allow file upload
+      setFormData((prev) => ({
+        ...prev,
+        blankCheque: { 
+          file, 
+          name: file.name, 
+          uploading: true 
+        },
+      }));
+      uploadChequeFile(file);
+    } finally {
+      setOcrProcessing(false);
+    }
+  };
+
+  const uploadChequeFile = async (file) => {
+    try {
+      if (currentUser?.email) {
+        const response = await uploadFileToS3(
+          file,
+          currentUser.email,
+          "blankCheque",
+          "bankDetails"
+        );
+        setFormData((prev) => ({
+          ...prev,
+          blankCheque: {
+            file,
+            name: file.name,
+            url: response.data.url,
+            uploading: false,
+          },
+        }));
+        setShowSaveIndicator(true);
+        setTimeout(() => setShowSaveIndicator(false), 3000);
+      }
+    } catch (error) {
+      console.error("Error uploading cheque file:", error);
+      setFormData((prev) => ({ ...prev, blankCheque: null }));
+      alert(`Failed to upload cheque: ${error.message}`);
+    }
+  };
+
+  const handleOCRConfirm = async (extractedData) => {
+    // Auto-fill the form fields
+    setFormData((prev) => ({
+      ...prev,
+      accountNumber: extractedData.accountNumber || prev.accountNumber,
+      accountName: extractedData.accountName || prev.accountName,
+    }));
+
+    setOcrModalOpen(false);
+    setOcrData(null);
+
+    // Upload the cheque file
+    if (pendingChequeFile) {
+      await uploadChequeFile(pendingChequeFile);
+      setPendingChequeFile(null);
+    }
+
+    setShowSaveIndicator(true);
+    setTimeout(() => setShowSaveIndicator(false), 3000);
+  };
+
+  const handleOCRRetry = () => {
+    setOcrModalOpen(false);
+    setOcrData(null);
+    setPendingChequeFile(null);
+    
+    // Reset the file input
+    const fileInput = document.getElementById("blankCheque");
+    if (fileInput) fileInput.value = "";
   };
 
   const handleDeleteFile = async (fieldName) => {
@@ -358,43 +486,85 @@ export default function Form4() {
             </div>
 
 
-            {/* Blank Cheque Upload */}
+            {/* Blank Cheque Upload with OCR */}
             <div className="flex flex-col md:flex-row items-start gap-6">
                 <div className="w-full md:w-1/3">
                   <h3 className="text-sm font-semibold text-gray-900 block mb-1">Blank Cheque</h3>
-                  <p className="text-xs text-gray-500">Upload a scanned copy of a blank cheque.</p>
+                  <p className="text-xs text-gray-500">Upload a scanned copy of a blank cheque (we'll extract account details with OCR).</p>
                 </div>
                 <div className="w-full md:w-2/3">
-                  <label className="cursor-pointer border border-gray-300 rounded px-3 py-2 text-sm hover:border-emerald-500 transition-colors block">
-                    {formData.blankCheque ? (
-                      <div className="flex justify-between items-center">
-                        <span className="text-sm">{formData.blankCheque.name}</span>
-                        <button
-                          type="button"
-                          onClick={(e) => {
-                            e.preventDefault(); 
-                            handleDeleteFile("blankCheque")
-                          }}
-                          className="text-red-500 text-xs hover:text-red-700 ml-2"
-                        >
-                          Delete
-                        </button>
+                  {/* File Upload Area */}
+                  <label className={`cursor-pointer border-2 border-dashed rounded px-4 py-3 text-sm transition-colors block ${
+                    ocrProcessing ? 'border-blue-300 bg-blue-50' : 'border-gray-300 hover:border-emerald-500'
+                  }`}>
+                    {ocrProcessing ? (
+                      <div className="space-y-3">
+                        <div className="flex items-center gap-2 text-blue-600">
+                          <svg className="w-5 h-5 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                          </svg>
+                          <span className="font-semibold">Processing cheque with OCR...</span>
+                        </div>
+                        {pendingChequeFile && (
+                          <div className="flex items-center gap-2 text-blue-600 ml-7">
+                            <svg className="w-4 h-4 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+                              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                            </svg>
+                            <span className="text-sm text-gray-700">{pendingChequeFile.name}</span>
+                          </div>
+                        )}
+                        <p className="text-xs text-blue-500 ml-7">This may take up to 30 seconds...</p>
+                      </div>
+                    ) : formData.blankCheque ? (
+                      <div className="space-y-3">
+                        <div className="flex items-center gap-3">
+                          <svg className="w-5 h-5 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+                            <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                          </svg>
+                          <div className="flex-1">
+                            <p className="text-sm font-semibold text-gray-900">{formData.blankCheque.name}</p>
+                            {formData.blankCheque.uploading ? (
+                              <p className="text-xs text-blue-600 flex items-center gap-1">
+                                <svg className="w-3 h-3 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                                </svg>
+                                Uploading to server...
+                              </p>
+                            ) : (
+                              <p className="text-xs text-green-600">✓ Successfully uploaded and processed</p>
+                            )}
+                          </div>
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.preventDefault(); 
+                              handleDeleteFile("blankCheque")
+                            }}
+                            className="text-red-500 text-xs hover:text-red-700 font-medium"
+                          >
+                            Remove
+                          </button>
+                        </div>
                       </div>
                     ) : (
-                      "Click to upload blank cheque"
+                      <div className="flex items-center gap-2 text-gray-600">
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                        </svg>
+                        <span>Click to upload blank cheque (JPG, PNG, TIFF)</span>
+                      </div>
                     )}
                     <input
                       type="file"
+                      id="blankCheque"
                       name="blankCheque"
                       onChange={handleFileChange}
+                      disabled={ocrProcessing}
+                      accept="image/jpeg,image/png,image/webp,image/tiff"
                       className="hidden"
                     />
                   </label>
-                  {formData.blankCheque && (
-                    <p className="text-xs text-gray-500 mt-1">
-                      {formData.blankCheque.uploading ? "Uploading..." : "Uploaded"}
-                    </p>
-                  )}
+                  <p className="text-xs text-gray-500 mt-2">Max 5MB • OCR will extract account number and name automatically</p>
                 </div>
               </div>
               
@@ -416,6 +586,17 @@ export default function Form4() {
               </button>
             </div>
           </form>
+
+          {/* OCR Preview Modal */}
+          <OCRPreviewModal
+            isOpen={ocrModalOpen}
+            data={ocrData}
+            onConfirm={handleOCRConfirm}
+            onEdit={() => {}} // Edit is handled in modal
+            onRetry={handleOCRRetry}
+            onClose={() => setOcrModalOpen(false)}
+            isLoading={false}
+          />
         </div>
       </div>
     </div>
