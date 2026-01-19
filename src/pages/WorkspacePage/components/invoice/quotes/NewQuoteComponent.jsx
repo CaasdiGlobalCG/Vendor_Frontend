@@ -16,7 +16,7 @@ const CAASDI_GLOBAL_CUSTOMER = {
   name: 'Caasdi Global',
   displayName: 'Caasdi Global',
   companyName: 'Caasdi Global',
-  email: '',
+  email: 'corporate@caasdiglobal.in',
   phone: '',
   gstin: '29AATFC6640B1ZB',
   billingAddress:
@@ -943,12 +943,24 @@ const NewQuoteComponentInner = ({
             // Set GSTIN form
             setGstinForm(selectedCustomer.gstin || '');
             setAddressLoading(false);
+            
+            // Initialize editable customer details with email for Ship To
+            setEditableCustomerDetails(prev => ({
+                ...prev,
+                billingAddress: CAASDI_GLOBAL_CUSTOMER.billingAddress,
+                billingPhone: CAASDI_GLOBAL_CUSTOMER.phone || '',
+                billingEmail: CAASDI_GLOBAL_CUSTOMER.email || '',
+                billingGstin: CAASDI_GLOBAL_CUSTOMER.gstin || '',
+                shippingEmail: selectedCustomer.email || '',
+                shippingPhone: selectedCustomer.phone || '',
+                shippingGstin: selectedCustomer.gstin || ''
+            }));
         } else {
             setCustomerDetails(null);
             setIsIntraState(false);
             setAddressLoading(false);
         }
-    }, [selectedCustomer?.gstin, selectedCustomer?.address, selectedCustomer?.customerId]);
+    }, [selectedCustomer?.gstin, selectedCustomer?.address, selectedCustomer?.customerId, selectedCustomer?.email, selectedCustomer?.phone]);
 
     // Handle item changes with GST calculations
     const handleItemChange = (index, field, value) => {
@@ -1825,13 +1837,9 @@ const NewQuoteComponentInner = ({
                                                 <div>
                                                     <label className="block text-xs font-medium text-gray-600 mb-1">Contact Information</label>
                                                     <div className="text-sm text-gray-700 bg-gray-100 p-3 rounded border border-gray-300">
-                                                        <div className="mb-2">
+                                                        <div>
                                                             <span className="text-xs font-medium text-gray-600">Email:</span>
                                                             <div className="text-gray-700">{editableCustomerDetails.billingEmail || CAASDI_GLOBAL_CUSTOMER.email || 'N/A'}</div>
-                                                        </div>
-                                                        <div>
-                                                            <span className="text-xs font-medium text-gray-600">Phone:</span>
-                                                            <div className="text-gray-700">{editableCustomerDetails.billingPhone || CAASDI_GLOBAL_CUSTOMER.phone || 'N/A'}</div>
                                                         </div>
                                                     </div>
                                                 </div>
@@ -1922,10 +1930,6 @@ const NewQuoteComponentInner = ({
                                                                 <span className="text-xs font-medium text-gray-600">Email:</span>
                                                                 <div className="text-gray-700">{editableCustomerDetails.shippingEmail || 'N/A'}</div>
                                                             </div>
-                                                            <div>
-                                                                <span className="text-xs font-medium text-gray-600">Phone:</span>
-                                                                <div className="text-gray-700">{editableCustomerDetails.shippingPhone || 'N/A'}</div>
-                                                            </div>
                                                         </div>
                                                     ) : (
                                                         <div className="space-y-2">
@@ -1938,16 +1942,6 @@ const NewQuoteComponentInner = ({
                                                                 })}
                                                                 className="w-full text-sm p-2 border border-gray-300 rounded"
                                                                 placeholder="Enter email..."
-                                                            />
-                                                            <input
-                                                                type="tel"
-                                                                value={editableCustomerDetails.shippingPhone}
-                                                                onChange={(e) => setEditableCustomerDetails({
-                                                                    ...editableCustomerDetails,
-                                                                    shippingPhone: e.target.value
-                                                                })}
-                                                                className="w-full text-sm p-2 border border-gray-300 rounded"
-                                                                placeholder="Enter phone..."
                                                             />
                                                         </div>
                                                     )}

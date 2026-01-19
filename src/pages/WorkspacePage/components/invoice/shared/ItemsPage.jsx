@@ -15,6 +15,7 @@ const ItemsPage = () => {
   const [showViewModal, setShowViewModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [selectedItem, setSelectedItem] = useState(null);
+  const [searchQuery, setSearchQuery] = useState('');
 
   // Using relative paths - no API_BASE_URL needed
 
@@ -217,12 +218,6 @@ const ItemsPage = () => {
             <p className="text-gray-600">Manage your inventory items</p>
           </div>
           <div className="flex items-center space-x-3">
-            <button className="bg-white border border-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-50 transition-all duration-200 flex items-center space-x-2 shadow-sm">
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-              </svg>
-              <span>Export</span>
-            </button>
             <button 
               onClick={() => setShowAddModal(true)}
               className="bg-gradient-to-r from-teal-600 to-teal-700 text-white px-6 py-2 rounded-lg hover:from-teal-700 hover:to-teal-800 transition-all duration-200 flex items-center space-x-2 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
@@ -296,7 +291,12 @@ const ItemsPage = () => {
             <div className="flex items-center space-x-4">
               <h3 className="text-lg font-semibold text-gray-900">Inventory Items</h3>
               <span className="bg-teal-100 text-teal-800 text-xs font-medium px-2.5 py-0.5 rounded-full">
-                {itemsData.length} items
+                {itemsData.filter(item => 
+                  item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                  item.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                  item.category.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                  item.type.toLowerCase().includes(searchQuery.toLowerCase())
+                ).length} items
               </span>
             </div>
             <div className="flex items-center space-x-3">
@@ -304,7 +304,9 @@ const ItemsPage = () => {
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
                 <input
                   type="text"
-                  placeholder="Search items..."
+                  placeholder="Search items by name, category, or type..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
                   className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent text-sm"
                 />
               </div>
@@ -348,7 +350,14 @@ const ItemsPage = () => {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
-              {itemsData.map((item, index) => (
+              {itemsData
+                .filter(item => 
+                  item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                  item.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                  item.category.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                  item.type.toLowerCase().includes(searchQuery.toLowerCase())
+                )
+                .map((item, index) => (
                 <tr key={item.id} className="hover:bg-gradient-to-r hover:from-teal-50 hover:to-blue-50 cursor-pointer transition-all duration-200 group">
                   <td className="px-6 py-5">
                     <div className="flex items-start">
@@ -432,7 +441,14 @@ const ItemsPage = () => {
         <div className="bg-gray-50 px-6 py-4 border-t border-gray-200">
           <div className="flex items-center justify-between">
             <div className="text-sm text-gray-600">
-              Showing <span className="font-medium">1</span> to <span className="font-medium">{itemsData.length}</span> of{' '}
+              Showing <span className="font-medium">1</span> to <span className="font-medium">
+                {itemsData.filter(item => 
+                  item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                  item.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                  item.category.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                  item.type.toLowerCase().includes(searchQuery.toLowerCase())
+                ).length}
+              </span> of{' '}
               <span className="font-medium">{itemsData.length}</span> items
             </div>
             <div className="flex items-center space-x-2">

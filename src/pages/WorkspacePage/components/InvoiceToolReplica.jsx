@@ -170,16 +170,12 @@ const InvoiceToolReplica = ({ onClose, workspaceId, workspaceName, selectedTask,
 
   const sidebarItems = [
     { id: 'home', label: 'Home', icon: Home },
-    { id: 'customers', label: 'Customers', icon: Users },
     { id: 'items', label: 'Items', icon: Package },
     { id: 'quotes', label: 'Quotes', icon: FileText },
     { id: 'invoices', label: 'Invoices', icon: Receipt },
     { id: 'subscriptions', label: 'Subscriptions', icon: RotateCcw },
-    { id: 'history', label: 'History', icon: History },
     { id: 'credit-notes', label: 'Credit Notes', icon: CreditCard },
-    { id: 'purchase-requisitions', label: 'Purchase Requisitions', icon: ShoppingCart },
-    { id: 'purchase-orders', label: 'Purchase Orders', icon: Package2 },
-    { id: 'delivery-challans', label: 'Delivery Challans', icon: Truck }
+    { id: 'purchase-orders', label: 'Purchase Orders', icon: Package2 }
   ];
 
   const salesData = [
@@ -812,51 +808,8 @@ const InvoiceToolReplica = ({ onClose, workspaceId, workspaceName, selectedTask,
         <div className="bg-white border-b border-gray-200 px-6 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center flex-1">
-              {/* Back Button */}
-              <button
-                onClick={onClose}
-                className="mr-4 p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
-                title="Back to Workspace"
-              >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-                </svg>
-              </button>
-              
-              <div className="relative max-w-md w-full">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-                <input
-                  type="text"
-                  placeholder="Search in Customers"
-                  className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
-                />
-              </div>
             </div>
             <div className="flex items-center space-x-4">
-              <button 
-                className="p-2 text-gray-400 hover:text-gray-600"
-                onClick={testNotification}
-                title="Test Notification (Debug)"
-              >
-                <Plus className="w-5 h-5" />
-              </button>
-              <div className="relative" ref={notificationDropdownRef}>
-                <button 
-                  onClick={() => setShowNotificationDropdown(!showNotificationDropdown)}
-                  className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full transition-colors relative"
-                >
-                  <Bell className="w-5 h-5" />
-                  {unreadCount > 0 && (
-                    <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold">
-                      {unreadCount > 9 ? '9+' : unreadCount}
-                    </span>
-                  )}
-                </button>
-                {showNotificationDropdown && renderNotificationDropdown()}
-              </div>
-              <button className="w-8 h-8 bg-teal-600 rounded-full flex items-center justify-center text-white font-semibold">
-                D
-              </button>
             </div>
           </div>
         </div>

@@ -36,8 +36,11 @@ const ElementNode = ({ id, data, isConnectable, selected }) => {
     if (data.deadline !== deadline) {
       setDeadline(data.deadline || null);
     }
+    if (data.isImportant !== undefined && data.isImportant !== isImportant) {
+      setIsImportant(data.isImportant);
+    }
     // eslint-disable-next-line
-  }, [data.deadline]);
+  }, [data.deadline, data.isImportant]);
   // Get current user from context
   const { currentUser } = useContext(VendorContext);
   const [inputValue, setInputValue] = useState('');
@@ -1038,7 +1041,7 @@ const ElementNode = ({ id, data, isConnectable, selected }) => {
 
   // Determine wrapper classes based on element type
   const getWrapperClasses = () => {
-    const baseClasses = 'bg-white border-2 rounded-xl shadow-xl relative group transition-all';
+    const baseClasses = `${isImportant ? 'bg-yellow-50' : 'bg-white'} border-2 rounded-xl shadow-xl relative group transition-all`;
     const compactTypes = ['divider', 'spacer', 'container', 'grid'];
     
     if (compactTypes.includes(data.type)) {
@@ -1095,6 +1098,27 @@ const ElementNode = ({ id, data, isConnectable, selected }) => {
       // Optionally show error
       // eslint-disable-next-line no-console
       console.error('Failed to persist deadline:', err);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  // Save isImportant state to backend (update node in workspace)
+  const persistIsImportant = async (important) => {
+    if (!workspaceId) return;
+    setSaving(true);
+    try {
+      // Fetch current workspace nodes
+      const workspace = await getWorkspaceById(workspaceId);
+      const nodes = workspace.nodes || [];
+      // Find and update this node's isImportant status
+      const updatedNodes = nodes.map((node) =>
+        node.id === id ? { ...node, data: { ...node.data, isImportant: important } } : node
+      );
+      await updateWorkspace(workspaceId, { nodes: updatedNodes });
+    } catch (err) {
+      // eslint-disable-next-line no-console
+      console.error('Failed to persist isImportant:', err);
     } finally {
       setSaving(false);
     }
@@ -1273,7 +1297,11 @@ const ElementNode = ({ id, data, isConnectable, selected }) => {
             )}
             {/* Mark as Important button */}
             <button
-              onClick={() => setIsImportant((prev) => !prev)}
+              onClick={async () => {
+                const newImportantState = !isImportant;
+                setIsImportant(newImportantState);
+                await persistIsImportant(newImportantState);
+              }}
               className={`ml-2 px-2 py-1 rounded border text-xs font-medium transition-colors duration-150 ${isImportant ? 'bg-yellow-400 text-white border-yellow-500' : 'bg-white text-yellow-600 border-yellow-400 hover:bg-yellow-50'}`}
               title={isImportant ? 'Unmark as Important' : 'Mark as Important'}
             >
