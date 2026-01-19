@@ -336,19 +336,19 @@ function Form1() {
                   <input
                     required
                     type="text"
-                    name="state"
-                    value={formData.state}
+                    name="city"
+                    value={formData.city}
                     onChange={handleInputChange}
-                    placeholder="State"
+                    placeholder="City"
                     className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
                   />
                   <input
                     required
                     type="text"
-                    name="city"
-                    value={formData.city}
+                    name="state"
+                    value={formData.state}
                     onChange={handleInputChange}
-                    placeholder="City"
+                    placeholder="State"
                     className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
                   />
                   <input

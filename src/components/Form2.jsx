@@ -324,6 +324,7 @@ import { useNavigate } from "react-router-dom";
 import { uploadFileToS3, deleteFileFromS3 } from "../utils/fileUpload";
 import StepIndicator from "./StepIndicator";
 import SidebarContent from "./SidebarContent";
+import { BUSINESS_TYPES, FLAT_BUSINESS_TYPES, INDUSTRY_TYPES, FLAT_INDUSTRY_TYPES } from "../constants/businessIndustryTypes";
 
 export default function Form2() {
   const navigate = useNavigate();
@@ -511,34 +512,55 @@ export default function Form2() {
             <div className="space-y-6">
               <div className="flex flex-col md:flex-row items-start gap-6">
                 <div className="w-full md:w-1/3">
-                  <h3 className="text-sm font-semibold text-gray-900 block mb-1">Business Information</h3>
-                  <p className="text-xs text-gray-500">provide your Business info</p>
+                  <h3 className="text-sm font-semibold text-gray-900 block mb-1">Business Type</h3>
+                  <p className="text-xs text-gray-500">select your business type</p>
                 </div>
                 <div className="w-full md:w-2/3">
-                  <input
+                  <select
                     required
-                    type="text"
                     name="businessType"
                     value={formData.businessType}
                     onChange={handleInputChange}
-                    placeholder="Business type"
-                    className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
-                  />
+                    className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent bg-white"
+                  >
+                    <option value="">Select Business Type</option>
+                    {Object.entries(BUSINESS_TYPES).map(([category, types]) => (
+                      <optgroup key={category} label={category}>
+                        {types.map((type) => (
+                          <option key={type} value={type}>
+                            {type}
+                          </option>
+                        ))}
+                      </optgroup>
+                    ))}
+                  </select>
                 </div>
               </div>
 
               <div className="flex flex-col md:flex-row items-start gap-6">
-                <div className="w-full md:w-1/3"></div>
+                <div className="w-full md:w-1/3">
+                  <h3 className="text-sm font-semibold text-gray-900 block mb-1">Industry Type</h3>
+                  <p className="text-xs text-gray-500">select your industry type</p>
+                </div>
                 <div className="w-full md:w-2/3">
-                  <input
+                  <select
                     required
-                    type="text"
                     name="industryType"
                     value={formData.industryType}
                     onChange={handleInputChange}
-                    placeholder="Industry type"
-                    className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
-                  />
+                    className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent bg-white"
+                  >
+                    <option value="">Select Industry Type</option>
+                    {Object.entries(INDUSTRY_TYPES).map(([category, types]) => (
+                      <optgroup key={category} label={category}>
+                        {types.map((type) => (
+                          <option key={type} value={type}>
+                            {type}
+                          </option>
+                        ))}
+                      </optgroup>
+                    ))}
+                  </select>
                 </div>
               </div>
 
