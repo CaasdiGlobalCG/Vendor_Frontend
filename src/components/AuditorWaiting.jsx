@@ -1,67 +1,18 @@
 
-// import React from "react";
-// import "../Styles/Auditor.css";
-
-// export default function Auditor() {
-//   return (
-//     <div className="a-main-container">
-//       <div className="a-box">
-//         <span className="a-text">Great work</span>
-//         <span className="a-text-2"> .You are almost there!!</span>
-//       </div>
-//       <span className="a-text-3">
-//         Thank you for submitting your KYC details. Our team is currently
-//         reviewing your documents to ensure compliance and security.
-//       </span>
-//       <span className="a-text-4">What happens next?</span>
-//       <div className="a-flex-row-cac">
-//         <div className="a-rectangle">
-//           <div className="a-qlementine-icons-preview" />
-//         </div>
-//         <div className="a-rectangle-1">
-//           <div className="a-mdi-clock-outline" />
-//         </div>
-//         <div className="a-rectangle-2">
-//           <div className="a-mdi-approve" />
-//         </div>
-//         <div className="a-rectangle-3" /> {/* No need for animate class */}
-//         <div className="a-rectangle-4" />
-//       </div>
-//       <div className="a-flex-row-d">
-//         <span className="a-review-process">Review process</span>
-//         <span className="a-processing-time">Processing time</span>
-//         <span className="a-approval-rejection">Approval or Rejection</span>
-//       </div>
-//       <div className="a-flex-row-aa">
-//         <span className="a-verification-team">
-//           Our verification team will manually check your submitted documents.
-//         </span>
-//         <span className="a-verification-process">
-//           This process typically takes 5-7 working days.
-//         </span>
-//         <span className="a-approval-notification">
-//           If approved, you can proceed to the next steps. If any issues arise,
-//           we’ll notify you via email.
-//         </span>
-//       </div>
-//       <span className="a-need-assistance">Need Assistance?</span>
-//       <div className="a-contact-support-team">
-//         <span className="a-contact-support-team-5">
-//           If you have any questions, please contact our support team at{" "}
-//         </span>
-//         <span className="a-support-email">Corporate@caasdiglobal.com</span>
-//         <span className="a-contact-support-team-6">
-//           {" "}
-//           or visit our Help Center
-//         </span>
-//       </div>
-//     </div>
-//   );
-// }
 
 import React from "react";
+import { useNavigate } from "react-router-dom";
 
 export default function AuditorWaiting() {
+  const navigate = useNavigate();
+
+  const handleBackToLogin = () => {
+    // Clear any stored tokens and user data
+    localStorage.clear();
+    // Navigate to login page
+    navigate("/");
+  };
+
   return (
     <div className="w-screen min-h-screen bg-white overflow-x-hidden p-6 font-[Poppins]">
       <div className="mt-2 ml-20 text-3xl font-medium">
@@ -135,9 +86,17 @@ export default function AuditorWaiting() {
 
       <h2 className="text-xl font-medium text-center mt-32">Need Assistance?</h2>
       <p className="text-center text-base opacity-80 mt-2">
-        If you have any questions, please contact our support team at <span className="text-[#21be9c]">Corporate@caasdiglobal.com</span> or visit our Help Center
+        If you have any questions, please contact our support team at <span className="text-[#21be9c]">corporate@caasdiglobal.com</span> or visit our Help Center
       </p>
-
+      {/* Back to Login Button */}
+      <div className="flex justify-center mt-16 pb-10">
+        <button
+          onClick={handleBackToLogin}
+          className="px-8 py-3 rounded-lg font-medium text-white bg-gradient-to-r from-[#0F5848] to-[#21BE9C] hover:from-[#0F5848]/90 hover:to-[#21BE9C]/90 transition-all duration-200 shadow-md"
+        >
+          Back to Login
+        </button>
+      </div>
       <style>
         {`
           @keyframes grow {
