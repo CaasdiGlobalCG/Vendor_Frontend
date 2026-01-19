@@ -6,8 +6,6 @@
 import axios from 'axios';
 import { parseChequeData } from './chequeParser';
 
-const API_BASE_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5005';
-
 /**
  * Process cheque image using AWS Textract
  * @param {File} imageFile - The cheque image file
@@ -37,8 +35,9 @@ export const processChequeOCR = async (imageFile, userEmail) => {
     formData.append('file', imageFile);
     formData.append('userEmail', userEmail);
 
-    // Call backend OCR endpoint
-    const response = await axios.post(`${API_BASE_URL}/api/ocr/process-cheque`, formData, {
+    // Call backend OCR endpoint using relative path
+    // This will work on both localhost and staging domains
+    const response = await axios.post(`/api/ocr/process-cheque`, formData, {
       headers: {
         'Content-Type': 'multipart/form-data'
       },
@@ -90,7 +89,7 @@ export const processChequeOCR = async (imageFile, userEmail) => {
  */
 export const checkOCRServiceAvailability = async () => {
   try {
-    const response = await axios.get(`${API_BASE_URL}/api/ocr/health`, {
+    const response = await axios.get(`/api/ocr/health`, {
       timeout: 5000
     });
     return response.data.available === true;
