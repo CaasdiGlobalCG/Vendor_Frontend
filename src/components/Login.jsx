@@ -766,8 +766,18 @@ function Login() {
               />
             </div>
           )}
-          <h2 className="text-gray-900 text-2xl font-semibold mb-2">Hello User</h2>
-          <p className="text-sm text-gray-600 mb-6">Enter your email and password to log in</p>
+          {view === 'login' && (
+            <>
+              <h2 className="text-gray-900 text-2xl font-semibold mb-2">Hello User</h2>
+              <p className="text-sm text-gray-600 mb-6">Enter your email and password to log in</p>
+            </>
+          )}
+          {view === 'forgotPassword' && (
+            <>
+              <h2 className="text-gray-900 text-2xl font-semibold mb-2">Forgot Password</h2>
+              <p className="text-sm text-gray-600 mb-6">Enter your email to receive a reset code</p>
+            </>
+          )}
 
           {view === 'login' && (
             <>
@@ -852,8 +862,6 @@ function Login() {
 
           {view === 'forgotPassword' && (
             <>
-              <h2 className="text-gray-900 text-xl font-semibold mb-2">Forgot Password</h2>
-              <p className="text-sm text-gray-600 mb-6">Enter your email to receive a reset code</p>
               <form className="w-full" onSubmit={handleForgotPassword}>
                 <input
                   type="email"
