@@ -3,6 +3,7 @@ import { VendorContext } from "../context/VendorContext";
 import { UserContext } from "../context/UserContext";
 import { useNavigate } from "react-router-dom";
 import { uploadFileToS3, deleteFileFromS3 } from "../utils/fileUpload";
+import { searchIFSCCode } from "../utils/ifscData";
 import StepIndicator from "./StepIndicator";
 import SidebarContent from "./SidebarContent";
 
@@ -24,6 +25,9 @@ export default function Form4() {
   const [showWarning, setShowWarning] = useState(false);
   const [showSaveIndicator, setShowSaveIndicator] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isVerifying, setIsVerifying] = useState(false);
+  const [verificationMessage, setVerificationMessage] = useState("");
+  const [verificationStatus, setVerificationStatus] = useState(null); // 'success' or 'error'
 
   useEffect(() => {
     if (currentUser) {
@@ -117,6 +121,40 @@ export default function Form4() {
     }));
   };
 
+  const handleVerifyIFSC = () => {
+    if (!formData.ifscCode || formData.ifscCode.trim() === "") {
+      setVerificationStatus("error");
+      setVerificationMessage("Please enter an IFSC code first");
+      setTimeout(() => setVerificationStatus(null), 3000);
+      return;
+    }
+
+    setIsVerifying(true);
+    
+    // Simulate a small delay for verification
+    setTimeout(() => {
+      const result = searchIFSCCode(formData.ifscCode);
+      
+      if (result.found) {
+        setFormData((prevData) => ({
+          ...prevData,
+          bankName: result.bankName,
+          branchAddress: result.branchAddress,
+        }));
+        setVerificationStatus("success");
+        setVerificationMessage(`✓ IFSC verified! Bank: ${result.bankName}`);
+        setShowSaveIndicator(true);
+        setTimeout(() => setShowSaveIndicator(false), 3000);
+      } else {
+        setVerificationStatus("error");
+        setVerificationMessage("IFSC code not found in database");
+      }
+      
+      setIsVerifying(false);
+      setTimeout(() => setVerificationStatus(null), 3000);
+    }, 500);
+  };
+
   const handlePrevious = () => {
     navigate("/Form3");
   };
@@ -201,21 +239,110 @@ export default function Form4() {
                   <h3 className="text-sm font-semibold text-gray-900 block mb-1">Bank Information</h3>
                   <p className="text-xs text-gray-500">Provide your bank details for verification and onboarding.</p>
                 </div>
+                <div className="w-full md:w-2/3"></div>
+              </div>
+
+              {/* IFSC Code with Verify Button */}
+              <div className="flex flex-col md:flex-row items-start gap-6">
+                <div className="w-full md:w-1/3">
+                  <label className="text-sm font-semibold text-gray-900 block mb-1">IFSC Code</label>
+                  <p className="text-xs text-gray-500">Enter and verify IFSC code</p>
+                </div>
+                <div className="w-full md:w-2/3">
+                  <div className="flex gap-2">
+                    <input
+                      required
+                      type="text"
+                      name="ifscCode"
+                      value={formData.ifscCode}
+                      onChange={handleInputChange}
+                      placeholder="e.g., HDFC0000001"
+                      className="flex-1 border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent uppercase"
+                    />
+                    <button
+                      type="button"
+                      onClick={handleVerifyIFSC}
+                      disabled={isVerifying || !formData.ifscCode}
+                      className="px-4 py-2 text-sm font-medium border border-emerald-500 bg-emerald-50 text-emerald-600 rounded hover:bg-emerald-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
+                    >
+                      {isVerifying ? "Verifying..." : "Verify"}
+                    </button>
+                  </div>
+                  {verificationStatus && (
+                    <div className={`mt-2 p-2 rounded text-sm ${
+                      verificationStatus === "success" 
+                        ? "bg-green-100 text-green-700 border border-green-300" 
+                        : "bg-red-100 text-red-700 border border-red-300"
+                    }`}>
+                      {verificationMessage}
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Bank Name - Auto-filled from IFSC */}
+              <div className="flex flex-col md:flex-row items-start gap-6">
+                <div className="w-full md:w-1/3">
+                  <label className="text-sm font-semibold text-gray-900 block mb-1">Bank Name</label>
+                  <p className="text-xs text-gray-500">Auto-filled from IFSC</p>
+                </div>
                 <div className="w-full md:w-2/3">
                   <input
-                    required
                     type="text"
                     name="bankName"
                     value={formData.bankName}
                     onChange={handleInputChange}
-                    placeholder="Bank name"
+                    placeholder="Bank name (auto-filled)"
+                    disabled
+                    className="w-full border border-gray-300 rounded px-3 py-2 text-sm bg-gray-100 text-gray-600 cursor-not-allowed"
+                  />
+                </div>
+              </div>
+
+              {/* Branch Address - Auto-filled from IFSC */}
+              <div className="flex flex-col md:flex-row items-start gap-6">
+                <div className="w-full md:w-1/3">
+                  <label className="text-sm font-semibold text-gray-900 block mb-1">Branch Address</label>
+                  <p className="text-xs text-gray-500">Auto-filled from IFSC</p>
+                </div>
+                <div className="w-full md:w-2/3">
+                  <input
+                    type="text"
+                    name="branchAddress"
+                    value={formData.branchAddress}
+                    onChange={handleInputChange}
+                    placeholder="Branch address (auto-filled)"
+                    disabled
+                    className="w-full border border-gray-300 rounded px-3 py-2 text-sm bg-gray-100 text-gray-600 cursor-not-allowed"
+                  />
+                </div>
+              </div>
+
+              {/* Account Number */}
+              <div className="flex flex-col md:flex-row items-start gap-6">
+                <div className="w-full md:w-1/3">
+                  <label className="text-sm font-semibold text-gray-900 block mb-1">Account Number</label>
+                  <p className="text-xs text-gray-500">Provide account number</p>
+                </div>
+                <div className="w-full md:w-2/3">
+                  <input
+                    required
+                    type="text"
+                    name="accountNumber"
+                    value={formData.accountNumber}
+                    onChange={handleInputChange}
+                    placeholder="Account number (max 16 digits)"
                     className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
                   />
                 </div>
               </div>
 
+              {/* Account Name */}
               <div className="flex flex-col md:flex-row items-start gap-6">
-                <div className="w-full md:w-1/3"></div>
+                <div className="w-full md:w-1/3">
+                  <label className="text-sm font-semibold text-gray-900 block mb-1">Account Name</label>
+                  <p className="text-xs text-gray-500">Provide account name</p>
+                </div>
                 <div className="w-full md:w-2/3">
                   <input
                     required
@@ -224,51 +351,6 @@ export default function Form4() {
                     value={formData.accountName}
                     onChange={handleInputChange}
                     placeholder="Account name"
-                    className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
-                  />
-                </div>
-              </div>
-
-              <div className="flex flex-col md:flex-row items-start gap-6">
-                <div className="w-full md:w-1/3"></div>
-                <div className="w-full md:w-2/3">
-                  <input
-                    required
-                    type="text"
-                    name="accountNumber"
-                    value={formData.accountNumber}
-                    onChange={handleInputChange}
-                    placeholder="Account number"
-                    className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
-                  />
-                </div>
-              </div>
-
-              <div className="flex flex-col md:flex-row items-start gap-6">
-                <div className="w-full md:w-1/3"></div>
-                <div className="w-full md:w-2/3">
-                  <input
-                    required
-                    type="text"
-                    name="ifscCode"
-                    value={formData.ifscCode}
-                    onChange={handleInputChange}
-                    placeholder="IFSC number"
-                    className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
-                  />
-                </div>
-              </div>
-
-              <div className="flex flex-col md:flex-row items-start gap-6">
-                <div className="w-full md:w-1/3"></div>
-                <div className="w-full md:w-2/3">
-                  <input
-                    required
-                    type="text"
-                    name="branchAddress"
-                    value={formData.branchAddress}
-                    onChange={handleInputChange}
-                    placeholder="branch address"
                     className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
                   />
                 </div>
