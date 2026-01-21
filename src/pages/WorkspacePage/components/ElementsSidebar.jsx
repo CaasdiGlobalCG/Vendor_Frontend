@@ -158,9 +158,6 @@ const ElementsSidebar = ({ isOpen, onClose, onElementSelect, userRole, currentUs
       { id: 'organizational-chart', name: 'Organizational Chart', type: 'flowchart', preview: 'Company hierarchy structure' }
     ],
     other: [
-      { id: 'divider', name: 'Divider', type: 'divider', preview: 'Content separator' },
-      { id: 'spacer', name: 'Spacer', type: 'spacer', preview: 'Vertical spacing' },
-      { id: 'container', name: 'Container', type: 'container', preview: 'Content wrapper' },
       { id: 'grid', name: 'Grid', type: 'grid', preview: 'Layout grid system' }
     ]
   };

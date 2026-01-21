@@ -474,11 +474,6 @@ const ElementsPanel = ({
         { id: 'form-template', name: 'Form Template', type: 'form-template', preview: 'Ready-made form with basic fields' },
         { id: 'textarea', name: 'TextArea', type: 'textarea', preview: 'Large text input area' },
         { id: 'textbox', name: 'TextBox', type: 'textbox', preview: 'Single line text input' },
-        { id: 'radio', name: 'Radio', type: 'radio', preview: 'Radio button selection' },
-        { id: 'checkbox', name: 'Checkbox', type: 'checkbox', preview: 'Multiple choice selection' },
-        { id: 'button', name: 'Button', type: 'button', preview: 'Clickable action button' },
-        { id: 'input', name: 'Input', type: 'input', preview: 'Generic input field' },
-        { id: 'select', name: 'Select one', type: 'select', preview: 'Dropdown single selection' },
         { id: 'dropdown', name: 'Dropdown', type: 'dropdown', preview: 'Dropdown menu' }
       ]
     },

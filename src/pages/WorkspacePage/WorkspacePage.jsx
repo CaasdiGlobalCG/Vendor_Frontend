@@ -526,9 +526,6 @@ const WorkspacePage = () => {
     other: {
       name: 'Other Elements',
       elements: [
-        { id: 'divider', name: 'Divider', type: 'divider', preview: 'Content separator' },
-        { id: 'spacer', name: 'Spacer', type: 'spacer', preview: 'Vertical spacing' },
-        { id: 'container', name: 'Container', type: 'container', preview: 'Content wrapper' },
         { id: 'grid', name: 'Grid', type: 'grid', preview: 'Layout grid system' },
         { id: 'button', name: 'Button', type: 'button', preview: 'Action button' }
       ]
@@ -573,9 +570,6 @@ const WorkspacePage = () => {
     other: {
       name: 'Other Elements',
       elements: [
-        { id: 'divider', name: 'Divider', type: 'divider', preview: 'Content separator' },
-        { id: 'spacer', name: 'Spacer', type: 'spacer', preview: 'Vertical spacing' },
-        { id: 'container', name: 'Container', type: 'container', preview: 'Content wrapper' },
         { id: 'grid', name: 'Grid', type: 'grid', preview: 'Layout grid system' }
       ]
     }

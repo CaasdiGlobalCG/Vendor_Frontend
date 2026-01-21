@@ -1,7 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { updateWorkspace, getWorkspaceById } from '../../utils/workspaceApi';
+import { useReactFlow } from 'reactflow';
 
-const FormTemplate = () => {
-  const [formData, setFormData] = useState({
+const FormTemplate = ({ nodeId, workspaceId, onSubmitSuccess, initialFormData = null }) => {
+  const { setNodes } = useReactFlow();
+  const [formData, setFormData] = useState(initialFormData || {
     firstName: '',
     lastName: '',
     email: '',
@@ -11,6 +14,21 @@ const FormTemplate = () => {
     agreeToTerms: false
   });
 
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitMessage, setSubmitMessage] = useState(null);
+  const [isFormSubmitted, setIsFormSubmitted] = useState(!!initialFormData && Object.keys(initialFormData).length > 0);
+
+  // Load saved form data if available
+  useEffect(() => {
+    if (initialFormData && Object.keys(initialFormData).length > 0) {
+      console.log('📥 Loading saved form data:', initialFormData);
+      setFormData(prev => ({
+        ...initialFormData
+      }));
+      setIsFormSubmitted(true);
+    }
+  }, [JSON.stringify(initialFormData)]);
+
   const handleInputChange = (field, value) => {
     setFormData(prev => ({
       ...prev,
@@ -18,11 +36,81 @@ const FormTemplate = () => {
     }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     e.stopPropagation();
-    console.log('Form submitted:', formData);
-    alert('Form submitted successfully!');
+    
+    if (!nodeId || !workspaceId) {
+      console.warn('⚠️ Cannot submit form: Missing nodeId or workspaceId');
+      alert('Error: Cannot save form data. Please try again.');
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      console.log('💾 Saving form data for node:', nodeId);
+      
+      // Get workspace first using the API utility
+      const workspace = await getWorkspaceById(workspaceId);
+
+      // Find the node with matching ID and update its formData
+      const updatedNodes = workspace.nodes.map(node => {
+        if (node.id === nodeId) {
+          console.log('✏️ Updating node with form data');
+          const updatedNode = {
+            ...node,
+            data: {
+              ...node.data,
+              formData: formData,
+              lastSubmittedAt: new Date().toISOString(),
+              submissionCount: (node.data?.submissionCount || 0) + 1
+            }
+          };
+          console.log('📝 Updated node data:', updatedNode.data);
+          return updatedNode;
+        }
+        return node;
+      });
+
+      console.log('🔍 Updated nodes array:', updatedNodes.filter(n => n.id === nodeId));
+
+      // Save to database
+      console.log('📤 Sending updated workspace to server');
+      const result = await updateWorkspace(workspaceId, {
+        nodes: updatedNodes,
+        edges: workspace.edges || [],
+        zoomLevel: workspace.zoomLevel
+      });
+
+      console.log('✅ Form data saved to database successfully!');
+      console.log('📦 Server response:', result);
+      
+      // Update React state to reflect the changes
+      setNodes(updatedNodes);
+      
+      // Mark form as submitted
+      setIsFormSubmitted(true);
+      
+      setSubmitMessage('✅ Form ' + (isFormSubmitted ? 'updated' : 'submitted') + ' and saved successfully!');
+      
+      // Call optional callback
+      if (onSubmitSuccess) {
+        onSubmitSuccess(formData);
+      }
+
+      // Clear message after 3 seconds
+      setTimeout(() => {
+        setSubmitMessage(null);
+      }, 3000);
+    } catch (error) {
+      console.error('❌ Error saving form data:', error);
+      setSubmitMessage('❌ Error ' + (isFormSubmitted ? 'updating' : 'saving') + ' form. Please try again.');
+      setTimeout(() => {
+        setSubmitMessage(null);
+      }, 3000);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -155,13 +243,32 @@ const FormTemplate = () => {
       </div>
 
       {/* Submit Button */}
-      <div className="pt-2">
+      <div className="pt-2 space-y-2">
+        {submitMessage && (
+          <div className={`p-3 rounded-lg text-sm font-medium text-center ${
+            submitMessage.includes('Error') 
+              ? 'bg-red-100 text-red-800' 
+              : 'bg-green-100 text-green-800'
+          }`}>
+            {submitMessage}
+          </div>
+        )}
         <button
           type="submit"
-          className="w-full px-6 py-3 text-sm font-medium bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-lg hover:from-blue-700 hover:to-blue-800 transition-all duration-200 shadow-md hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+          disabled={isSubmitting}
+          className={`w-full px-6 py-3 text-sm font-medium rounded-lg transition-all duration-200 shadow-md hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-offset-2 ${
+            isSubmitting 
+              ? 'bg-gray-400 text-gray-600 cursor-not-allowed' 
+              : isFormSubmitted
+              ? 'bg-gradient-to-r from-amber-600 to-amber-700 text-white hover:from-amber-700 hover:to-amber-800 focus:ring-amber-500'
+              : 'bg-gradient-to-r from-blue-600 to-blue-700 text-white hover:from-blue-700 hover:to-blue-800 focus:ring-blue-500'
+          }`}
           onClick={(e) => e.stopPropagation()}
         >
-          Submit Form
+          {isSubmitting 
+            ? (isFormSubmitted ? 'Updating...' : 'Submitting...') 
+            : (isFormSubmitted ? '✏️ Update Form' : '📝 Submit Form')
+          }
         </button>
       </div>
     </form>

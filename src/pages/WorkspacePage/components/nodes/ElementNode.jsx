@@ -1,6 +1,7 @@
-import React, { useState, useContext, useEffect } from 'react';
+import React, { useState, useContext, useEffect, useRef } from 'react';
 import { useParams } from 'react-router-dom';
 import { getWorkspaceById, updateWorkspace } from '../../utils/workspaceApi';
+import { persistIsImportant, persistDeadline, persistTextContent, getTimeLeft as calculateTimeLeft, formatTimeLeft } from '../../utils/nodePersistence';
 import { Handle, Position, useReactFlow } from 'reactflow';
 import { Download, Eye, ExternalLink, X, ArrowRight, Check, X as XIcon, Menu, Star, Heart, Info, HelpCircle } from 'lucide-react';
 import { VendorContext } from '../../../../context/VendorContext';
@@ -21,7 +22,7 @@ import TablePreviewModal from '../modals/TablePreviewModal';
 import { createTableHelpers, defaultTableData } from '../../utils/tableUtils';
 
 const ElementNode = ({ id, data, isConnectable, selected }) => {
-  const { workspaceId } = useParams();
+  const workspaceId = data.workspaceId;  // Get workspaceId from node data
   const { setNodes } = useReactFlow();
   const [saving, setSaving] = useState(false);
   // Important state for highlighting
@@ -30,27 +31,170 @@ const ElementNode = ({ id, data, isConnectable, selected }) => {
   // Deadline state (persisted in backend)
   const [deadline, setDeadline] = useState(data.deadline || null); // ISO string or null
   const [showDeadlineInput, setShowDeadlineInput] = useState(false);
+  
+  // Track if we just set the deadline to prevent it from being cleared during sync
+  const deadlineJustSetRef = useRef(false);
 
   // Sync deadline from backend node data if changed externally
   useEffect(() => {
-    if (data.deadline !== deadline) {
-      setDeadline(data.deadline || null);
+    // Don't sync if we just set the deadline locally - give it time to persist
+    if (deadlineJustSetRef.current) {
+      console.log('⏳ Deadline was just set locally, skipping sync to prevent clearing');
+      return;
     }
+    
+    // Only sync deadline if data has it AND it's different from current state
+    if (data.deadline && data.deadline !== deadline) {
+      console.log('🔄 Syncing deadline from node data:', { dataDeadline: data.deadline, stateDeadline: deadline });
+      setDeadline(data.deadline);
+    }
+    // Don't clear deadline if data doesn't have it but state does - it might be in the process of being saved
+    // Only clear if explicitly set to null/undefined after previously having a value
+    
     if (data.isImportant !== undefined && data.isImportant !== isImportant) {
+      console.log('🔄 Syncing isImportant from node data:', { dataIsImportant: data.isImportant, stateIsImportant: isImportant });
       setIsImportant(data.isImportant);
     }
     // eslint-disable-next-line
   }, [data.deadline, data.isImportant]);
   // Get current user from context
   const { currentUser } = useContext(VendorContext);
-  const [inputValue, setInputValue] = useState('');
-  const [textareaValue, setTextareaValue] = useState('');
-  const [selectValue, setSelectValue] = useState('');
+  const [inputValue, setInputValue] = useState(data?.inputValue || '');
+  const [textareaValue, setTextareaValue] = useState(data?.textareaValue || '');
   const [checkboxValue, setCheckboxValue] = useState(false);
   const [radioValue, setRadioValue] = useState('');
   
-  // Dynamic options for interactive elements
-  const [selectOptions, setSelectOptions] = useState(['Option 1', 'Option 2', 'Option 3']);
+  // Auto-save refs for debouncing
+  const textareaTimeoutRef = useRef(null);
+  const inputTimeoutRef = useRef(null);
+  
+  // Auto-save textarea content with debounce
+  useEffect(() => {
+    if (!workspaceId || data.type !== 'textarea') return;
+    
+    // Clear previous timeout
+    if (textareaTimeoutRef.current) {
+      clearTimeout(textareaTimeoutRef.current);
+    }
+    
+    // Set new timeout to save after 2 seconds of inactivity
+    textareaTimeoutRef.current = setTimeout(async () => {
+      if (textareaValue && textareaValue.length > 0) {
+        try {
+          console.log('💾 Auto-saving textarea content');
+          await persistTextContent(id, textareaValue, 'textareaValue', setNodes, workspaceId);
+        } catch (error) {
+          console.error('❌ Error auto-saving textarea:', error);
+        }
+      }
+    }, 2000);
+    
+    return () => {
+      if (textareaTimeoutRef.current) {
+        clearTimeout(textareaTimeoutRef.current);
+      }
+    };
+  }, [textareaValue, workspaceId, data.type, id, setNodes]);
+  
+  // Auto-save textbox content with debounce
+  useEffect(() => {
+    if (!workspaceId || data.type !== 'textbox') return;
+    
+    // Clear previous timeout
+    if (inputTimeoutRef.current) {
+      clearTimeout(inputTimeoutRef.current);
+    }
+    
+    // Set new timeout to save after 2 seconds of inactivity
+    inputTimeoutRef.current = setTimeout(async () => {
+      if (inputValue && inputValue.length > 0) {
+        try {
+          console.log('💾 Auto-saving textbox content');
+          await persistTextContent(id, inputValue, 'inputValue', setNodes, workspaceId);
+        } catch (error) {
+          console.error('❌ Error auto-saving textbox:', error);
+        }
+      }
+    }, 2000);
+    
+    return () => {
+      if (inputTimeoutRef.current) {
+        clearTimeout(inputTimeoutRef.current);
+      }
+    };
+  }, [inputValue, workspaceId, data.type, id, setNodes]);
+  
+  // Dynamic options for interactive elements - load from persisted data
+  const [selectOptions, setSelectOptions] = useState(data?.selectOptions || []);
+  const [selectValue, setSelectValueState] = useState(data?.selectedValue || '');
+  const selectTimeoutRef = useRef(null);
+  
+  // Auto-save dropdown options and selected value with debounce
+  useEffect(() => {
+    if (!workspaceId || (data.type !== 'select' && data.type !== 'dropdown')) return;
+    
+    // Clear previous timeout
+    if (selectTimeoutRef.current) {
+      clearTimeout(selectTimeoutRef.current);
+    }
+    
+    // Set new timeout to save after 1 second of inactivity
+    selectTimeoutRef.current = setTimeout(async () => {
+      try {
+        console.log('💾 Auto-saving dropdown options and value');
+        // Save both options and selected value
+        setNodes((nodes) =>
+          nodes.map((node) =>
+            node.id === id
+              ? {
+                  ...node,
+                  data: {
+                    ...node.data,
+                    selectOptions: selectOptions,
+                    selectedValue: selectValue,
+                    lastModifiedAt: new Date().toISOString()
+                  }
+                }
+              : node
+          )
+        );
+        
+        // Persist to backend
+        const workspace = await getWorkspaceById(workspaceId);
+        if (workspace) {
+          const updatedNodes = workspace.nodes.map(node => 
+            node.id === id 
+              ? { 
+                  ...node, 
+                  data: { 
+                    ...node.data, 
+                    selectOptions: selectOptions,
+                    selectedValue: selectValue,
+                    lastModifiedAt: new Date().toISOString()
+                  } 
+                }
+              : node
+          );
+          await updateWorkspace(workspaceId, { nodes: updatedNodes });
+          console.log('✅ Dropdown data saved to backend');
+        }
+      } catch (error) {
+        console.error('❌ Error auto-saving dropdown:', error);
+      }
+    }, 1000);
+    
+    return () => {
+      if (selectTimeoutRef.current) {
+        clearTimeout(selectTimeoutRef.current);
+      }
+    };
+  }, [selectOptions, selectValue, workspaceId, data.type, id, setNodes]);
+  
+  // Wrapper to set select value and trigger save
+  const setSelectValue = (value) => {
+    setSelectValueState(value);
+  };
+  
   const [radioOptions, setRadioOptions] = useState(['Option 1', 'Option 2']);
   const [checkboxOptions, setCheckboxOptions] = useState(['Option 1', 'Option 2', 'Option 3']);
   const [checkedItems, setCheckedItems] = useState({});
@@ -797,7 +941,16 @@ const ElementNode = ({ id, data, isConnectable, selected }) => {
         );
       
       case 'form-template':
-        return <FormTemplate />;
+        console.log('📋 Rendering FormTemplate with data:', { 
+          nodeId: id, 
+          workspaceId, 
+          formData: data?.formData 
+        });
+        return <FormTemplate 
+          nodeId={id} 
+          workspaceId={workspaceId}
+          initialFormData={data?.formData}
+        />;
       
       case 'table':
         return renderTableElement();
@@ -821,10 +974,10 @@ const ElementNode = ({ id, data, isConnectable, selected }) => {
         return renderFileElement();
 
       case 'image-block':
-        return <ImageBlockRenderer data={data} />;
+        return <ImageBlockRenderer data={data} nodeId={id} workspaceId={workspaceId} setNodes={setNodes} />;
 
       case 'document-block':
-        return <DocumentBlockRenderer data={data} />;
+        return <DocumentBlockRenderer data={data} nodeId={id} workspaceId={workspaceId} setNodes={setNodes} />;
 
       case 'task-card':
       case 'task-card-progress':
@@ -1072,31 +1225,34 @@ const ElementNode = ({ id, data, isConnectable, selected }) => {
   }, [deadline]);
 
   const getTimeLeft = () => {
-    if (!deadline) return null;
-    const diff = new Date(deadline).getTime() - now;
-    if (diff <= 0) return 'Deadline reached';
-    const hours = Math.floor(diff / (1000 * 60 * 60));
-    const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-    const seconds = Math.floor((diff % (1000 * 60)) / 1000);
-    return `${hours}h ${minutes}m ${seconds}s`;
+    const timeLeft = calculateTimeLeft(deadline);
+    if (!timeLeft) return null;
+    if (timeLeft.isExpired) return 'Deadline reached';
+    return formatTimeLeft(timeLeft);
   };
 
   // Save deadline to backend (update node in workspace)
-  const persistDeadline = async (newDeadline) => {
+  const persistDeadlineLocal = async (newDeadline) => {
     if (!workspaceId) return;
     setSaving(true);
     try {
-      // Fetch current workspace nodes
-      const workspace = await getWorkspaceById(workspaceId);
-      const nodes = workspace.nodes || [];
-      // Find and update this node's deadline
-      const updatedNodes = nodes.map((node) =>
-        node.id === id ? { ...node, data: { ...node.data, deadline: newDeadline } } : node
-      );
-      await updateWorkspace(workspaceId, { nodes: updatedNodes });
+      deadlineJustSetRef.current = true; // Mark that we just set it to prevent sync from clearing it
+      
+      // Use shared persistence function
+      await persistDeadline(id, newDeadline, setNodes, workspaceId);
+      
+      // Update the local deadline state to match
+      setDeadline(newDeadline instanceof Date ? newDeadline.toISOString() : 
+                 (typeof newDeadline === 'string' && !newDeadline.includes('T')) ? new Date(newDeadline).toISOString() :
+                 newDeadline);
+      
+      // Reset the flag after 2 seconds so future syncs work normally
+      setTimeout(() => {
+        deadlineJustSetRef.current = false;
+      }, 2000);
+      
+      console.log('📝 Local deadline state updated');
     } catch (err) {
-      // Optionally show error
-      // eslint-disable-next-line no-console
       console.error('Failed to persist deadline:', err);
     } finally {
       setSaving(false);
@@ -1104,20 +1260,13 @@ const ElementNode = ({ id, data, isConnectable, selected }) => {
   };
 
   // Save isImportant state to backend (update node in workspace)
-  const persistIsImportant = async (important) => {
+  const persistIsImportantLocal = async (important) => {
     if (!workspaceId) return;
     setSaving(true);
     try {
-      // Fetch current workspace nodes
-      const workspace = await getWorkspaceById(workspaceId);
-      const nodes = workspace.nodes || [];
-      // Find and update this node's isImportant status
-      const updatedNodes = nodes.map((node) =>
-        node.id === id ? { ...node, data: { ...node.data, isImportant: important } } : node
-      );
-      await updateWorkspace(workspaceId, { nodes: updatedNodes });
+      // Use shared persistence function
+      await persistIsImportant(id, important, setNodes, workspaceId);
     } catch (err) {
-      // eslint-disable-next-line no-console
       console.error('Failed to persist isImportant:', err);
     } finally {
       setSaving(false);
@@ -1299,8 +1448,11 @@ const ElementNode = ({ id, data, isConnectable, selected }) => {
             <button
               onClick={async () => {
                 const newImportantState = !isImportant;
+                console.log('🌟 Mark as Important clicked:', { currentState: isImportant, newState: newImportantState, nodeId: id });
                 setIsImportant(newImportantState);
-                await persistIsImportant(newImportantState);
+                console.log('📝 State updated to:', newImportantState);
+                await persistIsImportantLocal(newImportantState);
+                console.log('✅ isImportant persisted successfully');
               }}
               className={`ml-2 px-2 py-1 rounded border text-xs font-medium transition-colors duration-150 ${isImportant ? 'bg-yellow-400 text-white border-yellow-500' : 'bg-white text-yellow-600 border-yellow-400 hover:bg-yellow-50'}`}
               title={isImportant ? 'Unmark as Important' : 'Mark as Important'}
@@ -1331,8 +1483,11 @@ const ElementNode = ({ id, data, isConnectable, selected }) => {
               <button
                 className="mt-1 px-2 py-1 text-xs bg-blue-500 text-white rounded"
                 onClick={async () => {
+                  console.log('⏰ Setting deadline:', { currentDeadline: deadline, nodeId: id });
                   setShowDeadlineInput(false);
-                  await persistDeadline(deadline);
+                  console.log('📝 Deadline input closed, persisting...');
+                  await persistDeadlineLocal(deadline);
+                  console.log('✅ Deadline persisted successfully');
                 }}
                 disabled={saving}
               >
@@ -1437,7 +1592,7 @@ const ElementNode = ({ id, data, isConnectable, selected }) => {
       
       {/* Sequence Number Badge - Top left corner, always visible */}
       {data.sequenceNumber && (
-        <div className="absolute -top-3 -left-3 z-20 w-6 h-6 bg-gradient-to-br from-green-500 to-emerald-600 text-white rounded-full flex items-center justify-center text-xs font-bold shadow-lg border-2 border-white">
+        <div className="absolute -top-4 -left-4 z-20 w-8 h-8 bg-gradient-to-br from-green-500 to-emerald-600 text-white rounded-full flex items-center justify-center text-sm font-bold shadow-lg border-2 border-white hover:shadow-xl transition-shadow">
           {data.sequenceNumber}
         </div>
       )}
