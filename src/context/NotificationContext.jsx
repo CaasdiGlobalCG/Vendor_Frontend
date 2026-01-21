@@ -101,6 +101,12 @@ export const NotificationProvider = ({ children }) => {
       
       newSocket.onerror = (error) => {
         console.error('NotificationContext - WebSocket error:', error);
+        console.error('NotificationContext - WebSocket readyState:', newSocket.readyState);
+        console.error('NotificationContext - Error details:', {
+          type: error.type,
+          message: error.message,
+          toString: error.toString()
+        });
       };
       
       // newSocket.onclose = (event) => {
