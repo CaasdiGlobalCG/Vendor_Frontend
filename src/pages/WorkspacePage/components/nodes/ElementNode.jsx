@@ -304,17 +304,25 @@ const ElementNode = ({ id, data, isConnectable, selected }) => {
   };
   
   // Check if current user can approve/reject this element
-  // User can approve if they have a different role than the element creator
+  // Multi-step approval workflow:
+  // 1. PM approves pending elements (status: 'pending' -> 'pm_approved')
+  // 2. Client approves PM-approved elements (status: 'pm_approved' -> 'client_approved')
   const canApprove = () => {
     const currentUserRole = currentUser?.role || 'vendor';
-    const elementCreatorRole = data.addedByRole || 'vendor';
     const approvalStatus = data.approvalStatus || 'pending';
     
-    // Can only approve/reject pending elements
-    if (approvalStatus !== 'pending') return false;
+    // PM can approve if element is pending
+    if (currentUserRole === 'pm' && approvalStatus === 'pending') {
+      return true;
+    }
     
-    // Can approve if roles are different (PM approves vendor elements, vendor approves PM elements)
-    return currentUserRole !== elementCreatorRole;
+    // Client can approve if PM has already approved
+    if (currentUserRole === 'client' && approvalStatus === 'pm_approved') {
+      return true;
+    }
+    
+    // Vendors cannot approve their own elements or already approved elements
+    return false;
   };
   
   // Handle opening approval modal
@@ -330,14 +338,46 @@ const ElementNode = ({ id, data, isConnectable, selected }) => {
     
     setIsSubmittingApproval(true);
     
-    // Prepare the new approval data
+    const currentUserRole = currentUser?.role || 'vendor';
+    
+    // Determine the new approval status based on user role and action
+    let newApprovalStatus;
+    let approvalDataKey; // Key to store approval data (e.g., 'pmApproval', 'clientApproval')
+    
+    if (approvalAction === 'approve') {
+      if (currentUserRole === 'pm') {
+        newApprovalStatus = 'pm_approved'; // PM approved, waiting for client
+        approvalDataKey = 'pmApproval';
+      } else if (currentUserRole === 'client') {
+        newApprovalStatus = 'client_approved'; // Client approved, fully approved
+        approvalDataKey = 'clientApproval';
+      } else {
+        newApprovalStatus = 'approved'; // Vendor or other
+        approvalDataKey = 'approval';
+      }
+    } else {
+      newApprovalStatus = 'rejected'; // Rejection ends the chain
+      approvalDataKey = currentUserRole === 'pm' ? 'pmApproval' : currentUserRole === 'client' ? 'clientApproval' : 'approval';
+    }
+    
+    // Prepare the new approval data - with proper structure for database
     const newApprovalData = {
-      approvalStatus: approvalAction === 'approve' ? 'approved' : 'rejected',
-      approvedBy: currentUser?.name || currentUser?.email || 'Unknown User',
-      approvedByEmail: currentUser?.email || null,
-      approvedByRole: currentUser?.role || 'vendor',
-      approvalTimestamp: new Date().toISOString(),
-      approvalReason: approvalReason.trim(),
+      approvalStatus: newApprovalStatus,
+      // Clear legacy approval fields (they're now in nested objects)
+      approvalReason: null,
+      approvedBy: null,
+      approvedByEmail: null,
+      approvedByRole: null,
+      approvalTimestamp: null,
+      // Add the new nested approval object
+      [approvalDataKey]: {
+        approvedBy: currentUser?.name || currentUser?.email || 'Unknown User',
+        approvedByEmail: currentUser?.email || null,
+        approvedByRole: currentUserRole,
+        approvalTimestamp: new Date().toISOString(),
+        approvalReason: approvalReason.trim(),
+        status: approvalAction === 'approve' ? 'approved' : 'rejected'
+      }
     };
     
     try {
@@ -359,6 +399,8 @@ const ElementNode = ({ id, data, isConnectable, selected }) => {
           return node;
         });
         
+        console.log('📤 Sending updated node to backend:', updatedNodes.find(n => n.id === id)?.data);
+        
         // Save to backend
         await updateWorkspace(workspaceId, { nodes: updatedNodes });
         
@@ -376,7 +418,7 @@ const ElementNode = ({ id, data, isConnectable, selected }) => {
           return node;
         }));
         
-        console.log(`✅ Element ${approvalAction}d successfully`);
+        console.log(`✅ Element ${approvalAction}d successfully by ${currentUserRole}. Status: ${newApprovalStatus}`);
       }
     } catch (error) {
       console.error('Error updating approval status:', error);
@@ -391,6 +433,10 @@ const ElementNode = ({ id, data, isConnectable, selected }) => {
   // Get approval status color
   const getApprovalStatusColor = () => {
     switch (data.approvalStatus) {
+      case 'client_approved':
+        return 'bg-green-100 text-green-800 border-green-300'; // Fully approved - green
+      case 'pm_approved':
+        return 'bg-blue-100 text-blue-800 border-blue-300'; // PM approved, waiting for client - blue
       case 'approved':
         return 'bg-green-100 text-green-800 border-green-300';
       case 'rejected':
@@ -403,6 +449,10 @@ const ElementNode = ({ id, data, isConnectable, selected }) => {
   // Get approval status icon
   const getApprovalStatusIcon = () => {
     switch (data.approvalStatus) {
+      case 'client_approved':
+        return '✓✓'; // Double check for fully approved
+      case 'pm_approved':
+        return '✓'; // Single check for PM approved
       case 'approved':
         return '✓';
       case 'rejected':
@@ -1514,7 +1564,9 @@ const ElementNode = ({ id, data, isConnectable, selected }) => {
           <div className="flex items-center space-x-2">
             <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium border ${getApprovalStatusColor()}`}>
               <span className="mr-1">{getApprovalStatusIcon()}</span>
-              {data.approvalStatus === 'approved' ? 'Approved' : 
+              {data.approvalStatus === 'client_approved' ? 'Fully Approved' :
+               data.approvalStatus === 'pm_approved' ? 'PM Approved' :
+               data.approvalStatus === 'approved' ? 'Approved' : 
                data.approvalStatus === 'rejected' ? 'Rejected' : 'Pending Approval'}
             </span>
           </div>
@@ -1527,8 +1579,55 @@ const ElementNode = ({ id, data, isConnectable, selected }) => {
           </span>
         </div>
         
-        {/* Approval Details (if approved/rejected) */}
-        {data.approvalStatus && data.approvalStatus !== 'pending' && (
+        {/* PM Approval Details */}
+        {data.pmApproval && (
+          <div className="mb-2 p-2 rounded-lg bg-green-50 border border-green-200">
+            <div className="flex items-center space-x-2 mb-1">
+              <span className="w-5 h-5 rounded-full flex items-center justify-center text-xs bg-green-500 text-white">
+                ✓
+              </span>
+              <span className="text-xs font-medium text-gray-700">
+                {data.pmApproval.status === 'approved' ? '✅ PM Approved' : '❌ PM Rejected'} by {data.pmApproval.approvedBy}
+              </span>
+            </div>
+            <p className="text-xs text-gray-500 ml-7">
+              📅 {formatDate(data.pmApproval.approvalTimestamp)}
+            </p>
+            {data.pmApproval.approvalReason && (
+              <div className="mt-2 p-2 bg-white rounded border border-gray-100">
+                <p className="text-xs text-gray-500 uppercase tracking-wide mb-1">PM Reason</p>
+                <p className="text-sm text-gray-700">{data.pmApproval.approvalReason}</p>
+              </div>
+            )}
+          </div>
+        )}
+        
+        {/* Client Approval Details */}
+        {data.clientApproval && (
+          <div className="mb-2 p-2 rounded-lg bg-blue-50 border border-blue-200">
+            <div className="flex items-center space-x-2 mb-1">
+              <span className="w-5 h-5 rounded-full flex items-center justify-center text-xs bg-blue-500 text-white">
+                ✓
+              </span>
+              <span className="text-xs font-medium text-gray-700">
+                {data.clientApproval.status === 'approved' ? '✅ Client Approved' : '❌ Client Rejected'} by {data.clientApproval.approvedBy}
+              </span>
+            </div>
+            <p className="text-xs text-gray-500 ml-7">
+              📅 {formatDate(data.clientApproval.approvalTimestamp)}
+            </p>
+            {data.clientApproval.approvalReason && (
+              <div className="mt-2 p-2 bg-white rounded border border-gray-100">
+                <p className="text-xs text-gray-500 uppercase tracking-wide mb-1">Client Reason</p>
+                <p className="text-sm text-gray-700">{data.clientApproval.approvalReason}</p>
+              </div>
+            )}
+          </div>
+        )}
+        
+        {/* Legacy Approval Details (if approved/rejected via old system) */}
+        {data.approvalStatus && data.approvalStatus !== 'pending' && data.approvalStatus !== 'pm_approved' && 
+         !data.pmApproval && !data.clientApproval && (
           <div className="mb-3 p-2 rounded-lg bg-gray-50 border border-gray-100">
             <div className="flex items-center space-x-2 mb-1">
               <span className={`w-5 h-5 rounded-full flex items-center justify-center text-xs ${
@@ -1583,9 +1682,14 @@ const ElementNode = ({ id, data, isConnectable, selected }) => {
         )}
         
         {/* Message when user cannot approve */}
-        {!canApprove() && data.approvalStatus === 'pending' && (
+        {!canApprove() && !data.approvalStatus?.includes('approved') && data.approvalStatus !== 'rejected' && (
           <p className="text-xs text-center text-gray-500 italic">
-            Waiting for {data.addedByRole === 'pm' ? 'Vendor' : 'PM'} to review this element
+            {data.approvalStatus === 'pending' 
+              ? 'Waiting for PM to review this element'
+              : data.approvalStatus === 'pm_approved'
+              ? 'Waiting for Client to review this element'
+              : 'Approval in progress'
+            }
           </p>
         )}
       </div>

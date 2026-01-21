@@ -18,7 +18,10 @@ export const usePermissions = (workspace, userRole) => {
         canViewFiles: false,
         canCreateTasks: false,
         canAssignTasks: false,
-        canUpdateTaskStatus: false
+        canUpdateTaskStatus: false,
+        canAccessMessages: false,
+        canAccessVideoCall: false,
+        canApproveElements: false
       };
     }
 
@@ -30,7 +33,25 @@ export const usePermissions = (workspace, userRole) => {
         canViewFiles: true,
         canCreateTasks: true,
         canAssignTasks: true,
-        canUpdateTaskStatus: true
+        canUpdateTaskStatus: true,
+        canAccessMessages: true,
+        canAccessVideoCall: true,
+        canApproveElements: true
+      };
+    }
+
+    // Clients have view access to canvas, messages, and video calls by default
+    if (userRole === 'client') {
+      return {
+        canEdit: false,
+        canComment: true, // Clients can send messages/comments
+        canViewFiles: true,
+        canCreateTasks: false,
+        canAssignTasks: false,
+        canUpdateTaskStatus: false,
+        canAccessMessages: true, // Clients can access messages
+        canAccessVideoCall: true, // Clients can access video calls
+        canApproveElements: true // Clients can approve/reject elements
       };
     }
 
@@ -46,7 +67,10 @@ export const usePermissions = (workspace, userRole) => {
         canViewFiles: true, // still allow viewing files
         canCreateTasks: false,
         canAssignTasks: false,
-        canUpdateTaskStatus: false
+        canUpdateTaskStatus: false,
+        canAccessMessages: false,
+        canAccessVideoCall: false,
+        canApproveElements: false
       };
     }
 
@@ -68,7 +92,10 @@ export const usePermissions = (workspace, userRole) => {
       canViewFiles: checkPermission(workspacePermissions.canViewFiles),
       canCreateTasks: checkPermission(workspacePermissions.canCreateTasks),
       canAssignTasks: checkPermission(workspacePermissions.canAssignTasks),
-      canUpdateTaskStatus: checkPermission(workspacePermissions.canUpdateTaskStatus)
+      canUpdateTaskStatus: checkPermission(workspacePermissions.canUpdateTaskStatus),
+      canAccessMessages: checkPermission(workspacePermissions.canAccessMessages),
+      canAccessVideoCall: checkPermission(workspacePermissions.canAccessVideoCall),
+      canApproveElements: checkPermission(workspacePermissions.canApproveElements)
     };
   }, [workspace, currentUser, userRole]);
 

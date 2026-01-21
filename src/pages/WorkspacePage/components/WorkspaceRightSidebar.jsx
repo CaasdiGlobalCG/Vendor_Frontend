@@ -672,7 +672,7 @@ const WorkspaceRightSidebar = ({
 
               <div className="pt-2 border-t border-gray-100">
                 <PermissionGuard
-                  permission="canComment"
+                  permission="canAccessMessages"
                   workspace={workspace}
                   userRole={userRole}
                   fallback={
@@ -698,7 +698,7 @@ const WorkspaceRightSidebar = ({
                     </PermissionButton>
 
                     <PermissionInput
-                      permission="canComment"
+                      permission="canAccessMessages"
                       workspace={workspace}
                       userRole={userRole}
                       type="text"
@@ -711,7 +711,7 @@ const WorkspaceRightSidebar = ({
                     />
 
                     <PermissionButton
-                      permission="canComment"
+                      permission="canAccessMessages"
                       workspace={workspace}
                       userRole={userRole}
                       onClick={() => {

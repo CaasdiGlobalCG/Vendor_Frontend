@@ -14,13 +14,14 @@ import {
 } from '@heroicons/react/24/outline';
 import config from '../../../config/env';
 
-const RoleBasedHeader = ({ userRole, currentUser, workspace, onManagePermissions, onInviteVendors, onInviteCAS }) => {
+const RoleBasedHeader = ({ userRole, currentUser, workspace, onManagePermissions, onInviteVendors, onInviteCAS, onStartCall }) => {
   const [showCollabDetails, setShowCollabDetails] = useState(false);
   const [collaborators, setCollaborators] = useState([]);
   const [loadingCollaborators, setLoadingCollaborators] = useState(false);
   const isPM = userRole === 'pm';
   const isVendor = userRole === 'vendor';
   const isCAS = userRole === 'cas';
+  const isClient = userRole === 'client';
 
   // Modal state for Share Progress
   const [showShareModal, setShowShareModal] = useState(false);
@@ -74,8 +75,8 @@ const RoleBasedHeader = ({ userRole, currentUser, workspace, onManagePermissions
             </h1>
             <div className="flex items-center space-x-2 mt-0.5">
               <span className="text-[11px] text-gray-500 leading-tight">
-                Role: <span className={`font-medium ${isPM ? 'text-blue-600' : isCAS ? 'text-purple-600' : 'text-green-600'}`}>
-                  {isPM ? 'PM' : isCAS ? 'CAS' : 'Vendor'}
+                Role: <span className={`font-medium ${isPM ? 'text-blue-600' : isCAS ? 'text-purple-600' : isClient ? 'text-orange-600' : 'text-green-600'}`}>
+                  {isPM ? 'PM' : isCAS ? 'CAS' : isClient ? 'Client' : 'Vendor'}
                 </span>
               </span>
               {workspace?.projectMetadata?.projectName && (
@@ -244,6 +245,20 @@ const RoleBasedHeader = ({ userRole, currentUser, workspace, onManagePermissions
 
             {/* Action buttons */}
             <div className="space-y-2">
+              {/* Start Call button - Available to all users */}
+              {onStartCall && (
+                <button
+                  onClick={onStartCall}
+                  className="w-full flex items-center justify-center px-3 py-2 text-xs font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-md transition-colors"
+                  title="Start a video call with collaborators"
+                >
+                  <svg className="h-4 w-4 mr-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M23 7l-7 5 7 5V7z" />
+                    <rect x="1" y="5" width="15" height="14" rx="2" ry="2" />
+                  </svg>
+                  Start Call
+                </button>
+              )}
               {isPM ? (
                 <>
                   <button

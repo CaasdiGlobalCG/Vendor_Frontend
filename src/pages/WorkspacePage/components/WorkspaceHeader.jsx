@@ -1,5 +1,5 @@
 import React, { useContext, useState, useEffect, useCallback } from 'react';
-import { ChevronDown, Plus, Save, MessageCircle, HelpCircle, X, ChevronLeft, ChevronRight, Lightbulb, MousePointer, Link2, Trash2, Users, Zap, Layout, Settings } from 'lucide-react';
+import { ChevronDown, Plus, Save, MessageCircle, HelpCircle, X, ChevronLeft, ChevronRight, Lightbulb, MousePointer, Link2, Trash2, Users, Zap, Layout, Settings, CheckCircle } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { VendorContext } from '../../../context/VendorContext';
 
@@ -78,7 +78,13 @@ const WorkspaceHeader = ({
   onTemplatesClick,
   showPostServicesActions = false,
   onOpenPostServices,
-  onOpenUpdateProgress
+  onOpenUpdateProgress,
+  onOpenReviewProgress,
+  onOpenClientReviewProgress,
+  onOpenProjectComplete,
+  userRole = 'vendor',
+  isPM = false,
+  isClient = false
 }) => {
   const navigate = useNavigate();
   const { currentUser } = useContext(VendorContext);
@@ -346,14 +352,54 @@ const WorkspaceHeader = ({
                 <span className="text-[10px] font-medium text-gray-500">Post Service</span>
               </button>
               
-              <button
-                onClick={onOpenUpdateProgress}
-                className="p-2 hover:bg-gray-100 rounded-lg transition-colors flex flex-col items-center space-y-1"
-                title="Update Progress"
-              >
-                <Zap className="w-4 h-4 text-gray-600" />
-                <span className="text-[10px] font-medium text-gray-500">Update Progress</span>
-              </button>
+              {isPM ? (
+                <>
+                  <button
+                    onClick={onOpenReviewProgress}
+                    className="p-2 hover:bg-gray-100 rounded-lg transition-colors flex flex-col items-center space-y-1"
+                    title="Review Progress"
+                  >
+                    <Zap className="w-4 h-4 text-orange-600" />
+                    <span className="text-[10px] font-medium text-gray-500">Review Progress</span>
+                  </button>
+                  <button
+                    onClick={onOpenProjectComplete}
+                    className="p-2 hover:bg-gray-100 rounded-lg transition-colors flex flex-col items-center space-y-1"
+                    title="Project Complete Request"
+                  >
+                    <CheckCircle className="w-4 h-4 text-blue-600" />
+                    <span className="text-[10px] font-medium text-gray-500">Complete Request</span>
+                  </button>
+                </>
+              ) : isClient ? (
+                <>
+                  <button
+                    onClick={onOpenClientReviewProgress}
+                    className="p-2 hover:bg-gray-100 rounded-lg transition-colors flex flex-col items-center space-y-1"
+                    title="Approve Progress"
+                  >
+                    <Zap className="w-4 h-4 text-green-600" />
+                    <span className="text-[10px] font-medium text-gray-500">Approve Progress</span>
+                  </button>
+                  <button
+                    onClick={onOpenProjectComplete}
+                    className="p-2 hover:bg-gray-100 rounded-lg transition-colors flex flex-col items-center space-y-1"
+                    title="Project Complete Request"
+                  >
+                    <CheckCircle className="w-4 h-4 text-blue-600" />
+                    <span className="text-[10px] font-medium text-gray-500">Complete Request</span>
+                  </button>
+                </>
+              ) : (
+                <button
+                  onClick={onOpenUpdateProgress}
+                  className="p-2 hover:bg-gray-100 rounded-lg transition-colors flex flex-col items-center space-y-1"
+                  title="Update Progress"
+                >
+                  <Zap className="w-4 h-4 text-gray-600" />
+                  <span className="text-[10px] font-medium text-gray-500">Update Progress</span>
+                </button>
+              )}
             </>
           )}
 

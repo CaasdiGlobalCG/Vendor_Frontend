@@ -3512,8 +3512,8 @@ const edgeTypes = {
           )} */}
         </ReactFlow>
         
-        {/* Read-only overlay when user doesn't have edit permissions */}
-        {!canEdit && (
+        {/* Read-only overlay when user doesn't have edit permissions - but NOT for clients */}
+        {!canEdit && userRole !== 'client' && (
           <div className="absolute inset-0 bg-black bg-opacity-5 pointer-events-none z-10 flex items-center justify-center">
             <div className="bg-white rounded-lg shadow-lg p-4 border border-gray-200 pointer-events-auto">
               <div className="flex items-center space-x-3">
@@ -3529,6 +3529,14 @@ const edgeTypes = {
                 </div>
               </div>
             </div>
+          </div>
+        )}
+        
+        {/* Subtle read-only indicator for clients - they can view but not edit */}
+        {!canEdit && userRole === 'client' && (
+          <div className="absolute top-4 right-4 z-10 bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 flex items-center space-x-2 text-xs text-gray-600">
+            <Eye className="w-3 h-3" />
+            <span>View only</span>
           </div>
         )}
       </div>
