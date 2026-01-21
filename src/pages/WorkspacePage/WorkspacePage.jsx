@@ -1134,6 +1134,14 @@ const WorkspacePage = () => {
     // Update selected task to reflect new subtask
     const updatedSelectedTask = updatedTasks.find(task => task.id === selectedTask.id);
     setSelectedTask(updatedSelectedTask);
+    
+    // CRITICAL: Select the newly created subtask so canvas shows empty data
+    // This prevents elements from being copied from the previous subtask
+    setSelectedSubtask(result.subtask);
+    console.log('✨ WorkspacePage: Auto-selected new subtask', {
+      subtaskId: result.subtask.id,
+      subtaskName: result.subtask.name
+    });
       
       // Refresh workspace data
       const updatedWorkspace = result.workspace;

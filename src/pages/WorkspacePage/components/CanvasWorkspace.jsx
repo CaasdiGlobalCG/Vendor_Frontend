@@ -467,8 +467,14 @@ const edgeTypes = {
       zoomLevel: newCanvasData.zoomLevel
     });
     
-    setNodes(newCanvasData.nodes);
-    setEdges(newCanvasData.edges);
+    // Directly clear and set nodes to ensure fresh data for new subtask
+    // Use setNodesRaw to bypass cleanup validation temporarily
+    if (Array.isArray(newCanvasData.nodes)) {
+      setNodesRaw(newCanvasData.nodes);
+    }
+    if (Array.isArray(newCanvasData.edges)) {
+      setEdges(newCanvasData.edges);
+    }
     updateZoomLevel(newCanvasData.zoomLevel);
     
     // Update last added node reference to the most recently added node (last in array)
