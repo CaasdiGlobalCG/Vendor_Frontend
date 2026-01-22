@@ -201,9 +201,6 @@ function SignUp() {
         pendingVerification: true
       };
       
-      // Store user data in localStorage for persistence
-      localStorage.setItem('currentUser', JSON.stringify(userData));
-      
       // Update the context with the user data
       setContextUser(userData);
       

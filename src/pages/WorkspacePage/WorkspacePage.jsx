@@ -43,17 +43,11 @@ const WorkspacePage = () => {
   
   // Check localStorage for PM user data (from PM dashboard)
   const storedPmUser = localStorage.getItem('pmUser');
-  const storedCurrentUser = localStorage.getItem('currentUser');
   let pmUserFromStorage = null;
   
   try {
     if (storedPmUser) {
       pmUserFromStorage = JSON.parse(storedPmUser);
-    } else if (storedCurrentUser) {
-      const parsedUser = JSON.parse(storedCurrentUser);
-      if (parsedUser.role === 'pm' || parsedUser.accessedFrom === 'pm-dashboard') {
-        pmUserFromStorage = parsedUser;
-      }
     }
   } catch (e) {
     console.error('Error parsing stored user data:', e);

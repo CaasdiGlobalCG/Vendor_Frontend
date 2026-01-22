@@ -6,6 +6,7 @@ import DateYearFunction from "./DateYearFunction";
 import { VendorContext } from "../../context/VendorContext";
 import { NotificationContext } from "../../context/NotificationContext";
 import config from '../../config/env';
+import { redirectToClientWithHandoff } from '../../utils/handoffToClient';
 import GlobalSearchOverlay from "./GlobalSearchOverlay";
 /**
  * Header
@@ -58,31 +59,17 @@ export const Header = () => {
     };
   }, [notificationDropdownRef]);
   
-  // Extract email and role from URL parameters
+  // Extract email and role from URL parameters (legacy). Do not trust these for identity.
   const urlParams = new URLSearchParams(location.search);
   const emailFromUrl = urlParams.get('email');
   const roleFromUrl = urlParams.get('role');
-  
-  // Effect to set user from URL parameters if available
+
+  // Legacy cleanup: strip query params but never set identity from them.
   useEffect(() => {
-    if (emailFromUrl && (!currentUser || currentUser.email !== emailFromUrl)) {
-      console.log("Header: Setting user from URL parameters:", { email: emailFromUrl, role: roleFromUrl });
-      
-      // Create a new user object from URL parameters
-      const newUser = {
-        email: emailFromUrl, // Use email as the primary identifier
-        role: roleFromUrl || 'vendor'
-      };
-      
-      // Set the new user in context
-      setUser(newUser);
-      
-      // Clean up the URL by removing the parameters
-      if (location.pathname === '/VendorDashboard') {
-        navigate('/VendorDashboard', { replace: true });
-      }
+    if (emailFromUrl || roleFromUrl) {
+      navigate(location.pathname, { replace: true });
     }
-  }, [emailFromUrl, roleFromUrl, currentUser, setUser, navigate, location.pathname]);
+  }, [emailFromUrl, roleFromUrl, navigate, location.pathname]);
   
   // Only log on first render, not on every update
   React.useEffect(() => {
@@ -120,35 +107,29 @@ export const Header = () => {
         return;
       }
       try {
-        const userEmail = currentUser?.email;
-        if (!userEmail) {
-          console.log("Header: No user email available to fetch vendor data");
+        const authToken = localStorage.getItem('authToken');
+        if (!authToken) {
+          console.log("Header: Missing authToken");
           return;
         }
-        console.log("Header: Fetching vendor data for email:", userEmail);
-        const emailResponse = await fetch(`${config.VENDOR_BACKEND_URL}/api/vendor/vendor-by-email?email=${encodeURIComponent(userEmail)}`);
-        if (!emailResponse.ok) {
-          throw new Error(`Server responded with status: ${emailResponse.status}`);
+
+        console.log("Header: Fetching vendor data (secure /me)");
+        const meResponse = await fetch(`${config.VENDOR_BACKEND_URL}/api/vendor/me`, {
+          headers: { Authorization: `Bearer ${authToken}` }
+        });
+        if (!meResponse.ok) {
+          throw new Error(`Server responded with status: ${meResponse.status}`);
         }
-        const emailData = await emailResponse.json();
-        console.log("Header: Email lookup response:", emailData);
-        if (emailData.success && emailData.data) {
-          const vendorId = emailData.data.vendorId || emailData.data.id;
-          console.log("Header: Found vendorId:", vendorId);
-          if (!vendorId) {
-            console.log("Header: No vendorId found in the response");
-            return;
-          }
-          const detailResponse = await fetch(`${config.VENDOR_BACKEND_URL}/api/vendor/vendor/${vendorId}`);
-          if (!detailResponse.ok) {
-            throw new Error(`Server responded with status: ${detailResponse.status}`);
-          }
-          const vendorDetail = await detailResponse.json();
-          console.log("Header: Vendor detail response:", vendorDetail);
+        const meData = await meResponse.json();
+        console.log("Header: /me response:", meData);
+        if (meData.success && meData.data) {
+          const vendorDetail = meData.data;
+          const vendorId = vendorDetail.vendorId || vendorDetail.id;
           if (vendorDetail) {
             const vd = vendorDetail.vendorDetails || {};
 
             setVendorData({
+              vendorId: vendorId,
               vendorDetails: vd,
               companyDetails: vendorDetail.companyDetails || {},
               serviceProductDetails: vendorDetail.serviceProductDetails || {},
@@ -178,7 +159,7 @@ export const Header = () => {
             console.log("Header: No vendor details found in response");
           }
         } else {
-          console.log("Header: No vendor found with email:", userEmail);
+          console.log("Header: No vendor found for current user");
         }
       } catch (error) {
         console.error('Header: Error fetching vendor info:', error);
@@ -727,14 +708,13 @@ export const Header = () => {
                  </button>
                  <button 
                    onClick={() => {
-                     // Check if user is logged in
-                     const userFromStorage = localStorage.getItem('currentUser');
-                     if (currentUser || userFromStorage) {
+                     // Do not rely on localStorage-stored identity
+                     const hasAuthToken = Boolean(localStorage.getItem('authToken'));
+                     if (currentUser || hasAuthToken) {
                        console.log("Header Mobile: User found, navigating to profile");
                        navigate('/userproduct');
                      } else {
-                       console.log("Header Mobile: No user found in localStorage or context");
-                       // Navigate to login if no user found
+                       console.log("Header Mobile: No authenticated user found");
                        navigate('/login');
                      }
                    }}
@@ -804,14 +784,13 @@ export const Header = () => {
              </button>
              <button 
                onClick={() => {
-                 // Check if user is logged in
-                 const userFromStorage = localStorage.getItem('currentUser');
-                 if (currentUser || userFromStorage) {
+                 // Do not rely on localStorage-stored identity
+                 const hasAuthToken = Boolean(localStorage.getItem('authToken'));
+                 if (currentUser || hasAuthToken) {
                    console.log("Header: User found, navigating to profile");
                    navigate('/userproduct');
                  } else {
-                   console.log("Header: No user found in localStorage or context");
-                   // Navigate to login if no user found
+                   console.log("Header: No authenticated user found");
                    navigate('/login');
                  }
                }}
@@ -845,7 +824,7 @@ export const Header = () => {
           {/* Updated Desktop Toggle */}
           <div
              className={`w-[59px] h-[23px] rounded-[17px] cursor-pointer relative ${isVendor ? 'bg-gradient-to-r from-teal-400 to-[#423e3e]' : 'bg-gradient-to-r from-[#423e3e] to-[#efcf4e]'}`}
-             onClick={() => {
+             onClick={async () => {
                const next = !isVendor;
                setIsVendor(next);
                if (!next) {
@@ -870,13 +849,13 @@ export const Header = () => {
                    console.warn('Header Toggle: Error clearing client localStorage:', e);
                  }
                  
-                 const authToken = localStorage.getItem('authToken');
-                 const email = (currentUser?.email) || localStorage.getItem('email');
-                 const qp = new URLSearchParams();
-                 if (authToken) qp.set('authToken', authToken);
-                 if (email) qp.set('email', email);
-                 qp.set('role', 'client');
-                 window.location.href = `${clientBase}/?${qp.toString()}`;
+                 try {
+                   await redirectToClientWithHandoff();
+                 } catch (e) {
+                   console.error('Header Toggle: handoff redirect failed:', e);
+                   alert('Unable to switch to client right now. Please try again.');
+                   window.location.assign(`${clientBase}/`);
+                 }
                }
              }}
              role="button" aria-label="Toggle Vendor/Client mode" tabIndex={0}
@@ -918,13 +897,11 @@ export const Header = () => {
                 className="w-auto px-3 h-[36px] bg-white bg-opacity-5 hover:bg-opacity-10 rounded-[9px] flex items-center justify-center text-white text-xs lg:text-sm font-semibold font-['Montserrat']"
                 onClick={() => {
                   const authToken = localStorage.getItem('authToken');
-                  const currentUserParsed = localStorage.getItem('currentUser') ? JSON.parse(localStorage.getItem('currentUser')) : null;
-                  const vendorId = currentUser?.vendorId || currentUserParsed?.vendorId || null;
+                  const vendorId = currentUser?.vendorId || vendorData?.vendorId || null;
                   
                   console.log("B2B Button Clicked:");
                   console.log("  authToken from localStorage:", authToken);
                   console.log("  currentUser object from context:", currentUser);
-                  console.log("  currentUserParsed from localStorage:", currentUserParsed);
                   console.log("  Calculated vendorId:", vendorId);
                   console.log("  SALES_URL from config:", config.SALES_URL);
                   console.log("  Type of SALES_URL:", typeof config.SALES_URL);

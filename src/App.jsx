@@ -242,30 +242,24 @@ function RoleGuard({ children }) {
 // Guard to ensure vendor has completed onboarding; otherwise send to Form1/Auditorapprove
 function VendorGuard({ children }) {
   const navigate = useNavigate();
+  const { currentUser, isHydratingUser } = useContext(VendorContext);
   useEffect(() => {
-    const checkVendorStatus = async () => {
-      try {
-        const email = localStorage.getItem('email');
-        if (!email) return;
-        const res = await fetch(`/api/vendor/user-status?email=${encodeURIComponent(email)}`);
-        if (!res.ok) return;
-        const data = await res.json();
-        const hasFilledForm = data?.data?.hasFilledForm === true;
-        const status = (data?.data?.status || '').toLowerCase();
-        if (!hasFilledForm) {
-          try {
-            await fetch(`/api/vendor/create-user`, {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ email }),
-            });
-          } catch {}
-          return navigate('/Form1', { replace: true });
-        }
-        if (status !== 'approved') return navigate('/Auditorapprove', { replace: true });
-      } catch {}
-    };
-    checkVendorStatus();
-  }, [navigate]);
+    // Avoid redirecting during hydration; otherwise users can briefly land on dashboard
+    // and then get sent to Form1 due to an intermediate/unknown hasFilledForm state.
+    if (isHydratingUser) return;
+
+    // Only redirect when we have a resolved user AND a resolved hasFilledForm boolean.
+    const hasFilledFormRaw = currentUser?.hasFilledForm;
+    if (typeof hasFilledFormRaw !== 'boolean') return;
+
+    const status = (currentUser?.status || '').toLowerCase();
+    if (hasFilledFormRaw === false) {
+      navigate('/Form1', { replace: true });
+      return;
+    }
+    if (status && status !== 'approved') {
+      navigate('/Auditorapprove', { replace: true });
+    }
+  }, [navigate, currentUser, isHydratingUser]);
   return children;
 }

@@ -95,7 +95,7 @@ export const VendorDashboard = () => {
   const location = useLocation();
   const navigate = useNavigate();
   
-  // Extract email and role from URL parameters
+  // Extract email/role from URL parameters (legacy). Do not trust these for identity.
   const urlParams = new URLSearchParams(location.search);
   const emailFromUrl = urlParams.get('email');
   const roleFromUrl = urlParams.get('role');
@@ -133,28 +133,12 @@ export const VendorDashboard = () => {
     checkPasskeyStatus();
   }, [currentUser?.email]);
   
-  // Effect to set user from URL parameters if available
+  // Legacy cleanup: strip query params but never set identity from them.
   useEffect(() => {
-    if (emailFromUrl && (!currentUser || currentUser.email !== emailFromUrl)) {
-      console.log("VendorDashboard: Setting user from URL parameters:", { email: emailFromUrl, role: roleFromUrl });
-      
-      // Create a new user object from URL parameters
-      const newUser = {
-        email: emailFromUrl, // Use email as the primary identifier
-        role: roleFromUrl || 'vendor'
-      };
-      
-      // Set the new user in context
-      setUser(newUser);
-      
-      // Clean up the URL by removing the parameters
+    if (emailFromUrl || roleFromUrl) {
       navigate('/VendorDashboard', { replace: true });
-      
-      // Reset fetch states when user changes
-      setVendorInfoFetched(false);
-      setProjectsFetched(false);
     }
-  }, [emailFromUrl, roleFromUrl, currentUser, setUser, navigate]);
+  }, [emailFromUrl, roleFromUrl, navigate]);
   
   // Effect to fetch vendor data when currentUser changes
   useEffect(() => {
@@ -173,38 +157,29 @@ export const VendorDashboard = () => {
           return;
         }
         
-        console.log("VendorDashboard: Fetching vendor data for email:", userEmail);
-        
-        // First, get the vendor by email to find the correct vendorId
-        const emailResponse = await fetch(`${config.VENDOR_BACKEND_URL}/api/vendor/vendor-by-email?email=${encodeURIComponent(userEmail)}`);
-        
-        if (!emailResponse.ok) {
-          throw new Error(`Server responded with status: ${emailResponse.status}`);
+        console.log("VendorDashboard: Fetching vendor data (secure /me) for:", userEmail);
+
+        const authToken = localStorage.getItem('authToken');
+        if (!authToken) {
+          console.log("VendorDashboard: Missing authToken");
+          return;
         }
-        
-        const emailData = await emailResponse.json();
-        console.log("VendorDashboard: Email lookup response:", emailData);
-        
-        if (emailData.success && emailData.data) {
-          // Get the vendorId from the response
-          const vendorId = emailData.data.vendorId || emailData.data.id;
-          console.log("VendorDashboard: Found vendorId:", vendorId);
-          
-          if (!vendorId) {
-            console.log("VendorDashboard: No vendorId found in the response");
-            return;
-          }
-          
-          // Now fetch the complete vendor data using the vendorId
-          const detailResponse = await fetch(`${config.VENDOR_BACKEND_URL}/api/vendor/vendor/${vendorId}`);
-          
-          if (!detailResponse.ok) {
-            throw new Error(`Server responded with status: ${detailResponse.status}`);
-          }
-          
-          const vendorDetail = await detailResponse.json();
-          console.log("VendorDashboard: Vendor detail response:", vendorDetail);
-          
+
+        const meResponse = await fetch(`${config.VENDOR_BACKEND_URL}/api/vendor/me`, {
+          headers: { Authorization: `Bearer ${authToken}` }
+        });
+
+        if (!meResponse.ok) {
+          throw new Error(`Server responded with status: ${meResponse.status}`);
+        }
+
+        const meData = await meResponse.json();
+        console.log("VendorDashboard: /me response:", meData);
+
+        if (meData.success && meData.data) {
+          const vendorDetail = meData.data;
+          const vendorId = vendorDetail.vendorId || vendorDetail.id;
+
           if (vendorDetail) {
             // Update the vendor data in context with all fields
             setVendorData({
@@ -233,7 +208,7 @@ export const VendorDashboard = () => {
             console.log("VendorDashboard: No vendor details found in response");
           }
         } else {
-          console.log("VendorDashboard: No vendor found with email:", userEmail);
+          console.log("VendorDashboard: No vendor found for current user");
         }
       } catch (error) {
         console.error('VendorDashboard: Error fetching vendor info:', error);

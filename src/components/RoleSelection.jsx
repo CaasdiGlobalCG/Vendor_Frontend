@@ -8,10 +8,9 @@ function RoleSelection() {
   const navigate = useNavigate();
   const location = useLocation();
 
-  // Extract email and googleId from URL params or state
+  // Extract email from URL params or state (googleId no longer required)
   const queryParams = new URLSearchParams(location.search);
   const email = queryParams.get("email") || location.state?.email;
-  const googleId = queryParams.get("googleId") || location.state?.googleId;
 
   // Check authentication status on page load
   useEffect(() => {
@@ -21,14 +20,17 @@ function RoleSelection() {
         console.log("Authenticated user:", user);
         const session = await Auth.currentSession();
         console.log("Current session:", session);
+        const idToken = session.getIdToken().getJwtToken();
         const response = await fetch(`/api/auth/verify`, {
-          credentials: "include",
+          headers: { Authorization: `Bearer ${idToken}` },
         });
         const data = await response.json();
         console.log("Verify response:", data);
-        if (data.role) {
-          if (data.role === "vendor") navigate("/Form1", { replace: true });
-          else if (data.role === "client") navigate("/client-page", { replace: true });
+        const selectedRole = (data?.lastSelectedRole || data?.role || '').toLowerCase();
+        const roleSelected = data?.roleSelected === true;
+        if (roleSelected && selectedRole) {
+          if (selectedRole === "vendor") navigate("/Form1", { replace: true });
+          else if (selectedRole === "client") navigate("/client-page", { replace: true });
         }
       } catch (error) {
         console.error("Authentication failed:", error);

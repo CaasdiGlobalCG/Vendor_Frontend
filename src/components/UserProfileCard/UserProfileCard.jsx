@@ -31,7 +31,7 @@ export default function UserProfileCard({
   
   // Get user data from both contexts
   const { currentUser, setCurrentUser } = useContext(UserContext);
-  const { currentUser: vendorUser } = useContext(VendorContext);
+  const { currentUser: vendorUser, hydrateCurrentUser, isHydratingUser } = useContext(VendorContext);
   
   const vendorId = propVendorId || currentUser?.vendorId || vendorUser?.vendorId;
   const userEmail = currentUser?.email || vendorUser?.email;
@@ -60,7 +60,7 @@ export default function UserProfileCard({
     console.log("UserProfileCard - Using email:", userEmail);
   }, [propVendorId, currentUser, vendorUser, vendorId, userEmail]);
 
-  // Initial attempt to load current user if none exists
+  // Initial attempt to hydrate user from backend if none exists
   useEffect(() => {
     const attemptUserRecovery = async () => {
       // Skip if we already have a current user with email in either context
@@ -70,21 +70,13 @@ export default function UserProfileCard({
         return;
       }
 
-      console.log("UserProfileCard - Attempting to recover user from localStorage");
+      // Do not recover identity from localStorage; hydrate from backend
       try {
-        // Try to get user from localStorage
-        const savedUser = localStorage.getItem('currentUser');
-        if (savedUser) {
-          const parsedUser = JSON.parse(savedUser);
-          console.log("UserProfileCard - Recovered user from localStorage:", parsedUser);
-          if (parsedUser && parsedUser.email) {
-            setCurrentUser(parsedUser);
-          }
-        } else {
-          console.log("UserProfileCard - No user found in localStorage");
+        if (typeof hydrateCurrentUser === 'function') {
+          await hydrateCurrentUser();
         }
       } catch (error) {
-        console.error("UserProfileCard - Error recovering user:", error);
+        console.error("UserProfileCard - Error hydrating user:", error);
       }
     };
     
@@ -108,29 +100,15 @@ export default function UserProfileCard({
       if (vendorId) {
         console.log("UserProfileCard - Using vendorId for fetch method:", vendorId);
         setFetchMethod('id');
-      } 
-      // Otherwise if we have an email, use that
-      else if (userEmail) {
-        console.log("UserProfileCard - Using email for fetch method:", userEmail);
-        setFetchMethod('email');
+      }
+      // Otherwise, use secure /me if we have a token
+      else if (localStorage.getItem('authToken')) {
+        setFetchMethod('me');
       }
       // In case neither is available, try one more recovery attempt
       else {
-        console.log("UserProfileCard - No user identifier available after delay, checking localStorage again");
-        try {
-          const savedUser = localStorage.getItem('currentUser');
-          if (savedUser) {
-            const parsedUser = JSON.parse(savedUser);
-            if (parsedUser?.email) {
-              console.log("UserProfileCard - Found email in localStorage, using for fetch:", parsedUser.email);
-              setFetchMethod('email');
-            } else if (parsedUser?.vendorId) {
-              console.log("UserProfileCard - Found vendorId in localStorage, using for fetch:", parsedUser.vendorId);
-              setFetchMethod('id');
-            }
-          }
-        } catch (error) {
-          console.error("UserProfileCard - Error in final recovery attempt:", error);
+        console.log("UserProfileCard - No user identifier available after delay");
+        if (!isHydratingUser) {
           setInternalError("Failed to identify user. Please try logging in again.");
         }
       }
@@ -139,66 +117,7 @@ export default function UserProfileCard({
     return () => clearTimeout(timer);
   }, [vendorId, userEmail, delayedFetchStarted, fetchMethod]);
 
-  // Step 1: Try to get vendorId if we don't have one but have email
-  useEffect(() => {
-    const getVendorIdFromEmail = async () => {
-      // Skip if we already have vendorId or don't have email or have already attempted this fetch
-      if (vendorId || !userEmail || fetchMethod !== 'email' || attemptedVendorIdFetch) {
-        return;
-      }
-      
-      try {
-        console.log("UserProfileCard - Attempting to get vendorId from email:", userEmail);
-        setInternalLoading(true);
-        setAttemptedVendorIdFetch(true);
-        
-        // First, get the vendor by email to find the correct vendorId
-        const response = await fetch(`${config.VENDOR_BACKEND_URL}/api/vendor/vendor-by-email?email=${encodeURIComponent(userEmail)}`);
-        
-        if (!response.ok) {
-          throw new Error(`Server responded with status: ${response.status}`);
-        }
-        
-        const data = await response.json();
-        console.log("UserProfileCard - Email lookup response:", data);
-        
-        if (data.success && data.data) {
-          // Get the vendorId from the response
-          const foundVendorId = data.data.vendorId || data.data.id || data.data._id;
-          console.log("UserProfileCard - Found vendorId from email:", foundVendorId);
-          
-          if (foundVendorId) {
-            // Update the currentUser with the found vendorId
-            const updatedUser = {
-              ...currentUser,
-              vendorId: foundVendorId
-            };
-            setCurrentUser(updatedUser);
-            
-            // Also update localStorage
-            localStorage.setItem('currentUser', JSON.stringify(updatedUser));
-            
-            console.log("UserProfileCard - Updated currentUser with vendorId:", foundVendorId);
-            
-            // Set fetch method to 'id' to trigger the next fetch with the found ID
-            setFetchMethod('id');
-          } else {
-            // Keep email-based fetch
-            console.log("UserProfileCard - No vendorId found in response, using email directly");
-          }
-        }
-        
-        setInternalLoading(false);
-      } catch (error) {
-        console.error('UserProfileCard - Error getting vendorId from email:', error);
-        setInternalLoading(false);
-      }
-    };
-    
-    getVendorIdFromEmail();
-  }, [userEmail, vendorId, currentUser, setCurrentUser, fetchMethod, attemptedVendorIdFetch]);
-
-  // Step 2: Fetch vendor data using either vendorId or email
+  // Fetch vendor data
   useEffect(() => {
     // Skip if we have external data or have already attempted to fetch
     if (externalProfileData || fetchAttempted) {
@@ -215,10 +134,9 @@ export default function UserProfileCard({
       console.log("UserProfileCard - Fetch method is 'id' but no vendorId available, waiting...");
       return;
     }
-    
-    // Skip if using 'email' method but don't have an email
-    if (fetchMethod === 'email' && !userEmail) {
-      console.log("UserProfileCard - Fetch method is 'email' but no email available, waiting...");
+
+    if (fetchMethod === 'me' && !localStorage.getItem('authToken')) {
+      console.log("UserProfileCard - Fetch method is 'me' but no authToken available, waiting...");
       return;
     }
     
@@ -227,47 +145,34 @@ export default function UserProfileCard({
         setInternalLoading(true);
         setFetchAttempted(true);
         
-        let url;
+        const authToken = localStorage.getItem('authToken');
+
+        let response;
         if (fetchMethod === 'id') {
-          url = `${config.VENDOR_BACKEND_URL}/api/vendor/vendor/${vendorId}`;
           console.log("UserProfileCard - Fetching data by vendorId:", vendorId);
+          response = await fetch(`${config.VENDOR_BACKEND_URL}/api/vendor/vendor/${vendorId}`);
         } else {
-          url = `${config.VENDOR_BACKEND_URL}/api/vendor/vendors?email=${encodeURIComponent(userEmail)}`;
-          console.log("UserProfileCard - Fetching data by email:", userEmail);
+          console.log("UserProfileCard - Fetching data via secure /me");
+          response = await fetch(`${config.VENDOR_BACKEND_URL}/api/vendor/me`, {
+            headers: { Authorization: `Bearer ${authToken}` }
+          });
         }
-        
-        const response = await fetch(url);
         
         if (!response.ok) {
           throw new Error(`Server responded with status: ${response.status}`);
         }
         
-        let vendorDetail;
-        if (fetchMethod === 'id') {
-          const data = await response.json();
-          console.log("UserProfileCard - Vendor detail response by ID:", data);
-          vendorDetail = data.data || data;
-        } else {
-          const data = await response.json();
-          console.log("UserProfileCard - Vendor detail response by email:", data);
-          vendorDetail = data.success && data.data && data.data.length > 0 ? data.data[0] : null;
-        }
+        const data = await response.json();
+        const vendorDetail = fetchMethod === 'id' ? (data.data || data) : (data.data || null);
         
         if (vendorDetail) {
-          // If we fetched by email and found a vendorId, update the user context
-          if (fetchMethod === 'email' && currentUser && !currentUser.vendorId && (vendorDetail.id || vendorDetail._id || vendorDetail.vendorId)) {
+          // If we fetched via /me and found a vendorId, update the user context in-memory
+          if (fetchMethod === 'me' && currentUser && !currentUser.vendorId && (vendorDetail.id || vendorDetail._id || vendorDetail.vendorId)) {
             const foundVendorId = vendorDetail.vendorId || vendorDetail.id || vendorDetail._id;
-            const updatedUser = {
+            setCurrentUser({
               ...currentUser,
               vendorId: foundVendorId
-            };
-            
-            setCurrentUser(updatedUser);
-            
-            // Also update localStorage
-            localStorage.setItem('currentUser', JSON.stringify(updatedUser));
-            
-            console.log("UserProfileCard - Updated currentUser with vendorId from email fetch:", foundVendorId);
+            });
           }
           
           // Format the data for the profile card

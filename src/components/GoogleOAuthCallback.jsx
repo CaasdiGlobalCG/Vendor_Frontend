@@ -2,6 +2,7 @@ import React, { useEffect, useState, useContext } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { VendorContext } from '../context/VendorContext';
 import config from '../config/env';
+import { redirectToClientWithHandoff } from '../utils/handoffToClient';
 
 /**
  * GoogleOAuthCallback
@@ -29,122 +30,69 @@ export default function GoogleOAuthCallback() {
     // Parse query parameters from the OAuth callback URL
     const params = new URLSearchParams(location.search);
     const token = params.get('token');
-    const email = params.get('email');
-    const status = params.get('status');
-    const filledFormParam = params.get('filledForm');
-    const filledForm = filledFormParam === 'true';
-    const role = params.get('role');
 
-    // Email is the minimum required identifier to proceed
-    if (!email) {
-      setError('No email found in URL');
-      return;
-    }
-
-    // Seed context early with basic user data; enriched later from backend
-    const userData = {
-      id: email,
-      email: email,
-      name: email.split('@')[0]
-    };
-    setContextUser(userData);
-
-    // Resolve user existence + status, then route accordingly
-    const checkUserStatus = async () => {
+    // Resolve identity securely from backend (JWT/session); do not trust URL email/status.
+    const seedFromBackend = async () => {
       try {
-        console.log("GoogleOAuthCallback - Processing with email:", email);
+        const res = await fetch(`${config.VENDOR_BACKEND_URL}/api/vendor/me`, {
+          credentials: 'include',
+          headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+        });
 
-        // Ensure user exists (safe to repeat). This supports first-time logins.
-        try {
-          const createResponse = await fetch(`${config.VENDOR_BACKEND_URL}/api/vendor/create-user`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              email: email,
-              name: email.split('@')[0],
-              status: 'pending',
-              hasFilledForm: false,
-              role: 'vendor'
-            }),
-          });
-          const createData = await createResponse.json();
-          console.log("GoogleOAuthCallback - Create/check user response:", createData);
-        } catch (createError) {
-          // Non-fatal; user may already exist
-          console.error("GoogleOAuthCallback - Error creating/checking user:", createError);
+        if (!res.ok) {
+          throw new Error(`Failed to resolve current vendor: ${res.status}`);
         }
 
-        // Query consolidated status endpoint to decide routing and context enrichment
-        const response = await fetch(`${config.VENDOR_BACKEND_URL}/api/vendor/user-status?email=${encodeURIComponent(email)}`);
-        const data = await response.json();
-        console.log("User status data in GoogleOAuthCallback:", data);
+        const me = await res.json();
+        const v = me?.data;
+        const email = v?.email || v?.vendorDetails?.primaryContactEmail;
+        const name = v?.name || v?.vendorDetails?.primaryContactName || (email ? email.split('@')[0] : null);
+        const status = v?.status;
+        const hasFilledForm = v?.hasFilledForm === true;
+        const role = (v?.role || 'vendor').toLowerCase();
 
-        if (data.success) {
-          const userData = data.data;
-          const currentStatus = userData.status;
-          const hasFilledForm = userData.hasFilledForm;
+        setContextUser({
+          id: v?.id || v?._id || email,
+          email,
+          name,
+          status,
+          hasFilledForm,
+          role,
+        });
 
-          // Enrich context with authoritative backend-sourced fields
-          setContextUser({
-            id: userData.id || email,
-            email: email,
-            name: userData.name || email.split('@')[0],
-            status: currentStatus,
-            hasFilledForm: hasFilledForm,
-            role: userData.role || role
+        if (role === 'client') {
+          const clientBase = config.CLIENT_URL;
+          if (!clientBase) {
+            setError('Client dashboard URL is not configured. Please contact support.');
+            return;
+          }
+
+          redirectToClientWithHandoff().catch((e) => {
+            console.error('GoogleOAuthCallback: handoff redirect failed:', e);
+            window.location.assign(`${clientBase}/`);
           });
+          return;
+        }
 
-          // Decide effective role: backend value takes precedence over URL param
-          const effectiveRole = userData.role || role;
-          if (!effectiveRole) {
-            navigate(`/role-selection?email=${encodeURIComponent(email)}`, { replace: true });
-            return;
-          }
-
-          // Client persona: hand off to client dashboard with query params
-          if (effectiveRole === 'client') {
-            const authToken = localStorage.getItem('authToken');
-            const clientBase = config.CLIENT_URL;
-            
-            if (!clientBase) {
-              console.error('CLIENT_URL is not configured');
-              setError('Client dashboard URL is not configured. Please contact support.');
-              return;
-            }
-            
-            const qp = new URLSearchParams();
-            if (authToken) qp.set('authToken', authToken);
-            qp.set('email', email);
-            qp.set('role', 'client');
-            window.location.href = `${clientBase}/?${qp.toString()}`;
-            return;
-          }
-
-          // Vendor persona: route by approval status and onboarding progress
-          if (currentStatus === 'approved') {
-            navigate("/VendorDashboard", { state: { role: 'vendor', email }, replace: true });
-          } else if (currentStatus === 'rejected') {
-            alert("Your vendor application has been rejected. Please contact support.");
-            navigate("/Form1", { state: { role: 'vendor', email }, replace: true });
-          } else if (currentStatus === 'pending' && hasFilledForm) {
-            navigate("/Auditorapprove", { state: { role: 'vendor', email }, replace: true });
-          } else {
-            navigate("/Form1", { state: { role: 'vendor', email }, replace: true });
-          }
+        if (String(status).toLowerCase() === 'approved') {
+          navigate('/VendorDashboard', { replace: true });
+        } else if (String(status).toLowerCase() === 'rejected') {
+          alert('Your vendor application has been rejected. Please contact support.');
+          navigate('/Form1', { replace: true });
+        } else if (String(status).toLowerCase() === 'pending' && hasFilledForm) {
+          navigate('/Auditorapprove', { replace: true });
         } else {
-          // Unknown user in backend: collect missing role via selection screen
-          navigate(`/role-selection?email=${encodeURIComponent(email)}`, { replace: true });
+          navigate('/Form1', { replace: true });
         }
       } catch (err) {
-        console.error("Error checking user status:", err);
-        setError('Error checking user status');
-
-        // Network/backend failure: fallback to role selection to unblock user
-        navigate(`/role-selection?email=${encodeURIComponent(email)}`, { replace: true });
+        console.error('GoogleOAuthCallback error:', err);
+        setError('Error verifying Google login');
+        navigate('/role-selection', { replace: true });
       }
     };
 
-    checkUserStatus();
+    seedFromBackend();
+
   }, [location.search, navigate, setContextUser]);
 
   if (error) {

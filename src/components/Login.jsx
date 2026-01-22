@@ -14,6 +14,7 @@ import background from "../assets/loginbackground.png";
 import { Eye, EyeOff } from "lucide-react";
 import config from '../config/env';
 import PasskeyMFAVerification from './PasskeyMFAVerification';
+import { redirectToClientWithHandoff } from '../utils/handoffToClient';
 const carouselItems = [
   {
     title: "Stay in Control",
@@ -61,7 +62,7 @@ function Login() {
   const navigate = useNavigate();
   const location = useLocation();
   const { role, email: emailFromState, from } = location.state || {};
-  const { setUser: setVendorContextUser, logout } = useContext(VendorContext);
+  const { setUser: setVendorContextUser, hydrateCurrentUser, logout } = useContext(VendorContext);
   const { setCurrentUser } = useContext(UserContext);
 
   // Carousel auto-rotation effect
@@ -77,32 +78,22 @@ function Login() {
   useEffect(() => {
     const queryParams = new URLSearchParams(location.search);
     const authTokenParam = queryParams.get('authToken');
-    const vendorIdParam = queryParams.get('vendorId');
-    const emailParam = queryParams.get('email');
     const statusParam = queryParams.get('status');
     const roleParam = queryParams.get('role');
     const filledFormParam = queryParams.get('filledForm');
 
-    console.log('Login.jsx (VendorDashboard): URL Params - authTokenParam:', authTokenParam ? 'Exists' : 'Does NOT exist', 'vendorIdParam:', vendorIdParam ? 'Exists' : 'Does NOT exist', 'emailParam:', emailParam ? 'Exists' : 'Does NOT exist');
+    console.log('Login.jsx (VendorDashboard): URL Params - authTokenParam:', authTokenParam ? 'Exists' : 'Does NOT exist');
 
     if (authTokenParam) {
       localStorage.setItem('authToken', authTokenParam);
       console.log('Login.jsx (VendorDashboard): Stored authToken from URL in localStorage.');
-    }
-    if (vendorIdParam) {
-      localStorage.setItem('vendorId', vendorIdParam);
-      console.log('Login.jsx (VendorDashboard): Stored vendorId from URL in localStorage.');
-    }
-    if (emailParam) {
-      localStorage.setItem('email', emailParam);
-      console.log('Login.jsx (VendorDashboard): Stored email from URL in localStorage.');
+      // Hydrate vendor identity from backend (do not trust vendorId/email from URL)
+      Promise.resolve(hydrateCurrentUser?.()).catch(() => {});
     }
 
-    if (authTokenParam || vendorIdParam || emailParam || statusParam || roleParam || filledFormParam) {
+    if (authTokenParam || statusParam || roleParam || filledFormParam) {
       // Optionally, remove params from URL after processing to keep it clean
       queryParams.delete('authToken');
-      queryParams.delete('vendorId');
-      queryParams.delete('email');
       queryParams.delete('status');
       queryParams.delete('role');
       queryParams.delete('filledForm');
@@ -110,20 +101,7 @@ function Login() {
     }
 
     // If a redirect was intended for the dashboard, ensure the user data is set and redirect
-    if (emailParam && statusParam) {
-      const userData = {
-        vendorId: vendorIdParam, // Use vendorId from param
-        email: emailParam,
-        status: statusParam,
-        role: roleParam,
-        hasFilledForm: filledFormParam === 'true'
-      };
-      // Removed call to undefined function setUserDataAndContexts and handleUserNavigation
-      // as per user request to remove temporary generation and streamline context updates.
-      // The logic for navigating based on status is handled in the second useEffect (Google redirect).
-    }
-
-  }, [location.search, navigate, setVendorContextUser, setCurrentUser]);
+  }, [location.search, navigate, hydrateCurrentUser, setVendorContextUser, setCurrentUser]);
 
   const handleLogin = async (e) => {
     // e.preventDefault();
@@ -206,7 +184,7 @@ function Login() {
           if (!roleSelected) {
             // Ensure we do not set any contexts before redirect
             try { localStorage.removeItem('currentUser'); } catch {}
-            navigate(`/role-selection?email=${encodeURIComponent(user.attributes.email)}`, { replace: true });
+            navigate(`/role-selection`, { replace: true });
             return;
           }
         }
@@ -214,12 +192,14 @@ function Login() {
         console.warn('Verify failed, proceeding cautiously:', verifyErr);
       }
 
-      // Fetch the vendor data to get the vendorId
+      // Fetch the vendor data (secure /me) to get the vendorId
       try {
-        const vendorResponse = await fetch(`${config.VENDOR_BACKEND_URL}/api/vendor/vendor-by-email?email=${encodeURIComponent(user.attributes.email)}`);
+        const vendorResponse = await fetch(`${config.VENDOR_BACKEND_URL}/api/vendor/me`, {
+          headers: { Authorization: `Bearer ${idToken}` }
+        });
         const vendorData = await vendorResponse.json();
         
-        console.log("Login.jsx (VendorDashboard): Response from vendor-by-email endpoint (Cognito login):", vendorData);
+        console.log("Login.jsx (VendorDashboard): Response from /api/vendor/me (Cognito login):", vendorData);
         
         let vendorId;
         if (vendorData.success && vendorData.data) { // Check if vendorData.data exists directly
@@ -236,15 +216,12 @@ function Login() {
         }
         
         const userData = {
-          vendorId: vendorId, // Add vendorId explicitly
-          email: user.attributes.email, // Email is our primary identifier
+          vendorId: vendorId,
+          email: user.attributes.email,
           name: user.attributes.name || user.username
         };
-        
-        // Store user data in localStorage for persistence
-        localStorage.setItem('currentUser', JSON.stringify(userData));
-        
-        // Update both contexts with the user data
+
+        // Do NOT store identity/profile in localStorage (prevents stale/cross-user leakage)
         setVendorContextUser(userData);
         setCurrentUser(userData);
       } catch (error) {
@@ -257,7 +234,10 @@ function Login() {
 
       // Use the new endpoint that checks both collections
       const userEmail = user.attributes.email;
-      const response = await fetch(`${config.VENDOR_BACKEND_URL}/api/vendor/user-status?email=${encodeURIComponent(userEmail)}`);
+      const response = await fetch(`${config.VENDOR_BACKEND_URL}/api/vendor/user-status`, {
+        credentials: 'include',
+        headers: { Authorization: `Bearer ${idToken}` }
+      });
       const data = await response.json();
       
       console.log("User status data from login:", data);
@@ -309,31 +289,27 @@ function Login() {
       // Otherwise, redirect based on user status
       if (data.success) {
         const userInfo = data.data;
+        const resolvedStatus = String(userInfo?.status || '').toLowerCase();
+        const resolvedHasFilledForm = userInfo?.hasFilledForm === true;
         // If role not selected, force role-selection
         try {
           const rs = localStorage.getItem('roleSelected');
           if (rs !== 'true') {
-            navigate(`/role-selection?email=${encodeURIComponent(userEmail)}`, { replace: true });
+            navigate(`/role-selection`, { replace: true });
             return;
           }
         } catch {}
-        if (userInfo.status === 'approved') {
+        if (resolvedStatus === 'approved') {
           // If approved, go directly to dashboard regardless of form completion
-          // Use URL parameters instead of state
-          const userEmail = user.attributes.email;
-          navigate(`/VendorDashboard?email=${encodeURIComponent(userEmail)}&role=${encodeURIComponent(userInfo.role || 'vendor')}`, { replace: true });
-        } else if (userInfo.status === 'rejected') {
+          navigate(`/VendorDashboard`, { replace: true });
+        } else if (resolvedStatus === 'rejected') {
           alert("Your vendor application has been rejected. Please contact support.");
-          const userEmail = user.attributes.email;
-          navigate(`/Form1?email=${encodeURIComponent(userEmail)}&role=${encodeURIComponent(userInfo.role || 'vendor')}`, { replace: true });
-        } else if (userInfo.status === 'pending' && userInfo.hasFilledForm) {
-          const userEmail = user.attributes.email;
-          navigate(`/Auditorapprove?email=${encodeURIComponent(userEmail)}&role=${encodeURIComponent(userInfo.role || 'vendor')}`, { replace: true });
+          navigate(`/Form1`, { replace: true });
+        } else if (resolvedStatus === 'pending' && resolvedHasFilledForm) {
+          navigate(`/Auditorapprove`, { replace: true });
         } else {
-          const userEmail = user.attributes.email;
           // If role is client, start client onboarding; else Form1
         if ((userInfo.role || '').toLowerCase() === 'client') {
-          const authToken = localStorage.getItem('authToken');
           const clientBase = config.CLIENT_URL || '';
           
           if (!clientBase) {
@@ -343,19 +319,18 @@ function Login() {
             setShowAlert(true);
             return;
           }
-          
-            const qp = new URLSearchParams();
-            if (authToken) qp.set('authToken', authToken);
-            qp.set('email', userEmail);
-            qp.set('role', 'client');
-            window.location.href = `${clientBase}/?${qp.toString()}`;
+
+          try { localStorage.removeItem('clientId'); } catch {}
+          redirectToClientWithHandoff().catch((e) => {
+            console.error('Login: handoff redirect failed:', e);
+            window.location.assign(`${clientBase}/`);
+          });
           } else {
-            navigate(`/Form1?email=${encodeURIComponent(userEmail)}&role=vendor`, { replace: true });
+            navigate(`/Form1`, { replace: true });
           }
         }
       } else {
-        const userEmail = user.attributes.email;
-        navigate(`/Form1?email=${encodeURIComponent(userEmail)}&role=vendor`, { replace: true });
+        navigate(`/Form1`, { replace: true });
       }
     } catch (error) {
       console.error("Error logging in:", error);
@@ -428,8 +403,7 @@ function Login() {
       name: mfaUserData.name
     };
     
-    // Store user data in localStorage
-    localStorage.setItem('currentUser', JSON.stringify(userData));
+    // Do NOT store identity/profile in localStorage (prevents stale/cross-user leakage)
     localStorage.setItem('authToken', mfaUserData.idToken);
     
     // Update contexts
@@ -437,13 +411,14 @@ function Login() {
     setCurrentUser(userData);
     
     // Redirect based on user status
-    if (mfaUserData.userStatus === 'approved') {
-      navigate(`/VendorDashboard?email=${encodeURIComponent(mfaUserData.email)}&role=${encodeURIComponent(mfaUserData.role || 'vendor')}`, { replace: true });
-    } else if (mfaUserData.userStatus === 'rejected') {
+    const mfaStatus = String(mfaUserData.userStatus || '').toLowerCase();
+    if (mfaStatus === 'approved') {
+      navigate(`/VendorDashboard`, { replace: true });
+    } else if (mfaStatus === 'rejected') {
       alert("Your vendor application has been rejected. Please contact support.");
-      navigate(`/Form1?email=${encodeURIComponent(mfaUserData.email)}&role=${encodeURIComponent(mfaUserData.role || 'vendor')}`, { replace: true });
-    } else if (mfaUserData.userStatus === 'pending' && mfaUserData.hasFilledForm) {
-      navigate(`/Auditorapprove?email=${encodeURIComponent(mfaUserData.email)}&role=${encodeURIComponent(mfaUserData.role || 'vendor')}`, { replace: true });
+      navigate(`/Form1`, { replace: true });
+    } else if (mfaStatus === 'pending' && mfaUserData.hasFilledForm) {
+      navigate(`/Auditorapprove`, { replace: true });
     } else {
       if ((mfaUserData.role || '').toLowerCase() === 'client') {
         const clientBase = config.CLIENT_URL || '';
@@ -454,13 +429,13 @@ function Login() {
           setShowAlert(true);
           return;
         }
-        const qp = new URLSearchParams();
-        if (mfaUserData.idToken) qp.set('authToken', mfaUserData.idToken);
-        qp.set('email', mfaUserData.email);
-        qp.set('role', 'client');
-        window.location.href = `${clientBase}/?${qp.toString()}`;
+        try { localStorage.removeItem('clientId'); } catch {}
+        redirectToClientWithHandoff().catch((e) => {
+          console.error('Login(MFA): handoff redirect failed:', e);
+          window.location.assign(`${clientBase}/`);
+        });
       } else {
-        navigate(`/Form1?email=${encodeURIComponent(mfaUserData.email)}&role=vendor`, { replace: true });
+        navigate(`/Form1`, { replace: true });
       }
     }
   };
@@ -553,10 +528,13 @@ function Login() {
           
           // Fetch the vendor data to get the vendorId
           try {
-            const vendorResponse = await fetch(`${config.VENDOR_BACKEND_URL}/api/vendor/vendor-by-email?email=${encodeURIComponent(email)}`);
+            // Prefer secure /me (uses session cookie or JWT)
+            const vendorResponse = await fetch(`${config.VENDOR_BACKEND_URL}/api/vendor/me`, {
+              credentials: 'include'
+            });
             const vendorData = await vendorResponse.json();
             
-            console.log("Login.jsx (VendorDashboard): Response from vendor-by-email endpoint (Google redirect):", vendorData);
+            console.log("Login.jsx (VendorDashboard): Response from /api/vendor/me (Google redirect):", vendorData);
             
             let vendorId;
             if (vendorData.success && vendorData.data) { // Check if vendorData.data exists directly
@@ -576,7 +554,7 @@ function Login() {
               const rs = localStorage.getItem('roleSelected');
               if (rs !== 'true') {
                 // Do not set contexts here; redirect to role selection
-                navigate(`/role-selection?email=${encodeURIComponent(email)}`, { replace: true });
+                navigate(`/role-selection`, { replace: true });
                 return;
               }
             } catch {}
@@ -587,9 +565,6 @@ function Login() {
               email: email, // Email is our primary identifier
               name: name,
             };
-            
-            // Store user data in localStorage for persistence
-            localStorage.setItem('currentUser', JSON.stringify(userData));
     
             // Set user in both contexts
             setVendorContextUser(userData);
@@ -615,7 +590,11 @@ function Login() {
           }
           
           // Now check the user status
-          const response = await fetch(`${config.VENDOR_BACKEND_URL}/api/vendor/user-status?email=${encodeURIComponent(email)}`);
+          const token = localStorage.getItem('authToken');
+          const response = await fetch(`${config.VENDOR_BACKEND_URL}/api/vendor/user-status`, {
+            credentials: 'include',
+            headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+          });
           const data = await response.json();
           console.log("Login - User status response:", data);
   
@@ -627,8 +606,8 @@ function Login() {
   
           if (data.success) {
             const userData = data.data;
-            const currentStatus = userData.status;
-            const hasFilledForm = userData.hasFilledForm;
+            const currentStatus = String(userData.status || '').toLowerCase();
+            const hasFilledForm = userData.hasFilledForm === true;
             // If role not selected, force role-selection
             try {
               const verifyRes = await fetch(`${config.VENDOR_BACKEND_URL}/api/auth/verify`, {
@@ -637,27 +616,25 @@ function Login() {
               if (verifyRes.ok) {
                 const verifyData = await verifyRes.json();
                 if (verifyData && verifyData.roleSelected === false) {
-                  navigate(`/role-selection?email=${encodeURIComponent(email)}`, { replace: true });
+                  navigate(`/role-selection`, { replace: true });
                   return;
                 }
               }
             } catch {}
   
             if (currentStatus === 'approved') {
-              // Use URL parameters instead of state
-              navigate(`/VendorDashboard?email=${encodeURIComponent(email)}&role=${encodeURIComponent(userData.role || 'vendor')}`, { replace: true });
+              navigate(`/VendorDashboard`, { replace: true });
             } else if (currentStatus === 'rejected') {
               setAlertMessage("Your vendor application has been rejected. Please contact support.");
               setAlertType("error");
               setShowAlert(true);
               setTimeout(() => {
-                navigate(`/Form1?email=${encodeURIComponent(email)}&role=${encodeURIComponent(userData.role || 'vendor')}`, { replace: true });
+                navigate(`/Form1`, { replace: true });
               }, 2000);
             } else if (currentStatus === 'pending' && hasFilledForm) {
-              navigate(`/Auditorapprove?email=${encodeURIComponent(email)}&role=${encodeURIComponent(userData.role || 'vendor')}`, { replace: true });
+              navigate(`/Auditorapprove`, { replace: true });
             } else {
               if ((userData.role || '').toLowerCase() === 'client') {
-                const authToken = localStorage.getItem('authToken');
                 const clientBase = config.CLIENT_URL || '';
                 
                 if (!clientBase) {
@@ -668,28 +645,18 @@ function Login() {
                   return;
                 }
                 
-                const qp = new URLSearchParams();
-                if (authToken) qp.set('authToken', authToken);
-                qp.set('email', email);
-                qp.set('role', 'client');
-                window.location.href = `${clientBase}/?${qp.toString()}`;
+                try { localStorage.removeItem('clientId'); } catch {}
+                redirectToClientWithHandoff().catch((e) => {
+                  console.error('Login: handoff redirect failed:', e);
+                  window.location.assign(`${clientBase}/`);
+                });
               } else {
-                navigate(`/Form1?email=${encodeURIComponent(email)}&role=vendor`, { replace: true });
+                navigate(`/Form1`, { replace: true });
               }
             }
           } else {
-            // fallback using URL param `status`
-            if (status === 'approved') {
-              // Use URL parameters instead of state
-              navigate(`/VendorDashboard?email=${encodeURIComponent(email)}&role=vendor`, { replace: true });
-            } else if (status === 'rejected') {
-              alert("Your vendor application has been rejected. Please contact support.");
-              navigate(`/Form1?email=${encodeURIComponent(email)}&role=vendor`, { replace: true });
-            } else if (status === 'pending' && filledFormParam) { // Use filledFormParam here
-              navigate(`/Auditorapprove?email=${encodeURIComponent(email)}&role=vendor`, { replace: true });
-            } else {
-              navigate(`/Form1?email=${encodeURIComponent(email)}&role=vendor`, { replace: true });
-            }
+            // If backend status isn't available, route to onboarding.
+            navigate(`/Form1`, { replace: true });
           }
         } catch (error) {
           console.error("Login - Error checking user status:", error);
