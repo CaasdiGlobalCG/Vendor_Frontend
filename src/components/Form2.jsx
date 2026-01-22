@@ -322,8 +322,11 @@ import { VendorContext } from "../context/VendorContext";
 import { UserContext } from "../context/UserContext";
 import { useNavigate } from "react-router-dom";
 import { uploadFileToS3, deleteFileFromS3 } from "../utils/fileUpload";
+import { validateGSTIN } from "../utils/gstinValidation";
+import { validatePAN } from "../utils/panValidation";
 import StepIndicator from "./StepIndicator";
 import SidebarContent from "./SidebarContent";
+import SearchableSelect from "./SearchableSelect";
 import { BUSINESS_TYPES, FLAT_BUSINESS_TYPES, INDUSTRY_TYPES, FLAT_INDUSTRY_TYPES } from "../constants/businessIndustryTypes";
 
 export default function Form2() {
@@ -344,6 +347,8 @@ export default function Form2() {
   });
 
   const [showSaveIndicator, setShowSaveIndicator] = useState(false);
+  const [gstinErrors, setGstinErrors] = useState({});
+  const [panErrors, setPanErrors] = useState({});
 
   useEffect(() => {
     if (currentUser) {
@@ -379,6 +384,51 @@ export default function Form2() {
       }));
       return;
     }
+
+    // GSTIN validation
+    if (name === "gstNumber") {
+      const sanitized = value.toUpperCase().trim();
+      setFormData((prevData) => ({
+        ...prevData,
+        [name]: sanitized,
+      }));
+
+      // Validate GSTIN only if it's not empty and has some content
+      if (sanitized.length > 0) {
+        const validation = validateGSTIN(sanitized);
+        if (!validation.isValid) {
+          setGstinErrors({ gstNumber: validation.error });
+        } else {
+          setGstinErrors({});
+        }
+      } else {
+        setGstinErrors({});
+      }
+      return;
+    }
+
+    // PAN validation
+    if (name === "panNumber") {
+      const sanitized = value.toUpperCase().trim();
+      setFormData((prevData) => ({
+        ...prevData,
+        [name]: sanitized,
+      }));
+
+      // Validate PAN only if it's not empty and has some content
+      if (sanitized.length > 0) {
+        const validation = validatePAN(sanitized);
+        if (!validation.isValid) {
+          setPanErrors({ panNumber: validation.error });
+        } else {
+          setPanErrors({});
+        }
+      } else {
+        setPanErrors({});
+      }
+      return;
+    }
+
     setFormData((prevData) => ({
       ...prevData,
       [name]: value,
@@ -481,6 +531,25 @@ export default function Form2() {
       setIsSubmitting(false);
       return;
     }
+
+    // Validate GSTIN format
+    const gstValidation = validateGSTIN(formData.gstNumber);
+    if (!gstValidation.isValid) {
+      alert(`Invalid GSTIN: ${gstValidation.error}`);
+      setGstinErrors({ gstNumber: gstValidation.error });
+      setIsSubmitting(false);
+      return;
+    }
+
+    // Validate PAN format
+    const panValidation = validatePAN(formData.panNumber);
+    if (!panValidation.isValid) {
+      alert(`Invalid PAN: ${panValidation.error}`);
+      setPanErrors({ panNumber: panValidation.error });
+      setIsSubmitting(false);
+      return;
+    }
+
     setIsSubmitting(true);
     handleNext();
   };
@@ -516,24 +585,14 @@ export default function Form2() {
                   <p className="text-xs text-gray-500">select your business type</p>
                 </div>
                 <div className="w-full md:w-2/3">
-                  <select
+                  <SearchableSelect
                     required
                     name="businessType"
                     value={formData.businessType}
                     onChange={handleInputChange}
-                    className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent bg-white"
-                  >
-                    <option value="">Select Business Type</option>
-                    {Object.entries(BUSINESS_TYPES).map(([category, types]) => (
-                      <optgroup key={category} label={category}>
-                        {types.map((type) => (
-                          <option key={type} value={type}>
-                            {type}
-                          </option>
-                        ))}
-                      </optgroup>
-                    ))}
-                  </select>
+                    options={FLAT_BUSINESS_TYPES}
+                    placeholder="Select Business Type"
+                  />
                 </div>
               </div>
 
@@ -543,24 +602,14 @@ export default function Form2() {
                   <p className="text-xs text-gray-500">select your industry type</p>
                 </div>
                 <div className="w-full md:w-2/3">
-                  <select
+                  <SearchableSelect
                     required
                     name="industryType"
                     value={formData.industryType}
                     onChange={handleInputChange}
-                    className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent bg-white"
-                  >
-                    <option value="">Select Industry Type</option>
-                    {Object.entries(INDUSTRY_TYPES).map(([category, types]) => (
-                      <optgroup key={category} label={category}>
-                        {types.map((type) => (
-                          <option key={type} value={type}>
-                            {type}
-                          </option>
-                        ))}
-                      </optgroup>
-                    ))}
-                  </select>
+                    options={FLAT_INDUSTRY_TYPES}
+                    placeholder="Select Industry Type"
+                  />
                 </div>
               </div>
 
@@ -582,69 +631,99 @@ export default function Form2() {
               </div>
 
               <div className="flex flex-col md:flex-row items-start gap-6">
-                <div className="w-full md:w-1/3"></div>
-                <div className="w-full md:w-2/3 flex gap-2">
-                  <input
-                    required
-                    type="text"
-                    name="gstNumber"
-                    value={formData.gstNumber || ""}
-                    onChange={handleInputChange}
-                    placeholder="GST number"
-                    className="flex-1 border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
-                  />
-                   <input type="file" name="gstCertificate" id="gstCertificate" onChange={handleFileChange} className="hidden" />
-                  <button
-                    type="button"
-                    onClick={() => document.getElementById('gstCertificate').click()}
-                    className="px-4 py-2 text-sm border border-gray-300 rounded text-gray-600 hover:bg-gray-50 transition-colors"
-                  >
-                    {formData.gstCertificate
-                      ? formData.gstCertificate.uploading
-                        ? "Uploading..."
-                        : "Uploaded"
-                      : "Upload"}
-                  </button>
+                <div className="w-full md:w-1/3">
+                  <h3 className="text-sm font-semibold text-gray-900 block mb-1">GST Number</h3>
+                  <p className="text-xs text-gray-500">enter your GST number</p>
                 </div>
-                {formData.gstCertificate && 
-                  <div className="w-full md:w-2/3 md:ml-auto text-xs text-gray-500 flex justify-between items-center">
-                    <span>{formData.gstCertificate.name}</span>
-                    <button type="button" onClick={() => handleDeleteFile('gstCertificate')} className="text-red-500 hover:text-red-700">Delete</button>
+                <div className="w-full md:w-2/3">
+                  <div className="flex gap-2">
+                    <div className="flex-1">
+                      <input
+                        required
+                        type="text"
+                        name="gstNumber"
+                        value={formData.gstNumber || ""}
+                        onChange={handleInputChange}
+                        placeholder="GST number (15 characters)"
+                        maxLength="15"
+                        className={`w-full border rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:border-transparent ${
+                          gstinErrors.gstNumber
+                            ? 'border-red-500 focus:ring-red-500'
+                            : 'border-gray-300 focus:ring-emerald-500'
+                        } bg-white`}
+                      />
+                      {gstinErrors.gstNumber && (
+                        <p className="mt-1 text-xs text-red-500">{gstinErrors.gstNumber}</p>
+                      )}
+                    </div>
+                    <input type="file" name="gstCertificate" id="gstCertificate" onChange={handleFileChange} className="hidden" />
+                    <button
+                      type="button"
+                      onClick={() => document.getElementById('gstCertificate').click()}
+                      className="px-4 py-2 text-sm border border-gray-300 rounded text-gray-600 hover:bg-gray-50 transition-colors whitespace-nowrap"
+                    >
+                      {formData.gstCertificate
+                        ? formData.gstCertificate.uploading
+                          ? "Uploading..."
+                          : "Uploaded"
+                        : "Upload"}
+                    </button>
                   </div>
-                }
+                  {formData.gstCertificate && 
+                    <div className="mt-2 text-xs text-gray-500 flex justify-between items-center">
+                      <span>{formData.gstCertificate.name}</span>
+                      <button type="button" onClick={() => handleDeleteFile('gstCertificate')} className="text-red-500 hover:text-red-700">Delete</button>
+                    </div>
+                  }
+                </div>
               </div>
 
               <div className="flex flex-col md:flex-row items-start gap-6">
-                <div className="w-full md:w-1/3"></div>
-                <div className="w-full md:w-2/3 flex gap-2">
-                  <input
-                    required
-                    type="text"
-                    name="panNumber"
-                    value={formData.panNumber || ""}
-                    onChange={handleInputChange}
-                    placeholder="PAN number"
-                    className="flex-1 border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
-                  />
-                  <input type="file" name="panCertificate" id="panCertificate" onChange={handleFileChange} className="hidden" />
-                  <button
-                    type="button"
-                    onClick={() => document.getElementById('panCertificate').click()}
-                    className="px-4 py-2 text-sm border border-gray-300 rounded text-gray-600 hover:bg-gray-50 transition-colors"
-                  >
-                   {formData.panCertificate
-                     ? formData.panCertificate.uploading
-                       ? "Uploading..."
-                       : "Uploaded"
-                     : "Upload"}
-                  </button>
+                <div className="w-full md:w-1/3">
+                  <h3 className="text-sm font-semibold text-gray-900 block mb-1">PAN Number</h3>
+                  <p className="text-xs text-gray-500">enter your PAN number</p>
                 </div>
-                {formData.panCertificate &&
-                  <div className="w-full md:w-2/3 md:ml-auto text-xs text-gray-500 flex justify-between items-center">
-                    <span>{formData.panCertificate.name}</span>
-                    <button type="button" onClick={() => handleDeleteFile('panCertificate')} className="text-red-500 hover:text-red-700">Delete</button>
+                <div className="w-full md:w-2/3">
+                  <div className="flex gap-2">
+                    <div className="flex-1">
+                      <input
+                        required
+                        type="text"
+                        name="panNumber"
+                        value={formData.panNumber || ""}
+                        onChange={handleInputChange}
+                        placeholder="PAN number (10 characters)"
+                        maxLength="10"
+                        className={`w-full border rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:border-transparent ${
+                          panErrors.panNumber
+                            ? 'border-red-500 focus:ring-red-500'
+                            : 'border-gray-300 focus:ring-emerald-500'
+                        } bg-white`}
+                      />
+                      {panErrors.panNumber && (
+                        <p className="mt-1 text-xs text-red-500">{panErrors.panNumber}</p>
+                      )}
+                    </div>
+                    <input type="file" name="panCertificate" id="panCertificate" onChange={handleFileChange} className="hidden" />
+                    <button
+                      type="button"
+                      onClick={() => document.getElementById('panCertificate').click()}
+                      className="px-4 py-2 text-sm border border-gray-300 rounded text-gray-600 hover:bg-gray-50 transition-colors whitespace-nowrap"
+                    >
+                     {formData.panCertificate
+                       ? formData.panCertificate.uploading
+                         ? "Uploading..."
+                         : "Uploaded"
+                       : "Upload"}
+                    </button>
                   </div>
-                }
+                  {formData.panCertificate &&
+                    <div className="mt-2 text-xs text-gray-500 flex justify-between items-center">
+                      <span>{formData.panCertificate.name}</span>
+                      <button type="button" onClick={() => handleDeleteFile('panCertificate')} className="text-red-500 hover:text-red-700">Delete</button>
+                    </div>
+                  }
+                </div>
               </div>
             </div>
 

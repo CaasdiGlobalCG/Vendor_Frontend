@@ -129,8 +129,8 @@ export default function Form3() {
             <div className="space-y-6">
               <div className="flex flex-col md:flex-row items-start gap-6">
                 <div className="w-full md:w-1/3">
-                  <h3 className="text-sm font-semibold text-gray-900 block mb-1">Product service information</h3>
-                  <p className="text-xs text-gray-500">provide your Product & service info</p>
+                  <h3 className="text-sm font-semibold text-gray-900 block mb-1">Business and Serivce Info</h3>
+                  <p className="text-xs text-gray-500">Provide key information about your business, services offered, and operational details.</p>
                 </div>
                 <div className="w-full md:w-2/3">
                   <textarea
@@ -173,7 +173,7 @@ export default function Form3() {
                     onChange={handleInputChange}
                     className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent appearance-none bg-white"
                   >
-                    <option value="">mode of payment</option>
+                    <option value="">Mode of payment</option>
                     <option value="Bank Transfer">Bank Transfer</option>
                     <option value="Credit Card">Credit Card</option>
                     <option value="Cash">Cash</option>
@@ -198,7 +198,7 @@ export default function Form3() {
                           name="machineName"
                           value={machine.machineName}
                           onChange={(e) => handleMachineChange(index, e)}
-                          placeholder="Machine Name"
+                          placeholder="Brand Name"
                           className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
                         />
                         <input
@@ -230,7 +230,7 @@ export default function Form3() {
                           name="contact"
                           value={machine.contact}
                           onChange={(e) => handleMachineChange(index, e)}
-                          placeholder="Contact"
+                          placeholder="Brand Contact"
                           className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
                         />
                         <div>

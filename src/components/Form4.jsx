@@ -102,11 +102,7 @@ export default function Form4() {
     setOcrProcessing(true);
     
     try {
-      if (!currentUser?.email) {
-        throw new Error("User email not available");
-      }
-
-      const result = await processChequeOCR(file, currentUser.email);
+      const result = await processChequeOCR(file, currentUser?.email || "unknown");
 
       if (result.success && result.data.success) {
         setOcrData(result.data);
@@ -179,6 +175,28 @@ export default function Form4() {
   };
 
   const handleOCRConfirm = async (extractedData) => {
+    // Check if IFSC code in cheque matches the entered IFSC code
+    if (extractedData.ifscCode && formData.ifscCode) {
+      const chequeIFSC = extractedData.ifscCode.toUpperCase().trim();
+      const enteredIFSC = formData.ifscCode.toUpperCase().trim();
+      
+      if (chequeIFSC !== enteredIFSC) {
+        const mismatchWarning = `IFSC Code Mismatch!\n\n` +
+          `IFSC in cheque: ${chequeIFSC}\n` +
+          `IFSC you entered: ${enteredIFSC}\n\n` +
+          `Please verify that you've entered the correct IFSC code. ` +
+          `Sometimes banks have multiple branches with different IFSC codes.\n\n` +
+          `Do you want to continue with your entered IFSC code?`;
+        
+        const shouldContinue = window.confirm(mismatchWarning);
+        if (!shouldContinue) {
+          setOcrModalOpen(false);
+          setOcrData(null);
+          return;
+        }
+      }
+    }
+
     // Auto-fill the form fields
     setFormData((prev) => ({
       ...prev,

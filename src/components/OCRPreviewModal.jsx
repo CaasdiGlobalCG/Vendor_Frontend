@@ -15,7 +15,8 @@ export default function OCRPreviewModal({
 }) {
   const [editedData, setEditedData] = useState({
     accountNumber: data?.accountNumber || "",
-    accountName: data?.accountName || ""
+    accountName: data?.accountName || "",
+    ifscCode: data?.ifscCode || ""
   });
 
   const [isEditing, setIsEditing] = useState(false);
@@ -48,12 +49,14 @@ export default function OCRPreviewModal({
       }
       onConfirm({
         accountNumber: editedData.accountNumber.trim(),
-        accountName: editedData.accountName.trim()
+        accountName: editedData.accountName.trim(),
+        ifscCode: editedData.ifscCode.trim() || undefined
       });
     } else {
       onConfirm({
         accountNumber: data.accountNumber,
-        accountName: data.accountName
+        accountName: data.accountName,
+        ifscCode: data.ifscCode || undefined
       });
     }
     setIsEditing(false);
@@ -63,7 +66,8 @@ export default function OCRPreviewModal({
     if (!isEditing) {
       setEditedData({
         accountNumber: data.accountNumber || "",
-        accountName: data.accountName || ""
+        accountName: data.accountName || "",
+        ifscCode: data.ifscCode || ""
       });
     }
     setIsEditing(!isEditing);
@@ -200,6 +204,38 @@ export default function OCRPreviewModal({
               ) : (
                 <div className="bg-gray-50 border border-gray-300 rounded px-3 py-2 text-sm text-gray-900">
                   {data?.accountName || "Not detected"}
+                </div>
+              )}
+            </div>
+
+            {/* IFSC Code */}
+            <div>
+              <div className="flex items-center justify-between mb-2">
+                <label className="text-sm font-semibold text-gray-900">
+                  IFSC Code
+                </label>
+                {!isEditing && fieldConfidence.ifscCode && (
+                  <span className={`text-xs font-medium ${getConfidenceColor(fieldConfidence.ifscCode)}`}>
+                    {fieldConfidence.ifscCode}% confidence
+                  </span>
+                )}
+              </div>
+              {isEditing ? (
+                <input
+                  type="text"
+                  value={editedData.ifscCode}
+                  onChange={(e) =>
+                    setEditedData({
+                      ...editedData,
+                      ifscCode: e.target.value.toUpperCase()
+                    })
+                  }
+                  className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder="Enter IFSC code (e.g., SBIN0001234)"
+                />
+              ) : (
+                <div className="bg-gray-50 border border-gray-300 rounded px-3 py-2 text-sm font-mono text-gray-900">
+                  {data?.ifscCode || "Not detected"}
                 </div>
               )}
             </div>

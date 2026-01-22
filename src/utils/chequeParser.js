@@ -23,8 +23,10 @@ export const parseChequeData = (textractBlocks) => {
   const errors = [];
   let accountNumber = null;
   let accountName = null;
+  let ifscCode = null;
   let accountNumberConfidence = 0;
   let accountNameConfidence = 0;
+  let ifscConfidence = 0;
 
   // Extract Account Number
   const accountNumberResult = extractAccountNumber(fullText);
@@ -44,6 +46,13 @@ export const parseChequeData = (textractBlocks) => {
     errors.push('Account name not detected');
   }
 
+  // Extract IFSC Code
+  const ifscResult = extractIFSCCode(fullText);
+  if (ifscResult) {
+    ifscCode = ifscResult.value;
+    ifscConfidence = ifscResult.confidence;
+  }
+
   // Calculate overall confidence (average of detected fields)
   let detectionCount = 0;
   let confidenceSum = 0;
@@ -56,6 +65,10 @@ export const parseChequeData = (textractBlocks) => {
     detectionCount++;
     confidenceSum += accountNameConfidence;
   }
+  if (ifscCode) {
+    detectionCount++;
+    confidenceSum += ifscConfidence;
+  }
 
   const overallConfidence = detectionCount > 0 ? Math.round(confidenceSum / detectionCount) : 0;
 
@@ -63,13 +76,15 @@ export const parseChequeData = (textractBlocks) => {
     success: errors.length === 0,
     accountNumber,
     accountName,
+    ifscCode,
     confidence: overallConfidence,
     fieldConfidence: {
       accountNumber: accountNumberConfidence,
-      accountName: accountNameConfidence
+      accountName: accountNameConfidence,
+      ifscCode: ifscConfidence
     },
     errors: errors.length > 0 ? errors : null,
-    warnings: generateWarnings(accountNumber, accountName)
+    warnings: generateWarnings(accountNumber, accountName, ifscCode)
   };
 };
 
@@ -196,6 +211,40 @@ const extractAccountName = (textractBlocks) => {
 };
 
 /**
+ * Extract IFSC Code from cheque text
+ * IFSC format: 4 uppercase letters + 0 + 6 alphanumeric characters (e.g., SBIN0001234)
+ */
+const extractIFSCCode = (text) => {
+  // IFSC code pattern: 4 letters + 0 + 6 alphanumeric (case-insensitive in input, normalized to uppercase)
+  const ifscPattern = /\b([A-Z]{4}0[A-Z0-9]{6})\b/gi;
+  
+  const matches = text.match(ifscPattern);
+  if (matches && matches.length > 0) {
+    // Take the first match found
+    const ifscCode = matches[0].toUpperCase();
+    return {
+      value: ifscCode,
+      confidence: 98 // IFSC is a standard format so high confidence
+    };
+  }
+
+  // Try alternative format (sometimes there might be spaces)
+  const alternativePattern = /([A-Z]{4})\s*0\s*([A-Z0-9]{6})/gi;
+  const altMatch = text.match(alternativePattern);
+  if (altMatch && altMatch.length > 0) {
+    const cleaned = altMatch[0].replace(/\s+/g, '').toUpperCase();
+    if (/^[A-Z]{4}0[A-Z0-9]{6}$/.test(cleaned)) {
+      return {
+        value: cleaned,
+        confidence: 90
+      };
+    }
+  }
+
+  return null;
+};
+
+/**
  * Clean and normalize extracted name text
  */
 const cleanNameText = (text) => {
@@ -211,7 +260,7 @@ const cleanNameText = (text) => {
 /**
  * Generate warnings for extracted data
  */
-const generateWarnings = (accountNumber, accountName) => {
+const generateWarnings = (accountNumber, accountName, ifscCode) => {
   const warnings = [];
 
   if (accountNumber) {
