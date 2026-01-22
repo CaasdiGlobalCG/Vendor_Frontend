@@ -3,7 +3,7 @@ import { useParams } from 'react-router-dom';
 import { getWorkspaceById, updateWorkspace } from '../../utils/workspaceApi';
 import { persistIsImportant, persistDeadline, persistTextContent, getTimeLeft as calculateTimeLeft, formatTimeLeft } from '../../utils/nodePersistence';
 import { Handle, Position, useReactFlow } from 'reactflow';
-import { Download, Eye, ExternalLink, X, ArrowRight, Check, X as XIcon, Menu, Star, Heart, Info, HelpCircle } from 'lucide-react';
+import { Download, Eye, ExternalLink, X, ArrowRight, Check, X as XIcon, Menu, Star, Heart, Info, HelpCircle, Lock } from 'lucide-react';
 import { VendorContext } from '../../../../context/VendorContext';
 import FormTemplate from '../forms/FormTemplate';
 import TableRenderer from '../forms/TableRenderer';
@@ -574,6 +574,57 @@ const ElementNode = ({ id, data, isConnectable, selected }) => {
       );
     }
 
+    // Show PDF preview for documents
+    const isPdf = data.documentUrl?.toLowerCase().endsWith('.pdf');
+
+    if (isPdf) {
+      return (
+        <div className="w-full h-full flex flex-col bg-white overflow-hidden">
+          {/* Document Header */}
+          <div className="flex items-start justify-between gap-4 p-2 border-b border-slate-200 bg-slate-50 flex-shrink-0">
+            <div className="min-w-0">
+              <p className="text-xs font-semibold text-slate-900 truncate">{data.name}</p>
+              <p className="text-[10px] text-slate-500">{meta.id || 'Document'}</p>
+            </div>
+            <div className="flex items-center space-x-0.5 flex-shrink-0">
+              <button
+                onClick={handleDocumentPreviewClick}
+                className="p-1 rounded text-slate-500 hover:text-blue-600 hover:bg-blue-50 transition-colors"
+                title="Preview"
+              >
+                <Eye className="w-3 h-3" />
+              </button>
+              <button
+                onClick={handleDocumentDownload}
+                className="p-1 rounded text-slate-500 hover:text-emerald-600 hover:bg-emerald-50 transition-colors"
+                title="Download"
+              >
+                <Download className="w-3 h-3" />
+              </button>
+              <button
+                onClick={handleDocumentOpen}
+                className="p-1 rounded text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 transition-colors"
+                title="Open in new tab"
+              >
+                <ExternalLink className="w-3 h-3" />
+              </button>
+            </div>
+          </div>
+
+          {/* PDF Viewer */}
+          <div className="flex-1 bg-gray-100 overflow-hidden min-h-0">
+            <iframe
+              src={`${data.documentUrl}#toolbar=0&navpanes=0&zoom=fit`}
+              title={data.name}
+              className="w-full h-full"
+              style={{ border: 'none', display: 'block' }}
+            />
+          </div>
+        </div>
+      );
+    }
+
+    // Fallback card view for non-PDF documents
     return (
       <div className="space-y-4">
         <div className="rounded-xl border border-slate-200 bg-slate-50 p-4 shadow-sm">
@@ -1396,6 +1447,13 @@ const ElementNode = ({ id, data, isConnectable, selected }) => {
       
       {/* Info & Help Icons - Top right corner */}
       <div className="absolute -top-3 -right-3 z-20 flex items-center space-x-1">
+        {/* Lock Indicator - Shows when element is locked */}
+        {data.locked && (
+          <div className="w-5 h-5 bg-orange-500 hover:bg-orange-600 text-white rounded-full flex items-center justify-center shadow-md border-2 border-white transition-all" title="Element is locked">
+            <Lock className="w-3 h-3" />
+          </div>
+        )}
+        
         {/* Info Button */}
         <div 
           className="relative"

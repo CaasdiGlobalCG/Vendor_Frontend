@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
-import { persistIsImportant, persistDeadline, formatTimeLeft, getTimeLeft } from '../../utils/nodePersistence';
+import { persistIsImportant, persistDeadline, persistTextContent, formatTimeLeft, getTimeLeft } from '../../utils/nodePersistence';
 import { Handle, Position, useReactFlow } from 'reactflow';
 
 const TextNode = ({ id, data, isConnectable, selected }) => {
@@ -14,6 +14,7 @@ const TextNode = ({ id, data, isConnectable, selected }) => {
   const deadlineJustSetRef = useRef(false);
   const [isEditing, setIsEditing] = useState(false);
   const [editContent, setEditContent] = useState('');
+  const textSaveTimeoutRef = useRef(null);
 
   // Update time left display every second
   useEffect(() => {
@@ -40,6 +41,40 @@ const TextNode = ({ id, data, isConnectable, selected }) => {
       setIsImportant(data.isImportant);
     }
   }, [data.deadline, data.isImportant]);
+
+  // Initialize content from node data
+  useEffect(() => {
+    if (data.content && data.content !== editContent && !isEditing) {
+      setEditContent(data.content);
+    }
+  }, [data.content, isEditing]);
+
+  // Auto-save text content when editing completes
+  useEffect(() => {
+    if (!workspaceId || isEditing || !editContent) return;
+
+    // Clear existing timeout
+    if (textSaveTimeoutRef.current) {
+      clearTimeout(textSaveTimeoutRef.current);
+    }
+
+    // Set new timeout to save after 1 second of inactivity
+    textSaveTimeoutRef.current = setTimeout(async () => {
+      try {
+        console.log('💾 Auto-saving text content:', { nodeId: id, content: editContent });
+        await persistTextContent(id, editContent, 'content', setNodes, workspaceId);
+        console.log('✅ Text content saved successfully');
+      } catch (error) {
+        console.error('❌ Failed to save text content:', error);
+      }
+    }, 1000);
+
+    return () => {
+      if (textSaveTimeoutRef.current) {
+        clearTimeout(textSaveTimeoutRef.current);
+      }
+    };
+  }, [editContent, isEditing, workspaceId, id]);
 
   const persistIsImportantLocal = async (important) => {
     if (!workspaceId) return;
@@ -89,7 +124,6 @@ const TextNode = ({ id, data, isConnectable, selected }) => {
       fontFamily: data.fontFamily || 'Arial',
       fontSize: `${data.fontSize || 12}pt`,
       color: data.color || '#000000',
-      backgroundColor: data.backgroundColor && data.backgroundColor !== 'transparent' ? data.backgroundColor : 'transparent',
     };
 
     // Apply formatting - handle both array and object formats
@@ -133,10 +167,17 @@ const TextNode = ({ id, data, isConnectable, selected }) => {
     setIsEditing(true);
   };
 
-  const handleEditComplete = () => {
+  const handleEditComplete = async () => {
     setIsEditing(false);
-    // Update the node data
-    data.content = editContent;
+    // Persist the updated content
+    if (workspaceId && editContent) {
+      try {
+        await persistTextContent(id, editContent, 'content', setNodes, workspaceId);
+        console.log('✅ Text content persisted on edit complete');
+      } catch (error) {
+        console.error('❌ Failed to persist text on edit complete:', error);
+      }
+    }
   };
 
   const handleKeyPress = (e) => {
@@ -147,7 +188,12 @@ const TextNode = ({ id, data, isConnectable, selected }) => {
   };
 
   return (
-    <div className={`${isImportant ? 'bg-yellow-50' : 'bg-white'} border-2 rounded-xl shadow-xl p-6 min-w-[300px] max-w-[500px] relative group transition-all ${getBorderStyle()}`}>
+    <div 
+      className={`border-2 rounded-xl shadow-xl p-6 min-w-[300px] max-w-[500px] relative group transition-all ${getBorderStyle()}`}
+      style={{
+        backgroundColor: data.backgroundColor && data.backgroundColor !== 'transparent' ? data.backgroundColor : (isImportant ? '#fffacd' : '#ffffff'),
+      }}
+    >
       {/* Connection Handles - Same as other nodes */}
       <Handle
         type="source"

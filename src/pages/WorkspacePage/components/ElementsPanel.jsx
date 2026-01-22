@@ -47,6 +47,7 @@ const DraggableFileCard = ({ file }) => {
   const { removeFile } = useUpload();
   const FileIcon = getFileIcon(file.name);
   const colorClass = getFileTypeColor(file.name);
+  const isImage = file.type?.startsWith('image/');
 
   const handleDragStart = (event) => {
     // Create a file element that can be dropped on canvas
@@ -90,6 +91,51 @@ const DraggableFileCard = ({ file }) => {
     document.dispatchEvent(event);
     console.log('📁 File double-click event dispatched:', fileElement);
   };
+
+  // For images, show image preview
+  if (isImage) {
+    return (
+      <div
+        draggable
+        onDragStart={handleDragStart}
+        onDoubleClick={handleDoubleClick}
+        className="-mx-2 relative cursor-move hover:shadow-lg transition-all duration-200 overflow-hidden group"
+        title="Drag to canvas or double-click to add"
+      >
+        {/* Image Preview */}
+        <img
+          src={file.url}
+          alt={file.name}
+          className="w-full h-32 object-cover"
+          onError={(e) => {
+            e.target.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="100" height="100"%3E%3Crect fill="%23e5e7eb" width="100" height="100"/%3E%3Ctext x="50" y="50" dominant-baseline="middle" text-anchor="middle" font-size="12" fill="%236b7280"%3EImage Error%3C/text%3E%3C/svg%3E';
+          }}
+        />
+
+        {/* File Info Overlay */}
+        <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 to-transparent p-2">
+          <p className="text-xs font-medium text-white truncate" title={file.name}>
+            {file.name}
+          </p>
+          <p className="text-xs text-gray-200">
+            {formatFileSize(file.size)}
+          </p>
+        </div>
+
+        {/* Remove Button */}
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            removeFile(file.id);
+          }}
+          className="absolute top-1 right-1 opacity-0 group-hover:opacity-100 text-red-500 hover:text-red-700 transition-opacity bg-white rounded-full p-1 shadow-md"
+          title="Remove file"
+        >
+          <X className="w-3 h-3" />
+        </button>
+      </div>
+    );
+  }
 
   return (
     <div
@@ -165,11 +211,11 @@ const UploadsSection = () => {
 
       {/* Uploaded Files */}
       {uploadedFiles.length > 0 && (
-        <div className="space-y-1.5">
+        <div className="space-y-1.5 overflow-hidden">
           <p className="text-xs text-gray-600 font-medium">
             Uploaded Files ({uploadedFiles.length})
           </p>
-          <div className="space-y-1.5 max-h-64 overflow-y-auto">
+          <div className="space-y-0.5 max-h-80 overflow-y-auto overflow-x-hidden">
             {uploadedFiles.map((file) => (
               <DraggableFileCard key={file.id} file={file} />
             ))}
@@ -213,51 +259,78 @@ const InvoiceQuoteCard = ({ item }) => {
     }
   };
 
+  const getStatusColor = (status) => {
+    switch (status?.toLowerCase()) {
+      case 'paid':
+        return 'bg-green-100 text-green-700';
+      case 'pending':
+      case 'draft':
+        return 'bg-yellow-100 text-yellow-700';
+      case 'overdue':
+        return 'bg-red-100 text-red-700';
+      default:
+        return 'bg-gray-100 text-gray-700';
+    }
+  };
+
   return (
     <div 
       draggable
       onDragStart={handleDragStart}
-      className="group p-3 bg-white rounded-lg border border-gray-200 hover:border-blue-300 hover:shadow-md transition-all duration-200 cursor-move relative w-[200px] h-[200px] flex flex-col"
+      className="group -mx-2 relative cursor-move hover:shadow-lg transition-all duration-200 overflow-hidden"
+      title="Drag to canvas or double-click to add"
     >
-      <div className="flex items-center justify-between mb-2">
-        <div className={`p-1.5 rounded-lg ${item.type === 'invoice' ? 'bg-blue-100 text-blue-600' : 'bg-purple-100 text-purple-600'}`}>
-          {item.type === 'invoice' ? <FileDigit className="w-4 h-4" /> : <FileText className="w-4 h-4" />}
+      {/* Card Background with Gradient */}
+      <div className={`w-full h-40 rounded-lg flex flex-col p-4 text-white relative overflow-hidden ${
+        item.type === 'invoice' 
+          ? 'bg-gradient-to-br from-blue-500 to-blue-700' 
+          : 'bg-gradient-to-br from-purple-500 to-purple-700'
+      }`}>
+        {/* Background Pattern */}
+        <div className="absolute inset-0 opacity-10">
+          <div className="absolute top-0 left-0 w-32 h-32 bg-white rounded-full -translate-x-8 -translate-y-8"></div>
+          <div className="absolute bottom-0 right-0 w-40 h-40 bg-white rounded-full translate-x-12 translate-y-12"></div>
         </div>
-        <span className="text-xs text-gray-500">{item.type === 'invoice' ? 'INV' : 'QTE'}</span>
-      </div>
-      
-      <h4 className="text-sm font-medium text-gray-900 group-hover:text-blue-700 line-clamp-2 mb-1">
-        {item.name}
-      </h4>
-      
-      <div className="flex-1 flex flex-col justify-between">
-        <p className="text-xs text-gray-500 line-clamp-2 mb-2">{item.preview}</p>
-        
-        <div className="mt-auto">
-          <div className="flex items-center justify-between mb-1">
-            <span className="text-xs text-gray-500">{item.date}</span>
-            <div className="text-sm font-semibold text-gray-900 truncate max-w-[80px] text-right" title={item.amount}>
-              {item.amount}
+
+        {/* Card Content */}
+        <div className="relative z-10 flex-1 flex flex-col">
+          {/* Header */}
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-xs font-semibold opacity-90">{item.type === 'invoice' ? 'INV' : 'QTE'}</span>
+            <div className={`p-1.5 rounded ${item.type === 'invoice' ? 'bg-blue-400/20' : 'bg-purple-400/20'}`}>
+              {item.type === 'invoice' ? <FileDigit className="w-3 h-3" /> : <FileText className="w-3 h-3" />}
             </div>
           </div>
+
+          {/* Title */}
+          <h4 className="text-sm font-semibold line-clamp-2 mb-2">
+            {item.name}
+          </h4>
+
+          {/* Description */}
+          <p className="text-xs opacity-90 line-clamp-1 mb-3">
+            {item.preview}
+          </p>
+        </div>
+
+        {/* Footer Info */}
+        <div className="relative z-10 space-y-1">
+          <div className="flex items-center justify-between text-xs">
+            <span className="opacity-80">{item.date}</span>
+            <span className="font-bold text-sm">{item.amount}</span>
+          </div>
           
-          <div className="flex items-center justify-between">
-            <span className={`text-[10px] px-2 py-0.5 rounded-full ${item.statusColor} flex items-center space-x-1`}>
+          <div>
+            <span className={`text-[10px] px-2 py-1 rounded-full font-semibold inline-flex items-center space-x-1 ${getStatusColor(item.status)}`}>
               {getStatusIcon(item.status)}
-              <span className="truncate max-w-[60px]">{item.status}</span>
+              <span>{item.status}</span>
             </span>
           </div>
         </div>
       </div>
-      
-      <div className="absolute bottom-1 right-1 opacity-0 group-hover:opacity-100 transition-opacity">
-        <div className="text-[10px] text-blue-500 flex items-center">
-          <span>Drag to canvas</span>
-          <svg className="w-2.5 h-2.5 ml-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
-          </svg>
-        </div>
-      </div>
+
+      {/* Hover Indicator */}
+      <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 rounded-lg transition-all pointer-events-none"></div>
     </div>
   );
 };

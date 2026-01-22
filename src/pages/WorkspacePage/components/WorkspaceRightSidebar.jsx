@@ -74,6 +74,28 @@ const WorkspaceRightSidebar = ({
     }
   };
 
+  const handleDeleteElement = (elementId, elementName) => {
+    // Emit event to delete element from canvas
+    const event = new CustomEvent('deleteElement', {
+      detail: {
+        elementId: elementId
+      }
+    });
+    document.dispatchEvent(event);
+    console.log('🗑️ Element deleted:', elementId);
+  };
+
+  const handleLockElement = (elementId) => {
+    // Emit event to lock/unlock element
+    const event = new CustomEvent('toggleLockElement', {
+      detail: {
+        elementId: elementId
+      }
+    });
+    document.dispatchEvent(event);
+    console.log('🔒 Element lock toggled:', elementId);
+  };
+
   useEffect(() => {
     if (editingElementId !== null && editInputRef.current) {
       editInputRef.current.focus();
@@ -814,132 +836,189 @@ const WorkspaceRightSidebar = ({
         <div className={`bg-white rounded-xl border border-gray-200 shadow-sm flex flex-col transition-all duration-300 ${elementsOverviewExpanded ? 'flex-1 min-h-0' : ''}`}>
           <button
             onClick={handleToggleElementsOverview}
-            className="w-full flex items-center justify-between px-5 py-4 text-left focus:outline-none"
+            className="w-full flex items-center justify-between px-5 py-4 text-left focus:outline-none hover:bg-gray-50 transition-colors"
           >
             <div className="flex items-center space-x-2">
-              <h4 className="text-sm font-medium text-gray-900">Elements Overview</h4>
-              <span className="text-xs text-gray-500 bg-gray-100 px-2 py-0.5 rounded-full">{sortedElements.length}</span>
+              <h4 className="text-sm font-semibold text-gray-900">Elements Overview</h4>
+              <span className="text-xs text-gray-600 bg-gray-100 px-2 py-0.5 rounded-full font-medium">{sortedElements.length}</span>
             </div>
-            <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform ${elementsOverviewExpanded ? 'transform rotate-180' : ''}`} />
+            <ChevronDown className={`w-5 h-5 text-gray-500 transition-transform ${elementsOverviewExpanded ? 'transform rotate-180' : ''}`} />
           </button>
           <div className={`${elementsOverviewExpanded ? 'flex-1 flex flex-col opacity-100 min-h-0' : 'max-h-0 opacity-0 pointer-events-none'} transition-all duration-300 ease-in-out overflow-hidden`}
                style={{transitionProperty: 'max-height, opacity'}}>
-            <div className="px-5 pb-5 border-t border-gray-100 flex-1 flex flex-col min-h-0 space-y-2 pt-4">
+            <div className="px-3 pb-4 border-t border-gray-100 flex-1 flex flex-col min-h-0 pt-3">
               {sortedElements.length > 0 ? (
-                <div className="space-y-1 flex-1 overflow-y-auto pr-1 min-h-0">
+                <div className="space-y-0.5 flex-1 overflow-y-auto pr-2 min-h-0">
                   {sortedElements.map((element, idx) => (
-                    <div key={element.id || idx}>
+                    <div key={element.id || idx} className="group">
                       <button
                         onClick={() => {
                           if (onZoomToElement) {
                             onZoomToElement(element.id);
                           }
                         }}
-                        className="w-full p-2 text-left bg-gray-50 hover:bg-blue-50 rounded-lg border border-gray-200 hover:border-blue-300 transition-all duration-200 group"
+                        className="w-full px-3 py-2 text-left hover:bg-blue-50 rounded-lg transition-colors duration-150 flex items-center justify-between"
                         title={`Click to zoom to ${element.data?.name || element.data?.type || 'element'}`}
                       >
-                        <div className="flex items-center justify-between gap-2">
-                          <div className="flex-1 min-w-0 flex items-center gap-1.5">
-                            <span className="inline-flex items-center justify-center w-5 h-5 bg-blue-600 text-white text-[9px] font-bold rounded-full flex-shrink-0">
-                              {element.data?.sequenceNumber || idx + 1}
-                            </span>
-                            <div className="min-w-0">
-                              {editingElementId === element.id ? (
-                                <input
-                                  ref={editInputRef}
-                                  type="text"
-                                  value={editingElementName}
-                                  onChange={(e) => setEditingElementName(e.target.value)}
-                                  onKeyDown={(e) => handleKeyDown(e, element.id)}
-                                  onBlur={() => handleSaveElementName(element.id)}
-                                  className="w-full text-xs font-medium px-1 py-0.5 bg-white border border-blue-400 rounded outline-none focus:ring-1 focus:ring-blue-500"
-                                />
-                              ) : (
-                                <>
-                                  <p className="text-xs font-medium text-gray-900 truncate">{element.data?.name || element.data?.type || 'Element'}</p>
-                                  <p className="text-xs text-gray-500 capitalize">{element.data?.type || 'Unknown'}</p>
-                                </>
-                              )}
-                            </div>
-                          </div>
-                          <div className="flex items-center gap-1.5 flex-shrink-0">
-                            {editingElementId === element.id ? (
-                              <button
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  handleSaveElementName(element.id);
-                                }}
-                                className="p-1 text-green-600 hover:text-green-700 hover:bg-green-50 rounded-md transition-colors"
-                                title="Save name"
-                              >
-                                <Check className="w-4 h-4" />
-                              </button>
+                        <div className="flex-1 min-w-0 flex items-center gap-2.5">
+                          {/* Sequence Number */}
+                          <span className="inline-flex items-center justify-center w-5 h-5 bg-blue-600 text-white text-[10px] font-bold rounded-full flex-shrink-0">
+                            {element.data?.sequenceNumber || idx + 1}
+                          </span>
+
+                          {/* Element Type Icon */}
+                          <div className="flex-shrink-0 w-5 h-5 flex items-center justify-center text-gray-600">
+                            {element.data?.type === 'form' || element.data?.type === 'form-template' ? (
+                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                              </svg>
+                            ) : element.data?.type === 'table' ? (
+                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M3 14h18m-9-4v8m-7 0h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                              </svg>
+                            ) : element.data?.type === 'chart' ? (
+                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                              </svg>
+                            ) : element.data?.type === 'image' || element.data?.type === 'file' ? (
+                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                              </svg>
+                            ) : element.data?.type === 'text' || element.data?.type === 'textNode' ? (
+                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 00.948-.684l1.498-4.493a1 1 0 011.502-.684l1.498 4.493a1 1 0 00.948.684H19a2 2 0 012 2v2a2 2 0 01-2 2H5a2 2 0 01-2-2V5z" />
+                              </svg>
                             ) : (
+                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01" />
+                              </svg>
+                            )}
+                          </div>
+
+                          {/* Element Name and Type */}
+                          <div className="min-w-0 flex-1">
+                            {editingElementId === element.id ? (
+                              <input
+                                ref={editInputRef}
+                                type="text"
+                                value={editingElementName}
+                                onChange={(e) => setEditingElementName(e.target.value)}
+                                onKeyDown={(e) => handleKeyDown(e, element.id)}
+                                onBlur={() => handleSaveElementName(element.id)}
+                                className="w-full text-xs font-medium text-gray-900 px-2 py-1 bg-white border border-blue-400 rounded outline-none focus:ring-1 focus:ring-blue-500"
+                              />
+                            ) : (
+                              <div className="min-w-0">
+                                <p className="text-xs font-medium text-gray-900 truncate">
+                                  {element.data?.name || element.data?.type || 'Element'}
+                                </p>
+                                {element.data?.type && element.data?.type !== (element.data?.name) && (
+                                  <p className="text-xs text-gray-500 capitalize truncate">{element.data?.type}</p>
+                                )}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+
+                        {/* Action Buttons */}
+                        <div className="flex items-center gap-1 flex-shrink-0 ml-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                          {editingElementId === element.id ? (
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleSaveElementName(element.id);
+                              }}
+                              className="p-1 text-green-600 hover:text-green-700 hover:bg-green-50 rounded transition-colors"
+                              title="Save name"
+                            >
+                              <Check className="w-3.5 h-3.5" />
+                            </button>
+                          ) : (
+                            <>
                               <button
                                 onClick={(e) => {
                                   e.stopPropagation();
                                   handleEditElement(element.id, element.data?.name || '');
                                 }}
-                                className="p-1 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-md transition-colors opacity-0 group-hover:opacity-100"
+                                className="p-1 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded transition-colors"
                                 title="Edit name"
                               >
-                                <Edit2 className="w-4 h-4" />
+                                <Edit2 className="w-3.5 h-3.5" />
                               </button>
-                            )}
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                setInfoTooltipId(infoTooltipId === element.id ? null : element.id);
-                              }}
-                              className="p-1 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-md transition-colors"
-                              title="Element information"
-                            >
-                              <Info className="w-4 h-4" />
-                            </button>
-                            <svg className="w-4 h-4 text-gray-400 group-hover:text-blue-600 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                            </svg>
-                          </div>
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleLockElement(element.id);
+                                }}
+                                className={`p-1 rounded transition-colors ${element.data?.locked ? 'text-orange-600 bg-orange-50' : 'text-gray-400 hover:text-orange-600 hover:bg-orange-50'}`}
+                                title={element.data?.locked ? 'Unlock element' : 'Lock element'}
+                              >
+                                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                                </svg>
+                              </button>
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  if (window.confirm(`Delete element "${element.data?.name || 'Unnamed'}"?`)) {
+                                    handleDeleteElement(element.id, element.data?.name || 'Unnamed');
+                                  }
+                                }}
+                                className="p-1 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded transition-colors"
+                                title="Delete element"
+                              >
+                                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                </svg>
+                              </button>
+                            </>
+                          )}
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setInfoTooltipId(infoTooltipId === element.id ? null : element.id);
+                            }}
+                            className="p-1 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded transition-colors"
+                            title="Element information"
+                          >
+                            <Info className="w-3.5 h-3.5" />
+                          </button>
                         </div>
                       </button>
-                      
-                      {/* Info Tooltip - shown below the card */}
+
+                      {/* Info Tooltip */}
                       {infoTooltipId === element.id && (
-                        <div className="mt-1 p-2.5 bg-gray-900 text-white text-xs rounded-lg border border-gray-700 space-y-1.5">
+                        <div className="mx-3 mt-1 p-2.5 bg-gray-900 text-white text-xs rounded-lg border border-gray-700 space-y-1">
                           <div>
-                            <p className="text-gray-400 text-[10px]">Name:</p>
-                            <p className="font-medium truncate">{element.data?.name || 'Unnamed'}</p>
+                            <p className="text-gray-400 text-[10px] font-semibold mb-0.5">NAME</p>
+                            <p className="font-medium truncate text-gray-100">{element.data?.name || 'Unnamed'}</p>
                           </div>
                           <div>
-                            <p className="text-gray-400 text-[10px]">Type:</p>
-                            <p className="font-medium capitalize truncate">{element.data?.type || 'Unknown'}</p>
+                            <p className="text-gray-400 text-[10px] font-semibold mb-0.5">TYPE</p>
+                            <p className="font-medium capitalize truncate text-gray-100">{element.data?.type || 'Unknown'}</p>
                           </div>
-                          <div>
-                            <p className="text-gray-400 text-[10px]">Position:</p>
-                            <p className="font-medium">X: {Math.round(element.position?.x || 0)}, Y: {Math.round(element.position?.y || 0)}</p>
-                          </div>
-                          <div>
-                            <p className="text-gray-400 text-[10px]">Size:</p>
-                            <p className="font-medium">W: {element.width || 'auto'}, H: {element.height || 'auto'}</p>
-                          </div>
-                          {element.parentNode && (
+                          <div className="flex gap-4">
                             <div>
-                              <p className="text-gray-400 text-[10px]">Inside:</p>
-                              <p className="font-medium">Container</p>
+                              <p className="text-gray-400 text-[10px] font-semibold mb-0.5">X</p>
+                              <p className="font-mono text-gray-100">{Math.round(element.position?.x || 0)}</p>
                             </div>
-                          )}
+                            <div>
+                              <p className="text-gray-400 text-[10px] font-semibold mb-0.5">Y</p>
+                              <p className="font-mono text-gray-100">{Math.round(element.position?.y || 0)}</p>
+                            </div>
+                          </div>
                         </div>
                       )}
                     </div>
                   ))}
                 </div>
               ) : (
-                <div className="flex flex-col items-center justify-center py-8 text-center text-gray-500">
-                  <svg className="w-8 h-8 text-gray-300 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
+                <div className="flex flex-col items-center justify-center py-12 text-center text-gray-500">
+                  <svg className="w-10 h-10 text-gray-300 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
                   </svg>
-                  <p className="text-xs">No elements added yet</p>
+                  <p className="text-sm font-medium text-gray-600">No elements yet</p>
+                  <p className="text-xs text-gray-500 mt-1">Drag elements from the left panel</p>
                 </div>
               )}
             </div>

@@ -272,6 +272,100 @@ const edgeTypes = {
   const [nodes, setNodesRaw, onNodesChange] = useNodesState(initialNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(canvasData.edges);
   
+  // Undo/Redo History Management
+  const historyRef = useRef({
+    past: [],
+    future: [],
+    maxHistorySize: 50 // Limit history to prevent memory issues
+  });
+
+  // Helper to create a snapshot of current state
+  const createSnapshot = useCallback(() => {
+    return {
+      nodes: nodes,
+      edges: edges,
+      timestamp: Date.now()
+    };
+  }, [nodes, edges]);
+
+  // Add state to history (called after changes)
+  const pushToHistory = useCallback(() => {
+    historyRef.current.past.push(createSnapshot());
+    // Limit history size
+    if (historyRef.current.past.length > historyRef.current.maxHistorySize) {
+      historyRef.current.past.shift();
+    }
+    // Clear future history when new action is performed
+    historyRef.current.future = [];
+  }, [createSnapshot]);
+
+  // Undo function
+  const handleUndo = useCallback(() => {
+    if (historyRef.current.past.length === 0) {
+      console.log('⏮️ Nothing to undo');
+      return;
+    }
+
+    // Save current state to future
+    historyRef.current.future.push(createSnapshot());
+
+    // Get previous state
+    const previousSnapshot = historyRef.current.past.pop();
+    if (previousSnapshot) {
+      console.log('⏮️ Undo:', previousSnapshot);
+      setNodesRaw(previousSnapshot.nodes);
+      setEdges(previousSnapshot.edges);
+    }
+  }, [createSnapshot, setNodesRaw, setEdges]);
+
+  // Redo function
+  const handleRedo = useCallback(() => {
+    if (historyRef.current.future.length === 0) {
+      console.log('⏭️ Nothing to redo');
+      return;
+    }
+
+    // Save current state to past
+    historyRef.current.past.push(createSnapshot());
+
+    // Get next state
+    const nextSnapshot = historyRef.current.future.pop();
+    if (nextSnapshot) {
+      console.log('⏭️ Redo:', nextSnapshot);
+      setNodesRaw(nextSnapshot.nodes);
+      setEdges(nextSnapshot.edges);
+    }
+  }, [createSnapshot, setNodesRaw, setEdges]);
+
+  // Keyboard shortcuts for Undo/Redo
+  useEffect(() => {
+    const handleKeyDown = (event) => {
+      // Check if user is typing in an input/textarea
+      const isInputElement = event.target.tagName === 'INPUT' ||
+                            event.target.tagName === 'TEXTAREA' ||
+                            event.target.contentEditable === 'true';
+
+      if (isInputElement) {
+        // Still allow undo/redo in input fields
+      }
+
+      // Ctrl+Z (or Cmd+Z on Mac) for Undo
+      if ((event.ctrlKey || event.metaKey) && event.key === 'z' && !event.shiftKey) {
+        event.preventDefault();
+        handleUndo();
+      }
+      // Ctrl+Y or Ctrl+Shift+Z for Redo
+      else if (((event.ctrlKey || event.metaKey) && event.key === 'y') ||
+               ((event.ctrlKey || event.metaKey) && event.shiftKey && event.key === 'z')) {
+        event.preventDefault();
+        handleRedo();
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [handleUndo, handleRedo]);
+  
   // Wrapper around setNodes to validate parent-child relationships
   const setNodes = useCallback((updateFn) => {
     try {
@@ -409,6 +503,8 @@ const edgeTypes = {
   const [showGroupingModal, setShowGroupingModal] = useState(false);
   const [isSelectionMode, setIsSelectionMode] = useState(false);
   const [manuallySelectedNodes, setManuallySelectedNodes] = useState([]);
+  const [isTextModeActive, setIsTextModeActive] = useState(false);
+  const [textModeConfig, setTextModeConfig] = useState(null);
 
   // Saving state
   const [saveStatus, setSaveStatus] = useState('idle'); // 'idle', 'saving', 'saved', 'error'
@@ -520,6 +616,9 @@ const edgeTypes = {
           setSaveStatus('saved');
           setLastSaved(new Date());
           // Save successful (log removed for performance)
+          
+          // Add to history after successful save
+          pushToHistory();
           
           // Reset to idle after showing saved status
           setTimeout(() => {
@@ -1317,6 +1416,18 @@ const edgeTypes = {
     
     setSelectedNodes(selectedNodeObjects);
     
+    // If a text node is selected, emit event to update TextPanel
+    if (selectedNodeObjects.length === 1 && selectedNodeObjects[0].type === 'textNode') {
+      const textNode = selectedNodeObjects[0];
+      const selectEvent = new CustomEvent('selectTextElement', {
+        detail: {
+          id: textNode.id,
+          ...textNode.data
+        }
+      });
+      document.dispatchEvent(selectEvent);
+    }
+    
     // Show grouping toolbar if multiple nodes are selected (and not flowchart elements)
     if (selectedNodeObjects.length >= 2) {
       // Check if any selected nodes are part of a flowchart group
@@ -1898,7 +2009,8 @@ const edgeTypes = {
             formats: {},
             flowchartGroup: selectedFlowchartGroup,
             flowchartType: flowchartType,
-            flowchartName: flowchartName
+            flowchartName: flowchartName,
+            workspaceId: workspace?.workspaceId
           }
         };
         break;
@@ -1917,11 +2029,54 @@ const edgeTypes = {
   };
 
   // Handle canvas click to hide flowchart toolbar and context menu
-  const onPaneClick = useCallback(() => {
+  const onPaneClick = useCallback((event) => {
+    console.log('🖱️ Pane clicked - Text mode active:', isTextModeActive);
+    
+    // If text mode is active, create a new text node
+    if (isTextModeActive && reactFlowInstance) {
+      console.log('✏️ Creating text node from pane click');
+      const position = reactFlowInstance.screenToFlowPosition({
+        x: event.clientX,
+        y: event.clientY
+      });
+
+      const newTextNode = {
+        id: `text_${Date.now()}`,
+        type: 'textNode',
+        position,
+        data: {
+          name: 'Text',
+          type: 'text',
+          content: 'Type here...',
+          fontSize: textModeConfig?.fontSize || '16',
+          fontFamily: textModeConfig?.fontFamily || 'Arial',
+          color: textModeConfig?.color || '#000000',
+          backgroundColor: textModeConfig?.backgroundColor || '#ffffff',
+          formats: [],
+          isEditing: true,
+          workspaceId: workspace?.workspaceId
+        }
+      };
+
+      console.log('✏️ Adding text node:', newTextNode);
+      setNodes(nds => [...nds, newTextNode]);
+      
+      // Emit event to select this text element in the panel
+      const selectEvent = new CustomEvent('selectTextElement', {
+        detail: newTextNode.data
+      });
+      document.dispatchEvent(selectEvent);
+      
+      // Prevent default pane click behavior
+      event.stopPropagation();
+      return;
+    }
+    
+    // Normal pane click behavior
     setShowFlowchartToolbar(false);
     setSelectedFlowchartGroup(null);
     setContextMenu({ isVisible: false, position: { x: 0, y: 0 }, selectedNodes: [] });
-  }, []);
+  }, [isTextModeActive, reactFlowInstance, textModeConfig, setNodes, workspace?.workspaceId]);
 
   // Handle right-click context menu
   const onNodeContextMenu = useCallback((event, node) => {
@@ -2239,6 +2394,7 @@ const edgeTypes = {
           color: textData.color,
           backgroundColor: textData.backgroundColor,
           formats: textData.formats,
+          workspaceId: workspace?.workspaceId
         },
       };
       
@@ -2623,6 +2779,73 @@ const edgeTypes = {
     };
   }, [setNodes]);
 
+  // Handle delete element
+  useEffect(() => {
+    const handleDeleteElement = (event) => {
+      const { elementId } = event.detail;
+      console.log('🗑️ Deleting element:', elementId);
+      
+      // Remove the node from canvas
+      setNodes(nds => nds.filter(node => node.id !== elementId));
+      
+      // Remove all edges connected to this node
+      setEdges(eds => eds.filter(edge => edge.source !== elementId && edge.target !== elementId));
+      
+      // Track the deletion activity
+      try {
+        trackActivity('element_removed', 'delete', 'element', {
+          elementId: elementId,
+          elementType: 'unknown',
+          details: {
+            canvasAction: true,
+            deletedVia: 'elements-overview'
+          }
+        });
+      } catch (e) {
+        console.error('❌ Error tracking delete activity:', e);
+      }
+    };
+
+    document.addEventListener('deleteElement', handleDeleteElement);
+    
+    return () => {
+      document.removeEventListener('deleteElement', handleDeleteElement);
+    };
+  }, [setNodes, setEdges, trackActivity]);
+
+  // Handle lock/unlock element
+  useEffect(() => {
+    const handleToggleLockElement = (event) => {
+      const { elementId } = event.detail;
+      console.log('🔒 Toggling lock for element:', elementId);
+      
+      setNodes(nds => nds.map(node => {
+        if (node.id === elementId) {
+          const isCurrentlyLocked = node.data?.locked || false;
+          const willBeLocked = !isCurrentlyLocked;
+          
+          console.log(`🔐 Element ${elementId} lock status: ${isCurrentlyLocked} → ${willBeLocked}`);
+          
+          return {
+            ...node,
+            data: {
+              ...node.data,
+              locked: willBeLocked
+            },
+            draggable: !willBeLocked // Prevent dragging when locked
+          };
+        }
+        return node;
+      }));
+    };
+
+    document.addEventListener('toggleLockElement', handleToggleLockElement);
+    
+    return () => {
+      document.removeEventListener('toggleLockElement', handleToggleLockElement);
+    };
+  }, [setNodes]);
+
   // Handle edge deletion
   const onEdgesDelete = useCallback((edgesToDelete) => {
     console.log('🗑️ Deleting edges:', edgesToDelete);
@@ -2696,6 +2919,55 @@ const edgeTypes = {
     console.log('✅ Valid connection');
     return true;
   }, [edges]);
+
+  // Handle text mode activation
+  useEffect(() => {
+    const handleActivateTextMode = (event) => {
+      const { active, ...config } = event.detail;
+      setIsTextModeActive(active);
+      setTextModeConfig(config);
+      console.log('📝 Text mode:', active ? 'ON' : 'OFF');
+    };
+
+    document.addEventListener('activateTextMode', handleActivateTextMode);
+    return () => document.removeEventListener('activateTextMode', handleActivateTextMode);
+  }, []);
+
+  // Listen for text element selection from TextPanel
+  useEffect(() => {
+    const handleSelectTextElement = (event) => {
+      const textElement = event.detail;
+      console.log('🎯 Text element selected:', textElement);
+      // This event is handled by WorkspacePage which updates the TextPanel state
+    };
+
+    document.addEventListener('selectTextElement', handleSelectTextElement);
+    return () => document.removeEventListener('selectTextElement', handleSelectTextElement);
+  }, []);
+
+  // Listen for text element updates from TextPanel
+  useEffect(() => {
+    const handleUpdateTextElement = (event) => {
+      const updatedElement = event.detail;
+      console.log('✏️ Updating text element:', updatedElement);
+      
+      setNodes(nds => nds.map(node => {
+        if (node.id === updatedElement.id) {
+          return {
+            ...node,
+            data: {
+              ...node.data,
+              ...updatedElement
+            }
+          };
+        }
+        return node;
+      }));
+    };
+
+    document.addEventListener('updateTextElement', handleUpdateTextElement);
+    return () => document.removeEventListener('updateTextElement', handleUpdateTextElement);
+  }, [setNodes]);
 
   // Keyboard shortcuts
   useEffect(() => {
@@ -3478,6 +3750,30 @@ const edgeTypes = {
                     </span> */}
                   </div>
                 )}
+
+                {/* Undo/Redo Buttons */}
+                <div className="flex items-center gap-1 border-l border-gray-200 pl-4">
+                  <button
+                    onClick={handleUndo}
+                    disabled={historyRef.current.past.length === 0}
+                    className="p-2 rounded-lg transition-colors border text-gray-700 hover:bg-gray-100 hover:text-gray-900 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-transparent"
+                    title="Undo (Ctrl+Z)"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                    </svg>
+                  </button>
+                  <button
+                    onClick={handleRedo}
+                    disabled={historyRef.current.future.length === 0}
+                    className="p-2 rounded-lg transition-colors border text-gray-700 hover:bg-gray-100 hover:text-gray-900 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-transparent"
+                    title="Redo (Ctrl+Y)"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19v-6a2 2 0 012-2h2a2 2 0 012 2v6a2 2 0 01-2 2h-2a2 2 0 01-2-2zm0 0V9a2 2 0 00-2-2H9a2 2 0 00-2 2v10m6 0a2 2 0 01-2 2H9a2 2 0 01-2-2m0 0V5a2 2 0 01 2-2h2a2 2 0 012 2v14a2 2 0 002 2h2a2 2 0 002-2z" />
+                    </svg>
+                  </button>
+                </div>
               </div>
             </div>
           </Panel>
@@ -3714,10 +4010,10 @@ const edgeTypes = {
       />
       {edgeLabelModal.isOpen && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black bg-opacity-50">
-          <div className="bg-white rounded-xl shadow-2xl w-full max-w-md p-6">
+          <div className="bg-white rounded-xl shadow-2xl w-full max-w-sm p-4">
             {/* Header */}
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold text-gray-900">Edit Connection</h3>
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="text-base font-semibold text-gray-900">Edit Connection</h3>
               <button
                 onClick={closeEdgeLabelModal}
                 className="p-1 hover:bg-gray-100 rounded-lg transition-colors"
@@ -3727,8 +4023,8 @@ const edgeTypes = {
             </div>
             
             {/* Connection Name */}
-            <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700 mb-1">Connection Name</label>
+            <div className="mb-3">
+              <label className="block text-xs font-medium text-gray-700 mb-1">Connection Name</label>
               <input
                 type="text"
                 autoFocus
@@ -3745,14 +4041,14 @@ const edgeTypes = {
                   }
                 }}
                 placeholder="e.g., Data Flow, Approval, Next Step..."
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className="w-full px-2 py-1.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               />
             </div>
             
             {/* Connection Style */}
-            <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700 mb-2">Line Style</label>
-              <div className="grid grid-cols-4 gap-2">
+            <div className="mb-3">
+              <label className="block text-xs font-medium text-gray-700 mb-1.5">Line Style</label>
+              <div className="grid grid-cols-4 gap-1.5">
                 {[
                   { id: 'default', label: 'Solid', icon: '━' },
                   { id: 'dashed', label: 'Dashed', icon: '┅' },
@@ -3762,7 +4058,7 @@ const edgeTypes = {
                   <button
                     key={style.id}
                     onClick={() => setEdgeStyleInput(style.id)}
-                    className={`px-3 py-2 rounded-lg border-2 text-sm font-medium transition-all ${
+                    className={`px-2 py-1.5 rounded-lg border-2 text-xs font-medium transition-all ${
                       edgeStyleInput === style.id
                         ? 'border-blue-500 bg-blue-50 text-blue-700'
                         : 'border-gray-200 hover:border-gray-300 text-gray-600'
@@ -3776,9 +4072,9 @@ const edgeTypes = {
             </div>
             
             {/* Connection Color */}
-            <div className="mb-6">
-              <label className="block text-sm font-medium text-gray-700 mb-2">Line Color</label>
-              <div className="flex flex-wrap gap-2">
+            <div className="mb-4">
+              <label className="block text-xs font-medium text-gray-700 mb-1.5">Line Color</label>
+              <div className="flex flex-wrap gap-1.5">
                 {[
                   { color: '#3b82f6', name: 'Blue' },
                   { color: '#10b981', name: 'Green' },
@@ -3791,7 +4087,7 @@ const edgeTypes = {
                   <button
                     key={c.color}
                     onClick={() => setEdgeColorInput(c.color)}
-                    className={`w-8 h-8 rounded-full border-2 transition-all ${
+                    className={`w-7 h-7 rounded-full border-2 transition-all ${
                       edgeColorInput === c.color
                         ? 'border-gray-900 ring-2 ring-offset-2 ring-blue-500'
                         : 'border-gray-300 hover:border-gray-400'
@@ -3804,34 +4100,34 @@ const edgeTypes = {
             </div>
             
             {/* Action Buttons */}
-            <div className="flex justify-between items-center">
+            <div className="flex justify-between items-center gap-2">
               {/* Delete Button */}
               <button
                 type="button"
                 onClick={handleDeleteEdge}
-                className="px-4 py-2 text-sm rounded-lg border border-red-300 text-red-600 hover:bg-red-50 flex items-center gap-2 transition-colors"
+                className="px-2 py-1.5 text-xs rounded-lg border border-red-300 text-red-600 hover:bg-red-50 flex items-center gap-1.5 transition-colors"
               >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                 </svg>
-                Delete Connection
+                Delete
               </button>
               
               {/* Save/Cancel Buttons */}
-              <div className="flex gap-2">
+              <div className="flex gap-1.5">
                 <button
                   type="button"
                   onClick={closeEdgeLabelModal}
-                  className="px-4 py-2 text-sm rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-100 transition-colors"
+                  className="px-2 py-1.5 text-xs rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-100 transition-colors"
                 >
                   Cancel
                 </button>
                 <button
                   type="button"
                   onClick={handleEdgeLabelSave}
-                  className="px-4 py-2 text-sm rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition-colors"
+                  className="px-2 py-1.5 text-xs rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition-colors"
                 >
-                  Save Changes
+                  Save
                 </button>
               </div>
             </div>

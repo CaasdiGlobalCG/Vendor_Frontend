@@ -188,6 +188,7 @@ const WorkspacePage = () => {
   const [showTextPanel, setShowTextPanel] = useState(false);
   const [showTemplatesPanel, setShowTemplatesPanel] = useState(false);
   const [showInvoiceTool, setShowInvoiceTool] = useState(false);
+  const [selectedTextElement, setSelectedTextElement] = useState(null);
   const [showManageBOQModal, setShowManageBOQModal] = useState(false);
   const [showPostServicesModal, setShowPostServicesModal] = useState(false);
   const [showUpdateProgressModal, setShowUpdateProgressModal] = useState(false);
@@ -207,6 +208,22 @@ const WorkspacePage = () => {
   const [quotes, setQuotes] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+
+  // Listen for text element selection from canvas
+  useEffect(() => {
+    const handleSelectTextElement = (event) => {
+      const textElement = event.detail;
+      console.log('🎯 Text element selected from canvas:', textElement);
+      setSelectedTextElement(textElement);
+      // Optionally open the text panel
+      if (!showTextPanel) {
+        setShowTextPanel(true);
+      }
+    };
+
+    document.addEventListener('selectTextElement', handleSelectTextElement);
+    return () => document.removeEventListener('selectTextElement', handleSelectTextElement);
+  }, [showTextPanel]);
 
   // Debug: Log notifications array whenever it changes
   useEffect(() => {
@@ -1231,6 +1248,15 @@ const WorkspacePage = () => {
     setShowInvoiceTool(false);
   };
 
+  const handleUpdateTextElement = (updatedElement) => {
+    setSelectedTextElement(updatedElement);
+    // Emit event to CanvasWorkspace to update the text element
+    const event = new CustomEvent('updateTextElement', {
+      detail: updatedElement
+    });
+    document.dispatchEvent(event);
+  };
+
   const handleTemplatesClick = () => {
     setShowTemplatesPanel(true);
     setShowTextPanel(false);
@@ -1694,6 +1720,8 @@ const WorkspacePage = () => {
       <TextPanel
         isOpen={showTextPanel}
         onClose={() => setShowTextPanel(false)}
+        selectedTextElement={selectedTextElement}
+        onUpdateTextElement={handleUpdateTextElement}
       />
 
       {/* Templates Panel */}

@@ -291,19 +291,6 @@ const WorkspaceHeader = ({
               <span>Elements</span>
             </button>
             <button 
-              data-tour="layouts-btn"
-              disabled={!isCanvasActive}
-              onClick={isCanvasActive ? onLayoutsClick : undefined}
-              className={`flex items-center space-x-2 px-3 py-2 rounded-lg text-sm font-normal transition-all duration-200 ${
-                isCanvasActive
-                    ? 'text-gray-700 hover:shadow-md cursor-pointer'
-                    : 'text-gray-400 cursor-not-allowed'
-}`}
-            >
-              <Plus className="w-4 h-4" />
-              <span>Layouts</span>
-            </button>
-            <button 
               data-tour="text-btn"
               disabled={!isCanvasActive}
               onClick={isCanvasActive ? onTextClick : undefined}

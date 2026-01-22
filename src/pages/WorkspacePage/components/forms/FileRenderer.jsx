@@ -78,6 +78,55 @@ const FileRenderer = ({ data }) => {
   const colorClass = getFileTypeColor(fileData.name);
   const isImage = fileData.type?.startsWith('image/');
 
+  // For images, show the image preview directly
+  if (isImage) {
+    return (
+      <div className="w-full h-full relative group">
+        {/* Image Preview */}
+        <img
+          src={fileData.url}
+          alt={fileData.name}
+          className="w-full h-full object-cover rounded-lg"
+          onError={(e) => {
+            e.target.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="100" height="100"%3E%3Crect fill="%23e5e7eb" width="100" height="100"/%3E%3Ctext x="50" y="50" dominant-baseline="middle" text-anchor="middle" font-size="12" fill="%236b7280"%3EImage Error%3C/text%3E%3C/svg%3E';
+          }}
+        />
+        
+        {/* Hover Overlay with Actions */}
+        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 rounded-lg flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all">
+          <div className="flex items-center justify-center space-x-3">
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                downloadFile();
+              }}
+              className="p-2 bg-white rounded-full hover:bg-gray-100 transition-colors shadow-lg"
+              title="Download"
+            >
+              <Download className="w-5 h-5 text-gray-700" />
+            </button>
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                openFile();
+              }}
+              className="p-2 bg-white rounded-full hover:bg-gray-100 transition-colors shadow-lg"
+              title="Open in new tab"
+            >
+              <ExternalLink className="w-5 h-5 text-gray-700" />
+            </button>
+          </div>
+        </div>
+
+        {/* File Info Badge */}
+        <div className="absolute top-2 left-2 bg-white/90 px-2 py-1 rounded text-xs max-w-[calc(100%-1rem)]">
+          <p className="font-medium truncate text-gray-900">{fileData.name}</p>
+          <p className="text-gray-600">{formatFileSize(fileData.size)}</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="w-full">
       {/* File Card */}
@@ -164,43 +213,30 @@ const FileRenderer = ({ data }) => {
 
             {/* Modal Content */}
             <div className="p-4 max-h-[70vh] overflow-auto">
-              {isImage ? (
-                <img
-                  src={fileData.url}
-                  alt={fileData.name}
-                  className="max-w-full max-h-full object-contain mx-auto"
-                />
-              ) : (
-                <div className="text-center py-12">
-                  <FileIcon className="w-16 h-16 mx-auto mb-4 text-gray-400" />
-                  <p className="text-gray-600 mb-4">Preview not available for this file type</p>
-                  <div className="flex items-center justify-center space-x-3">
-                    <button
-                      onClick={downloadFile}
-                      className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-                    >
-                      <Download className="w-4 h-4" />
-                      <span>Download File</span>
-                    </button>
-                    <button
-                      onClick={openFile}
-                      className="flex items-center space-x-2 px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
-                    >
-                      <ExternalLink className="w-4 h-4" />
-                      <span>Open in New Tab</span>
-                    </button>
-                  </div>
+              <div className="text-center py-12">
+                <FileIcon className="w-16 h-16 mx-auto mb-4 text-gray-400" />
+                <p className="text-gray-600 mb-4">Preview not available for this file type</p>
+                <div className="flex items-center justify-center space-x-3">
+                  <button
+                    onClick={downloadFile}
+                    className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                  >
+                    <Download className="w-4 h-4" />
+                    <span>Download File</span>
+                  </button>
+                  <button
+                    onClick={openFile}
+                    className="flex items-center space-x-2 px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
+                  >
+                    <ExternalLink className="w-4 h-4" />
+                    <span>Open in New Tab</span>
+                  </button>
                 </div>
-              )}
+              </div>
             </div>
           </div>
         </div>
       )}
-
-      {/* Usage Info */}
-      <div className="text-center text-xs text-gray-500 mt-2">
-        Uploaded file • Click actions to interact
-      </div>
     </div>
   );
 };
