@@ -34,13 +34,55 @@ const LeadDetailPage = () => {
     const location = useLocation();
     const navigate = useNavigate();
     const { currentUser } = useContext(VendorContext);
-    const leadDetails = location.state?.projectData;
+    let leadDetails = location.state?.projectData;
 
     // Quotation upload state
     const [quotationFile, setQuotationFile] = useState(null);
     const [isUploadingQuotation, setIsUploadingQuotation] = useState(false);
     const [uploadedQuotation, setUploadedQuotation] = useState(null);
     const [quotationError, setQuotationError] = useState(null);
+    const [freshLeadData, setFreshLeadData] = useState(null);
+
+    // Use fresh data from API if available, otherwise use stale data from location.state
+    if (freshLeadData) {
+        leadDetails = { ...leadDetails, ...freshLeadData };
+    }
+
+    // Fetch fresh lead data from API on component mount
+    useEffect(() => {
+        const fetchFreshLeadData = async () => {
+            try {
+                const vendorId = currentUser?.vendorId || currentUser?.id;
+                if (!vendorId || !leadId) return;
+
+                const response = await fetch(`/api/vendor-leads/${leadId}`, {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data?.lead) {
+                        setFreshLeadData({
+                            rejectionReason: data.lead.rejectionReason,
+                            negotiationHistory: data.lead.negotiationHistory,
+                            leadVersion: data.lead.leadVersion,
+                            status: data.lead.status
+                        });
+                    }
+                }
+            } catch (error) {
+                console.error('Error fetching fresh lead data:', error);
+                // Silently fail - use stale data from location.state
+            }
+        };
+
+        fetchFreshLeadData();
+    }, [leadId, currentUser]);
+
+    // Quotation upload state
 
     // Helper: download BOQ via backend-signed URL
     const handleDownloadBoq = async () => {
@@ -341,6 +383,63 @@ const LeadDetailPage = () => {
                     Detailed Bill of Quantities (BOQ) is available in the downloadable PDF document linked above (if provided).
                 </div>
             </div>
+
+            {/* PM Rejection Feedback (if rejected for revision or has negotiation history) */}
+            {(leadDetails?.status === 'sent' || leadDetails?.rejectionReason || leadDetails?.negotiationHistory?.length > 0) && leadDetails?.rejectionReason && (
+                <div className="mb-10 p-4 rounded-lg border-l-4 border-rose-500 bg-rose-50">
+                    <div className="flex items-start gap-3">
+                        <div className="flex-shrink-0">
+                            {leadDetails?.status === 'sent' && leadDetails?.negotiationHistory?.length > 0 ? (
+                                <ArrowPathIcon className="h-5 w-5 text-orange-600 mt-0.5" />
+                            ) : (
+                                <XMarkIcon className="h-5 w-5 text-rose-600 mt-0.5" />
+                            )}
+                        </div>
+                        <div className="flex-1">
+                            <h3 className="text-sm font-semibold text-rose-800 mb-2">
+                                {leadDetails?.status === 'sent' && leadDetails?.negotiationHistory?.length > 0 
+                                    ? `Lead Updated & Resent for Revision (v${leadDetails?.leadVersion || 1})`
+                                    : `Lead Returned for Revision (v${leadDetails?.leadVersion || 1})`
+                                }
+                            </h3>
+                            {leadDetails?.status === 'sent' && leadDetails?.negotiationHistory?.length > 0 && (
+                                <div className="text-xs text-orange-700 bg-orange-100 rounded px-2 py-1 mb-3 inline-block">
+                                    ✓ PM has updated this lead and resent it for your review
+                                </div>
+                            )}
+                            <div className="text-sm text-rose-700 mb-3">
+                                <p className="font-medium mb-1">Reason for Rejection:</p>
+                                <p className="bg-white rounded px-3 py-2 border border-rose-200 mb-2">
+                                    {leadDetails.rejectionReason}
+                                </p>
+                            </div>
+                            {leadDetails?.pmDecision?.feedback && (
+                                <div className="text-sm text-rose-700">
+                                    <p className="font-medium mb-1">PM Feedback:</p>
+                                    <p className="bg-white rounded px-3 py-2 border border-rose-200">
+                                        {leadDetails.pmDecision.feedback}
+                                    </p>
+                                </div>
+                            )}
+                            {leadDetails?.negotiationHistory && leadDetails.negotiationHistory.length > 0 && (
+                                <div className="mt-3 pt-3 border-t border-rose-200">
+                                    <p className="text-xs font-medium text-rose-700 mb-2">Negotiation History:</p>
+                                    <div className="space-y-1">
+                                        {leadDetails.negotiationHistory.map((entry, idx) => (
+                                            <div key={idx} className="text-xs text-rose-600 bg-white rounded px-2 py-1 border border-rose-100">
+                                                <span className="font-medium">v{entry.version}:</span> {entry.action === 'pm_rejected' ? 'PM Rejected' : 'PM Resent'} {entry.rejectionReason && `- ${entry.rejectionReason}`}
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+                            <p className="text-xs text-rose-600 mt-3 italic">
+                                Please update your quotation and resubmit below to address the feedback.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            )}
 
             {/* Upload/View Quotation */}
             <div className="mb-10">
