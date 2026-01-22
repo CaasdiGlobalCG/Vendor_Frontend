@@ -293,6 +293,14 @@ const edgeTypes = {
       // Fail silently to prevent crashes
     }
   }, []);
+
+  // Emit nodes change event for the Elements Overview sidebar
+  useEffect(() => {
+    const event = new CustomEvent('canvasNodesChanged', {
+      detail: { nodes }
+    });
+    document.dispatchEvent(event);
+  }, [nodes]);
   
   // Element sequence counter - tracks the order elements are added
   const elementSequenceRef = useRef(() => {
@@ -2201,6 +2209,8 @@ const edgeTypes = {
     zoomOut: handleZoomOut,
     fitView: handleFitView,
     setZoomLevel: handleSetZoomLevel,
+    getNodes: () => nodes,
+    getEdges: () => edges,
   }));
 
   // Handle viewport changes to update zoom level
@@ -2529,6 +2539,89 @@ const edgeTypes = {
       document.removeEventListener('elementDoubleClick', handleElementDoubleClick);
     };
   },  [getAutoPlacementPosition, setNodes]);
+
+  // Handle zoom to element from Elements Overview
+  useEffect(() => {
+    const handleZoomToElement = (event) => {
+      const { elementId } = event.detail;
+      console.log('🔍 Zooming to element:', elementId);
+      
+      // Find the node with the given ID
+      const targetNode = nodes.find(node => node.id === elementId);
+      
+      if (targetNode && reactFlowInstance) {
+        // Select the node
+        setNodes(nds => nds.map(node => ({
+          ...node,
+          selected: node.id === elementId
+        })));
+        
+        // Calculate position, accounting for parent offsets if element is nested
+        let x = targetNode.position.x;
+        let y = targetNode.position.y;
+        let width = targetNode.width || 200;
+        let height = targetNode.height || 200;
+        
+        // If the node has a parent (is inside a container), add parent position
+        if (targetNode.parentNode) {
+          const parentNode = nodes.find(n => n.id === targetNode.parentNode);
+          if (parentNode) {
+            x += parentNode.position.x;
+            y += parentNode.position.y;
+            console.log('📦 Element is nested in parent:', { parentId: targetNode.parentNode, parentPos: parentNode.position });
+          }
+        }
+        
+        // Get the center position of the target node
+        const position = {
+          x: x + width / 2,
+          y: y + height / 2
+        };
+        
+        // Use a zoom level that fits the element well (higher zoom = closer)
+        const targetZoom = 1.5;
+        reactFlowInstance.setCenter(position.x, position.y, { zoom: targetZoom, duration: 800 });
+        
+        console.log('✅ Zoomed to element:', { elementId, position, zoom: targetZoom, isNested: !!targetNode.parentNode });
+      } else {
+        console.warn('❌ Element not found or ReactFlow instance not ready:', { elementId, nodeFound: !!targetNode, instanceReady: !!reactFlowInstance });
+      }
+    };
+
+    document.addEventListener('zoomToElement', handleZoomToElement);
+    
+    return () => {
+      document.removeEventListener('zoomToElement', handleZoomToElement);
+    };
+  }, [nodes, setNodes, reactFlowInstance]);
+
+  // Handle update element name
+  useEffect(() => {
+    const handleUpdateElementName = (event) => {
+      const { elementId, newName } = event.detail;
+      console.log('✏️ Updating element name:', { elementId, newName });
+      
+      // Update the node data with new name
+      setNodes(nds => nds.map(node => {
+        if (node.id === elementId) {
+          return {
+            ...node,
+            data: {
+              ...node.data,
+              name: newName
+            }
+          };
+        }
+        return node;
+      }));
+    };
+
+    document.addEventListener('updateElementName', handleUpdateElementName);
+    
+    return () => {
+      document.removeEventListener('updateElementName', handleUpdateElementName);
+    };
+  }, [setNodes]);
 
   // Handle edge deletion
   const onEdgesDelete = useCallback((edgesToDelete) => {

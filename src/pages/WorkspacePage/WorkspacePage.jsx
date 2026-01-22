@@ -155,6 +155,7 @@ const WorkspacePage = () => {
   const [workspace, setWorkspace] = useState(null);
   const [workspaceLoading, setWorkspaceLoading] = useState(true);
   const [workspaceError, setWorkspaceError] = useState(null);
+  const [canvasNodes, setCanvasNodes] = useState([]);
   
   // User role state (detected dynamically including client detection)
   const [detectedUserRole, setDetectedUserRole] = useState(userRole);
@@ -882,6 +883,21 @@ const WorkspacePage = () => {
 
     return () => clearInterval(autoSaveInterval);
   }, [workspace, workspaceId]);
+
+  // Listen for canvas nodes changes and update the canvasNodes state
+  useEffect(() => {
+    const handleNodesChanged = (event) => {
+      const { nodes } = event.detail;
+      console.log('📊 Canvas nodes updated:', nodes.length, 'elements');
+      setCanvasNodes(nodes || []);
+    };
+
+    document.addEventListener('canvasNodesChanged', handleNodesChanged);
+
+    return () => {
+      document.removeEventListener('canvasNodesChanged', handleNodesChanged);
+    };
+  }, []);
 
   // Handle browser back button when invoice tool overlay is open
   useEffect(() => {
@@ -1615,6 +1631,14 @@ const WorkspacePage = () => {
             isConnected={isConnected}
             onMarkNotificationAsRead={markNotificationAsRead}
             onMarkAllAsRead={markAllAsRead}
+            canvasElements={canvasNodes}
+            onZoomToElement={(elementId) => {
+              // Emit event to CanvasWorkspace to zoom and focus on the element
+              const event = new CustomEvent('zoomToElement', {
+                detail: { elementId }
+              });
+              document.dispatchEvent(event);
+            }}
           />
         </div>
       </div>
