@@ -22,7 +22,8 @@ export const CopilotProvider = ({ children, userId, workspaceId }) => {
   const [conversationHistory, setConversationHistory] = useState([]);
 
   const baseURL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5001';
-  const API_BASE_URL = `${baseURL}/api`;
+  // Check if /api is already included in the URL
+  const API_BASE_URL = baseURL.endsWith('/api') ? baseURL : `${baseURL}/api`;
 
   // Initialize with welcome message and suggested questions
   useEffect(() => {

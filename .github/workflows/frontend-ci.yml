@@ -68,6 +68,7 @@ jobs:
           build-args: |
             VITE_CLIENT_URL=${{secrets.VITE_CLIENT_PROD_URL}}
             VITE_SALES_URL=${{secrets.VITE_SALES_PROD_URL}}
+            VITE_BACKEND_URL=${{secrets.VITE_BACKEND_PROD_URL}}
           platforms: linux/amd64
 
       - name: Verify build args (prod)
@@ -76,6 +77,7 @@ jobs:
           echo "Production build completed with:"
           echo "VITE_CLIENT_URL is set: ${{ secrets.VITE_CLIENT_PROD_URL != '' }}"
           echo "VITE_SALES_URL is set: ${{ secrets.VITE_SALES_PROD_URL != '' }}"
+          echo "VITE_BACKEND_URL is set: ${{ secrets.VITE_BACKEND_PROD_URL != '' }}"
 
       - name: Build and push image (staging)
         if: steps.target.outputs.ENV == 'staging'
@@ -89,6 +91,7 @@ jobs:
           build-args: |
             VITE_CLIENT_URL=${{secrets.VITE_CLIENT_STAGING_URL}}
             VITE_SALES_URL=${{secrets.VITE_SALES_STAGING_URL}}
+            VITE_BACKEND_URL=${{secrets.VITE_BACKEND_STAGING_URL}}
           platforms: linux/amd64
 
       - name: Verify build args (staging)
@@ -97,6 +100,7 @@ jobs:
           echo "Staging build completed with:"
           echo "VITE_CLIENT_URL is set: ${{ secrets.VITE_CLIENT_STAGING_URL != '' }}"
           echo "VITE_SALES_URL is set: ${{ secrets.VITE_SALES_STAGING_URL != '' }}"
+          echo "VITE_BACKEND_URL is set: ${{ secrets.VITE_BACKEND_STAGING_URL != '' }}"
 
       - name: Setup kubectl
         uses: azure/setup-kubectl@v4
