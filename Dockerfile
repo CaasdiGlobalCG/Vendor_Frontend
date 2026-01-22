@@ -4,12 +4,10 @@ FROM node:20-alpine AS build
 # Accept build arguments for environment variables
 ARG VITE_CLIENT_URL
 ARG VITE_SALES_URL
-ARG VITE_BACKEND_URL
 
 # Set them as environment variables so Vite can access them during build
 ENV VITE_CLIENT_URL=${VITE_CLIENT_URL}
 ENV VITE_SALES_URL=${VITE_SALES_URL}
-ENV VITE_BACKEND_URL=${VITE_BACKEND_URL}
 
 # Install system libraries required by Node modules (esp. Vite, Rollup)
 RUN apk add --no-cache libc6-compat
