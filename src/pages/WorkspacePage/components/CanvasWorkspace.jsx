@@ -27,6 +27,7 @@ import GroupingToolbar from './GroupingToolbar';
 import ContextMenu from './ContextMenu';
 import TaskCardConfigModal from './modals/TaskCardConfigModal';
 import { getFlowchartTemplate } from '../utils/flowchartTemplates';
+import { getWorkspaceById } from '../utils/workspaceApi';
 import config from '../../../config/env';
 
 // Custom CSS to ensure controls work properly and add auto-connection effects
@@ -214,9 +215,92 @@ const edgeTypes = {
     };
   };
 
+  // Utility function to clean up orphaned nodes (nodes with invalid parentNode references)
+  // Defined outside useCallback since it's used in initialization
+  const cleanupOrphanedNodesHelper = (nodesToClean) => {
+    if (!nodesToClean || !Array.isArray(nodesToClean) || nodesToClean.length === 0) return [];
+    
+    try {
+      // Get all node IDs
+      const nodeIds = new Set(nodesToClean.map(n => n?.id).filter(Boolean));
+      
+      // First pass: collect parent nodes (must come before children)
+      const parentNodes = [];
+      const childNodes = [];
+      const regularNodes = [];
+      
+      nodesToClean.forEach(node => {
+        if (!node || !node.id) return; // Skip invalid nodes
+        
+        if (node.data?.isGroupContainer) {
+          parentNodes.push(node);
+        } else if (node.parentNode) {
+          // Check if parent exists
+          if (nodeIds.has(node.parentNode)) {
+            childNodes.push(node);
+          } else {
+            // Parent doesn't exist - remove parentNode reference
+            console.log('🧹 Cleaning orphaned node:', node.id, '- parent not found:', node.parentNode);
+            regularNodes.push({
+              ...node,
+              parentNode: undefined,
+              extent: undefined,
+              data: {
+                ...node.data,
+                isGroupChild: false,
+                parentGroupId: undefined
+              }
+            });
+          }
+        } else {
+          regularNodes.push(node);
+        }
+      });
+      
+      // Return nodes in correct order: parents first, then children, then regular
+      return [...parentNodes, ...childNodes, ...regularNodes];
+    } catch (err) {
+      console.error('❌ Error cleaning up orphaned nodes:', err);
+      // Return original array if cleanup fails
+      return nodesToClean;
+    }
+  };
+
   const canvasData = getCanvasData();
-  const [nodes, setNodes, onNodesChange] = useNodesState(canvasData.nodes);
+  // Clean up nodes on initialization to remove orphaned parent references
+  const initialNodes = cleanupOrphanedNodesHelper(canvasData.nodes);
+  const [nodes, setNodesRaw, onNodesChange] = useNodesState(initialNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(canvasData.edges);
+  
+  // Wrapper around setNodes to validate parent-child relationships
+  const setNodes = useCallback((updateFn) => {
+    try {
+      // If it's a function, call it with current nodes
+      if (typeof updateFn === 'function') {
+        setNodesRaw(currentNodes => {
+          const updatedNodes = updateFn(currentNodes);
+          // Validate and clean before applying
+          const validatedNodes = cleanupOrphanedNodesHelper(updatedNodes);
+          return validatedNodes;
+        });
+      } else {
+        // If it's an array, validate directly
+        const validatedNodes = cleanupOrphanedNodesHelper(updateFn);
+        setNodesRaw(validatedNodes);
+      }
+    } catch (err) {
+      console.error('❌ Error in setNodes wrapper:', err);
+      // Fail silently to prevent crashes
+    }
+  }, []);
+
+  // Emit nodes change event for the Elements Overview sidebar
+  useEffect(() => {
+    const event = new CustomEvent('canvasNodesChanged', {
+      detail: { nodes }
+    });
+    document.dispatchEvent(event);
+  }, [nodes]);
   
   // Element sequence counter - tracks the order elements are added
   const elementSequenceRef = useRef(() => {
@@ -234,11 +318,17 @@ const edgeTypes = {
     elementSequenceRef.current = elementSequenceRef.current();
   }
 
+  // Track the last added element for auto-connection
+  const lastAddedNodeIdRef = useRef(null);
+  // Flag to prevent workspace data refresh from overwriting local node changes
+  const isUpdatingNodesLocallyRef = useRef(false);
+
   // Function to clear all elements from canvas
   const clearCanvas = () => {
     setNodes([]);
     setEdges([]);
     elementSequenceRef.current = 0; // Reset sequence when canvas is cleared
+    lastAddedNodeIdRef.current = null; // Reset last added element reference
     console.log('🧹 Canvas cleared - all elements removed');
   };
   const [reactFlowInstance, setReactFlowInstance] = useState(null);
@@ -324,8 +414,59 @@ const edgeTypes = {
   const [saveStatus, setSaveStatus] = useState('idle'); // 'idle', 'saving', 'saved', 'error'
   const [lastSaved, setLastSaved] = useState(null);
 
-  // Update canvas data when selectedSubtask changes
+  // Wrapped cleanup function using the helper
+  const cleanupOrphanedNodes = useCallback((nodesToClean) => {
+    return cleanupOrphanedNodesHelper(nodesToClean);
+  }, []);
+
+  // Refresh workspace data when navigating back or on mount to ensure latest state is loaded
+  // BUT only do this on initial mount, not when nodes change (to prevent losing local additions)
+  const hasRefreshedRef = useRef(false);
+  
   useEffect(() => {
+    const refreshWorkspaceData = async () => {
+      if (!workspace?.workspaceId || hasRefreshedRef.current) return;
+      
+      try {
+        console.log('🔄 Refreshing workspace data to ensure latest state is persisted...');
+        hasRefreshedRef.current = true;
+        const freshWorkspace = await getWorkspaceById(workspace.workspaceId);
+        
+        if (freshWorkspace && freshWorkspace.nodes) {
+          console.log('✅ Workspace data refreshed - loading latest nodes with persisted states');
+          // Only update if we haven't added any local nodes yet
+          // This ensures that locally added elements aren't lost
+          if (nodes.length === 0 && freshWorkspace.nodes.length > 0) {
+            // Clean up nodes with invalid parent references
+            const cleanedNodes = cleanupOrphanedNodes(freshWorkspace.nodes);
+            setNodes(cleanedNodes);
+            if (freshWorkspace.edges) {
+              setEdges(freshWorkspace.edges);
+            }
+          }
+        }
+      } catch (err) {
+        console.error('Error refreshing workspace data:', err);
+      }
+    };
+
+    // Use a timeout to ensure this runs after component is fully mounted
+    const timeoutId = setTimeout(() => {
+      refreshWorkspaceData();
+    }, 100);
+
+    return () => clearTimeout(timeoutId);
+  }, [workspace?.workspaceId]);
+
+  // Update canvas data when selectedSubtask changes
+  // BUT: Skip this if we're currently updating nodes locally (to prevent losing new additions)
+  useEffect(() => {
+    // If we're actively updating nodes locally (like after drop), skip this refresh
+    if (isUpdatingNodesLocallyRef.current) {
+      console.log('⏭️ Skipping canvas data update - currently updating nodes locally');
+      return;
+    }
+
     const newCanvasData = getCanvasData();
     console.log('🔄 CanvasWorkspace: Updating canvas data for subtask change', {
       subtaskId: selectedSubtask?.id,
@@ -334,9 +475,25 @@ const edgeTypes = {
       zoomLevel: newCanvasData.zoomLevel
     });
     
-    setNodes(newCanvasData.nodes);
-    setEdges(newCanvasData.edges);
+    // Directly clear and set nodes to ensure fresh data for new subtask
+    // Use setNodesRaw to bypass cleanup validation temporarily
+    if (Array.isArray(newCanvasData.nodes)) {
+      setNodesRaw(newCanvasData.nodes);
+    }
+    if (Array.isArray(newCanvasData.edges)) {
+      setEdges(newCanvasData.edges);
+    }
     updateZoomLevel(newCanvasData.zoomLevel);
+    
+    // Update last added node reference to the most recently added node (last in array)
+    if (newCanvasData.nodes && newCanvasData.nodes.length > 0) {
+      const lastNode = newCanvasData.nodes[newCanvasData.nodes.length - 1];
+      lastAddedNodeIdRef.current = lastNode.id;
+      console.log('📌 Set last added element to:', lastNode.id);
+    } else {
+      lastAddedNodeIdRef.current = null;
+      console.log('📌 Cleared last added element reference');
+    }
   }, [selectedSubtask?.id, workspace?.workspaceId, updateZoomLevel]);
 
   // Auto-save workspace data when nodes or edges change
@@ -506,11 +663,10 @@ const edgeTypes = {
 
   // Helper function to create a node with sequence number
   const createElementNode = (element, position, customData = null) => {
-    // Auto-increment sequence number for each new element
-    elementSequenceRef.current += 1;
-    const sequenceNum = elementSequenceRef.current;
+    // Get the next sequence number (count of existing sequenced elements + 1)
+    const sequenceNum = (nodes.filter(n => n.data?.sequenceNumber !== undefined && n.data.sequenceNumber !== null).length) + 1;
     
-    console.log('🏗️ createElementNode called with:', { element, position, customData, sequenceNum });
+    console.log('🏗️ createElementNode called with:', { element, position, customData, sequenceNum, totalNodes: nodes.length });
     
     const isLayout = element.width !== undefined || ['frame', 'rows', 'columns', 'grid', 'image'].includes(element.type);
     const isText = element.type === 'text' || element.content !== undefined;
@@ -666,12 +822,116 @@ const edgeTypes = {
     return newNode;
   };
 
+  // Helper function to auto-connect a newly added node to the previous element
+  const autoConnectNewNode = (newNode) => {
+    const previousNodeId = lastAddedNodeIdRef.current;
+    console.log('📌 Previous node ID stored:', previousNodeId);
+    
+    if (previousNodeId) {
+      setNodes((currentNodes) => {
+        // Find the previous node
+        const previousNode = currentNodes.find(node => node.id === previousNodeId);
+        
+        if (previousNode) {
+          console.log(`🎯 Found previous node: ${previousNodeId} at position (${previousNode.position.x}, ${previousNode.position.y})`);
+          
+          // Determine connection direction based on relative position
+          const dx = newNode.position.x - previousNode.position.x;
+          const dy = newNode.position.y - previousNode.position.y;
+          
+          let sourceId = previousNode.id;
+          let targetId = newNode.id;
+          let sourceHandle = 'right-out';
+          let targetHandle = 'left-in';
+          
+          // Adjust handles based on direction
+          if (Math.abs(dx) > Math.abs(dy)) {
+            // Horizontal layout
+            if (dx < 0) {
+              // New node is to the left, reverse direction
+              sourceId = newNode.id;
+              targetId = previousNode.id;
+            }
+          } else {
+            // Vertical layout
+            if (dy > 0) {
+              // New node is below - connect top to bottom
+              sourceId = previousNode.id;
+              targetId = newNode.id;
+              sourceHandle = 'bottom-out';
+              targetHandle = 'top-in';
+            } else {
+              // New node is above - connect bottom to top
+              sourceId = newNode.id;
+              targetId = previousNode.id;
+              sourceHandle = 'bottom-out';
+              targetHandle = 'top-in';
+            }
+          }
+          
+          // Queue the edge creation for after nodes are updated
+          setEdges((currentEdges) => {
+            console.log('📐 Creating edge from', sourceId, 'to', targetId);
+            
+            // Check if connection already exists
+            const connectionExists = currentEdges.some(
+              edge => (edge.source === sourceId && edge.target === targetId && 
+                       edge.sourceHandle === sourceHandle && edge.targetHandle === targetHandle) ||
+                      (edge.source === targetId && edge.target === sourceId)
+            );
+            
+            if (!connectionExists) {
+              const edgeId = `edge_auto_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+              const newEdge = {
+                id: edgeId,
+                source: sourceId,
+                target: targetId,
+                sourceHandle: sourceHandle,
+                targetHandle: targetHandle,
+                type: 'custom',
+                animated: true,
+                style: { 
+                  strokeWidth: 3, 
+                  stroke: '#3b82f6',
+                },
+                data: { 
+                  label: '',
+                  isAutoConnected: true
+                }
+              };
+              
+              console.log(`✅ AUTO-CONNECTED: ${sourceId} → ${targetId}`);
+              return [...currentEdges, newEdge];
+            } else {
+              console.log(`⏭️ Connection already exists between: ${sourceId} ↔ ${targetId}`);
+              return currentEdges;
+            }
+          });
+        } else {
+          console.log(`⚠️ Previous node (${previousNodeId}) not found in current nodes`);
+        }
+        
+        return currentNodes;
+      });
+    } else {
+      console.log('ℹ️ No previous element - this is the first element');
+    }
+    
+    // Update the reference to track this new node as the last added
+    lastAddedNodeIdRef.current = newNode.id;
+    console.log('📌 Updated last added element to:', newNode.id);
+  };
+
   // Handle table configuration confirmation
   const handleTableConfigConfirm = async (tableConfig) => {
     if (pendingTableElement && pendingPosition) {
-      const newNode = createElementNode(pendingTableElement, pendingPosition, tableConfig);
+      const finalPosition = findNonCollidingPosition(pendingPosition, 400, 300);
+      const newNode = createElementNode(pendingTableElement, finalPosition, tableConfig);
       console.log('🆕 Creating table with custom data:', newNode);
       setNodes((nds) => nds.concat(newNode));
+      
+      // Auto-connect to previous element
+      autoConnectNewNode(newNode);
       
       // Track the table creation activity
       await trackActivity(
@@ -707,9 +967,13 @@ const edgeTypes = {
   // Handle chart configuration confirmation
   const handleChartConfigConfirm = async (chartConfig) => {
     if (pendingChartElement && pendingPosition) {
-      const newNode = createElementNode(pendingChartElement, pendingPosition, chartConfig);
+      const finalPosition = findNonCollidingPosition(pendingPosition, 450, 350);
+      const newNode = createElementNode(pendingChartElement, finalPosition, chartConfig);
       console.log('🆕 Creating chart with custom data:', newNode);
       setNodes((nds) => nds.concat(newNode));
+      
+      // Auto-connect to previous element
+      autoConnectNewNode(newNode);
       
       // Track the chart creation activity
       await trackActivity(
@@ -780,9 +1044,13 @@ const edgeTypes = {
         
         console.log('📦 Element with config:', elementWithConfig);
         console.log('🔧 Turnkey config data:', turnkeyConfig);
-        const newNode = createElementNode(elementWithConfig, pendingPosition, turnkeyConfig);
+        const finalPosition = findNonCollidingPosition(pendingPosition, 350, 250);
+        const newNode = createElementNode(elementWithConfig, finalPosition, turnkeyConfig);
         console.log('🆕 Created turnkey workflow node:', newNode);
         setNodes((nds) => nds.concat(newNode));
+        
+        // Auto-connect to previous element
+        autoConnectNewNode(newNode);
         
         nodeId = newNode.id;
         isNewNode = true;
@@ -868,9 +1136,13 @@ const edgeTypes = {
   // Handle list configuration confirmation
   const handleListConfigConfirm = (listConfig) => {
     if (pendingListElement && pendingPosition) {
-      const newNode = createElementNode(pendingListElement, pendingPosition, listConfig);
+      const finalPosition = findNonCollidingPosition(pendingPosition, 350, 300);
+      const newNode = createElementNode(pendingListElement, finalPosition, listConfig);
       console.log('🆕 Creating list with custom data:', newNode);
       setNodes((nds) => nds.concat(newNode));
+      
+      // Auto-connect to previous element
+      autoConnectNewNode(newNode);
       
       // Reset pending state
       setPendingListElement(null);
@@ -889,9 +1161,13 @@ const edgeTypes = {
   // Handle layout configuration confirmation
   const handleLayoutConfigConfirm = (layoutConfig) => {
     if (pendingLayoutElement && pendingPosition) {
-      const newNode = createLayoutNode(pendingLayoutElement, pendingPosition, layoutConfig);
+      const finalPosition = findNonCollidingPosition(pendingPosition, 400, 300);
+      const newNode = createLayoutNode(pendingLayoutElement, finalPosition, layoutConfig);
       console.log('🆕 Creating layout with custom data:', newNode);
       setNodes((nds) => nds.concat(newNode));
+      
+      // Auto-connect to previous element
+      autoConnectNewNode(newNode);
       
       // Reset pending state
       setPendingLayoutElement(null);
@@ -908,8 +1184,12 @@ const edgeTypes = {
   };
   const handleTaskCardConfigConfirm = async (taskCardConfig) => {
     if (pendingTaskCardElement && pendingPosition) {
-      const newNode = createElementNode(pendingTaskCardElement, pendingPosition, { taskCardData: taskCardConfig });
+      const finalPosition = findNonCollidingPosition(pendingPosition, 300, 250);
+      const newNode = createElementNode(pendingTaskCardElement, finalPosition, { taskCardData: taskCardConfig });
       setNodes((nds) => nds.concat(newNode));
+      
+      // Auto-connect to previous element
+      autoConnectNewNode(newNode);
 
       await trackActivity(
         'element_added',
@@ -1182,43 +1462,98 @@ const edgeTypes = {
 
   // Handle grouping confirmation
   const handleGroupingConfirm = (groupingConfig) => {
-    console.log('✅ Creating grouped grid:', groupingConfig);
+    console.log('✅ Creating grouped container with grid layout:', groupingConfig);
     
     // Use manuallySelectedNodes for consistency
     const nodesToGroup = manuallySelectedNodes;
     
-    // Calculate center position of selected nodes
-    const centerX = nodesToGroup.reduce((sum, node) => sum + node.position.x, 0) / nodesToGroup.length;
-    const centerY = nodesToGroup.reduce((sum, node) => sum + node.position.y, 0) / nodesToGroup.length;
+    if (nodesToGroup.length === 0) {
+      console.log('❌ No nodes to group');
+      return;
+    }
     
-    // Create new grouped grid node
-    const groupedGridNode = {
-      id: `grouped_grid_${Date.now()}`,
+    // Get grid configuration from modal
+    const gridColumns = groupingConfig.gridColumns || 2;
+    const gridRows = groupingConfig.gridRows || Math.ceil(nodesToGroup.length / gridColumns);
+    
+    // Calculate cell dimensions based on actual node sizes with generous spacing
+    const cellWidth = 420;  // Width for each cell (increased for spacing)
+    const cellHeight = 480; // Height for each cell (increased for spacing)
+    const cellGap = 30; // Gap between cells (increased)
+    const cellInnerPadding = 15; // Inner padding around each node within cell
+    const containerPaddingX = 35; // Horizontal padding inside container (increased to ensure elements fit)
+    const containerPaddingTop = 65; // Top padding (for header + spacing)
+    const containerPaddingBottom = 35; // Bottom padding (increased to ensure elements fit)
+    
+    // Calculate container dimensions - ensure it perfectly fits the grid
+    // Formula: (cellWidth * columns) + (gaps between cells) + (padding on both sides)
+    const containerWidth = (cellWidth * gridColumns) + (cellGap * Math.max(0, gridColumns - 1)) + (containerPaddingX * 2);
+    const containerHeight = (cellHeight * gridRows) + (cellGap * Math.max(0, gridRows - 1)) + containerPaddingTop + containerPaddingBottom;
+    
+    // Get the top-left position based on selected nodes
+    const minX = Math.min(...nodesToGroup.map(n => n.position.x));
+    const minY = Math.min(...nodesToGroup.map(n => n.position.y));
+    
+    // Position container with proper offset
+    const containerX = minX - containerPaddingX;
+    const containerY = minY - containerPaddingTop;
+    
+    // Generate unique group ID
+    const groupId = `group_${Date.now()}`;
+    
+    // Create the group container node (parent)
+    const groupContainerNode = {
+      id: groupId,
       type: 'layoutNode',
-      position: { x: centerX - 200, y: centerY - 150 }, // Center the grid
+      position: { x: containerX, y: containerY },
+      style: {
+        width: containerWidth,
+        height: containerHeight,
+        zIndex: -1, // Behind child nodes
+      },
       data: {
-        name: groupingConfig.title,
-        type: 'grid',
-        id: 'grouped-grid',
-        preview: groupingConfig.description,
-        width: Math.max(400, groupingConfig.gridColumns * 120),
-        height: Math.max(300, groupingConfig.gridRows * 100),
-        customLayoutData: {
-          gridItems: groupingConfig.elements.map((element, index) => {
-            // Find the original node to get the complete data
-            const originalNode = nodesToGroup.find(node => node.id === element.id);
-            return {
-              id: element.id,
-              content: element.name,
-              row: element.gridPosition.row,
-              col: element.gridPosition.col,
-              visible: element.visible,
-              originalData: originalNode?.data || element.data,
-              originalType: originalNode?.type || element.type
-            };
-          })
+        workspaceId: workspace?.workspaceId,
+        name: groupingConfig.title || `Group (${nodesToGroup.length} items)`,
+        type: 'group-container',
+        id: 'group-container',
+        width: containerWidth,
+        height: containerHeight,
+        preview: groupingConfig.description || 'Grouped elements container',
+        isGroupContainer: true,
+        groupId: groupId,
+        childNodeIds: nodesToGroup.map(n => n.id),
+        gridConfig: {
+          columns: gridColumns,
+          rows: gridRows,
+          cellWidth,
+          cellHeight,
+          cellGap,
+          cellInnerPadding
         },
-        isGroupedGrid: true,
+        containerStyle: {
+          backgroundColor: '#f0f9ff',
+          borderColor: '#3b82f6',
+          borderWidth: 3,
+          borderRadius: 16,
+          headerColor: '#3b82f6',
+        },
+        customLayoutData: {
+          layoutType: 'group-container',
+          title: groupingConfig.title,
+          description: groupingConfig.description,
+          gridColumns,
+          gridRows,
+          childNodes: nodesToGroup.map((node, index) => ({
+            id: node.id,
+            name: node.data?.name || 'Element',
+            type: node.type,
+            originalPosition: node.position,
+            gridPosition: {
+              row: Math.floor(index / gridColumns),
+              col: index % gridColumns
+            }
+          }))
+        },
         originalNodes: nodesToGroup.map(node => ({
           id: node.id,
           data: node.data,
@@ -1228,20 +1563,67 @@ const edgeTypes = {
       }
     };
     
-    // Remove original nodes and add grouped grid
+    // Calculate grid positions for child nodes
     const selectedNodeIds = nodesToGroup.map(node => node.id);
-    setNodes(currentNodes => {
-      const filteredNodes = currentNodes.filter(node => !selectedNodeIds.includes(node.id));
-      return [...filteredNodes, groupedGridNode];
-    });
     
-    // Remove any edges connected to the removed nodes
-    setEdges(currentEdges => 
-      currentEdges.filter(edge => 
-        !selectedNodeIds.includes(edge.source) && 
-        !selectedNodeIds.includes(edge.target)
-      )
-    );
+    setNodes(currentNodes => {
+      // Update existing nodes with new grid positions inside the container
+      const updatedNodes = currentNodes.map(node => {
+        const nodeIndex = selectedNodeIds.indexOf(node.id);
+        if (nodeIndex !== -1) {
+          // Calculate row and column for this node
+          const row = Math.floor(nodeIndex / gridColumns);
+          const col = nodeIndex % gridColumns;
+          
+          // Calculate position within container (relative to container's top-left)
+          // Position at the start of the cell, then add inner padding
+          const cellStartX = containerPaddingX + (col * (cellWidth + cellGap));
+          const cellStartY = containerPaddingTop + (row * (cellHeight + cellGap));
+          
+          const newX = cellStartX + cellInnerPadding;
+          const newY = cellStartY + cellInnerPadding;
+          
+          // Calculate available space for node (cell size minus padding on both sides)
+          const nodeWidth = cellWidth - (cellInnerPadding * 2);
+          const nodeHeight = cellHeight - (cellInnerPadding * 2);
+          
+          // Ensure node stays within bounds
+          const maxX = newX + nodeWidth;
+          const maxY = newY + nodeHeight;
+          
+          // Validate positioning
+          const boundedX = Math.max(cellInnerPadding, Math.min(newX, containerWidth - nodeWidth - cellInnerPadding));
+          const boundedY = Math.max(containerPaddingTop, Math.min(newY, containerHeight - nodeHeight - cellInnerPadding));
+          
+          return {
+            ...node,
+            parentNode: groupId,
+            extent: 'parent',
+            position: {
+              x: boundedX,
+              y: boundedY
+            },
+            style: {
+              ...node.style,
+              width: nodeWidth,
+              height: nodeHeight
+            },
+            data: {
+              ...node.data,
+              isGroupChild: true,
+              parentGroupId: groupId,
+              gridPosition: { row, col },
+              width: nodeWidth,
+              height: nodeHeight
+            }
+          };
+        }
+        return node;
+      });
+      
+      // Add the group container at the beginning (so it renders behind)
+      return [groupContainerNode, ...updatedNodes];
+    });
     
     // Close modal and reset state
     setShowGroupingModal(false);
@@ -1250,7 +1632,13 @@ const edgeTypes = {
     setManuallySelectedNodes([]);
     setIsSelectionMode(false);
     
-    console.log('🎉 Grouped grid created successfully!');
+    console.log('🎉 Group container created with grid layout!', {
+      groupId,
+      childCount: nodesToGroup.length,
+      gridConfig: { columns: gridColumns, rows: gridRows },
+      containerPosition: { x: containerX, y: containerY },
+      containerSize: { width: containerWidth, height: containerHeight }
+    });
   };
 
   // Handle flowchart creation
@@ -1302,6 +1690,12 @@ const edgeTypes = {
     // Add nodes and edges to the canvas
     setNodes((nds) => nds.concat(newNodes));
     setEdges((eds) => eds.concat(newEdges));
+    
+    // Auto-connect the first node of the flowchart to the previous element
+    if (newNodes.length > 0) {
+      const firstNode = newNodes[0];
+      autoConnectNewNode(firstNode);
+    }
 
     // Track the flowchart creation activity
     await trackActivity(
@@ -1380,8 +1774,39 @@ const edgeTypes = {
     const flowchartName = groupNodes[0]?.data?.flowchartName || 'Flowchart';
     
     if (window.confirm(`Delete entire ${flowchartName}? This will remove all ${groupNodes.length} elements and ${groupEdges.length} connections.`)) {
-      // Remove all nodes in the group
-      setNodes(nds => nds.filter(node => node.data?.flowchartGroup !== groupId));
+      // Remove all nodes in the group and renumber remaining nodes
+      setNodes(nds => {
+        // Filter out flowchart nodes
+        let remainingNodes = nds.filter(node => node.data?.flowchartGroup !== groupId);
+        
+        // Renumber remaining nodes with sequence numbers
+        const nodesWithSequence = remainingNodes
+          .filter(node => node.data?.sequenceNumber !== undefined && node.data.sequenceNumber !== null)
+          .sort((a, b) => (a.data?.sequenceNumber || 0) - (b.data?.sequenceNumber || 0));
+        
+        if (nodesWithSequence.length > 0) {
+          remainingNodes = remainingNodes.map((node) => {
+            const currentSeqIndex = nodesWithSequence.findIndex(n => n.id === node.id);
+            
+            if (currentSeqIndex !== -1) {
+              const newSequenceNumber = currentSeqIndex + 1;
+              console.log(`🔢 Renumbering node ${node.id}: ${node.data?.sequenceNumber} → ${newSequenceNumber}`);
+              
+              return {
+                ...node,
+                data: {
+                  ...node.data,
+                  sequenceNumber: newSequenceNumber
+                }
+              };
+            }
+            
+            return node;
+          });
+        }
+        
+        return remainingNodes;
+      });
       
       // Remove all edges in the group
       setEdges(eds => eds.filter(edge => edge.data?.flowchartGroup !== groupId));
@@ -1716,8 +2141,16 @@ const edgeTypes = {
   // Handle key press for deletion and duplication
   useEffect(() => {
     const handleKeyPress = (event) => {
-      // Prevent shortcuts when typing in input fields
-      if (event.target.tagName === 'INPUT' || event.target.tagName === 'TEXTAREA' || event.target.contentEditable === 'true') {
+      // Prevent shortcuts when typing in input fields, textareas, or contenteditable elements
+      const isInputElement = event.target.tagName === 'INPUT' || 
+                            event.target.tagName === 'TEXTAREA' || 
+                            event.target.contentEditable === 'true';
+      
+      // Also check if the event target is inside an input (for nested elements)
+      const isInsideInput = event.target.closest('input, textarea, [contenteditable="true"]');
+      
+      if (isInputElement || isInsideInput) {
+        // Allow the input to receive the key event
         return;
       }
 
@@ -1776,6 +2209,8 @@ const edgeTypes = {
     zoomOut: handleZoomOut,
     fitView: handleFitView,
     setZoomLevel: handleSetZoomLevel,
+    getNodes: () => nodes,
+    getEdges: () => edges,
   }));
 
   // Handle viewport changes to update zoom level
@@ -2105,6 +2540,89 @@ const edgeTypes = {
     };
   },  [getAutoPlacementPosition, setNodes]);
 
+  // Handle zoom to element from Elements Overview
+  useEffect(() => {
+    const handleZoomToElement = (event) => {
+      const { elementId } = event.detail;
+      console.log('🔍 Zooming to element:', elementId);
+      
+      // Find the node with the given ID
+      const targetNode = nodes.find(node => node.id === elementId);
+      
+      if (targetNode && reactFlowInstance) {
+        // Select the node
+        setNodes(nds => nds.map(node => ({
+          ...node,
+          selected: node.id === elementId
+        })));
+        
+        // Calculate position, accounting for parent offsets if element is nested
+        let x = targetNode.position.x;
+        let y = targetNode.position.y;
+        let width = targetNode.width || 200;
+        let height = targetNode.height || 200;
+        
+        // If the node has a parent (is inside a container), add parent position
+        if (targetNode.parentNode) {
+          const parentNode = nodes.find(n => n.id === targetNode.parentNode);
+          if (parentNode) {
+            x += parentNode.position.x;
+            y += parentNode.position.y;
+            console.log('📦 Element is nested in parent:', { parentId: targetNode.parentNode, parentPos: parentNode.position });
+          }
+        }
+        
+        // Get the center position of the target node
+        const position = {
+          x: x + width / 2,
+          y: y + height / 2
+        };
+        
+        // Use a zoom level that fits the element well (higher zoom = closer)
+        const targetZoom = 1.5;
+        reactFlowInstance.setCenter(position.x, position.y, { zoom: targetZoom, duration: 800 });
+        
+        console.log('✅ Zoomed to element:', { elementId, position, zoom: targetZoom, isNested: !!targetNode.parentNode });
+      } else {
+        console.warn('❌ Element not found or ReactFlow instance not ready:', { elementId, nodeFound: !!targetNode, instanceReady: !!reactFlowInstance });
+      }
+    };
+
+    document.addEventListener('zoomToElement', handleZoomToElement);
+    
+    return () => {
+      document.removeEventListener('zoomToElement', handleZoomToElement);
+    };
+  }, [nodes, setNodes, reactFlowInstance]);
+
+  // Handle update element name
+  useEffect(() => {
+    const handleUpdateElementName = (event) => {
+      const { elementId, newName } = event.detail;
+      console.log('✏️ Updating element name:', { elementId, newName });
+      
+      // Update the node data with new name
+      setNodes(nds => nds.map(node => {
+        if (node.id === elementId) {
+          return {
+            ...node,
+            data: {
+              ...node.data,
+              name: newName
+            }
+          };
+        }
+        return node;
+      }));
+    };
+
+    document.addEventListener('updateElementName', handleUpdateElementName);
+    
+    return () => {
+      document.removeEventListener('updateElementName', handleUpdateElementName);
+    };
+  }, [setNodes]);
+
   // Handle edge deletion
   const onEdgesDelete = useCallback((edgesToDelete) => {
     console.log('🗑️ Deleting edges:', edgesToDelete);
@@ -2114,7 +2632,43 @@ const edgeTypes = {
   // Handle node deletion
   const onNodesDelete = useCallback((nodesToDelete) => {
     console.log('🗑️ Deleting nodes:', nodesToDelete);
-    setNodes((nds) => nds.filter((node) => !nodesToDelete.find((n) => n.id === node.id)));
+    setNodes((nds) => {
+      // Filter out deleted nodes
+      let remainingNodes = nds.filter((node) => !nodesToDelete.find((n) => n.id === node.id));
+      
+      // Get all nodes with sequence numbers and sort by sequence number
+      const nodesWithSequence = remainingNodes
+        .filter(node => node.data?.sequenceNumber !== undefined && node.data.sequenceNumber !== null)
+        .sort((a, b) => (a.data?.sequenceNumber || 0) - (b.data?.sequenceNumber || 0));
+      
+      console.log('📊 Nodes with sequence numbers:', nodesWithSequence.length);
+      
+      // Renumber the remaining nodes
+      if (nodesWithSequence.length > 0) {
+        remainingNodes = remainingNodes.map((node) => {
+          // Find the current sequence number position
+          const currentSeqIndex = nodesWithSequence.findIndex(n => n.id === node.id);
+          
+          if (currentSeqIndex !== -1) {
+            // This node has a sequence number, update it to new sequential number
+            const newSequenceNumber = currentSeqIndex + 1;
+            console.log(`🔢 Renumbering node ${node.id}: ${node.data?.sequenceNumber} → ${newSequenceNumber}`);
+            
+            return {
+              ...node,
+              data: {
+                ...node.data,
+                sequenceNumber: newSequenceNumber
+              }
+            };
+          }
+          
+          return node;
+        });
+      }
+      
+      return remainingNodes;
+    });
   }, [setNodes]);
 
   // Connection validation
@@ -2146,6 +2700,19 @@ const edgeTypes = {
   // Keyboard shortcuts
   useEffect(() => {
     const handleKeyPress = (event) => {
+      // Prevent shortcuts when typing in input fields, textareas, or contenteditable elements
+      const isInputElement = event.target.tagName === 'INPUT' || 
+                            event.target.tagName === 'TEXTAREA' || 
+                            event.target.contentEditable === 'true';
+      
+      // Also check if the event target is inside an input (for nested elements)
+      const isInsideInput = event.target.closest('input, textarea, [contenteditable="true"]');
+      
+      if (isInputElement || isInsideInput) {
+        // Allow the input to receive the key event
+        return;
+      }
+      
       // Delete selected nodes/edges with Delete key
       if (event.key === 'Delete' || event.key === 'Backspace') {
         const selectedNodes = nodes.filter(node => node.selected);
@@ -2210,6 +2777,109 @@ const edgeTypes = {
     console.log('🔄 Drag leave React Flow canvas');
   }, []);
 
+  // Collision detection function - Enhanced to prevent ANY overlaps
+  const findNonCollidingPosition = (position, newNodeWidth = 300, newNodeHeight = 200) => {
+    const padding = 100; // Larger padding to prevent overlaps
+    const offset = 100; // Larger offset distance to try
+    const offsets = [
+      { x: offset, y: 0 },       // Right
+      { x: 0, y: offset },       // Down
+      { x: -offset, y: 0 },      // Left
+      { x: 0, y: -offset },      // Up
+      { x: offset, y: offset },  // Down-right
+      { x: -offset, y: offset }, // Down-left
+      { x: offset, y: -offset }, // Up-right
+      { x: -offset, y: -offset } // Up-left
+    ];
+
+    const hasCollision = (pos) => {
+      for (const node of nodes) {
+        if (!node.position) continue;
+        
+        // Use more generous dimension estimates
+        const nodeWidth = node.measured?.width || node.width || 350;
+        const nodeHeight = node.measured?.height || node.height || 250;
+        
+        // Check if position overlaps with this node (with generous padding)
+        const overlaps = 
+          pos.x < node.position.x + nodeWidth + padding &&
+          pos.x + newNodeWidth + padding > node.position.x &&
+          pos.y < node.position.y + nodeHeight + padding &&
+          pos.y + newNodeHeight + padding > node.position.y;
+        
+        if (overlaps) {
+          console.log(`⚠️ Collision detected with node at (${node.position.x}, ${node.position.y})`);
+          return true;
+        }
+      }
+      return false;
+    };
+
+    // If current position has no collision, use it
+    if (!hasCollision(position)) {
+      console.log(`✅ Current position is clear`);
+      return position;
+    }
+
+    console.log(`🔍 Current position has collision, searching for empty space...`);
+
+    // Try offsets in expanding circles - more aggressive search
+    let found = false;
+
+    for (let multiplier = 1; multiplier <= 10 && !found; multiplier++) {
+      for (const offset of offsets) {
+        const testPos = {
+          x: position.x + offset.x * multiplier,
+          y: position.y + offset.y * multiplier
+        };
+
+        if (!hasCollision(testPos)) {
+          console.log(`🎯 Found non-colliding position at distance multiplier ${multiplier}`);
+          console.log(`📍 New position: x=${testPos.x}, y=${testPos.y}`);
+          return testPos;
+        }
+      }
+    }
+
+    // If still no space found, find the node with most available space and move far from it
+    if (!found) {
+      console.log(`⚠️ Could not find position using standard search, using fallback strategy`);
+      
+      // Find the bottommost and rightmost node
+      let maxX = position.x;
+      let maxY = position.y;
+      let maxNodeWidth = 0;
+      let maxNodeHeight = 0;
+
+      for (const node of nodes) {
+        if (!node.position) continue;
+        const nodeWidth = node.measured?.width || node.width || 350;
+        const nodeHeight = node.measured?.height || node.height || 250;
+        
+        if (node.position.x + nodeWidth > maxX + maxNodeWidth) {
+          maxX = node.position.x;
+          maxNodeWidth = nodeWidth;
+        }
+        if (node.position.y + nodeHeight > maxY + maxNodeHeight) {
+          maxY = node.position.y;
+          maxNodeHeight = nodeHeight;
+        }
+      }
+
+      // Place new node below and to the right of the rightmost/bottommost node
+      const fallbackPos = {
+        x: maxX + maxNodeWidth + 150,
+        y: maxY + maxNodeHeight + 150
+      };
+
+      console.log(`📍 Using fallback position: x=${fallbackPos.x}, y=${fallbackPos.y}`);
+      return fallbackPos;
+    }
+
+    console.log(`📍 Final position: x=${position.x}, y=${position.y}`);
+    return position;
+  };
+
   // Handle drop from ElementsPanel
   const onDrop = useCallback(
     async (event) => {
@@ -2250,11 +2920,14 @@ const edgeTypes = {
           console.log('🎯 Fallback position:', position);
         }
 
+        // Check for collisions and find non-colliding position
+        position = findNonCollidingPosition(position, 300, 200);
+
         // Check if it's a table element
         if (isTableElement(element)) {
           console.log('📊 Table element detected in drop, showing configuration modal');
           setPendingTableElement(element);
-          setPendingPosition(position);
+          setPendingPosition(findNonCollidingPosition(position, 400, 300));
           setShowTableModal(true);
           return;
         }
@@ -2263,7 +2936,7 @@ const edgeTypes = {
         if (isChartElement(element)) {
           console.log('📈 Chart element detected in drop, showing configuration modal');
           setPendingChartElement(element);
-          setPendingPosition(position);
+          setPendingPosition(findNonCollidingPosition(position, 450, 350));
           setShowChartModal(true);
           return;
         }
@@ -2272,7 +2945,7 @@ const edgeTypes = {
         if (isListElement(element)) {
           console.log('📝 List element detected in drop, showing configuration modal');
           setPendingListElement(element);
-          setPendingPosition(position);
+          setPendingPosition(findNonCollidingPosition(position, 350, 300));
           setShowListModal(true);
           return;
         }
@@ -2281,7 +2954,7 @@ const edgeTypes = {
         if (isLayoutElement(element)) {
           console.log('🏗️ Layout element detected in drop, showing configuration modal');
           setPendingLayoutElement(element);
-          setPendingPosition(position);
+          setPendingPosition(findNonCollidingPosition(position, 400, 300));
           setShowLayoutModal(true);
           return;
         }
@@ -2289,7 +2962,7 @@ const edgeTypes = {
         // Check if it's a flowchart element
         if (isFlowchartElement(element)) {
           console.log('🔄 Flowchart element detected in drop, creating template');
-          createFlowchartTemplate(element, position);
+          createFlowchartTemplate(element, findNonCollidingPosition(position, 300, 200));
           return;
         }
 
@@ -2304,7 +2977,7 @@ const edgeTypes = {
         if (element?.type === 'turnkey-workflow' || element?.elementType === 'turnkey-workflow' || element?.id === 'turnkey-workflow') {
           console.log('🔧 Turnkey workflow element detected in drop, showing configuration modal');
           setPendingTurnkeyElement(element);
-          setPendingPosition(position);
+          setPendingPosition(findNonCollidingPosition(position, 350, 250));
           setShowTurnkeyModal(true);
           return;
         }
@@ -2312,8 +2985,12 @@ const edgeTypes = {
         if (element.type === 'image-block') {
           console.log('🖼️ Image block element detected in drop, creating default block');
           const imageBlockData = JSON.parse(JSON.stringify(element.imageBlockData || {}));
-          const newNode = createElementNode(element, position, { imageBlockData });
+          const newNode = createElementNode(element, findNonCollidingPosition(position, 300, 200), { imageBlockData });
           setNodes((nds) => nds.concat(newNode));
+          
+          // Auto-connect to previous element
+          autoConnectNewNode(newNode);
+          
           trackActivity('element_added', 'create', 'element', {
             elementId: newNode.id,
             elementType: element.type,
@@ -2331,7 +3008,7 @@ const edgeTypes = {
           console.log('📝 Task card element detected in drop, showing configuration modal');
           setPendingTaskCardElement(element);
           setPendingTaskCardInitialData(element.taskCardData || null);
-          setPendingPosition(position);
+          setPendingPosition(findNonCollidingPosition(position, 300, 250));
           setShowTaskCardModal(true);
           return;
         }
@@ -2358,117 +3035,122 @@ const edgeTypes = {
         console.log('🔍 Node type:', newNode.type);
         console.log('🔍 Node data:', newNode.data);
         
-        // Auto-connect to nearby nodes with smart connection direction
-        const CONNECTION_THRESHOLD = 800; // pixels - increased for larger canvas workspaces
+        // Auto-connect to the previously added element
+        // Get the previous node ID before adding the new one
+        const previousNodeId = lastAddedNodeIdRef.current;
+        console.log('📌 Previous node ID stored:', previousNodeId);
         
-        // Get current nodes BEFORE adding the new one
-        let currentNodesSnapshot = [];
+        // Add the new node and handle auto-connection in the same setState callback
         setNodes((currentNodes) => {
-          currentNodesSnapshot = [...currentNodes];
-          return currentNodes;
-        });
-        
-        // Small delay to ensure state is captured, then add node and create connections
-        setTimeout(() => {
-          // Add the new node
-          setNodes((nds) => {
-            const updatedNodes = nds.concat(newNode);
-            console.log('📊 Updated nodes array:', updatedNodes.length, 'nodes');
-            return updatedNodes;
-          });
+          console.log('📊 Current nodes before adding new:', currentNodes.length, 'nodes');
           
-          // Now create auto-connections based on the snapshot
-          console.log('🔗 Checking for auto-connections. Existing nodes:', currentNodesSnapshot.length);
-          
-          if (currentNodesSnapshot.length > 0) {
-            // Find nearby nodes for connection
-            const nearbyNodes = currentNodesSnapshot.filter(node => {
-              const dx = node.position.x - newNode.position.x;
-              const dy = node.position.y - newNode.position.y;
-              const distance = Math.sqrt(dx * dx + dy * dy);
+          // Check if we should create a connection
+          if (previousNodeId && currentNodes.length > 0) {
+            console.log('🔗 Attempting to connect new element to previously added element:', previousNodeId);
+            
+            // Find the previous node
+            const previousNode = currentNodes.find(node => node.id === previousNodeId);
+            
+            if (previousNode) {
+              console.log(`🎯 Found previous node: ${previousNodeId} at position (${previousNode.position.x}, ${previousNode.position.y})`);
               
-              console.log(`📏 Distance from ${node.id} to new node: ${Math.round(distance)}px`);
-              return distance < CONNECTION_THRESHOLD;
-            });
-            
-            console.log(`🎯 Found ${nearbyNodes.length} nearby nodes within ${CONNECTION_THRESHOLD}px`);
-            
-            if (nearbyNodes.length > 0) {
+              // Determine connection direction based on relative position
+              const dx = newNode.position.x - previousNode.position.x;
+              const dy = newNode.position.y - previousNode.position.y;
+              
+              let sourceId = previousNode.id;
+              let targetId = newNode.id;
+              let sourceHandle = 'right-out';
+              let targetHandle = 'left-in';
+              
+              // Adjust handles based on direction if needed
+              if (Math.abs(dx) > Math.abs(dy)) {
+                // Horizontal layout - already set correctly
+                if (dx < 0) {
+                  // New node is to the left, reverse direction
+                  sourceId = newNode.id;
+                  targetId = previousNode.id;
+                  sourceHandle = 'right-out';
+                  targetHandle = 'left-in';
+                }
+              } else {
+                // Vertical layout
+                if (dy > 0) {
+                  // New node is below - connect top to bottom
+                  sourceId = previousNode.id;
+                  targetId = newNode.id;
+                  sourceHandle = 'bottom-out';
+                  targetHandle = 'top-in';
+                } else {
+                  // New node is above - connect bottom to top
+                  sourceId = newNode.id;
+                  targetId = previousNode.id;
+                  sourceHandle = 'bottom-out';
+                  targetHandle = 'top-in';
+                }
+              }
+              
+              // Queue the edge creation for after nodes are updated
               setEdges((currentEdges) => {
-                const newEdges = [...currentEdges];
+                console.log('📐 Creating edge from', sourceId, 'to', targetId);
                 
-                nearbyNodes.forEach((nearbyNode) => {
-                  // Determine connection direction based on relative position
-                  const dx = newNode.position.x - nearbyNode.position.x;
-                  const dy = newNode.position.y - nearbyNode.position.y;
-                  
-                  let sourceId, targetId;
-                  
-                  // Determine direction - connect from existing to new (workflow flow)
-                  if (Math.abs(dx) > Math.abs(dy)) {
-                    // Horizontal layout
-                    if (dx > 0) {
-                      // New node is to the right - connect existing → new
-                      sourceId = nearbyNode.id;
-                      targetId = newNode.id;
-                    } else {
-                      // New node is to the left - connect new → existing
-                      sourceId = newNode.id;
-                      targetId = nearbyNode.id;
-                    }
-                  } else {
-                    // Vertical layout
-                    if (dy > 0) {
-                      // New node is below - connect existing → new
-                      sourceId = nearbyNode.id;
-                      targetId = newNode.id;
-                    } else {
-                      // New node is above - connect new → existing
-                      sourceId = newNode.id;
-                      targetId = nearbyNode.id;
-                    }
-                  }
-                  
-                  // Check if connection already exists
-                  const connectionExists = newEdges.some(
-                    edge => (edge.source === sourceId && edge.target === targetId) ||
-                            (edge.source === targetId && edge.target === sourceId)
-                  );
-                  
-                  if (!connectionExists) {
-                    const edgeId = `edge_auto_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
-                    const newEdge = {
-                      id: edgeId,
-                      source: sourceId,
-                      target: targetId,
-                      sourceHandle: 'right-out',
-                      targetHandle: 'left-in',
-                      type: 'custom',
-                      animated: true,
-                      style: { 
-                        strokeWidth: 3, 
-                        stroke: '#3b82f6',
-                      },
-                      data: { 
-                        label: '',
-                        isAutoConnected: true
-                      }
-                    };
-                    
-                    newEdges.push(newEdge);
-                    console.log(`✅ AUTO-CONNECTED: ${sourceId} → ${targetId}`);
-                  } else {
-                    console.log(`⏭️ Connection already exists: ${sourceId} ↔ ${targetId}`);
-                  }
-                });
+                // Check if connection already exists
+                const connectionExists = currentEdges.some(
+                  edge => (edge.source === sourceId && edge.target === targetId && 
+                           edge.sourceHandle === sourceHandle && edge.targetHandle === targetHandle) ||
+                          (edge.source === targetId && edge.target === sourceId)
+                );
                 
-                return newEdges;
+                if (!connectionExists) {
+                  const edgeId = `edge_auto_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+                  const newEdge = {
+                    id: edgeId,
+                    source: sourceId,
+                    target: targetId,
+                    sourceHandle: sourceHandle,
+                    targetHandle: targetHandle,
+                    type: 'custom',
+                    animated: true,
+                    style: { 
+                      strokeWidth: 3, 
+                      stroke: '#3b82f6',
+                    },
+                    data: { 
+                      label: '',
+                      isAutoConnected: true
+                    }
+                  };
+                  
+                  console.log(`✅ AUTO-CONNECTED: ${sourceId} → ${targetId}`);
+                  return [...currentEdges, newEdge];
+                } else {
+                  console.log(`⏭️ Connection already exists between: ${sourceId} ↔ ${targetId}`);
+                  return currentEdges;
+                }
               });
+            } else {
+              console.log(`⚠️ Previous node (${previousNodeId}) not found in current nodes`);
             }
           } else {
-            console.log('ℹ️ First element dropped - no nodes to connect to');
+            console.log('ℹ️ First element dropped - no previous element to connect to');
           }
-        }, 50);
+          
+          // Update the reference to track this new node as the last added
+          lastAddedNodeIdRef.current = newNode.id;
+          console.log('📌 Updated last added element to:', newNode.id);
+          
+          // Set flag to prevent workspace data refresh from overwriting this new node
+          isUpdatingNodesLocallyRef.current = true;
+          
+          // Return updated nodes array
+          return [...currentNodes, newNode];
+        });
+        
+        // Reset the flag after a brief delay to allow UI to update
+        setTimeout(() => {
+          isUpdatingNodesLocallyRef.current = false;
+          console.log('🔓 Unlocked canvas data updates after local node addition');
+        }, 100);
         
         // Track the element addition activity
         await trackActivity(
@@ -2492,7 +3174,7 @@ const edgeTypes = {
         console.error('❌ Error parsing dropped element:', error);
       }
     },
-    [reactFlowInstance, setNodes, trackActivity]
+    [reactFlowInstance, setNodes, trackActivity, nodes]
   );
   useEffect(() => {
     updateOffset();
@@ -2929,8 +3611,8 @@ const edgeTypes = {
           )} */}
         </ReactFlow>
         
-        {/* Read-only overlay when user doesn't have edit permissions */}
-        {!canEdit && (
+        {/* Read-only overlay when user doesn't have edit permissions - but NOT for clients */}
+        {!canEdit && userRole !== 'client' && (
           <div className="absolute inset-0 bg-black bg-opacity-5 pointer-events-none z-10 flex items-center justify-center">
             <div className="bg-white rounded-lg shadow-lg p-4 border border-gray-200 pointer-events-auto">
               <div className="flex items-center space-x-3">
@@ -2946,6 +3628,14 @@ const edgeTypes = {
                 </div>
               </div>
             </div>
+          </div>
+        )}
+        
+        {/* Subtle read-only indicator for clients - they can view but not edit */}
+        {!canEdit && userRole === 'client' && (
+          <div className="absolute top-4 right-4 z-10 bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 flex items-center space-x-2 text-xs text-gray-600">
+            <Eye className="w-3 h-3" />
+            <span>View only</span>
           </div>
         )}
       </div>

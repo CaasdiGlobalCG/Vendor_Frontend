@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState, useRef } from 'react';
 import {
   FileText,
   UploadCloud,
@@ -8,8 +8,10 @@ import {
   User,
   Layers,
   Paperclip,
-  X
+  X,
+  Loader2
 } from 'lucide-react';
+import { getWorkspaceById, updateWorkspace } from '../../utils/workspaceApi';
 
 const SUPPORTED_FORMATS = ['PDF', 'DOCX', 'XLSX', 'PPT', 'ZIP'];
 
@@ -46,7 +48,7 @@ const getFileBadge = (type = '') => {
   }
 };
 
-const DocumentBlockRenderer = ({ data }) => {
+const DocumentBlockRenderer = ({ data, nodeId, workspaceId, setNodes }) => {
   const initial = data?.documentBlockData ?? {};
   const [fileName, setFileName] = useState(initial.fileName ?? '');
   const [fileType, setFileType] = useState(initial.fileType ?? '');
@@ -56,6 +58,11 @@ const DocumentBlockRenderer = ({ data }) => {
   const [comments, setComments] = useState(initial.comments ?? []);
   const [newComment, setNewComment] = useState('');
   const [showPreview, setShowPreview] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const [uploadError, setUploadError] = useState('');
+  
+  // Auto-save ref for debouncing
+  const saveTimeoutRef = useRef(null);
 
   const fileBadge = useMemo(() => getFileBadge(fileType), [fileType]);
   const isPreviewablePdf = useMemo(() => {
@@ -64,6 +71,78 @@ const DocumentBlockRenderer = ({ data }) => {
     const normalizedName = (fileName || '').toLowerCase();
     return normalizedType === 'pdf' || normalizedName.endsWith('.pdf');
   }, [fileUrl, fileType, fileName]);
+
+  // Auto-save documentBlockData changes to backend
+  useEffect(() => {
+    if (!workspaceId || !nodeId) return;
+    
+    // Clear previous timeout
+    if (saveTimeoutRef.current) {
+      clearTimeout(saveTimeoutRef.current);
+    }
+    
+    // Set new timeout to save after 1.5 seconds of inactivity
+    saveTimeoutRef.current = setTimeout(async () => {
+      try {
+        const documentBlockData = {
+          fileName,
+          fileType,
+          fileSize,
+          fileUrl,
+          versions,
+          comments,
+          lastModifiedAt: new Date().toISOString()
+        };
+        
+        console.log('💾 Auto-saving document block data:', documentBlockData);
+        
+        // Update local node state
+        if (setNodes) {
+          setNodes((nodes) =>
+            nodes.map((node) =>
+              node.id === nodeId
+                ? {
+                    ...node,
+                    data: {
+                      ...node.data,
+                      documentBlockData,
+                      lastModifiedAt: new Date().toISOString()
+                    }
+                  }
+                : node
+            )
+          );
+        }
+        
+        // Persist to backend
+        const workspace = await getWorkspaceById(workspaceId);
+        if (workspace) {
+          const updatedNodes = workspace.nodes.map(node => 
+            node.id === nodeId 
+              ? { 
+                  ...node, 
+                  data: { 
+                    ...node.data, 
+                    documentBlockData,
+                    lastModifiedAt: new Date().toISOString()
+                  } 
+                }
+              : node
+          );
+          await updateWorkspace(workspaceId, { nodes: updatedNodes });
+          console.log('✅ Document block data saved to backend');
+        }
+      } catch (error) {
+        console.error('❌ Error auto-saving document block:', error);
+      }
+    }, 1500);
+    
+    return () => {
+      if (saveTimeoutRef.current) {
+        clearTimeout(saveTimeoutRef.current);
+      }
+    };
+  }, [fileName, fileType, fileSize, fileUrl, versions, comments, workspaceId, nodeId, setNodes]);
 
   useEffect(() => {
     if (!isPreviewablePdf && showPreview) {
@@ -88,35 +167,99 @@ const DocumentBlockRenderer = ({ data }) => {
     }
   };
 
-  const handleFileUpload = (event) => {
+  const handleFileUpload = async (event) => {
     const file = event.target.files?.[0];
     if (!file) return;
+
+    // Validate file size (max 50MB for documents)
+    if (file.size > 50 * 1024 * 1024) {
+      setUploadError('File size must be less than 50MB');
+      return;
+    }
 
     const extension = file.name.split('.').pop()?.toLowerCase() || '';
     setFileName(file.name);
     setFileType(extension);
     setFileSize(`${(file.size / (1024 * 1024)).toFixed(2)} MB`);
+    setUploading(true);
+    setUploadError('');
 
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      const result = e.target?.result;
-      if (typeof result === 'string') {
-        setFileUrl(result);
+    try {
+      // Create form data for upload
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('workspaceId', workspaceId);
+      formData.append('nodeId', nodeId);
+      formData.append('fileType', 'document-block');
+
+      console.log('📤 Uploading document to S3...', {
+        fileName: file.name,
+        fileSize: file.size,
+        workspaceId,
+        nodeId
+      });
+
+      // Upload to S3 via backend API
+      const response = await fetch('/api/workspace-files/upload', {
+        method: 'POST',
+        body: formData
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to upload document');
       }
-    };
-    reader.readAsDataURL(file);
 
-    setVersions((prev) => {
-      const nextVersionNumber = prev.length + 1;
-      const newVersion = {
-        id: `ver-${Date.now()}`,
-        version: `v${nextVersionNumber}.0`,
-        uploadedAt: new Date().toISOString(),
-        uploadedBy: 'You',
-        notes: `${file.name} uploaded`
+      const result = await response.json();
+      console.log('✅ Document uploaded successfully:', result);
+
+      // Set the S3 URL as the file URL
+      const s3FileUrl = result.file?.s3Url || result.s3Url || result.url;
+      setFileUrl(s3FileUrl);
+
+      // Add version entry
+      setVersions((prev) => {
+        const nextVersionNumber = prev.length + 1;
+        const newVersion = {
+          id: `ver-${Date.now()}`,
+          version: `v${nextVersionNumber}.0`,
+          uploadedAt: new Date().toISOString(),
+          uploadedBy: 'You',
+          notes: `${file.name} uploaded`,
+          s3Url: s3FileUrl
+        };
+        return [newVersion, ...prev];
+      });
+
+    } catch (error) {
+      console.error('❌ Error uploading document:', error);
+      setUploadError(error.message || 'Failed to upload document');
+      
+      // Fallback to base64 for local preview if S3 fails
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const result = e.target?.result;
+        if (typeof result === 'string') {
+          setFileUrl(result);
+        }
       };
-      return [newVersion, ...prev];
-    });
+      reader.readAsDataURL(file);
+
+      // Still add version entry for local fallback
+      setVersions((prev) => {
+        const nextVersionNumber = prev.length + 1;
+        const newVersion = {
+          id: `ver-${Date.now()}`,
+          version: `v${nextVersionNumber}.0`,
+          uploadedAt: new Date().toISOString(),
+          uploadedBy: 'You',
+          notes: `${file.name} uploaded (local)`
+        };
+        return [newVersion, ...prev];
+      });
+    } finally {
+      setUploading(false);
+    }
   };
 
   const handleAddComment = () => {
@@ -171,18 +314,34 @@ const DocumentBlockRenderer = ({ data }) => {
               <FileText className="w-3 h-3" />
               <span>Preview</span>
             </button>
-            <label className="inline-flex items-center space-x-1 px-3 py-1 text-xs font-semibold text-white bg-sky-600 rounded-lg cursor-pointer hover:bg-sky-700">
-              <UploadCloud className="w-3 h-3" />
-              <span>Upload</span>
+            <label className={`inline-flex items-center space-x-1 px-3 py-1 text-xs font-semibold text-white rounded-lg ${uploading ? 'bg-sky-400 cursor-wait' : 'bg-sky-600 cursor-pointer hover:bg-sky-700'}`}>
+              {uploading ? (
+                <>
+                  <Loader2 className="w-3 h-3 animate-spin" />
+                  <span>Uploading...</span>
+                </>
+              ) : (
+                <>
+                  <UploadCloud className="w-3 h-3" />
+                  <span>Upload</span>
+                </>
+              )}
               <input
                 type="file"
                 accept="application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/msword,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.presentationml.presentation,application/vnd.ms-powerpoint,application/zip,application/x-zip-compressed"
                 className="hidden"
                 onChange={handleFileUpload}
+                disabled={uploading}
               />
             </label>
           </div>
         </div>
+
+        {uploadError && (
+          <div className="mx-4 mb-2 p-2 bg-red-50 border border-red-200 rounded-lg text-xs text-red-600">
+            {uploadError}
+          </div>
+        )}
 
         <div className="p-4 space-y-4">
           <div className="space-y-3">

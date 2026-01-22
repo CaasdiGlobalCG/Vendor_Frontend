@@ -790,6 +790,75 @@ const LayoutRenderer = ({ data, layoutType }) => {
     </div>
   );
 
+  // Group Container Layout Renderer
+  const renderGroupContainerLayout = () => {
+    const childNodes = data?.customLayoutData?.childNodes || [];
+    const containerStyle = data?.containerStyle || {};
+    const gridConfig = data?.gridConfig || { columns: 2, rows: 1 };
+    
+    return (
+      <div className="h-full flex flex-col">
+        {/* Group Container Header */}
+        <div 
+          className="px-4 py-3 rounded-t-xl flex items-center justify-between"
+          style={{
+            backgroundColor: containerStyle.headerColor || '#3b82f6',
+            color: 'white'
+          }}
+        >
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 bg-white/20 rounded-lg flex items-center justify-center">
+              <Grid className="w-5 h-5" />
+            </div>
+            <div>
+              <span className="font-semibold text-base">{data?.name || 'Grouped Elements'}</span>
+              <div className="text-xs text-white/80">
+                {gridConfig.columns} columns × {gridConfig.rows} rows
+              </div>
+            </div>
+          </div>
+          <span className="bg-white/20 px-3 py-1 rounded-full text-sm font-medium">
+            {childNodes.length} items
+          </span>
+        </div>
+        
+        {/* Group Container Body - Grid visualization */}
+        <div 
+          className="flex-1 p-4 rounded-b-xl relative"
+          style={{
+            backgroundColor: containerStyle.backgroundColor || '#f0f9ff',
+            minHeight: 200
+          }}
+        >
+          {/* Grid lines visualization */}
+          <div 
+            className="absolute inset-4 pointer-events-none"
+            style={{
+              display: 'grid',
+              gridTemplateColumns: `repeat(${gridConfig.columns}, 1fr)`,
+              gridTemplateRows: `repeat(${gridConfig.rows}, 1fr)`,
+              gap: '8px'
+            }}
+          >
+            {Array.from({ length: gridConfig.columns * gridConfig.rows }).map((_, idx) => (
+              <div 
+                key={idx}
+                className="border-2 border-dashed border-blue-200 rounded-lg bg-white/50"
+              />
+            ))}
+          </div>
+          
+          {/* Info text */}
+          <div className="absolute bottom-2 left-4 right-4 text-center">
+            <p className="text-xs text-blue-400 font-medium">
+              📦 Elements are arranged in {gridConfig.columns}×{gridConfig.rows} grid
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   // Render the appropriate layout type
   const renderLayout = () => {
     switch (actualLayoutType) {
@@ -802,6 +871,8 @@ const LayoutRenderer = ({ data, layoutType }) => {
       case 'grid':
       case 'grids':
         return renderGridLayout();
+      case 'group-container':
+        return renderGroupContainerLayout();
       case 'image':
       case 'image-placeholder':
       case 'image-gallery':

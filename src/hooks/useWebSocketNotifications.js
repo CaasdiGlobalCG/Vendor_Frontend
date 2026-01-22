@@ -20,8 +20,11 @@ const useWebSocketNotifications = (userId, userType = 'vendor') => {
         wsRef.current.close();
       }
 
-      // Create WebSocket connection
-      const wsUrl = `${config.VENDOR_BACKEND_URL.replace('http', 'ws')}/api/notifications/ws/${userId}?userType=${userType}`;
+      // Create WebSocket connection using window.location.host to go through Vite proxy
+      const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+      const wsHost = window.location.host;
+      const wsUrl = `${wsProtocol}//${wsHost}/api/notifications/ws/${userId}?userType=${userType}`;
+      console.log('useWebSocketNotifications - Connecting to:', wsUrl);
       wsRef.current = new WebSocket(wsUrl);
 
       wsRef.current.onopen = () => {
@@ -36,14 +39,32 @@ const useWebSocketNotifications = (userId, userType = 'vendor') => {
           
           if (data.type === 'notification') {
             const notification = data.notification;
-            setNotifications(prev => [notification, ...prev]);
+            
+            // Format call notifications properly
+            let formattedNotification;
+            if (notification.type === 'call_invitation' || notification.type === 'call_ended' || notification.type === 'call_declined') {
+              // Call notifications come pre-formatted from backend
+              formattedNotification = {
+                ...notification,
+                time: notification.timestamp ? new Date(notification.timestamp).toLocaleTimeString() : 'Just now',
+                isRead: false,
+                isImportant: notification.priority === 'high',
+                isSaved: false
+              };
+            } else {
+              // Other notifications use as-is
+              formattedNotification = notification;
+            }
+            
+            setNotifications(prev => [formattedNotification, ...prev]);
             setUnreadCount(prev => prev + 1);
             
             // Show browser notification if permission is granted
             if (Notification.permission === 'granted') {
-              new Notification(notification.message, {
+              new Notification(formattedNotification.title || formattedNotification.message, {
+                body: formattedNotification.message,
                 icon: '/favicon.ico',
-                tag: notification.notificationId
+                tag: formattedNotification.id || formattedNotification.notificationId
               });
             }
 

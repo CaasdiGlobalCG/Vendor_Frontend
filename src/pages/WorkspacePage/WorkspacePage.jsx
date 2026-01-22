@@ -21,9 +21,15 @@ import InvoiceToolReplica from './components/InvoiceToolReplica';
 import RoleBasedHeader from './components/RoleBasedHeader';
 import { PostServicesModal } from './components/modals/PostServices';
 import UpdateProgressModal from './components/modals/UpdateProgressModal';
+import ReviewProgressModal from './components/modals/ReviewProgressModal';
+import ProjectCompleteModal from './components/modals/ProjectCompleteModal';
 import PermissionsModal from './components/PermissionsModal';
 import InviteCASModal from './components/InviteCASModal';
 import useWebSocketNotifications from '../../hooks/useWebSocketNotifications';
+import StartCallModal from './components/modals/StartCallModal';
+import IncomingCallNotification from './components/modals/IncomingCallNotification';
+import ActiveCallInterface from './components/modals/ActiveCallInterface';
+import useVideoCall from '../../hooks/useVideoCall';
 import config from '../../config/env';
 
 const WorkspacePage = () => {
@@ -77,6 +83,8 @@ const WorkspacePage = () => {
     accessedFrom: 'trunky-dashboard'
   } : null;
 
+  // Client detection will be done after workspace loads (in useState and useEffect)
+  // For now, initialize with basic role logic
   const userRole = urlUserRole || 
                    location.state?.userRole || 
                    (pmUserFromStorage?.role === 'pm' ? 'pm' : null) ||
@@ -113,7 +121,7 @@ const WorkspacePage = () => {
   }, [pmUserFromStorage, pmUserFromUrl, casUser, currentUser?.role, setUser]);
 
   // WebSocket notifications hook
-  const userId = currentUser?.id || currentUser?.userId || currentUser?.pmId;
+  const userId = currentUser?.id || currentUser?.userId || currentUser?.pmId || currentUser?.vendorId;
   const userType = currentUser?.role || 'vendor';
   const {
     notifications,
@@ -141,6 +149,11 @@ const WorkspacePage = () => {
   const [workspace, setWorkspace] = useState(null);
   const [workspaceLoading, setWorkspaceLoading] = useState(true);
   const [workspaceError, setWorkspaceError] = useState(null);
+  const [canvasNodes, setCanvasNodes] = useState([]);
+  
+  // User role state (detected dynamically including client detection)
+  const [detectedUserRole, setDetectedUserRole] = useState(userRole);
+  const [detectedClientId, setDetectedClientId] = useState(null);
   
   // UI state
   const [activeTab, setActiveTab] = useState('Task');
@@ -172,10 +185,35 @@ const WorkspacePage = () => {
   const [showManageBOQModal, setShowManageBOQModal] = useState(false);
   const [showPostServicesModal, setShowPostServicesModal] = useState(false);
   const [showUpdateProgressModal, setShowUpdateProgressModal] = useState(false);
+  const [showReviewProgressModal, setShowReviewProgressModal] = useState(false);
+  const [showClientReviewProgressModal, setShowClientReviewProgressModal] = useState(false);
+  const [showProjectCompleteModal, setShowProjectCompleteModal] = useState(false);
+  
+  // Video call states
+  const [showStartCallModal, setShowStartCallModal] = useState(false);
+  const [processedCallNotifications, setProcessedCallNotifications] = useState(new Set());
+  const [workspaceCollaborators, setWorkspaceCollaborators] = useState([]);
+  
+  // Video call hooks
+  const { startCall, joinCall, activeCall: callState } = useVideoCall();
+  const [activeCall, setActiveCall] = useState(null);
   const [invoices, setInvoices] = useState([]);
   const [quotes, setQuotes] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+
+  // Debug: Log notifications array whenever it changes
+  useEffect(() => {
+    console.log('📬 Notifications updated:', {
+      total: notifications?.length || 0,
+      notifications: notifications,
+      callInvitations: notifications?.filter(n => n.type === 'call_invitation') || [],
+      activeCall,
+      processedCount: processedCallNotifications.size,
+      userId: currentUser?.id || currentUser?.userId,
+      isConnected
+    });
+  }, [notifications, activeCall, processedCallNotifications, currentUser, isConnected]);
 
   // Check if we should show invoice tool based on URL
   useEffect(() => {
@@ -197,20 +235,26 @@ const WorkspacePage = () => {
       
       try {
         // Prepare headers with user info
+        // Use clientId if available (when user is a client), otherwise use vendorId
+        const userId = detectedClientId || currentUser.vendorId;
+        const userRole = detectedClientId ? 'client' : 'vendor';
+        
         const headers = {
           'Content-Type': 'application/json',
           'x-user-info': JSON.stringify({
             vendorId: currentUser.vendorId,
+            clientId: detectedClientId || undefined,
             email: currentUser?.email,
-            role: 'vendor',
+            role: userRole,
             name: currentUser?.name
-          })
+          }),
+          'x-user-role': userRole
         };
         
-        console.log('🔑 Using vendor ID:', currentUser.vendorId);
+        console.log('🔑 Using', userRole, 'ID:', userId);
         
         // Fetch invoices
-        const invoicesRes = await fetch(`/api/workspace/invoices?vendorId=${currentUser.vendorId}`, {
+        const invoicesRes = await fetch(`/api/workspace/invoices?vendorId=${userId}`, {
           headers: headers
         });
         
@@ -246,7 +290,7 @@ const WorkspacePage = () => {
     };
     
     fetchData();
-  }, [currentUser?.vendorId]);
+  }, [currentUser?.vendorId, detectedClientId]);
 
   // Helper function to get status color
   const getStatusColor = (status = '') => {
@@ -520,9 +564,6 @@ const WorkspacePage = () => {
     other: {
       name: 'Other Elements',
       elements: [
-        { id: 'divider', name: 'Divider', type: 'divider', preview: 'Content separator' },
-        { id: 'spacer', name: 'Spacer', type: 'spacer', preview: 'Vertical spacing' },
-        { id: 'container', name: 'Container', type: 'container', preview: 'Content wrapper' },
         { id: 'grid', name: 'Grid', type: 'grid', preview: 'Layout grid system' },
         { id: 'button', name: 'Button', type: 'button', preview: 'Action button' }
       ]
@@ -567,9 +608,6 @@ const WorkspacePage = () => {
     other: {
       name: 'Other Elements',
       elements: [
-        { id: 'divider', name: 'Divider', type: 'divider', preview: 'Content separator' },
-        { id: 'spacer', name: 'Spacer', type: 'spacer', preview: 'Vertical spacing' },
-        { id: 'container', name: 'Container', type: 'container', preview: 'Content wrapper' },
         { id: 'grid', name: 'Grid', type: 'grid', preview: 'Layout grid system' }
       ]
     }
@@ -613,6 +651,69 @@ const WorkspacePage = () => {
         setWorkspace(workspaceData);
         console.log('✅ Loaded workspace');
         
+        // Detect if current user is a client by checking if they're listed as a client in collaborators
+        const userId = currentUser?.vendorId || currentUser?.userId || currentUser?.id;
+        const workspaceClientId = workspaceData?.projectMetadata?.clientId;
+        
+        // Fetch collaborators to check if current user is listed as a client
+        let isClient = false;
+        let userClientId = null;
+        
+        try {
+          const collaboratorsRes = await fetch(`/api/workspaces/${workspaceId}/collaborators`, {
+            headers: {
+              'x-user-info': JSON.stringify({
+                vendorId: currentUser.vendorId,
+                email: currentUser?.email,
+                role: 'vendor',
+                name: currentUser?.name
+              })
+            }
+          });
+          
+          if (collaboratorsRes.ok) {
+            const collaboratorsData = await collaboratorsRes.json();
+            console.log('📋 Collaborators fetched:', collaboratorsData.collaborators);
+            
+            // Save collaborators to state for video calls
+            setWorkspaceCollaborators(collaboratorsData.collaborators || []);
+            
+            // Check if CURRENT USER is marked as a client in the collaborators list
+            const currentUserAsClient = collaboratorsData.collaborators?.find(
+              c => c.isClient && (c.vendorId === userId || c.email === currentUser?.email)
+            );
+            
+            if (currentUserAsClient) {
+              console.log('👥 Client detected in collaborators! Current user is a client:', currentUserAsClient.vendorId);
+              isClient = true;
+              userClientId = currentUserAsClient.vendorId;
+            } else {
+              console.log('🔍 Not a client. Current user not found in client collaborators. userId:', userId, 'Collaborators:', collaboratorsData.collaborators?.map(c => ({ vendorId: c.vendorId, email: c.email, isClient: c.isClient })));
+            }
+          }
+        } catch (err) {
+          console.warn('⚠️ Could not fetch collaborators to detect client role:', err.message);
+        }
+        
+        if (isClient) {
+          console.log('🔄 Setting detected role to: client');
+          setDetectedUserRole('client');
+          setDetectedClientId(userClientId);
+          // Update the currentUser's role in VendorContext ONLY if role is not already 'client'
+          if (currentUser?.role !== 'client') {
+            console.log('📝 Updating user role in VendorContext from', currentUser?.role, 'to client');
+            setUser({
+              ...currentUser,
+              role: 'client'
+            });
+          }
+          console.log('✅ Detected role state updated to: client');
+        } else {
+          console.log('🔍 Not a client. userId:', userId, 'clientId:', workspaceClientId);
+          setDetectedUserRole(userRole);
+          setDetectedClientId(null);
+        }
+        
         // Set zoom level from workspace data
         if (workspaceData.zoomLevel) {
           if (workspaceData.zoomLevel !== undefined && workspaceData.zoomLevel !== null) {
@@ -622,11 +723,12 @@ const WorkspacePage = () => {
         
         // Set user permissions based on role and workspace access control
         if (workspaceData.accessControl && currentUser) {
-          const userId = currentUser.vendorId || currentUser.userId || currentUser.id;
           const permissions = workspaceData.accessControl.permissions || {};
           
+          const finalRole = isClient ? 'client' : userRole;
+          
           console.log('🔍 Permission Check Debug:', {
-            userRole,
+            finalRole,
             userId,
             currentUser,
             permissions: permissions.canEdit,
@@ -634,22 +736,31 @@ const WorkspacePage = () => {
           });
           
           setUserPermissions({
-            canEdit: userRole === 'pm' || permissions.canEdit?.includes(userId) || false,
+            canEdit: finalRole === 'pm' || permissions.canEdit?.includes(userId) || false,
             canComment: permissions.canComment?.includes(userId) || true,
             canViewFiles: permissions.canViewFiles?.includes(userId) || true,
-            canCreateTasks: userRole === 'pm' || permissions.canCreateTasks?.includes(userId) || false,
-            canAssignTasks: userRole === 'pm' || permissions.canAssignTasks?.includes(userId) || false,
-            canUpdateTaskStatus: permissions.canUpdateTaskStatus?.includes(userId) || userRole === 'vendor' || userRole === 'cas'
+            canCreateTasks: finalRole === 'pm' || permissions.canCreateTasks?.includes(userId) || false,
+            canAssignTasks: finalRole === 'pm' || permissions.canAssignTasks?.includes(userId) || false,
+            canUpdateTaskStatus: permissions.canUpdateTaskStatus?.includes(userId) || finalRole === 'vendor' || finalRole === 'cas',
+            canAddNotes: permissions.canAddNotes?.includes(userId) || finalRole === 'client',
+            canApproveElements: permissions.canApproveElements?.includes(userId) || finalRole === 'client',
+            canAccessMessages: permissions.canAccessMessages?.includes(userId) || finalRole === 'client',
+            canAccessVideoCall: permissions.canAccessVideoCall?.includes(userId) || finalRole === 'client'
           });
         } else {
           // Default permissions for non-RBAC workspaces
+          const finalRole = isClient ? 'client' : userRole;
           setUserPermissions({
-            canEdit: userRole === 'pm',
+            canEdit: finalRole === 'pm',
             canComment: true,
             canViewFiles: true,
-            canCreateTasks: userRole === 'pm',
-            canAssignTasks: userRole === 'pm',
-            canUpdateTaskStatus: userRole === 'vendor' || userRole === 'cas'
+            canCreateTasks: finalRole === 'pm',
+            canAssignTasks: finalRole === 'pm',
+            canUpdateTaskStatus: finalRole === 'vendor' || finalRole === 'cas',
+            canAddNotes: finalRole === 'client',
+            canApproveElements: finalRole === 'client',
+            canAccessMessages: finalRole === 'client',
+            canAccessVideoCall: finalRole === 'client'
           });
         }
         
@@ -663,7 +774,7 @@ const WorkspacePage = () => {
     };
 
     loadWorkspace();
-  }, [workspaceId]);
+  }, [workspaceId, currentUser]);
 
   // Save workspace data (now saves to specific subtask)
   const saveWorkspace = async (workspaceData) => {
@@ -766,6 +877,21 @@ const WorkspacePage = () => {
 
     return () => clearInterval(autoSaveInterval);
   }, [workspace, workspaceId]);
+
+  // Listen for canvas nodes changes and update the canvasNodes state
+  useEffect(() => {
+    const handleNodesChanged = (event) => {
+      const { nodes } = event.detail;
+      console.log('📊 Canvas nodes updated:', nodes.length, 'elements');
+      setCanvasNodes(nodes || []);
+    };
+
+    document.addEventListener('canvasNodesChanged', handleNodesChanged);
+
+    return () => {
+      document.removeEventListener('canvasNodesChanged', handleNodesChanged);
+    };
+  }, []);
 
   // Handle browser back button when invoice tool overlay is open
   useEffect(() => {
@@ -910,6 +1036,21 @@ const WorkspacePage = () => {
     }
   }, [workspace]);
 
+  // Handle incoming call notifications - just log, don't mark as processed
+  // Notifications are marked as processed only when user accepts or declines
+  useEffect(() => {
+    // Filter for incoming call invitations
+    const callInvitations = notifications?.filter(n => n.type === 'call_invitation') || [];
+
+    // Log unread invitations (don't mark as processed here - that happens on accept/decline)
+    callInvitations.forEach(notification => {
+      if (!processedCallNotifications.has(notification.id)) {
+        console.log('📞 New call invitation received:', notification);
+        // Don't mark as processed here - let the notification stay visible until user acts
+      }
+    });
+  }, [notifications, processedCallNotifications]);
+
   // Add task via API
   const addTask = async (taskData) => {
     if (!workspaceId) {
@@ -1003,6 +1144,14 @@ const WorkspacePage = () => {
     // Update selected task to reflect new subtask
     const updatedSelectedTask = updatedTasks.find(task => task.id === selectedTask.id);
     setSelectedTask(updatedSelectedTask);
+    
+    // CRITICAL: Select the newly created subtask so canvas shows empty data
+    // This prevents elements from being copied from the previous subtask
+    setSelectedSubtask(result.subtask);
+    console.log('✨ WorkspacePage: Auto-selected new subtask', {
+      subtaskId: result.subtask.id,
+      subtaskName: result.subtask.name
+    });
       
       // Refresh workspace data
       const updatedWorkspace = result.workspace;
@@ -1181,6 +1330,136 @@ const WorkspacePage = () => {
     (typeof window !== 'undefined' ? localStorage.getItem('currentWorkspace') : null) ||
     'Workspace';
 
+  // ========================================
+  // VIDEO CALL HANDLERS
+  // ========================================
+  
+  const handleStartCallClick = () => {
+    console.log('📞 Start Call button clicked');
+    setShowStartCallModal(true);
+  };
+
+  const handleStartCallSubmit = async (callData) => {
+    try {
+      console.log('📞 Starting call with data:', callData);
+      const { selectedCollaborators, callTitle } = callData;
+      
+      // Prepare invited user IDs from selected collaborators
+      const invitedUserIds = selectedCollaborators.map(c => c.vendorId || c.userId || c.id);
+      console.log('📞 Invited user IDs:', invitedUserIds);
+      
+      // Start the call via API
+      const callResult = await startCall({
+        collaborators: selectedCollaborators,
+        workspaceId,
+        callTitle: callTitle || 'Workspace Call',
+        initiatorId: currentUser?.vendorId || currentUser?.id,
+        initiatorName: currentUser?.name,
+        invitedUserIds: invitedUserIds
+      });
+
+      console.log('✅ Call started successfully:', callResult);
+      
+      // Set the active call directly from the result (backend returns all Chime SDK data)
+      if (callResult && callResult.meetingId) {
+        setActiveCall(callResult);
+        console.log('📱 Active call state updated:', callResult);
+      }
+      
+      // Close the modal
+      setShowStartCallModal(false);
+      
+      // Show success message
+      alert(`Call "${callTitle}" started! Invitations sent to ${selectedCollaborators.length} collaborator(s).`);
+    } catch (error) {
+      console.error('❌ Error starting call:', error);
+      alert('Failed to start call. Please try again.');
+    }
+  };
+
+  const handleAcceptCall = async (notification) => {
+    try {
+      console.log('✅ Accepting call:', notification);
+      const callData = notification.data;
+      
+      // Join the call via API
+      const result = await joinCall(
+        callData.meetingId,
+        currentUser?.vendorId || currentUser?.id,
+        currentUser?.name
+      );
+
+      console.log('✅ Joined call successfully:', result);
+      
+      // Set the active call from the result
+      if (result && result.call) {
+        setActiveCall(result.call);
+        console.log('📱 Active call state updated after join:', result.call);
+      }
+      
+      // Mark notification as processed
+      setProcessedCallNotifications(prev => new Set([...prev, notification.id]));
+      
+    } catch (error) {
+      console.error('❌ Error accepting call:', error);
+      alert('Failed to join call. Please try again.');
+    }
+  };
+
+  const handleDeclineCall = async (notification) => {
+    try {
+      console.log('❌ Declining call:', notification);
+      const callData = notification.data;
+      
+      // Decline the call via API
+      await fetch('/api/calls/decline', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+        },
+        body: JSON.stringify({
+          meetingId: callData.meetingId,
+          attendeeId: currentUser?.vendorId || currentUser?.id
+        })
+      });
+
+      // Mark notification as processed
+      setProcessedCallNotifications(prev => new Set([...prev, notification.id]));
+      console.log('✅ Call declined successfully');
+      
+    } catch (error) {
+      console.error('❌ Error declining call:', error);
+      alert('Failed to decline call. Please try again.');
+    }
+  };
+
+  const handleEndCall = async () => {
+    try {
+      console.log('🛑 Ending call:', activeCall?.meetingId);
+      
+      // End the call via API
+      await fetch('/api/calls/end', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+        },
+        body: JSON.stringify({
+          meetingId: activeCall?.meetingId
+        })
+      });
+
+      // Clear active call
+      setActiveCall(null);
+      console.log('✅ Call ended successfully');
+      
+    } catch (error) {
+      console.error('❌ Error ending call:', error);
+      alert('Failed to end call. Please try again.');
+    }
+  };
+
   // Show loading state
   if (workspaceLoading) {
     return (
@@ -1261,13 +1540,15 @@ const WorkspacePage = () => {
       
       <div className="workspace-container h-screen w-screen bg-white overflow-hidden" style={{ margin: 0, padding: 0 }}>
         {/* Role-based header */}
+        {console.log('🔍 RoleBasedHeader rendering with detectedUserRole:', detectedUserRole)}
         <RoleBasedHeader 
-          userRole={userRole}
+          userRole={detectedUserRole}
           currentUser={currentUser}
           workspace={workspace}
           onManagePermissions={handleManagePermissions}
           onInviteVendors={handleInviteVendors}
           onInviteCAS={handleInviteCAS}
+          onStartCall={handleStartCallClick}
         />
         
         <WorkspaceHeader 
@@ -1279,6 +1560,12 @@ const WorkspacePage = () => {
           showPostServicesActions
           onOpenPostServices={() => setShowPostServicesModal(true)}
           onOpenUpdateProgress={() => setShowUpdateProgressModal(true)}
+          onOpenReviewProgress={() => setShowReviewProgressModal(true)}
+          onOpenClientReviewProgress={() => setShowClientReviewProgressModal(true)}
+          onOpenProjectComplete={() => setShowProjectCompleteModal(true)}
+          userRole={userRole}
+          isPM={isPM}
+          isClient={!!detectedClientId}
         />
         
         <div className="flex h-[calc(100vh-160px)]">
@@ -1293,7 +1580,7 @@ const WorkspacePage = () => {
             onSubtaskClick={handleSubtaskClick}
             onShowAddTaskModal={() => setShowAddTaskModal(true)}
             workspace={workspace}
-            userRole={userRole}
+            userRole={detectedUserRole}
             onLeaveWorkspace={handleLeaveWorkspace}
           />
 
@@ -1319,7 +1606,7 @@ const WorkspacePage = () => {
             onCreateTask={addTask}
             onCreateSubtask={addSubtask}
             onActivityCreated={triggerActivityRefresh}
-            userRole={userRole}
+            userRole={detectedUserRole}
             userPermissions={userPermissions}
           />
 
@@ -1332,12 +1619,20 @@ const WorkspacePage = () => {
             workspaceId={workspaceId}
             onActivityCreated={activityRefreshTrigger}
             workspace={workspace}
-            userRole={userRole}
+            userRole={detectedUserRole}
             notifications={notifications}
             unreadCount={unreadCount}
             isConnected={isConnected}
             onMarkNotificationAsRead={markNotificationAsRead}
             onMarkAllAsRead={markAllAsRead}
+            canvasElements={canvasNodes}
+            onZoomToElement={(elementId) => {
+              // Emit event to CanvasWorkspace to zoom and focus on the element
+              const event = new CustomEvent('zoomToElement', {
+                detail: { elementId }
+              });
+              document.dispatchEvent(event);
+            }}
           />
         </div>
       </div>
@@ -1362,7 +1657,7 @@ const WorkspacePage = () => {
         isOpen={showElementsSidebar}
         onClose={() => setShowElementsSidebar(false)}
         onElementSelect={handleElementSelect}
-        userRole={userRole}
+        userRole={detectedUserRole}
         currentUser={currentUser}
         elementOptions={elementOptions}
       />
@@ -1430,10 +1725,38 @@ const WorkspacePage = () => {
         projectId={workspace?.projectId || ''}
         taskId={selectedTask?.id || ''}
         subtaskId={selectedSubtask?.id || ''}
+        tasks={workspace?.tasks || []}
+        workspace={workspace}
         onUpdate={(updatedData) => {
           // Handle successful update - could refresh workspace data or show success message
           console.log('Progress updated:', updatedData);
         }}
+      />
+
+      {/* Review Progress Modal */}
+      <ReviewProgressModal
+        isOpen={showReviewProgressModal}
+        onClose={() => setShowReviewProgressModal(false)}
+        workspace={workspace}
+        userRole={userRole}
+      />
+
+      {/* Client Review Progress Modal */}
+      <ReviewProgressModal
+        isOpen={showClientReviewProgressModal}
+        onClose={() => setShowClientReviewProgressModal(false)}
+        workspace={workspace}
+        userRole="client"
+      />
+
+      {/* Project Complete Request Modal */}
+      <ProjectCompleteModal
+        isOpen={showProjectCompleteModal}
+        onClose={() => setShowProjectCompleteModal(false)}
+        workspace={workspace}
+        userRole={userRole}
+        isPM={isPM}
+        isClient={!!detectedClientId}
       />
 
       {/* Invoice Tool Full Screen */}
@@ -1473,6 +1796,56 @@ const WorkspacePage = () => {
         workspace={workspace}
         onInviteSuccess={handleCASInviteSuccess}
       />
+
+      {/* ========================================
+           VIDEO CALL COMPONENTS
+         ======================================== */}
+
+      {/* Start Call Modal - Shows collaborators list for selection */}
+      {!activeCall && (
+        <StartCallModal
+          isOpen={showStartCallModal}
+          onClose={() => setShowStartCallModal(false)}
+          workspaceId={workspaceId}
+          currentUser={currentUser}
+          collaborators={workspaceCollaborators}
+          onStartCall={handleStartCallSubmit}
+        />
+      )}
+
+      {/* Incoming Call Notifications - Show popup for each incoming call invitation */}
+      {!activeCall && notifications?.map(notification => {
+        console.log('🔍 Checking notification:', { 
+          type: notification.type, 
+          id: notification.id, 
+          processed: processedCallNotifications.has(notification.id),
+          activeCall: activeCall 
+        });
+        
+        if (notification.type === 'call_invitation' && !processedCallNotifications.has(notification.id)) {
+          console.log('✅ Rendering IncomingCallNotification for:', notification.id);
+          return (
+            <IncomingCallNotification
+              key={notification.id}
+              notification={notification}
+              onAccept={() => handleAcceptCall(notification)}
+              onDecline={() => handleDeclineCall(notification)}
+              currentUser={currentUser}
+            />
+          );
+        }
+        return null;
+      })}
+
+      {/* Active Call Interface - Full screen call UI when in active call */}
+      {activeCall && (
+        <ActiveCallInterface
+          call={activeCall}
+          currentUser={currentUser}
+          onEndCall={handleEndCall}
+        />
+      )}
+
     </UploadProvider>
   );
 };

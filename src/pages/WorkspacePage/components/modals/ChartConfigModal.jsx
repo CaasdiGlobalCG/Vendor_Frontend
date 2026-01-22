@@ -264,21 +264,21 @@ const ChartConfigModal = ({ isOpen, onClose, onConfirm, chartType }) => {
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
       <div className="bg-white rounded-xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden">
         {/* Modal Header */}
-        <div className="flex items-center justify-between p-6 border-b border-gray-200 bg-gradient-to-r from-blue-50 to-indigo-50">
-          <div className="flex items-center space-x-3">
-            <div className="p-2 bg-blue-100 rounded-lg">
-              <ChartIcon className="w-5 h-5 text-blue-600" />
+        <div className="flex items-center justify-between p-4 border-b border-gray-200 bg-gradient-to-r from-blue-50 to-indigo-50">
+          <div className="flex items-center space-x-2">
+            <div className="p-1.5 bg-blue-100 rounded-lg">
+              <ChartIcon className="w-4 h-4 text-blue-600" />
             </div>
             <div>
-              <h2 className="text-2xl font-bold text-gray-900">Configure {currentConfig.name}</h2>
-              <p className="text-gray-600 mt-1">Set up your chart data and customize colors</p>
+              <h2 className="text-lg font-bold text-gray-900">Configure {currentConfig.name}</h2>
+              <p className="text-xs text-gray-600 mt-0.5">Set up your chart data and customize colors</p>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+            className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors"
           >
-            <X className="w-6 h-6 text-gray-500" />
+            <X className="w-4 h-4 text-gray-500" />
           </button>
         </div>
 
@@ -287,7 +287,7 @@ const ChartConfigModal = ({ isOpen, onClose, onConfirm, chartType }) => {
           <div className="flex">
             <button
               onClick={() => setActiveTab('manual')}
-              className={`px-6 py-3 font-medium text-sm border-b-2 transition-colors ${
+              className={`px-4 py-2 font-medium text-xs border-b-2 transition-colors ${
                 activeTab === 'manual'
                   ? 'border-blue-500 text-blue-600 bg-blue-50'
                   : 'border-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-50'
@@ -297,7 +297,7 @@ const ChartConfigModal = ({ isOpen, onClose, onConfirm, chartType }) => {
             </button>
             <button
               onClick={() => setActiveTab('upload')}
-              className={`px-6 py-3 font-medium text-sm border-b-2 transition-colors ${
+              className={`px-4 py-2 font-medium text-xs border-b-2 transition-colors ${
                 activeTab === 'upload'
                   ? 'border-blue-500 text-blue-600 bg-blue-50'
                   : 'border-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-50'
@@ -309,41 +309,41 @@ const ChartConfigModal = ({ isOpen, onClose, onConfirm, chartType }) => {
         </div>
 
         {/* Modal Content */}
-        <div className="p-6 max-h-[60vh] overflow-y-auto">
+        <div className="p-4 max-h-[60vh] overflow-y-auto">
           {/* Chart Settings */}
-          <div className="mb-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Chart Settings</h3>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="mb-4">
+            <h3 className="text-sm font-semibold text-gray-900 mb-3">Chart Settings</h3>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Chart Title</label>
+                <label className="block text-xs font-medium text-gray-700 mb-1">Chart Title</label>
                 <input
                   type="text"
                   value={chartTitle}
                   onChange={(e) => setChartTitle(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-2 py-1.5 text-xs border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                   placeholder="Enter chart title"
                 />
               </div>
               {currentConfig.defaultXAxis && (
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">X-Axis Label</label>
+                  <label className="block text-xs font-medium text-gray-700 mb-1">X-Axis Label</label>
                   <input
                     type="text"
                     value={xAxisLabel}
                     onChange={(e) => setXAxisLabel(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-2 py-1.5 text-xs border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                     placeholder="Enter X-axis label"
                   />
                 </div>
               )}
               {currentConfig.defaultYAxis && (
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Y-Axis Label</label>
+                  <label className="block text-xs font-medium text-gray-700 mb-1">Y-Axis Label</label>
                   <input
                     type="text"
                     value={yAxisLabel}
                     onChange={(e) => setYAxisLabel(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-2 py-1.5 text-xs border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                     placeholder="Enter Y-axis label"
                   />
                 </div>
@@ -353,26 +353,26 @@ const ChartConfigModal = ({ isOpen, onClose, onConfirm, chartType }) => {
 
           {activeTab === 'manual' && (
             <div>
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-semibold text-gray-900">Data Points</h3>
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="text-sm font-semibold text-gray-900">Data Points</h3>
                 <button
                   onClick={addDataPoint}
-                  className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                  className="flex items-center space-x-1.5 px-3 py-1.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-xs"
                 >
-                  <Plus className="w-4 h-4" />
+                  <Plus className="w-3 h-3" />
                   <span>Add Point</span>
                 </button>
               </div>
 
-              <div className="space-y-3 max-h-64 overflow-y-auto">
+              <div className="space-y-1.5 max-h-64 overflow-y-auto">
                 {chartData.map((item, index) => (
-                  <div key={index} className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
+                  <div key={index} className="flex items-center space-x-1.5 p-1.5 bg-gray-50 rounded-lg">
                     <div className="flex-1">
                       <input
                         type="text"
                         value={item.label}
                         onChange={(e) => updateDataPoint(index, 'label', e.target.value)}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="w-full px-2 py-1 text-xs border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                         placeholder="Label"
                       />
                     </div>
@@ -381,7 +381,7 @@ const ChartConfigModal = ({ isOpen, onClose, onConfirm, chartType }) => {
                         type="number"
                         value={item.value}
                         onChange={(e) => updateDataPoint(index, 'value', parseFloat(e.target.value) || 0)}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="w-full px-2 py-1 text-xs border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                         placeholder="Value"
                       />
                     </div>
@@ -391,25 +391,25 @@ const ChartConfigModal = ({ isOpen, onClose, onConfirm, chartType }) => {
                           type="number"
                           value={item.x || 0}
                           onChange={(e) => updateDataPoint(index, 'x', parseFloat(e.target.value) || 0)}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          className="w-full px-2 py-1 text-xs border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                           placeholder="X Value"
                         />
                       </div>
                     )}
-                    <div className="flex items-center space-x-2">
+                    <div className="flex items-center space-x-1">
                       <input
                         type="color"
                         value={colors[index] || defaultColors[0]}
                         onChange={(e) => updateColor(index, e.target.value)}
-                        className="w-8 h-8 border border-gray-300 rounded cursor-pointer"
+                        className="w-6 h-6 border border-gray-300 rounded cursor-pointer"
                         title="Choose color"
                       />
                       <button
                         onClick={() => removeDataPoint(index)}
                         disabled={chartData.length === 1}
-                        className="p-2 text-red-600 hover:bg-red-50 rounded-md disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="p-1 text-red-600 hover:bg-red-50 rounded-md disabled:opacity-50 disabled:cursor-not-allowed"
                       >
-                        <Minus className="w-4 h-4" />
+                        <Minus className="w-3 h-3" />
                       </button>
                     </div>
                   </div>
@@ -420,13 +420,13 @@ const ChartConfigModal = ({ isOpen, onClose, onConfirm, chartType }) => {
 
           {activeTab === 'upload' && (
             <div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">Upload Data File</h3>
+              <h3 className="text-sm font-semibold text-gray-900 mb-3">Upload Data File</h3>
               
-              <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center">
-                <Upload className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                <div className="space-y-2">
-                  <p className="text-lg font-medium text-gray-900">Upload your data file</p>
-                  <p className="text-gray-600">
+              <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
+                <Upload className="w-8 h-8 text-gray-400 mx-auto mb-2" />
+                <div className="space-y-1">
+                  <p className="text-sm font-medium text-gray-900">Upload your data file</p>
+                  <p className="text-xs text-gray-600">
                     Supports CSV files with columns: Label, Value{chartType === 'scatter-plot' ? ', X-Value' : ''}
                   </p>
                 </div>
@@ -454,9 +454,9 @@ const ChartConfigModal = ({ isOpen, onClose, onConfirm, chartType }) => {
                 )}
               </div>
 
-              <div className="mt-6 p-4 bg-gray-50 rounded-lg">
-                <h4 className="font-medium text-gray-900 mb-2">CSV Format Requirements:</h4>
-                <ul className="text-sm text-gray-600 space-y-1">
+              <div className="mt-4 p-3 bg-gray-50 rounded-lg">
+                <h4 className="font-medium text-xs text-gray-900 mb-1.5">CSV Format Requirements:</h4>
+                <ul className="text-xs text-gray-600 space-y-0.5">
                   <li>• First row should contain headers</li>
                   <li>• First column: Labels (text)</li>
                   <li>• Second column: Values (numbers)</li>
@@ -469,22 +469,22 @@ const ChartConfigModal = ({ isOpen, onClose, onConfirm, chartType }) => {
         </div>
 
         {/* Modal Footer */}
-        <div className="px-6 py-4 border-t border-gray-200 bg-gray-50">
+        <div className="px-4 py-3 border-t border-gray-200 bg-gray-50">
           <div className="flex justify-between items-center">
-            <div className="text-sm text-gray-600">
+            <div className="text-xs text-gray-600">
               {chartData.length} data point{chartData.length !== 1 ? 's' : ''} configured
             </div>
-            <div className="flex space-x-3">
+            <div className="flex space-x-2">
               <button
                 onClick={onClose}
-                className="px-6 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+                className="px-4 py-1.5 border border-gray-300 text-xs text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
               >
                 Cancel
               </button>
               <button
                 onClick={handleConfirm}
                 disabled={chartData.length === 0 || isProcessing}
-                className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                className="px-4 py-1.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-xs"
               >
                 Create Chart
               </button>

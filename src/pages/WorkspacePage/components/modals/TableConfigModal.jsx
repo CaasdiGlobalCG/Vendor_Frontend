@@ -281,16 +281,16 @@ const TableConfigModal = ({ isOpen, onClose, onConfirm, tableType }) => {
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
       <div className="bg-white rounded-xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden">
         {/* Modal Header */}
-        <div className="flex items-center justify-between p-6 border-b border-gray-200">
+        <div className="flex items-center justify-between p-4 border-b border-gray-200">
           <div>
-            <h2 className="text-2xl font-bold text-gray-900">Configure Table Data</h2>
-            <p className="text-gray-600 mt-1">Set up your {tableType?.replace('-', ' ')} with custom data</p>
+            <h2 className="text-lg font-bold text-gray-900">Configure Table Data</h2>
+            <p className="text-xs text-gray-600 mt-0.5">Set up your {tableType?.replace('-', ' ')} with custom data</p>
           </div>
           <button
             onClick={onClose}
-            className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+            className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors"
           >
-            <X className="w-6 h-6 text-gray-500" />
+            <X className="w-4 h-4 text-gray-500" />
           </button>
         </div>
 
@@ -298,24 +298,24 @@ const TableConfigModal = ({ isOpen, onClose, onConfirm, tableType }) => {
         <div className="flex border-b border-gray-200">
           <button
             onClick={() => setActiveTab('manual')}
-            className={`flex-1 px-6 py-4 text-sm font-medium transition-colors ${
+            className={`flex-1 px-3 py-2 text-xs font-medium transition-colors ${
               activeTab === 'manual'
                 ? 'text-blue-600 border-b-2 border-blue-600 bg-blue-50'
                 : 'text-gray-500 hover:text-gray-700'
             }`}
           >
-            <Edit3 className="w-4 h-4 inline mr-2" />
+            <Edit3 className="w-3 h-3 inline mr-1" />
             Manual Entry
           </button>
           <button
             onClick={() => setActiveTab('upload')}
-            className={`flex-1 px-6 py-4 text-sm font-medium transition-colors ${
+            className={`flex-1 px-3 py-2 text-xs font-medium transition-colors ${
               activeTab === 'upload'
                 ? 'text-blue-600 border-b-2 border-blue-600 bg-blue-50'
                 : 'text-gray-500 hover:text-gray-700'
             }`}
           >
-            <Upload className="w-4 h-4 inline mr-2" />
+            <Upload className="w-3 h-3 inline mr-1" />
             File Upload
           </button>
         </div>
@@ -326,20 +326,20 @@ const TableConfigModal = ({ isOpen, onClose, onConfirm, tableType }) => {
             <div className="space-y-4">
               {/* Column Controls */}
               <div className="flex items-center justify-between">
-                <h3 className="text-lg font-semibold text-gray-900">Table Structure</h3>
-                <div className="flex space-x-2">
+                <h3 className="text-sm font-semibold text-gray-900">Table Structure</h3>
+                <div className="flex space-x-1.5">
                   <button
                     onClick={addColumn}
-                    className="px-3 py-1 bg-green-500 text-white rounded text-sm hover:bg-green-600 flex items-center space-x-1"
+                    className="px-2 py-1 bg-green-500 text-white rounded text-xs hover:bg-green-600 flex items-center space-x-0.5"
                   >
-                    <Plus className="w-4 h-4" />
+                    <Plus className="w-3 h-3" />
                     <span>Add Column</span>
                   </button>
                   <button
                     onClick={addRow}
-                    className="px-3 py-1 bg-blue-500 text-white rounded text-sm hover:bg-blue-600 flex items-center space-x-1"
+                    className="px-2 py-1 bg-blue-500 text-white rounded text-xs hover:bg-blue-600 flex items-center space-x-0.5"
                   >
-                    <Plus className="w-4 h-4" />
+                    <Plus className="w-3 h-3" />
                     <span>Add Row</span>
                   </button>
                 </div>
@@ -347,53 +347,53 @@ const TableConfigModal = ({ isOpen, onClose, onConfirm, tableType }) => {
 
               {/* Data Table */}
               <div className="overflow-x-auto border border-gray-300 rounded-lg">
-                <table className="min-w-full">
+                <table className="min-w-full text-xs">
                   <thead className="bg-gray-50">
                     <tr>
                       {columns.map((column, index) => (
-                        <th key={index} className="px-4 py-2 border-b border-gray-300">
-                          <div className="flex items-center space-x-2">
+                        <th key={index} className="px-2 py-1.5 border-b border-gray-300">
+                          <div className="flex items-center space-x-1">
                             <input
                               type="text"
                               value={column}
                               onChange={(e) => updateColumnName(index, e.target.value)}
-                              className="font-semibold text-gray-700 bg-transparent border-none focus:outline-none focus:ring-1 focus:ring-blue-500 rounded px-2 py-1"
+                              className="font-semibold text-xs text-gray-700 bg-transparent border-none focus:outline-none focus:ring-1 focus:ring-blue-500 rounded px-1.5 py-0.5"
                             />
                             {columns.length > 1 && (
                               <button
                                 onClick={() => removeColumn(index)}
                                 className="text-red-500 hover:text-red-700"
                               >
-                                <Minus className="w-4 h-4" />
+                                <Minus className="w-3 h-3" />
                               </button>
                             )}
                           </div>
                         </th>
                       ))}
-                      <th className="px-4 py-2 border-b border-gray-300 w-16">Actions</th>
+                      <th className="px-2 py-1.5 border-b border-gray-300 w-12">Actions</th>
                     </tr>
                   </thead>
                   <tbody>
                     {tableData.map((row, rowIndex) => (
                       <tr key={row.id || rowIndex} className="hover:bg-gray-50">
                         {columns.map((column) => (
-                          <td key={column} className="px-4 py-2 border-b border-gray-200">
+                          <td key={column} className="px-2 py-1.5 border-b border-gray-200">
                             <input
                               type="text"
                               value={row[column] || ''}
                               onChange={(e) => updateCellValue(rowIndex, column, e.target.value)}
-                              className="w-full px-2 py-1 border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
+                              className="w-full px-1.5 py-0.5 text-xs border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
                               placeholder={`Enter ${column}`}
                             />
                           </td>
                         ))}
-                        <td className="px-4 py-2 border-b border-gray-200">
+                        <td className="px-2 py-1.5 border-b border-gray-200">
                           {tableData.length > 1 && (
                             <button
                               onClick={() => removeRow(rowIndex)}
                               className="text-red-500 hover:text-red-700"
                             >
-                              <Minus className="w-4 h-4" />
+                              <Minus className="w-3 h-3" />
                             </button>
                           )}
                         </td>
@@ -403,7 +403,7 @@ const TableConfigModal = ({ isOpen, onClose, onConfirm, tableType }) => {
                 </table>
               </div>
 
-              <div className="text-sm text-gray-600">
+              <div className="text-xs text-gray-600 space-y-0.5">
                 <p>• Click column headers to rename them</p>
                 <p>• Use the + buttons to add more rows or columns</p>
                 <p>• Use the - buttons to remove rows or columns</p>
@@ -412,11 +412,11 @@ const TableConfigModal = ({ isOpen, onClose, onConfirm, tableType }) => {
           )}
 
           {activeTab === 'upload' && (
-            <div className="space-y-6">
+            <div className="space-y-3">
               <div className="text-center">
-                <FileSpreadsheet className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">Upload Your Data</h3>
-                <p className="text-gray-600 mb-6">
+                <FileSpreadsheet className="w-10 h-10 text-gray-400 mx-auto mb-2" />
+                <h3 className="text-sm font-semibold text-gray-900 mb-1">Upload Your Data</h3>
+                <p className="text-xs text-gray-600 mb-4">
                   Upload a CSV or Excel file to automatically populate your table
                 </p>
 
@@ -457,9 +457,9 @@ const TableConfigModal = ({ isOpen, onClose, onConfirm, tableType }) => {
                 )}
               </div>
 
-              <div className="bg-gray-50 p-4 rounded-lg">
-                <h4 className="font-semibold text-gray-900 mb-2">File Format Requirements:</h4>
-                <ul className="text-sm text-gray-600 space-y-1">
+              <div className="bg-gray-50 p-3 rounded-lg">
+                <h4 className="font-semibold text-xs text-gray-900 mb-1">File Format Requirements:</h4>
+                <ul className="text-xs text-gray-600 space-y-0.5">
                   <li>• First row should contain column headers</li>
                   <li>• CSV: Data should be comma-separated</li>
                   <li>• CSV: Text with commas should be enclosed in quotes</li>
@@ -585,23 +585,23 @@ const TableConfigModal = ({ isOpen, onClose, onConfirm, tableType }) => {
         )}
 
         {/* Modal Footer */}
-        <div className="flex items-center justify-between p-6 border-t border-gray-200 bg-gray-50">
+        <div className="flex items-center justify-between p-3 border-t border-gray-200 bg-gray-50">
           <button
             onClick={resetToDefault}
-            className="px-4 py-2 text-gray-600 hover:text-gray-800 transition-colors"
+            className="px-3 py-1.5 text-xs text-gray-600 hover:text-gray-800 transition-colors"
           >
             Reset to Default
           </button>
-          <div className="flex space-x-3">
+          <div className="flex space-x-2">
             <button
               onClick={onClose}
-              className="px-6 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+              className="px-4 py-1.5 border border-gray-300 text-xs text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
             >
               Cancel
             </button>
             <button
               onClick={handleConfirm}
-              className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+              className="px-4 py-1.5 bg-blue-600 text-white text-xs rounded-lg hover:bg-blue-700 transition-colors"
             >
               Create Table
             </button>

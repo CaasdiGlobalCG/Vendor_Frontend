@@ -96,12 +96,12 @@ const DraggableFileCard = ({ file }) => {
       draggable
       onDragStart={handleDragStart}
       onDoubleClick={handleDoubleClick}
-      className={`p-3 rounded-lg border-2 ${colorClass} group relative cursor-move hover:shadow-md transition-all duration-200`}
+      className={`p-2 rounded-lg border-2 ${colorClass} group relative cursor-move hover:shadow-md transition-all duration-200`}
       title="Drag to canvas or double-click to add"
     >
       {/* File Icon and Info */}
-      <div className="flex items-start space-x-3">
-        <FileIcon className="w-6 h-6 flex-shrink-0 mt-1" />
+      <div className="flex items-start space-x-2">
+        <FileIcon className="w-4 h-4 flex-shrink-0 mt-0.5" />
         <div className="flex-1 min-w-0">
           <p className="text-xs font-medium truncate" title={file.name}>
             {file.name}
@@ -118,10 +118,10 @@ const DraggableFileCard = ({ file }) => {
           e.stopPropagation();
           removeFile(file.id);
         }}
-        className="absolute top-1 right-1 opacity-0 group-hover:opacity-100 text-red-500 hover:text-red-700 transition-opacity bg-white rounded-full p-1"
+        className="absolute top-0.5 right-0.5 opacity-0 group-hover:opacity-100 text-red-500 hover:text-red-700 transition-opacity bg-white rounded-full p-0.5"
         title="Remove file"
       >
-        <X className="w-3 h-3" />
+        <X className="w-2.5 h-2.5" />
       </button>
     </div>
   );
@@ -144,14 +144,14 @@ const UploadsSection = () => {
   };
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-2">
       {/* Upload Button */}
       <button
         onClick={handleFileSelect}
-        className="w-full flex items-center justify-center space-x-2 p-3 bg-gradient-to-r from-cyan-500 to-blue-600 text-white rounded-lg hover:from-cyan-600 hover:to-blue-700 transition-all duration-200 shadow-md hover:shadow-lg"
+        className="w-full flex items-center justify-center space-x-1.5 p-2 bg-gradient-to-r from-cyan-500 to-blue-600 text-white rounded-lg hover:from-cyan-600 hover:to-blue-700 transition-all duration-200 shadow-md hover:shadow-lg"
       >
-        <Upload className="w-4 h-4" />
-        <span className="text-sm font-medium">Upload Files</span>
+        <Upload className="w-3.5 h-3.5" />
+        <span className="text-xs font-medium">Upload Files</span>
       </button>
       
       <input
@@ -165,11 +165,11 @@ const UploadsSection = () => {
 
       {/* Uploaded Files */}
       {uploadedFiles.length > 0 && (
-        <div className="space-y-2">
+        <div className="space-y-1.5">
           <p className="text-xs text-gray-600 font-medium">
             Uploaded Files ({uploadedFiles.length})
           </p>
-          <div className="space-y-2 max-h-64 overflow-y-auto">
+          <div className="space-y-1.5 max-h-64 overflow-y-auto">
             {uploadedFiles.map((file) => (
               <DraggableFileCard key={file.id} file={file} />
             ))}
@@ -179,8 +179,8 @@ const UploadsSection = () => {
 
       {/* Empty State */}
       {uploadedFiles.length === 0 && (
-        <div className="text-center py-4 text-gray-400">
-          <Upload className="w-8 h-8 mx-auto mb-2 opacity-50" />
+        <div className="text-center py-3 text-gray-400">
+          <Upload className="w-6 h-6 mx-auto mb-1 opacity-50" />
           <p className="text-xs">No files uploaded yet</p>
         </div>
       )}
@@ -461,6 +461,7 @@ const ElementsPanel = ({
 }) => {
   // Initialize state for the modal
   const [showManageBOQ, setShowManageBOQ] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
   
   // Debug logs
   console.log('📊 ElementsPanel props:', { selectedCategory, elementOptions });
@@ -474,11 +475,6 @@ const ElementsPanel = ({
         { id: 'form-template', name: 'Form Template', type: 'form-template', preview: 'Ready-made form with basic fields' },
         { id: 'textarea', name: 'TextArea', type: 'textarea', preview: 'Large text input area' },
         { id: 'textbox', name: 'TextBox', type: 'textbox', preview: 'Single line text input' },
-        { id: 'radio', name: 'Radio', type: 'radio', preview: 'Radio button selection' },
-        { id: 'checkbox', name: 'Checkbox', type: 'checkbox', preview: 'Multiple choice selection' },
-        { id: 'button', name: 'Button', type: 'button', preview: 'Clickable action button' },
-        { id: 'input', name: 'Input', type: 'input', preview: 'Generic input field' },
-        { id: 'select', name: 'Select one', type: 'select', preview: 'Dropdown single selection' },
         { id: 'dropdown', name: 'Dropdown', type: 'dropdown', preview: 'Dropdown menu' }
       ]
     },
@@ -854,8 +850,14 @@ const ElementsPanel = ({
   // Get the elements for the current category
   const currentElements = Array.isArray(currentCategory.elements) ? currentCategory.elements : [];
   
+  // Filter elements based on search query
+  const filteredElements = currentElements.filter(element =>
+    element.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    (element.preview && element.preview.toLowerCase().includes(searchQuery.toLowerCase()))
+  );
+  
   console.log('✅ Current category:', currentCategory);
-  console.log('📋 Elements to render:', Array.isArray(currentElements) ? currentElements.length : 0);
+  console.log('📋 Elements to render:', Array.isArray(filteredElements) ? filteredElements.length : 0);
   
   // Debug log when showManageBOQ changes
   React.useEffect(() => {
@@ -873,54 +875,59 @@ const ElementsPanel = ({
   if (!selectedCategory) {
     return (
       <div className="fixed right-0 top-0 w-80 h-full bg-white shadow-2xl border-l border-gray-200 z-40 flex flex-col">
-        <div className="flex-shrink-0 p-6 border-b border-gray-200">
+        <div className="flex-shrink-0 p-3 border-b border-gray-200">
           <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-3">
+            <div className="flex items-center space-x-2">
               <button
                 onClick={onBackToCategories}
-                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                className="p-0.5 hover:bg-gray-100 rounded-lg transition-colors"
               >
-                <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
                 </svg>
               </button>
-              <h3 className="text-base font-semibold text-gray-900">Elements</h3>
+              <h3 className="text-sm font-semibold text-gray-900">Elements</h3>
             </div>
             <button
               onClick={onClose}
-              className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+              className="p-0.5 hover:bg-gray-100 rounded-lg transition-colors"
             >
-              <X className="w-5 h-5 text-gray-500" />
+              <X className="w-4 h-4 text-gray-500" />
             </button>
           </div>
         </div>
-        <div className="flex-1 flex items-center justify-center p-6">
-          <p className="text-gray-500">Please select a category</p>
+        <div className="flex-1 flex items-center justify-center p-4">
+          <p className="text-sm text-gray-500">Please select a category</p>
         </div>
       </div>
     );
   }
 
+  // Reset search query when category changes
+  React.useEffect(() => {
+    setSearchQuery('');
+  }, [selectedCategory]);
+
   return (
     <div className="fixed right-0 top-0 w-80 h-full bg-white shadow-2xl border-l border-gray-200 z-40 flex flex-col">
       {/* Header */}
-      <div className="flex-shrink-0 px-5 py-4 border-b border-gray-200 bg-white">
+      <div className="flex-shrink-0 px-3 py-2.5 border-b border-gray-200 bg-white">
         <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-3">
+          <div className="flex items-center space-x-2">
             <button
               onClick={onBackToCategories}
-              className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors"
+              className="p-0.5 hover:bg-gray-100 rounded-lg transition-colors"
               title="Back to categories"
             >
-              <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
               </svg>
             </button>
-            <div className="flex items-center space-x-2.5">
+            <div className="flex items-center space-x-1.5">
               <div className="text-gray-600">
                 {currentCategory.icon}
               </div>
-              <h3 className="text-lg font-semibold text-gray-900">{currentCategory.name}</h3>
+              <h3 className="text-sm font-semibold text-gray-900">{currentCategory.name}</h3>
             </div>
             {selectedCategory === 'tables' && (
               <button
@@ -930,33 +937,35 @@ const ElementsPanel = ({
                   console.log('Manage BOQ button clicked');
                   setShowManageBOQ(true);
                 }}
-                className="ml-3 px-3 py-1.5 text-xs font-medium bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center space-x-1.5 shadow-sm"
+                className="ml-2 px-2 py-1 text-xs font-medium bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center space-x-1 shadow-sm"
               >
-                <FileSpreadsheetIcon size={13} />
+                <FileSpreadsheetIcon size={12} />
                 <span>Manage BOQ</span>
               </button>
             )}
           </div>
           <button
             onClick={onClose}
-            className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors"
+            className="p-0.5 hover:bg-gray-100 rounded-lg transition-colors"
             title="Close panel"
           >
-            <X className="w-5 h-5 text-gray-500" />
+            <X className="w-4 h-4 text-gray-500" />
           </button>
         </div>
       </div>
 
       {/* Search Bar */}
-      <div className="flex-shrink-0 px-5 pb-4 border-b border-gray-100">
+      <div className="flex-shrink-0 px-3 pt-2.5 pb-2 border-b border-gray-100">
         <div className="relative">
           <input
             type="text"
             placeholder={`Search ${currentCategory.name.toLowerCase()}...`}
-            className="w-full pl-10 pr-4 py-2.5 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-gray-50 focus:bg-white transition-colors"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full pl-8 pr-3 py-1.5 text-xs border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-gray-50 focus:bg-white transition-colors"
           />
-          <div className="absolute left-3 top-1/2 transform -translate-y-1/2">
-            <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <div className="absolute left-2.5 top-1/2 transform -translate-y-1/2">
+            <svg className="w-3.5 h-3.5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
             </svg>
           </div>
@@ -964,41 +973,53 @@ const ElementsPanel = ({
       </div>
 
       {/* Elements Grid - Scrollable */}
-      <div className="flex-1 overflow-y-auto p-5">
+      <div className="flex-1 overflow-y-auto p-3">
         {selectedCategory === 'uploads' ? (
           <UploadsSection />
         ) : selectedCategory === 'invoices-quotes' ? (
-          <div className="space-y-4">
-            <div className="flex items-center justify-between mb-4">
-              <h4 className="text-sm font-medium text-gray-700">Recent Documents</h4>
+          <div className="space-y-3">
+            <div className="flex items-center justify-between mb-2">
+              <h4 className="text-xs font-medium text-gray-700">Recent Documents</h4>
               <button className="text-xs text-blue-600 hover:text-blue-800 flex items-center">
-                <Plus className="w-3 h-3 mr-1" />
+                <Plus className="w-2.5 h-2.5 mr-0.5" />
                 New Document
               </button>
             </div>
-            <div className="grid grid-cols-1 gap-3">
-              {currentElements.map((item) => (
-                <InvoiceQuoteCard key={item.id} item={item} />
-              ))}
+            <div className="grid grid-cols-1 gap-2">
+              {filteredElements.length > 0 ? (
+                filteredElements.map((item) => (
+                  <InvoiceQuoteCard key={item.id} item={item} />
+                ))
+              ) : (
+                <div className="text-center py-4 text-gray-400">
+                  <p className="text-xs">No documents found</p>
+                </div>
+              )}
             </div>
           </div>
         ) : (
-          <div className="space-y-3">
-            {currentElements.map((element) => (
-              <DraggableElement key={element.id} element={element} />
-            ))}
+          <div className="space-y-2">
+            {filteredElements.length > 0 ? (
+              filteredElements.map((element) => (
+                <DraggableElement key={element.id} element={element} />
+              ))
+            ) : (
+              <div className="text-center py-6 text-gray-400">
+                <p className="text-xs">No elements found matching "{searchQuery}"</p>
+              </div>
+            )}
           </div>
         )}
       </div>
 
       {/* Footer */}
-      <div className="flex-shrink-0 px-5 py-4 border-t border-gray-200 bg-gradient-to-b from-gray-50 to-white">
+      <div className="flex-shrink-0 px-3 py-2 border-t border-gray-200 bg-gradient-to-b from-gray-50 to-white">
         <div className="text-center">
-          <p className="text-xs font-medium text-gray-600 mb-1">
+          <p className="text-xs font-medium text-gray-600 mb-0.5">
             💡 Tip: Drag or double-click to add
           </p>
           <p className="text-xs text-gray-400">
-            Elements are ready to use
+            Ready to use
           </p>
         </div>
       </div>

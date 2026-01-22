@@ -1,11 +1,21 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Handle, Position } from 'reactflow';
+import { useParams } from 'react-router-dom';
+import { persistIsImportant, persistDeadline, formatTimeLeft, getTimeLeft } from '../../utils/nodePersistence';
+import { Handle, Position, useReactFlow } from 'reactflow';
 import { Maximize2, Minimize2, X, Sparkles, MoreVertical, Save, Trash2, Tag, Clock, Check, Plus } from 'lucide-react';
 // Using a simple textarea for now to avoid dependency issues
 import { Resizable } from 'react-resizable';
 import Draggable from 'react-draggable';
 
-const SmartNoteNode = ({ data, isConnectable, selected }) => {
+const SmartNoteNode = ({ id, data, isConnectable, selected }) => {
+  const workspaceId = data.workspaceId;  // Get workspaceId from node data
+  const { setNodes } = useReactFlow();
+  const [saving, setSaving] = useState(false);
+  const [isImportant, setIsImportant] = useState(data.isImportant || false);
+  const [deadline, setDeadline] = useState(data.deadline || null);
+  const [showDeadlineInput, setShowDeadlineInput] = useState(false);
+  const [timeLeft, setTimeLeft] = useState(null);
+  const deadlineJustSetRef = useRef(false);
   const [content, setContent] = useState('');
   const [isExpanded, setIsExpanded] = useState(true);
   const [isMinimized, setIsMinimized] = useState(false);
@@ -16,6 +26,61 @@ const SmartNoteNode = ({ data, isConnectable, selected }) => {
   const [newTag, setNewTag] = useState('');
   const [position, setPosition] = useState({ x: 0, y: 0 });
   const [size, setSize] = useState({ width: 300, height: 200 });
+  
+  // Update time left display every second
+  useEffect(() => {
+    if (!deadline) return;
+    
+    const updateTimer = () => {
+      const time = getTimeLeft(deadline);
+      setTimeLeft(time);
+    };
+    
+    updateTimer();
+    const interval = setInterval(updateTimer, 1000);
+    return () => clearInterval(interval);
+  }, [deadline]);
+
+  // Sync deadline and isImportant from node data
+  useEffect(() => {
+    if (deadlineJustSetRef.current) return;
+    
+    if (data.deadline && data.deadline !== deadline) {
+      setDeadline(data.deadline);
+    }
+    if (data.isImportant !== undefined && data.isImportant !== isImportant) {
+      setIsImportant(data.isImportant);
+    }
+  }, [data.deadline, data.isImportant]);
+
+  const persistIsImportantLocal = async (important) => {
+    if (!workspaceId) return;
+    setSaving(true);
+    try {
+      await persistIsImportant(id, important, setNodes, workspaceId);
+    } catch (err) {
+      console.error('Failed to persist isImportant:', err);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const persistDeadlineLocal = async (newDeadline) => {
+    if (!workspaceId) return;
+    setSaving(true);
+    try {
+      deadlineJustSetRef.current = true;
+      await persistDeadline(id, newDeadline, setNodes, workspaceId);
+      setDeadline(newDeadline instanceof Date ? newDeadline.toISOString() : newDeadline);
+      setTimeout(() => {
+        deadlineJustSetRef.current = false;
+      }, 2000);
+    } catch (err) {
+      console.error('Failed to persist deadline:', err);
+    } finally {
+      setSaving(false);
+    }
+  };
   
   const handleAIAction = async (action) => {
     if (!content.trim()) return;
@@ -135,18 +200,35 @@ const SmartNoteNode = ({ data, isConnectable, selected }) => {
       defaultClassName="react-draggable"
     >
       <div 
-        className={`bg-yellow-50 border ${selected ? 'border-blue-400 shadow-lg' : 'border-yellow-200'} rounded-lg shadow-sm overflow-hidden`}
+        className={`relative bg-yellow-50 border ${selected ? 'border-blue-400 shadow-lg' : 'border-yellow-200'} rounded-lg shadow-sm`}
         style={{ width: size.width, height: 'auto', minHeight: '150px' }}
       >
         {/* Header */}
         <div 
-          className="smart-note-handle bg-yellow-100 px-3 py-2 flex justify-between items-center cursor-move"
+          className="smart-note-handle bg-yellow-100 px-3 py-2 flex justify-between items-center cursor-move group"
         >
           <div className="flex items-center space-x-2">
             <Sparkles size={16} className="text-yellow-600" />
             <span className="text-sm font-medium text-yellow-800">Smart Note</span>
           </div>
           <div className="flex space-x-1">
+            <button 
+              onClick={async () => {
+                setIsImportant(!isImportant);
+                await persistIsImportantLocal(!isImportant);
+              }}
+              className={`px-1.5 py-1 rounded text-xs ${isImportant ? 'bg-yellow-400 text-white' : 'text-yellow-600 hover:text-yellow-800'}`}
+              title={isImportant ? 'Unmark as Important' : 'Mark as Important'}
+            >
+              {isImportant ? '★' : '☆'}
+            </button>
+            <button 
+              onClick={() => setShowDeadlineInput(!showDeadlineInput)}
+              className="text-yellow-600 hover:text-yellow-800 p-1"
+              title="Set Deadline"
+            >
+              <Clock size={14} />
+            </button>
             <button 
               onClick={() => setIsMinimized(true)}
               className="text-yellow-600 hover:text-yellow-800 p-1"
@@ -163,6 +245,36 @@ const SmartNoteNode = ({ data, isConnectable, selected }) => {
             </button>
           </div>
         </div>
+
+        {/* Deadline Input */}
+        {showDeadlineInput && (
+          <div className="px-3 py-2 bg-yellow-50 border-b border-yellow-100 flex gap-1">
+            <input
+              type="datetime-local"
+              className="border rounded px-2 py-1 text-xs flex-1"
+              value={deadline ? new Date(deadline).toISOString().slice(0,16) : ''}
+              onChange={(e) => setDeadline(e.target.value)}
+              disabled={saving}
+            />
+            <button
+              className="px-2 py-1 text-xs bg-yellow-400 text-white rounded"
+              onClick={async () => {
+                setShowDeadlineInput(false);
+                await persistDeadlineLocal(deadline);
+              }}
+              disabled={saving}
+            >
+              {saving ? '...' : '✓'}
+            </button>
+          </div>
+        )}
+
+        {/* Deadline Display */}
+        {deadline && timeLeft && !timeLeft.isExpired && (
+          <div className="px-3 py-1 bg-blue-50 border-b border-blue-100 text-xs text-blue-600">
+            ⏱ {formatTimeLeft(timeLeft)}
+          </div>
+        )}
 
         {/* Tags */}
         <div className="px-3 pt-2 flex flex-wrap gap-2">
@@ -256,6 +368,13 @@ const SmartNoteNode = ({ data, isConnectable, selected }) => {
             {new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
           </div>
         </div>
+
+        {/* Sequence Number Badge - Top left corner */}
+        {data.sequenceNumber && (
+          <div className="absolute -top-4 -left-4 z-20 w-8 h-8 bg-gradient-to-br from-green-500 to-emerald-600 text-white rounded-full flex items-center justify-center text-sm font-bold shadow-lg border-2 border-white hover:shadow-xl transition-shadow">
+            {data.sequenceNumber}
+          </div>
+        )}
 
         {/* Node Handles */}
         <Handle

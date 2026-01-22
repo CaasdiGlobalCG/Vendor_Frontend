@@ -1,5 +1,7 @@
 import React, { useState, useEffect, useRef, useContext } from 'react';
-import { Handle, Position } from 'reactflow';
+import { useParams } from 'react-router-dom';
+import { persistIsImportant, persistDeadline, formatTimeLeft, getTimeLeft } from '../../utils/nodePersistence';
+import { Handle, Position, useReactFlow } from 'reactflow';
 import { Calendar, X, Plus, Mail, User, Clock, MapPin, Check, Trash2, MoreVertical, Video } from 'lucide-react';
 import 'react-datepicker/dist/react-datepicker.css';
 import DatePicker from 'react-datepicker';
@@ -7,8 +9,16 @@ import config from '../../../../config/env';
 import { VendorContext } from '../../../../context/VendorContext';
 import VideoCallModal from '../VideoCallModal';
 
-const CalendarNode = ({ data }) => {
+const CalendarNode = ({ id, data, isConnectable, selected }) => {
+  const workspaceId = data.workspaceId;  // Get workspaceId from node data
+  const { setNodes } = useReactFlow();
   const { currentUser } = useContext(VendorContext);
+  const [saving, setSaving] = useState(false);
+  const [isImportant, setIsImportant] = useState(data.isImportant || false);
+  const [deadline, setDeadline] = useState(data.deadline || null);
+  const [showDeadlineInput, setShowDeadlineInput] = useState(false);
+  const [timeLeft, setTimeLeft] = useState(null);
+  const deadlineJustSetRef = useRef(false);
   const [title, setTitle] = useState('New Meeting');
   const [location, setLocation] = useState('');
   const [description, setDescription] = useState('');
@@ -27,6 +37,61 @@ const CalendarNode = ({ data }) => {
   const [cursorPosition, setCursorPosition] = useState(0);
   const participantsInputRef = useRef(null);
   const mentionDropdownRef = useRef(null);
+
+  // Update time left display every second
+  useEffect(() => {
+    if (!deadline) return;
+    
+    const updateTimer = () => {
+      const time = getTimeLeft(deadline);
+      setTimeLeft(time);
+    };
+    
+    updateTimer();
+    const interval = setInterval(updateTimer, 1000);
+    return () => clearInterval(interval);
+  }, [deadline]);
+
+  // Sync deadline and isImportant from node data
+  useEffect(() => {
+    if (deadlineJustSetRef.current) return;
+    
+    if (data.deadline && data.deadline !== deadline) {
+      setDeadline(data.deadline);
+    }
+    if (data.isImportant !== undefined && data.isImportant !== isImportant) {
+      setIsImportant(data.isImportant);
+    }
+  }, [data.deadline, data.isImportant]);
+
+  const persistIsImportantLocal = async (important) => {
+    if (!workspaceId) return;
+    setSaving(true);
+    try {
+      await persistIsImportant(id, important, setNodes, workspaceId);
+    } catch (err) {
+      console.error('Failed to persist isImportant:', err);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const persistDeadlineLocal = async (newDeadline) => {
+    if (!workspaceId) return;
+    setSaving(true);
+    try {
+      deadlineJustSetRef.current = true;
+      await persistDeadline(id, newDeadline, setNodes, workspaceId);
+      setDeadline(newDeadline instanceof Date ? newDeadline.toISOString() : newDeadline);
+      setTimeout(() => {
+        deadlineJustSetRef.current = false;
+      }, 2000);
+    } catch (err) {
+      console.error('Failed to persist deadline:', err);
+    } finally {
+      setSaving(false);
+    }
+  };
 
   // Fetch collaborators from workspace
   useEffect(() => {
@@ -161,7 +226,13 @@ const CalendarNode = ({ data }) => {
   };
 
   return (
-    <div className="bg-white rounded-lg border border-blue-200 shadow-md overflow-hidden w-96">
+    <div className={`${isImportant ? 'bg-blue-100' : 'bg-white'} rounded-lg border border-blue-200 shadow-md overflow-hidden w-96 relative group`}>
+      {/* Sequence Number Badge - Top left corner */}
+      {data.sequenceNumber && (
+        <div className="absolute -top-4 -left-4 z-20 w-8 h-8 bg-gradient-to-br from-green-500 to-emerald-600 text-white rounded-full flex items-center justify-center text-sm font-bold shadow-lg border-2 border-white hover:shadow-xl transition-shadow">
+          {data.sequenceNumber}
+        </div>
+      )}
       <Handle type="target" position={Position.Top} />
       
       {/* Header */}
@@ -170,13 +241,62 @@ const CalendarNode = ({ data }) => {
           <Calendar className="w-5 h-5" />
           <span className="font-medium">Schedule Meeting</span>
         </div>
-        <button 
-          onClick={() => setIsEditing(!isEditing)}
-          className="p-1 hover:bg-blue-500 rounded"
-        >
-          {isEditing ? <Check className="w-4 h-4" /> : <MoreVertical className="w-4 h-4" />}
-        </button>
+        <div className="flex gap-1">
+          <button 
+            onClick={async () => {
+              setIsImportant(!isImportant);
+              await persistIsImportantLocal(!isImportant);
+            }}
+            className={`p-1 rounded text-sm ${isImportant ? 'bg-yellow-400 text-white' : 'hover:bg-blue-500'}`}
+            title={isImportant ? 'Unmark as Important' : 'Mark as Important'}
+          >
+            {isImportant ? '★' : '☆'}
+          </button>
+          <button 
+            onClick={() => setShowDeadlineInput(!showDeadlineInput)}
+            className="p-1 hover:bg-blue-500 rounded"
+            title="Set Deadline"
+          >
+            <Clock className="w-4 h-4" />
+          </button>
+          <button 
+            onClick={() => setIsEditing(!isEditing)}
+            className="p-1 hover:bg-blue-500 rounded"
+          >
+            {isEditing ? <Check className="w-4 h-4" /> : <MoreVertical className="w-4 h-4" />}
+          </button>
+        </div>
       </div>
+
+      {/* Deadline Input */}
+      {showDeadlineInput && (
+        <div className="px-3 py-2 bg-blue-50 border-b border-blue-100 flex gap-1">
+          <input
+            type="datetime-local"
+            className="border rounded px-2 py-1 text-xs flex-1"
+            value={deadline ? new Date(deadline).toISOString().slice(0,16) : ''}
+            onChange={(e) => setDeadline(e.target.value)}
+            disabled={saving}
+          />
+          <button
+            className="px-2 py-1 text-xs bg-blue-600 text-white rounded"
+            onClick={async () => {
+              setShowDeadlineInput(false);
+              await persistDeadlineLocal(deadline);
+            }}
+            disabled={saving}
+          >
+            {saving ? '...' : '✓'}
+          </button>
+        </div>
+      )}
+
+      {/* Deadline Display */}
+      {deadline && timeLeft && !timeLeft.isExpired && (
+        <div className="px-3 py-1 bg-blue-50 border-b border-blue-100 text-xs text-blue-600">
+          ⏱ {formatTimeLeft(timeLeft)}
+        </div>
+      )}
 
       {/* Content */}
       <div className="p-4 space-y-4">

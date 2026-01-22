@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
-import { UploadCloud, MapPin, Clock, Image as ImageIcon, Trash2, Plus, Eye, Download, X } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { UploadCloud, MapPin, Clock, Image as ImageIcon, Trash2, Plus, Eye, Download, X, Loader2 } from 'lucide-react';
+import { getWorkspaceById, updateWorkspace } from '../../utils/workspaceApi';
 
 const defaultAnnotations = [
   { id: 'ann-1', text: 'Highlight key progress', position: 'top-left' }
@@ -20,7 +21,7 @@ const formatPositionBadge = (position) => {
   }
 };
 
-const ImageBlockRenderer = ({ data }) => {
+const ImageBlockRenderer = ({ data, nodeId, workspaceId, setNodes }) => {
   const initial = data.imageBlockData || {};
   const [imageUrl, setImageUrl] = useState(initial.imageUrl || '');
   const [caption, setCaption] = useState(initial.caption || '');
@@ -29,19 +30,154 @@ const ImageBlockRenderer = ({ data }) => {
   const [annotations, setAnnotations] = useState(initial.annotations || defaultAnnotations);
   const [imageWidth, setImageWidth] = useState(initial.width ?? 80);
   const [showPreview, setShowPreview] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const [uploadError, setUploadError] = useState('');
+  
+  // Auto-save ref for debouncing
+  const saveTimeoutRef = useRef(null);
 
-  const handleImageUpload = (event) => {
+  // Auto-save imageBlockData changes to backend
+  useEffect(() => {
+    if (!workspaceId || !nodeId) return;
+    
+    // Clear previous timeout
+    if (saveTimeoutRef.current) {
+      clearTimeout(saveTimeoutRef.current);
+    }
+    
+    // Set new timeout to save after 1.5 seconds of inactivity
+    saveTimeoutRef.current = setTimeout(async () => {
+      try {
+        const imageBlockData = {
+          imageUrl,
+          caption,
+          timestamp,
+          geotag,
+          annotations,
+          width: imageWidth,
+          lastModifiedAt: new Date().toISOString()
+        };
+        
+        console.log('💾 Auto-saving image block data:', imageBlockData);
+        
+        // Update local node state
+        if (setNodes) {
+          setNodes((nodes) =>
+            nodes.map((node) =>
+              node.id === nodeId
+                ? {
+                    ...node,
+                    data: {
+                      ...node.data,
+                      imageBlockData,
+                      lastModifiedAt: new Date().toISOString()
+                    }
+                  }
+                : node
+            )
+          );
+        }
+        
+        // Persist to backend
+        const workspace = await getWorkspaceById(workspaceId);
+        if (workspace) {
+          const updatedNodes = workspace.nodes.map(node => 
+            node.id === nodeId 
+              ? { 
+                  ...node, 
+                  data: { 
+                    ...node.data, 
+                    imageBlockData,
+                    lastModifiedAt: new Date().toISOString()
+                  } 
+                }
+              : node
+          );
+          await updateWorkspace(workspaceId, { nodes: updatedNodes });
+          console.log('✅ Image block data saved to backend');
+        }
+      } catch (error) {
+        console.error('❌ Error auto-saving image block:', error);
+      }
+    }, 1500);
+    
+    return () => {
+      if (saveTimeoutRef.current) {
+        clearTimeout(saveTimeoutRef.current);
+      }
+    };
+  }, [imageUrl, caption, timestamp, geotag, annotations, imageWidth, workspaceId, nodeId, setNodes]);
+
+  const handleImageUpload = async (event) => {
     const file = event.target.files?.[0];
     if (!file) return;
 
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      const result = e.target?.result;
-      if (typeof result === 'string') {
-        setImageUrl(result);
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      setUploadError('Please select an image file');
+      return;
+    }
+
+    // Validate file size (max 10MB)
+    if (file.size > 10 * 1024 * 1024) {
+      setUploadError('Image size must be less than 10MB');
+      return;
+    }
+
+    setUploading(true);
+    setUploadError('');
+
+    try {
+      // Create form data for upload
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('workspaceId', workspaceId);
+      formData.append('nodeId', nodeId);
+      formData.append('fileType', 'image-block');
+
+      console.log('📤 Uploading image to S3...', {
+        fileName: file.name,
+        fileSize: file.size,
+        workspaceId,
+        nodeId
+      });
+
+      // Upload to S3 via backend API
+      const response = await fetch('/api/workspace-files/upload', {
+        method: 'POST',
+        body: formData
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to upload image');
       }
-    };
-    reader.readAsDataURL(file);
+
+      const result = await response.json();
+      console.log('✅ Image uploaded successfully:', result);
+
+      // Set the S3 URL as the image URL
+      const s3ImageUrl = result.file?.s3Url || result.s3Url || result.url;
+      setImageUrl(s3ImageUrl);
+      
+      // The auto-save effect will persist this to the backend
+      
+    } catch (error) {
+      console.error('❌ Error uploading image:', error);
+      setUploadError(error.message || 'Failed to upload image');
+      
+      // Fallback to base64 for local preview if S3 fails
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const result = e.target?.result;
+        if (typeof result === 'string') {
+          setImageUrl(result);
+        }
+      };
+      reader.readAsDataURL(file);
+    } finally {
+      setUploading(false);
+    }
   };
 
   const addAnnotation = () => {
@@ -116,13 +252,28 @@ const ImageBlockRenderer = ({ data }) => {
               <Download className="w-3 h-3" />
               <span>Download</span>
             </button>
-            <label className="inline-flex items-center space-x-1 px-3 py-1 text-xs font-semibold text-white bg-cyan-600 rounded-lg cursor-pointer hover:bg-cyan-700">
-              <UploadCloud className="w-3 h-3" />
-              <span>Upload</span>
-              <input type="file" accept="image/*" className="hidden" onChange={handleImageUpload} />
+            <label className={`inline-flex items-center space-x-1 px-3 py-1 text-xs font-semibold text-white rounded-lg ${uploading ? 'bg-cyan-400 cursor-wait' : 'bg-cyan-600 cursor-pointer hover:bg-cyan-700'}`}>
+              {uploading ? (
+                <>
+                  <Loader2 className="w-3 h-3 animate-spin" />
+                  <span>Uploading...</span>
+                </>
+              ) : (
+                <>
+                  <UploadCloud className="w-3 h-3" />
+                  <span>Upload</span>
+                </>
+              )}
+              <input type="file" accept="image/*" className="hidden" onChange={handleImageUpload} disabled={uploading} />
             </label>
           </div>
         </div>
+
+        {uploadError && (
+          <div className="mx-4 mb-2 p-2 bg-red-50 border border-red-200 rounded-lg text-xs text-red-600">
+            {uploadError}
+          </div>
+        )}
 
         <div className="p-4 space-y-4">
           <div className="space-y-3">

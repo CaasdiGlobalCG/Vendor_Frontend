@@ -1,5 +1,7 @@
-import React, { useState, useCallback } from 'react';
-import { Handle, Position } from 'reactflow';
+import React, { useState, useCallback, useRef, useEffect } from 'react';
+import { useParams } from 'react-router-dom';
+import { persistIsImportant, persistDeadline, formatTimeLeft, getTimeLeft } from '../../utils/nodePersistence';
+import { Handle, Position, useReactFlow } from 'reactflow';
 import { CheckCircle, Clock, AlertCircle, X, Plus, MoreVertical, Mail, User, Check, Trash2, ChevronRight } from 'lucide-react';
 
 // Sample data structure
@@ -30,7 +32,15 @@ const initialColumns = {
 
 const columnOrder = ['submitted', 'underReview', 'approved'];
 
-const ApprovalBoardNode = ({ data }) => {
+const ApprovalBoardNode = ({ id, data, isConnectable, selected }) => {
+  const workspaceId = data.workspaceId;  // Get workspaceId from node data
+  const { setNodes } = useReactFlow();
+  const [saving, setSaving] = useState(false);
+  const [isImportant, setIsImportant] = useState(data.isImportant || false);
+  const [deadline, setDeadline] = useState(data.deadline || null);
+  const [showDeadlineInput, setShowDeadlineInput] = useState(false);
+  const [timeLeft, setTimeLeft] = useState(null);
+  const deadlineJustSetRef = useRef(false);
   const [columns, setColumns] = useState(initialColumns);
   const [showAddModal, setShowAddModal] = useState(false);
   const [isEditing, setIsEditing] = useState(true);
@@ -43,6 +53,61 @@ const ApprovalBoardNode = ({ data }) => {
   const [selectedItem, setSelectedItem] = useState(null);
   const [showMoveMenu, setShowMoveMenu] = useState({ show: false, itemId: null });
   const [showItemDetails, setShowItemDetails] = useState({ show: false, item: null });
+
+  // Update time left display every second
+  useEffect(() => {
+    if (!deadline) return;
+    
+    const updateTimer = () => {
+      const time = getTimeLeft(deadline);
+      setTimeLeft(time);
+    };
+    
+    updateTimer();
+    const interval = setInterval(updateTimer, 1000);
+    return () => clearInterval(interval);
+  }, [deadline]);
+
+  // Sync deadline and isImportant from node data
+  useEffect(() => {
+    if (deadlineJustSetRef.current) return;
+    
+    if (data.deadline && data.deadline !== deadline) {
+      setDeadline(data.deadline);
+    }
+    if (data.isImportant !== undefined && data.isImportant !== isImportant) {
+      setIsImportant(data.isImportant);
+    }
+  }, [data.deadline, data.isImportant]);
+
+  const persistIsImportantLocal = async (important) => {
+    if (!workspaceId) return;
+    setSaving(true);
+    try {
+      await persistIsImportant(id, important, setNodes, workspaceId);
+    } catch (err) {
+      console.error('Failed to persist isImportant:', err);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const persistDeadlineLocal = async (newDeadline) => {
+    if (!workspaceId) return;
+    setSaving(true);
+    try {
+      deadlineJustSetRef.current = true;
+      await persistDeadline(id, newDeadline, setNodes, workspaceId);
+      setDeadline(newDeadline instanceof Date ? newDeadline.toISOString() : newDeadline);
+      setTimeout(() => {
+        deadlineJustSetRef.current = false;
+      }, 2000);
+    } catch (err) {
+      console.error('Failed to persist deadline:', err);
+    } finally {
+      setSaving(false);
+    }
+  };
 
   const moveItem = (itemId, fromColumnId, toColumnId) => {
     if (fromColumnId === toColumnId) return;
@@ -172,6 +237,12 @@ const ApprovalBoardNode = ({ data }) => {
 
   return (
     <div className="bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden w-full max-w-4xl">
+      {/* Sequence Number Badge - Top left corner */}
+      {data.sequenceNumber && (
+        <div className="absolute -top-4 -left-4 z-20 w-8 h-8 bg-gradient-to-br from-green-500 to-emerald-600 text-white rounded-full flex items-center justify-center text-sm font-bold shadow-lg border-2 border-white hover:shadow-xl transition-shadow">
+          {data.sequenceNumber}
+        </div>
+      )}
       <Handle type="target" position={Position.Top} />
       
       {/* Header */}
@@ -181,6 +252,23 @@ const ApprovalBoardNode = ({ data }) => {
           <span className="font-medium">Approval Board</span>
         </div>
         <div className="flex space-x-2">
+          <button 
+            onClick={async () => {
+              setIsImportant(!isImportant);
+              await persistIsImportantLocal(!isImportant);
+            }}
+            className={`px-2 py-1 rounded text-sm ${isImportant ? 'bg-yellow-400 text-white' : 'bg-white text-indigo-600 hover:bg-indigo-50'}`}
+            title={isImportant ? 'Unmark as Important' : 'Mark as Important'}
+          >
+            {isImportant ? '★' : '☆'}
+          </button>
+          <button 
+            onClick={() => setShowDeadlineInput(!showDeadlineInput)}
+            className="p-2 rounded bg-white text-indigo-600 hover:bg-indigo-50"
+            title="Set Deadline"
+          >
+            <Clock className="w-4 h-4" />
+          </button>
           <button 
             onClick={() => setShowAddModal(true)}
             className="px-3 py-1 bg-white text-indigo-600 text-sm rounded hover:bg-indigo-50 flex items-center space-x-1"
@@ -197,6 +285,36 @@ const ApprovalBoardNode = ({ data }) => {
           </button>
         </div>
       </div>
+
+      {/* Deadline Input */}
+      {showDeadlineInput && (
+        <div className="px-3 py-2 bg-indigo-50 border-b border-indigo-100 flex gap-1">
+          <input
+            type="datetime-local"
+            className="border rounded px-2 py-1 text-xs flex-1"
+            value={deadline ? new Date(deadline).toISOString().slice(0,16) : ''}
+            onChange={(e) => setDeadline(e.target.value)}
+            disabled={saving}
+          />
+          <button
+            className="px-2 py-1 text-xs bg-indigo-600 text-white rounded"
+            onClick={async () => {
+              setShowDeadlineInput(false);
+              await persistDeadlineLocal(deadline);
+            }}
+            disabled={saving}
+          >
+            {saving ? '...' : '✓'}
+          </button>
+        </div>
+      )}
+
+      {/* Deadline Display */}
+      {deadline && timeLeft && !timeLeft.isExpired && (
+        <div className="px-3 py-1 bg-indigo-50 border-b border-indigo-100 text-xs text-indigo-600">
+          ⏱ {formatTimeLeft(timeLeft)}
+        </div>
+      )}
 
       {/* Board */}
       <div className="flex p-4 space-x-4 overflow-x-auto">

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useContext, useRef } from 'react';
-import { ChevronDown, MoreHorizontal, CheckCircle, AlertTriangle, FileText, MessageCircle, Paperclip, Send, Video, Edit3, Hand, Clock, User, Zap, Maximize2, Plus, Trash2, Move, Palette, Expand, Download, Eye, Bell, X } from 'lucide-react';
+import { ChevronDown, MoreHorizontal, CheckCircle, AlertTriangle, FileText, MessageCircle, Paperclip, Send, Video, Edit3, Hand, Clock, User, Zap, Maximize2, Plus, Trash2, Move, Palette, Expand, Download, Eye, Bell, X, Info, Edit2, Check } from 'lucide-react';
 import { VendorContext } from '../../../context/VendorContext';
 import ActivityFullScreen from './ActivityFullScreen';
 import FullScreenMessages from './FullScreenMessages';
@@ -18,7 +18,9 @@ const WorkspaceRightSidebar = ({
   workspaceId,
   onActivityCreated, // New prop to trigger immediate refresh
   workspace, // For permission checking
-  userRole // For permission checking
+  userRole, // For permission checking
+  canvasElements = [], // Elements on the canvas
+  onZoomToElement // Callback to zoom to an element
 }) => {
   const { currentUser } = useContext(VendorContext);
   const [realTimeActivities, setRealTimeActivities] = useState([]);
@@ -27,6 +29,11 @@ const WorkspaceRightSidebar = ({
   const [initialLoad, setInitialLoad] = useState(true);
   const [activityExpanded, setActivityExpanded] = useState(true);
   const [messagesExpanded, setMessagesExpanded] = useState(false);
+  const [elementsOverviewExpanded, setElementsOverviewExpanded] = useState(false);
+  const [infoTooltipId, setInfoTooltipId] = useState(null);
+  const [editingElementId, setEditingElementId] = useState(null);
+  const [editingElementName, setEditingElementName] = useState('');
+  const editInputRef = useRef(null);
 
   const handleToggleActivity = () => {
     setActivityExpanded(prev => {
@@ -38,6 +45,42 @@ const WorkspaceRightSidebar = ({
     });
   };
 
+  const handleEditElement = (elementId, currentName) => {
+    setEditingElementId(elementId);
+    setEditingElementName(currentName);
+  };
+
+  const handleSaveElementName = (elementId) => {
+    if (editingElementName.trim()) {
+      // Emit event to update element name on canvas
+      const event = new CustomEvent('updateElementName', {
+        detail: {
+          elementId: elementId,
+          newName: editingElementName.trim()
+        }
+      });
+      document.dispatchEvent(event);
+      setEditingElementId(null);
+      setEditingElementName('');
+    }
+  };
+
+  const handleKeyDown = (e, elementId) => {
+    if (e.key === 'Enter') {
+      handleSaveElementName(elementId);
+    } else if (e.key === 'Escape') {
+      setEditingElementId(null);
+      setEditingElementName('');
+    }
+  };
+
+  useEffect(() => {
+    if (editingElementId !== null && editInputRef.current) {
+      editInputRef.current.focus();
+      editInputRef.current.select();
+    }
+  }, [editingElementId]);
+
   const handleToggleMessages = () => {
     setMessagesExpanded(prev => {
       const next = !prev;
@@ -47,6 +90,38 @@ const WorkspaceRightSidebar = ({
       return next;
     });
   };
+
+  const handleToggleElementsOverview = () => {
+    setElementsOverviewExpanded(prev => {
+      const next = !prev;
+      if (next) {
+        setActivityExpanded(false);
+        setMessagesExpanded(false);
+      }
+      return next;
+    });
+  };
+
+  // Filter and sort elements by sequence number
+  const sortedElements = canvasElements
+    .filter(el => el && el.data)
+    .sort((a, b) => {
+      const seqA = a.data?.sequenceNumber || Infinity;
+      const seqB = b.data?.sequenceNumber || Infinity;
+      return seqA - seqB;
+    });
+
+  // Debug logging
+  useEffect(() => {
+    console.log('🔍 Elements Overview Debug:', {
+      canvasElementsCount: canvasElements?.length || 0,
+      filteredCount: sortedElements.length,
+      canvasElements: canvasElements,
+      sortedElements: sortedElements,
+      selectedSubtask: selectedSubtask?.id,
+      selectedTask: selectedTask?.id
+    });
+  }, [canvasElements, sortedElements, selectedSubtask, selectedTask]);
   
 
   // Debug: Component loaded (only when no user)
@@ -672,7 +747,7 @@ const WorkspaceRightSidebar = ({
 
               <div className="pt-2 border-t border-gray-100">
                 <PermissionGuard
-                  permission="canComment"
+                  permission="canAccessMessages"
                   workspace={workspace}
                   userRole={userRole}
                   fallback={
@@ -698,7 +773,7 @@ const WorkspaceRightSidebar = ({
                     </PermissionButton>
 
                     <PermissionInput
-                      permission="canComment"
+                      permission="canAccessMessages"
                       workspace={workspace}
                       userRole={userRole}
                       type="text"
@@ -711,7 +786,7 @@ const WorkspaceRightSidebar = ({
                     />
 
                     <PermissionButton
-                      permission="canComment"
+                      permission="canAccessMessages"
                       workspace={workspace}
                       userRole={userRole}
                       onClick={() => {
@@ -731,6 +806,142 @@ const WorkspaceRightSidebar = ({
                   </div>
                 </PermissionGuard>
               </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Accordion: Elements Overview */}
+        <div className={`bg-white rounded-xl border border-gray-200 shadow-sm flex flex-col transition-all duration-300 ${elementsOverviewExpanded ? 'flex-1 min-h-0' : ''}`}>
+          <button
+            onClick={handleToggleElementsOverview}
+            className="w-full flex items-center justify-between px-5 py-4 text-left focus:outline-none"
+          >
+            <div className="flex items-center space-x-2">
+              <h4 className="text-sm font-medium text-gray-900">Elements Overview</h4>
+              <span className="text-xs text-gray-500 bg-gray-100 px-2 py-0.5 rounded-full">{sortedElements.length}</span>
+            </div>
+            <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform ${elementsOverviewExpanded ? 'transform rotate-180' : ''}`} />
+          </button>
+          <div className={`${elementsOverviewExpanded ? 'flex-1 flex flex-col opacity-100 min-h-0' : 'max-h-0 opacity-0 pointer-events-none'} transition-all duration-300 ease-in-out overflow-hidden`}
+               style={{transitionProperty: 'max-height, opacity'}}>
+            <div className="px-5 pb-5 border-t border-gray-100 flex-1 flex flex-col min-h-0 space-y-2 pt-4">
+              {sortedElements.length > 0 ? (
+                <div className="space-y-1 flex-1 overflow-y-auto pr-1 min-h-0">
+                  {sortedElements.map((element, idx) => (
+                    <div key={element.id || idx}>
+                      <button
+                        onClick={() => {
+                          if (onZoomToElement) {
+                            onZoomToElement(element.id);
+                          }
+                        }}
+                        className="w-full p-2 text-left bg-gray-50 hover:bg-blue-50 rounded-lg border border-gray-200 hover:border-blue-300 transition-all duration-200 group"
+                        title={`Click to zoom to ${element.data?.name || element.data?.type || 'element'}`}
+                      >
+                        <div className="flex items-center justify-between gap-2">
+                          <div className="flex-1 min-w-0 flex items-center gap-1.5">
+                            <span className="inline-flex items-center justify-center w-5 h-5 bg-blue-600 text-white text-[9px] font-bold rounded-full flex-shrink-0">
+                              {element.data?.sequenceNumber || idx + 1}
+                            </span>
+                            <div className="min-w-0">
+                              {editingElementId === element.id ? (
+                                <input
+                                  ref={editInputRef}
+                                  type="text"
+                                  value={editingElementName}
+                                  onChange={(e) => setEditingElementName(e.target.value)}
+                                  onKeyDown={(e) => handleKeyDown(e, element.id)}
+                                  onBlur={() => handleSaveElementName(element.id)}
+                                  className="w-full text-xs font-medium px-1 py-0.5 bg-white border border-blue-400 rounded outline-none focus:ring-1 focus:ring-blue-500"
+                                />
+                              ) : (
+                                <>
+                                  <p className="text-xs font-medium text-gray-900 truncate">{element.data?.name || element.data?.type || 'Element'}</p>
+                                  <p className="text-xs text-gray-500 capitalize">{element.data?.type || 'Unknown'}</p>
+                                </>
+                              )}
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-1.5 flex-shrink-0">
+                            {editingElementId === element.id ? (
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleSaveElementName(element.id);
+                                }}
+                                className="p-1 text-green-600 hover:text-green-700 hover:bg-green-50 rounded-md transition-colors"
+                                title="Save name"
+                              >
+                                <Check className="w-4 h-4" />
+                              </button>
+                            ) : (
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleEditElement(element.id, element.data?.name || '');
+                                }}
+                                className="p-1 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-md transition-colors opacity-0 group-hover:opacity-100"
+                                title="Edit name"
+                              >
+                                <Edit2 className="w-4 h-4" />
+                              </button>
+                            )}
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setInfoTooltipId(infoTooltipId === element.id ? null : element.id);
+                              }}
+                              className="p-1 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-md transition-colors"
+                              title="Element information"
+                            >
+                              <Info className="w-4 h-4" />
+                            </button>
+                            <svg className="w-4 h-4 text-gray-400 group-hover:text-blue-600 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                            </svg>
+                          </div>
+                        </div>
+                      </button>
+                      
+                      {/* Info Tooltip - shown below the card */}
+                      {infoTooltipId === element.id && (
+                        <div className="mt-1 p-2.5 bg-gray-900 text-white text-xs rounded-lg border border-gray-700 space-y-1.5">
+                          <div>
+                            <p className="text-gray-400 text-[10px]">Name:</p>
+                            <p className="font-medium truncate">{element.data?.name || 'Unnamed'}</p>
+                          </div>
+                          <div>
+                            <p className="text-gray-400 text-[10px]">Type:</p>
+                            <p className="font-medium capitalize truncate">{element.data?.type || 'Unknown'}</p>
+                          </div>
+                          <div>
+                            <p className="text-gray-400 text-[10px]">Position:</p>
+                            <p className="font-medium">X: {Math.round(element.position?.x || 0)}, Y: {Math.round(element.position?.y || 0)}</p>
+                          </div>
+                          <div>
+                            <p className="text-gray-400 text-[10px]">Size:</p>
+                            <p className="font-medium">W: {element.width || 'auto'}, H: {element.height || 'auto'}</p>
+                          </div>
+                          {element.parentNode && (
+                            <div>
+                              <p className="text-gray-400 text-[10px]">Inside:</p>
+                              <p className="font-medium">Container</p>
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="flex flex-col items-center justify-center py-8 text-center text-gray-500">
+                  <svg className="w-8 h-8 text-gray-300 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
+                  </svg>
+                  <p className="text-xs">No elements added yet</p>
+                </div>
+              )}
             </div>
           </div>
         </div>

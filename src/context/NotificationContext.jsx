@@ -46,7 +46,9 @@ export const NotificationProvider = ({ children }) => {
     
     // Determine WebSocket protocol (ws or wss)
     const wsProtocol = window.location.protocol === 'https:' ? 'wss' : 'ws';
-    const wsUrl = `${wsProtocol}://${window.location.hostname}:5001/api/notifications/ws/${userId}?userType=vendor`;
+    // Use the same host and port as the current page (Vite will proxy to backend)
+    const wsHost = window.location.host;
+    const wsUrl = `${wsProtocol}://${wsHost}/api/notifications/ws/${userId}?userType=vendor`;
     
     console.log(`NotificationContext - Opening WebSocket connection to: ${wsUrl}`);
     
@@ -99,6 +101,12 @@ export const NotificationProvider = ({ children }) => {
       
       newSocket.onerror = (error) => {
         console.error('NotificationContext - WebSocket error:', error);
+        console.error('NotificationContext - WebSocket readyState:', newSocket.readyState);
+        console.error('NotificationContext - Error details:', {
+          type: error.type,
+          message: error.message,
+          toString: error.toString()
+        });
       };
       
       // newSocket.onclose = (event) => {
@@ -133,8 +141,24 @@ export const NotificationProvider = ({ children }) => {
     
     console.log('NotificationContext - Adding new notification:', notification);
     
-    // Format the notification
-    const formattedNotification = formatNotification(notification);
+    // Check if this is a call invitation or other pre-formatted notification type
+    // If so, use it as-is; otherwise format it as a lead
+    let formattedNotification;
+    if (notification.type === 'call_invitation' || notification.type === 'call_ended' || notification.type === 'call_declined') {
+      // Call notifications come pre-formatted from the backend
+      console.log('NotificationContext - Using pre-formatted call notification');
+      formattedNotification = {
+        ...notification,
+        time: notification.timestamp ? new Date(notification.timestamp).toLocaleTimeString() : 'Just now',
+        isRead: false,
+        isImportant: notification.priority === 'high',
+        isSaved: false
+      };
+    } else {
+      // Format as lead notification
+      console.log('NotificationContext - Formatting as lead notification');
+      formattedNotification = formatNotification(notification);
+    }
     
     // Add to state
     addNotification(formattedNotification);
@@ -337,13 +361,35 @@ export const NotificationProvider = ({ children }) => {
         // Filter out invalid notifications (might happen if formatting fails)
         const validNotifications = formattedNotifications.filter(n => n && n.id);
         
-        setNotifications(validNotifications);
+        // Merge with existing WebSocket notifications (call invitations, etc.) to avoid overwriting them
+        setNotifications(prev => {
+          // Keep WebSocket-only notifications (call invitations, call_ended, call_declined)
+          const wsOnlyNotifications = prev.filter(n => 
+            n.type === 'call_invitation' || 
+            n.type === 'call_ended' || 
+            n.type === 'call_declined'
+          );
+          
+          // Merge WebSocket notifications with fetched notifications, removing duplicates
+          const merged = [...wsOnlyNotifications];
+          validNotifications.forEach(notif => {
+            if (!merged.some(existing => existing.id === notif.id)) {
+              merged.push(notif);
+            }
+          });
+          
+          console.log(`NotificationContext - Merged notifications: ${wsOnlyNotifications.length} WebSocket + ${validNotifications.length} fetched = ${merged.length} total`);
+          return merged;
+        });
         
-        // Update the unread count based on the valid notifications
-        const validUnreadCount = validNotifications.filter(n => !n.isRead).length;
-        setUnreadCount(validUnreadCount);
+        // Update the unread count based on all notifications (including WebSocket ones)
+        setNotifications(allNotifs => {
+          const validUnreadCount = allNotifs.filter(n => !n.isRead).length;
+          setUnreadCount(validUnreadCount);
+          return allNotifs; // Don't modify, just read
+        });
         
-        console.log(`NotificationContext - Updated state with ${validNotifications.length} notifications, ${validUnreadCount} unread`);
+        console.log(`NotificationContext - Updated state with notifications`);
         
       } else {
         console.log(`NotificationContext - No notifications data found or invalid format`);

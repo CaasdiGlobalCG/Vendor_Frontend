@@ -4,6 +4,7 @@ import { Search, Grid, Table, BarChart3, Square, List, X, GitBranch, Package, Up
 
 const ElementsSidebar = ({ isOpen, onClose, onElementSelect, userRole, currentUser, elementOptions = {} }) => {
   const [selectedCategory, setSelectedCategory] = useState('forms');
+  const [searchQuery, setSearchQuery] = useState('');
 
   // Check if user is CAS member with turnkey access
   console.log('🔍 Turnkey Detection Debug:', {
@@ -158,9 +159,6 @@ const ElementsSidebar = ({ isOpen, onClose, onElementSelect, userRole, currentUs
       { id: 'organizational-chart', name: 'Organizational Chart', type: 'flowchart', preview: 'Company hierarchy structure' }
     ],
     other: [
-      { id: 'divider', name: 'Divider', type: 'divider', preview: 'Content separator' },
-      { id: 'spacer', name: 'Spacer', type: 'spacer', preview: 'Vertical spacing' },
-      { id: 'container', name: 'Container', type: 'container', preview: 'Content wrapper' },
       { id: 'grid', name: 'Grid', type: 'grid', preview: 'Layout grid system' }
     ]
   };
@@ -187,55 +185,61 @@ const ElementsSidebar = ({ isOpen, onClose, onElementSelect, userRole, currentUs
       {/* Elements Sidebar */}
       <div data-tour="elements-sidebar" className="w-80 bg-white shadow-2xl flex flex-col max-h-screen">
         {/* Header - Fixed */}
-        <div className="px-5 py-4 border-b border-gray-200 flex-shrink-0 bg-white">
+        <div className="px-3 py-2.5 border-b border-gray-200 flex-shrink-0 bg-white">
           <div className="flex items-center justify-between">
-            <h2 className="text-xl font-bold text-gray-900">Elements</h2>
+            <h2 className="text-sm font-bold text-gray-900">Elements</h2>
             <button
               onClick={onClose}
-              className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors"
+              className="p-0.5 hover:bg-gray-100 rounded-lg transition-colors"
               title="Close"
             >
-              <X className="w-5 h-5 text-gray-500" />
+              <X className="w-4 h-4 text-gray-500" />
             </button>
           </div>
         </div>
 
         {/* Search Bar - Fixed */}
-        <div className="px-5 py-4 border-b border-gray-100 flex-shrink-0 bg-white">
+        <div className="px-3 py-2 pt-2.5 border-b border-gray-100 flex-shrink-0 bg-white">
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+            <Search className="absolute left-2.5 top-1/2 transform -translate-y-1/2 w-3.5 h-3.5 text-gray-400" />
             <input
               type="text"
               placeholder="Search elements..."
-              className="w-full pl-10 pr-4 py-2.5 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-gray-50 focus:bg-white transition-colors"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full pl-8 pr-3 py-1.5 text-xs border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-gray-50 focus:bg-white transition-colors"
             />
           </div>
         </div>
 
         {/* Elements Categories - Scrollable */}
         <div className="flex-1 overflow-y-auto bg-gray-50">
-          <div className="p-4 space-y-3">
-            {elementCategories.map((category) => (
+          <div className="p-2.5 space-y-2">
+            {elementCategories
+              .filter(category => 
+                category.name.toLowerCase().includes(searchQuery.toLowerCase())
+              )
+              .map((category) => (
               <div
                 key={category.id}
                 onClick={() => handleElementSelect(category.id)}
-                className={`group relative flex items-center justify-between p-4 rounded-xl cursor-pointer transition-all duration-300 ${
+                className={`group relative flex items-center justify-between p-2.5 rounded-lg cursor-pointer transition-all duration-300 ${
                   selectedCategory === category.id
-                    ? 'bg-white border-2 border-blue-500 shadow-lg shadow-blue-100'
-                    : 'bg-white border border-gray-200 hover:border-blue-300 hover:shadow-md'
+                    ? 'bg-white border-2 border-blue-500 shadow-md shadow-blue-100'
+                    : 'bg-white border border-gray-200 hover:border-blue-300 hover:shadow-sm'
                 }`}
               >
-                <div className="flex items-center space-x-4 flex-1 min-w-0">
-                  <div className={`p-3 rounded-xl flex-shrink-0 transition-all duration-300 ${
+                <div className="flex items-center space-x-2.5 flex-1 min-w-0">
+                  <div className={`p-1.5 rounded-lg flex-shrink-0 transition-all duration-300 ${
                     selectedCategory === category.id 
-                      ? `${category.color} shadow-md scale-110` 
-                      : `${category.color} group-hover:shadow-sm group-hover:scale-105`
+                      ? `${category.color} shadow-sm scale-105` 
+                      : `${category.color} group-hover:shadow-sm group-hover:scale-102`
                   }`}>
-                    <category.icon className={`w-6 h-6 ${
+                    <category.icon className={`w-4 h-4 ${
                       selectedCategory === category.id ? 'text-current' : ''
                     }`} />
                   </div>
-                  <span className={`text-sm font-semibold truncate ${
+                  <span className={`text-xs font-medium truncate ${
                     selectedCategory === category.id ? 'text-gray-900' : 'text-gray-700 group-hover:text-gray-900'
                   }`}>
                     {category.name}
@@ -245,11 +249,11 @@ const ElementsSidebar = ({ isOpen, onClose, onElementSelect, userRole, currentUs
                 {/* Right arrow with animation */}
                 <div className={`flex-shrink-0 transition-all duration-300 ${
                   selectedCategory === category.id 
-                    ? 'text-blue-600 translate-x-1' 
-                    : 'text-gray-400 group-hover:text-gray-600 group-hover:translate-x-1'
+                    ? 'text-blue-600 translate-x-0.5' 
+                    : 'text-gray-400 group-hover:text-gray-600 group-hover:translate-x-0.5'
                 }`}>
                   <svg 
-                    className="w-5 h-5" 
+                    className="w-3.5 h-3.5" 
                     fill="none" 
                     stroke="currentColor" 
                     viewBox="0 0 24 24"
@@ -260,7 +264,7 @@ const ElementsSidebar = ({ isOpen, onClose, onElementSelect, userRole, currentUs
                 
                 {/* Selection indicator */}
                 {selectedCategory === category.id && (
-                  <div className="absolute left-0 top-1/2 transform -translate-y-1/2 w-1 h-8 bg-blue-500 rounded-r-full"></div>
+                  <div className="absolute left-0 top-1/2 transform -translate-y-1/2 w-0.5 h-6 bg-blue-500 rounded-r-full"></div>
                 )}
               </div>
             ))}
@@ -268,13 +272,13 @@ const ElementsSidebar = ({ isOpen, onClose, onElementSelect, userRole, currentUs
         </div>
 
         {/* Footer - Fixed */}
-        <div className="px-5 py-4 border-t border-gray-200 flex-shrink-0 bg-white">
+        <div className="px-3 py-2 border-t border-gray-200 flex-shrink-0 bg-white">
           <div className="text-center">
-            <p className="text-xs font-medium text-gray-600 mb-1">
-              💡 Select a category to browse elements
+            <p className="text-xs font-medium text-gray-600 mb-0.5">
+              💡 Select a category
             </p>
             <p className="text-xs text-gray-400">
-              Click to view available options
+              to browse elements
             </p>
           </div>
         </div>

@@ -624,7 +624,12 @@ const LeadsPage = () => {
                         updatedAt: lead.updatedAt,
                         vendorResponse: lead.vendorResponse,
                         pmDecision: lead.pmDecision,
-                        tags: lead.tags || []
+                        tags: lead.tags || [],
+                        // New fields for rejection feedback
+                        rejectionReason: lead.rejectionReason || null,
+                        leadVersion: lead.leadVersion || null,
+                        negotiationHistory: lead.negotiationHistory || [],
+                        rawStatus: lead.status // Keep original status for checking pm_rejected_for_revision
                     }));
                 
                 console.log(`📊 Filtered ${formattedData.length} PM-sent leads out of ${data.leads.length} total leads`);

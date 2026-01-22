@@ -22,8 +22,8 @@ const GroupingModal = ({ isOpen, onClose, onConfirm, selectedNodes }) => {
       
       setGridColumns(optimalColumns);
       setGridRows(optimalRows);
-      setGridTitle(`Grouped Elements (${nodeCount} items)`);
-      setGridDescription(`Combined grid layout with ${nodeCount} elements`);
+      setGridTitle(`Group Container (${nodeCount} items)`);
+      setGridDescription(`Container holding ${nodeCount} grouped elements`);
       
       // Auto-arrange elements in grid
       const arrangement = selectedNodes.map((node, index) => ({
