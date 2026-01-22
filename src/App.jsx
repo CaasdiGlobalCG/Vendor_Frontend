@@ -1,11 +1,6 @@
-<<<<<<< Updated upstream
-import { Routes, Route, useNavigate, useLocation } from "react-router-dom";
-import { useEffect, useContext, useState } from "react";
-=======
 import { Routes, Route, useNavigate } from "react-router-dom";
 import { useEffect, useContext } from "react";
 import { CopilotProvider } from './context/CopilotContext';
->>>>>>> Stashed changes
 import HomePage from "./pages/HomePage";
 import { VendorProvider, VendorContext } from "./context/VendorContext";
 import { UserProvider, UserContext } from "./context/UserContext";
