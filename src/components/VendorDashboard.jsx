@@ -44,6 +44,13 @@ export default function VendorDashboard() {
         const hasFilledForm = vendor?.hasFilledForm;
         const email = vendor?.email || vendor?.vendorDetails?.primaryContactEmail || vendorContext?.currentUser?.email || currentUser?.email;
 
+        // Once the vendor has submitted, they should be in pending review.
+        // Don't bounce them back to Form1 on refresh.
+        if (status === 'pending') {
+          navigate('/Auditorapprove', { state: { role, email }, replace: true });
+          return;
+        }
+
         if (typeof hasFilledForm === 'boolean' && hasFilledForm === false) {
           navigate('/Form1', { state: { role, email }, replace: true });
           return;

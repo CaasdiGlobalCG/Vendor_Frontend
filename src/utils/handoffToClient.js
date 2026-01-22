@@ -13,14 +13,11 @@ export async function redirectToClientWithHandoff() {
     );
   } catch {}
 
-  const token = localStorage.getItem('authToken');
-  if (!token) throw new Error('Missing authToken in localStorage');
-
+  const legacyToken = localStorage.getItem('authToken');
   const res = await fetch('/api/auth/handoff', {
     method: 'POST',
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
+    credentials: 'include',
+    headers: legacyToken ? { Authorization: `Bearer ${legacyToken}` } : undefined,
   });
 
   if (!res.ok) {

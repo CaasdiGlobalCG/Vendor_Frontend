@@ -1414,9 +1414,9 @@ const WorkspacePage = () => {
       // Decline the call via API
       await fetch('/api/calls/decline', {
         method: 'POST',
+        credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('authToken')}`
         },
         body: JSON.stringify({
           meetingId: callData.meetingId,
@@ -1441,9 +1441,9 @@ const WorkspacePage = () => {
       // End the call via API
       await fetch('/api/calls/end', {
         method: 'POST',
+        credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('authToken')}`
         },
         body: JSON.stringify({
           meetingId: activeCall?.meetingId

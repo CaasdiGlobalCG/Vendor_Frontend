@@ -69,7 +69,7 @@ export default function GoogleOAuthCallback() {
 
           redirectToClientWithHandoff().catch((e) => {
             console.error('GoogleOAuthCallback: handoff redirect failed:', e);
-            window.location.assign(`${clientBase}/`);
+            setError('Unable to switch to client right now. Please try again.');
           });
           return;
         }

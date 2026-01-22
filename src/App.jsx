@@ -1,5 +1,5 @@
-import { Routes, Route, useNavigate } from "react-router-dom";
-import { useEffect, useContext } from "react";
+import { Routes, Route, useNavigate, useLocation } from "react-router-dom";
+import { useEffect, useContext, useState } from "react";
 import HomePage from "./pages/HomePage";
 import { VendorProvider, VendorContext } from "./context/VendorContext";
 import { UserProvider, UserContext } from "./context/UserContext";
@@ -149,7 +149,11 @@ function App() {
 
 function AppContent() {
   const { currentUser: vendorUser } = useContext(VendorContext);
+  const { hydrateCurrentUser } = useContext(VendorContext);
   const { currentUser: userContextUser } = useContext(UserContext);
+  const navigate = useNavigate();
+  const location = useLocation();
+  const [isExchangingHandoff, setIsExchangingHandoff] = useState(false);
   
   // Log context values on mount
   useEffect(() => {
@@ -158,6 +162,71 @@ function AppContent() {
     console.log("App initialized - UserContext user:", userContextUser);
     console.log("Added GitHub Actions");
   }, []);
+
+  // Client → Vendor switch: accept one-time handoff code and set vendor httpOnly cookie.
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const handoff = params.get('handoff');
+    if (!handoff) return;
+
+    const guardKey = `vendorHandoffExchanged:${handoff}`;
+    const already = sessionStorage.getItem(guardKey) === 'true';
+    if (already) {
+      params.delete('handoff');
+      navigate({ search: params.toString() }, { replace: true });
+      return;
+    }
+
+    let isCancelled = false;
+    setIsExchangingHandoff(true);
+
+    (async () => {
+      try {
+        const r = await fetch(`/api/auth/handoff/vendor-exchange?code=${encodeURIComponent(handoff)}`, {
+          method: 'GET',
+          credentials: 'include',
+        });
+        const d = await r.json().catch(() => null);
+        if (!r.ok || !d?.success) {
+          console.error('Vendor App: handoff vendor-exchange failed', { status: r.status, body: d });
+          return;
+        }
+
+        // Refresh VendorContext from cookie-authenticated /api/vendor/me
+        try {
+          await hydrateCurrentUser();
+        } catch {}
+
+        sessionStorage.setItem(guardKey, 'true');
+
+        // Remove handoff param from URL
+        params.delete('handoff');
+        navigate({ search: params.toString() }, { replace: true });
+
+        // Route into the vendor dashboard; VendorGuard will redirect if onboarding is incomplete.
+        navigate('/VendorDashboard', { replace: true });
+      } catch (e) {
+        console.error('Vendor App: handoff vendor-exchange error', e);
+      } finally {
+        if (!isCancelled) setIsExchangingHandoff(false);
+      }
+    })();
+
+    return () => {
+      isCancelled = true;
+    };
+  }, [location.search, navigate, hydrateCurrentUser]);
+
+  if (isExchangingHandoff) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-white">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+          <p className="mt-4 text-gray-700">Switching to Vendor…</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <Routes>
@@ -210,32 +279,20 @@ export default App;
 // Guard to ensure role is selected before accessing protected routes
 function RoleGuard({ children }) {
   const navigate = useNavigate();
+  const { currentUser, isHydratingUser } = useContext(VendorContext);
   useEffect(() => {
     const checkRole = async () => {
-      const rs = localStorage.getItem('roleSelected');
-      if (rs === 'true') return;
-      const token = localStorage.getItem('authToken');
-      if (token) {
-        try {
-          const r = await fetch('/api/auth/verify', {
-            headers: { Authorization: `Bearer ${token}` }
-          });
-          if (r.ok) {
-            const d = await r.json();
-            if (d?.roleSelected === true) {
-              localStorage.setItem('roleSelected', 'true');
-              return;
-            }
-          }
-        } catch {}
-      }
-      // Avoid redirect loop if already on role-selection
-      if (window.location.pathname !== '/role-selection') {
-        navigate('/role-selection', { replace: true });
+      // With cookie-based auth, role-selection is driven by vendor backend state.
+      // If we're authenticated, allow navigation and let VendorGuard handle onboarding.
+      if (isHydratingUser) return;
+      if (currentUser) return;
+
+      if (window.location.pathname !== '/login') {
+        navigate('/login', { replace: true });
       }
     };
     checkRole();
-  }, [navigate]);
+  }, [navigate, currentUser, isHydratingUser]);
   return children;
 }
 
@@ -252,12 +309,23 @@ function VendorGuard({ children }) {
     const hasFilledFormRaw = currentUser?.hasFilledForm;
     if (typeof hasFilledFormRaw !== 'boolean') return;
 
-    const status = (currentUser?.status || '').toLowerCase();
+    const status = String(currentUser?.status || '').trim().toLowerCase();
+
+    // Approved vendors should never be bounced back to onboarding.
+    if (status === 'approved') return;
+
+    // If the vendor is already in a review state, do not send them back to Form1.
+    if (status === 'pending') {
+      navigate('/Auditorapprove', { replace: true });
+      return;
+    }
+
     if (hasFilledFormRaw === false) {
       navigate('/Form1', { replace: true });
       return;
     }
-    if (status && status !== 'approved') {
+
+    if (status) {
       navigate('/Auditorapprove', { replace: true });
     }
   }, [navigate, currentUser, isHydratingUser]);

@@ -23,36 +23,48 @@ export const VendorProvider = ({ children }) => {
     try {
       setIsHydratingUser(true);
 
-      // Token is still stored client-side for Cognito. For Google OAuth we may only have a session cookie.
-      const token = localStorage.getItem('authToken');
-
-      let verifyData = null;
-      if (token) {
-        const verifyRes = await fetch(`${config.VENDOR_BACKEND_URL}/api/auth/verify`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        if (verifyRes.ok) {
-          verifyData = await verifyRes.json();
-        }
-      }
-
-      // Fetch vendor record securely (no email query param)
+      // Fetch vendor record securely from cookie-authenticated /me endpoint (no email query param)
       let vendorId = null;
       let name = null;
       let status = null;
       let hasFilledForm = null;
-      let email = verifyData?.email || null;
+      let email = null;
 
-      const meRes = await fetch(`${config.VENDOR_BACKEND_URL}/api/vendor/me`, {
-        credentials: 'include',
-        headers: token ? { Authorization: `Bearer ${token}` } : undefined,
-      });
-      if (meRes.ok) {
-        const me = await meRes.json();
-        const v = me?.data;
+      const tryMe = async () => {
+        const res = await fetch(`${config.VENDOR_BACKEND_URL}/api/vendor/me`, {
+          credentials: 'include',
+        });
+        if (!res.ok) return { ok: false, status: res.status };
+        const me = await res.json();
+        return { ok: true, me };
+      };
+
+      let meAttempt = await tryMe();
+
+      // Migration bridge: if the user is logged in via legacy localStorage token, establish
+      // the vendor httpOnly cookie session once, then rely on cookies thereafter.
+      if (!meAttempt.ok) {
+        const legacyToken = localStorage.getItem('authToken');
+        if (legacyToken) {
+          const sessionRes = await fetch(`${config.VENDOR_BACKEND_URL}/api/auth/session`, {
+            method: 'POST',
+            credentials: 'include',
+            headers: {
+              Authorization: `Bearer ${legacyToken}`,
+            },
+          });
+
+          if (sessionRes.ok) {
+            meAttempt = await tryMe();
+          }
+        }
+      }
+
+      if (meAttempt.ok) {
+        const v = meAttempt.me?.data;
         vendorId = v?.vendorId || v?.id || null;
         name = v?.name || v?.vendorDetails?.firstName || v?.vendorDetails?.primaryContactName || null;
-        status = v?.status || null;
+        status = v?.status != null ? String(v.status).trim() : null;
         hasFilledForm = typeof v?.hasFilledForm === 'boolean' ? v.hasFilledForm : null;
         email = email || v?.email || v?.vendorDetails?.primaryContactEmail || null;
       }
@@ -65,9 +77,9 @@ export const VendorProvider = ({ children }) => {
 
       setCurrentUser({
         email,
-        role: verifyData?.role || verifyData?.lastSelectedRole || 'vendor',
-        lastSelectedRole: verifyData?.lastSelectedRole ?? null,
-        roleSelected: verifyData?.roleSelected === true,
+        role: 'vendor',
+        lastSelectedRole: null,
+        roleSelected: true,
         vendorId,
         name,
         status,
@@ -108,6 +120,14 @@ export const VendorProvider = ({ children }) => {
   // Logout function to clear all user data
   const logout = () => {
     console.log("VendorContext: Logging out user");
+
+    // Best-effort: clear server-issued httpOnly auth cookie
+    try {
+      fetch(`${config.VENDOR_BACKEND_URL}/api/auth/logout`, {
+        method: 'POST',
+        credentials: 'include',
+      }).catch(() => {});
+    } catch {}
     
     // Reset state
     setCurrentUser(null);

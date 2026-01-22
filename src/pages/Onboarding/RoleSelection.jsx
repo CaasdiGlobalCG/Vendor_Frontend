@@ -42,7 +42,7 @@ function RoleSelection() {
               await redirectToClientWithHandoff();
             } catch (e) {
               console.error('RoleSelection: handoff redirect failed:', e);
-              window.location.assign(`${clientBase}/`);
+              alert('Unable to switch to client right now. Please try again.');
             }
           }
         }
@@ -93,7 +93,7 @@ function RoleSelection() {
             await redirectToClientWithHandoff();
           } catch (e) {
             console.error('RoleSelection: handoff redirect failed:', e);
-            window.location.assign(`${clientBase}/`);
+            alert('Unable to switch to client right now. Please try again.');
           }
         }
       } else {

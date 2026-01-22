@@ -107,15 +107,9 @@ export const Header = () => {
         return;
       }
       try {
-        const authToken = localStorage.getItem('authToken');
-        if (!authToken) {
-          console.log("Header: Missing authToken");
-          return;
-        }
-
         console.log("Header: Fetching vendor data (secure /me)");
         const meResponse = await fetch(`${config.VENDOR_BACKEND_URL}/api/vendor/me`, {
-          headers: { Authorization: `Bearer ${authToken}` }
+          credentials: 'include',
         });
         if (!meResponse.ok) {
           throw new Error(`Server responded with status: ${meResponse.status}`);
@@ -709,8 +703,7 @@ export const Header = () => {
                  <button 
                    onClick={() => {
                      // Do not rely on localStorage-stored identity
-                     const hasAuthToken = Boolean(localStorage.getItem('authToken'));
-                     if (currentUser || hasAuthToken) {
+                     if (currentUser) {
                        console.log("Header Mobile: User found, navigating to profile");
                        navigate('/userproduct');
                      } else {
@@ -854,7 +847,7 @@ export const Header = () => {
                  } catch (e) {
                    console.error('Header Toggle: handoff redirect failed:', e);
                    alert('Unable to switch to client right now. Please try again.');
-                   window.location.assign(`${clientBase}/`);
+                   setIsVendor(true); // revert toggle, stay in vendor app
                  }
                }
              }}

@@ -19,7 +19,7 @@ function Verification() {
           await redirectToClientWithHandoff();
         } catch (e) {
           console.error('Verification: handoff redirect failed:', e);
-          window.location.assign(`${clientBase}/`);
+          alert('Unable to switch to client right now. Please try again.');
         }
       })();
       return;

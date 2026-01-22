@@ -159,14 +159,8 @@ export const VendorDashboard = () => {
         
         console.log("VendorDashboard: Fetching vendor data (secure /me) for:", userEmail);
 
-        const authToken = localStorage.getItem('authToken');
-        if (!authToken) {
-          console.log("VendorDashboard: Missing authToken");
-          return;
-        }
-
         const meResponse = await fetch(`${config.VENDOR_BACKEND_URL}/api/vendor/me`, {
-          headers: { Authorization: `Bearer ${authToken}` }
+          credentials: 'include',
         });
 
         if (!meResponse.ok) {

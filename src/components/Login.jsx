@@ -323,7 +323,7 @@ function Login() {
           try { localStorage.removeItem('clientId'); } catch {}
           redirectToClientWithHandoff().catch((e) => {
             console.error('Login: handoff redirect failed:', e);
-            window.location.assign(`${clientBase}/`);
+            alert('Unable to switch to client right now. Please try again.');
           });
           } else {
             navigate(`/Form1`, { replace: true });
@@ -432,7 +432,7 @@ function Login() {
         try { localStorage.removeItem('clientId'); } catch {}
         redirectToClientWithHandoff().catch((e) => {
           console.error('Login(MFA): handoff redirect failed:', e);
-          window.location.assign(`${clientBase}/`);
+          alert('Unable to switch to client right now. Please try again.');
         });
       } else {
         navigate(`/Form1`, { replace: true });
@@ -648,7 +648,7 @@ function Login() {
                 try { localStorage.removeItem('clientId'); } catch {}
                 redirectToClientWithHandoff().catch((e) => {
                   console.error('Login: handoff redirect failed:', e);
-                  window.location.assign(`${clientBase}/`);
+                  alert('Unable to switch to client right now. Please try again.');
                 });
               } else {
                 navigate(`/Form1`, { replace: true });
