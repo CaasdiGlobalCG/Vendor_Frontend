@@ -1,5 +1,5 @@
-import { Routes, Route, useNavigate, useLocation, useState } from "react-router-dom";
-import { useEffect, useContext } from "react";
+import { Routes, Route, useNavigate, useLocation } from "react-router-dom";
+import { useEffect, useContext, useState } from "react";
 
 import HomePage from "./pages/HomePage";
 import { VendorProvider, VendorContext } from "./context/VendorContext";
