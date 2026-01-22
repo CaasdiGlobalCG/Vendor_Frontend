@@ -14,63 +14,56 @@ export default function VendorDashboard() {
   const { role } = location.state || {};
 
   useEffect(() => {
-    // Check if we have vendor email from URL params, location state, or context
-    const urlParams = new URLSearchParams(location.search);
-    const email = urlParams.get('email') || 
-                 location.state?.email ||
-                 (vendorContext?.currentUser?.email) || 
-                 (currentUser?.email);
-    
-    console.log("VendorDashboard - checking email:", email);
-    
-    if (email) {
-      // Fetch vendor information from backend
-      const fetchVendorInfo = async () => {
-        try {
-          console.log("Fetching vendor info for email:", email);
-          const response = await fetch(`${config.VENDOR_BACKEND_URL}/api/vendor/vendors?email=${encodeURIComponent(email)}`);
-          
-          if (!response.ok) {
-            throw new Error(`Server responded with status: ${response.status}`);
+    // Never trust identity from URL params; rely on authenticated /me.
+    const fetchVendorInfo = async () => {
+      try {
+        const token = localStorage.getItem('authToken');
+        const response = await fetch(`${config.VENDOR_BACKEND_URL}/api/vendor/me`, {
+          credentials: 'include',
+          headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+        });
+
+        if (!response.ok) {
+          // If not authenticated, go to login.
+          if (response.status === 401) {
+            navigate('/login', { replace: true });
           }
-          
-          const data = await response.json();
-          console.log("Vendor data response:", data);
-          
-          if (data.success && data.data.length > 0) {
-            const vendor = data.data[0];
-            setVendorInfo(vendor);
-            
-            // If vendor is not approved or hasn't filled form, redirect to appropriate page
-            if (vendor.status !== 'approved') {
-              console.log("Redirecting - vendor status not approved or form not filled:", {
-                status: vendor.status,
-                hasFilledForm: vendor.hasFilledForm
-              });
-              
-              if (vendor.status === 'pending') {
-                navigate('/Auditorapprove', { state: { role, email }, replace: true });
-              } else {
-                navigate('/Form1', { state: { role, email }, replace: true });
-              }
-            } else {
-              console.log("Vendor approved and form filled - staying on dashboard");
-            }
-          } else {
-            console.error("Vendor not found or data format incorrect:", data);
-            navigate('/Form1', { state: { role, email }, replace: true });
-          }
-        } catch (error) {
-          console.error('Error fetching vendor info:', error);
-          // Don't redirect on error - let user stay on dashboard
+          return;
         }
-      };
-      
-      fetchVendorInfo();
-    } else {
-      console.error("No email found for vendor lookup");
-      navigate('/login', { replace: true });
-    }
+
+        const payload = await response.json();
+        const vendor = payload?.data;
+        if (!payload?.success || !vendor) {
+          return;
+        }
+
+        setVendorInfo(vendor);
+
+        // Redirect only when state is definitive.
+        const status = String(vendor?.status || '').toLowerCase();
+        const hasFilledForm = vendor?.hasFilledForm;
+        const email = vendor?.email || vendor?.vendorDetails?.primaryContactEmail || vendorContext?.currentUser?.email || currentUser?.email;
+
+        // Once the vendor has submitted, they should be in pending review.
+        // Don't bounce them back to Form1 on refresh.
+        if (status === 'pending') {
+          navigate('/Auditorapprove', { state: { role, email }, replace: true });
+          return;
+        }
+
+        if (typeof hasFilledForm === 'boolean' && hasFilledForm === false) {
+          navigate('/Form1', { state: { role, email }, replace: true });
+          return;
+        }
+        if (status && status !== 'approved') {
+          navigate('/Auditorapprove', { state: { role, email }, replace: true });
+        }
+      } catch (error) {
+        console.error('Error fetching vendor info:', error);
+      }
+    };
+
+    fetchVendorInfo();
   }, [location, navigate, vendorContext, currentUser]);
 
   return (

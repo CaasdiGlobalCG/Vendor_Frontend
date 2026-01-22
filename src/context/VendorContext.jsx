@@ -1,4 +1,5 @@
-import React, { createContext, useState, useEffect } from "react";
+import React, { createContext, useState, useEffect, useCallback } from "react";
+import config from "../config/env";
 
 export const VendorContext = createContext();
 
@@ -13,24 +14,94 @@ const initialData = {
 };
 
 export const VendorProvider = ({ children }) => {
-  // Initialize currentUser from localStorage
-  const [currentUser, setCurrentUser] = useState(() => {
-    try {
-      const savedUser = localStorage.getItem('currentUser');
-      const parsedUser = savedUser ? JSON.parse(savedUser) : null;
-      console.log("VendorContext - Loaded user from localStorage:", parsedUser);
-      return parsedUser;
-    } catch (error) {
-      console.error("Error loading user from localStorage:", error);
-      return null;
-    }
-  });
+  // Do NOT hydrate currentUser from localStorage (prevents stale/cross-user leakage)
+  const [currentUser, setCurrentUser] = useState(null);
+  const [isHydratingUser, setIsHydratingUser] = useState(true);
   const [vendorData, setVendorData] = useState(initialData);
+
+  const hydrateCurrentUser = useCallback(async () => {
+    try {
+      setIsHydratingUser(true);
+
+      // Fetch vendor record securely from cookie-authenticated /me endpoint (no email query param)
+      let vendorId = null;
+      let name = null;
+      let status = null;
+      let hasFilledForm = null;
+      let email = null;
+
+      const tryMe = async () => {
+        const res = await fetch(`${config.VENDOR_BACKEND_URL}/api/vendor/me`, {
+          credentials: 'include',
+        });
+        if (!res.ok) return { ok: false, status: res.status };
+        const me = await res.json();
+        return { ok: true, me };
+      };
+
+      let meAttempt = await tryMe();
+
+      // Migration bridge: if the user is logged in via legacy localStorage token, establish
+      // the vendor httpOnly cookie session once, then rely on cookies thereafter.
+      if (!meAttempt.ok) {
+        const legacyToken = localStorage.getItem('authToken');
+        if (legacyToken) {
+          const sessionRes = await fetch(`${config.VENDOR_BACKEND_URL}/api/auth/session`, {
+            method: 'POST',
+            credentials: 'include',
+            headers: {
+              Authorization: `Bearer ${legacyToken}`,
+            },
+          });
+
+          if (sessionRes.ok) {
+            meAttempt = await tryMe();
+          }
+        }
+      }
+
+      if (meAttempt.ok) {
+        const v = meAttempt.me?.data;
+        vendorId = v?.vendorId || v?.id || null;
+        name = v?.name || v?.vendorDetails?.firstName || v?.vendorDetails?.primaryContactName || null;
+        status = v?.status != null ? String(v.status).trim() : null;
+        hasFilledForm = typeof v?.hasFilledForm === 'boolean' ? v.hasFilledForm : null;
+        email = email || v?.email || v?.vendorDetails?.primaryContactEmail || null;
+      }
+
+      // If neither token nor session resolves a user, clear state.
+      if (!email && !vendorId) {
+        setCurrentUser(null);
+        return;
+      }
+
+      setCurrentUser({
+        email,
+        role: 'vendor',
+        lastSelectedRole: null,
+        roleSelected: true,
+        vendorId,
+        name,
+        status,
+        hasFilledForm,
+      });
+    } catch (error) {
+      console.error('VendorContext - Failed to hydrate current user:', error);
+      setCurrentUser(null);
+    } finally {
+      setIsHydratingUser(false);
+    }
+  }, []);
 
   // Debug effect to log when currentUser changes
   useEffect(() => {
     console.log("VendorContext - Current user updated:", currentUser);
   }, [currentUser]);
+
+  // Hydrate on first mount
+  useEffect(() => {
+    hydrateCurrentUser();
+  }, [hydrateCurrentUser]);
 
   // Set current user and reset vendor data if needed
   const setUser = (user) => {
@@ -44,21 +115,19 @@ export const VendorProvider = ({ children }) => {
     
     // Set the new user
     setCurrentUser(user);
-    
-    // Save user to localStorage
-    if (user) {
-      try {
-        localStorage.setItem('currentUser', JSON.stringify(user));
-        console.log("VendorContext - Saved user to localStorage");
-      } catch (error) {
-        console.error("Error saving user to localStorage:", error);
-      }
-    }
   };
 
   // Logout function to clear all user data
   const logout = () => {
     console.log("VendorContext: Logging out user");
+
+    // Best-effort: clear server-issued httpOnly auth cookie
+    try {
+      fetch(`${config.VENDOR_BACKEND_URL}/api/auth/logout`, {
+        method: 'POST',
+        credentials: 'include',
+      }).catch(() => {});
+    } catch {}
     
     // Reset state
     setCurrentUser(null);
@@ -90,6 +159,8 @@ export const VendorProvider = ({ children }) => {
       vendorData, 
       setVendorData,
       currentUser,
+      isHydratingUser,
+      hydrateCurrentUser,
       setUser,
       logout
     }}>

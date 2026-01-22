@@ -91,29 +91,7 @@ const [selectedCountry, setSelectedCountry] = useState('');
     console.log("UserProductPage - Vendor User Context:", vendorUser);
   }, [currentUser, vendorUser]);
 
-  // Check if we need to recover user data from localStorage
-  useEffect(() => {
-    if (!currentUser?.email && !vendorUser?.email) {
-        console.log("UserProjectPage - No user email in context, attempting to recover from localStorage");
-        try {
-            const savedUser = localStorage.getItem('currentUser');
-            if (savedUser) {
-                const parsedUser = JSON.parse(savedUser);
-                console.log("UserProjectPage - Recovered user from localStorage:", parsedUser);
-                if (parsedUser?.email) {
-                    // Update profile data with recovered email
-                    setProfileData(prev => ({
-                        ...prev,
-                        email: parsedUser.email,
-                        name: parsedUser.name || prev.name
-                    }));
-                }
-            }
-        } catch (error) {
-            console.error("UserProjectPage - Error recovering user from localStorage:", error);
-        }
-    }
-}, [currentUser, vendorUser]);
+    // Do not recover identity from localStorage; VendorContext hydrates from backend.
 
   // Fetch vendor data from backend with a delay to ensure context is properly initialized
   useEffect(() => {
@@ -126,20 +104,12 @@ const [selectedCountry, setSelectedCountry] = useState('');
     const fetchVendorData = async () => {
       try {
           setLoading(true);
-          
-          // Use email from either context or profile data
-          const emailToUse = currentUser?.email || vendorUser?.email || profileData.email;
-          
-          console.log("UserProjectPage - Attempting to fetch vendor data using email:", emailToUse);
-          
-          if (!emailToUse || emailToUse === 'Loading...') {
-              console.log("UserProjectPage - No valid email found, displaying error");
-              setError("No user email found. Please log in again.");
-              setLoading(false);
-              return;
-          }
-          
-          const response = await fetch(`${config.VENDOR_BACKEND_URL}/api/vendor/vendors?email=${encodeURIComponent(emailToUse)}`);
+
+          const token = localStorage.getItem('authToken');
+          const response = await fetch(`${config.VENDOR_BACKEND_URL}/api/vendor/me`, {
+            credentials: 'include',
+            headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+          });
           
           if (!response.ok) {
               throw new Error(`Server responded with status: ${response.status}`);
@@ -148,8 +118,8 @@ const [selectedCountry, setSelectedCountry] = useState('');
           const data = await response.json();
           console.log("Vendor data response:", data);
           
-          if (data.success && data.data && data.data.length > 0) {
-              const vendor = data.data[0];
+            if (data.success && data.data) {
+              const vendor = data.data;
               
               // Prepare profile data first
               const newProfileData = {
@@ -159,7 +129,7 @@ const [selectedCountry, setSelectedCountry] = useState('');
                   companyName: vendor.companyDetails?.companyName || vendor.vendorDetails?.companyName || '',
                   phone: vendor.vendorDetails?.primaryContactPhone || '',
                   location: `${vendor.companyDetails?.state || ''}, ${vendor.companyDetails?.country || ''}`,
-                  email: vendor.vendorDetails?.primaryContactEmail || emailToUse || '',
+                    email: vendor.vendorDetails?.primaryContactEmail || vendor.email || currentUser?.email || vendorUser?.email || '',
               };
               
               // Set profile data immediately
@@ -814,13 +784,17 @@ const [editProductData, setEditProductData] = useState(null);
   // Fetch products from backend
   useEffect(() => {
     const fetchProducts = async () => {
-      if (!currentUser?.email) return;
+      if (!currentUser) return;
       
       try {
         setProductsLoading(true);
         setProductsError(null);
-        
-        const response = await fetch(`${config.VENDOR_BACKEND_URL}/api/vendor/products?email=${encodeURIComponent(currentUser.email)}`);
+
+        const token = localStorage.getItem('authToken');
+        const response = await fetch(`${config.VENDOR_BACKEND_URL}/api/vendor/products`, {
+          credentials: 'include',
+          headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+        });
         
         if (!response.ok) {
           throw new Error(`Server responded with status: ${response.status}`);
@@ -850,13 +824,17 @@ const [editProductData, setEditProductData] = useState(null);
   // Fetch services from backend
   useEffect(() => {
     const fetchServices = async () => {
-      if (!currentUser?.email) return;
+      if (!currentUser) return;
       
       try {
         setServicesLoading(true);
         setServicesError(null);
-        
-        const response = await fetch(`${config.VENDOR_BACKEND_URL}/api/vendor/services?email=${encodeURIComponent(currentUser.email)}`);
+
+        const token = localStorage.getItem('authToken');
+        const response = await fetch(`${config.VENDOR_BACKEND_URL}/api/vendor/services`, {
+          credentials: 'include',
+          headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+        });
         
         if (!response.ok) {
           throw new Error(`Server responded with status: ${response.status}`);
@@ -1021,13 +999,17 @@ const [editProductData, setEditProductData] = useState(null);
   // Fetch services from backend (with fallback to static data)
   useEffect(() => {
     const fetchServices = async () => {
-      if (!currentUser?.email) return;
+      if (!currentUser) return;
       
       try {
         setServicesLoading(true);
         setServicesError(null);
-        
-        const response = await fetch(`${config.VENDOR_BACKEND_URL}/api/vendor/services?email=${encodeURIComponent(currentUser.email)}`);
+
+        const token = localStorage.getItem('authToken');
+        const response = await fetch(`${config.VENDOR_BACKEND_URL}/api/vendor/services`, {
+          credentials: 'include',
+          headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+        });
         
         if (!response.ok) {
           // If 404, use default data and don't show error

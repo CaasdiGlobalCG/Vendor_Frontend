@@ -2,28 +2,31 @@ import React from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import "../styles/Verification.css";
 import config from "../config/env";
+import { redirectToClientWithHandoff } from '../utils/handoffToClient';
 
 function Verification() {
   const navigate = useNavigate();
   const location = useLocation();
-  const email = location.state?.email || new URLSearchParams(location.search).get("email") || localStorage.getItem("email");
-  const role = (location.state?.role || new URLSearchParams(location.search).get("role") || localStorage.getItem("role") || "").toLowerCase();
+  const email = location.state?.email || new URLSearchParams(location.search).get("email");
+  const role = (location.state?.role || new URLSearchParams(location.search).get("role") || "").toLowerCase();
 
   const handleContinue = () => {
     // If they already chose role=client, send to client app; otherwise guide to role selection
     if (role === "client") {
       const clientBase = config.CLIENT_URL || '';
-      const authToken = localStorage.getItem('authToken');
-      const qp = new URLSearchParams();
-      if (authToken) qp.set('authToken', authToken);
-      if (email) qp.set('email', email);
-      qp.set('role', 'client');
-      window.location.href = `${clientBase}/?${qp.toString()}`;
+      (async () => {
+        try {
+          await redirectToClientWithHandoff();
+        } catch (e) {
+          console.error('Verification: handoff redirect failed:', e);
+          alert('Unable to switch to client right now. Please try again.');
+        }
+      })();
       return;
     }
     // Default: go to role selection so user can choose Vendor or Client
     if (email) {
-      navigate(`/role-selection?email=${encodeURIComponent(email)}`, { replace: true });
+      navigate('/role-selection', { state: { email }, replace: true });
     } else {
       navigate('/role-selection', { replace: true });
     }

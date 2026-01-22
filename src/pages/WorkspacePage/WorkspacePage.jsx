@@ -49,17 +49,11 @@ const WorkspacePage = () => {
   
   // Check localStorage for PM user data (from PM dashboard)
   const storedPmUser = localStorage.getItem('pmUser');
-  const storedCurrentUser = localStorage.getItem('currentUser');
   let pmUserFromStorage = null;
   
   try {
     if (storedPmUser) {
       pmUserFromStorage = JSON.parse(storedPmUser);
-    } else if (storedCurrentUser) {
-      const parsedUser = JSON.parse(storedCurrentUser);
-      if (parsedUser.role === 'pm' || parsedUser.accessedFrom === 'pm-dashboard') {
-        pmUserFromStorage = parsedUser;
-      }
     }
   } catch (e) {
     console.error('Error parsing stored user data:', e);
@@ -1446,9 +1440,9 @@ const WorkspacePage = () => {
       // Decline the call via API
       await fetch('/api/calls/decline', {
         method: 'POST',
+        credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('authToken')}`
         },
         body: JSON.stringify({
           meetingId: callData.meetingId,
@@ -1473,9 +1467,9 @@ const WorkspacePage = () => {
       // End the call via API
       await fetch('/api/calls/end', {
         method: 'POST',
+        credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('authToken')}`
         },
         body: JSON.stringify({
           meetingId: activeCall?.meetingId

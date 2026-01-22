@@ -3,16 +3,16 @@ import { useLocation, useNavigate } from "react-router-dom";
 // Tailwind-based futuristic styling replaces legacy CSS
 import { Auth } from "aws-amplify";
 import config from '../../config/env';
+import { redirectToClientWithHandoff } from '../../utils/handoffToClient';
 
 function RoleSelection() {
   const [role, setRole] = useState("");
   const navigate = useNavigate();
   const location = useLocation();
 
-  // Extract email and googleId from URL params or state
+  // Extract email from URL params or state (googleId no longer required)
   const queryParams = new URLSearchParams(location.search);
   const email = queryParams.get("email") || location.state?.email;
-  const googleId = queryParams.get("googleId") || location.state?.googleId;
 
   // Check authentication status on page load
   useEffect(() => {
@@ -29,19 +29,21 @@ function RoleSelection() {
         });
         if (!response.ok) return; // Stay on this page if unauth
         const data = await response.json();
+        // Email is derived from the verified token; do not persist identity in localStorage.
         // Only navigate away if role was already selected previously
         if (data?.roleSelected === true) {
           localStorage.setItem('roleSelected', 'true');
-          if ((data.role || '').toLowerCase() === "vendor") {
+          const selectedRole = (data?.lastSelectedRole || data?.role || '').toLowerCase();
+          if (selectedRole === "vendor") {
             navigate("/Form1", { replace: true });
-          } else if ((data.role || '').toLowerCase() === "client") {
-            const authToken = localStorage.getItem('authToken');
-            const clientBase = CONFIG.CLIENT_URL;
-            const qp = new URLSearchParams();
-            if (authToken) qp.set('authToken', authToken);
-            if (email) qp.set('email', email);
-            qp.set('role', 'client');
-            window.location.href = `${clientBase}/?${qp.toString()}`;
+          } else if (selectedRole === "client") {
+            const clientBase = config.CLIENT_URL;
+            try {
+              await redirectToClientWithHandoff();
+            } catch (e) {
+              console.error('RoleSelection: handoff redirect failed:', e);
+              alert('Unable to switch to client right now. Please try again.');
+            }
           }
         }
       } catch (error) {
@@ -86,13 +88,13 @@ function RoleSelection() {
         if (role === 'vendor') {
           navigate('/Form1', { replace: true });
         } else {
-          const authToken = localStorage.getItem('authToken');
           const clientBase = config.CLIENT_URL;
-          const qp = new URLSearchParams();
-          if (authToken) qp.set('authToken', authToken);
-          if (email) qp.set('email', email);
-          qp.set('role', 'client');
-          window.location.href = `${clientBase}/?${qp.toString()}`;
+          try {
+            await redirectToClientWithHandoff();
+          } catch (e) {
+            console.error('RoleSelection: handoff redirect failed:', e);
+            alert('Unable to switch to client right now. Please try again.');
+          }
         }
       } else {
         throw new Error(data.error || "Failed to save role");

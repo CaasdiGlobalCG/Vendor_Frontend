@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useContext } from "react";
 import { useNavigate } from "react-router-dom";
 import { VendorContext } from "../../context/VendorContext";
-import { UserContext } from "../../context/UserContext";
 import {
   Download,
   Award,
@@ -15,8 +14,7 @@ import config from '../../config/env';
 
 export default function EditCompany() {
   const navigate = useNavigate();
-  const { currentUser } = useContext(UserContext);
-  const { vendorData, setVendorData } = useContext(VendorContext);
+  const { currentUser, vendorData, setVendorData } = useContext(VendorContext);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [saving, setSaving] = useState(false);
@@ -49,15 +47,16 @@ export default function EditCompany() {
     const fetchCompanyData = async () => {
       try {
         setLoading(true);
-        const emailToUse = currentUser?.email;
-        
-        if (!emailToUse) {
-          setError("No user email found. Please log in again.");
+        const authToken = localStorage.getItem('authToken');
+        if (!authToken) {
+          setError("Not authenticated. Please log in again.");
           setLoading(false);
           return;
         }
-        
-        const response = await fetch(`${config.VENDOR_BACKEND_URL}/api/vendor/vendor-by-email?email=${encodeURIComponent(emailToUse)}`);
+
+        const response = await fetch(`${config.VENDOR_BACKEND_URL}/api/vendor/me`, {
+          headers: { Authorization: `Bearer ${authToken}` }
+        });
         
         if (!response.ok) {
           throw new Error(`Server responded with status: ${response.status}`);
@@ -65,9 +64,9 @@ export default function EditCompany() {
         
         const data = await response.json();
         console.log("Vendor data response:", data);
-        
-        if (data.success && data.data && data.data.length > 0) {
-          const vendor = data.data[0];
+
+        if (data.success && data.data) {
+          const vendor = data.data;
           
           // Update the vendor data in context
           setVendorData(prevData => ({
