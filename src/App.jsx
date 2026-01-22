@@ -1,6 +1,6 @@
 import { Routes, Route, useNavigate } from "react-router-dom";
 import { useEffect, useContext } from "react";
-import { CopilotProvider } from './context/CopilotContext';
+
 import HomePage from "./pages/HomePage";
 import { VendorProvider, VendorContext } from "./context/VendorContext";
 import { UserProvider, UserContext } from "./context/UserContext";
@@ -136,7 +136,6 @@ const Layout = () => {
 
 function App() {
   return (
-    <CopilotProvider>
       <UserProvider>
         <VendorProvider>
           <ErrorBoundary>
@@ -146,7 +145,6 @@ function App() {
           </ErrorBoundary>
         </VendorProvider>
       </UserProvider>
-    </CopilotProvider>
   );
 }
 

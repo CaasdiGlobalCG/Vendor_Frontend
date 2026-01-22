@@ -17,8 +17,6 @@ import { Sparkles, FileText, Calendar, CheckCircle, StickyNote, ClipboardCheck }
 import ManageBOQModal from './components/ManageBOQModal';
 import { UploadProvider } from './components/forms/UploadManager';
 import { VendorContext } from '../../context/VendorContext';
-import { CopilotProvider } from '../../context/CopilotContext';
-import WorkspaceCopilot from './components/WorkspaceCopilot';
 import InvoiceToolReplica from './components/InvoiceToolReplica';
 import RoleBasedHeader from './components/RoleBasedHeader';
 import { PostServicesModal } from './components/modals/PostServices';
@@ -1876,8 +1874,7 @@ const WorkspacePage = () => {
         />
       )}
 
-      {/* Workspace Copilot */}
-      <WorkspaceCopilot />
+
 
     </UploadProvider>
   );
