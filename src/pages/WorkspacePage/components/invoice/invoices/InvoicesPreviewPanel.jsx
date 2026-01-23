@@ -1,9 +1,11 @@
-import React, { useState, useRef } from 'react';
+import React, { useContext, useState, useRef } from 'react';
 import { Download, Send, Settings, Edit2, X, Upload } from 'lucide-react';
 import html2pdf from 'html2pdf.js';
 import StandardPreview from '../shared/StandardPreview.jsx';
+import { VendorContext } from '../../../../../context/VendorContext';
 
 export default function QuotesPreviewPanel({ quotes, selectedQuoteId, onSelectQuote, onClose }) {
+  const { currentUser: vendorUser } = useContext(VendorContext);
   const [selectedId, setSelectedId] = useState(selectedQuoteId || (quotes[0]?.id || quotes[0]?.quotationId));
   const [quotesWithCustomDetails, setQuotesWithCustomDetails] = useState(
     quotes.map(q => ({
@@ -38,7 +40,15 @@ export default function QuotesPreviewPanel({ quotes, selectedQuoteId, onSelectQu
     if (!selectedQuote) return;
     
     try {
-      const currentUser = JSON.parse(localStorage.getItem('vendor') || '{}');
+      const storageUser = (() => {
+        try {
+          return JSON.parse(sessionStorage.getItem('vendor') || '{}');
+        } catch {
+          return {};
+        }
+      })();
+
+      const currentUser = vendorUser || storageUser;
       const vendorId = currentUser?.vendorId || currentUser?.id;
       const invoiceId = selectedQuote.invoiceId || selectedQuote.id;
 

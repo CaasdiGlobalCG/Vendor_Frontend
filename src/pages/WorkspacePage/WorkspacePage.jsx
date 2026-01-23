@@ -47,8 +47,8 @@ const WorkspacePage = () => {
   const urlUserName = urlParams.get('userName');
   const urlUserEmail = urlParams.get('userEmail');
   
-  // Check localStorage for PM user data (from PM dashboard)
-  const storedPmUser = localStorage.getItem('pmUser');
+  // Check sessionStorage for PM user data (from PM dashboard)
+  const storedPmUser = sessionStorage.getItem('pmUser');
   let pmUserFromStorage = null;
   
   try {

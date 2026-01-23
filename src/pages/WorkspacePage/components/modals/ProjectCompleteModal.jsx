@@ -15,14 +15,14 @@ const ProjectCompleteModal = ({ isOpen, onClose, workspace, userRole, isPM, isCl
 
   // Get user info for authentication headers
   const getUserInfo = () => {
-    const pmUser = localStorage.getItem('pmUser');
+    const pmUser = sessionStorage.getItem('pmUser');
     if (pmUser) {
       try {
         return JSON.parse(pmUser);
       } catch (e) {}
     }
     
-    const clientUser = localStorage.getItem('clientUser');
+    const clientUser = sessionStorage.getItem('clientUser');
     if (clientUser) {
       try {
         return JSON.parse(clientUser);

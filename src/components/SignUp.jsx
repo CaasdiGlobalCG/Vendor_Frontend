@@ -208,7 +208,7 @@ function SignUp() {
       // This will be removed after successful verification
       // Use a simple encryption to avoid storing plain text password
       const encryptedPassword = btoa(password); // Base64 encoding (not secure, but better than plaintext)
-      localStorage.setItem(`temp_password_${email}`, encryptedPassword);
+      sessionStorage.setItem(`temp_password_${email}`, encryptedPassword);
       
       // Navigate to verification page
       navigate("/verification", { state: { email } });

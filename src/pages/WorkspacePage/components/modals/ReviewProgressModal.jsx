@@ -17,7 +17,7 @@ const ReviewProgressModal = ({ isOpen, onClose, workspace, userRole, taskId, sub
   // Get user info for authentication headers
   const getUserInfo = () => {
     // Try to get PM user from localStorage
-    const pmUser = localStorage.getItem('pmUser');
+    const pmUser = sessionStorage.getItem('pmUser');
     if (pmUser) {
       try {
         return JSON.parse(pmUser);
@@ -25,7 +25,7 @@ const ReviewProgressModal = ({ isOpen, onClose, workspace, userRole, taskId, sub
     }
     
     // Try to get client user from localStorage
-    const clientUser = localStorage.getItem('clientUser');
+    const clientUser = sessionStorage.getItem('clientUser');
     if (clientUser) {
       try {
         return JSON.parse(clientUser);

@@ -34,7 +34,7 @@ export default function Form3() {
 
   useEffect(() => {
     if (currentUser) {
-      const savedData = localStorage.getItem(`form3Data_${currentUser.id}`);
+      const savedData = sessionStorage.getItem(`form3Data_${currentUser.id}`);
       if (savedData) {
         const parsedData = JSON.parse(savedData);
         if (!parsedData.machineryDetails || !Array.isArray(parsedData.machineryDetails)) {
@@ -83,7 +83,7 @@ export default function Form3() {
 
   const handleNext = () => {
     if (currentUser) {
-      localStorage.setItem(`form3Data_${currentUser.id}`, JSON.stringify(formData));
+      sessionStorage.setItem(`form3Data_${currentUser.id}`, JSON.stringify(formData));
     }
     setVendorData(prev => ({
       ...prev,

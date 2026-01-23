@@ -39,7 +39,7 @@ export default function Form4() {
 
   useEffect(() => {
     if (currentUser) {
-      const savedData = localStorage.getItem(`form4Data_${currentUser.id}`);
+      const savedData = sessionStorage.getItem(`form4Data_${currentUser.id}`);
       if (savedData) {
         const parsedData = JSON.parse(savedData);
         setFormData(parsedData);
@@ -307,7 +307,7 @@ export default function Form4() {
 
   const handleNext = () => {
     if (currentUser) {
-      localStorage.setItem(`form4Data_${currentUser.id}`, JSON.stringify(formData));
+      sessionStorage.setItem(`form4Data_${currentUser.id}`, JSON.stringify(formData));
     }
     setVendorData(prev => ({
       ...prev,

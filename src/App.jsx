@@ -1,6 +1,5 @@
 import { Routes, Route, useNavigate, useLocation } from "react-router-dom";
-import { useEffect, useContext, useState } from "react";
-
+import { useEffect, useContext, useState, useMemo } from "react";
 import HomePage from "./pages/HomePage";
 import { VendorProvider, VendorContext } from "./context/VendorContext";
 import { UserProvider, UserContext } from "./context/UserContext";
@@ -155,6 +154,17 @@ function AppContent() {
   const navigate = useNavigate();
   const location = useLocation();
   const [isExchangingHandoff, setIsExchangingHandoff] = useState(false);
+
+  // Synchronous check to avoid a 1-frame flash of the '/' page.
+  // useEffect runs after first paint, so we gate rendering here when handoff is present.
+  const handoffParam = useMemo(() => {
+    const params = new URLSearchParams(location.search);
+    const handoff = params.get('handoff');
+    if (!handoff) return null;
+    const guardKey = `vendorHandoffExchanged:${handoff}`;
+    const already = sessionStorage.getItem(guardKey) === 'true';
+    return already ? null : handoff;
+  }, [location.search]);
   
   // Log context values on mount
   useEffect(() => {
@@ -218,7 +228,7 @@ function AppContent() {
     };
   }, [location.search, navigate, hydrateCurrentUser]);
 
-  if (isExchangingHandoff) {
+  if (handoffParam || isExchangingHandoff) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-white">
         <div className="text-center">

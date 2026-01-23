@@ -172,6 +172,9 @@ function Login() {
       localStorage.setItem('authToken', idToken);
       console.log("Stored Cognito authToken in localStorage:", idToken);
 
+      let verifyRoleSelected = null;
+      let verifyLastSelectedRole = null;
+
       // Gate by roleSelected BEFORE fetching vendor or setting contexts
       try {
         const verifyRes = await fetch(`${config.VENDOR_BACKEND_URL}/api/auth/verify`, {
@@ -179,17 +182,49 @@ function Login() {
         });
         if (verifyRes.ok) {
           const verifyData = await verifyRes.json();
-          const roleSelected = verifyData?.roleSelected === true;
-          localStorage.setItem('roleSelected', roleSelected ? 'true' : 'false');
-          if (!roleSelected) {
+          verifyRoleSelected = verifyData?.roleSelected === true;
+          verifyLastSelectedRole = (verifyData?.lastSelectedRole || '').toString().toLowerCase();
+
+          // Keep as a legacy hint for some guards, but do not rely on it.
+          localStorage.setItem('roleSelected', verifyRoleSelected ? 'true' : 'false');
+
+          if (!verifyRoleSelected) {
             // Ensure we do not set any contexts before redirect
             try { localStorage.removeItem('currentUser'); } catch {}
             navigate(`/role-selection`, { replace: true });
             return;
           }
+
+          // If the user last used the client app, redirect there after login.
+          // Respect explicit vendor intent (client->vendor switch or vendor role/login).
+          try {
+            const qp = new URLSearchParams(location.search);
+            const explicitVendor =
+              qp.get('fromClient') === 'true' ||
+              qp.get('role') === 'vendor' ||
+              Boolean(qp.get('handoff'));
+
+            if (!explicitVendor && verifyLastSelectedRole === 'client') {
+              await redirectToClientWithHandoff();
+              return;
+            }
+          } catch (redirErr) {
+            console.warn('lastSelectedRole redirect check failed:', redirErr);
+          }
         }
       } catch (verifyErr) {
         console.warn('Verify failed, proceeding cautiously:', verifyErr);
+      }
+
+      // Establish vendor cookie session (sid) so subsequent requests can use credentials:'include'.
+      try {
+        await fetch(`${config.VENDOR_BACKEND_URL}/api/auth/session`, {
+          method: 'POST',
+          credentials: 'include',
+          headers: { Authorization: `Bearer ${idToken}` },
+        });
+      } catch (e) {
+        console.warn('Failed to establish vendor cookie session:', e);
       }
 
       // Fetch the vendor data (secure /me) to get the vendorId
@@ -291,14 +326,11 @@ function Login() {
         const userInfo = data.data;
         const resolvedStatus = String(userInfo?.status || '').toLowerCase();
         const resolvedHasFilledForm = userInfo?.hasFilledForm === true;
-        // If role not selected, force role-selection
-        try {
-          const rs = localStorage.getItem('roleSelected');
-          if (rs !== 'true') {
-            navigate(`/role-selection`, { replace: true });
-            return;
-          }
-        } catch {}
+        // If verify told us role isn't selected, never proceed.
+        if (verifyRoleSelected === false) {
+          navigate(`/role-selection`, { replace: true });
+          return;
+        }
         if (resolvedStatus === 'approved') {
           // If approved, go directly to dashboard regardless of form completion
           navigate(`/VendorDashboard`, { replace: true });
@@ -549,15 +581,8 @@ function Login() {
               return; // Stop processing Google redirect
             }
             
-            // If role not selected, do not set contexts or open sockets
-            try {
-              const rs = localStorage.getItem('roleSelected');
-              if (rs !== 'true') {
-                // Do not set contexts here; redirect to role selection
-                navigate(`/role-selection`, { replace: true });
-                return;
-              }
-            } catch {}
+            // Do not rely on localStorage roleSelected (it can be stale/cleared).
+            // The authoritative check happens via /api/auth/verify below.
 
             // Create a more complete user object with vendorId
             const userData = {

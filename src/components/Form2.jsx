@@ -24,7 +24,7 @@
 //   // Load saved data from localStorage on component mount
 //   useEffect(() => {
 //     if (currentUser) {
-//       const savedData = localStorage.getItem(`form2Data_${currentUser.id}`);
+//       const savedData = sessionStorage.getItem(`form2Data_${currentUser.id}`);
 //       if (savedData) {
 //         const parsedData = JSON.parse(savedData);
 //         setFormData(parsedData);
@@ -51,7 +51,7 @@
 
 //   const handleNext = () => {
 //     if (currentUser) {
-//       localStorage.setItem(`form2Data_${currentUser.id}`, JSON.stringify(formData));
+//       sessionStorage.setItem(`form2Data_${currentUser.id}`, JSON.stringify(formData));
 //     }
 //     setVendorData(prev => ({
 //       ...prev,
@@ -352,7 +352,7 @@ export default function Form2() {
 
   useEffect(() => {
     if (currentUser) {
-      const savedData = localStorage.getItem(`form2Data_${currentUser.id}`);
+      const savedData = sessionStorage.getItem(`form2Data_${currentUser.id}`);
       if (savedData) {
         const parsedData = JSON.parse(savedData);
         setFormData(parsedData);
@@ -484,7 +484,7 @@ export default function Form2() {
 
   const handleNext = () => {
     if (currentUser) {
-      localStorage.setItem(`form2Data_${currentUser.id}`, JSON.stringify(formData));
+      sessionStorage.setItem(`form2Data_${currentUser.id}`, JSON.stringify(formData));
     }
     setVendorData(prev => ({
       ...prev,

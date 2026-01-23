@@ -202,7 +202,7 @@ const WorkspaceHeader = ({
   // Determine the correct dashboard based on user role and access method
  const handleBackToDashboard = () => {
   // Check if user came from PM dashboard
-  const storedPmUser = localStorage.getItem('pmUser');
+  const storedPmUser = sessionStorage.getItem('pmUser');
   let accessedFromPM = false;
 
   try {

@@ -1,14 +1,16 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useContext } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 // Tailwind-based futuristic styling replaces legacy CSS
 import { Auth } from "aws-amplify";
 import config from '../../config/env';
 import { redirectToClientWithHandoff } from '../../utils/handoffToClient';
+import { VendorContext } from '../../context/VendorContext';
 
 function RoleSelection() {
   const [role, setRole] = useState("");
   const navigate = useNavigate();
   const location = useLocation();
+  const { hydrateCurrentUser } = useContext(VendorContext);
 
   // Extract email from URL params or state (googleId no longer required)
   const queryParams = new URLSearchParams(location.search);
@@ -35,6 +37,17 @@ function RoleSelection() {
           localStorage.setItem('roleSelected', 'true');
           const selectedRole = (data?.lastSelectedRole || data?.role || '').toLowerCase();
           if (selectedRole === "vendor") {
+            // Ensure vendor cookie session exists, then hydrate context so RoleGuard doesn't bounce.
+            try {
+              await fetch(`${config.VENDOR_BACKEND_URL}/api/auth/session`, {
+                method: 'POST',
+                credentials: 'include',
+                headers: { Authorization: `Bearer ${idToken}` },
+              });
+            } catch {}
+            try {
+              await hydrateCurrentUser?.();
+            } catch {}
             navigate("/Form1", { replace: true });
           } else if (selectedRole === "client") {
             const clientBase = config.CLIENT_URL;
@@ -86,6 +99,17 @@ function RoleSelection() {
         // Persist roleSelected locally so guards unlock navigation
         localStorage.setItem('roleSelected', 'true');
         if (role === 'vendor') {
+          // Establish cookie session + hydrate context before moving into onboarding.
+          try {
+            await fetch(`${config.VENDOR_BACKEND_URL}/api/auth/session`, {
+              method: 'POST',
+              credentials: 'include',
+              headers: { Authorization: `Bearer ${idToken}` },
+            });
+          } catch {}
+          try {
+            await hydrateCurrentUser?.();
+          } catch {}
           navigate('/Form1', { replace: true });
         } else {
           const clientBase = config.CLIENT_URL;
