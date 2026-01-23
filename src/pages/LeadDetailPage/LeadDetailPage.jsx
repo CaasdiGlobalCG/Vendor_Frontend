@@ -42,6 +42,18 @@ const LeadDetailPage = () => {
     const [uploadedQuotation, setUploadedQuotation] = useState(null);
     const [quotationError, setQuotationError] = useState(null);
     const [freshLeadData, setFreshLeadData] = useState(null);
+    
+    // Vendor BOQ upload state (when PM doesn't provide BOQ)
+    const [vendorBoqFile, setVendorBoqFile] = useState(null);
+    const [isUploadingVendorBoq, setIsUploadingVendorBoq] = useState(false);
+    const [uploadedVendorBoq, setUploadedVendorBoq] = useState(null);
+    const [vendorBoqError, setVendorBoqError] = useState(null);
+    
+    // Vendor quotation for vendor's BOQ
+    const [vendorQuotationFile, setVendorQuotationFile] = useState(null);
+    const [isUploadingVendorQuotation, setIsUploadingVendorQuotation] = useState(false);
+    const [uploadedVendorQuotation, setUploadedVendorQuotation] = useState(null);
+    const [vendorQuotationError, setVendorQuotationError] = useState(null);
 
     // Use fresh data from API if available, otherwise use stale data from location.state
     if (freshLeadData) {
@@ -191,15 +203,183 @@ const LeadDetailPage = () => {
         }
     };
 
-    const handleUploadQuotation = async () => {
+    const handleVendorBoqFileChange = (event) => {
+        const file = event.target.files?.[0];
+        if (file) {
+            setVendorBoqFile(file);
+            setVendorBoqError(null);
+        }
+    };
+
+    const handleVendorQuotationFileChange = (event) => {
+        const file = event.target.files?.[0];
+        if (file) {
+            setVendorQuotationFile(file);
+            setVendorQuotationError(null);
+        }
+    };
+
+    const handleUploadVendorBoq = async () => {
         try {
-            if (!quotationFile) {
+            if (!vendorBoqFile) {
+                alert('Please select a BOQ PDF to upload.');
+                return;
+            }
+
+            const vendorId = currentUser.vendorId || currentUser.id;
+            if (!vendorId) {
+                alert('Vendor ID is missing. Please re-login and try again.');
+                return;
+            }
+
+            setIsUploadingVendorBoq(true);
+            setVendorBoqError(null);
+
+            console.log('=== VENDOR BOQ UPLOAD STARTED ===');
+            console.log('Lead ID:', leadId);
+            console.log('Vendor ID:', vendorId);
+            console.log('File name:', vendorBoqFile.name);
+
+            // 1) Upload BOQ file to S3
+            const uploadResponse = await uploadFileToS3(
+                vendorBoqFile,
+                currentUser.email,
+                'vendorBoq',
+                'vendorBoqs'
+            );
+
+            console.log('S3 Upload Response:', uploadResponse);
+
+            const boqFileUrl = uploadResponse?.data?.url;
+            if (!boqFileUrl) {
+                throw new Error('File upload succeeded but URL is missing in response.');
+            }
+
+            console.log('BOQ File URL from S3:', boqFileUrl);
+
+            // 2) Send to backend to store vendor BOQ
+            console.log('Calling backend endpoint: /api/vendor-leads/' + leadId + '/vendor-boq');
+            const response = await fetch(`/api/vendor-leads/${leadId}/vendor-boq`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    vendorId,
+                    pmId: leadDetails?.pmId,
+                    vendorBoqUrl: boqFileUrl,
+                    vendorBoqFileName: vendorBoqFile.name
+                })
+            });
+
+            const data = await response.json().catch(() => ({}));
+            console.log('Backend response:', data);
+
+            if (!response.ok || !data?.success) {
+                throw new Error(
+                    data.error ||
+                    data.message ||
+                    `Failed to save vendor BOQ (status ${response.status})`
+                );
+            }
+
+            setUploadedVendorBoq({
+                boqFileUrl,
+                fileName: vendorBoqFile.name,
+                uploadedAt: new Date().toISOString()
+            });
+            setVendorBoqFile(null);
+            
+            alert('Your BOQ has been uploaded successfully! Now you can upload a quotation based on this BOQ.');
+        } catch (error) {
+            console.error('Error uploading vendor BOQ:', error);
+            setVendorBoqError(error.message || 'Failed to upload BOQ. Please try again.');
+            alert(error.message || 'Failed to upload BOQ. Please try again.');
+        } finally {
+            setIsUploadingVendorBoq(false);
+        }
+    };
+
+    const handleUploadVendorQuotation = async () => {
+        try {
+            if (!vendorQuotationFile) {
                 alert('Please select a quotation PDF to upload.');
                 return;
             }
 
-            if (!currentUser?.email) {
-                alert('User email is required to upload quotation.');
+            if (!uploadedVendorBoq) {
+                alert('Please upload your BOQ first before uploading a quotation.');
+                return;
+            }
+
+            const vendorId = currentUser.vendorId || currentUser.id;
+            if (!vendorId) {
+                alert('Vendor ID is missing. Please re-login and try again.');
+                return;
+            }
+
+            setIsUploadingVendorQuotation(true);
+            setVendorQuotationError(null);
+
+            // 1) Upload quotation file to S3
+            const uploadResponse = await uploadFileToS3(
+                vendorQuotationFile,
+                currentUser.email,
+                'vendorQuotation',
+                'vendorQuotations'
+            );
+
+            const quotationFileUrl = uploadResponse?.data?.url;
+            if (!quotationFileUrl) {
+                throw new Error('File upload succeeded but URL is missing in response.');
+            }
+
+            // 2) Send to backend to store vendor quotation
+            const response = await fetch(`/api/vendor-leads/${leadId}/vendor-quotation`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    vendorId,
+                    pmId: leadDetails?.pmId,
+                    vendorBoqUrl: uploadedVendorBoq.boqFileUrl,
+                    vendorQuotationUrl: quotationFileUrl,
+                    vendorQuotationFileName: vendorQuotationFile.name
+                })
+            });
+
+            const data = await response.json().catch(() => ({}));
+
+            if (!response.ok || !data?.success) {
+                throw new Error(
+                    data.error ||
+                    data.message ||
+                    `Failed to save vendor quotation (status ${response.status})`
+                );
+            }
+
+            setUploadedVendorQuotation({
+                quotationFileUrl,
+                fileName: vendorQuotationFile.name,
+                uploadedAt: new Date().toISOString()
+            });
+            setVendorQuotationFile(null);
+            
+            alert('Your quotation has been uploaded and sent to PM for review!');
+        } catch (error) {
+            console.error('Error uploading vendor quotation:', error);
+            setVendorQuotationError(error.message || 'Failed to upload quotation. Please try again.');
+            alert(error.message || 'Failed to upload quotation. Please try again.');
+        } finally {
+            setIsUploadingVendorQuotation(false);
+        }
+    };
+
+    const handleUploadQuotation = async () => {
+        try {
+            if (!quotationFile) {
+                alert('Please select a quotation PDF to upload.');
                 return;
             }
 
@@ -384,6 +564,164 @@ const LeadDetailPage = () => {
                 </div>
             </div>
 
+            {/* Vendor BOQ Upload Section (if PM hasn't provided BOQ) */}
+            {!leadDetails?.boqAttachment && !leadDetails?.boqFileUrl && (
+                <div className="mb-10 p-4 rounded-lg border-l-4 border-blue-500 bg-blue-50">
+                    <div className="flex items-start gap-3">
+                        <div className="flex-shrink-0">
+                            <UploadIcon className="h-5 w-5 text-blue-600 mt-0.5" />
+                        </div>
+                        <div className="flex-1">
+                            <h3 className="text-sm font-semibold text-blue-900 mb-2">
+                                Create Your Own Bill of Quantities (BOQ)
+                            </h3>
+                            <p className="text-sm text-blue-800 mb-4">
+                                No BOQ has been provided by the PM. You can upload your own BOQ and submit a quotation based on it.
+                            </p>
+
+                            {/* Vendor BOQ Upload */}
+                            {!uploadedVendorBoq ? (
+                                <div>
+                                    <p className="text-sm font-medium text-gray-700 mb-3">Step 1: Upload Your BOQ</p>
+                                    <div className="border-2 border-dashed border-blue-300 rounded-md p-4 flex flex-col items-center justify-center text-center bg-white mb-4">
+                                        <UploadIcon className="h-8 w-8 text-blue-400 mb-2" />
+                                        <p className="text-sm text-gray-700 mb-1">
+                                            Upload your own Bill of Quantities (BOQ)
+                                        </p>
+                                        <p className="text-xs text-gray-500 mb-3">
+                                            Supported format: PDF
+                                        </p>
+                                        <label className="inline-flex items-center px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-md cursor-pointer hover:bg-blue-700">
+                                            Choose File
+                                            <input
+                                                type="file"
+                                                accept="application/pdf"
+                                                className="hidden"
+                                                onChange={handleVendorBoqFileChange}
+                                            />
+                                        </label>
+                                        {vendorBoqFile && (
+                                            <p className="mt-2 text-xs text-gray-600">
+                                                Selected: <span className="font-medium">{vendorBoqFile.name}</span>
+                                            </p>
+                                        )}
+                                    </div>
+                                    <div className="flex justify-end">
+                                        <button
+                                            type="button"
+                                            onClick={handleUploadVendorBoq}
+                                            disabled={!vendorBoqFile || isUploadingVendorBoq}
+                                            className={`inline-flex items-center px-4 py-2 rounded-md text-sm font-medium text-white ${
+                                                !vendorBoqFile || isUploadingVendorBoq
+                                                    ? 'bg-gray-400 cursor-not-allowed'
+                                                    : 'bg-blue-600 hover:bg-blue-700'
+                                            }`}
+                                        >
+                                            {isUploadingVendorBoq ? (
+                                                <>
+                                                    <ArrowPathIcon className="h-4 w-4 mr-2 animate-spin" />
+                                                    Uploading...
+                                                </>
+                                            ) : (
+                                                'Upload BOQ'
+                                            )}
+                                        </button>
+                                    </div>
+                                    {vendorBoqError && (
+                                        <p className="mt-2 text-sm text-red-600">{vendorBoqError}</p>
+                                    )}
+                                </div>
+                            ) : (
+                                <div className="bg-green-50 border border-green-200 rounded-md p-3 mb-4">
+                                    <div className="flex items-center gap-2 mb-2">
+                                        <CheckIcon className="h-5 w-5 text-green-600 flex-shrink-0" />
+                                        <p className="text-sm font-medium text-green-800">
+                                            BOQ Uploaded
+                                        </p>
+                                    </div>
+                                    <p className="text-xs text-green-700">
+                                        <span className="font-medium">{uploadedVendorBoq.fileName}</span> - Uploaded at {new Date(uploadedVendorBoq.uploadedAt).toLocaleString()}
+                                    </p>
+                                </div>
+                            )}
+
+                            {/* Vendor Quotation Upload (shown after BOQ upload) */}
+                            {uploadedVendorBoq && (
+                                <div className="mt-6">
+                                    <p className="text-sm font-medium text-gray-700 mb-3">Step 2: Upload Your Quotation</p>
+                                    
+                                    {uploadedVendorQuotation ? (
+                                        <div className="bg-green-50 border border-green-200 rounded-md p-3">
+                                            <div className="flex items-center gap-2">
+                                                <CheckIcon className="h-5 w-5 text-green-600 flex-shrink-0" />
+                                                <div>
+                                                    <p className="text-sm font-medium text-green-800">
+                                                        Quotation Sent to PM
+                                                    </p>
+                                                    <p className="text-xs text-green-700 mt-1">
+                                                        <span className="font-medium">{uploadedVendorQuotation.fileName}</span> - Uploaded at {new Date(uploadedVendorQuotation.uploadedAt).toLocaleString()}
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    ) : (
+                                        <div>
+                                            <div className="border-2 border-dashed border-blue-300 rounded-md p-4 flex flex-col items-center justify-center text-center bg-white mb-4">
+                                                <UploadIcon className="h-8 w-8 text-blue-400 mb-2" />
+                                                <p className="text-sm text-gray-700 mb-1">
+                                                    Upload your quotation based on the BOQ above
+                                                </p>
+                                                <p className="text-xs text-gray-500 mb-3">
+                                                    Supported format: PDF
+                                                </p>
+                                                <label className="inline-flex items-center px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-md cursor-pointer hover:bg-blue-700">
+                                                    Choose File
+                                                    <input
+                                                        type="file"
+                                                        accept="application/pdf"
+                                                        className="hidden"
+                                                        onChange={handleVendorQuotationFileChange}
+                                                    />
+                                                </label>
+                                                {vendorQuotationFile && (
+                                                    <p className="mt-2 text-xs text-gray-600">
+                                                        Selected: <span className="font-medium">{vendorQuotationFile.name}</span>
+                                                    </p>
+                                                )}
+                                            </div>
+                                            <div className="flex justify-end">
+                                                <button
+                                                    type="button"
+                                                    onClick={handleUploadVendorQuotation}
+                                                    disabled={!vendorQuotationFile || isUploadingVendorQuotation}
+                                                    className={`inline-flex items-center px-4 py-2 rounded-md text-sm font-medium text-white ${
+                                                        !vendorQuotationFile || isUploadingVendorQuotation
+                                                            ? 'bg-gray-400 cursor-not-allowed'
+                                                            : 'bg-blue-600 hover:bg-blue-700'
+                                                    }`}
+                                                >
+                                                    {isUploadingVendorQuotation ? (
+                                                        <>
+                                                            <ArrowPathIcon className="h-4 w-4 mr-2 animate-spin" />
+                                                            Uploading...
+                                                        </>
+                                                    ) : (
+                                                        'Upload Quotation & Send to PM'
+                                                    )}
+                                                </button>
+                                            </div>
+                                            {vendorQuotationError && (
+                                                <p className="mt-2 text-sm text-red-600">{vendorQuotationError}</p>
+                                            )}
+                                        </div>
+                                    )}
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                </div>
+            )}
+
             {/* PM Rejection Feedback (if rejected for revision or has negotiation history) */}
             {(leadDetails?.status === 'sent' || leadDetails?.rejectionReason || leadDetails?.negotiationHistory?.length > 0) && leadDetails?.rejectionReason && (
                 <div className="mb-10 p-4 rounded-lg border-l-4 border-rose-500 bg-rose-50">
@@ -441,7 +779,8 @@ const LeadDetailPage = () => {
                 </div>
             )}
 
-            {/* Upload/View Quotation */}
+            {/* Upload/View Quotation - Only show when PM has provided BOQ */}
+            {(leadDetails?.boqAttachment || leadDetails?.boqFileUrl) && (
             <div className="mb-10">
                 <h2 className="text-xl font-semibold text-gray-900 mb-4">Your Quotation</h2>
 
@@ -521,6 +860,7 @@ const LeadDetailPage = () => {
                     </>
                 )}
             </div>
+            )}
 
             {/* Action Buttons (Removed/Disabled for frontend-only view) */}
              <div className="flex flex-wrap justify-end gap-3 sm:gap-4 mt-8">

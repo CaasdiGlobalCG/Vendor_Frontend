@@ -301,19 +301,20 @@ const PMDashboard = () => {
                       >
                         <RectangleGroupIcon className="h-3 w-3 mr-1" />
                         {project.workspaceId ? 'Open Workspace' : 'Create Workspace'}
-                                            <button
-                                              onClick={() => {
-                                                if (project.workspaceId) {
-                                                  setSelectedWorkspaceId(project.workspaceId);
-                                                  setShowProgressReview(true);
-                                                } else {
-                                                  alert('Workspace not created for this project yet');
-                                                }
-                                              }}
-                                              className="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded text-white bg-indigo-600 hover:bg-indigo-700 ml-2"
-                                            >
-                                              Progress Review
-                                            </button>
+                      </button>
+                      
+                      <button
+                        onClick={() => {
+                          if (project.workspaceId) {
+                            setSelectedWorkspaceId(project.workspaceId);
+                            setShowProgressReview(true);
+                          } else {
+                            alert('Workspace not created for this project yet');
+                          }
+                        }}
+                        className="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded text-white bg-indigo-600 hover:bg-indigo-700"
+                      >
+                        Progress Review
                       </button>
                       
                       <button className="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded text-blue-700 bg-blue-100 hover:bg-blue-200">
@@ -349,13 +350,6 @@ const PMDashboard = () => {
 
       {/* Create Project Modal - Placeholder */}
       {showCreateProject && (
-              {showProgressReview && (
-                <ProgressReviewModal
-                  isOpen={showProgressReview}
-                  onClose={() => { setShowProgressReview(false); setSelectedWorkspaceId(null); }}
-                  workspaceId={selectedWorkspaceId}
-                />
-              )}
         <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-6">
             <h3 className="text-lg font-medium text-gray-900 mb-4">Create New Project</h3>
@@ -372,6 +366,15 @@ const PMDashboard = () => {
             </div>
           </div>
         </div>
+      )}
+
+      {/* Progress Review Modal */}
+      {showProgressReview && (
+        <ProgressReviewModal
+          isOpen={showProgressReview}
+          onClose={() => { setShowProgressReview(false); setSelectedWorkspaceId(null); }}
+          workspaceId={selectedWorkspaceId}
+        />
       )}
     </div>
   );

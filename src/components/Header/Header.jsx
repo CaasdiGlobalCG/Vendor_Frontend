@@ -108,8 +108,16 @@ export const Header = () => {
       }
       try {
         console.log("Header: Fetching vendor data (secure /me)");
+        const token = localStorage.getItem('authToken');
+        const headers = {
+          'Content-Type': 'application/json',
+        };
+        if (token) {
+          headers['Authorization'] = `Bearer ${token}`;
+        }
         const meResponse = await fetch(`${config.VENDOR_BACKEND_URL}/api/vendor/me`, {
           credentials: 'include',
+          headers,
         });
         if (!meResponse.ok) {
           throw new Error(`Server responded with status: ${meResponse.status}`);
