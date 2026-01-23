@@ -3031,6 +3031,7 @@ const edgeTypes = {
   // Handle drag over
   const onDragOver = useCallback((event) => {
     event.preventDefault();
+    event.stopPropagation();
     event.dataTransfer.dropEffect = 'copy';
     setIsDraggingOver(true);
     console.log('🔄 Drag over React Flow canvas, dataTransfer types:', event.dataTransfer.types);
@@ -3039,6 +3040,7 @@ const edgeTypes = {
   // Handle drag enter
   const onDragEnter = useCallback((event) => {
     event.preventDefault();
+    event.stopPropagation();
     setIsDraggingOver(true);
     console.log('🔄 Drag enter React Flow canvas');
   }, []);
@@ -3046,6 +3048,7 @@ const edgeTypes = {
   // Handle drag leave
   const onDragLeave = useCallback((event) => {
     event.preventDefault();
+    event.stopPropagation();
     setIsDraggingOver(false);
     console.log('🔄 Drag leave React Flow canvas');
   }, []);
@@ -3158,6 +3161,7 @@ const edgeTypes = {
     async (event) => {
       console.log('🎯🎯🎯 DROP EVENT FIRED - dataTransfer types:', event.dataTransfer?.types);
       event.preventDefault();
+      event.stopPropagation();
       setIsDraggingOver(false);
       console.log('🎯 Drop event triggered on React Flow canvas');
 
@@ -3225,10 +3229,16 @@ const edgeTypes = {
               position,
               data: {
                 elementName: asset.name,
-                elementType: 'element',
-                type: 'element',
-                content: `📄 ${asset.name}`,
-                documentUrl: asset.s3Url,
+                elementType: 'document-block',
+                type: 'document-block',
+                documentBlockData: {
+                  fileName: asset.name,
+                  fileType: asset.name.split('.').pop().toUpperCase(),
+                  fileSize: asset.size,
+                  fileUrl: asset.s3Url,
+                  versions: [],
+                  comments: []
+                },
                 canvasAction: true,
                 assetId: asset.assetId || asset.id,
                 category: asset.category
@@ -3264,9 +3274,14 @@ const edgeTypes = {
 
       const elementData = event.dataTransfer.getData('application/json');
       console.log('📦 Element data retrieved:', elementData);
+      console.log('📦 All available data types:', Array.from(event.dataTransfer.items || []).map(item => item.type));
+      console.log('📦 Plain text data:', event.dataTransfer.getData('text/plain'));
 
       if (!elementData) {
         console.log('❌ No element data found in dataTransfer');
+        console.log('⚠️ Checking all data types...');
+        const itemsArray = Array.from(event.dataTransfer.items || []);
+        console.log('📋 DataTransfer items:', itemsArray);
         return;
       }
 

@@ -66,7 +66,16 @@ const DraggableFileCard = ({ file }) => {
       }
     };
     
-    event.dataTransfer.setData('application/json', JSON.stringify(fileElement));
+    const fileJson = JSON.stringify(fileElement);
+    event.dataTransfer.setData('application/json', fileJson);
+    event.dataTransfer.effectAllowed = 'copy';
+    event.dataTransfer.setData('text/plain', file.name);
+    
+    // Set drag image
+    const dragImage = new Image();
+    dragImage.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="60" height="60"%3E%3Crect fill="%233b82f6" width="60" height="60" rx="8"/%3E%3Ctext x="30" y="30" font-size="24" fill="white" text-anchor="middle" dominant-baseline="middle"%3E📄%3C/text%3E%3C/svg%3E';
+    event.dataTransfer.setDragImage(dragImage, 30, 30);
+    
     console.log('📁 File drag started:', fileElement);
   };
 
@@ -237,13 +246,23 @@ const UploadsSection = () => {
 // Invoice/Quote Card Component
 const InvoiceQuoteCard = ({ item }) => {
   const handleDragStart = (event) => {
+    console.log('🚀 INVOICE/QUOTE DRAG START EVENT FIRED!', event);
+    
     const elementJson = JSON.stringify({
       ...item,
       type: item.type === 'invoice' ? 'invoice' : 'quotation',
       preview: `${item.type === 'invoice' ? 'Invoice' : 'Quotation'}: ${item.name}`
     });
     event.dataTransfer.setData('application/json', elementJson);
-    event.dataTransfer.effectAllowed = 'move';
+    event.dataTransfer.effectAllowed = 'copy';
+    event.dataTransfer.setData('text/plain', item.name);
+    
+    // Set drag image
+    const dragImage = new Image();
+    dragImage.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="60" height="60"%3E%3Crect fill="%233b82f6" width="60" height="60" rx="8"/%3E%3Ctext x="30" y="30" font-size="24" fill="white" text-anchor="middle" dominant-baseline="middle"%3E📋%3C/text%3E%3C/svg%3E';
+    event.dataTransfer.setDragImage(dragImage, 30, 30);
+    
+    console.log('📄 Invoice/Quote drag started:', item.name);
   };
 
   const getStatusIcon = (status) => {
@@ -364,15 +383,25 @@ const createSerializableElement = (element) => {
 // DraggableElement component for React Flow
 const DraggableElement = ({ element }) => {
   const handleDragStart = (event) => {
+    console.log('🚀 DRAG START EVENT FIRED!', event);
+    
     // Create a clean, serializable version of the element
     const cleanElement = createSerializableElement(element);
     
     // Set the element data for React Flow to consume
-    event.dataTransfer.setData('application/json', JSON.stringify(cleanElement));
-    event.dataTransfer.effectAllowed = 'move';
+    const elementJson = JSON.stringify(cleanElement);
+    event.dataTransfer.setData('application/json', elementJson);
+    event.dataTransfer.effectAllowed = 'copy';
+    event.dataTransfer.setData('text/plain', element.name);
+    
+    // Set drag image for visual feedback
+    const dragImage = new Image();
+    dragImage.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="60" height="60"%3E%3Crect fill="%233b82f6" width="60" height="60" rx="8"/%3E%3Ctext x="30" y="30" font-size="24" fill="white" text-anchor="middle" dominant-baseline="middle"%3E+%3C/text%3E%3C/svg%3E';
+    event.dataTransfer.setDragImage(dragImage, 30, 30);
     
     console.log('🚀 Drag started for element:', element.name);
     console.log('📦 Clean element data being transferred:', cleanElement);
+    console.log('✅ DataTransfer types:', event.dataTransfer.types);
   };
 
   const handleDoubleClick = (event) => {
@@ -514,7 +543,7 @@ const DraggableElement = ({ element }) => {
       {/* Action Hint */}
       <div className="flex items-center justify-between pt-2 border-t border-gray-100">
         <p className="text-xs text-gray-400 group-hover:text-blue-500 transition-colors">
-          Double-click to add
+          Drag or double-click
         </p>
         <div className="flex items-center space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
           <div className="w-1.5 h-1.5 bg-blue-400 rounded-full"></div>
@@ -1089,10 +1118,10 @@ const ElementsPanel = ({
       <div className="flex-shrink-0 px-3 py-2 border-t border-gray-200 bg-gradient-to-b from-gray-50 to-white">
         <div className="text-center">
           <p className="text-xs font-medium text-gray-600 mb-0.5">
-            💡 Tip: Drag or double-click to add
+            💡 Tip: Drag to canvas or double-click to add
           </p>
           <p className="text-xs text-gray-400">
-            Ready to use
+            Both methods supported
           </p>
         </div>
       </div>
