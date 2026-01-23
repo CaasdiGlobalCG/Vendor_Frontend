@@ -331,10 +331,11 @@ import { BUSINESS_TYPES, FLAT_BUSINESS_TYPES, INDUSTRY_TYPES, FLAT_INDUSTRY_TYPE
 
 export default function Form2() {
   const navigate = useNavigate();
-  const { vendorData, setVendorData } = useContext(VendorContext);
+  const { vendorData, setVendorData, currentUser: vendorContextUser } = useContext(VendorContext);
   const { currentUser } = useContext(UserContext) || {};
   const currentYear = new Date().getFullYear();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [userEmail, setUserEmail] = useState(null);
 
   const [formData, setFormData] = useState({
     businessType: vendorData.companyDetails.businessType || "",
@@ -350,7 +351,9 @@ export default function Form2() {
   const [gstinErrors, setGstinErrors] = useState({});
   const [panErrors, setPanErrors] = useState({});
 
+  // Fetch user email from API as a fallback
   useEffect(() => {
+<<<<<<< Updated upstream
     if (currentUser) {
       const savedData = sessionStorage.getItem(`form2Data_${currentUser.id}`);
       if (savedData) {
@@ -360,9 +363,49 @@ export default function Form2() {
           ...prev,
           companyDetails: parsedData
         }));
+=======
+    const fetchUserEmail = async () => {
+      try {
+        // First try from context
+        if (vendorContextUser?.email) {
+          console.log('[FORM2_USER_FROM_CONTEXT]', vendorContextUser.email);
+          setUserEmail(vendorContextUser.email);
+          return;
+        }
+
+        // Fallback: Fetch from API
+        const token = localStorage.getItem('authToken');
+        if (!token) {
+          console.log('[FORM2_NO_TOKEN] No auth token found');
+          return;
+        }
+
+        const response = await fetch(`${window.location.origin}/api/vendor/me`, {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          },
+          credentials: 'include'
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          const fetchedEmail = data?.data?.email || data?.data?.vendorDetails?.primaryContactEmail;
+          if (fetchedEmail) {
+            console.log('[FORM2_USER_FROM_API]', fetchedEmail);
+            setUserEmail(fetchedEmail);
+          }
+        } else {
+          console.log('[FORM2_API_FETCH_FAILED]', response.status);
+        }
+      } catch (error) {
+        console.error('[FORM2_FETCH_USER_ERROR]', error);
+>>>>>>> Stashed changes
       }
-    }
-  }, [currentUser, setVendorData]);
+    };
+
+    fetchUserEmail();
+  }, [vendorContextUser]);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -439,25 +482,58 @@ export default function Form2() {
     const { name, files } = e.target;
     if (files && files.length > 0) {
       const file = files[0];
+      
+      console.log(`[FORM2_FILE_SELECTED] ${name}:`, {
+        name: file.name,
+        size: file.size,
+        type: file.type,
+        userEmail,
+        timestamp: new Date().toISOString()
+      });
+      
       setFormData((prev) => ({ ...prev, [name]: { file, name: file.name, uploading: true } }));
+      
       try {
-        if (currentUser?.email) {
-          const section = "companyDetails";
-          const response = await uploadFileToS3(file, currentUser.email, name, section);
-          setFormData((prev) => ({
-            ...prev,
-            [name]: {
-              file,
-              name: file.name,
-              url: response.data.url,
-              uploading: false,
-            },
-          }));
-          setShowSaveIndicator(true);
-          setTimeout(() => setShowSaveIndicator(false), 3000);
+        // Use email from state (fetched from context or API)
+        if (!userEmail) {
+          console.error('[FORM2_ERROR] User email still not available');
+          throw new Error('User email not available. Please refresh and try again.');
         }
+        
+        const section = "companyDetails";
+        console.log(`[FORM2_UPLOAD_START] Uploading ${name} for ${userEmail}`);
+        
+        const response = await uploadFileToS3(file, userEmail, name, section);
+        
+        console.log(`[FORM2_UPLOAD_RESPONSE_RECEIVED] ${name}:`, response);
+        
+        // Extract the URL from the response - it should be in response.data.url
+        const uploadedUrl = response?.data?.url;
+        
+        if (!uploadedUrl) {
+          console.error(`[FORM2_ERROR] No URL in response for ${name}:`, response);
+          throw new Error('No file URL returned from server. Please check the upload response.');
+        }
+        
+        console.log(`[FORM2_UPLOAD_SUCCESS] ${name} uploaded to: ${uploadedUrl}`);
+        
+        setFormData((prev) => ({
+          ...prev,
+          [name]: {
+            file,
+            name: file.name,
+            url: uploadedUrl,
+            uploading: false,
+          },
+        }));
+        setShowSaveIndicator(true);
+        setTimeout(() => setShowSaveIndicator(false), 3000);
       } catch (error) {
-        console.error("Error uploading file:", error);
+        console.error(`[FORM2_UPLOAD_ERROR] ${name}:`, {
+          message: error.message,
+          stack: error.stack,
+          timestamp: new Date().toISOString()
+        });
         setFormData((prev) => ({ ...prev, [name]: null }));
         alert(`Failed to upload file: ${error.message}. Please try again.`);
       }

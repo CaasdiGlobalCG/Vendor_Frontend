@@ -2,6 +2,7 @@ import React, { useState, useEffect, useContext } from "react";
 import { useNavigate } from "react-router-dom";
 import { VendorContext } from "../context/VendorContext";
 import { UserContext } from "../context/UserContext";
+import { getStates, getCitiesByState } from "../utils/statesAndCities";
 import StepIndicator from "./StepIndicator";
 import SidebarContent from "./SidebarContent";
 
@@ -41,12 +42,12 @@ function Form1() {
     pincode: vendorData.vendorDetails.pincode || "",
   });
 
-  // State to control the visibility of the "Save Changes" indicator
+  // State management
   const [showSaveIndicator, setShowSaveIndicator] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  
-  // State for phone number validation warning
   const [showPhoneWarning, setShowPhoneWarning] = useState(false);
+  const [states, setStates] = useState([]);
+  const [cities, setCities] = useState([]);
 
   // Load saved data from localStorage when component mounts
   useEffect(() => {
@@ -58,6 +59,31 @@ function Form1() {
       }
     }
   }, [currentUser]);
+
+  // Load states on component mount
+  useEffect(() => {
+    const loadedStates = getStates();
+    setStates(loadedStates);
+    
+    // If a state is already selected, load its cities
+    if (formData.state) {
+      setCities(getCitiesByState(formData.state));
+    }
+  }, []);
+
+  // Update cities when state changes
+  useEffect(() => {
+    if (formData.state) {
+      const cityList = getCitiesByState(formData.state);
+      setCities(cityList);
+      // Reset city if it's not in the new list
+      if (!cityList.includes(formData.city)) {
+        setFormData(prev => ({ ...prev, city: "" }));
+      }
+    } else {
+      setCities([]);
+    }
+  }, [formData.state]);
 
   // Handle input changes
   const handleInputChange = (e) => {
@@ -333,24 +359,37 @@ function Form1() {
                     placeholder="Address"
                     className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
                   />
-                  <input
+                  <select
                     required
-                    type="text"
-                    name="city"
-                    value={formData.city}
-                    onChange={handleInputChange}
-                    placeholder="City"
-                    className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
-                  />
-                  <input
-                    required
-                    type="text"
                     name="state"
                     value={formData.state}
                     onChange={handleInputChange}
-                    placeholder="State"
-                    className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
-                  />
+                    className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent appearance-none bg-white"
+                  >
+                    <option value="" className="text-gray-400">Select State</option>
+                    {states.map((state) => (
+                      <option key={state} value={state} className="text-gray-900">
+                        {state}
+                      </option>
+                    ))}
+                  </select>
+                  <select
+                    required
+                    name="city"
+                    value={formData.city}
+                    onChange={handleInputChange}
+                    disabled={!formData.state}
+                    className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent appearance-none bg-white disabled:bg-gray-50 disabled:cursor-not-allowed disabled:text-gray-400"
+                  >
+                    <option value="" className="text-gray-400">
+                      {!formData.state ? "Select State first" : "Select City"}
+                    </option>
+                    {cities.map((city) => (
+                      <option key={city} value={city} className="text-gray-900">
+                        {city}
+                      </option>
+                    ))}
+                  </select>
                   <input
                     required
                     type="text"
