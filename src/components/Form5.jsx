@@ -17,6 +17,7 @@ export default function Form5() {
     hasCertifications: vendorData.complianceCertifications.hasCertifications || false,
     uploadDocument: vendorData.complianceCertifications.uploadDocument || null,
     isoCertificate: vendorData.complianceCertifications.isoCertificate || null,
+    certificateUpload: vendorData.complianceCertifications.certificateUpload || null,
     healthSafetyStandards: vendorData.complianceCertifications.healthSafetyStandards || "",
   });
 
@@ -25,17 +26,6 @@ export default function Form5() {
 
   // Fetch user email from API as a fallback
   useEffect(() => {
-<<<<<<< Updated upstream
-    if (currentUser) {
-      const savedData = sessionStorage.getItem(`form5Data_${currentUser.id}`);
-      if (savedData) {
-        const parsedData = JSON.parse(savedData);
-        setFormData(parsedData);
-        setVendorData(prev => ({
-          ...prev,
-          complianceCertifications: parsedData
-        }));
-=======
     const fetchUserEmail = async () => {
       try {
         // First try from context
@@ -72,11 +62,21 @@ export default function Form5() {
         }
       } catch (error) {
         console.error('[FORM5_FETCH_USER_ERROR]', error);
->>>>>>> Stashed changes
       }
     };
 
     fetchUserEmail();
+    if (currentUser) {
+      const savedData = sessionStorage.getItem(`form5Data_${currentUser.id}`);
+      if (savedData) {
+        const parsedData = JSON.parse(savedData);
+        setFormData(parsedData);
+        setVendorData(prev => ({
+          ...prev,
+          complianceCertifications: parsedData
+        }));
+      }
+    }
   }, [vendorContextUser]);
 
   const handleInputChange = async (e) => {
@@ -173,6 +173,12 @@ export default function Form5() {
           originalName: formData.isoCertificate.name,
           contentType: formData.isoCertificate.file?.type,
           file: formData.isoCertificate.file
+        } : null,
+        certificateUpload: formData.certificateUpload ? {
+          url: formData.certificateUpload.url,
+          originalName: formData.certificateUpload.name,
+          contentType: formData.certificateUpload.file?.type,
+          file: formData.certificateUpload.file
         } : null,
         healthSafetyStandards: formData.healthSafetyStandards,
       }
