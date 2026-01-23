@@ -106,6 +106,7 @@ const edgeTypes = {
 
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [headerOffset, setHeaderOffset] = useState(0);
+  const [showClearConfirmation, setShowClearConfirmation] = useState(false);
   const previousOverflowRef = useRef('');
 
   const updateOffset = useCallback(() => {
@@ -3030,9 +3031,9 @@ const edgeTypes = {
   // Handle drag over
   const onDragOver = useCallback((event) => {
     event.preventDefault();
-    event.dataTransfer.dropEffect = 'move';
+    event.dataTransfer.dropEffect = 'copy';
     setIsDraggingOver(true);
-    console.log('🔄 Drag over React Flow canvas');
+    console.log('🔄 Drag over React Flow canvas, dataTransfer types:', event.dataTransfer.types);
   }, []);
 
   // Handle drag enter
@@ -3155,9 +3156,111 @@ const edgeTypes = {
   // Handle drop from ElementsPanel
   const onDrop = useCallback(
     async (event) => {
+      console.log('🎯🎯🎯 DROP EVENT FIRED - dataTransfer types:', event.dataTransfer?.types);
       event.preventDefault();
       setIsDraggingOver(false);
       console.log('🎯 Drop event triggered on React Flow canvas');
+
+      // Check for asset drop first
+      const assetData = event.dataTransfer.getData('asset');
+      console.log('🎯 Asset data from drag:', assetData);
+      
+      if (assetData) {
+        console.log('🖼️ Asset dropped on canvas');
+        try {
+          const asset = JSON.parse(assetData);
+          console.log('📦 Asset parsed:', asset);
+          
+          if (!asset.s3Url) {
+            console.error('❌ Asset missing s3Url:', asset);
+            return;
+          }
+          
+          // Get position
+          const reactFlowBounds = event.currentTarget.getBoundingClientRect();
+          let position;
+          if (reactFlowInstance) {
+            position = reactFlowInstance.project({
+              x: event.clientX - reactFlowBounds.left,
+              y: event.clientY - reactFlowBounds.top,
+            });
+          } else {
+            position = {
+              x: event.clientX - reactFlowBounds.left - 100,
+              y: event.clientY - reactFlowBounds.top - 50,
+            };
+          }
+
+          position = findNonCollidingPosition(position, 200, 200);
+
+          // Create image or asset node based on category
+          let newNode;
+          if (asset.category === 'images' || asset.category === 'icons') {
+            // Create image node
+            newNode = {
+              id: `asset-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+              type: 'elementNode',
+              position,
+              data: {
+                elementName: asset.name,
+                elementType: 'image-block',
+                type: 'image-block',
+                imageUrl: asset.s3Url,
+                imageBlockData: {
+                  imageUrl: asset.s3Url,
+                  imageAlt: asset.name,
+                  imageWidth: 200,
+                  imageHeight: 200
+                },
+                canvasAction: true,
+                assetId: asset.assetId || asset.id,
+                category: asset.category
+              },
+            };
+          } else if (asset.category === 'documents') {
+            // Create document link node
+            newNode = {
+              id: `asset-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+              type: 'elementNode',
+              position,
+              data: {
+                elementName: asset.name,
+                elementType: 'element',
+                type: 'element',
+                content: `📄 ${asset.name}`,
+                documentUrl: asset.s3Url,
+                canvasAction: true,
+                assetId: asset.assetId || asset.id,
+                category: asset.category
+              },
+            };
+          } else if (asset.category === 'fonts') {
+            // Create font reference node
+            newNode = {
+              id: `asset-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+              type: 'textNode',
+              position,
+              data: {
+                content: `Font: ${asset.name}`,
+                type: 'font',
+                fontUrl: asset.s3Url,
+                canvasAction: true,
+                assetId: asset.assetId || asset.id,
+                category: asset.category
+              },
+            };
+          }
+
+          if (newNode) {
+            console.log('✅ Creating asset node:', newNode);
+            setNodes((nds) => [...nds, newNode]);
+            return;
+          }
+        } catch (error) {
+          console.error('❌ Error processing asset drop:', error);
+          return;
+        }
+      }
 
       const elementData = event.dataTransfer.getData('application/json');
       console.log('📦 Element data retrieved:', elementData);
@@ -3620,8 +3723,14 @@ const edgeTypes = {
         className="flex-1 relative overflow-hidden" 
         style={{ 
           width: '100%', 
-          height: '100%'
+          height: '100%',
+          zIndex: 1,
+          pointerEvents: 'auto'
         }}
+        onDrop={canEdit ? onDrop : undefined}
+        onDragOver={canEdit ? onDragOver : undefined}
+        onDragEnter={canEdit ? onDragEnter : undefined}
+        onDragLeave={onDragLeave}
       >
         <ReactFlow
           style={{ width: '100%', height: '100%' }}
@@ -3643,9 +3752,6 @@ const edgeTypes = {
             console.log('✅ ReactFlow instance initialized:', instance);
           }}
           onViewportChange={onViewportChange}
-          onDrop={canEdit ? onDrop : undefined}
-          onDragOver={canEdit ? onDragOver : undefined}
-          onDragEnter={canEdit ? onDragEnter : undefined}
           nodesDraggable
           nodesConnectable={canEdit}
           elementsSelectable={canEdit}
@@ -3695,7 +3801,7 @@ const edgeTypes = {
                    <div className="flex items-center gap-2">
                     <button
                       onClick={handleSelectionModeToggle}
-                      className={`p-2 rounded-lg transition-colors border ${
+                      className={`p-1.5 rounded-lg transition-colors border ${
                         isSelectionMode
                           ? 'bg-blue-600 text-white hover:bg-blue-700 border-blue-600'
                           : 'bg-blue-50 text-blue-700 hover:bg-blue-100 border-blue-200'
@@ -3704,9 +3810,9 @@ const edgeTypes = {
                       aria-pressed={isSelectionMode}
                     >
                       {isSelectionMode ? (
-                        <X className="w-4 h-4" />
+                        <X className="w-3.5 h-3.5" />
                       ) : (
-                        <Users className="w-4 h-4" />
+                        <Users className="w-3.5 h-3.5" />
                       )}
                       <span className="sr-only">
                         {isSelectionMode ? 'Exit selection mode' : 'Select multiple elements'}
@@ -3723,9 +3829,9 @@ const edgeTypes = {
                       
                       <button
                         onClick={handleGroupIntoGrid}
-                        className="inline-flex items-center gap-2 px-3 py-1.5 text-xs bg-blue-600 text-white hover:bg-blue-700 rounded-lg transition-colors"
+                        className="inline-flex items-center gap-2 px-2.5 py-1 text-xs bg-blue-600 text-white hover:bg-blue-700 rounded-lg transition-colors"
                       >
-                         <Grid className="w-4 h-4" />
+                         <Grid className="w-3.5 h-3.5" />
                          <span>Group ({manuallySelectedNodes.length})</span>
                       </button>
                     )}
@@ -3734,14 +3840,11 @@ const edgeTypes = {
                 
                 {/* Connection Tools */}
                 {nodes.length > 1 && (
-                  <div className="flex items-center gap-2 border-l border-gray-200 pl-4">
+                  <div className="flex items-center gap-2 border-l border-gray-200 pl-3">
                     <button
-                      onClick={() => {
-                        setEdges([]);
-                        console.log('🧹 All connections cleared');
-                      }}
-                      className="px-3 py-1 text-xs bg-red-100 hover:bg-red-200 text-red-700 rounded transition-colors"
-                      title="Clear all connections (Ctrl+Shift+C)"
+                      onClick={() => setShowClearConfirmation(true)}
+                      className="px-2.5 py-1 text-xs bg-red-100 hover:bg-red-200 text-red-700 rounded transition-colors"
+                      title="Clear all elements and connections (Ctrl+Shift+C)"
                     >
                       Clear All
                     </button>
@@ -3752,28 +3855,7 @@ const edgeTypes = {
                 )}
 
                 {/* Undo/Redo Buttons */}
-                <div className="flex items-center gap-1 border-l border-gray-200 pl-4">
-                  <button
-                    onClick={handleUndo}
-                    disabled={historyRef.current.past.length === 0}
-                    className="p-2 rounded-lg transition-colors border text-gray-700 hover:bg-gray-100 hover:text-gray-900 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-transparent"
-                    title="Undo (Ctrl+Z)"
-                  >
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                    </svg>
-                  </button>
-                  <button
-                    onClick={handleRedo}
-                    disabled={historyRef.current.future.length === 0}
-                    className="p-2 rounded-lg transition-colors border text-gray-700 hover:bg-gray-100 hover:text-gray-900 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-transparent"
-                    title="Redo (Ctrl+Y)"
-                  >
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19v-6a2 2 0 012-2h2a2 2 0 012 2v6a2 2 0 01-2 2h-2a2 2 0 01-2-2zm0 0V9a2 2 0 00-2-2H9a2 2 0 00-2 2v10m6 0a2 2 0 01-2 2H9a2 2 0 01-2-2m0 0V5a2 2 0 01 2-2h2a2 2 0 012 2v14a2 2 0 002 2h2a2 2 0 002-2z" />
-                    </svg>
-                  </button>
-                </div>
+                {/* Removed - Undo/Redo buttons removed per user request */}
               </div>
             </div>
           </Panel>
@@ -4130,6 +4212,59 @@ const edgeTypes = {
                   Save
                 </button>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Clear All Confirmation Modal */}
+      {showClearConfirmation && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg shadow-xl w-full max-w-md overflow-hidden">
+            {/* Header */}
+            <div className="flex items-center justify-between p-6 border-b border-gray-200 bg-red-50">
+              <h3 className="text-lg font-semibold text-red-900">Clear All Elements?</h3>
+              <button
+                onClick={() => setShowClearConfirmation(false)}
+                className="text-gray-400 hover:text-gray-600 transition-colors"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+
+            {/* Content */}
+            <div className="p-6">
+              <p className="text-gray-700 mb-2">
+                Are you sure you want to delete everything?
+              </p>
+              <p className="text-sm text-gray-600">
+                This will remove all elements and connections from the canvas. This action cannot be undone.
+              </p>
+            </div>
+
+            {/* Footer */}
+            <div className="flex items-center justify-end space-x-3 p-6 border-t border-gray-200 bg-gray-50">
+              <button
+                onClick={() => setShowClearConfirmation(false)}
+                className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => {
+                  setNodes([]);
+                  setEdges([]);
+                  elementSequenceRef.current = 0;
+                  lastAddedNodeIdRef.current = null;
+                  console.log('🧹 Canvas cleared - all elements and connections removed');
+                  setShowClearConfirmation(false);
+                }}
+                className="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-md hover:bg-red-700 transition-colors"
+              >
+                Delete All
+              </button>
             </div>
           </div>
         </div>

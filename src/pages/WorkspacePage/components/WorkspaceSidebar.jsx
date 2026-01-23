@@ -31,7 +31,7 @@ const WorkspaceSidebar = ({
       <div className="bg-gray-50 border-b border-gray-200">
         <div className="flex">
           {['Task', 'Layers', 'Assets'].map((tab) => {
-            const isDisabled = (tab === 'Layers' || tab === 'Assets') && !selectedTask;
+            const isDisabled = (tab === 'Layers' || tab === 'Assets') && !selectedSubtask;
             return (
               <button
                 key={tab}
@@ -74,7 +74,7 @@ const WorkspaceSidebar = ({
       )}
 
       {activeTab === 'Assets' && (
-        <AssetsTab selectedTask={selectedTask} />
+        <AssetsTab selectedSubtask={selectedSubtask} workspaceId={workspace?.workspaceId} />
       )}
 
       {/* Leave Workspace Button - Always at the bottom */}
