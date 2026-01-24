@@ -327,17 +327,17 @@ function VendorGuard({ children }) {
 
     // If the vendor is already in a review state, do not send them back to Form1.
     if (status === 'pending') {
-      navigate('/Auditorapprove', { replace: true });
+      if (hasFilledFormRaw === true) {
+        navigate('/Auditorapprove', { replace: true });
+      } else {
+        navigate('/Form1', { replace: true });
+      }
       return;
     }
 
     if (hasFilledFormRaw === false) {
       navigate('/Form1', { replace: true });
       return;
-    }
-
-    if (status) {
-      navigate('/Auditorapprove', { replace: true });
     }
   }, [navigate, currentUser, isHydratingUser]);
   return children;
