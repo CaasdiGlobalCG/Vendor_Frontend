@@ -7,6 +7,7 @@ import { VendorContext } from "../../context/VendorContext";
 import { NotificationContext } from "../../context/NotificationContext";
 import config from '../../config/env';
 import { redirectToClientWithHandoff } from '../../utils/handoffToClient';
+import { redirectToSalesWithHandoff } from '../../utils/handoffToSales';
 import GlobalSearchOverlay from "./GlobalSearchOverlay";
 /**
  * Header
@@ -896,34 +897,19 @@ export const Header = () => {
             <div className="flex items-center gap-2 lg:gap-4">
               <button
                 className="w-auto px-3 h-[36px] bg-white bg-opacity-5 hover:bg-opacity-10 rounded-[9px] flex items-center justify-center text-white text-xs lg:text-sm font-semibold font-['Montserrat']"
-                onClick={() => {
-                  const authToken = localStorage.getItem('authToken');
-                  const vendorId = currentUser?.vendorId || vendorData?.vendorId || null;
-                  
-                  console.log("B2B Button Clicked:");
-                  console.log("  authToken from localStorage:", authToken);
-                  console.log("  currentUser object from context:", currentUser);
-                  console.log("  Calculated vendorId:", vendorId);
-                  console.log("  SALES_URL from config:", config.SALES_URL);
-                  console.log("  Type of SALES_URL:", typeof config.SALES_URL);
-
+                onClick={async () => {
                   if (!config.SALES_URL) {
                     console.error('SALES_URL is not configured');
                     alert('B2B Sales dashboard URL is not configured. Please contact support.');
                     return;
                   }
 
-                  if (authToken && vendorId) {
-                    console.log("Redirecting to B2B sales dashboard with authToken and vendorId");
-                    const params = new URLSearchParams({
-                      authToken: authToken,
-                      vendorId: vendorId
-                    });
-                    window.location.href = `${config.SALES_URL}/?${params.toString()}`;
-                  } else {
-                    console.log("Authentication details missing. Cannot redirect to whiteboard-ui.");
-                    alert("You need to be logged in as a vendor to access the B2B dashboard.");
-                    navigate("/login");
+                  try {
+                    await redirectToSalesWithHandoff();
+                  } catch (e) {
+                    console.error('B2B handoff redirect failed:', e);
+                    alert('Unable to open B2B Sales dashboard right now. Please try again.');
+                    navigate('/login');
                   }
                 }}
               > B2B <img src="https://c.animaapp.com/VmmSqCQF/img/guidance-shop.svg" alt="Shop" className="ml-2 w-4 h-4 lg:w-6 lg:h-6" /> </button>
