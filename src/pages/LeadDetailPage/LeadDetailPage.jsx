@@ -564,8 +564,8 @@ const LeadDetailPage = () => {
                 </div>
             </div>
 
-            {/* Vendor BOQ Upload Section (if PM hasn't provided BOQ) */}
-            {!leadDetails?.boqAttachment && !leadDetails?.boqFileUrl && (
+            {/* Vendor BOQ Upload Section (always available - mandatory if PM hasn't provided BOQ, optional if PM has) */}
+            {true && (
                 <div className="mb-10 p-4 rounded-lg border-l-4 border-blue-500 bg-blue-50">
                     <div className="flex items-start gap-3">
                         <div className="flex-shrink-0">
@@ -573,10 +573,16 @@ const LeadDetailPage = () => {
                         </div>
                         <div className="flex-1">
                             <h3 className="text-sm font-semibold text-blue-900 mb-2">
-                                Create Your Own Bill of Quantities (BOQ)
+                                {!leadDetails?.boqAttachment && !leadDetails?.boqFileUrl 
+                                    ? 'Create Your Own Bill of Quantities (BOQ) - Required'
+                                    : 'Upload Your Own Bill of Quantities (BOQ) - Optional'
+                                }
                             </h3>
                             <p className="text-sm text-blue-800 mb-4">
-                                No BOQ has been provided by the PM. You can upload your own BOQ and submit a quotation based on it.
+                                {!leadDetails?.boqAttachment && !leadDetails?.boqFileUrl 
+                                    ? 'No BOQ has been provided by the PM. You must upload your own BOQ and submit a quotation based on it.'
+                                    : 'A BOQ has been provided by the PM. You can optionally upload your own BOQ as an alternative and submit a quotation based on it instead.'
+                                }
                             </p>
 
                             {/* Vendor BOQ Upload */}
@@ -779,10 +785,16 @@ const LeadDetailPage = () => {
                 </div>
             )}
 
-            {/* Upload/View Quotation - Only show when PM has provided BOQ */}
+            {/* Upload/View Quotation - Show when PM has provided BOQ */}
             {(leadDetails?.boqAttachment || leadDetails?.boqFileUrl) && (
             <div className="mb-10">
                 <h2 className="text-xl font-semibold text-gray-900 mb-4">Your Quotation</h2>
+                
+                <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-md">
+                    <p className="text-sm text-blue-800">
+                        <span className="font-medium">BOQ Source:</span> You can upload your quotation based on the PM's provided BOQ above, or you can optionally upload your own BOQ (see section above) and use that instead.
+                    </p>
+                </div>
 
                 {uploadedQuotation ? (
                     <div className="flex items-center justify-between gap-3 p-3 border rounded-md bg-green-50 mb-4">
