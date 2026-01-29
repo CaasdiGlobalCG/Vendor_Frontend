@@ -14,12 +14,10 @@ function getLegacyAuthToken() {
   }
 }
 
-export async function redirectToClientWithHandoff() {
-  const clientBase = config.CLIENT_URL || '';
-  if (!clientBase) throw new Error('CLIENT_URL is not configured');
+export async function redirectToSalesWithHandoff() {
+  const salesBase = config.SALES_URL || '';
+  if (!salesBase) throw new Error('SALES_URL is not configured');
 
-  // Record the exact vendor URL before switching apps.
-  // This enables smoother UX (and can be used for explicit "Back to Vendor" links later).
   try {
     sessionStorage.setItem(
       'vendor:lastRoute',
@@ -47,12 +45,5 @@ export async function redirectToClientWithHandoff() {
   const code = data?.code;
   if (!code) throw new Error('handoff did not return code');
 
-  try {
-    localStorage.removeItem('clientId');
-    sessionStorage.removeItem('bootRouted');
-  } catch {}
-
-  // Use assign() so the current vendor route is kept in browser history.
-  // This makes the browser Back button return to the exact last vendor route.
-  window.location.assign(`${clientBase}/?handoff=${encodeURIComponent(code)}`);
+  window.location.assign(`${salesBase}/?handoff=${encodeURIComponent(code)}`);
 }

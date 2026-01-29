@@ -405,48 +405,25 @@ const [editProductData, setEditProductData] = useState(null);
   };
   
   const handleEditClick = (product) => {
-    // Create a properly formatted product object for editing
-    const formattedProduct = {
-      id: product.id,
-      name: product.name || '',
-      category: product.category || '',
-      keyFeatures: product.keyFeatures || '',
-      targetCustomers: product.targetCustomers || '',
-      usageAreas: product.usageAreas || '',
-      availableSizes: product.availableSizes || '',
-      packagingDelivery: product.packagingDelivery || '',
-      certifications: product.certifications || '',
-      supportServices: product.supportServices || '',
-      catalogDemo: product.catalogDemo || '',
-      images: product.images || [],
-      verified: product.verified || false
-    };
-    
-    // Set the formatted product data
-    setEditProductData(formattedProduct);
-    setNewImages([null, null, null]); // Reset image uploads
-    
-    // Initialize custom fields if the product has them
-    if (product.customFields) {
-      const customFieldsArray = [];
-      if (Array.isArray(product.customFields)) {
-        // If customFields is an array, use it directly
-        setNewProductCustomFields(product.customFields);
-      } else if (typeof product.customFields === 'object') {
-        // If customFields is an object, convert it to array format
-        for (const [key, value] of Object.entries(product.customFields)) {
-          customFieldsArray.push({ label: key, value: value });
-        }
-        setNewProductCustomFields(customFieldsArray);
-      } else {
-        setNewProductCustomFields([]); // Reset custom fields if format is unexpected
-      }
-    } else {
-      setNewProductCustomFields([]); // Reset custom fields if none exist
+    const authToken = localStorage.getItem('authToken');
+    const vendorId = currentUser?.vendorId;
+
+    if (!config.SALES_URL) {
+      alert('B2B Sales dashboard URL is not configured. Please contact support.');
+      return;
     }
-    
-    setShowEditDialog(true);
-    console.log("Opening edit dialog for product:", formattedProduct);
+
+    if (!authToken || !vendorId || !product?.id) {
+      alert('Missing authentication details or product id.');
+      return;
+    }
+
+    const params = new URLSearchParams({
+      authToken,
+      vendorId,
+    });
+
+    window.location.href = `${config.SALES_URL}/products/${product.id}?${params.toString()}`;
   };
   
   const handleUpdateProduct = async () => {
@@ -538,7 +515,7 @@ const [editProductData, setEditProductData] = useState(null);
   
   const handleDeleteProduct = async (productId) => {
     try {
-      if (!currentUser?.email || !productId) {
+      if (!productId) {
         alert("Missing required information");
         return;
       }
@@ -547,17 +524,17 @@ const [editProductData, setEditProductData] = useState(null);
         return;
       }
       
-      // Send delete request to backend
+      const token = localStorage.getItem('authToken');
+
+      // Send delete request to Vendor backend (which deletes from Products table)
       const response = await fetch(`${config.VENDOR_BACKEND_URL}/api/vendor/products`, {
         method: 'DELETE',
+        credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
         },
-        body: JSON.stringify({
-          email: currentUser.email,
-          productId: productId
-        }),
-        credentials: 'include'
+        body: JSON.stringify({ productId }),
       });
       
       if (!response.ok) {
@@ -783,43 +760,81 @@ const [editProductData, setEditProductData] = useState(null);
 
   // Fetch products from backend
   useEffect(() => {
+    let isMounted = true;
+
     const fetchProducts = async () => {
-      if (!currentUser) return;
-      
+      const token = localStorage.getItem('authToken');
+
       try {
         setProductsLoading(true);
         setProductsError(null);
 
-        const token = localStorage.getItem('authToken');
         const response = await fetch(`${config.VENDOR_BACKEND_URL}/api/vendor/products`, {
           credentials: 'include',
           headers: token ? { Authorization: `Bearer ${token}` } : undefined,
         });
-        
+
         if (!response.ok) {
           throw new Error(`Server responded with status: ${response.status}`);
         }
-        
-        const data = await response.json();
-        console.log("Products data response:", data);
-        
-        if (data.success && data.data) {
-          setProducts(data.data);
-        } else {
-          // If no products found, set empty array
-          setProducts([]);
+
+        const payload = await response.json();
+
+        const items = Array.isArray(payload?.data) ? payload.data : (Array.isArray(payload) ? payload : []);
+
+        const normalized = items.map((item) => ({
+          ...item,
+          id: item.productId || item.id,
+          name: item.productName || item.name || 'Unnamed Product',
+          category: item.productCategory || item.category || '',
+          verified: (item.status || '').toUpperCase() === 'PUBLISHED',
+          keyFeatures: Array.isArray(item.productFeatures) ? item.productFeatures.join(', ') : item.productFeatures,
+          targetCustomers: Array.isArray(item.targetMarket) ? item.targetMarket.join(', ') : item.targetMarket,
+          usageAreas: item.detailedDescription || item.shortDescription || '',
+          availableSizes: Array.isArray(item.sizeOptions) ? item.sizeOptions.join(', ') : item.sizeOptions,
+          packagingDelivery: item.packagingDetails || '',
+          certifications: item.businessLicense || '',
+          supportServices: item.afterSalesService || '',
+          catalogDemo: item.catalogDemo || '',
+          customFields: Array.isArray(item.displayAttributes)
+            ? item.displayAttributes.map((a) => ({ label: a?.property, value: a?.value }))
+            : [],
+          images: Array.isArray(item.images) ? item.images : [],
+        }));
+
+        if (isMounted) {
+          setProducts(normalized);
         }
       } catch (error) {
         console.error('Error fetching products:', error);
-        setProductsError('Failed to load products.');
-        setProducts([]);
+        if (isMounted) {
+          setProductsError('Failed to load products.');
+          setProducts([]);
+        }
       } finally {
-        setProductsLoading(false);
+        if (isMounted) {
+          setProductsLoading(false);
+        }
       }
     };
-    
+
     fetchProducts();
-  }, [currentUser?.email]);
+
+    // Refresh when user returns to tab (best UX after Add/Edit in Sales app)
+    const onFocus = () => fetchProducts();
+    const onVisibilityChange = () => {
+      if (document.visibilityState === 'visible') fetchProducts();
+    };
+
+    window.addEventListener('focus', onFocus);
+    document.addEventListener('visibilitychange', onVisibilityChange);
+
+    return () => {
+      isMounted = false;
+      window.removeEventListener('focus', onFocus);
+      document.removeEventListener('visibilitychange', onVisibilityChange);
+    };
+  }, [currentUser?.vendorId]);
   
   // Fetch services from backend
   useEffect(() => {
@@ -1564,7 +1579,28 @@ const [editProductData, setEditProductData] = useState(null);
                   <Button
                     size="sm"
                     className="bg-gradient-to-l from-[#095B49] to-[#000000] hover:opacity-90"
-                    onClick={() => setShowAddProductForm(true)}
+                    onClick={() => {
+                      const authToken = localStorage.getItem('authToken');
+                      const vendorId = currentUser?.vendorId;
+
+                      if (!config.SALES_URL) {
+                        alert('B2B Sales dashboard URL is not configured. Please contact support.');
+                        return;
+                      }
+
+                      if (!authToken || !vendorId) {
+                        alert('You need to be logged in as a vendor to add products.');
+                        navigate('/login');
+                        return;
+                      }
+
+                      const params = new URLSearchParams({
+                        authToken,
+                        vendorId,
+                      });
+
+                      window.location.href = `${config.SALES_URL}/add-new-product?${params.toString()}`;
+                    }}
                   >
                     <Plus className="h-4 w-4 mr-1" /> Add
                   </Button>
@@ -1680,7 +1716,7 @@ const [editProductData, setEditProductData] = useState(null);
                                 product.images.map((image, index) => (
                                   <img
                                     key={index}
-                                    src={image.url || "https://via.placeholder.com/150"}
+                                    src={(typeof image === 'string' ? image : image?.url) || "https://via.placeholder.com/150"}
                                     alt={`Product ${index + 1}`}
                                     className={`w-44 h-36 object-cover border-2 ${index === 0 ? 'border-blue-500' : 'border-transparent'} rounded`}
                                   />
