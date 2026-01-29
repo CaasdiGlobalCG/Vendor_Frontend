@@ -2310,7 +2310,7 @@ const edgeTypes = {
         return;
       }
 
-      if (event.key === 'Delete' || event.key === 'Backspace') {
+      if (event.key === 'Delete') {
         // Find selected nodes that belong to flowchart groups
         const selectedNodes = nodes.filter(node => node.selected);
         const flowchartGroups = new Set();
@@ -2987,7 +2987,7 @@ const edgeTypes = {
       }
       
       // Delete selected nodes/edges with Delete key
-      if (event.key === 'Delete' || event.key === 'Backspace') {
+      if (event.key === 'Delete') {
         const selectedNodes = nodes.filter(node => node.selected);
         const selectedEdges = edges.filter(edge => edge.selected);
         
@@ -3782,6 +3782,7 @@ const edgeTypes = {
           panActivationKey={canEdit ? 'Space' : undefined}
           connectionLineType="smoothstep"
           connectionLineStyle={{ strokeWidth: 2, stroke: '#6b7280' }}
+          deleteKey={null}
           className={`bg-white transition-all duration-200 ${
             isDraggingOver ? 'bg-blue-50 ring-4 ring-blue-300' : ''
           }`}

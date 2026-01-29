@@ -20,10 +20,18 @@ export const UploadProvider = ({ children, workspaceId, vendorId, taskId, subtas
   const loadWorkspaceFiles = async () => {
     try {
       setLoading(true);
+      
+      // Require subtaskId to load files - files are scoped to subtasks only
+      if (!subtaskId) {
+        console.log('⚠️ No subtaskId provided, skipping file load');
+        setUploadedFiles([]);
+        return;
+      }
+
       const params = new URLSearchParams();
-      if (vendorId) params.append('vendorId', vendorId);
+      params.append('subtaskId', subtaskId);
       if (taskId) params.append('taskId', taskId);
-      if (subtaskId) params.append('subtaskId', subtaskId);
+      if (vendorId) params.append('vendorId', vendorId);
 
       const response = await fetch(`/api/workspace-files/workspace/${workspaceId}?${params}`);
       
@@ -54,14 +62,19 @@ export const UploadProvider = ({ children, workspaceId, vendorId, taskId, subtas
   };
 
   const uploadFiles = async (files) => {
+    // Require subtaskId for uploads
+    if (!subtaskId) {
+      throw new Error('Subtask ID is required to upload files');
+    }
+
     const fileArray = Array.from(files);
     const uploadPromises = fileArray.map(async (file) => {
       const formData = new FormData();
       formData.append('file', file);
       formData.append('workspaceId', workspaceId);
-      if (vendorId) formData.append('vendorId', vendorId);
+      formData.append('subtaskId', subtaskId);
       if (taskId) formData.append('taskId', taskId);
-      if (subtaskId) formData.append('subtaskId', subtaskId);
+      if (vendorId) formData.append('vendorId', vendorId);
 
       try {
         const response = await fetch(`/api/workspace-files/upload`, {
@@ -128,7 +141,7 @@ export const UploadProvider = ({ children, workspaceId, vendorId, taskId, subtas
 
       // If it's an uploaded file, delete from S3
       if (fileToRemove.isUploaded) {
-        const response = await fetch(`/api/workspace-files/${fileId}?workspaceId=${workspaceId}`, {
+        const response = await fetch(`/api/workspace-files/${fileId}?workspaceId=${workspaceId}&subtaskId=${subtaskId}`, {
           method: 'DELETE'
         });
 
@@ -182,7 +195,7 @@ export const UploadProvider = ({ children, workspaceId, vendorId, taskId, subtas
 
   const downloadFile = async (file) => {
     try {
-      const response = await fetch(`/api/workspace-files/download/${file.id}?workspaceId=${workspaceId}`);
+      const response = await fetch(`/api/workspace-files/download/${file.id}?workspaceId=${workspaceId}&subtaskId=${subtaskId}`);
       
       if (response.ok) {
         const result = await response.json();
