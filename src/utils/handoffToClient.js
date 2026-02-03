@@ -1,20 +1,6 @@
 import config from '../config/env';
 
-function getLegacyAuthToken() {
-  try {
-    const raw = localStorage.getItem('authToken');
-    if (!raw) return null;
-    const token = String(raw).trim();
-    if (!token) return null;
-    const lowered = token.toLowerCase();
-    if (lowered === 'null' || lowered === 'undefined') return null;
-    return token;
-  } catch {
-    return null;
-  }
-}
-
-export async function redirectToClientWithHandoff() {
+export async function redirectToClientWithHandoff(options = {}) {
   const clientBase = config.CLIENT_URL || '';
   if (!clientBase) throw new Error('CLIENT_URL is not configured');
 
@@ -27,15 +13,15 @@ export async function redirectToClientWithHandoff() {
     );
   } catch {}
 
-  const legacyToken = getLegacyAuthToken();
+  const token = options?.token;
   const res = await fetch('/api/auth/handoff', {
     method: 'POST',
     credentials: 'include',
     headers: {
-      ...(legacyToken ? { Authorization: `Bearer ${legacyToken}` } : {}),
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
       'Content-Type': 'application/json',
     },
-    body: JSON.stringify(legacyToken ? { token: legacyToken } : {}),
+    body: JSON.stringify(token ? { token } : {}),
   });
 
   if (!res.ok) {
