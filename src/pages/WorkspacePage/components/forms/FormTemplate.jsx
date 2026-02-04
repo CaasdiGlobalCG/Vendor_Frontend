@@ -85,8 +85,22 @@ const FormTemplate = ({ nodeId, workspaceId, onSubmitSuccess, initialFormData = 
       console.log('✅ Form data saved to database successfully!');
       console.log('📦 Server response:', result);
       
-      // Update React state to reflect the changes
-      setNodes(updatedNodes);
+      // Update only the current node's data, not all nodes
+      setNodes(prevNodes => 
+        prevNodes.map(node => 
+          node.id === nodeId 
+            ? {
+                ...node,
+                data: {
+                  ...node.data,
+                  formData: formData,
+                  lastSubmittedAt: new Date().toISOString(),
+                  submissionCount: (node.data?.submissionCount || 0) + 1
+                }
+              }
+            : node
+        )
+      );
       
       // Mark form as submitted
       setIsFormSubmitted(true);

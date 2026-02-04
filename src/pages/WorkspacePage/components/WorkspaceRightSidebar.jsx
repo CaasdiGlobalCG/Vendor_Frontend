@@ -30,6 +30,7 @@ const WorkspaceRightSidebar = ({
   const [activityExpanded, setActivityExpanded] = useState(true);
   const [messagesExpanded, setMessagesExpanded] = useState(false);
   const [elementsOverviewExpanded, setElementsOverviewExpanded] = useState(false);
+  const [elementsSortBy, setElementsSortBy] = useState('sequence'); // 'sequence' or 'recently-updated'
   const [infoTooltipId, setInfoTooltipId] = useState(null);
   const [editingElementId, setEditingElementId] = useState(null);
   const [editingElementName, setEditingElementName] = useState('');
@@ -56,7 +57,9 @@ const WorkspaceRightSidebar = ({
       const event = new CustomEvent('updateElementName', {
         detail: {
           elementId: elementId,
-          newName: editingElementName.trim()
+          newName: editingElementName.trim(),
+          lastUpdatedAt: new Date().toISOString(),
+          lastUpdatedBy: currentUser?.name || currentUser?.email || 'Unknown User'
         }
       });
       document.dispatchEvent(event);
@@ -124,10 +127,44 @@ const WorkspaceRightSidebar = ({
     });
   };
 
-  // Filter and sort elements by sequence number
+  // Helper function to check if an element is recently updated
+  // An element is considered recently updated if it was added/updated within the last 5 minutes
+  const isRecentlyUpdated = (element) => {
+    if (!element.data?.addedAt && !element.data?.lastUpdatedAt) {
+      return false;
+    }
+    
+    const timestamp = element.data?.lastUpdatedAt || element.data?.addedAt;
+    const now = new Date();
+    const elementTime = new Date(timestamp);
+    const minutesDiff = (now - elementTime) / (1000 * 60);
+    
+    // Consider element recently updated if added/updated within last 5 minutes
+    return minutesDiff < 5;
+  };
+
+  // Filter and sort elements
   const sortedElements = canvasElements
     .filter(el => el && el.data)
     .sort((a, b) => {
+      if (elementsSortBy === 'recently-updated') {
+        // Sort by most recently updated first, then by sequence
+        const isRecentA = isRecentlyUpdated(a) ? 1 : 0;
+        const isRecentB = isRecentlyUpdated(b) ? 1 : 0;
+        
+        if (isRecentA !== isRecentB) {
+          return isRecentB - isRecentA; // Recently updated first
+        }
+        
+        // If both are recent or both are not, sort by timestamp
+        const timeA = new Date(a.data?.lastUpdatedAt || a.data?.addedAt || 0).getTime();
+        const timeB = new Date(b.data?.lastUpdatedAt || b.data?.addedAt || 0).getTime();
+        if (timeA !== timeB) {
+          return timeB - timeA; // Most recent first
+        }
+      }
+      
+      // Default sort by sequence number
       const seqA = a.data?.sequenceNumber || Infinity;
       const seqB = b.data?.sequenceNumber || Infinity;
       return seqA - seqB;
@@ -145,6 +182,18 @@ const WorkspaceRightSidebar = ({
     });
   }, [canvasElements, sortedElements, selectedSubtask, selectedTask]);
   
+  // Auto-refresh to update recently updated indicators
+  // This ensures the "Recently Updated" badge disappears after 5 minutes
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
+  
+  useEffect(() => {
+    // Set up interval to refresh every 30 seconds
+    const interval = setInterval(() => {
+      setRefreshTrigger(prev => prev + 1);
+    }, 30000); // 30 seconds
+    
+    return () => clearInterval(interval);
+  }, []);
 
   // Debug: Component loaded (only when no user)
   if (!currentUser) {
@@ -844,25 +893,40 @@ const WorkspaceRightSidebar = ({
             </div>
             <ChevronDown className={`w-5 h-5 text-gray-500 transition-transform ${elementsOverviewExpanded ? 'transform rotate-180' : ''}`} />
           </button>
+          
+          {/* Sort Options */}
+          {elementsOverviewExpanded && (
+            <div className="px-5 py-2 border-t border-gray-100 flex items-center gap-2">
+              <span className="text-xs text-gray-600 font-medium">Sort by:</span>
+              <select
+                value={elementsSortBy}
+                onChange={(e) => setElementsSortBy(e.target.value)}
+                className="text-xs border border-gray-200 rounded px-2 py-1 focus:outline-none focus:ring-1 focus:ring-blue-500 bg-white"
+              >
+                <option value="sequence">Sequence</option>
+                <option value="recently-updated">Recently Updated</option>
+              </select>
+            </div>
+          )}
           <div className={`${elementsOverviewExpanded ? 'flex-1 flex flex-col opacity-100 min-h-0' : 'max-h-0 opacity-0 pointer-events-none'} transition-all duration-300 ease-in-out overflow-hidden`}
                style={{transitionProperty: 'max-height, opacity'}}>
             <div className="px-3 pb-4 border-t border-gray-100 flex-1 flex flex-col min-h-0 pt-3">
               {sortedElements.length > 0 ? (
                 <div className="space-y-0.5 flex-1 overflow-y-auto pr-2 min-h-0">
                   {sortedElements.map((element, idx) => (
-                    <div key={element.id || idx} className="group">
+                    <div key={element.id || idx} className={`group ${isRecentlyUpdated(element) ? 'bg-amber-50 border-l-2 border-amber-400' : ''}`}>
                       <button
                         onClick={() => {
                           if (onZoomToElement) {
                             onZoomToElement(element.id);
                           }
                         }}
-                        className="w-full px-3 py-2 text-left hover:bg-blue-50 rounded-lg transition-colors duration-150 flex items-center justify-between"
+                        className={`w-full px-3 py-2 text-left rounded-lg transition-colors duration-150 flex items-center justify-between ${isRecentlyUpdated(element) ? 'hover:bg-amber-100' : 'hover:bg-blue-50'}`}
                         title={`Click to zoom to ${element.data?.name || element.data?.type || 'element'}`}
                       >
                         <div className="flex-1 min-w-0 flex items-center gap-2.5">
                           {/* Sequence Number */}
-                          <span className="inline-flex items-center justify-center w-5 h-5 bg-blue-600 text-white text-[10px] font-bold rounded-full flex-shrink-0">
+                          <span className={`inline-flex items-center justify-center w-5 h-5 text-white text-[10px] font-bold rounded-full flex-shrink-0 ${isRecentlyUpdated(element) ? 'bg-amber-500' : 'bg-blue-600'}`}>
                             {element.data?.sequenceNumber || idx + 1}
                           </span>
 
@@ -909,9 +973,16 @@ const WorkspaceRightSidebar = ({
                               />
                             ) : (
                               <div className="min-w-0">
-                                <p className="text-xs font-medium text-gray-900 truncate">
-                                  {element.data?.name || element.data?.type || 'Element'}
-                                </p>
+                                <div className="flex items-center gap-1.5">
+                                  <p className="text-xs font-medium text-gray-900 truncate">
+                                    {element.data?.name || element.data?.type || 'Element'}
+                                  </p>
+                                  {isRecentlyUpdated(element) && (
+                                    <span className="inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-semibold bg-amber-200 text-amber-800 flex-shrink-0 whitespace-nowrap">
+                                      ✨ NEW
+                                    </span>
+                                  )}
+                                </div>
                                 {element.data?.type && element.data?.type !== (element.data?.name) && (
                                   <p className="text-xs text-gray-500 capitalize truncate">{element.data?.type}</p>
                                 )}

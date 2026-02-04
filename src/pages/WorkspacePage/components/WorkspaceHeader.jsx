@@ -2,6 +2,8 @@ import React, { useContext, useState, useEffect, useCallback } from 'react';
 import { ChevronDown, Plus, Save, MessageCircle, HelpCircle, X, ChevronLeft, ChevronRight, Lightbulb, MousePointer, Link2, Trash2, Users, Zap, Layout, Settings, CheckCircle } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { VendorContext } from '../../../context/VendorContext';
+import config from '../../../config/env';
+import { Auth } from 'aws-amplify';
 
 // Tutorial steps with target selectors for highlighting actual elements
 const tutorialSteps = [
@@ -385,6 +387,39 @@ const WorkspaceHeader = ({
               )}
             </>
           )}
+
+          {/* B2B / Graviyx Button - available to everyone in workspace */}
+          <button
+            onClick={async () => {
+              const targetHome = config.B2B_MARKETPLACE_URL;
+              if (!targetHome) {
+                alert('B2B marketplace URL is not configured. Please contact support.');
+                return;
+              }
+
+              let idToken = '';
+              try {
+                const session = await Auth.currentSession();
+                idToken = session.getIdToken().getJwtToken();
+              } catch {
+                idToken = localStorage.getItem('authToken') || '';
+              }
+
+              if (idToken) {
+                window.location.href = `${targetHome}/?token=${encodeURIComponent(idToken)}`;
+                return;
+              }
+
+              // No token available (PM/CAS/etc). Still allow navigation to login.
+              const base = targetHome.replace(/\/home\/?$/, '');
+              window.location.href = `${base}/signup`;
+            }}
+            className="p-2 hover:bg-emerald-50 rounded-lg transition-colors flex flex-col items-center space-y-1"
+            title="Open B2B Marketplace (Graviyx)"
+          >
+            <Link2 className="w-4 h-4 text-emerald-700" />
+            <span className="text-[10px] font-medium text-gray-500">B2B</span>
+          </button>
 
           {/* Help Button - Small icon style */}
           <button

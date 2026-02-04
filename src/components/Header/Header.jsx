@@ -2,6 +2,7 @@ import React, { useState, useContext, useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
 // Import NavLink, useLocation, and useNavigate
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
+import { Auth } from "aws-amplify";
 import DateYearFunction from "./DateYearFunction";
 import { VendorContext } from "../../context/VendorContext";
 import { NotificationContext } from "../../context/NotificationContext";
@@ -898,6 +899,34 @@ export const Header = () => {
               <button
                 className="w-auto px-3 h-[36px] bg-white bg-opacity-5 hover:bg-opacity-10 rounded-[9px] flex items-center justify-center text-white text-xs lg:text-sm font-semibold font-['Montserrat']"
                 onClick={async () => {
+                  let idToken = '';
+                  try {
+                    const session = await Auth.currentSession();
+                    idToken = session.getIdToken().getJwtToken();
+                  } catch {
+                    idToken = localStorage.getItem('authToken') || '';
+                  }
+
+                  if (!idToken) {
+                    alert('You need to be logged in to access GravityX.');
+                    navigate('/login');
+                    return;
+                  }
+
+                  const b2bMarketplaceUrl = config.B2B_MARKETPLACE_URL;
+                  if (!b2bMarketplaceUrl) {
+                    alert('B2B marketplace URL is not configured. Please contact support.');
+                    return;
+                  }
+
+                  window.location.href = `${b2bMarketplaceUrl}/?token=${encodeURIComponent(idToken)}`;
+                }}
+              >
+                GravityX <img src="https://c.animaapp.com/VmmSqCQF/img/guidance-shop.svg" alt="Shop" className="ml-2 w-4 h-4 lg:w-6 lg:h-6" />
+              </button>
+              <button
+                className="w-auto px-3 h-[36px] bg-white bg-opacity-5 hover:bg-opacity-10 rounded-[9px] flex items-center justify-center text-white text-xs lg:text-sm font-semibold font-['Montserrat']"
+                onClick={async () => {
                   if (!config.SALES_URL) {
                     console.error('SALES_URL is not configured');
                     alert('B2B Sales dashboard URL is not configured. Please contact support.');
@@ -912,7 +941,9 @@ export const Header = () => {
                     navigate('/login');
                   }
                 }}
-              > B2B <img src="https://c.animaapp.com/VmmSqCQF/img/guidance-shop.svg" alt="Shop" className="ml-2 w-4 h-4 lg:w-6 lg:h-6" /> </button>
+              >
+                B2B <img src="https://c.animaapp.com/VmmSqCQF/img/guidance-shop.svg" alt="Shop" className="ml-2 w-4 h-4 lg:w-6 lg:h-6" />
+              </button>
               <button className="w-auto px-3 h-[36px] bg-white bg-opacity-5 hover:bg-opacity-10 rounded-[9px] flex items-center justify-center text-white text-xs lg:text-sm font-semibold font-['Montserrat']"> Prompt <img src="https://c.animaapp.com/VmmSqCQF/img/vector.svg" alt="Prompt" className="ml-2 w-3 h-3 lg:w-4 lg:h-4" /> </button>
           </div>
           </div>

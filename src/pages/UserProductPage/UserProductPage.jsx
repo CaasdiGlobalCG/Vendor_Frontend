@@ -29,6 +29,7 @@ import { VendorContext } from "../../context/VendorContext";
 import AppHeader from "../../components/AppHeader/Appheader";
 import UserProfileCard from '../../components/UserProfileCard/UserProfileCard'; // Import the new component
 import config from '../../config/env';
+import { redirectToSalesWithHandoff } from '../../utils/handoffToSales';
 
 export default function UserPortfolio() {
   const { currentUser } = useContext(UserContext);
@@ -369,8 +370,6 @@ const [editProductData, setEditProductData] = useState(null);
   const [showAddServiceForm, setShowAddServiceForm] = useState(false);
   const [newServiceCustomFields, setNewServiceCustomFields] = useState([]); // ADD THIS LINE
   const [newProductCustomFields, setNewProductCustomFields] = useState([]); // Add product custom fields
-
-
 
   const [newService, setNewService] = useState({
     name: "",
@@ -852,13 +851,18 @@ const [editProductData, setEditProductData] = useState(null);
         });
         
         if (!response.ok) {
+          // If 404, use default data and don't show error
+          if (response.status === 404) {
+            console.log("Services API not implemented yet, using default data");
+            return;
+          }
           throw new Error(`Server responded with status: ${response.status}`);
         }
         
         const data = await response.json();
         console.log("Services data response:", data);
         
-        if (data.success && data.data) {
+        if (data.success && data.data && data.data.length > 0) {
           setServices(data.data);
         } else {
           // If no services found, set empty array
@@ -866,8 +870,8 @@ const [editProductData, setEditProductData] = useState(null);
         }
       } catch (error) {
         console.error('Error fetching services:', error);
-        setServicesError('Failed to load services.');
-        setServices([]);
+        setServicesError('Failed to load services. Using default data.');
+        // Keep using default data on error
       } finally {
         setServicesLoading(false);
       }
@@ -1577,32 +1581,26 @@ const [editProductData, setEditProductData] = useState(null);
                     />
                   </div>
                   <Button
-                    size="sm"
-                    className="bg-gradient-to-l from-[#095B49] to-[#000000] hover:opacity-90"
-                    onClick={() => {
-                      const authToken = localStorage.getItem('authToken');
-                      const vendorId = currentUser?.vendorId;
-
+                    variant="primary"
+                    className="bg-emerald-700 hover:bg-emerald-800"
+                    onClick={async () => {
                       if (!config.SALES_URL) {
+                        console.error('SALES_URL is not configured');
                         alert('B2B Sales dashboard URL is not configured. Please contact support.');
                         return;
                       }
-
-                      if (!authToken || !vendorId) {
-                        alert('You need to be logged in as a vendor to add products.');
+    
+                      try {
+                        await redirectToSalesWithHandoff();
+                      } catch (e) {
+                        console.error('B2B handoff redirect failed:', e);
+                        alert('Unable to open B2B Sales dashboard right now. Please try again.');
                         navigate('/login');
-                        return;
                       }
-
-                      const params = new URLSearchParams({
-                        authToken,
-                        vendorId,
-                      });
-
-                      window.location.href = `${config.SALES_URL}/add-new-product?${params.toString()}`;
                     }}
                   >
-                    <Plus className="h-4 w-4 mr-1" /> Add
+                    <Plus className="mr-2 h-4 w-4" />
+                    Add New Product
                   </Button>
                 </div>
                 <div className="space-y-2 p-4">

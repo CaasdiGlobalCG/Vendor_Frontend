@@ -152,7 +152,7 @@ function Login() {
           }
 
           if (!explicitVendor && verifyLastSelectedRole === "client") {
-            await redirectToClientWithHandoff();
+            await redirectToClientWithHandoff({ token: idToken });
             return;
           }
         }
