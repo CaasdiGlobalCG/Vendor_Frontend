@@ -884,6 +884,9 @@ const edgeTypes = {
         addedByEmail: currentUser?.email || null,
         addedByRole: currentUser?.role || 'vendor', // 'vendor' or 'pm'
         addedAt: new Date().toISOString(),
+        lastUpdatedAt: new Date().toISOString(),
+        lastUpdatedBy: currentUser?.name || currentUser?.email || 'Unknown User',
+        isRecentlyUpdated: true,
         
         // Element sequence number - order in which it was added
         sequenceNumber: sequenceNum,
@@ -915,7 +918,15 @@ const edgeTypes = {
         width: element.width || 380,
         height: element.height || 280,
         // Add custom layout data if provided
-        ...(layoutConfig?.customLayoutData && { customLayoutData: layoutConfig.customLayoutData })
+        ...(layoutConfig?.customLayoutData && { customLayoutData: layoutConfig.customLayoutData }),
+        // Element metadata - who added and when
+        addedBy: currentUser?.name || currentUser?.email || 'Unknown User',
+        addedByEmail: currentUser?.email || null,
+        addedByRole: currentUser?.role || 'vendor',
+        addedAt: new Date().toISOString(),
+        lastUpdatedAt: new Date().toISOString(),
+        lastUpdatedBy: currentUser?.name || currentUser?.email || 'Unknown User',
+        isRecentlyUpdated: true,
       },
     };
     
@@ -2755,17 +2766,20 @@ const edgeTypes = {
   // Handle update element name
   useEffect(() => {
     const handleUpdateElementName = (event) => {
-      const { elementId, newName } = event.detail;
-      console.log('✏️ Updating element name:', { elementId, newName });
+      const { elementId, newName, lastUpdatedAt, lastUpdatedBy } = event.detail;
+      console.log('✏️ Updating element name:', { elementId, newName, lastUpdatedAt });
       
-      // Update the node data with new name
+      // Update the node data with new name and timestamp
       setNodes(nds => nds.map(node => {
         if (node.id === elementId) {
           return {
             ...node,
             data: {
               ...node.data,
-              name: newName
+              name: newName,
+              lastUpdatedAt: lastUpdatedAt || new Date().toISOString(),
+              lastUpdatedBy: lastUpdatedBy || node.data?.lastUpdatedBy,
+              isRecentlyUpdated: true
             }
           };
         }

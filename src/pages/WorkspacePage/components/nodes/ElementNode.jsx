@@ -35,6 +35,17 @@ const ElementNode = ({ id, data, isConnectable, selected }) => {
   // Track if we just set the deadline to prevent it from being cleared during sync
   const deadlineJustSetRef = useRef(false);
 
+  // Auto-refresh for recently updated indicator (every 30 seconds)
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
+  
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setRefreshTrigger(prev => prev + 1);
+    }, 30000); // Refresh every 30 seconds
+    
+    return () => clearInterval(interval);
+  }, []);
+  
   // Sync deadline from backend node data if changed externally
   useEffect(() => {
     // Don't sync if we just set the deadline locally - give it time to persist
@@ -444,6 +455,21 @@ const ElementNode = ({ id, data, isConnectable, selected }) => {
       default:
         return 'bg-yellow-100 text-yellow-800 border-yellow-300';
     }
+  };
+
+  // Helper function to check if element is recently updated (within 5 minutes)
+  const isRecentlyUpdated = () => {
+    if (!data.addedAt && !data.lastUpdatedAt) {
+      return false;
+    }
+    
+    const timestamp = data.lastUpdatedAt || data.addedAt;
+    const now = new Date();
+    const elementTime = new Date(timestamp);
+    const minutesDiff = (now - elementTime) / (1000 * 60);
+    
+    // Consider element recently updated if added/updated within last 5 minutes
+    return minutesDiff < 5;
   };
   
   // Get approval status icon
@@ -1296,21 +1322,22 @@ const ElementNode = ({ id, data, isConnectable, selected }) => {
   // Determine wrapper classes based on element type
   const getWrapperClasses = () => {
     const baseClasses = `${isImportant ? 'bg-yellow-50' : 'bg-white'} border-2 rounded-xl shadow-xl relative group transition-all`;
+    const recentlyUpdatedClass = isRecentlyUpdated() ? 'ring-2 ring-amber-300 ring-offset-1' : '';
     const compactTypes = ['divider', 'spacer', 'container', 'grid'];
     
     if (compactTypes.includes(data.type)) {
       if (data.type === 'divider') {
-        return `${baseClasses} p-2 min-w-[200px] max-w-[400px]`;
+        return `${baseClasses} ${recentlyUpdatedClass} p-2 min-w-[200px] max-w-[400px]`;
       } else if (data.type === 'spacer') {
-        return `${baseClasses} p-2 min-w-[150px] max-w-[300px]`;
+        return `${baseClasses} ${recentlyUpdatedClass} p-2 min-w-[150px] max-w-[300px]`;
       } else if (data.type === 'container') {
-        return `${baseClasses} p-4 min-w-[200px] max-w-[400px]`;
+        return `${baseClasses} ${recentlyUpdatedClass} p-4 min-w-[200px] max-w-[400px]`;
       } else if (data.type === 'grid') {
-        return `${baseClasses} p-3 min-w-[250px] max-w-[400px]`;
+        return `${baseClasses} ${recentlyUpdatedClass} p-3 min-w-[250px] max-w-[400px]`;
       }
     }
     
-    return `${baseClasses} p-6 ${
+    return `${baseClasses} ${recentlyUpdatedClass} p-6 ${
       data.type === 'form-template' 
         ? 'min-w-[450px] max-w-[550px]' 
         : 'min-w-[320px] max-w-[400px]'
@@ -1447,6 +1474,13 @@ const ElementNode = ({ id, data, isConnectable, selected }) => {
       
       {/* Info & Help Icons - Top right corner */}
       <div className="absolute -top-3 -right-3 z-20 flex items-center space-x-1">
+        {/* Recently Updated Badge - Shows when element was added/updated within 5 minutes */}
+        {isRecentlyUpdated() && (
+          <div className="w-8 h-8 bg-amber-400 text-white rounded-full flex items-center justify-center shadow-lg border-2 border-white font-bold text-lg animate-pulse" title="Recently updated" role="status" aria-label="Recently updated">
+            ✨
+          </div>
+        )}
+        
         {/* Lock Indicator - Shows when element is locked */}
         {data.locked && (
           <div className="w-5 h-5 bg-orange-500 hover:bg-orange-600 text-white rounded-full flex items-center justify-center shadow-md border-2 border-white transition-all" title="Element is locked">
@@ -1543,6 +1577,14 @@ const ElementNode = ({ id, data, isConnectable, selected }) => {
         <div className="mb-4 text-center relative">
           <div className="flex items-center justify-center space-x-2">
             <h4 className="text-lg font-semibold text-gray-800">{data.name}</h4>
+            
+            {/* Recently Updated Badge */}
+            {isRecentlyUpdated() && (
+              <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-bold bg-amber-200 text-amber-800 shadow-md border border-amber-300 whitespace-nowrap">
+                ✨ NEW
+              </span>
+            )}
+            
             {isTableElement() && (
               <button
                 onClick={handlePreviewClick}
