@@ -33,6 +33,14 @@ const WorkspaceMain = ({
   onZoomChange
 }) => {
   const canvasRef = useRef(null);
+  
+  // Make canvas ref globally accessible for approval operations
+  useEffect(() => {
+    window.canvasWorkspaceRef = canvasRef;
+    return () => {
+      window.canvasWorkspaceRef = null;
+    };
+  }, [canvasRef]);
   const [zoomInput, setZoomInput] = useState(String(zoomLevel));
   const [isZoomInputFocused, setIsZoomInputFocused] = useState(false);
 

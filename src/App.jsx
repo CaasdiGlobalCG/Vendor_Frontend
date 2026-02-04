@@ -30,11 +30,13 @@ import ProjectLeadForm from "./pages/ProjectLeadFolder/ProjectLeadForm"; // Assu
 import NotificationsPage from "./pages/NotificationPage/NotificationPage"; // Import NotificationsPage
 import RoleSelection from "./pages/Onboarding/RoleSelection"; // Import Role Selector
 import Verification from "./components/Verification";
-  import TermsAndConditions from "./components/TermsAndConditions";
+import TermsAndConditions from "./components/TermsAndConditions";
 import { Component } from "react";
 import config from "./config/env";
 import './App.css';
 import NewCustomerPage from "./pages/WorkspacePage/components/invoice/customers/NewCustomerPage";
+import PMPOManagementPage from "./pages/PMDashboard/PMPOManagementPage";
+import VendorPOResponsePage from "./pages/WorkspacePage/components/invoice/purchase-orders/VendorPOResponsePage";
 
 // Error Boundary Component
 class ErrorBoundary extends Component {
@@ -267,6 +269,10 @@ function AppContent() {
         <Route path="notifications" element={<NotificationsPage />} />
 
       </Route>
+      {/* PM PO Management Route */}
+      <Route path="/pm/po-management" element={<RoleGuard><PMPOManagementPage /></RoleGuard>} />
+      {/* Vendor PO Response Route */}
+      <Route path="/workspace/po-responses" element={<RoleGuard><VendorPOResponsePage /></RoleGuard>} />
       {/* Removed EditCompany route as it's now handled with a modal */}
       <Route path="/vendor-home" element={<Home />} />
       <Route path="/userproject" element={<UserProjectPage />} />

@@ -3,7 +3,7 @@ import { useParams } from 'react-router-dom';
 import { getWorkspaceById, updateWorkspace } from '../../utils/workspaceApi';
 import { persistIsImportant, persistDeadline, persistTextContent, getTimeLeft as calculateTimeLeft, formatTimeLeft } from '../../utils/nodePersistence';
 import { Handle, Position, useReactFlow } from 'reactflow';
-import { Download, Eye, ExternalLink, X, ArrowRight, Check, X as XIcon, Menu, Star, Heart, Info, HelpCircle, Lock } from 'lucide-react';
+import { Download, Eye, ExternalLink, X, ArrowRight, Check, X as XIcon, Menu, Star, Heart, Info, HelpCircle, Lock, Send } from 'lucide-react';
 import { VendorContext } from '../../../../context/VendorContext';
 import FormTemplate from '../forms/FormTemplate';
 import TableRenderer from '../forms/TableRenderer';
@@ -239,6 +239,12 @@ const ElementNode = ({ id, data, isConnectable, selected }) => {
   const [approvalReason, setApprovalReason] = useState('');
   const [isSubmittingApproval, setIsSubmittingApproval] = useState(false);
   
+  // Force re-render after approval
+  const [forceUpdate, setForceUpdate] = useState(0);
+  
+  // Send for approval state
+  const [isSendingForApproval, setIsSendingForApproval] = useState(false);
+  
   // Help tutorial state
   const [showHelpTutorial, setShowHelpTutorial] = useState(false);
   const [tutorialStep, setTutorialStep] = useState(0);
@@ -316,24 +322,206 @@ const ElementNode = ({ id, data, isConnectable, selected }) => {
   
   // Check if current user can approve/reject this element
   // Multi-step approval workflow:
-  // 1. PM approves pending elements (status: 'pending' -> 'pm_approved')
-  // 2. Client approves PM-approved elements (status: 'pm_approved' -> 'client_approved')
+  // 1. Vendor sends for approval (status: 'sent_to_pm')
+  // 2. PM approves pending elements (status: 'sent_to_pm' -> 'pm_approved')
+  // 3. Client approves PM-approved elements (status: 'pm_approved' -> 'client_approved')
+  // 4. Final state: element becomes locked
   const canApprove = () => {
-    const currentUserRole = currentUser?.role || 'vendor';
-    const approvalStatus = data.approvalStatus || 'pending';
+    const currentUserRole = getCurrentUserRole();
+    const approvalStatus = data.approvalStatus || 'draft';
     
-    // PM can approve if element is pending
-    if (currentUserRole === 'pm' && approvalStatus === 'pending') {
+    // PM can approve if element is sent to PM and PM hasn't already approved
+    if (currentUserRole === 'pm' && approvalStatus === 'sent_to_pm' && !data.pmApproval) {
       return true;
     }
     
-    // Client can approve if PM has already approved
-    if (currentUserRole === 'client' && approvalStatus === 'pm_approved') {
+    // Client can approve if PM has already approved and client hasn't already acted
+    if (currentUserRole === 'client' && approvalStatus === 'pm_approved' && !data.clientApproval) {
       return true;
     }
     
-    // Vendors cannot approve their own elements or already approved elements
+    // Vendors cannot approve their own elements
     return false;
+  };
+  
+  // Get current user role from URL parameters or context
+  const getCurrentUserRole = () => {
+    // Check URL parameters first (for PMs and clients accessing vendor frontend)
+    const urlParams = new URLSearchParams(window.location.search);
+    const urlUserRole = urlParams.get('userRole');
+    
+    if (urlUserRole && ['vendor', 'pm', 'client'].includes(urlUserRole)) {
+      return urlUserRole;
+    }
+    
+    // Fall back to context
+    return currentUser?.role || 'vendor';
+  };
+  
+  // Check if vendor can send element for approval
+  const canSendForApproval = () => {
+    const currentUserRole = getCurrentUserRole();
+    const approvalStatus = data.approvalStatus || 'draft';
+    
+    // Only vendors can send for approval, and only if element is in draft/initial state
+    // Accept both 'draft' and 'pending' as initial states (before being sent to PM)
+    const canSend = currentUserRole === 'vendor' && (approvalStatus === 'draft' || approvalStatus === 'pending' || approvalStatus === undefined || approvalStatus === null);
+    
+    if (!canSend && currentUserRole === 'vendor') {
+      console.log('🔍 canSendForApproval DEBUG:', {
+        currentUserRole,
+        approvalStatus,
+        dataApprovalStatus: data.approvalStatus,
+        canSend
+      });
+    }
+    
+    return canSend;
+  };
+  
+  // Check if element is locked (cannot be edited)
+  const isElementLocked = () => {
+    const approvalStatus = data.approvalStatus || 'draft';
+    // Element is locked if it's in approval process or fully approved
+    return ['sent_to_pm', 'pm_approved', 'client_approved', 'locked'].includes(approvalStatus);
+  };
+  
+  // Handle sending element for approval
+  const handleSendForApproval = async () => {
+    console.log('🚀 handleSendForApproval CALLED! Node ID:', id);
+    console.log('🔍 Current approval status:', data.approvalStatus);
+    console.log('🔍 Workspace ID:', workspaceId);
+    
+    setIsSendingForApproval(true);
+    
+    // Mark that we're in approval submission to prevent WorkspacePage from saving stale canvas data
+    window.__isApprovingInProgress = true;
+    
+    try {
+      // Get current workspace data
+      console.log('📡 Fetching workspace data...');
+      const workspaceData = await getWorkspaceById(workspaceId);
+      console.log('📦 Workspace data received:', { 
+        hasData: !!workspaceData, 
+        tasksCount: workspaceData?.tasks?.length,
+        nodesCount: workspaceData?.nodes?.length 
+      });
+      
+      if (workspaceData) {
+        // Track if node was found
+        let nodeFound = false;
+        
+        // Function to update node in nested tasks/subtasks structure
+        const updateNodeInTasks = (tasks) => {
+          return (tasks || []).map(task => ({
+            ...task,
+            subtasks: (task.subtasks || []).map(subtask => {
+              // Ensure canvasData exists with proper structure
+              const canvasData = subtask.canvasData || { nodes: [], edges: [], zoomLevel: 100 };
+              return {
+                ...subtask,
+                canvasData: {
+                  ...canvasData,
+                  nodes: (canvasData.nodes || []).map(node => {
+                    if (node.id === id) {
+                      nodeFound = true;
+                      console.log('✅ Found node in subtask:', subtask.id, 'Updating to sent_to_pm');
+                      return {
+                        ...node,
+                        data: {
+                          ...node.data,
+                          approvalStatus: 'sent_to_pm',
+                          sentForApprovalAt: new Date().toISOString(),
+                          sentForApprovalBy: currentUser?.name || currentUser?.email || 'Unknown User',
+                        }
+                      };
+                    }
+                    return node;
+                  })
+                }
+              };
+            })
+          }));
+        };
+        
+        // Update the tasks with the modified node
+        const updatedTasks = updateNodeInTasks(workspaceData.tasks || []);
+        
+        console.log('📤 Sending element for approval in tasks, nodeFound:', nodeFound);
+        
+        if (!nodeFound) {
+          console.error('❌ Node not found in any subtask! ID:', id);
+          console.log('📋 Available tasks/subtasks:', JSON.stringify(workspaceData.tasks?.map(t => ({
+            id: t.id,
+            subtasks: t.subtasks?.map(s => ({
+              id: s.id,
+              nodeIds: s.canvasData?.nodes?.map(n => n.id) || []
+            }))
+          })), null, 2));
+        }
+        
+        // Save to backend with timestamp
+        console.log('💾 Saving to backend...');
+        const result = await updateWorkspace(workspaceId, { 
+          tasks: updatedTasks,
+          updatedAt: new Date().toISOString()
+        });
+        
+        console.log('✅ Element sent for approval to backend:', { updatedAt: result?.updatedAt, success: !!result });
+        
+        // Fetch fresh workspace data to ensure UI is in sync
+        console.log('🔄 Fetching fresh workspace data...');
+        const freshWorkspaceData = await getWorkspaceById(workspaceId);
+        
+        if (freshWorkspaceData) {
+          // Find the updated node from fresh data
+          let updatedNodeFromServer = null;
+          (freshWorkspaceData.tasks || []).forEach(task => {
+            (task.subtasks || []).forEach(subtask => {
+              (subtask.canvasData?.nodes || []).forEach(node => {
+                if (node.id === id) {
+                  updatedNodeFromServer = node;
+                  console.log('📝 Found updated node from server:', {
+                    id: node.id,
+                    approvalStatus: node.data?.approvalStatus
+                  });
+                }
+              });
+            });
+          });
+          
+          // Update local React Flow state with fresh data
+          if (updatedNodeFromServer) {
+            setNodes((nds) => nds.map((node) => {
+              if (node.id === id) {
+                console.log('📝 Local state updated with server data, new status:', updatedNodeFromServer.data?.approvalStatus);
+                return updatedNodeFromServer;
+              }
+              return node;
+            }));
+          } else {
+            console.error('❌ Could not find updated node in fresh data');
+          }
+        }
+        
+        // Force re-render to ensure UI updates
+        setForceUpdate(prev => prev + 1);
+        
+        console.log('✅ Element sent for approval successfully');
+      } else {
+        console.error('❌ No workspace data received!');
+      }
+    } catch (error) {
+      console.error('❌ Error sending element for approval:', error);
+      console.error('Error details:', error.message, error.stack);
+    } finally {
+      setIsSendingForApproval(false);
+      // Wait before clearing the approval flag to ensure canvas saves are blocked
+      setTimeout(() => {
+        window.__isApprovingInProgress = false;
+        console.log('✅ Send for approval workflow completed, canvas saves re-enabled');
+      }, 2000);
+    }
   };
   
   // Handle opening approval modal
@@ -349,7 +537,11 @@ const ElementNode = ({ id, data, isConnectable, selected }) => {
     
     setIsSubmittingApproval(true);
     
-    const currentUserRole = currentUser?.role || 'vendor';
+    // Mark that we're in approval submission to prevent WorkspacePage from saving stale canvas data
+    // Store this flag globally so WorkspacePage can check it
+    window.__isApprovingInProgress = true;
+    
+    const currentUserRole = getCurrentUserRole();
     
     // Determine the new approval status based on user role and action
     let newApprovalStatus;
@@ -391,69 +583,156 @@ const ElementNode = ({ id, data, isConnectable, selected }) => {
       }
     };
     
+    console.log('🚀 Starting approval submission:', {
+      elementId: id,
+      currentUserRole,
+      approvalAction,
+      newApprovalStatus,
+      approvalDataKey,
+      newApprovalData
+    });
+    
     try {
       // Get current workspace data
+      console.log('📥 Fetching current workspace data...');
       const workspaceData = await getWorkspaceById(workspaceId);
       
       if (workspaceData) {
-        // Update the node's approval data
-        const updatedNodes = workspaceData.nodes.map(node => {
-          if (node.id === id) {
-            return {
-              ...node,
-              data: {
-                ...node.data,
-                ...newApprovalData,
-              }
-            };
-          }
-          return node;
+        console.log('✅ Got workspace data, updating nodes in tasks/subtasks...');
+        
+        // Function to update node in nested tasks/subtasks structure
+        const updateNodeInTasks = (tasks) => {
+          return (tasks || []).map(task => ({
+            ...task,
+            subtasks: (task.subtasks || []).map(subtask => {
+              // Ensure canvasData exists with proper structure
+              const canvasData = subtask.canvasData || { nodes: [], edges: [], zoomLevel: 100 };
+              return {
+                ...subtask,
+                canvasData: {
+                  ...canvasData,
+                  nodes: (canvasData.nodes || []).map(node => {
+                    if (node.id === id) {
+                      const updatedNode = {
+                        ...node,
+                        data: {
+                          ...node.data,
+                          ...newApprovalData,
+                        }
+                      };
+                      console.log('📝 Updated node data in subtask:', updatedNode.data);
+                      return updatedNode;
+                    }
+                    return node;
+                  })
+                }
+              };
+            })
+          }));
+        };
+        
+        // Update the tasks with the modified node
+        const updatedTasks = updateNodeInTasks(workspaceData.tasks || []);
+        
+        console.log('📤 Sending updated tasks to backend...', {
+          taskCount: updatedTasks.length,
+          nodeId: id
         });
         
-        console.log('📤 Sending updated node to backend:', updatedNodes.find(n => n.id === id)?.data);
+        // Save to backend - send the entire updated workspace to ensure consistency
+        const updateResult = await updateWorkspace(workspaceId, { 
+          tasks: updatedTasks,
+          updatedAt: new Date().toISOString()
+        });
         
-        // Save to backend
-        await updateWorkspace(workspaceId, { nodes: updatedNodes });
+        console.log('✅ Backend update successful:', {
+          workspaceId,
+          updatedAt: updateResult?.updatedAt
+        });
         
-        // Update local React Flow state immediately so UI reflects the change
-        setNodes((nds) => nds.map((node) => {
-          if (node.id === id) {
-            return {
-              ...node,
-              data: {
-                ...node.data,
-                ...newApprovalData,
+        // Fetch fresh workspace data to ensure we have the latest state
+        console.log('🔄 Fetching fresh workspace data...');
+        const freshWorkspaceData = await getWorkspaceById(workspaceId);
+        
+        if (freshWorkspaceData) {
+          // Find the updated node from fresh data
+          let updatedNodeFromServer = null;
+          (freshWorkspaceData.tasks || []).forEach(task => {
+            (task.subtasks || []).forEach(subtask => {
+              (subtask.canvasData?.nodes || []).forEach(node => {
+                if (node.id === id) {
+                  updatedNodeFromServer = node;
+                }
+              });
+            });
+          });
+          
+          // Update local React Flow state with fresh data from server
+          console.log('🔄 Updating local React Flow state with server data...');
+          if (updatedNodeFromServer) {
+            setNodes((nds) => nds.map((node) => {
+              if (node.id === id) {
+                console.log('📝 Local state updated with server node data:', updatedNodeFromServer.data);
+                return updatedNodeFromServer;
               }
-            };
+              return node;
+            }));
           }
-          return node;
+        }
+        
+        // Force re-render to ensure UI updates
+        setForceUpdate(prev => prev + 1);
+        
+        // Notify parent component to refresh workspace state
+        // This ensures WorkspacePage gets the latest data with updated approval status
+        window.dispatchEvent(new CustomEvent('approvalCompleted', {
+          detail: {
+            nodeId: id,
+            workspaceId,
+            newStatus: newApprovalStatus,
+            timestamp: Date.now()
+          }
         }));
         
         console.log(`✅ Element ${approvalAction}d successfully by ${currentUserRole}. Status: ${newApprovalStatus}`);
+      } else {
+        console.error('❌ No workspace data received');
+        throw new Error('No workspace data received');
       }
     } catch (error) {
-      console.error('Error updating approval status:', error);
+      console.error('❌ Error updating approval status:', error);
+      // Don't update local state if backend update failed
+      alert(`Failed to ${approvalAction} element. Please try again. Error: ${error.message}`);
     } finally {
+      console.log('🏁 Approval submission cleanup');
       setIsSubmittingApproval(false);
       setShowApprovalModal(false);
       setApprovalAction(null);
       setApprovalReason('');
+      // Wait before clearing the approval flag to ensure canvas saves are blocked
+      // The flag was set to true at the start, keep it true until this completes
+      setTimeout(() => {
+        window.__isApprovingInProgress = false;
+        console.log('✅ Approval workflow completed, canvas saves re-enabled');
+      }, 2000);
     }
   };
   
   // Get approval status color
   const getApprovalStatusColor = () => {
     switch (data.approvalStatus) {
+      case 'sent_to_pm':
+        return 'bg-blue-100 text-blue-800 border-blue-300'; // Sent to PM - blue
+      case 'pm_approved':
+        return 'bg-yellow-100 text-yellow-800 border-yellow-300'; // PM approved, waiting for client - yellow
       case 'client_approved':
         return 'bg-green-100 text-green-800 border-green-300'; // Fully approved - green
-      case 'pm_approved':
-        return 'bg-blue-100 text-blue-800 border-blue-300'; // PM approved, waiting for client - blue
-      case 'approved':
-        return 'bg-green-100 text-green-800 border-green-300';
+      case 'locked':
+        return 'bg-gray-100 text-gray-800 border-gray-300'; // Locked - gray
       case 'rejected':
-        return 'bg-red-100 text-red-800 border-red-300';
+        return 'bg-red-100 text-red-800 border-red-300'; // Rejected - red
       default:
-        return 'bg-yellow-100 text-yellow-800 border-yellow-300';
+        return 'bg-gray-100 text-gray-800 border-gray-300'; // Draft - gray
     }
   };
 
@@ -475,16 +754,18 @@ const ElementNode = ({ id, data, isConnectable, selected }) => {
   // Get approval status icon
   const getApprovalStatusIcon = () => {
     switch (data.approvalStatus) {
-      case 'client_approved':
-        return '✓✓'; // Double check for fully approved
+      case 'sent_to_pm':
+        return '📤'; // Sent to PM
       case 'pm_approved':
-        return '✓'; // Single check for PM approved
-      case 'approved':
-        return '✓';
+        return '✓'; // PM approved
+      case 'client_approved':
+        return '✓✓'; // Client approved
+      case 'locked':
+        return '🔒'; // Locked
       case 'rejected':
-        return '✕';
+        return '✕'; // Rejected
       default:
-        return '⏳';
+        return '📝'; // Draft
     }
   };
   
@@ -851,17 +1132,22 @@ const ElementNode = ({ id, data, isConnectable, selected }) => {
 
 
   const renderInteractiveElement = () => {
+    const isLocked = isElementLocked();
+    
     switch (data.type) {
       case 'textarea':
         return (
           <textarea
             value={textareaValue}
-            onChange={(e) => setTextareaValue(e.target.value)}
-            className="w-full h-32 p-4 border-2 border-gray-300 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-base"
-            placeholder="Enter your text here..."
+            onChange={(e) => !isLocked && setTextareaValue(e.target.value)}
+            className={`w-full h-32 p-4 border-2 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-base ${
+              isLocked ? 'border-gray-200 bg-gray-50 text-gray-500 cursor-not-allowed' : 'border-gray-300'
+            }`}
+            placeholder={isLocked ? "Element is locked" : "Enter your text here..."}
             onClick={(e) => e.stopPropagation()}
             onKeyDown={(e) => e.stopPropagation()}
             onFocus={(e) => e.stopPropagation()}
+            readOnly={isLocked}
           />
         );
       
@@ -871,19 +1157,22 @@ const ElementNode = ({ id, data, isConnectable, selected }) => {
           <input
             type="text"
             value={inputValue}
-            onChange={(e) => setInputValue(e.target.value)}
-            className="w-full p-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-base"
-            placeholder="Type your text here..."
+            onChange={(e) => !isLocked && setInputValue(e.target.value)}
+            className={`w-full p-3 border-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-base ${
+              isLocked ? 'border-gray-200 bg-gray-50 text-gray-500 cursor-not-allowed' : 'border-gray-300'
+            }`}
+            placeholder={isLocked ? "Element is locked" : "Type your text here..."}
             onClick={(e) => e.stopPropagation()}
             onKeyDown={(e) => e.stopPropagation()}
             onFocus={(e) => e.stopPropagation()}
+            readOnly={isLocked}
           />
         );
       
       case 'button':
         return (
           <div className="space-y-2">
-            {isEditingButton ? (
+            {isEditingButton && !isLocked ? (
               <input
                 type="text"
                 value={buttonText}
@@ -903,19 +1192,28 @@ const ElementNode = ({ id, data, isConnectable, selected }) => {
               <button
                 onClick={(e) => {
                   e.stopPropagation();
-                  alert(`${buttonText} clicked!`);
+                  if (!isLocked) {
+                    alert(`${buttonText} clicked!`);
+                  }
                 }}
                 onDoubleClick={(e) => {
                   e.stopPropagation();
-                  setIsEditingButton(true);
+                  if (!isLocked) {
+                    setIsEditingButton(true);
+                  }
                 }}
-                className="w-full px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors"
+                className={`w-full px-4 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors ${
+                  isLocked 
+                    ? 'bg-gray-400 text-gray-600 cursor-not-allowed' 
+                    : 'bg-blue-600 text-white hover:bg-blue-700'
+                }`}
+                disabled={isLocked}
               >
                 {buttonText}
               </button>
             )}
             <div className="text-xs text-gray-500 text-center">
-              Double-click to edit text
+              {isLocked ? 'Element is locked' : 'Double-click to edit text'}
             </div>
           </div>
         );
@@ -930,13 +1228,16 @@ const ElementNode = ({ id, data, isConnectable, selected }) => {
           <div className="space-y-2">
             <select
               value={selectValue}
-              onChange={(e) => setSelectValue(e.target.value)}
-              className="w-full p-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-base bg-white"
+              onChange={(e) => !isLocked && setSelectValue(e.target.value)}
+              className={`w-full p-3 border-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-base bg-white ${
+                isLocked ? 'border-gray-200 bg-gray-50 text-gray-500 cursor-not-allowed' : 'border-gray-300'
+              }`}
               onClick={(e) => e.stopPropagation()}
               onKeyDown={(e) => e.stopPropagation()}
               onFocus={(e) => e.stopPropagation()}
+              disabled={isLocked}
             >
-              <option value="">Select an option</option>
+              <option value="">{isLocked ? "Element is locked" : "Select an option"}</option>
               {selectOptions.map((option, index) => (
                 <option key={index} value={option.toLowerCase().replace(/\s+/g, '-')}>
                   {option}
@@ -947,9 +1248,16 @@ const ElementNode = ({ id, data, isConnectable, selected }) => {
               <button
                 onClick={(e) => {
                   e.stopPropagation();
-                  addSelectOption();
+                  if (!isLocked) {
+                    addSelectOption();
+                  }
                 }}
-                className="flex-1 px-4 py-2 text-sm font-medium bg-gradient-to-r from-emerald-500 to-green-600 text-white rounded-lg hover:from-emerald-600 hover:to-green-700 transition-all duration-200 shadow-md hover:shadow-lg flex items-center justify-center space-x-2"
+                className={`flex-1 px-4 py-2 text-sm font-medium rounded-lg transition-all duration-200 shadow-md hover:shadow-lg flex items-center justify-center space-x-2 ${
+                  isLocked 
+                    ? 'bg-gray-400 text-gray-600 cursor-not-allowed' 
+                    : 'bg-gradient-to-r from-emerald-500 to-green-600 text-white hover:from-emerald-600 hover:to-green-700'
+                }`}
+                disabled={isLocked}
               >
                 <span className="text-lg">+</span>
                 <span>Add Option</span>
@@ -958,9 +1266,16 @@ const ElementNode = ({ id, data, isConnectable, selected }) => {
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
-                    removeOption(selectOptions, setSelectOptions, selectOptions.length - 1);
+                    if (!isLocked) {
+                      removeOption(selectOptions, setSelectOptions, selectOptions.length - 1);
+                    }
                   }}
-                  className="px-4 py-2 text-sm font-medium bg-gradient-to-r from-red-500 to-rose-600 text-white rounded-lg hover:from-red-600 hover:to-rose-700 transition-all duration-200 shadow-md hover:shadow-lg flex items-center justify-center space-x-2"
+                  className={`px-4 py-2 text-sm font-medium rounded-lg transition-all duration-200 shadow-md hover:shadow-lg flex items-center justify-center space-x-2 ${
+                    isLocked 
+                      ? 'bg-gray-400 text-gray-600 cursor-not-allowed' 
+                      : 'bg-gradient-to-r from-red-500 to-rose-600 text-white hover:from-red-600 hover:to-rose-700'
+                  }`}
+                  disabled={isLocked}
                 >
                   <span className="text-lg">×</span>
                   <span>Remove</span>
@@ -975,20 +1290,23 @@ const ElementNode = ({ id, data, isConnectable, selected }) => {
           <div className="space-y-2">
             <div className="space-y-2">
               {checkboxOptions.map((option, index) => (
-                <label key={index} className="flex items-center space-x-2 cursor-pointer">
+                <label key={index} className={`flex items-center space-x-2 ${isLocked ? 'cursor-not-allowed' : 'cursor-pointer'}`}>
                   <input
                     type="checkbox"
                     checked={checkedItems[option] || false}
-                    onChange={(e) => setCheckedItems({
+                    onChange={(e) => !isLocked && setCheckedItems({
                       ...checkedItems,
                       [option]: e.target.checked
                     })}
-                    className="w-5 h-5 text-blue-600 border-2 border-gray-300 rounded focus:ring-blue-500"
+                    className={`w-5 h-5 border-2 rounded focus:ring-blue-500 ${
+                      isLocked ? 'border-gray-300 bg-gray-100 text-gray-400 cursor-not-allowed' : 'text-blue-600 border-gray-300'
+                    }`}
                     onClick={(e) => e.stopPropagation()}
                     onKeyDown={(e) => e.stopPropagation()}
                     onFocus={(e) => e.stopPropagation()}
+                    disabled={isLocked}
                   />
-                  <span className="text-base text-gray-700">{option}</span>
+                  <span className={`text-base ${isLocked ? 'text-gray-500' : 'text-gray-700'}`}>{option}</span>
                 </label>
               ))}
             </div>
@@ -996,9 +1314,16 @@ const ElementNode = ({ id, data, isConnectable, selected }) => {
               <button
                 onClick={(e) => {
                   e.stopPropagation();
-                  addCheckboxOption();
+                  if (!isLocked) {
+                    addCheckboxOption();
+                  }
                 }}
-                className="flex-1 px-4 py-2 text-sm font-medium bg-gradient-to-r from-emerald-500 to-green-600 text-white rounded-lg hover:from-emerald-600 hover:to-green-700 transition-all duration-200 shadow-md hover:shadow-lg flex items-center justify-center space-x-2"
+                className={`flex-1 px-4 py-2 text-sm font-medium rounded-lg transition-all duration-200 shadow-md hover:shadow-lg flex items-center justify-center space-x-2 ${
+                  isLocked 
+                    ? 'bg-gray-400 text-gray-600 cursor-not-allowed' 
+                    : 'bg-gradient-to-r from-emerald-500 to-green-600 text-white hover:from-emerald-600 hover:to-green-700'
+                }`}
+                disabled={isLocked}
               >
                 <span className="text-lg">+</span>
                 <span>Add Option</span>
@@ -1007,9 +1332,16 @@ const ElementNode = ({ id, data, isConnectable, selected }) => {
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
-                    removeOption(checkboxOptions, setCheckboxOptions, checkboxOptions.length - 1);
+                    if (!isLocked) {
+                      removeOption(checkboxOptions, setCheckboxOptions, checkboxOptions.length - 1);
+                    }
                   }}
-                  className="px-4 py-2 text-sm font-medium bg-gradient-to-r from-red-500 to-rose-600 text-white rounded-lg hover:from-red-600 hover:to-rose-700 transition-all duration-200 shadow-md hover:shadow-lg flex items-center justify-center space-x-2"
+                  className={`px-4 py-2 text-sm font-medium rounded-lg transition-all duration-200 shadow-md hover:shadow-lg flex items-center justify-center space-x-2 ${
+                    isLocked 
+                      ? 'bg-gray-400 text-gray-600 cursor-not-allowed' 
+                      : 'bg-gradient-to-r from-red-500 to-rose-600 text-white hover:from-red-600 hover:to-rose-700'
+                  }`}
+                  disabled={isLocked}
                 >
                   <span className="text-lg">×</span>
                   <span>Remove</span>
@@ -1024,19 +1356,22 @@ const ElementNode = ({ id, data, isConnectable, selected }) => {
           <div className="space-y-2">
             <div className="space-y-2">
               {radioOptions.map((option, index) => (
-                <label key={index} className="flex items-center space-x-2 cursor-pointer">
+                <label key={index} className={`flex items-center space-x-2 ${isLocked ? 'cursor-not-allowed' : 'cursor-pointer'}`}>
                   <input
                     type="radio"
                     name={`radio-${data.id || Math.random()}`}
                     value={option}
                     checked={radioValue === option}
-                    onChange={(e) => setRadioValue(e.target.value)}
-                    className="w-5 h-5 text-blue-600 border-2 border-gray-300 focus:ring-blue-500"
+                    onChange={(e) => !isLocked && setRadioValue(e.target.value)}
+                    className={`w-5 h-5 border-2 focus:ring-blue-500 ${
+                      isLocked ? 'border-gray-300 bg-gray-100 text-gray-400 cursor-not-allowed' : 'text-blue-600 border-gray-300'
+                    }`}
                     onClick={(e) => e.stopPropagation()}
                     onKeyDown={(e) => e.stopPropagation()}
                     onFocus={(e) => e.stopPropagation()}
+                    disabled={isLocked}
                   />
-                  <span className="text-base text-gray-700">{option}</span>
+                  <span className={`text-base ${isLocked ? 'text-gray-500' : 'text-gray-700'}`}>{option}</span>
                 </label>
               ))}
             </div>
@@ -1044,9 +1379,16 @@ const ElementNode = ({ id, data, isConnectable, selected }) => {
               <button
                 onClick={(e) => {
                   e.stopPropagation();
-                  addRadioOption();
+                  if (!isLocked) {
+                    addRadioOption();
+                  }
                 }}
-                className="flex-1 px-4 py-2 text-sm font-medium bg-gradient-to-r from-emerald-500 to-green-600 text-white rounded-lg hover:from-emerald-600 hover:to-green-700 transition-all duration-200 shadow-md hover:shadow-lg flex items-center justify-center space-x-2"
+                className={`flex-1 px-4 py-2 text-sm font-medium rounded-lg transition-all duration-200 shadow-md hover:shadow-lg flex items-center justify-center space-x-2 ${
+                  isLocked 
+                    ? 'bg-gray-400 text-gray-600 cursor-not-allowed' 
+                    : 'bg-gradient-to-r from-emerald-500 to-green-600 text-white hover:from-emerald-600 hover:to-green-700'
+                }`}
+                disabled={isLocked}
               >
                 <span className="text-lg">+</span>
                 <span>Add Option</span>
@@ -1055,9 +1397,16 @@ const ElementNode = ({ id, data, isConnectable, selected }) => {
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
-                    removeOption(radioOptions, setRadioOptions, radioOptions.length - 1);
+                    if (!isLocked) {
+                      removeOption(radioOptions, setRadioOptions, radioOptions.length - 1);
+                    }
                   }}
-                  className="px-4 py-2 text-sm font-medium bg-gradient-to-r from-red-500 to-rose-600 text-white rounded-lg hover:from-red-600 hover:to-rose-700 transition-all duration-200 shadow-md hover:shadow-lg flex items-center justify-center space-x-2"
+                  className={`px-4 py-2 text-sm font-medium rounded-lg transition-all duration-200 shadow-md hover:shadow-lg flex items-center justify-center space-x-2 ${
+                    isLocked 
+                      ? 'bg-gray-400 text-gray-600 cursor-not-allowed' 
+                      : 'bg-gradient-to-r from-red-500 to-rose-600 text-white hover:from-red-600 hover:to-rose-700'
+                  }`}
+                  disabled={isLocked}
                 >
                   <span className="text-lg">×</span>
                   <span>Remove</span>
@@ -1664,10 +2013,11 @@ const ElementNode = ({ id, data, isConnectable, selected }) => {
           <div className="flex items-center space-x-2">
             <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium border ${getApprovalStatusColor()}`}>
               <span className="mr-1">{getApprovalStatusIcon()}</span>
-              {data.approvalStatus === 'client_approved' ? 'Fully Approved' :
-               data.approvalStatus === 'pm_approved' ? 'PM Approved' :
-               data.approvalStatus === 'approved' ? 'Approved' : 
-               data.approvalStatus === 'rejected' ? 'Rejected' : 'Pending Approval'}
+              {data.approvalStatus === 'sent_to_pm' ? 'Sent to PM for Approval' :
+               data.approvalStatus === 'pm_approved' ? 'PM Approved - Waiting for Client' :
+               data.approvalStatus === 'client_approved' ? 'Fully Approved' :
+               data.approvalStatus === 'locked' ? 'Locked' :
+               data.approvalStatus === 'rejected' ? 'Rejected' : 'Draft'}
             </span>
           </div>
           
@@ -1678,6 +2028,23 @@ const ElementNode = ({ id, data, isConnectable, selected }) => {
             Added by {data.addedByRole === 'pm' ? 'PM' : 'Vendor'}
           </span>
         </div>
+        
+        {/* Sent for Approval Info */}
+        {data.sentForApprovalAt && (
+          <div className="mb-2 p-2 rounded-lg bg-blue-50 border border-blue-200">
+            <div className="flex items-center space-x-2 mb-1">
+              <span className="w-5 h-5 rounded-full flex items-center justify-center text-xs bg-blue-500 text-white">
+                📤
+              </span>
+              <span className="text-xs font-medium text-gray-700">
+                Sent for approval by {data.sentForApprovalBy}
+              </span>
+            </div>
+            <p className="text-xs text-gray-500 ml-7">
+              📅 {formatDate(data.sentForApprovalAt)}
+            </p>
+          </div>
+        )}
         
         {/* PM Approval Details */}
         {data.pmApproval && (
@@ -1725,41 +2092,35 @@ const ElementNode = ({ id, data, isConnectable, selected }) => {
           </div>
         )}
         
-        {/* Legacy Approval Details (if approved/rejected via old system) */}
-        {data.approvalStatus && data.approvalStatus !== 'pending' && data.approvalStatus !== 'pm_approved' && 
-         !data.pmApproval && !data.clientApproval && (
-          <div className="mb-3 p-2 rounded-lg bg-gray-50 border border-gray-100">
-            <div className="flex items-center space-x-2 mb-1">
-              <span className={`w-5 h-5 rounded-full flex items-center justify-center text-xs ${
-                data.approvalStatus === 'approved' ? 'bg-green-500 text-white' : 'bg-red-500 text-white'
-              }`}>
-                {data.approvalStatus === 'approved' ? '✓' : '✕'}
-              </span>
-              <span className="text-xs font-medium text-gray-700">
-                {data.approvalStatus === 'approved' ? 'Approved' : 'Rejected'} by {data.approvedBy}
-              </span>
+        {/* Send for Approval Button (only for vendors on draft elements) */}
+        {(() => {
+          const canSend = canSendForApproval();
+          console.log('📤 Button visibility check:', { canSend, currentUserRole: getCurrentUserRole(), approvalStatus: data.approvalStatus });
+          return canSend && (
+            <div className="mb-3">
+              <button
+                onClick={handleSendForApproval}
+                disabled={isSendingForApproval}
+                className="w-full flex items-center justify-center space-x-2 px-3 py-2 bg-blue-500 hover:bg-blue-600 text-white text-sm font-medium rounded-lg transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isSendingForApproval ? (
+                  <>
+                    <svg className="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    <span>Sending...</span>
+                  </>
+                ) : (
+                  <>
+                    <Send className="w-4 h-4" />
+                    <span>Send for Approval</span>
+                  </>
+                )}
+              </button>
             </div>
-            
-            {data.approvedByRole && (
-              <p className="text-xs text-gray-500 ml-7">
-                Role: {data.approvedByRole === 'pm' ? 'Project Manager' : 'Vendor'}
-              </p>
-            )}
-            
-            {data.approvalTimestamp && (
-              <p className="text-xs text-gray-500 ml-7">
-                📅 {formatDate(data.approvalTimestamp)}
-              </p>
-            )}
-            
-            {data.approvalReason && (
-              <div className="mt-2 p-2 bg-white rounded border border-gray-100">
-                <p className="text-xs text-gray-500 uppercase tracking-wide mb-1">Reason</p>
-                <p className="text-sm text-gray-700">{data.approvalReason}</p>
-              </div>
-            )}
-          </div>
-        )}
+          );
+        })()}
         
         {/* Approval/Reject Buttons (only show if user can approve) */}
         {canApprove() && (
@@ -1781,15 +2142,30 @@ const ElementNode = ({ id, data, isConnectable, selected }) => {
           </div>
         )}
         
-        {/* Message when user cannot approve */}
-        {!canApprove() && !data.approvalStatus?.includes('approved') && data.approvalStatus !== 'rejected' && (
-          <p className="text-xs text-center text-gray-500 italic">
-            {data.approvalStatus === 'pending' 
-              ? 'Waiting for PM to review this element'
-              : data.approvalStatus === 'pm_approved'
-              ? 'Waiting for Client to review this element'
-              : 'Approval in progress'
-            }
+        {/* Message when approval workflow is active */}
+        {data.approvalStatus === 'sent_to_pm' && (
+          <p className="text-xs text-center text-blue-600 italic">
+            ⏳ Waiting for PM to review this element
+          </p>
+        )}
+        {data.approvalStatus === 'pm_approved' && (
+          <p className="text-xs text-center text-yellow-600 italic">
+            ⏳ Waiting for Client to review this element
+          </p>
+        )}
+        {data.approvalStatus === 'client_approved' && (
+          <p className="text-xs text-center text-green-600 italic">
+            ✅ Element has been fully approved
+          </p>
+        )}
+        {data.approvalStatus === 'locked' && (
+          <p className="text-xs text-center text-gray-600 italic">
+            🔒 Element is locked and cannot be edited
+          </p>
+        )}
+        {data.approvalStatus === 'rejected' && (
+          <p className="text-xs text-center text-red-600 italic">
+            ❌ Element has been rejected
           </p>
         )}
       </div>

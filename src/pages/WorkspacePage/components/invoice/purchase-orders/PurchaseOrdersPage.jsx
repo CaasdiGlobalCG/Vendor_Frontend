@@ -33,6 +33,9 @@ const PurchaseOrdersPage = ({ workspaceId, workspaceName, selectedTask, selected
   const [sendingPo, setSendingPo] = useState(false);
   const [showPreviewModal, setShowPreviewModal] = useState(false);
   const [previewPdfUrl, setPreviewPdfUrl] = useState(null);
+  const [approvingPoId, setApprovingPoId] = useState(null);
+  const [approvalMessage, setApprovalMessage] = useState(null);
+  const [approvalError, setApprovalError] = useState(null);
   const previewRef = React.useRef(null);
 
   // Sync highlighted quote when sourceQuote prop changes
@@ -368,6 +371,83 @@ const PurchaseOrdersPage = ({ workspaceId, workspaceName, selectedTask, selected
     }
   };
 
+  const handleApproveAndSendPO = async (order) => {
+    if (!order?.id || !currentUser?.vendorId) {
+      console.error('❌ Missing order ID or vendor ID');
+      setApprovalError('Missing required information to approve PO');
+      return;
+    }
+
+    try {
+      setApprovingPoId(order.id);
+      setApprovalError(null);
+      setApprovalMessage(null);
+
+      const vendorId = currentUser.vendorId;
+      const headers = {
+        'Content-Type': 'application/json',
+        'x-user-info': JSON.stringify({
+          vendorId: vendorId,
+          email: currentUser?.email,
+          role: 'vendor',
+          name: currentUser?.name
+        })
+      };
+
+      console.log('🔄 Approving PO:', order.id);
+
+      // Call backend endpoint to approve PO
+      const response = await fetch(`/api/workspace/purchase-orders/${order.id}/vendor-approve`, {
+        method: 'POST',
+        headers: headers,
+        body: JSON.stringify({
+          vendorId: vendorId,
+          vendorName: currentUser?.name || currentUser?.vendorName,
+          approvalDate: new Date().toISOString()
+        })
+      });
+
+      console.log('📡 Response status:', response.status);
+
+      if (!response.ok) {
+        const responseText = await response.text();
+        console.error('❌ Response text:', responseText);
+        throw new Error(`Server returned ${response.status}: ${responseText.substring(0, 100)}`);
+      }
+
+      const result = await response.json();
+
+      if (!result.success) {
+        throw new Error(result.message || 'Failed to approve purchase order');
+      }
+
+      console.log('✅ PO approved successfully:', result.data);
+      setApprovalMessage(`PO ${order.id} has been approved and sent to PM for review`);
+      
+      // Refresh the PO list after successful approval
+      setTimeout(() => {
+        fetchPurchaseOrders();
+        setApprovalMessage(null);
+      }, 2000);
+    } catch (err) {
+      console.error('❌ Error approving PO:', err);
+      setApprovalError(`Failed to approve PO: ${err.message}`);
+    } finally {
+      setApprovingPoId(null);
+    }
+  };
+
+  // Clear messages after 4 seconds
+  useEffect(() => {
+    if (approvalError || approvalMessage) {
+      const timer = setTimeout(() => {
+        setApprovalError(null);
+        setApprovalMessage(null);
+      }, 4000);
+      return () => clearTimeout(timer);
+    }
+  }, [approvalError, approvalMessage]);
+
   // Calculate stats
   const totalOrders = purchaseOrdersData.length;
   const acceptedOrders = purchaseOrdersData.filter(order => order.statusType === 'accepted').length;
@@ -378,6 +458,29 @@ const PurchaseOrdersPage = ({ workspaceId, workspaceName, selectedTask, selected
 
   return (
     <div className="min-h-full bg-gradient-to-br from-gray-50 via-slate-50 to-stone-50">
+      {/* Approval Success/Error Messages */}
+      {approvalMessage && (
+        <div className="fixed top-4 right-4 z-40 bg-green-50 border border-green-200 rounded-lg p-4 flex items-center space-x-3 shadow-lg animate-slide-in">
+          <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0">
+            <CheckCircle className="w-6 h-6 text-green-600" />
+          </div>
+          <div>
+            <p className="text-sm font-medium text-green-900">{approvalMessage}</p>
+          </div>
+        </div>
+      )}
+      
+      {approvalError && (
+        <div className="fixed top-4 right-4 z-40 bg-red-50 border border-red-200 rounded-lg p-4 flex items-center space-x-3 shadow-lg animate-slide-in">
+          <div className="w-10 h-10 bg-red-100 rounded-full flex items-center justify-center flex-shrink-0">
+            <AlertCircle className="w-6 h-6 text-red-600" />
+          </div>
+          <div>
+            <p className="text-sm font-medium text-red-900">{approvalError}</p>
+          </div>
+        </div>
+      )}
+
       {/* PDF Preview Modal */}
       {showPreviewModal && previewPdfUrl && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
@@ -720,6 +823,16 @@ const PurchaseOrdersPage = ({ workspaceId, workspaceName, selectedTask, selected
                           >
                             <Eye className="w-4 h-4" />
                           </button>
+                          {order.status && (order.status.toLowerCase().includes('pending_review') || order.status.toLowerCase().includes('pending review')) && (
+                            <button
+                              className="text-xs px-3 py-1.5 bg-emerald-50 text-emerald-700 rounded-lg hover:bg-emerald-100 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                              onClick={() => handleApproveAndSendPO(order)}
+                              disabled={approvingPoId === order.id}
+                              title="Approve and send to PM"
+                            >
+                              {approvingPoId === order.id ? 'Approving...' : '✓ Approve'}
+                            </button>
+                          )}
                           {order.status && order.status.toLowerCase().includes('requested for invoice') && onConvertToInvoice && (
                             <button
                               className="text-xs px-3 py-1.5 bg-emerald-50 text-emerald-700 rounded-lg hover:bg-emerald-100 transition-colors duration-200"

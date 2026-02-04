@@ -793,8 +793,35 @@ const WorkspacePage = () => {
     loadWorkspace();
   }, [workspaceId, currentUser]);
 
-  // Save workspace data (now saves to specific subtask)
+  // Listen for approval completion events and refresh workspace
+  useEffect(() => {
+    const handleApprovalCompleted = async (event) => {
+      console.log('🎯 WorkspacePage: Approval completed event received', event.detail);
+      
+      // Refresh workspace data to get the updated approval status
+      try {
+        const response = await fetch(`/api/workspaces/${event.detail.workspaceId}`);
+        if (response.ok) {
+          const freshWorkspaceData = await response.json();
+          setWorkspace(freshWorkspaceData);
+          console.log('✅ WorkspacePage: Workspace refreshed after approval completion');
+        }
+      } catch (error) {
+        console.error('❌ WorkspacePage: Failed to refresh workspace after approval', error);
+      }
+    };
+
+    window.addEventListener('approvalCompleted', handleApprovalCompleted);
+    return () => window.removeEventListener('approvalCompleted', handleApprovalCompleted);
+  }, []);
   const saveWorkspace = async (workspaceData) => {
+    // IMPORTANT: Skip canvas saves if approval submission is in progress
+    // This prevents stale canvas data from overwriting newly submitted approvals
+    if (window.__isApprovingInProgress) {
+      console.log('⏸️ WorkspacePage: Skipping canvas save - approval submission in progress');
+      return;
+    }
+
     console.log('🔄 WorkspacePage: saveWorkspace called', {
       workspaceId,
       hasWorkspace: !!workspace,
@@ -843,6 +870,18 @@ const WorkspacePage = () => {
         
         // Update the workspace with the latest data
         setWorkspace(result.workspace);
+        
+        // Update selectedSubtask to reflect the new canvas data
+        if (result.workspace?.tasks) {
+          const updatedTask = result.workspace.tasks.find(t => t.id === selectedTask.id);
+          if (updatedTask?.subtasks) {
+            const updatedSubtask = updatedTask.subtasks.find(s => s.id === selectedSubtask.id);
+            if (updatedSubtask) {
+              setSelectedSubtask(updatedSubtask);
+              console.log('🔄 WorkspacePage: Updated selectedSubtask with new canvas data');
+            }
+          }
+        }
         
       } catch (error) {
         console.error('❌ WorkspacePage: Error saving subtask canvas:', error);
