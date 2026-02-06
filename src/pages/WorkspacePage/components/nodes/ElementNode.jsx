@@ -1,4 +1,3 @@
-import { persistNodeDataPatch } from '../../utils/nodePersistence';
 import React, { useState, useContext, useEffect, useRef } from 'react';
 import { useParams } from 'react-router-dom';
 import { getWorkspaceById, updateWorkspace } from '../../utils/workspaceApi';
