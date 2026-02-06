@@ -1,3 +1,4 @@
+import { persistNodeDataPatch } from '../../utils/nodePersistence';
 import React, { useState, useContext, useEffect, useRef } from 'react';
 import { useParams } from 'react-router-dom';
 import { getWorkspaceById, updateWorkspace } from '../../utils/workspaceApi';
@@ -586,92 +587,38 @@ const ElementNode = ({ id, data, isConnectable, selected }) => {
     });
     
     try {
-      // Get current workspace data
-      console.log('📥 Fetching current workspace data...');
-      const workspaceData = await getWorkspaceById(workspaceId);
-      
-      if (workspaceData) {
-        console.log('✅ Got workspace data, updating nodes in tasks/subtasks...');
-        
-        // Function to update node in nested tasks/subtasks structure
-        const updateNodeInTasks = (tasks) => {
-          return (tasks || []).map(task => ({
-            ...task,
-            subtasks: (task.subtasks || []).map(subtask => {
-              // Ensure canvasData exists with proper structure
-              const canvasData = subtask.canvasData || { nodes: [], edges: [], zoomLevel: 100 };
-              return {
-                ...subtask,
-                canvasData: {
-                  ...canvasData,
-                  nodes: (canvasData.nodes || []).map(node => {
-                    if (node.id === id) {
-                      const updatedNode = {
-                        ...node,
-                        data: {
-                          ...node.data,
-                          ...newApprovalData,
-                        }
-                      };
-                      console.log('📝 Updated node data in subtask:', updatedNode.data);
-                      return updatedNode;
-                    }
-                    return node;
-                  })
-                }
-              };
-            })
-          }));
-        };
-        
-        // Update the tasks with the modified node
-        const updatedTasks = updateNodeInTasks(workspaceData.tasks || []);
-        
-        console.log('📤 Sending updated tasks to backend...', {
-          taskCount: updatedTasks.length,
-          nodeId: id
-        });
-        
-        // Save to backend - send the entire updated workspace to ensure consistency
-        const updateResult = await updateWorkspace(workspaceId, { 
-          tasks: updatedTasks,
-          updatedAt: new Date().toISOString()
-        });
-        
-        console.log('✅ Backend update successful:', {
-          workspaceId,
-          updatedAt: updateResult?.updatedAt
-        });
-        
-        // Fetch fresh workspace data to ensure we have the latest state
-        console.log('🔄 Fetching fresh workspace data...');
-        const freshWorkspaceData = await getWorkspaceById(workspaceId);
-        
-        if (freshWorkspaceData) {
-          // Find the updated node from fresh data
-          let updatedNodeFromServer = null;
-          (freshWorkspaceData.tasks || []).forEach(task => {
-            (task.subtasks || []).forEach(subtask => {
-              (subtask.canvasData?.nodes || []).forEach(node => {
-                if (node.id === id) {
-                  updatedNodeFromServer = node;
-                }
-              });
+      console.log('📤 Persisting approval patch (subtask-aware)...', { nodeId: id, workspaceId });
+      await persistNodeDataPatch(id, newApprovalData, setNodes, workspaceId, { bypassApprovalFlow: true });
+
+      // Fetch fresh workspace data to ensure we have the latest state
+      console.log('🔄 Fetching fresh workspace data...');
+      const freshWorkspaceData = await getWorkspaceById(workspaceId);
+
+      if (freshWorkspaceData) {
+        // Find the updated node from fresh data
+        let updatedNodeFromServer = null;
+        (freshWorkspaceData.tasks || []).forEach(task => {
+          (task.subtasks || []).forEach(subtask => {
+            (subtask.canvasData?.nodes || []).forEach(node => {
+              if (node.id === id) {
+                updatedNodeFromServer = node;
+              }
             });
           });
-          
-          // Update local React Flow state with fresh data from server
-          console.log('🔄 Updating local React Flow state with server data...');
-          if (updatedNodeFromServer) {
-            setNodes((nds) => nds.map((node) => {
-              if (node.id === id) {
-                console.log('📝 Local state updated with server node data:', updatedNodeFromServer.data);
-                return updatedNodeFromServer;
-              }
-              return node;
-            }));
-          }
+        });
+
+        // Update local React Flow state with fresh data from server
+        console.log('🔄 Updating local React Flow state with server data...');
+        if (updatedNodeFromServer) {
+          setNodes((nds) => nds.map((node) => {
+            if (node.id === id) {
+              console.log('📝 Local state updated with server node data:', updatedNodeFromServer.data);
+              return updatedNodeFromServer;
+            }
+            return node;
+          }));
         }
+      }
         
         // Force re-render to ensure UI updates
         setForceUpdate(prev => prev + 1);
@@ -688,10 +635,6 @@ const ElementNode = ({ id, data, isConnectable, selected }) => {
         }));
         
         console.log(`✅ Element ${approvalAction}d successfully by ${currentUserRole}. Status: ${newApprovalStatus}`);
-      } else {
-        console.error('❌ No workspace data received');
-        throw new Error('No workspace data received');
-      }
     } catch (error) {
       console.error('❌ Error updating approval status:', error);
       // Don't update local state if backend update failed
@@ -2088,7 +2031,12 @@ const ElementNode = ({ id, data, isConnectable, selected }) => {
         {/* Send for Approval Button (only for vendors on draft elements) */}
         {(() => {
           const canSend = canSendForApproval();
-          console.log('📤 Button visibility check:', { canSend, currentUserRole: getCurrentUserRole(), approvalStatus: data.approvalStatus });
+          console.log('📤 Button visibility check:', {
+            nodeId: id,
+            canSend,
+            currentUserRole: getCurrentUserRole(),
+            approvalStatus: data.approvalStatus
+          });
           return canSend && (
             <div className="mb-3">
               <button
