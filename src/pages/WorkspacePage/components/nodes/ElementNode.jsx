@@ -392,119 +392,45 @@ const ElementNode = ({ id, data, isConnectable, selected }) => {
     window.__isApprovingInProgress = true;
     
     try {
-      // Get current workspace data
-      console.log('📡 Fetching workspace data...');
-      const workspaceData = await getWorkspaceById(workspaceId);
-      console.log('📦 Workspace data received:', { 
-        hasData: !!workspaceData, 
-        tasksCount: workspaceData?.tasks?.length,
-        nodesCount: workspaceData?.nodes?.length 
-      });
-      
-      if (workspaceData) {
-        // Track if node was found
-        let nodeFound = false;
-        
-        // Function to update node in nested tasks/subtasks structure
-        const updateNodeInTasks = (tasks) => {
-          return (tasks || []).map(task => ({
-            ...task,
-            subtasks: (task.subtasks || []).map(subtask => {
-              // Ensure canvasData exists with proper structure
-              const canvasData = subtask.canvasData || { nodes: [], edges: [], zoomLevel: 100 };
-              return {
-                ...subtask,
-                canvasData: {
-                  ...canvasData,
-                  nodes: (canvasData.nodes || []).map(node => {
-                    if (node.id === id) {
-                      nodeFound = true;
-                      console.log('✅ Found node in subtask:', subtask.id, 'Updating to sent_to_pm');
-                      return {
-                        ...node,
-                        data: {
-                          ...node.data,
-                          approvalStatus: 'sent_to_pm',
-                          sentForApprovalAt: new Date().toISOString(),
-                          sentForApprovalBy: currentUser?.name || currentUser?.email || 'Unknown User',
-                        }
-                      };
-                    }
-                    return node;
-                  })
-                }
-              };
-            })
-          }));
-        };
-        
-        // Update the tasks with the modified node
-        const updatedTasks = updateNodeInTasks(workspaceData.tasks || []);
-        
-        console.log('📤 Sending element for approval in tasks, nodeFound:', nodeFound);
-        
-        if (!nodeFound) {
-          console.error('❌ Node not found in any subtask! ID:', id);
-          console.log('📋 Available tasks/subtasks:', JSON.stringify(workspaceData.tasks?.map(t => ({
-            id: t.id,
-            subtasks: t.subtasks?.map(s => ({
-              id: s.id,
-              nodeIds: s.canvasData?.nodes?.map(n => n.id) || []
-            }))
-          })), null, 2));
-        }
-        
-        // Save to backend with timestamp
-        console.log('💾 Saving to backend...');
-        const result = await updateWorkspace(workspaceId, { 
-          tasks: updatedTasks,
-          updatedAt: new Date().toISOString()
-        });
-        
-        console.log('✅ Element sent for approval to backend:', { updatedAt: result?.updatedAt, success: !!result });
-        
-        // Fetch fresh workspace data to ensure UI is in sync
-        console.log('🔄 Fetching fresh workspace data...');
-        const freshWorkspaceData = await getWorkspaceById(workspaceId);
-        
-        if (freshWorkspaceData) {
-          // Find the updated node from fresh data
-          let updatedNodeFromServer = null;
-          (freshWorkspaceData.tasks || []).forEach(task => {
-            (task.subtasks || []).forEach(subtask => {
-              (subtask.canvasData?.nodes || []).forEach(node => {
-                if (node.id === id) {
-                  updatedNodeFromServer = node;
-                  console.log('📝 Found updated node from server:', {
-                    id: node.id,
-                    approvalStatus: node.data?.approvalStatus
-                  });
-                }
-              });
+      const patch = {
+        approvalStatus: 'sent_to_pm',
+        sentForApprovalAt: new Date().toISOString(),
+        sentForApprovalBy: currentUser?.name || currentUser?.email || 'Unknown User'
+      };
+
+      console.log('📤 Persisting send-for-approval patch (subtask-aware)...', { nodeId: id, workspaceId, patch });
+      await persistNodeDataPatch(id, patch, setNodes, workspaceId, { bypassApprovalFlow: true });
+
+      // Fetch fresh workspace data to ensure UI is in sync
+      console.log('🔄 Fetching fresh workspace data...');
+      const freshWorkspaceData = await getWorkspaceById(workspaceId);
+
+      if (freshWorkspaceData) {
+        // Find the updated node from fresh data
+        let updatedNodeFromServer = null;
+        (freshWorkspaceData.tasks || []).forEach(task => {
+          (task.subtasks || []).forEach(subtask => {
+            (subtask.canvasData?.nodes || []).forEach(node => {
+              if (node.id === id) {
+                updatedNodeFromServer = node;
+                console.log('📝 Found updated node from server:', {
+                  id: node.id,
+                  approvalStatus: node.data?.approvalStatus
+                });
+              }
             });
           });
-          
-          // Update local React Flow state with fresh data
-          if (updatedNodeFromServer) {
-            setNodes((nds) => nds.map((node) => {
-              if (node.id === id) {
-                console.log('📝 Local state updated with server data, new status:', updatedNodeFromServer.data?.approvalStatus);
-                return updatedNodeFromServer;
-              }
-              return node;
-            }));
-          } else {
-            console.error('❌ Could not find updated node in fresh data');
-          }
+        });
+
+        if (!updatedNodeFromServer) {
+          console.error('❌ Could not find updated node in fresh data after send-for-approval');
         }
-        
-        // Force re-render to ensure UI updates
-        setForceUpdate(prev => prev + 1);
-        
-        console.log('✅ Element sent for approval successfully');
-      } else {
-        console.error('❌ No workspace data received!');
       }
+
+      // Force re-render to ensure UI updates
+      setForceUpdate(prev => prev + 1);
+
+      console.log('✅ Element sent for approval successfully');
     } catch (error) {
       console.error('❌ Error sending element for approval:', error);
       console.error('Error details:', error.message, error.stack);
@@ -527,7 +453,10 @@ const ElementNode = ({ id, data, isConnectable, selected }) => {
   
   // Handle submitting approval/rejection
   const handleApprovalSubmit = async () => {
-    if (!approvalReason.trim()) return;
+    if (!approvalReason.trim()) {
+      console.warn('⚠️ Approval submit blocked: empty reason', { nodeId: id, approvalAction });
+      return;
+    }
     
     setIsSubmittingApproval(true);
     

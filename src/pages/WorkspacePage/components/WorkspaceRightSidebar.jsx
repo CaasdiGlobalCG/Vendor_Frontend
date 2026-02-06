@@ -172,9 +172,18 @@ const WorkspaceRightSidebar = ({
 
   // Debug logging
   useEffect(() => {
+    const approvalSummary = (sortedElements || [])
+      .filter((el) => el && el.id)
+      .map((el) => ({
+        id: el.id,
+        name: el.data?.name,
+        approvalStatus: el.data?.approvalStatus
+      }));
+
     console.log('🔍 Elements Overview Debug:', {
       canvasElementsCount: canvasElements?.length || 0,
       filteredCount: sortedElements.length,
+      approvalSummary,
       canvasElements: canvasElements,
       sortedElements: sortedElements,
       selectedSubtask: selectedSubtask?.id,
