@@ -591,7 +591,7 @@ const edgeTypes = {
       lastAddedNodeIdRef.current = null;
       console.log('📌 Cleared last added element reference');
     }
-  }, [selectedSubtask?.id, workspace?.workspaceId, updateZoomLevel]);
+  }, [selectedSubtask?.id, selectedSubtask?.updatedAt, workspace?.workspaceId, updateZoomLevel]);
 
   // Auto-save workspace data when nodes or edges change
   useEffect(() => {
