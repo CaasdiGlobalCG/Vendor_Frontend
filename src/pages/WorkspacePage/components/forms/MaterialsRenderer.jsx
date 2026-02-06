@@ -2,7 +2,7 @@ import React, { useState, useContext, useEffect, useRef } from 'react';
 import { Plus, Minus, Send, Package, AlertCircle, CheckCircle, Clock, Upload, FileSpreadsheet, Edit2, X } from 'lucide-react';
 import { VendorContext } from '../../../../context/VendorContext';
 import config from '../../../../config/env';
-import { getWorkspaceById, updateWorkspace } from '../../utils/workspaceApi';
+import { persistNodeDataPatch } from '../../utils/nodePersistence';
 import * as XLSX from 'xlsx';
 
 const MaterialsRenderer = ({ data, materialType, workspaceId, currentUser, nodeId }) => {
@@ -104,14 +104,12 @@ const MaterialsRenderer = ({ data, materialType, workspaceId, currentUser, nodeI
       return;
     }
     try {
-      const workspace = await getWorkspaceById(workspaceId);
-      const nodes = workspace.nodes || [];
-      const updatedNodes = nodes.map((node) =>
-        node.id === nodeId 
-          ? { ...node, data: { ...node.data, procurementData } } 
-          : node
+      await persistNodeDataPatch(
+        nodeId,
+        { procurementData },
+        null,
+        workspaceId
       );
-      await updateWorkspace(workspaceId, { nodes: updatedNodes });
       console.log('✅ Procurement data persisted successfully');
     } catch (err) {
       console.error('Failed to persist procurement data:', err);

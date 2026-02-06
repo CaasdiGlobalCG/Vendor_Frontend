@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { UploadCloud, MapPin, Clock, Image as ImageIcon, Trash2, Plus, Eye, Download, X, Loader2 } from 'lucide-react';
-import { getWorkspaceById, updateWorkspace } from '../../utils/workspaceApi';
+import { persistNodeDataPatch } from '../../utils/nodePersistence';
 
 const defaultAnnotations = [
   { id: 'ann-1', text: 'Highlight key progress', position: 'top-left' }
@@ -78,24 +78,16 @@ const ImageBlockRenderer = ({ data, nodeId, workspaceId, setNodes }) => {
           );
         }
         
-        // Persist to backend
-        const workspace = await getWorkspaceById(workspaceId);
-        if (workspace) {
-          const updatedNodes = workspace.nodes.map(node => 
-            node.id === nodeId 
-              ? { 
-                  ...node, 
-                  data: { 
-                    ...node.data, 
-                    imageBlockData,
-                    lastModifiedAt: new Date().toISOString()
-                  } 
-                }
-              : node
-          );
-          await updateWorkspace(workspaceId, { nodes: updatedNodes });
-          console.log('✅ Image block data saved to backend');
-        }
+        await persistNodeDataPatch(
+          nodeId,
+          {
+            imageBlockData,
+            lastModifiedAt: new Date().toISOString()
+          },
+          null,
+          workspaceId
+        );
+        console.log('✅ Image block data saved to backend');
       } catch (error) {
         console.error('❌ Error auto-saving image block:', error);
       }

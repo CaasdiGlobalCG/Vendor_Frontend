@@ -1,7 +1,7 @@
 import React, { useState, useContext, useEffect, useRef } from 'react';
 import { useParams } from 'react-router-dom';
 import { getWorkspaceById, updateWorkspace } from '../../utils/workspaceApi';
-import { persistIsImportant, persistDeadline, persistTextContent, getTimeLeft as calculateTimeLeft, formatTimeLeft } from '../../utils/nodePersistence';
+import { persistIsImportant, persistDeadline, persistTextContent, persistNodeDataPatch, getTimeLeft as calculateTimeLeft, formatTimeLeft } from '../../utils/nodePersistence';
 import { Handle, Position, useReactFlow } from 'reactflow';
 import { Download, Eye, ExternalLink, X, ArrowRight, Check, X as XIcon, Menu, Star, Heart, Info, HelpCircle, Lock, Send } from 'lucide-react';
 import { VendorContext } from '../../../../context/VendorContext';
@@ -170,25 +170,18 @@ const ElementNode = ({ id, data, isConnectable, selected }) => {
           )
         );
         
-        // Persist to backend
-        const workspace = await getWorkspaceById(workspaceId);
-        if (workspace) {
-          const updatedNodes = workspace.nodes.map(node => 
-            node.id === id 
-              ? { 
-                  ...node, 
-                  data: { 
-                    ...node.data, 
-                    selectOptions: selectOptions,
-                    selectedValue: selectValue,
-                    lastModifiedAt: new Date().toISOString()
-                  } 
-                }
-              : node
-          );
-          await updateWorkspace(workspaceId, { nodes: updatedNodes });
-          console.log('✅ Dropdown data saved to backend');
-        }
+        // Persist to backend (subtask canvas aware)
+        await persistNodeDataPatch(
+          id,
+          {
+            selectOptions: selectOptions,
+            selectedValue: selectValue,
+            lastModifiedAt: new Date().toISOString()
+          },
+          null,
+          workspaceId
+        );
+        console.log('✅ Dropdown data saved to backend');
       } catch (error) {
         console.error('❌ Error auto-saving dropdown:', error);
       }

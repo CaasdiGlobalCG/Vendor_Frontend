@@ -1,4 +1,140 @@
+import axios from 'axios';
 import { updateWorkspace, getWorkspaceById } from './workspaceApi';
+
+const isApprovalFlowInProgress = () => {
+  try {
+    return typeof window !== 'undefined' && !!window.__isApprovingInProgress;
+  } catch {
+    return false;
+  }
+};
+
+const findSubtaskContainingNode = (workspace, nodeId) => {
+  const tasks = workspace?.tasks || [];
+  for (const task of tasks) {
+    const subtasks = task?.subtasks || [];
+    for (const subtask of subtasks) {
+      const nodes = subtask?.canvasData?.nodes || [];
+      if (nodes.some((n) => n?.id === nodeId)) {
+        return {
+          taskId: task.id,
+          subtaskId: subtask.id,
+          canvasData: {
+            nodes: nodes || [],
+            edges: subtask?.canvasData?.edges || [],
+            zoomLevel: subtask?.canvasData?.zoomLevel || 100
+          }
+        };
+      }
+    }
+  }
+  return null;
+};
+
+const saveSubtaskCanvas = async (workspaceId, taskId, subtaskId, canvasData) => {
+  const res = await axios.put(
+    `/api/workspaces/${workspaceId}/tasks/${taskId}/subtasks/${subtaskId}/canvas`,
+    {
+      nodes: canvasData.nodes || [],
+      edges: canvasData.edges || [],
+      zoomLevel: canvasData.zoomLevel || 100
+    },
+    {
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    }
+  );
+  return res.data;
+};
+
+/**
+ * Persist a partial update to node.data, saving into subtask canvas when the node belongs to a subtask.
+ * @param {string} nodeId
+ * @param {object} dataPatch - partial node.data patch
+ * @param {Function} [setNodes] - optional React Flow setNodes
+ * @param {string} workspaceId
+ */
+export const persistNodeDataPatch = async (nodeId, dataPatch, setNodes, workspaceId) => {
+  if (!workspaceId || !nodeId) return;
+
+  if (isApprovalFlowInProgress()) {
+    console.log('⏸️ Skipping persistNodeDataPatch - approval submission in progress');
+    return;
+  }
+
+  const workspace = await getWorkspaceById(workspaceId);
+  const subtaskLocation = findSubtaskContainingNode(workspace, nodeId);
+
+  if (subtaskLocation?.taskId && subtaskLocation?.subtaskId) {
+    const updatedNodes = (subtaskLocation.canvasData.nodes || []).map((node) => {
+      if (node.id !== nodeId) return node;
+      return {
+        ...node,
+        data: {
+          ...(node.data || {}),
+          ...(dataPatch || {})
+        }
+      };
+    });
+
+    await saveSubtaskCanvas(workspaceId, subtaskLocation.taskId, subtaskLocation.subtaskId, {
+      ...subtaskLocation.canvasData,
+      nodes: updatedNodes
+    });
+
+    if (typeof setNodes === 'function') {
+      setNodes((currentNodes) =>
+        currentNodes.map((node) =>
+          node.id === nodeId
+            ? {
+                ...node,
+                data: {
+                  ...(node.data || {}),
+                  ...(dataPatch || {})
+                }
+              }
+            : node
+        )
+      );
+    }
+
+    return;
+  }
+
+  const updatedNodes = (workspace.nodes || []).map((node) => {
+    if (node.id !== nodeId) return node;
+    return {
+      ...node,
+      data: {
+        ...(node.data || {}),
+        ...(dataPatch || {})
+      }
+    };
+  });
+
+  await updateWorkspace(workspaceId, {
+    nodes: updatedNodes,
+    edges: workspace.edges || [],
+    zoomLevel: workspace.zoomLevel || 100
+  });
+
+  if (typeof setNodes === 'function') {
+    setNodes((currentNodes) =>
+      currentNodes.map((node) =>
+        node.id === nodeId
+          ? {
+              ...node,
+              data: {
+                ...(node.data || {}),
+                ...(dataPatch || {})
+              }
+            }
+          : node
+      )
+    );
+  }
+};
 
 /**
  * Persist the isImportant flag to backend for a node
@@ -9,10 +145,55 @@ import { updateWorkspace, getWorkspaceById } from './workspaceApi';
  */
 export const persistIsImportant = async (nodeId, isImportant, setNodes, workspaceId) => {
   try {
+    if (isApprovalFlowInProgress()) {
+      console.log('⏸️ Skipping persistIsImportant - approval submission in progress');
+      return;
+    }
+
     console.log('💾 Persisting isImportant:', { nodeId, isImportant });
     
     // Fetch the latest workspace data
     const workspace = await getWorkspaceById(workspaceId);
+
+    // Prefer saving into subtask canvas if the node lives there
+    const subtaskLocation = findSubtaskContainingNode(workspace, nodeId);
+    if (subtaskLocation?.taskId && subtaskLocation?.subtaskId) {
+      const updatedNodes = (subtaskLocation.canvasData.nodes || []).map(node => {
+        if (node.id === nodeId) {
+          return {
+            ...node,
+            data: {
+              ...node.data,
+              isImportant: isImportant
+            }
+          };
+        }
+        return node;
+      });
+
+      await saveSubtaskCanvas(workspaceId, subtaskLocation.taskId, subtaskLocation.subtaskId, {
+        ...subtaskLocation.canvasData,
+        nodes: updatedNodes
+      });
+
+      setNodes((currentNodes) =>
+        currentNodes.map(node => {
+          if (node.id === nodeId) {
+            return {
+              ...node,
+              data: {
+                ...node.data,
+                isImportant: isImportant
+              }
+            };
+          }
+          return node;
+        })
+      );
+
+      console.log('✅ isImportant persisted successfully (subtask canvas)');
+      return;
+    }
     
     // Update the specific node with isImportant flag
     const updatedNodes = (workspace.nodes || []).map(node => {
@@ -69,6 +250,11 @@ export const persistIsImportant = async (nodeId, isImportant, setNodes, workspac
  */
 export const persistDeadline = async (nodeId, deadline, setNodes, workspaceId) => {
   try {
+    if (isApprovalFlowInProgress()) {
+      console.log('⏸️ Skipping persistDeadline - approval submission in progress');
+      return;
+    }
+
     console.log('💾 Persisting deadline:', { nodeId, deadline });
     
     // Convert to ISO string if it's a date
@@ -80,6 +266,46 @@ export const persistDeadline = async (nodeId, deadline, setNodes, workspaceId) =
     
     // Fetch the latest workspace data
     const workspace = await getWorkspaceById(workspaceId);
+
+    // Prefer saving into subtask canvas if the node lives there
+    const subtaskLocation = findSubtaskContainingNode(workspace, nodeId);
+    if (subtaskLocation?.taskId && subtaskLocation?.subtaskId) {
+      const updatedNodes = (subtaskLocation.canvasData.nodes || []).map(node => {
+        if (node.id === nodeId) {
+          return {
+            ...node,
+            data: {
+              ...node.data,
+              deadline: isoDeadline
+            }
+          };
+        }
+        return node;
+      });
+
+      await saveSubtaskCanvas(workspaceId, subtaskLocation.taskId, subtaskLocation.subtaskId, {
+        ...subtaskLocation.canvasData,
+        nodes: updatedNodes
+      });
+
+      setNodes((currentNodes) =>
+        currentNodes.map(node => {
+          if (node.id === nodeId) {
+            return {
+              ...node,
+              data: {
+                ...node.data,
+                deadline: isoDeadline
+              }
+            };
+          }
+          return node;
+        })
+      );
+
+      console.log('✅ Deadline persisted successfully (subtask canvas)');
+      return;
+    }
     
     // Update the specific node with deadline
     const updatedNodes = (workspace.nodes || []).map(node => {
@@ -173,10 +399,57 @@ export const formatTimeLeft = (timeLeft) => {
  */
 export const persistTextContent = async (nodeId, content, contentType, setNodes, workspaceId) => {
   try {
+    if (isApprovalFlowInProgress()) {
+      console.log('⏸️ Skipping persistTextContent - approval submission in progress');
+      return;
+    }
+
     console.log('💾 Persisting text content:', { nodeId, contentType, length: content.length });
     
     // Fetch the latest workspace data
     const workspace = await getWorkspaceById(workspaceId);
+
+    // Prefer saving into subtask canvas if the node lives there
+    const subtaskLocation = findSubtaskContainingNode(workspace, nodeId);
+    if (subtaskLocation?.taskId && subtaskLocation?.subtaskId) {
+      const updatedNodes = (subtaskLocation.canvasData.nodes || []).map(node => {
+        if (node.id === nodeId) {
+          return {
+            ...node,
+            data: {
+              ...node.data,
+              [contentType]: content,
+              lastModifiedAt: new Date().toISOString()
+            }
+          };
+        }
+        return node;
+      });
+
+      await saveSubtaskCanvas(workspaceId, subtaskLocation.taskId, subtaskLocation.subtaskId, {
+        ...subtaskLocation.canvasData,
+        nodes: updatedNodes
+      });
+
+      setNodes((currentNodes) =>
+        currentNodes.map(node => {
+          if (node.id === nodeId) {
+            return {
+              ...node,
+              data: {
+                ...node.data,
+                [contentType]: content,
+                lastModifiedAt: new Date().toISOString()
+              }
+            };
+          }
+          return node;
+        })
+      );
+
+      console.log('✅ Text content persisted successfully (subtask canvas)');
+      return;
+    }
     
     // Update the specific node with text content
     const updatedNodes = (workspace.nodes || []).map(node => {

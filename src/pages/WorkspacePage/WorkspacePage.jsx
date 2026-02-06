@@ -804,6 +804,15 @@ const WorkspacePage = () => {
         if (response.ok) {
           const freshWorkspaceData = await response.json();
           setWorkspace(freshWorkspaceData);
+
+          // Keep selectedTask/selectedSubtask in sync so CanvasWorkspace renders latest canvasData
+          if (selectedTask?.id && selectedSubtask?.id && Array.isArray(freshWorkspaceData?.tasks)) {
+            const updatedTask = freshWorkspaceData.tasks.find(t => t.id === selectedTask.id);
+            const updatedSubtask = updatedTask?.subtasks?.find(s => s.id === selectedSubtask.id);
+            if (updatedTask) setSelectedTask(updatedTask);
+            if (updatedSubtask) setSelectedSubtask(updatedSubtask);
+          }
+
           console.log('✅ WorkspacePage: Workspace refreshed after approval completion');
         }
       } catch (error) {
@@ -813,7 +822,7 @@ const WorkspacePage = () => {
 
     window.addEventListener('approvalCompleted', handleApprovalCompleted);
     return () => window.removeEventListener('approvalCompleted', handleApprovalCompleted);
-  }, []);
+  }, [selectedTask, selectedSubtask]);
   const saveWorkspace = async (workspaceData) => {
     // IMPORTANT: Skip canvas saves if approval submission is in progress
     // This prevents stale canvas data from overwriting newly submitted approvals

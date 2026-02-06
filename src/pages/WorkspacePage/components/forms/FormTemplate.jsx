@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { updateWorkspace, getWorkspaceById } from '../../utils/workspaceApi';
+import { persistNodeDataPatch } from '../../utils/nodePersistence';
 import { useReactFlow } from 'reactflow';
 
 const FormTemplate = ({ nodeId, workspaceId, onSubmitSuccess, initialFormData = null }) => {
@@ -50,40 +50,17 @@ const FormTemplate = ({ nodeId, workspaceId, onSubmitSuccess, initialFormData = 
     try {
       console.log('💾 Saving form data for node:', nodeId);
       
-      // Get workspace first using the API utility
-      const workspace = await getWorkspaceById(workspaceId);
-
-      // Find the node with matching ID and update its formData
-      const updatedNodes = workspace.nodes.map(node => {
-        if (node.id === nodeId) {
-          console.log('✏️ Updating node with form data');
-          const updatedNode = {
-            ...node,
-            data: {
-              ...node.data,
-              formData: formData,
-              lastSubmittedAt: new Date().toISOString(),
-              submissionCount: (node.data?.submissionCount || 0) + 1
-            }
-          };
-          console.log('📝 Updated node data:', updatedNode.data);
-          return updatedNode;
-        }
-        return node;
-      });
-
-      console.log('🔍 Updated nodes array:', updatedNodes.filter(n => n.id === nodeId));
-
-      // Save to database
-      console.log('📤 Sending updated workspace to server');
-      const result = await updateWorkspace(workspaceId, {
-        nodes: updatedNodes,
-        edges: workspace.edges || [],
-        zoomLevel: workspace.zoomLevel
-      });
+      await persistNodeDataPatch(
+        nodeId,
+        {
+          formData: formData,
+          lastSubmittedAt: new Date().toISOString(),
+        },
+        setNodes,
+        workspaceId
+      );
 
       console.log('✅ Form data saved to database successfully!');
-      console.log('📦 Server response:', result);
       
       // Update only the current node's data, not all nodes
       setNodes(prevNodes => 

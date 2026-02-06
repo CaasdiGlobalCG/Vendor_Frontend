@@ -11,7 +11,7 @@ import {
   X,
   Loader2
 } from 'lucide-react';
-import { getWorkspaceById, updateWorkspace } from '../../utils/workspaceApi';
+import { persistNodeDataPatch } from '../../utils/nodePersistence';
 
 const SUPPORTED_FORMATS = ['PDF', 'DOCX', 'XLSX', 'PPT', 'ZIP'];
 
@@ -114,24 +114,16 @@ const DocumentBlockRenderer = ({ data, nodeId, workspaceId, setNodes }) => {
           );
         }
         
-        // Persist to backend
-        const workspace = await getWorkspaceById(workspaceId);
-        if (workspace) {
-          const updatedNodes = workspace.nodes.map(node => 
-            node.id === nodeId 
-              ? { 
-                  ...node, 
-                  data: { 
-                    ...node.data, 
-                    documentBlockData,
-                    lastModifiedAt: new Date().toISOString()
-                  } 
-                }
-              : node
-          );
-          await updateWorkspace(workspaceId, { nodes: updatedNodes });
-          console.log('✅ Document block data saved to backend');
-        }
+        await persistNodeDataPatch(
+          nodeId,
+          {
+            documentBlockData,
+            lastModifiedAt: new Date().toISOString()
+          },
+          null,
+          workspaceId
+        );
+        console.log('✅ Document block data saved to backend');
       } catch (error) {
         console.error('❌ Error auto-saving document block:', error);
       }
