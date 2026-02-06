@@ -54,13 +54,12 @@ const saveSubtaskCanvas = async (workspaceId, taskId, subtaskId, canvasData) => 
  * @param {object} dataPatch - partial node.data patch
  * @param {Function} [setNodes] - optional React Flow setNodes
  * @param {string} workspaceId
+ * @param {object} [options]
  */
-export const persistNodeDataPatch = async (nodeId, dataPatch, setNodes, workspaceId) => {
+export const persistNodeDataPatch = async (nodeId, dataPatch, setNodes, workspaceId, options = {}) => {
   if (!workspaceId || !nodeId) return;
 
-  // Optional 5th argument: options (kept optional to avoid breaking existing call sites)
-  const options = arguments.length >= 5 && typeof arguments[4] === 'object' ? arguments[4] : {};
-  const bypassApprovalFlow = !!options.bypassApprovalFlow;
+  const bypassApprovalFlow = !!options?.bypassApprovalFlow;
 
   if (!bypassApprovalFlow && isApprovalFlowInProgress()) {
     console.log('⏸️ Skipping persistNodeDataPatch - approval submission in progress');
