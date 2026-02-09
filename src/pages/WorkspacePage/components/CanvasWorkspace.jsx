@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useEffect, useContext, useRef, useImperativeHandle, forwardRef } from 'react';
-import { Plus, Save, Eye, X, Users, Grid, Maximize2, Minimize2} from 'lucide-react';
+import { Plus, Save, Eye, X, Users, Grid, Maximize2, Minimize2 } from 'lucide-react';
 import { VendorContext } from '../../../context/VendorContext';
 import ReactFlow, { 
   useNodesState, 
@@ -92,6 +92,7 @@ const edgeTypes = {
   const MIN_ZOOM_PERCENT = 10;
   const MAX_ZOOM_PERCENT = 200;
   const CanvasWorkspace = forwardRef(({ 
+  selectedTask,
   selectedSubtask, 
   sidebarCollapsed, 
   onToggleSidebars,
@@ -197,6 +198,74 @@ const edgeTypes = {
       }
     } catch (error) {
       console.error('❌ CanvasWorkspace: Error tracking activity:', error);
+    }
+  };
+
+  // Function to record deletion history
+  const recordDeletionHistory = async (elementId, elementData, deletionContext = {}) => {
+    if (!workspace?.workspaceId || !currentUser || !elementId) {
+      console.log('⚠️ Cannot record deletion history - missing required data');
+      return;
+    }
+
+    try {
+      const deletionPayload = {
+        workspaceId: workspace.workspaceId,
+        taskId: selectedTask?.id || null,
+        subtaskId: selectedSubtask?.id || null,
+        elementId: elementId,
+        elementType: elementData?.type || 'unknown',
+        elementName: elementData?.name || 'Unnamed Element',
+        elementData: {
+          ...elementData,
+          // Include all relevant metadata
+          addedBy: elementData?.addedBy || null,
+          addedByEmail: elementData?.addedByEmail || null,
+          addedAt: elementData?.addedAt || null,
+          lastUpdatedAt: elementData?.lastUpdatedAt || null,
+          lastUpdatedBy: elementData?.lastUpdatedBy || null,
+          approvalStatus: elementData?.approvalStatus || null,
+          approvedBy: elementData?.approvedBy || null
+        },
+        deletedBy: currentUser.name || currentUser.email || 'Unknown User',
+        deletedByEmail: currentUser.email || null,
+        deletedByRole: currentUser.role || 'vendor',
+        position: elementData?.position || deletionContext.position || null,
+        details: {
+          canvasAction: deletionContext.canvasAction !== false,
+          deletedVia: deletionContext.deletedVia || 'canvas',
+          relatedEdges: deletionContext.relatedEdges || []
+        }
+      };
+
+      console.log('📝 Recording deletion history:', {
+        elementId,
+        subtaskId: deletionPayload.subtaskId,
+        taskId: deletionPayload.taskId,
+        elementType: deletionPayload.elementType,
+        elementName: deletionPayload.elementName,
+        workspaceId: workspace.workspaceId
+      });
+
+      const response = await fetch('/api/element-deletion-history', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(deletionPayload)
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        console.log('✅ Deletion history recorded successfully:', result.deletion?.deletionId);
+        return result.deletion;
+      } else {
+        const errorText = await response.text();
+        console.error('❌ Failed to record deletion history:', errorText);
+      }
+    } catch (error) {
+      console.error('❌ Error recording deletion history:', error);
+      // Don't throw - this is non-critical
     }
   };
 
@@ -2151,6 +2220,15 @@ const edgeTypes = {
     if (contextMenu.selectedNodes.length > 0) {
       const nodeIdsToDelete = contextMenu.selectedNodes.map(n => n.id);
       
+      // Record deletion history for each deleted node
+      contextMenu.selectedNodes.forEach((nodeToDelete) => {
+        recordDeletionHistory(nodeToDelete.id, nodeToDelete.data, {
+          deletedVia: 'context-menu',
+          canvasAction: true,
+          position: nodeToDelete.position
+        });
+      });
+      
       // Check for flowchart groups and delete them
       const flowchartGroups = new Set();
       contextMenu.selectedNodes.forEach(node => {
@@ -2174,7 +2252,7 @@ const edgeTypes = {
       
       console.log('🗑️ Deleted elements:', nodeIdsToDelete.length);
     }
-  }, [contextMenu.selectedNodes, setNodes, setEdges, deleteFlowchartGroup]);
+  }, [contextMenu.selectedNodes, setNodes, setEdges, deleteFlowchartGroup, recordDeletionHistory]);
 
   const handleContextMenuEdit = useCallback(() => {
     if (contextMenu.selectedNodes.length === 1) {
@@ -2800,20 +2878,38 @@ const edgeTypes = {
       const { elementId } = event.detail;
       console.log('🗑️ Deleting element:', elementId);
       
+      // Find the node before deleting it
+      const nodeToDelete = nodes.find(node => node.id === elementId);
+      const nodeData = nodeToDelete?.data || {};
+      
+      // Find all edges connected to this node
+      const connectedEdges = edges.filter(edge => edge.source === elementId || edge.target === elementId);
+      const connectedEdgeIds = connectedEdges.map(edge => edge.id);
+      
       // Remove the node from canvas
       setNodes(nds => nds.filter(node => node.id !== elementId));
       
       // Remove all edges connected to this node
       setEdges(eds => eds.filter(edge => edge.source !== elementId && edge.target !== elementId));
       
+      // Record deletion history
+      recordDeletionHistory(elementId, nodeData, {
+        deletedVia: 'elements-overview',
+        canvasAction: true,
+        relatedEdges: connectedEdgeIds,
+        position: nodeToDelete?.position
+      });
+      
       // Track the deletion activity
       try {
         trackActivity('element_removed', 'delete', 'element', {
           elementId: elementId,
-          elementType: 'unknown',
+          elementType: nodeData?.type || 'unknown',
           details: {
             canvasAction: true,
-            deletedVia: 'elements-overview'
+            deletedVia: 'elements-overview',
+            elementName: nodeData?.name || 'Unnamed',
+            connectedEdges: connectedEdgeIds.length
           }
         });
       } catch (e) {
@@ -2826,7 +2922,9 @@ const edgeTypes = {
     return () => {
       document.removeEventListener('deleteElement', handleDeleteElement);
     };
-  }, [setNodes, setEdges, trackActivity]);
+  }, [setNodes, setEdges, trackActivity, recordDeletionHistory, nodes, edges]);
+
+
 
   // Handle lock/unlock element
   useEffect(() => {
@@ -2870,6 +2968,19 @@ const edgeTypes = {
   // Handle node deletion
   const onNodesDelete = useCallback((nodesToDelete) => {
     console.log('🗑️ Deleting nodes:', nodesToDelete);
+    
+    // Record deletion history for each deleted node before removing it
+    nodesToDelete.forEach((nodeToDelete) => {
+      const fullNode = nodes.find(n => n.id === nodeToDelete.id);
+      if (fullNode) {
+        recordDeletionHistory(nodeToDelete.id, fullNode.data, {
+          deletedVia: 'canvas-delete-key',
+          canvasAction: true,
+          position: fullNode.position
+        });
+      }
+    });
+    
     setNodes((nds) => {
       // Filter out deleted nodes
       let remainingNodes = nds.filter((node) => !nodesToDelete.find((n) => n.id === node.id));
@@ -2907,7 +3018,7 @@ const edgeTypes = {
       
       return remainingNodes;
     });
-  }, [setNodes]);
+  }, [setNodes, recordDeletionHistory, nodes]);
 
   // Connection validation
   const isValidConnection = useCallback((connection) => {
@@ -4299,6 +4410,8 @@ const edgeTypes = {
           </div>
         </div>
       )}
+
+      {/* Deletion History Modal - REMOVED: Now in WorkspaceRightSidebar */}
     </>
   );
 });

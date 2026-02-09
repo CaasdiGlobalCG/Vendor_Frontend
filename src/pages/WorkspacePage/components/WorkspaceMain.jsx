@@ -148,6 +148,7 @@ const WorkspaceMain = ({
           // Show canvas when subtask is selected
           <CanvasWorkspace
             ref={canvasRef}
+            selectedTask={selectedTask}
             selectedSubtask={selectedSubtask}
             sidebarCollapsed={sidebarCollapsed}
             onToggleSidebars={onToggleSidebars}

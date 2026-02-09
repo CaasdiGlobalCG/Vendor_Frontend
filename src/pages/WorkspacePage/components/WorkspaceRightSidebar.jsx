@@ -30,7 +30,10 @@ const WorkspaceRightSidebar = ({
   const [activityExpanded, setActivityExpanded] = useState(true);
   const [messagesExpanded, setMessagesExpanded] = useState(false);
   const [elementsOverviewExpanded, setElementsOverviewExpanded] = useState(false);
+  const [deletionHistoryExpanded, setDeletionHistoryExpanded] = useState(false);
   const [elementsSortBy, setElementsSortBy] = useState('sequence'); // 'sequence' or 'recently-updated'
+  const [deletionHistory, setDeletionHistory] = useState([]);
+  const [loadingDeletionHistory, setLoadingDeletionHistory] = useState(false);
   const [infoTooltipId, setInfoTooltipId] = useState(null);
   const [editingElementId, setEditingElementId] = useState(null);
   const [editingElementName, setEditingElementName] = useState('');
@@ -41,9 +44,76 @@ const WorkspaceRightSidebar = ({
       const next = !prev;
       if (next) {
         setMessagesExpanded(false);
+        setDeletionHistoryExpanded(false);
       }
       return next;
     });
+  };
+
+  const handleToggleDeletionHistory = () => {
+    setDeletionHistoryExpanded(prev => {
+      const next = !prev;
+      if (next) {
+        setActivityExpanded(false);
+        setMessagesExpanded(false);
+        fetchDeletionHistory();
+      }
+      return next;
+    });
+  };
+
+
+
+  const isRecentlyDeleted = (deletion) => {
+    const deletedTime = new Date(deletion.deletedAt);
+    const now = new Date();
+    const diffInMinutes = (now - deletedTime) / (1000 * 60);
+    return diffInMinutes < 5; // Recently deleted if within 5 minutes
+  };
+
+  const fetchDeletionHistory = async () => {
+    if (!selectedSubtask?.id) {
+      console.warn('⚠️ Cannot fetch deletion history - no subtask selected');
+      return;
+    }
+    
+    setLoadingDeletionHistory(true);
+    const subtaskId = selectedSubtask.id;
+    console.log('🔄 Fetching deletion history for subtask:', subtaskId);
+    
+    try {
+      const url = `/api/element-deletion-history/subtask/${subtaskId}`;
+      console.log('📡 Making request to:', url);
+      
+      const response = await fetch(url);
+      console.log('📊 Response status:', response.status);
+      
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('❌ Failed to fetch deletion history:', response.status, errorText);
+        throw new Error(`Failed to fetch deletion history: ${response.status}`);
+      }
+      
+      const data = await response.json();
+      console.log('✅ Deletion history response:', data);
+      console.log('   - subtaskId searched:', subtaskId);
+      console.log('   - deletions found:', data.deletions?.length || 0);
+      if (data.deletions?.length > 0) {
+        console.log('   - first deletion subtaskId:', data.deletions[0].subtaskId);
+        // Sort by most recent first
+        const sortedDeletions = data.deletions.sort((a, b) => 
+          new Date(b.deletedAt) - new Date(a.deletedAt)
+        );
+        setDeletionHistory(sortedDeletions);
+      } else {
+        setDeletionHistory([]);
+      }
+    } catch (error) {
+      console.error('❌ Error fetching deletion history:', error);
+      setDeletionHistory([]);
+    } finally {
+      setLoadingDeletionHistory(false);
+    }
   };
 
   const handleEditElement = (elementId, currentName) => {
@@ -1099,6 +1169,92 @@ const WorkspaceRightSidebar = ({
                   </svg>
                   <p className="text-sm font-medium text-gray-600">No elements yet</p>
                   <p className="text-xs text-gray-500 mt-1">Drag elements from the left panel</p>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Accordion: Deletion History */}
+        <div className={`bg-white rounded-xl border border-gray-200 shadow-sm flex flex-col transition-all duration-300 ${deletionHistoryExpanded ? 'flex-1 min-h-0' : ''}`}>
+          <button
+            onClick={handleToggleDeletionHistory}
+            className="w-full flex items-center justify-between px-5 py-4 text-left focus:outline-none hover:bg-gray-50 transition-colors"
+          >
+            <div className="flex items-center space-x-2">
+              <h4 className="text-sm font-semibold text-gray-900">Deletion History</h4>
+              {deletionHistory.length > 0 && (
+                <span className="text-xs text-red-600 bg-red-100 px-2 py-0.5 rounded-full font-medium">{deletionHistory.length}</span>
+              )}
+            </div>
+            <ChevronDown className={`w-5 h-5 text-gray-500 transition-transform ${deletionHistoryExpanded ? 'transform rotate-180' : ''}`} />
+          </button>
+
+          <div className={`${deletionHistoryExpanded ? 'flex-1 flex flex-col opacity-100 min-h-0' : 'max-h-0 opacity-0 pointer-events-none'} transition-all duration-300 ease-in-out overflow-hidden`}
+               style={{transitionProperty: 'max-height, opacity'}}>
+            <div className="px-3 pb-4 border-t border-gray-100 flex-1 flex flex-col min-h-0 pt-3">
+              {loadingDeletionHistory ? (
+                <div className="flex items-center justify-center py-8">
+                  <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-red-600"></div>
+                </div>
+              ) : deletionHistory.length > 0 ? (
+                <div className="space-y-2 flex-1 overflow-y-auto pr-2 min-h-0">
+                  {deletionHistory.map((deletion) => {
+                    const recently = isRecentlyDeleted(deletion);
+                    return (
+                      <div 
+                        key={deletion.deletionId} 
+                        className={`p-3 rounded-lg border transition-colors group ${
+                          recently 
+                            ? 'bg-red-100 border-red-300 shadow-sm' 
+                            : 'bg-red-50 border-red-100 hover:border-red-200'
+                        }`}
+                      >
+                        {/* Recently deleted badge */}
+                        {recently && (
+                          <div className="flex items-center justify-between mb-2">
+                            <span className="inline-flex items-center px-2 py-1 rounded-full text-[10px] font-bold bg-red-600 text-white">
+                              🔥 RECENTLY DELETED
+                            </span>
+                          </div>
+                        )}
+
+                        <div className="flex items-start justify-between gap-2 mb-2">
+                          <div className="flex-1 min-w-0">
+                            <p className="text-xs font-semibold text-gray-900 truncate">
+                              {deletion.elementName}
+                            </p>
+                            <p className="text-[11px] text-gray-600 mt-0.5">
+                              <span className="inline-block px-1.5 py-0.5 bg-red-100 text-red-700 rounded text-[10px] font-medium">
+                                {deletion.elementType}
+                              </span>
+                            </p>
+                          </div>
+                          <span className="text-[10px] text-red-600 font-medium flex-shrink-0 whitespace-nowrap">
+                            {deletion.details?.deletedVia || 'canvas'}
+                          </span>
+                        </div>
+
+                        <div className="space-y-1.5 text-[10px] mb-3">
+                          <div className="flex items-center gap-1 text-gray-700">
+                            <User className="w-3 h-3 text-gray-500 flex-shrink-0" />
+                            <span className="truncate">{deletion.deletedBy}</span>
+                          </div>
+                          <div className="flex items-center gap-1 text-gray-700">
+                            <Clock className="w-3 h-3 text-gray-500 flex-shrink-0" />
+                            <span className="truncate">{new Date(deletion.deletedAt).toLocaleString()}</span>
+                          </div>
+                        </div>
+
+
+                      </div>
+                    );
+                  })}
+                </div>
+              ) : (
+                <div className="text-center py-8">
+                  <Trash2 className="w-8 h-8 text-gray-300 mx-auto mb-2" />
+                  <p className="text-sm text-gray-500">No deleted elements</p>
                 </div>
               )}
             </div>
