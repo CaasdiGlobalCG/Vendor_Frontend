@@ -30,6 +30,7 @@ const SentLeadsPage = () => {
     const [nextToken, setNextToken] = useState(null);
     const [hasMore, setHasMore] = useState(false);
     const [loadingMore, setLoadingMore] = useState(false);
+    const [selectedLead, setSelectedLead] = useState(null);
 
     const successMessage = location?.state?.successMessage || null;
 
@@ -104,6 +105,8 @@ const SentLeadsPage = () => {
         }
     };
 
+    const closeModal = () => setSelectedLead(null);
+
     return (
         <div className="p-4 sm:p-5 space-y-6">
             <div className="mb-2 flex items-center justify-between gap-3">
@@ -150,8 +153,13 @@ const SentLeadsPage = () => {
                 ) : (
                     <div className="space-y-3">
                         {leads.map((lead) => (
-                            <div key={`${lead.referrerVendorId}-${lead.createdAt}`} className="border border-gray-200 rounded-lg p-4">
-                                <div className="flex flex-wrap items-start justify-between gap-2">
+                            <button
+                                key={`${lead.referrerVendorId}-${lead.createdAt}`}
+                                type="button"
+                                onClick={() => setSelectedLead(lead)}
+                                className="w-full text-left border border-gray-200 rounded-lg p-4 hover:bg-gray-50 transition"
+                            >
+                                <div className="flex flex-wrap items-start justify-between gap-3">
                                     <div>
                                         <div className="text-sm font-semibold text-gray-900">
                                             {lead?.project?.name ? lead.project.name : (lead?.companyName || 'Lead')}
@@ -162,25 +170,29 @@ const SentLeadsPage = () => {
                                             <span className="font-medium">Status:</span> {lead.status || 'new'}
                                         </div>
                                     </div>
-                                    <div className="text-xs text-gray-500">{formatDateTime(lead.createdAt)}</div>
+
+                                    <div className="text-right">
+                                        <div className="text-xs text-gray-500">{formatDateTime(lead.createdAt)}</div>
+                                        <div className="mt-2 inline-block text-xs font-medium text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-1 rounded">
+                                            View Details
+                                        </div>
+                                    </div>
                                 </div>
 
-                                <div className="mt-3 text-sm text-gray-700">
+                                <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm text-gray-700">
                                     <div>
                                         <span className="font-medium">Contact:</span> {lead?.contact?.name || '-'}
-                                        {lead?.contact?.email ? <span className="text-gray-600"> • {lead.contact.email}</span> : null}
-                                        {lead?.contact?.phone ? <span className="text-gray-600"> • {lead.contact.phone}</span> : null}
                                     </div>
-                                    {lead.location ? (
-                                        <div className="mt-1">
-                                            <span className="font-medium">Location:</span> {lead.location}
-                                        </div>
-                                    ) : null}
-                                    {lead?.project?.description ? (
-                                        <div className="mt-2 text-sm text-gray-600">{lead.project.description}</div>
-                                    ) : null}
+                                    <div className="sm:text-right">
+                                        <span className="font-medium">Company:</span> {lead?.companyName || '-'}
+                                    </div>
+                                    <div className="sm:col-span-2 text-gray-600 text-xs">
+                                        {lead?.contact?.email ? `Email: ${lead.contact.email}` : ''}
+                                        {lead?.contact?.email && lead?.contact?.phone ? ' • ' : ''}
+                                        {lead?.contact?.phone ? `Phone: ${lead.contact.phone}` : ''}
+                                    </div>
                                 </div>
-                            </div>
+                            </button>
                         ))}
 
                         {hasMore && (
@@ -197,6 +209,95 @@ const SentLeadsPage = () => {
                     </div>
                 )}
             </div>
+
+            {selectedLead && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+                    <button
+                        type="button"
+                        aria-label="Close"
+                        onClick={closeModal}
+                        className="absolute inset-0 bg-black/40"
+                    />
+                    <div className="relative w-full max-w-2xl bg-white rounded-xl shadow-sm border border-gray-200 p-4 sm:p-6">
+                        <div className="flex items-start justify-between gap-3">
+                            <div>
+                                <h2 className="text-lg font-semibold text-gray-900">Sent Lead Details</h2>
+                                <p className="text-sm text-gray-600 mt-1">Full information for this lead.</p>
+                            </div>
+                            <button
+                                type="button"
+                                onClick={closeModal}
+                                className="px-3 py-1.5 rounded-md border border-gray-300 text-gray-700 hover:bg-gray-50 text-sm"
+                            >
+                                Close
+                            </button>
+                        </div>
+
+                        <div className="mt-5 grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div className="border border-gray-200 rounded-lg p-4">
+                                <div className="text-xs text-gray-500">Lead</div>
+                                <div className="text-sm font-semibold text-gray-900 mt-1">
+                                    {selectedLead?.project?.name ? selectedLead.project.name : (selectedLead?.companyName || 'Lead')}
+                                </div>
+                                <div className="text-xs text-gray-600 mt-2">
+                                    <span className="font-medium">Type:</span> {selectedLead.leadType || '-'}
+                                    <span className="mx-2">•</span>
+                                    <span className="font-medium">Status:</span> {selectedLead.status || 'new'}
+                                </div>
+                            </div>
+
+                            <div className="border border-gray-200 rounded-lg p-4">
+                                <div className="text-xs text-gray-500">Contact</div>
+                                <div className="text-sm font-semibold text-gray-900 mt-1">{selectedLead?.contact?.name || '-'}</div>
+                                <div className="text-sm text-gray-700 mt-2">
+                                    {selectedLead?.contact?.email ? <div><span className="font-medium">Email:</span> {selectedLead.contact.email}</div> : null}
+                                    {selectedLead?.contact?.phone ? <div className="mt-1"><span className="font-medium">Phone:</span> {selectedLead.contact.phone}</div> : null}
+                                </div>
+                            </div>
+
+                            <div className="border border-gray-200 rounded-lg p-4">
+                                <div className="text-xs text-gray-500">Company / Location</div>
+                                <div className="text-sm text-gray-700 mt-2">
+                                    <div><span className="font-medium">Company:</span> {selectedLead.companyName || '-'}</div>
+                                    <div className="mt-1"><span className="font-medium">Location:</span> {selectedLead.location || '-'}</div>
+                                </div>
+                            </div>
+
+                            <div className="border border-gray-200 rounded-lg p-4">
+                                <div className="text-xs text-gray-500">Project</div>
+                                <div className="text-sm text-gray-700 mt-2">
+                                    <div><span className="font-medium">Name:</span> {selectedLead?.project?.name || '-'}</div>
+                                    <div className="mt-1"><span className="font-medium">Budget:</span> {selectedLead?.project?.estimatedBudget || '-'}</div>
+                                    <div className="mt-1"><span className="font-medium">Timeline:</span> {selectedLead?.project?.timeline || '-'}</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {selectedLead?.project?.description ? (
+                            <div className="mt-4 border border-gray-200 rounded-lg p-4">
+                                <div className="text-xs text-gray-500">Project Description</div>
+                                <div className="text-sm text-gray-700 mt-2 whitespace-pre-wrap">{selectedLead.project.description}</div>
+                            </div>
+                        ) : null}
+
+                        {selectedLead?.notes ? (
+                            <div className="mt-4 border border-gray-200 rounded-lg p-4">
+                                <div className="text-xs text-gray-500">Notes</div>
+                                <div className="text-sm text-gray-700 mt-2 whitespace-pre-wrap">{selectedLead.notes}</div>
+                            </div>
+                        ) : null}
+
+                        <div className="mt-4 border border-gray-200 rounded-lg p-4">
+                            <div className="text-xs text-gray-500">Metadata</div>
+                            <div className="text-sm text-gray-700 mt-2 grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                <div><span className="font-medium">Lead ID:</span> {selectedLead.leadId || '-'}</div>
+                                <div><span className="font-medium">Created:</span> {formatDateTime(selectedLead.createdAt)}</div>
+                                <div className="sm:col-span-2"><span className="font-medium">Updated:</span> {formatDateTime(selectedLead.updatedAt)}</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };
