@@ -95,7 +95,12 @@ const NewLeadsPage = () => {
                 throw new Error(data.error || 'Failed to submit lead');
             }
 
-            navigate('/VendorDashboard/leads', { replace: true });
+            navigate('/VendorDashboard/leads/sent', {
+                replace: true,
+                state: {
+                    successMessage: 'Lead sent successfully.',
+                },
+            });
         } catch (err) {
             console.error('❌ Failed to submit referral lead:', err);
             setError(err?.message || 'Failed to submit lead. Please try again.');
