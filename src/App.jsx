@@ -26,6 +26,7 @@ import { Outlet } from "react-router-dom";
 import ProjectsPage from "./pages/ProjectsPage/ProjectsPage"; // Assuming ProjectsPage is here
 import LeadDetailPage from "./pages/LeadDetailPage/LeadDetailPage"; // Assuming LeadDetailPage is here
 import LeadsPage from "./pages/Leadspage/LeadsPage"; // Assuming LeadsPage is here
+import NewLeadsPage from "./pages/Leadspage/NewLeadsPage";
 import ProjectLeadForm from "./pages/ProjectLeadFolder/ProjectLeadForm"; // Assuming ProjectLeadForm is here
 import NotificationsPage from "./pages/NotificationPage/NotificationPage"; // Import NotificationsPage
 import RoleSelection from "./pages/Onboarding/RoleSelection"; // Import Role Selector
@@ -265,6 +266,7 @@ function AppContent() {
         <Route index element={<VendorDashboard mockProjects={mockProjects} />} />
         <Route path="projects" element={<ProjectsPage mockProjects={mockProjects} />} />
         <Route path="leads" element={<LeadsPage />} />
+        <Route path="leads/newleads" element={<NewLeadsPage />} />
         <Route path="workspace" element={<WorkspaceList />} />
         <Route path="notifications" element={<NotificationsPage />} />
 

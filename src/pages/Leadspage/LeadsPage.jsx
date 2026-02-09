@@ -871,10 +871,19 @@ const LeadsPage = () => {
         <div className="p-4 sm:p-5 space-y-6">
 
             <div className="mb-6">
-                <Link to="/VendorDashboard/projects" className="flex items-center text-lg font-medium text-gray-700 hover:text-black">
-                    <ChevronLeftIcon className="mr-2 h-5 w-5" />
-                    Project Requests
-                </Link>
+                <div className="flex items-center justify-between gap-3">
+                    <Link to="/VendorDashboard/projects" className="flex items-center text-lg font-medium text-gray-700 hover:text-black">
+                        <ChevronLeftIcon className="mr-2 h-5 w-5" />
+                        Project Requests
+                    </Link>
+
+                    <Link
+                        to="/VendorDashboard/leads/newleads"
+                        className="px-4 py-2 rounded-md bg-emerald-600 text-white hover:bg-emerald-700 text-sm font-medium"
+                    >
+                        Send Leads
+                    </Link>
+                </div>
             </div>
 
             {currentUser && (
