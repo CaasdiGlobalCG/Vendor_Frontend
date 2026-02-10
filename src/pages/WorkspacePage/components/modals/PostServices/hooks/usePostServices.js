@@ -35,6 +35,11 @@ export const usePostServices = (workspaceId, subtaskId, isOpen) => {
             size: post.attachments[0].fileSize,
             preview: post.attachments[0].fileUrl
           } : null,
+          taskId: post.taskId || '',
+          taskName: post.taskName || '',
+          subtaskId: post.subtaskId || '',
+          subtaskName: post.subtaskName || '',
+          unlockRequest: post.unlockRequest || null, // Include unlock request data
           replies: post.replies ? post.replies.map(reply => ({
             id: reply.replyId,
             author: { 

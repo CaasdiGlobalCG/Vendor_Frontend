@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { User, Image as ImageIcon } from 'lucide-react';
+import { User, Image as ImageIcon, Unlock, CheckCircle, XCircle } from 'lucide-react';
 import ReplyComposer from './ReplyComposer';
 import ReplyThread from './ReplyThread';
 import ImageModal from './ImageModal';
@@ -30,11 +30,19 @@ const PostItem = ({
   setReplyHashtagQuery,
   insertReplyMention,
   insertReplyHashtag,
-  handleReplyMessageChange
+  handleReplyMessageChange,
+  // Unlock request props
+  currentUser,
+  workspace,
+  workspaceId,
+  onUnlockRequest,
+  onUnlockApprove
 }) => {
   // Image modal state
   const [selectedImage, setSelectedImage] = useState(null);
   const [isImageModalOpen, setIsImageModalOpen] = useState(false);
+  const [isRequestingUnlock, setIsRequestingUnlock] = useState(false);
+  const [isApprovingUnlock, setIsApprovingUnlock] = useState(false);
 
   const handleImageClick = (attachment) => {
     setSelectedImage(attachment);
@@ -44,6 +52,37 @@ const PostItem = ({
   const closeImageModal = () => {
     setIsImageModalOpen(false);
     setSelectedImage(null);
+  };
+
+  const isPM = currentUser?.role === 'pm' || displayUser.role === 'Project manager';
+  const isClient = currentUser?.role === 'client';
+  const isWorkspaceCompleted = workspace?.status === 'completed';
+  const hasTaskInfo = post.taskId && post.subtaskId;
+  
+  // Check unlock status from post
+  const unlockRequest = post.unlockRequest;
+  const isUnlockPending = unlockRequest?.status === 'pending';
+  const isUnlockApproved = unlockRequest?.status === 'approved';
+  const isUnlockRejected = unlockRequest?.status === 'rejected';
+
+  const handleRequestUnlock = async () => {
+    if (!hasTaskInfo || isRequestingUnlock) return;
+    setIsRequestingUnlock(true);
+    try {
+      await onUnlockRequest(post.id, post.taskId, post.subtaskId);
+    } finally {
+      setIsRequestingUnlock(false);
+    }
+  };
+
+  const handleApproveUnlock = async (approved) => {
+    if (isApprovingUnlock) return;
+    setIsApprovingUnlock(true);
+    try {
+      await onUnlockApprove(post.id, post.taskId, post.subtaskId, approved);
+    } finally {
+      setIsApprovingUnlock(false);
+    }
   };
   return (
     <div className="bg-white rounded-lg border border-gray-200 shadow-sm">
@@ -59,8 +98,41 @@ const PostItem = ({
         </div>
         <div className="text-[10px] text-gray-400">{post.dateLabel}</div>
       </div>
-      
-      <div className="px-3 pb-2 text-[11px] text-gray-800 leading-relaxed">
+            {/* Task/Subtask Badge */}
+      {post.taskName && (
+        <div className="px-3 pb-1 flex items-center gap-2 flex-wrap">
+          <div className="inline-flex items-center gap-1 text-[10px] bg-blue-50 text-blue-700 px-2 py-0.5 rounded-full border border-blue-200">
+            <span className="font-medium">{post.taskName}</span>
+            {post.subtaskName && (
+              <>
+                <span className="text-blue-400">→</span>
+                <span>{post.subtaskName}</span>
+              </>
+            )}
+          </div>
+          
+          {/* Unlock Status Badges */}
+          {isUnlockPending && (
+            <div className="inline-flex items-center gap-1 text-[10px] bg-amber-50 text-amber-700 px-2 py-0.5 rounded-full border border-amber-200">
+              <Unlock className="w-2.5 h-2.5" />
+              <span>Unlock Pending</span>
+            </div>
+          )}
+          {isUnlockApproved && (
+            <div className="inline-flex items-center gap-1 text-[10px] bg-green-50 text-green-700 px-2 py-0.5 rounded-full border border-green-200">
+              <CheckCircle className="w-2.5 h-2.5" />
+              <span>Unlocked</span>
+            </div>
+          )}
+          {isUnlockRejected && (
+            <div className="inline-flex items-center gap-1 text-[10px] bg-red-50 text-red-700 px-2 py-0.5 rounded-full border border-red-200">
+              <XCircle className="w-2.5 h-2.5" />
+              <span>Unlock Rejected</span>
+            </div>
+          )}
+        </div>
+      )}
+            <div className="px-3 pb-2 text-[11px] text-gray-800 leading-relaxed">
         {renderTextWithHighlights(post.text)}
       </div>
       
@@ -127,17 +199,58 @@ const PostItem = ({
         </div>
       )}
       
-      <div className="px-3 py-2 flex items-center justify-between text-[11px] text-gray-600 border-t border-gray-100">
-        <button className="inline-flex items-center gap-1 hover:text-gray-800">
-          <span className="text-sm leading-none">▢</span>
-          <span>{post.replies?.length || 0} replies</span>
-        </button>
-        <button 
-          onClick={() => setReplyingTo(replyingTo === post.id ? null : post.id)}
-          className="hover:text-gray-800 text-[11px]"
-        >
-          reply
-        </button>
+      <div className="px-3 py-2 border-t border-gray-100">
+        <div className="flex items-center justify-between text-[11px] text-gray-600 mb-2">
+          <button className="inline-flex items-center gap-1 hover:text-gray-800">
+            <span className="text-sm leading-none">▢</span>
+            <span>{post.replies?.length || 0} replies</span>
+          </button>
+          <button 
+            onClick={() => setReplyingTo(replyingTo === post.id ? null : post.id)}
+            className="hover:text-gray-800 text-[11px]"
+          >
+            reply
+          </button>
+        </div>
+        
+        {/* Unlock Request Actions */}
+        {isWorkspaceCompleted && hasTaskInfo && (
+          <div className="mt-2">
+            {/* PM: Request Unlock Button */}
+            {isPM && !unlockRequest && (
+              <button
+                onClick={handleRequestUnlock}
+                disabled={isRequestingUnlock}
+                className="inline-flex items-center gap-1 text-[11px] bg-amber-50 text-amber-700 px-3 py-1.5 rounded-md border border-amber-200 hover:bg-amber-100 transition-colors disabled:opacity-50"
+              >
+                <Unlock className="w-3 h-3" />
+                <span>{isRequestingUnlock ? 'Requesting...' : 'Request Unlock for This Task'}</span>
+              </button>
+            )}
+            
+            {/* Client: Approve/Reject Buttons */}
+            {isClient && isUnlockPending && (
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => handleApproveUnlock(true)}
+                  disabled={isApprovingUnlock}
+                  className="inline-flex items-center gap-1 text-[11px] bg-green-50 text-green-700 px-3 py-1.5 rounded-md border border-green-200 hover:bg-green-100 transition-colors disabled:opacity-50"
+                >
+                  <CheckCircle className="w-3 h-3" />
+                  <span>Approve Unlock</span>
+                </button>
+                <button
+                  onClick={() => handleApproveUnlock(false)}
+                  disabled={isApprovingUnlock}
+                  className="inline-flex items-center gap-1 text-[11px] bg-red-50 text-red-700 px-3 py-1.5 rounded-md border border-red-200 hover:bg-red-100 transition-colors disabled:opacity-50"
+                >
+                  <XCircle className="w-3 h-3" />
+                  <span>Reject</span>
+                </button>
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Reply Composer */}

@@ -30,7 +30,9 @@ const PostComposer = ({
   insertHashtag,
   handlePost,
   isPosting,
-  renderTextWithHighlights
+  renderTextWithHighlights,
+  selectedTaskForPost,
+  selectedSubtaskForPost
 }) => {
   return (
     <div className="p-3 border-b border-gray-200 bg-gray-50">
@@ -118,9 +120,10 @@ const PostComposer = ({
           </div>
           <button 
             onClick={handlePost} 
-            disabled={isPosting || !message.trim()}
+            disabled={isPosting || !message.trim() || !selectedTaskForPost || !selectedSubtaskForPost}
+            title={!selectedTaskForPost || !selectedSubtaskForPost ? 'Please select task and subtask first' : ''}
             className={`px-2.5 py-1 text-[10px] rounded inline-flex items-center gap-1 transition-colors ${
-              isPosting || !message.trim()
+              isPosting || !message.trim() || !selectedTaskForPost || !selectedSubtaskForPost
                 ? 'bg-gray-400 text-gray-200 cursor-not-allowed'
                 : 'bg-blue-600 text-white hover:bg-blue-700'
             }`}

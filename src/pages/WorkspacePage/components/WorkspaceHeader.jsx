@@ -86,7 +86,10 @@ const WorkspaceHeader = ({
   onOpenProjectComplete,
   userRole = 'vendor',
   isPM = false,
-  isClient = false
+  isClient = false,
+  workspace = null,
+  selectedTask = null,
+  selectedSubtask = null
 }) => {
   const navigate = useNavigate();
   const { currentUser } = useContext(VendorContext);
@@ -252,6 +255,46 @@ const WorkspaceHeader = ({
     setCurrentStep(0);
   };
 
+  // Check if workspace is completed - disable editing for vendors
+  const isWorkspaceCompleted = workspace?.status === 'completed' || workspace?.status === 'project completed';
+  const isVendor = userRole === 'vendor';
+  
+  // Check if current task/subtask is unlocked
+  const isCurrentTaskUnlocked = React.useMemo(() => {
+    if (!isWorkspaceCompleted || !selectedTask || !selectedSubtask) return false;
+    const unlockedTasks = workspace?.unlockedTasks || [];
+    
+    console.log('🔍 WorkspaceHeader - Unlock Check:', {
+      isWorkspaceCompleted,
+      selectedTaskId: selectedTask?.id,
+      selectedSubtaskId: selectedSubtask?.id,
+      unlockedTasks,
+      checking: unlockedTasks.some(
+        ut => ut.taskId === selectedTask.id && ut.subtaskId === selectedSubtask.id
+      )
+    });
+    
+    return unlockedTasks.some(
+      ut => ut.taskId === selectedTask.id && ut.subtaskId === selectedSubtask.id
+    );
+  }, [isWorkspaceCompleted, selectedTask, selectedSubtask, workspace?.unlockedTasks]);
+  
+  // Vendors: disable editing only if workspace is completed AND current task is NOT unlocked
+  const shouldDisableEditing = isWorkspaceCompleted && isVendor && !isCurrentTaskUnlocked;
+  
+  console.log('🔍 WorkspaceHeader - Editing State:', {
+    isWorkspaceCompleted,
+    isVendor,
+    isCurrentTaskUnlocked,
+    shouldDisableEditing
+  });
+  
+  // Manual refresh handler for vendors on completed workspaces
+  const handleRefresh = () => {
+    console.log('🔄 Manual workspace refresh triggered');
+    window.location.reload();
+  };
+
   return (
     <div className="bg-white border-b border-gray-200 px-2 py-1" data-workspace-header>
       <div className="flex items-center justify-between relative">
@@ -267,49 +310,68 @@ const WorkspaceHeader = ({
             {/* <span>Back to Dashboard</span> */}
           </button>
           
-          <div className="flex items-center space-x-2 cursor-pointer">
-            <div className="w-8 h-8 bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg flex items-center justify-center text-white font-medium text-sm">
-              CG
+          <div className="flex items-center space-x-2">
+            <div className="flex items-center space-x-2 cursor-pointer">
+              <div className="w-8 h-8 bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg flex items-center justify-center text-white font-medium text-sm">
+                CG
+              </div>
+              <ChevronDown className="w-4 h-4 text-gray-600" />
             </div>
-            <ChevronDown className="w-4 h-4 text-gray-600" />
+            
+            {/* Refresh button for vendors on completed workspace */}
+            {isWorkspaceCompleted && isVendor && (
+              <button
+                onClick={handleRefresh}
+                className="flex items-center space-x-1 px-2 py-1 text-xs text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded transition-colors"
+                title="Refresh to check for unlocked tasks"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                </svg>
+                <span>Refresh</span>
+              </button>
+            )}
           </div>
           
           <div className="flex items-center space-x-4">
             <button 
               data-tour="elements-btn"
-              disabled={!isCanvasActive}
-              onClick={isCanvasActive ? onElementsClick : undefined}
+              disabled={!isCanvasActive || shouldDisableEditing}
+              onClick={isCanvasActive && !shouldDisableEditing ? onElementsClick : undefined}
               className={`flex items-center space-x-2 px-3 py-2 rounded-lg text-sm font-normal transition-all duration-200 ${
-                isCanvasActive
+                isCanvasActive && !shouldDisableEditing
                   ? 'text-gray-700 hover:shadow-md cursor-pointer'
                   : 'text-gray-400 cursor-not-allowed'
 }`}
+              title={shouldDisableEditing ? 'Project is completed - editing disabled' : 'Add Elements'}
             >
               <Plus className="w-4 h-4" />
               <span>Elements</span>
             </button>
             <button 
               data-tour="text-btn"
-              disabled={!isCanvasActive}
-              onClick={isCanvasActive ? onTextClick : undefined}
+              disabled={!isCanvasActive || shouldDisableEditing}
+              onClick={isCanvasActive && !shouldDisableEditing ? onTextClick : undefined}
               className={`flex items-center space-x-2 px-3 py-2 rounded-lg text-sm font-normal transition-all duration-200 ${
-                isCanvasActive
+                isCanvasActive && !shouldDisableEditing
                   ? 'text-gray-700 hover:shadow-md cursor-pointer'
                   : 'text-gray-400 cursor-not-allowed'
 }`}
+              title={shouldDisableEditing ? 'Project is completed - editing disabled' : 'Add Text'}
             >
               <Plus className="w-4 h-4" />
               <span>Text</span>
             </button>
             <button 
               data-tour="templates-btn"
-              disabled={!isCanvasActive}
-              onClick={isCanvasActive ? onTemplatesClick : undefined}
+              disabled={!isCanvasActive || shouldDisableEditing}
+              onClick={isCanvasActive && !shouldDisableEditing ? onTemplatesClick : undefined}
               className={`flex items-center space-x-2 px-3 py-2 rounded-lg text-sm font-normal transition-all duration-200 ${
-                isCanvasActive
+                isCanvasActive && !shouldDisableEditing
                     ? 'text-gray-700 hover:shadow-md cursor-pointer'
                     : 'text-gray-400 cursor-not-allowed'
                 }`}
+              title={shouldDisableEditing ? 'Project is completed - editing disabled' : 'Add Templates'}
             >
               <Plus className="w-4 h-4" />
               <span>Templates</span>
@@ -378,8 +440,11 @@ const WorkspaceHeader = ({
               ) : (
                 <button
                   onClick={onOpenUpdateProgress}
-                  className="p-2 hover:bg-gray-100 rounded-lg transition-colors flex flex-col items-center space-y-1"
-                  title="Update Progress"
+                  disabled={shouldDisableEditing}
+                  className={`p-2 rounded-lg transition-colors flex flex-col items-center space-y-1 ${
+                    shouldDisableEditing ? 'opacity-50 cursor-not-allowed' : 'hover:bg-gray-100'
+                  }`}
+                  title={shouldDisableEditing ? 'Project is completed - updates disabled' : 'Update Progress'}
                 >
                   <Zap className="w-4 h-4 text-gray-600" />
                   <span className="text-[10px] font-medium text-gray-500">Update Progress</span>

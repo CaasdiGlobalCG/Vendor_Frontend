@@ -1,12 +1,12 @@
-import React, { useMemo, useRef, useState } from 'react';
-import { X, User, Plus } from 'lucide-react';
+import React, { useMemo, useRef, useState, useEffect } from 'react';
+import { X, User, Plus, ChevronDown } from 'lucide-react';
 import PostComposer from './PostComposer';
 import PostList from './PostList';
 import { usePostServices } from './hooks/usePostServices';
 import { renderTextWithHighlights, formatSizeMB } from './utils/textUtils.jsx';
 import config from '../../../../../config/env.js';
 
-const PostServicesModal = ({ isOpen, onClose, currentUser, workspaceId, subtaskId, taskId, selectedSubtask }) => {
+const PostServicesModal = ({ isOpen, onClose, currentUser, workspaceId, subtaskId, taskId, selectedSubtask, workspace, onWorkspaceUpdate }) => {
   const fileInputRef = useRef(null);
 
   const displayUser = useMemo(() => {
@@ -15,9 +15,16 @@ const PostServicesModal = ({ isOpen, onClose, currentUser, workspaceId, subtaskI
     return { name, role };
   }, [currentUser]);
 
+  // State for task and subtask selection
+  const [selectedTaskForPost, setSelectedTaskForPost] = useState(taskId || '');
+  const [selectedSubtaskForPost, setSelectedSubtaskForPost] = useState(subtaskId || '');
+  const [availableSubtasks, setAvailableSubtasks] = useState([]);
+  const [showTaskDropdown, setShowTaskDropdown] = useState(false);
+  const [showSubtaskDropdown, setShowSubtaskDropdown] = useState(false);
+
   // State for post composer
   const [message, setMessage] = useState('');
-  const [attachments, setAttachments] = useState([{ id: 'att-1', name: 'Photo.jpeg', size: 2.5 * 1024 * 1024 }]);
+  const [attachments, setAttachments] = useState([]);
   const [isPosting, setIsPosting] = useState(false);
   const [showComposer, setShowComposer] = useState(true);
 
@@ -43,6 +50,48 @@ const PostServicesModal = ({ isOpen, onClose, currentUser, workspaceId, subtaskI
 
   // Custom hook for post services data
   const { posts, setPosts, collaborators, departments } = usePostServices(workspaceId, subtaskId, isOpen);
+
+  // Get all tasks from workspace
+  const allTasks = useMemo(() => workspace?.tasks || [], [workspace]);
+
+  // Update available subtasks when task is selected
+  useEffect(() => {
+    if (selectedTaskForPost) {
+      const task = allTasks.find(t => t.id === selectedTaskForPost);
+      setAvailableSubtasks(task?.subtasks || []);
+    } else {
+      setAvailableSubtasks([]);
+      setSelectedSubtaskForPost('');
+    }
+  }, [selectedTaskForPost, allTasks]);
+
+  // Get selected task and subtask names for display
+  const selectedTaskName = useMemo(() => {
+    const task = allTasks.find(t => t.id === selectedTaskForPost);
+    return task?.name || 'Select Task';
+  }, [allTasks, selectedTaskForPost]);
+
+  const selectedSubtaskName = useMemo(() => {
+    const subtask = availableSubtasks.find(st => st.id === selectedSubtaskForPost);
+    return subtask?.name || 'Select Subtask';
+  }, [availableSubtasks, selectedSubtaskForPost]);
+
+  // Close dropdowns when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (showTaskDropdown || showSubtaskDropdown) {
+        const target = event.target;
+        const isTaskButton = target.closest('[data-task-dropdown]');
+        const isSubtaskButton = target.closest('[data-subtask-dropdown]');
+        
+        if (!isTaskButton) setShowTaskDropdown(false);
+        if (!isSubtaskButton) setShowSubtaskDropdown(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [showTaskDropdown, showSubtaskDropdown]);
 
   // Attachment handlers
   const addAttachment = (file) => {
@@ -174,8 +223,8 @@ const PostServicesModal = ({ isOpen, onClose, currentUser, workspaceId, subtaskI
       formData.append('senderRole', currentUser?.role || 'vendor');
       formData.append('content', replyMessage);
       formData.append('parentPostId', parentPostId);
-      formData.append('subtaskId', subtaskId || '');
-      formData.append('taskId', taskId || '');
+      formData.append('subtaskId', selectedSubtaskForPost || '');
+      formData.append('taskId', selectedTaskForPost || '');
       
       // Add actual files to FormData for replies with the correct field name 'attachments'
       replyAttachments.forEach((attachment) => {
@@ -240,6 +289,12 @@ const PostServicesModal = ({ isOpen, onClose, currentUser, workspaceId, subtaskI
   const handlePost = async () => {
     if (!message.trim() || isPosting) return;
 
+    // Validate task and subtask selection
+    if (!selectedTaskForPost || !selectedSubtaskForPost) {
+      alert('Please select both a task and subtask before posting a service request.');
+      return;
+    }
+
     setIsPosting(true);
     try {
       const formData = new FormData();
@@ -249,8 +304,8 @@ const PostServicesModal = ({ isOpen, onClose, currentUser, workspaceId, subtaskI
       formData.append('senderEmail', currentUser?.email || '');
       formData.append('senderRole', currentUser?.role || 'vendor');
       formData.append('content', message);
-      formData.append('subtaskId', subtaskId || '');
-      formData.append('taskId', taskId || '');
+      formData.append('subtaskId', selectedSubtaskForPost || '');
+      formData.append('taskId', selectedTaskForPost || '');
 
       attachments.forEach((attachment) => {
         if (attachment.file) {
@@ -266,13 +321,21 @@ const PostServicesModal = ({ isOpen, onClose, currentUser, workspaceId, subtaskI
       if (response.ok) {
         const newPost = await response.json();
         const firstImage = attachments.find(a => a.file?.type?.startsWith('image/')) || attachments[0] || null;
+        // Find task and subtask names for display
+        const selectedTask = allTasks.find(t => t.id === selectedTaskForPost);
+        const selectedSubtask = selectedTask?.subtasks?.find(s => s.id === selectedSubtaskForPost);
+        
         setPosts(prev => [
           {
             id: newPost.postId || `post-${Date.now()}`,
             author: { name: displayUser.name, role: displayUser.role },
             dateLabel: new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }).toLowerCase(),
             text: message,
-            attachment: firstImage ? { name: firstImage.name, size: firstImage.size, preview: firstImage.file ? URL.createObjectURL(firstImage.file) : null } : null
+            attachment: firstImage ? { name: firstImage.name, size: firstImage.size, preview: firstImage.file ? URL.createObjectURL(firstImage.file) : null } : null,
+            taskId: selectedTaskForPost,
+            taskName: selectedTask?.name || '',
+            subtaskId: selectedSubtaskForPost,
+            subtaskName: selectedSubtask?.name || ''
           },
           ...prev
         ]);
@@ -293,29 +356,203 @@ const PostServicesModal = ({ isOpen, onClose, currentUser, workspaceId, subtaskI
     }
   };
 
+  const handleUnlockRequest = async (postId, taskId, subtaskId) => {
+    try {
+      const response = await fetch(`${config.VENDOR_BACKEND_URL}/api/post-services/${postId}/unlock-request`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          workspaceId,
+          taskId,
+          subtaskId,
+          requestedBy: currentUser?.id || currentUser?.userId || 'default-user-id',
+          requestedByName: displayUser.name,
+          requestedByRole: currentUser?.role || displayUser.role
+        })
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        
+        // Update the post with unlock request status
+        setPosts(prev => prev.map(post => 
+          post.id === postId 
+            ? { ...post, unlockRequest: result.unlockRequest }
+            : post
+        ));
+        
+        console.log('✅ Unlock request created:', result);
+        alert('Unlock request sent to client for approval');
+      } else {
+        const errorData = await response.json();
+        console.error('Failed to create unlock request:', errorData);
+        alert('Failed to create unlock request. Please try again.');
+      }
+    } catch (error) {
+      console.error('Error creating unlock request:', error);
+      alert('Error creating unlock request. Please try again.');
+    }
+  };
+
+  const handleUnlockApprove = async (postId, taskId, subtaskId, approved) => {
+    try {
+      const response = await fetch(`${config.VENDOR_BACKEND_URL}/api/post-services/${postId}/unlock-approve`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          workspaceId,
+          taskId,
+          subtaskId,
+          approved,
+          approvedBy: currentUser?.id || currentUser?.userId || 'default-user-id',
+          approvedByName: displayUser.name
+        })
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        
+        // Update the post with unlock approval status
+        setPosts(prev => prev.map(post => 
+          post.id === postId 
+            ? { ...post, unlockRequest: result.unlockRequest }
+            : post
+        ));
+        
+        // Refresh workspace data if approved
+        if (approved && onWorkspaceUpdate) {
+          console.log('✅ Task/Subtask unlocked, refreshing workspace data...');
+          await onWorkspaceUpdate();
+        }
+        
+        console.log(`✅ Unlock ${approved ? 'approved' : 'rejected'}:`, result);
+        alert(`Task unlock ${approved ? 'approved' : 'rejected'} successfully`);
+      } else {
+        const errorData = await response.json();
+        console.error('Failed to approve unlock:', errorData);
+        alert('Failed to process unlock approval. Please try again.');
+      }
+    } catch (error) {
+      console.error('Error approving unlock:', error);
+      alert('Error processing unlock approval. Please try again.');
+    }
+  };
+
   if (!isOpen) return null;
+
+  const isVendor = displayUser.role === 'vendor';
+  console.log('🔍 PostServicesModal - User Role Check:', {
+    currentUser,
+    displayUserRole: displayUser.role,
+    isVendor
+  });
 
   return (
     <div className="fixed inset-0 z-50 flex justify-end bg-black/40">
       <div className="flex-1" onClick={onClose} role="presentation" />
       <div className="relative h-full w-full max-w-xl bg-white shadow-2xl flex flex-col">
         <div className="flex items-center justify-between px-5 py-3 border-b border-gray-200">
-          <div>
+          <div className="flex-1">
             <h2 className="text-base font-semibold text-gray-900">Post services</h2>
-            {subtaskId && (
-              <p className="text-xs text-gray-500 mt-0.5">
-                Posts for: {selectedSubtask?.name || `Subtask ${subtaskId}`}
-              </p>
+            
+            {/* Task and Subtask Selection - Only show for non-vendors */}
+            {!isVendor && (
+              <div className="mt-2">
+                <div className="flex items-center gap-2 mb-1">
+                  <span className="text-xs text-gray-600">Select task and subtask</span>
+                  <span className="text-xs text-red-500">*Required</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <User className="w-4 h-4 text-gray-400" />
+              
+                  {/* Task Dropdown */}
+                  <div className="relative" data-task-dropdown>
+                <button
+                  onClick={() => setShowTaskDropdown(!showTaskDropdown)}
+                  className="flex items-center gap-1 px-2 py-1 text-xs border border-gray-300 rounded-md hover:bg-gray-50 transition-colors"
+                >
+                  <span className="text-gray-700">{selectedTaskName}</span>
+                  <ChevronDown className="w-3 h-3 text-gray-500" />
+                </button>
+                
+                {showTaskDropdown && (
+                  <div className="absolute top-full left-0 mt-1 w-48 bg-white border border-gray-200 rounded-lg shadow-lg z-10 max-h-60 overflow-y-auto">
+                    <div className="py-1">
+                      {allTasks.length === 0 ? (
+                        <div className="px-3 py-2 text-xs text-gray-500">No tasks available</div>
+                      ) : (
+                        allTasks.map(task => (
+                          <button
+                            key={task.id}
+                            onClick={() => {
+                              setSelectedTaskForPost(task.id);
+                              setShowTaskDropdown(false);
+                            }}
+                            className="w-full text-left px-3 py-2 text-xs hover:bg-gray-100 transition-colors"
+                          >
+                            {task.name}
+                          </button>
+                        ))
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
+              
+              {/* Subtask Dropdown - only show if task is selected */}
+              {selectedTaskForPost && (
+                <>
+                  <span className="text-gray-400">→</span>
+                  <div className="relative" data-subtask-dropdown>
+                    <button
+                      onClick={() => setShowSubtaskDropdown(!showSubtaskDropdown)}
+                      className="flex items-center gap-1 px-2 py-1 text-xs border border-gray-300 rounded-md hover:bg-gray-50 transition-colors"
+                      disabled={availableSubtasks.length === 0}
+                    >
+                      <span className="text-gray-700">{selectedSubtaskName}</span>
+                      <ChevronDown className="w-3 h-3 text-gray-500" />
+                    </button>
+                    
+                    {showSubtaskDropdown && (
+                      <div className="absolute top-full left-0 mt-1 w-48 bg-white border border-gray-200 rounded-lg shadow-lg z-10 max-h-60 overflow-y-auto">
+                        <div className="py-1">
+                          {availableSubtasks.length === 0 ? (
+                            <div className="px-3 py-2 text-xs text-gray-500">No subtasks available</div>
+                          ) : (
+                            availableSubtasks.map(subtask => (
+                              <button
+                                key={subtask.id}
+                                onClick={() => {
+                                  setSelectedSubtaskForPost(subtask.id);
+                                  setShowSubtaskDropdown(false);
+                                }}
+                                className="w-full text-left px-3 py-2 text-xs hover:bg-gray-100 transition-colors"
+                              >
+                                {subtask.name}
+                              </button>
+                            ))
+                          )}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </>
+              )}
+              </div>
+            </div>
             )}
           </div>
           <div className="flex items-center gap-2">
-            <button
-              onClick={() => setShowComposer(true)}
-              className="inline-flex items-center gap-1 rounded-lg bg-blue-600 px-2.5 py-1 text-xs font-semibold text-white hover:bg-blue-700 transition-colors"
-            >
-              <Plus className="w-3.5 h-3.5" />
-              New Post
-            </button>
+            {/* New Post button - Only show for non-vendors */}
+            {!isVendor && (
+              <button
+                onClick={() => setShowComposer(true)}
+                className="inline-flex items-center gap-1 rounded-lg bg-blue-600 px-2.5 py-1 text-xs font-semibold text-white hover:bg-blue-700 transition-colors"
+              >
+                <Plus className="w-3.5 h-3.5" />
+                New Post
+              </button>
+            )}
             <button onClick={onClose} className="p-2 rounded-lg hover:bg-gray-100" aria-label="Close post services">
               <X className="w-5 h-5 text-gray-500" />
             </button>
@@ -323,7 +560,8 @@ const PostServicesModal = ({ isOpen, onClose, currentUser, workspaceId, subtaskI
         </div>
 
         <div className="flex-1 overflow-y-auto">
-          {showComposer && (
+          {/* Post Composer - Only show for non-vendors */}
+          {!isVendor && showComposer && (
             <PostComposer
               message={message}
               setMessage={setMessage}
@@ -352,6 +590,8 @@ const PostServicesModal = ({ isOpen, onClose, currentUser, workspaceId, subtaskI
               handlePost={handlePost}
               isPosting={isPosting}
               renderTextWithHighlights={renderTextWithHighlights}
+              selectedTaskForPost={selectedTaskForPost}
+              selectedSubtaskForPost={selectedSubtaskForPost}
             />
           )}
 
@@ -381,6 +621,11 @@ const PostServicesModal = ({ isOpen, onClose, currentUser, workspaceId, subtaskI
             insertReplyMention={insertReplyMention}
             insertReplyHashtag={insertReplyHashtag}
             handleReplyMessageChange={handleReplyMessageChange}
+            currentUser={currentUser}
+            workspace={workspace}
+            workspaceId={workspaceId}
+            onUnlockRequest={handleUnlockRequest}
+            onUnlockApprove={handleUnlockApprove}
           />
         </div>
       </div>

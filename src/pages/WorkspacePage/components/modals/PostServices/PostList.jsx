@@ -27,7 +27,13 @@ const PostList = ({
   setReplyHashtagQuery,
   insertReplyMention,
   insertReplyHashtag,
-  handleReplyMessageChange
+  handleReplyMessageChange,
+  // Unlock request props
+  currentUser,
+  workspace,
+  workspaceId,
+  onUnlockRequest,
+  onUnlockApprove
 }) => {
   return (
     <div className="px-3 pb-3 flex-1 overflow-y-auto">
@@ -62,6 +68,12 @@ const PostList = ({
               insertReplyMention={insertReplyMention}
               insertReplyHashtag={insertReplyHashtag}
               handleReplyMessageChange={handleReplyMessageChange}
+              // Unlock request props
+              currentUser={currentUser}
+              workspace={workspace}
+              workspaceId={workspaceId}
+              onUnlockRequest={onUnlockRequest}
+              onUnlockApprove={onUnlockApprove}
             />
           ))}
         </div>

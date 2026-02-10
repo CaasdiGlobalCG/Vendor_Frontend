@@ -147,8 +147,32 @@ const edgeTypes = {
   
   // Check if user can edit canvas
   // Lock canvas if workspace is marked completed, regardless of userPermissions
-  const isWorkspaceCompleted = workspace?.status === 'project completed';
-  const canEdit = userRole === 'pm' ? true : (!isWorkspaceCompleted && userPermissions?.canEdit);
+  const isWorkspaceCompleted = workspace?.status === 'completed' || workspace?.status === 'project completed';
+  
+  // Check if the current task/subtask has been unlocked (post-completion)
+  const isCurrentTaskUnlocked = React.useMemo(() => {
+    if (!isWorkspaceCompleted || !selectedTask || !selectedSubtask) return false;
+    const unlockedTasks = workspace?.unlockedTasks || [];
+    
+    console.log('🔓 CanvasWorkspace - Unlock Check:', {
+      isWorkspaceCompleted,
+      selectedTaskId: selectedTask?.id,
+      selectedSubtaskId: selectedSubtask?.id,
+      unlockedTasks,
+      userRole,
+      canEditPerm: userPermissions?.canEdit
+    });
+    
+    return unlockedTasks.some(
+      ut => ut.taskId === selectedTask.id && ut.subtaskId === selectedSubtask.id
+    );
+  }, [isWorkspaceCompleted, selectedTask, selectedSubtask, workspace?.unlockedTasks]);
+  
+  // PMs always can edit.
+  // If task is unlocked (post-completion), vendor can edit regardless of base canEdit permission.
+  // If workspace is not completed, use normal permission check.
+  const canEdit = userRole === 'pm' ? true : 
+    (isCurrentTaskUnlocked || (!isWorkspaceCompleted && userPermissions?.canEdit));
   
   // Canvas permissions check complete
 

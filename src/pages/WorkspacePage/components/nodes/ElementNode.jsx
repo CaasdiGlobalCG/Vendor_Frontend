@@ -16,7 +16,8 @@ import FileRenderer from '../forms/FileRenderer';
 import TaskCardRenderer from '../forms/TaskCardRenderer';
 import ImageBlockRenderer from '../forms/ImageBlockRenderer';
 import DocumentBlockRenderer from '../forms/DocumentBlockRenderer';
-
+import ConcreteBlocksCalculator from '../forms/ConcreteBlocksCalculator';
+import BricksCalculator from '../forms/BricksCalculator';
 
 import TablePreviewModal from '../modals/TablePreviewModal';
 import { createTableHelpers, defaultTableData } from '../../utils/tableUtils';
@@ -1529,6 +1530,17 @@ const ElementNode = ({ id, data, isConnectable, selected }) => {
       case 'task-card':
       case 'task-card-progress':
         return <TaskCardRenderer data={data} />;
+      
+      case 'cost-calculator':
+        // Render different calculators based on element name or id
+        if (data.name === 'Bricks Calculator' || data.id === 'bricks-calculator') {
+          return <BricksCalculator data={data} nodeId={id} workspaceId={workspaceId} setNodes={setNodes} />;
+        } else if (data.name === 'Concrete Calculator' || data.id === 'concrete-calculator') {
+          // For future: Concrete mix calculator
+          return <ConcreteBlocksCalculator data={data} nodeId={id} workspaceId={workspaceId} setNodes={setNodes} />;
+        }
+        // Default to Concrete Blocks Calculator
+        return <ConcreteBlocksCalculator data={data} nodeId={id} workspaceId={workspaceId} setNodes={setNodes} />;
       
       case 'icon':
         return renderIconElement();

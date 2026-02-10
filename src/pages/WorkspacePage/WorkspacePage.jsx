@@ -231,6 +231,74 @@ const WorkspacePage = () => {
       isConnected
     });
   }, [notifications, activeCall, processedCallNotifications, currentUser, isConnected]);
+  
+  // Refetch workspace data (for use after updates) - MUST be defined before useEffects that use it
+  const refetchWorkspace = useCallback(async () => {
+    if (!workspaceId) return;
+    
+    try {
+      console.log('🔄 Refetching workspace data...');
+      const response = await fetch(`/api/workspaces/${workspaceId}`);
+      if (response.ok) {
+        const freshWorkspaceData = await response.json();
+        setWorkspace(freshWorkspaceData);
+        
+        // Keep selectedTask/selectedSubtask in sync
+        if (selectedTask?.id && selectedSubtask?.id && Array.isArray(freshWorkspaceData?.tasks)) {
+          const updatedTask = freshWorkspaceData.tasks.find(t => t.id === selectedTask.id);
+          const updatedSubtask = updatedTask?.subtasks?.find(s => s.id === selectedSubtask.id);
+          if (updatedTask) setSelectedTask(updatedTask);
+          if (updatedSubtask) setSelectedSubtask(updatedSubtask);
+        }
+        
+        console.log('✅ Workspace data refreshed');
+        return freshWorkspaceData;
+      }
+    } catch (error) {
+      console.error('❌ Failed to refetch workspace:', error);
+    }
+  }, [workspaceId, selectedTask, selectedSubtask]);
+  
+  // Listen for workspace unlock notifications and refresh workspace data
+  useEffect(() => {
+    const unlockNotifications = notifications?.filter(n => 
+      n.type === 'workspace_unlocked' && 
+      n.workspaceId === workspaceId &&
+      !n.read
+    ) || [];
+    
+    if (unlockNotifications.length > 0) {
+      console.log('🔓 Workspace unlock notification received, refreshing workspace data...');
+      refetchWorkspace();
+      
+      // Mark notifications as read
+      unlockNotifications.forEach(notification => {
+        if (markNotificationAsRead) {
+          markNotificationAsRead(notification.notificationId);
+        }
+      });
+    }
+  }, [notifications, workspaceId, refetchWorkspace, markNotificationAsRead]);
+  
+  // Polling fallback: For vendors on completed workspaces, poll for updates every 30 seconds
+  useEffect(() => {
+    const isVendor = userRole === 'vendor';
+    const isCompleted = workspace?.status === 'completed' || workspace?.status === 'project completed';
+    
+    if (isVendor && isCompleted && workspaceId) {
+      console.log('🔄 Setting up polling for completed workspace (fallback for WebSocket)');
+      
+      const pollInterval = setInterval(() => {
+        console.log('⏰ Polling workspace for unlock updates...');
+        refetchWorkspace();
+      }, 30000); // Poll every 30 seconds
+      
+      return () => {
+        console.log('🛑 Stopping workspace polling');
+        clearInterval(pollInterval);
+      };
+    }
+  }, [workspace?.status, userRole, workspaceId, refetchWorkspace]);
 
   // Check if we should show invoice tool based on URL
   useEffect(() => {
@@ -642,8 +710,6 @@ const WorkspacePage = () => {
   const [showPermissionsModal, setShowPermissionsModal] = useState(false);
   const [showInviteVendorsModal, setShowInviteVendorsModal] = useState(false);
   const [showInviteCASModal, setShowInviteCASModal] = useState(false);
-
-  // Using relative paths - no API_BASE_URL needed
 
   // Load workspace data
   useEffect(() => {
@@ -1640,6 +1706,9 @@ const WorkspacePage = () => {
           userRole={userRole}
           isPM={isPM}
           isClient={!!detectedClientId}
+          workspace={workspace}
+          selectedTask={selectedTask}
+          selectedSubtask={selectedSubtask}
         />
         
         <div className="flex h-[calc(100vh-160px)]">
@@ -1785,12 +1854,19 @@ const WorkspacePage = () => {
       {/* Post Services Modal */}
       <PostServicesModal
         isOpen={showPostServicesModal}
-        onClose={() => setShowPostServicesModal(false)}
+        onClose={() => {
+          setShowPostServicesModal(false);
+          // Refetch workspace when modal closes (fallback for non-WebSocket scenarios)
+          console.log('📥 Post Services modal closed, refreshing workspace...');
+          setTimeout(() => refetchWorkspace(), 500);
+        }}
         currentUser={currentUser}
         workspaceId={workspaceId}
         subtaskId={selectedSubtask?.id}
         taskId={selectedTask?.id}
         selectedSubtask={selectedSubtask}
+        workspace={workspace}
+        onWorkspaceUpdate={refetchWorkspace}
       />
 
       {/* Update Progress Modal */}

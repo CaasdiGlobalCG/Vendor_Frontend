@@ -1,5 +1,5 @@
 import React, { useRef, useState } from 'react';
-import { Grid, Table, BarChart3, Square, List, X, GitBranch, Package, Upload, FileText, Image, FileSpreadsheet, Plus, File, Settings, Workflow, FileDigit, FileCheck, Clock, AlertCircle, ClipboardList, FileSpreadsheet as FileSpreadsheetIcon, Sparkles, Calendar, CheckCircle, StickyNote, ClipboardCheck, Minus, ArrowDown, Box, LayoutGrid, CheckSquare, TrendingUp } from 'lucide-react';
+import { Grid, Table, BarChart3, Square, List, X, GitBranch, Package, Upload, FileText, Image, FileSpreadsheet, Plus, File, Settings, Workflow, FileDigit, FileCheck, Clock, AlertCircle, ClipboardList, FileSpreadsheet as FileSpreadsheetIcon, Sparkles, Calendar, CheckCircle, StickyNote, ClipboardCheck, Minus, ArrowDown, Box, LayoutGrid, CheckSquare, TrendingUp, Calculator, Layers } from 'lucide-react';
 import { useUpload } from './forms/UploadManager';
 import ManageBOQModal from './ManageBOQModal';
 
@@ -524,6 +524,9 @@ const DraggableElement = ({ element }) => {
         {element.type === 'task-card-progress' && (
           <TrendingUp className="w-6 h-6 text-teal-600" />
         )}
+        {element.type === 'cost-calculator' && element.elementIcon && (
+          element.elementIcon
+        )}
 
         </div>
         
@@ -847,6 +850,20 @@ const ElementsPanel = ({
       name: 'Uploads',
       icon: <Upload className="w-5 h-5" />,
       elements: [] // This will be dynamically populated with uploaded files
+    },
+    'cost-calculators': {
+      name: 'Cost Calculators',
+      icon: <Calculator className="w-5 h-5" />,
+      elements: [
+        // { id: 'building-cost-calculator', name: 'Building Cost Calculator', type: 'cost-calculator', preview: 'Calculate total building construction costs', elementIcon: <Box className="w-6 h-6 text-blue-600" /> },
+        { id: 'concrete-blocks-calculator', name: 'Concrete Blocks Calculator', type: 'cost-calculator', preview: 'Calculate the number of concrete blocks for your project', elementIcon: <Package className="w-6 h-6 text-orange-600" /> },
+        { id: 'bricks-calculator', name: 'Bricks Calculator', type: 'cost-calculator', preview: 'Estimate the number of bricks required for walls', elementIcon: <Package className="w-6 h-6 text-red-600" /> },
+        { id: 'concrete-calculator', name: 'Concrete Calculator', type: 'cost-calculator', preview: 'Calculate amount of concrete mix needed for foundations or columns', elementIcon: <Layers className="w-6 h-6 text-gray-600" /> },
+        { id: 'flooring-calculator', name: 'Flooring Calculator', type: 'cost-calculator', preview: 'Plan flooring materials and get accurate cost estimates', elementIcon: <Grid className="w-6 h-6 text-amber-700" /> },
+        { id: 'soil-excavation-calculator', name: 'Soil Excavation Calculator', type: 'cost-calculator', preview: 'Calculate volume of soil excavation for foundations', elementIcon: <Plus className="w-6 h-6 text-yellow-700" /> },
+        { id: 'steel-cost-calculator', name: 'Steel Calculator', type: 'cost-calculator', preview: 'Estimate steel reinforcement required for structures', elementIcon: <Layers className="w-6 h-6 text-slate-700" /> },
+        { id: 'vinyl-calculator', name: 'Vinyl Calculator', type: 'cost-calculator', preview: 'Calculate vinyl material and installation costs', elementIcon: <Square className="w-6 h-6 text-green-600" /> }
+      ]
     },
     flowcharts: {
       name: 'Flowcharts',
