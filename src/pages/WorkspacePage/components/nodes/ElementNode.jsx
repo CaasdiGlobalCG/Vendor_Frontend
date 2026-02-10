@@ -3,7 +3,7 @@ import { useParams } from 'react-router-dom';
 import { getWorkspaceById, updateWorkspace } from '../../utils/workspaceApi';
 import { persistIsImportant, persistDeadline, persistTextContent, persistNodeDataPatch, getTimeLeft as calculateTimeLeft, formatTimeLeft } from '../../utils/nodePersistence';
 import { Handle, Position, useReactFlow } from 'reactflow';
-import { Download, Eye, ExternalLink, X, ArrowRight, Check, X as XIcon, Menu, Star, Heart, Info, HelpCircle, Lock, Send } from 'lucide-react';
+import { Download, Eye, ExternalLink, X, ArrowRight, Check, X as XIcon, Menu, Star, Heart, Info, HelpCircle, Lock, Send, MoreVertical, Copy, Edit2, Trash2 } from 'lucide-react';
 import { VendorContext } from '../../../../context/VendorContext';
 import FormTemplate from '../forms/FormTemplate';
 import TableRenderer from '../forms/TableRenderer';
@@ -32,6 +32,10 @@ const ElementNode = ({ id, data, isConnectable, selected }) => {
   const [deadline, setDeadline] = useState(data.deadline || null); // ISO string or null
   const [showDeadlineInput, setShowDeadlineInput] = useState(false);
   
+  // Menu dropdown state
+  const [showMenuDropdown, setShowMenuDropdown] = useState(false);
+  const menuDropdownRef = useRef(null);
+  
   // Track if we just set the deadline to prevent it from being cleared during sync
   const deadlineJustSetRef = useRef(false);
 
@@ -45,6 +49,20 @@ const ElementNode = ({ id, data, isConnectable, selected }) => {
     
     return () => clearInterval(interval);
   }, []);
+  
+  // Close menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (menuDropdownRef.current && !menuDropdownRef.current.contains(event.target)) {
+        setShowMenuDropdown(false);
+      }
+    };
+    
+    if (showMenuDropdown) {
+      document.addEventListener('mousedown', handleClickOutside);
+      return () => document.removeEventListener('mousedown', handleClickOutside);
+    }
+  }, [showMenuDropdown]);
   
   // Sync deadline from backend node data if changed externally
   useEffect(() => {
@@ -237,6 +255,11 @@ const ElementNode = ({ id, data, isConnectable, selected }) => {
   
   // Send for approval state
   const [isSendingForApproval, setIsSendingForApproval] = useState(false);
+  
+  // Deletion request state
+  const [showDeletionModal, setShowDeletionModal] = useState(false);
+  const [deletionReason, setDeletionReason] = useState('');
+  const [isSubmittingDeletion, setIsSubmittingDeletion] = useState(false);
   
   // Help tutorial state
   const [showHelpTutorial, setShowHelpTutorial] = useState(false);
@@ -701,6 +724,190 @@ const ElementNode = ({ id, data, isConnectable, selected }) => {
   const isTableElement = () => {
     return data.type === 'table' || data.id?.includes('table') || 
            ['basic-table', 'sortable-table', 'filterable-table', 'paginated-table', 'editable-table', 'expandable-table'].includes(data.id);
+  };
+  
+  // Menu action handlers
+  const handleDuplicate = async () => {
+    setShowMenuDropdown(false);
+    // Emit duplicate action - parent component should handle this
+    const event = new CustomEvent('element-duplicate', { detail: { nodeId: id, nodeData: data } });
+    window.dispatchEvent(event);
+  };
+
+  const handleEdit = () => {
+    setShowMenuDropdown(false);
+    // The element is already in edit mode by default when selected
+    // This can trigger any additional edit-specific behavior if needed
+    console.log('Edit element:', id);
+  };
+
+  const handleDelete = async () => {
+    setShowMenuDropdown(false);
+    const currentUserRole = getCurrentUserRole();
+    
+    // If user is vendor, request deletion (not immediate delete)
+    if (currentUserRole === 'vendor') {
+      setShowDeletionModal(true);
+    } else if (currentUserRole === 'pm') {
+      // PM can approve existing deletion request or delete directly
+      if (data.deletionRequested) {
+        // PM approving an existing deletion request
+        if (window.confirm('Approve deletion of this element?')) {
+          // Emit delete action for actual deletion
+          const event = new CustomEvent('element-delete', { detail: { nodeId: id } });
+          window.dispatchEvent(event);
+        }
+      } else {
+        // PM deleting directly (with confirmation)
+        if (window.confirm('Are you sure you want to delete this element?')) {
+          const event = new CustomEvent('element-delete', { detail: { nodeId: id } });
+          window.dispatchEvent(event);
+        }
+      }
+    }
+  };
+
+  // Check if PM can approve deletion
+  const canApproveDeletion = () => {
+    const currentUserRole = getCurrentUserRole();
+    return currentUserRole === 'pm' && data.deletionRequested && !data.deletionApprovedAt;
+  };
+
+  // Handle submitting deletion request (vendor)
+  const handleSubmitDeletionRequest = async () => {
+    setIsSubmittingDeletion(true);
+    try {
+      const patch = {
+        deletionRequested: true,
+        deletionRequestedAt: new Date().toISOString(),
+        deletionRequestedBy: currentUser?.name || currentUser?.email || 'Unknown User',
+        deletionReason: deletionReason || 'No reason provided'
+      };
+
+      console.log('📤 Persisting deletion request...', { nodeId: id, workspaceId, patch });
+
+      await persistNodeDataPatch(
+        id,
+        patch,
+        setNodes,
+        workspaceId,
+        { bypassApprovalFlow: true }
+      );
+
+      // Update local state
+      setNodes((nodes) =>
+        nodes.map((node) =>
+          node.id === id
+            ? {
+                ...node,
+                data: {
+                  ...node.data,
+                  ...patch
+                }
+              }
+            : node
+        )
+      );
+
+      console.log('✅ Deletion request persisted successfully');
+      setShowDeletionModal(false);
+      setDeletionReason('');
+      
+      // Notify parent that deletion was requested
+      const event = new CustomEvent('element-deletion-requested', { detail: { nodeId: id } });
+      window.dispatchEvent(event);
+    } catch (error) {
+      console.error('❌ Error submitting deletion request:', error);
+      alert('Failed to submit deletion request');
+    } finally {
+      setIsSubmittingDeletion(false);
+    }
+  };
+
+  // Handle PM approving deletion
+  const handleApproveDeletion = async () => {
+    if (!window.confirm('Approve deletion of this element?')) return;
+
+    try {
+      setIsSubmittingDeletion(true);
+      
+      // Get current workspace
+      const workspace = await getWorkspaceById(workspaceId);
+      
+      // Filter out the deleted node
+      const updatedNodes = (workspace.nodes || []).filter(node => node.id !== id);
+      
+      // Update workspace without the deleted element
+      await updateWorkspace(workspaceId, {
+        nodes: updatedNodes,
+        edges: workspace.edges || [],
+        zoomLevel: workspace.zoomLevel || 100
+      });
+      
+      console.log('✅ Element deleted successfully by PM:', { nodeId: id, workspaceId });
+      
+      // Remove from local React state
+      setNodes((currentNodes) => currentNodes.filter(node => node.id !== id));
+      
+      // Emit event for parent component
+      const event = new CustomEvent('element-deleted', { detail: { nodeId: id } });
+      window.dispatchEvent(event);
+    } catch (error) {
+      console.error('❌ Error approving deletion:', error);
+      alert('Failed to approve deletion');
+    } finally {
+      setIsSubmittingDeletion(false);
+    }
+  };
+
+  // Handle PM rejecting deletion
+  const handleRejectDeletion = async () => {
+    if (!window.confirm('Reject deletion request for this element?')) return;
+
+    try {
+      const patch = {
+        deletionRequested: false,
+        deletionRequestedAt: null,
+        deletionRequestedBy: null,
+        deletionReason: null,
+        deletionRejectedAt: new Date().toISOString(),
+        deletionRejectedBy: currentUser?.name || currentUser?.email || 'Unknown User'
+      };
+
+      console.log('📋 Persisting deletion rejection...', { nodeId: id, workspaceId, patch });
+
+      await persistNodeDataPatch(
+        id,
+        patch,
+        setNodes,
+        workspaceId,
+        { bypassApprovalFlow: true }
+      );
+
+      // Update local state
+      setNodes((nodes) =>
+        nodes.map((node) =>
+          node.id === id
+            ? {
+                ...node,
+                data: {
+                  ...node.data,
+                  ...patch
+                }
+              }
+            : node
+        )
+      );
+
+      console.log('✅ Deletion request rejected successfully');
+      
+      // Notify parent
+      const event = new CustomEvent('element-deletion-rejected', { detail: { nodeId: id } });
+      window.dispatchEvent(event);
+    } catch (error) {
+      console.error('❌ Error rejecting deletion:', error);
+      alert('Failed to reject deletion request');
+    }
   };
   
   // Handle preview click
@@ -1798,6 +2005,44 @@ const ElementNode = ({ id, data, isConnectable, selected }) => {
               </span>
             )}
             
+            {/* Three-Dot Menu Button */}
+            <div className="relative" ref={menuDropdownRef}>
+              <button
+                onClick={() => setShowMenuDropdown(!showMenuDropdown)}
+                className="p-1 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded transition-all duration-200"
+                title="More options"
+              >
+                <MoreVertical className="w-4 h-4" />
+              </button>
+              
+              {/* Dropdown Menu */}
+              {showMenuDropdown && (
+                <div className="absolute right-0 mt-2 w-48 bg-white border border-gray-200 rounded-lg shadow-lg z-50">
+                  <button
+                    onClick={handleDuplicate}
+                    className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100 flex items-center space-x-2 first:rounded-t-lg transition-colors"
+                  >
+                    <Copy className="w-4 h-4 text-gray-500" />
+                    <span>Duplicate</span>
+                  </button>
+                  <button
+                    onClick={handleEdit}
+                    className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100 flex items-center space-x-2 transition-colors"
+                  >
+                    <Edit2 className="w-4 h-4 text-gray-500" />
+                    <span>Edit</span>
+                  </button>
+                  <button
+                    onClick={handleDelete}
+                    className="w-full px-4 py-2 text-left text-sm text-red-700 hover:bg-red-50 flex items-center space-x-2 last:rounded-b-lg transition-colors"
+                  >
+                    <Trash2 className="w-4 h-4 text-red-500" />
+                    <span>Delete</span>
+                  </button>
+                </div>
+              )}
+            </div>
+            
             {isTableElement() && (
               <button
                 onClick={handlePreviewClick}
@@ -1907,6 +2152,47 @@ const ElementNode = ({ id, data, isConnectable, selected }) => {
             <p className="text-xs text-gray-500 ml-7">
               📅 {formatDate(data.sentForApprovalAt)}
             </p>
+          </div>
+        )}
+        
+        {/* Deletion Request Status */}
+        {data.deletionRequested && (
+          <div className="mb-2 p-2 rounded-lg bg-red-50 border border-red-200">
+            <div className="flex items-center space-x-2 mb-1">
+              <span className="w-5 h-5 rounded-full flex items-center justify-center text-xs bg-red-500 text-white">
+                🗑️
+              </span>
+              <span className="text-xs font-medium text-gray-700">
+                Deletion requested by {data.deletionRequestedBy}
+              </span>
+            </div>
+            <p className="text-xs text-gray-500 ml-7">
+              📅 {formatDate(data.deletionRequestedAt)}
+            </p>
+            {data.deletionReason && (
+              <div className="mt-2 p-2 bg-white rounded border border-gray-100">
+                <p className="text-xs text-gray-500 uppercase tracking-wide mb-1">Deletion Reason</p>
+                <p className="text-xs text-gray-700">{data.deletionReason}</p>
+              </div>
+            )}
+            
+            {/* PM Deletion Controls */}
+            {canApproveDeletion() && (
+              <div className="mt-2 flex gap-2">
+                <button
+                  onClick={handleApproveDeletion}
+                  className="flex-1 px-2 py-1 text-xs bg-red-500 text-white rounded hover:bg-red-600 transition-colors"
+                >
+                  Approve Deletion
+                </button>
+                <button
+                  onClick={handleRejectDeletion}
+                  className="flex-1 px-2 py-1 text-xs bg-gray-500 text-white rounded hover:bg-gray-600 transition-colors"
+                >
+                  Reject Deletion
+                </button>
+              </div>
+            )}
           </div>
         )}
         
@@ -2191,6 +2477,104 @@ const ElementNode = ({ id, data, isConnectable, selected }) => {
                   <>
                     {approvalAction === 'approve' ? <Check className="w-4 h-4" /> : <XIcon className="w-4 h-4" />}
                     <span>{approvalAction === 'approve' ? 'Approve' : 'Reject'}</span>
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      
+      {/* Deletion Request Modal */}
+      {showDeletionModal && (
+        <div className="fixed inset-0 z-[1000] flex items-center justify-center bg-black/50 backdrop-blur-sm">
+          <div 
+            className="bg-white rounded-2xl shadow-2xl w-full max-w-md mx-4 overflow-hidden"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Modal Header */}
+            <div className="px-6 py-4 bg-gradient-to-r from-orange-500 to-red-500">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-3">
+                  <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center">
+                    <Trash2 className="w-6 h-6 text-white" />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-semibold text-white">
+                      Request Deletion
+                    </h3>
+                    <p className="text-sm text-white/80">{data.name}</p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setShowDeletionModal(false)}
+                  className="p-2 hover:bg-white/20 rounded-full transition-colors"
+                >
+                  <X className="w-5 h-5 text-white" />
+                </button>
+              </div>
+            </div>
+            
+            {/* Modal Body */}
+            <div className="p-6">
+              <div className="mb-4 p-3 rounded-lg bg-orange-50 border border-orange-200">
+                <p className="text-sm text-orange-800">
+                  ⚠️ This element will be marked for deletion. A PM will need to approve this request before it's permanently deleted.
+                </p>
+              </div>
+              
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Reason for Deletion
+                  <span className="text-red-500">*</span>
+                </label>
+                <textarea
+                  value={deletionReason}
+                  onChange={(e) => setDeletionReason(e.target.value)}
+                  placeholder="Enter reason for requesting deletion..."
+                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-orange-500 resize-none transition-all"
+                  rows={4}
+                />
+              </div>
+              
+              {/* Element Info */}
+              <div className="bg-gray-50 rounded-lg p-3 mb-4">
+                <p className="text-xs text-gray-500 uppercase tracking-wide mb-1">Element Details</p>
+                <p className="text-sm text-gray-700">
+                  <span className="font-medium">Type:</span> {data.type}
+                </p>
+                <p className="text-sm text-gray-700">
+                  <span className="font-medium">Added by:</span> {data.addedBy} ({data.addedByRole === 'pm' ? 'PM' : 'Vendor'})
+                </p>
+              </div>
+            </div>
+            
+            {/* Modal Footer */}
+            <div className="px-6 py-4 bg-gray-50 border-t border-gray-100 flex space-x-3">
+              <button
+                onClick={() => setShowDeletionModal(false)}
+                disabled={isSubmittingDeletion}
+                className="flex-1 px-4 py-2.5 border border-gray-300 text-gray-700 rounded-xl hover:bg-gray-100 transition-colors font-medium"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleSubmitDeletionRequest}
+                disabled={!deletionReason.trim() || isSubmittingDeletion}
+                className="flex-1 px-4 py-2.5 text-white rounded-xl font-medium transition-all flex items-center justify-center space-x-2 bg-orange-500 hover:bg-orange-600 disabled:bg-orange-300 disabled:cursor-not-allowed"
+              >
+                {isSubmittingDeletion ? (
+                  <>
+                    <svg className="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    <span>Submitting...</span>
+                  </>
+                ) : (
+                  <>
+                    <Trash2 className="w-4 h-4" />
+                    <span>Request Deletion</span>
                   </>
                 )}
               </button>
