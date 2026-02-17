@@ -3,7 +3,7 @@ import { useParams } from 'react-router-dom';
 import { getWorkspaceById, updateWorkspace } from '../../utils/workspaceApi';
 import { persistIsImportant, persistDeadline, persistTextContent, persistNodeDataPatch, getTimeLeft as calculateTimeLeft, formatTimeLeft } from '../../utils/nodePersistence';
 import { Handle, Position, useReactFlow } from 'reactflow';
-import { Download, Eye, ExternalLink, X, ArrowRight, Check, X as XIcon, Menu, Star, Heart, Info, HelpCircle, Lock, Send, MoreVertical, Copy, Edit2, Trash2 } from 'lucide-react';
+import { Download, Eye, ExternalLink, X, ArrowRight, Check, X as XIcon, Menu, Star, Heart, Info, HelpCircle, Lock, Send, MoreVertical, Copy, Edit2, Trash2, FileText } from 'lucide-react';
 import { VendorContext } from '../../../../context/VendorContext';
 import FormTemplate from '../forms/FormTemplate';
 import TableRenderer from '../forms/TableRenderer';
@@ -18,6 +18,12 @@ import ImageBlockRenderer from '../forms/ImageBlockRenderer';
 import DocumentBlockRenderer from '../forms/DocumentBlockRenderer';
 import ConcreteBlocksCalculator from '../forms/ConcreteBlocksCalculator';
 import BricksCalculator from '../forms/BricksCalculator';
+import ConcreteCalculator from '../forms/ConcreteCalculator';
+import FlooringCalculator from '../forms/FlooringCalculator';
+import SoilExcavationCalculator from '../forms/SoilExcavationCalculator';
+import SteelEstimationCalculator from '../forms/SteelEstimationCalculator';
+import VinylFlooringCalculator from '../forms/VinylFlooringCalculator';
+import BOQGenerator from '../forms/BOQGenerator';
 
 import TablePreviewModal from '../modals/TablePreviewModal';
 import { createTableHelpers, defaultTableData } from '../../utils/tableUtils';
@@ -36,6 +42,8 @@ const ElementNode = ({ id, data, isConnectable, selected }) => {
   // Menu dropdown state
   const [showMenuDropdown, setShowMenuDropdown] = useState(false);
   const menuDropdownRef = useRef(null);
+  
+
   
   // Track if we just set the deadline to prevent it from being cleared during sync
   const deadlineJustSetRef = useRef(false);
@@ -1531,13 +1539,26 @@ const ElementNode = ({ id, data, isConnectable, selected }) => {
       case 'task-card-progress':
         return <TaskCardRenderer data={data} />;
       
+      case 'boq-generator':
+        return <BOQGenerator />;
+
       case 'cost-calculator':
         // Render different calculators based on element name or id
-        if (data.name === 'Bricks Calculator' || data.id === 'bricks-calculator') {
+        const lowerName = (data.name || '').toLowerCase();
+        const lowerId = (data.id || '').toLowerCase();
+        
+        if (lowerName.includes('vinyl') || lowerId.includes('vinyl')) {
+          return <VinylFlooringCalculator data={data} nodeId={id} workspaceId={workspaceId} setNodes={setNodes} />;
+        } else if (lowerName.includes('steel') || lowerId.includes('steel')) {
+          return <SteelEstimationCalculator data={data} nodeId={id} workspaceId={workspaceId} setNodes={setNodes} />;
+        } else if (data.name === 'Bricks Calculator' || data.id === 'bricks-calculator') {
           return <BricksCalculator data={data} nodeId={id} workspaceId={workspaceId} setNodes={setNodes} />;
         } else if (data.name === 'Concrete Calculator' || data.id === 'concrete-calculator') {
-          // For future: Concrete mix calculator
-          return <ConcreteBlocksCalculator data={data} nodeId={id} workspaceId={workspaceId} setNodes={setNodes} />;
+          return <ConcreteCalculator data={data} nodeId={id} workspaceId={workspaceId} setNodes={setNodes} />;
+        } else if (data.name === 'Flooring Calculator' || data.id === 'flooring-calculator') {
+          return <FlooringCalculator data={data} nodeId={id} workspaceId={workspaceId} setNodes={setNodes} />;
+        } else if (data.name === 'Soil Excavation Calculator' || data.id === 'soil-excavation-calculator') {
+          return <SoilExcavationCalculator data={data} nodeId={id} workspaceId={workspaceId} setNodes={setNodes} />;
         }
         // Default to Concrete Blocks Calculator
         return <ConcreteBlocksCalculator data={data} nodeId={id} workspaceId={workspaceId} setNodes={setNodes} />;
@@ -1756,6 +1777,11 @@ const ElementNode = ({ id, data, isConnectable, selected }) => {
     const baseClasses = `${isImportant ? 'bg-yellow-50' : 'bg-white'} border-2 rounded-xl shadow-xl relative group transition-all`;
     const recentlyUpdatedClass = isRecentlyUpdated() ? 'ring-2 ring-amber-300 ring-offset-1' : '';
     const compactTypes = ['divider', 'spacer', 'container', 'grid'];
+    
+    // BOQ Generator has special flexible sizing
+    if (data.type === 'boq-generator') {
+      return `${baseClasses} ${recentlyUpdatedClass} p-4 min-w-[600px] max-w-[95vw]`;
+    }
     
     if (compactTypes.includes(data.type)) {
       if (data.type === 'divider') {

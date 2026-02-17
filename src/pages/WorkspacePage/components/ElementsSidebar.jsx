@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Search, Grid, Table, BarChart3, Square, List, X, GitBranch, Package, Upload, Settings, FileText, ClipboardList, Image as ImageIcon, Sparkles, Calculator, Layers, Plus, Box } from 'lucide-react';
+import { Search, Grid, Table, BarChart3, Square, List, X, GitBranch, Package, Upload, Settings, FileText, ClipboardList, Image as ImageIcon, Sparkles, Calculator, Layers, Plus, Box, FileDigit } from 'lucide-react';
 
 
 const ElementsSidebar = ({ isOpen, onClose, onElementSelect, userRole, currentUser, elementOptions = {} }) => {
@@ -151,6 +151,7 @@ const ElementsSidebar = ({ isOpen, onClose, onElementSelect, userRole, currentUs
       { id: 'tools-equipment', name: 'Tools & Equipment', type: 'materials', preview: 'Request tools and equipment' }
     ],
     'cost-calculators': [
+      { id: 'boq-generator', name: 'BOQ Generator', type: 'boq-generator', preview: 'Generate professional Bill of Quantities with cost breakdown', icon: <FileDigit className="w-6 h-6 text-purple-600" /> },
       // { id: 'building-cost-calculator', name: 'Building Cost Calculator', type: 'cost-calculator', preview: 'Calculate total building construction costs' },
       { id: 'concrete-blocks-calculator', name: 'Concrete Blocks Calculator', type: 'cost-calculator', preview: 'Calculate the number of concrete blocks for your project', icon: <Package className="w-6 h-6 text-orange-600" /> },
       { id: 'bricks-calculator', name: 'Bricks Calculator', type: 'cost-calculator', preview: 'Estimate the number of bricks required for walls', icon: <Package className="w-6 h-6 text-red-600" /> },

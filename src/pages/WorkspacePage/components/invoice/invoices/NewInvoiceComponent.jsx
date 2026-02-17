@@ -9,6 +9,42 @@ import html2pdf from 'html2pdf.js';
 import { createRoot } from 'react-dom/client';
 import StandardPreview from '../shared/StandardPreview.jsx';
 
+// Fixed Caasdi Global customer used for all invoices
+const CAASDI_GLOBAL_CUSTOMER = {
+  id: 'caasdi-global',
+  customerId: 'caasdi-global',
+  name: 'Caasdi Global',
+  displayName: 'Caasdi Global',
+  companyName: 'Caasdi Global',
+  email: 'corporate@caasdiglobal.in',
+  phone: '',
+  gstin: '29AATFC6640B1ZB',
+  billingAddress:
+    'Caasdi Global,\n262, 2nd floor, Srinivasa Nagar,\nBanashankari 1st Stage,\nBengaluru, Karnataka, 560050',
+  shippingAddress:
+    'Caasdi Global,\n262, 2nd floor, Srinivasa Nagar,\nBanashankari 1st Stage,\nBengaluru, Karnataka, 560050',
+  address: {
+    billing: {
+      street1: '262, 2nd floor, Srinivasa Nagar',
+      street2: 'Banashankari 1st Stage',
+      city: 'Bengaluru',
+      state: 'Karnataka',
+      country: 'India',
+      pinCode: '560050',
+    },
+    shipping: {
+      street1: '262, 2nd floor, Srinivasa Nagar',
+      street2: 'Banashankari 1st Stage',
+      city: 'Bengaluru',
+      state: 'Karnataka',
+      country: 'India',
+      pinCode: '560050',
+    },
+  },
+  customerType: 'Organization',
+  isCaasdiGlobal: true,
+};
+
 const CustomerSearchModal = ({ open, onClose, onSelect }) => {
   const { currentUser } = useContext(VendorContext);
   const [search, setSearch] = useState('');
@@ -265,6 +301,32 @@ const CustomerDropdown = ({ value, onChange }) => {
         </div>
       )}
       <CustomerSearchModal open={showSearchModal} onClose={() => setShowSearchModal(false)} onSelect={onChange} />
+    </div>
+  );
+};
+
+// Locked Caasdi Global customer dropdown - read-only for invoices
+const LockedCustomerDropdown = ({ value, onChange }) => {
+  // Always lock invoices to Caasdi Global and do not expose the full customer list
+  useEffect(() => {
+    // Ensure onChange is called with CAASDI_GLOBAL_CUSTOMER if value is not properly set or is missing the isCaasdiGlobal flag
+    if (!value || !value.isCaasdiGlobal) {
+      onChange(CAASDI_GLOBAL_CUSTOMER);
+    }
+  }, [onChange]);
+
+  return (
+    <div className="relative w-full font-poppins">
+      <div className="border-2 border-cg rounded-lg px-6 py-4 flex items-center text-lg bg-gray-50 cursor-not-allowed">
+        <div>
+          <div className="font-semibold text-gray-900">Caasdi Global</div>
+          <div className="text-xs text-gray-600 mt-1">
+            262, 2nd floor, Srinivasa Nagar, Banashankari 1st Stage, Bengaluru, Karnataka, 560050
+          </div>
+          <div className="text-xs text-gray-600 mt-0.5">GSTIN: 29AATFC6640B1ZB</div>
+        </div>
+        <span className="ml-auto text-xs text-gray-400">Fixed bill-to</span>
+      </div>
     </div>
   );
 };
@@ -619,22 +681,23 @@ const NewInvoiceComponentInner = ({ onBack, projectId, initialData, duplicateMod
     };
     
     // State variables for GST
-    const [isIntraState, setIsIntraState] = useState(false);
+    // Default to true since Caasdi Global is always state 29, and most vendors will be 29
+    const [isIntraState, setIsIntraState] = useState(true);
 
     // Items state
     const [items, setItems] = useState([
         { selectedItem: null, description: '', quantity: '', rate: '', amount: 0, hsn: '', cgstRate: '', sgstRate: '', igstRate: '', cgstAmount: 0, sgstAmount: 0, igstAmount: 0, ratePerSqft: '', measurements: '' },
     ]);
     const [showTotalSummary, setShowTotalSummary] = useState(false);
-    const [selectedCustomer, setSelectedCustomer] = useState(null);
+    const [selectedCustomer, setSelectedCustomer] = useState(CAASDI_GLOBAL_CUSTOMER);
     const [customerDetails, setCustomerDetails] = useState(null);
     const [addressLoading, setAddressLoading] = useState(false);
     const [addressEditMode, setAddressEditMode] = useState(null);
     const [editingCustomerDetails, setEditingCustomerDetails] = useState(false);
     const [editableCustomerDetails, setEditableCustomerDetails] = useState({
-        billingAddress: '',
-        shippingAddress: '',
-        gstin: ''
+        billingAddress: CAASDI_GLOBAL_CUSTOMER.billingAddress,
+        shippingAddress: CAASDI_GLOBAL_CUSTOMER.shippingAddress,
+        gstin: CAASDI_GLOBAL_CUSTOMER.gstin
     });
     const [addressForm, setAddressForm] = useState({
         billing: { street1: '', street2: '', city: '', state: '', country: '', pinCode: '', phone: '', fax: '' },
@@ -699,11 +762,35 @@ const NewInvoiceComponentInner = ({ onBack, projectId, initialData, duplicateMod
         }
     }, [projectId]);
 
+    // Initialize Caasdi Global details when component mounts (for new invoices)
+    useEffect(() => {
+        if (!initialData) {
+            // For new invoices, initialize with Caasdi Global
+            console.log('🎯 Mount effect: No initialData, setting Caasdi Global');
+            setSelectedCustomer(CAASDI_GLOBAL_CUSTOMER);
+            setEditableCustomerDetails({
+                billingAddress: CAASDI_GLOBAL_CUSTOMER.billingAddress,
+                shippingAddress: CAASDI_GLOBAL_CUSTOMER.shippingAddress,
+                gstin: CAASDI_GLOBAL_CUSTOMER.gstin
+            });
+        } else {
+            console.log('🎯 Mount effect: Found initialData, skipping mount initialization');
+        }
+    }, []); // Only run once on mount
+
     // Handle initialData for editing existing invoice, duplicating, or creating from PO
     useEffect(() => {
         if (initialData) {
-            const customer = initialData.customerDetails || initialData.selectedCustomer;
-            console.log('📦 Setting selected customer from initialData:', customer);
+            // Check if customer exists and has actual data (not empty object)
+            let customer = initialData.customerDetails || initialData.selectedCustomer;
+            
+            // If customer is empty or doesn't exist, use Caasdi Global
+            if (!customer || !customer.customerId) {
+                customer = CAASDI_GLOBAL_CUSTOMER;
+                console.log('📦 Customer from initialData was empty, using CAASDI_GLOBAL_CUSTOMER');
+            } else {
+                console.log('📦 Setting selected customer from initialData:', customer);
+            }
             setSelectedCustomer(customer);
             
             // Initialize editable customer details
@@ -733,11 +820,63 @@ const NewInvoiceComponentInner = ({ onBack, projectId, initialData, duplicateMod
                     shippingAddress: shippingAddr || '',
                     gstin: customer.gstin || ''
                 });
+            } else {
+                // Default to Caasdi Global if no customer provided
+                setSelectedCustomer(CAASDI_GLOBAL_CUSTOMER);
+                setEditableCustomerDetails({
+                    billingAddress: CAASDI_GLOBAL_CUSTOMER.billingAddress,
+                    shippingAddress: CAASDI_GLOBAL_CUSTOMER.shippingAddress,
+                    gstin: CAASDI_GLOBAL_CUSTOMER.gstin
+                });
             }
             
-            setItems(initialData.items || [
-                { selectedItem: null, description: '', quantity: '', rate: '', amount: 0, hsn: '', cgstRate: '', sgstRate: '', igstRate: '', cgstAmount: 0, sgstAmount: 0, igstAmount: 0 },
-            ]);
+            // Transform PO items to invoice item format if coming from PO
+            let itemsToSet = [];
+            if (Array.isArray(initialData.items) && initialData.items.length > 0) {
+                console.log('📦 Raw items from initialData:', initialData.items);
+                itemsToSet = initialData.items.map((item, idx) => {
+                    console.log(`📦 Transforming item ${idx}:`, item);
+                    
+                    // The PO item already has most fields at the root level
+                    // We need to ensure selectedItem has the necessary data for display
+                    const itemWithName = {
+                        ...item,
+                        name: item.description || item.itemName || item.name || item.selectedItem?.name || 'Item'
+                    };
+                    
+                    // Default to CGST/SGST for Caasdi Global (always state 29)
+                    // If the item only has IGST values, convert them to CGST/SGST
+                    const cgstRate = item.cgstRate || (item.igstRate ? item.igstRate / 2 : 0);
+                    const sgstRate = item.sgstRate || (item.igstRate ? item.igstRate / 2 : 0);
+                    const cgstAmount = item.cgstAmount || (item.igstAmount ? item.igstAmount / 2 : 0);
+                    const sgstAmount = item.sgstAmount || (item.igstAmount ? item.igstAmount / 2 : 0);
+                    
+                    return {
+                        selectedItem: itemWithName,  // Pass the full item object with name as selectedItem
+                        itemId: item.itemId || item.id,
+                        description: item.description || item.itemName || item.name || '',
+                        quantity: item.quantity || item.qty || '',
+                        rate: item.rate || item.unitPrice || item.price || '',
+                        amount: item.amount || item.total || 0,
+                        hsn: item.hsn || item.hsnCode || '',
+                        cgstRate: cgstRate,
+                        sgstRate: sgstRate,
+                        igstRate: 0,  // Always set to 0 for Caasdi Global (intra-state)
+                        cgstAmount: cgstAmount,
+                        sgstAmount: sgstAmount,
+                        igstAmount: 0,  // Always set to 0 for Caasdi Global (intra-state)
+                        ratePerSqft: item.ratePerSqft || '',
+                        measurements: item.measurements || ''
+                    };
+                });
+                console.log('✅ Transformed items:', itemsToSet);
+            } else {
+                console.log('❌ No items in initialData, using empty default');
+                itemsToSet = [
+                    { selectedItem: null, description: '', quantity: '', rate: '', amount: 0, hsn: '', cgstRate: '', sgstRate: '', igstRate: '', cgstAmount: 0, sgstAmount: 0, igstAmount: 0 },
+                ];
+            }
+            setItems(itemsToSet);
             setDiscount(initialData.discount?.value?.toString() || '');
             setTdsType(initialData.tdsType || '');
             setTdsValue(initialData.tdsValue?.toString() || '');
@@ -772,6 +911,89 @@ const NewInvoiceComponentInner = ({ onBack, projectId, initialData, duplicateMod
             // For duplicate mode, new numbers will be set by the config loading effects
         }
     }, [initialData, duplicateMode]);
+
+    // Sync editable customer details whenever selected customer changes
+    useEffect(() => {
+        if (selectedCustomer) {
+            console.log('🔄 Running sync effect with selectedCustomer:', selectedCustomer.name, selectedCustomer.id || selectedCustomer.customerId);
+            
+            const formatAddressFromObj = (addressObj) => {
+                if (!addressObj) return '';
+                const parts = [];
+                if (addressObj.street1) parts.push(addressObj.street1);
+                if (addressObj.street2) parts.push(addressObj.street2);
+                const cityStateParts = [];
+                if (addressObj.city) cityStateParts.push(addressObj.city);
+                if (addressObj.state) cityStateParts.push(addressObj.state);
+                if (addressObj.pinCode) cityStateParts.push(addressObj.pinCode);
+                if (cityStateParts.length > 0) parts.push(cityStateParts.join(', '));
+                if (addressObj.country && addressObj.country !== 'IN') parts.push(addressObj.country);
+                return parts.join('\n');
+            };
+            
+            const billingAddr = selectedCustomer.billingAddress || formatAddressFromObj(selectedCustomer.address?.billing);
+            const shippingAddr = selectedCustomer.shippingAddress || formatAddressFromObj(selectedCustomer.address?.shipping);
+            
+            console.log('📍 Setting customer details:', { billingAddr, shippingAddr, gstin: selectedCustomer.gstin });
+            setEditableCustomerDetails({
+                billingAddress: billingAddr || '',
+                shippingAddress: shippingAddr || '',
+                gstin: selectedCustomer.gstin || ''
+            });
+        }
+    }, [selectedCustomer]);
+
+    // Determine if transaction is intra-state or inter-state based on GSTIN state codes
+    useEffect(() => {
+        console.log('🔍 Intra-State Check triggered');
+        console.log('  - selectedCustomer.gstin:', selectedCustomer?.gstin);
+        console.log('  - currentUser?.gstin:', currentUser?.gstin);
+        console.log('  - currentUser full:', currentUser);
+        
+        if (selectedCustomer && selectedCustomer.gstin) {
+            // Extract state code from customer GSTIN (first 2 digits)
+            const customerStateCode = selectedCustomer.gstin.substring(0, 2);
+            
+            // Extract state code from vendor GSTIN (first 2 digits)
+            // Try multiple fields to find vendor GSTIN
+            let vendorGstin = currentUser?.gstin || currentUser?.gstNumber || currentUser?.vendorGstin;
+            console.log('   - Looking for vendor GSTIN in:', { gstin: currentUser?.gstin, gstNumber: currentUser?.gstNumber, vendorGstin: currentUser?.vendorGstin });
+            
+            // If no vendor GSTIN found, default to 29
+            if (!vendorGstin) {
+                console.warn('⚠️ No vendor GSTIN found, defaulting to state 29 (Karnataka)');
+                vendorGstin = '29AAAAAAAAAAAAA'; // Dummy for extraction
+            }
+            
+            const vendorStateCode = vendorGstin ? vendorGstin.substring(0, 2) : '29';
+            
+            console.log('📍 GST Analysis:', { customerStateCode, vendorStateCode, customerGstin: selectedCustomer.gstin, vendorGstin });
+            
+            // If state codes match, it's intra-state (CGST + SGST), otherwise inter-state (IGST)
+            const isIntra = customerStateCode === vendorStateCode;
+            console.log('✅ Is Intra-State?', isIntra, `(Customer: ${customerStateCode}, Vendor: ${vendorStateCode})`);
+            
+            setIsIntraState(isIntra);
+        } else {
+            console.log('❌ No selected customer or GSTIN, defaulting to intra-state');
+            setIsIntraState(true); // Default to intra-state for Caasdi Global (state 29)
+        }
+    }, [selectedCustomer, currentUser]);
+
+    // Safeguard: ensure editableCustomerDetails always has values for Caasdi Global
+    useEffect(() => {
+        setEditableCustomerDetails(prevDetails => {
+            if (!prevDetails?.billingAddress || prevDetails.billingAddress.trim() === '') {
+                console.warn('⚠️ Billing address was empty, restoring from Caasdi Global');
+                return {
+                    billingAddress: CAASDI_GLOBAL_CUSTOMER.billingAddress,
+                    shippingAddress: prevDetails?.shippingAddress || CAASDI_GLOBAL_CUSTOMER.shippingAddress,
+                    gstin: prevDetails?.gstin || CAASDI_GLOBAL_CUSTOMER.gstin
+                };
+            }
+            return prevDetails;
+        });
+    }, []);
 
     // Fetch complete customer details when customer is selected
     const fetchCompleteCustomerDetails = async (customerId) => {
@@ -1560,11 +1782,12 @@ const NewInvoiceComponentInner = ({ onBack, projectId, initialData, duplicateMod
             customInvoiceId: customQuoteNumber,
             
             // Customer information
-            customerId: quoteCustomer.originalCustomerId || quoteCustomer.customerId || quoteCustomer.id,
+            // For Caasdi Global (fixed customer), use vendorId as customerId since it's the company's own ID
+            customerId: selectedCustomer?.isCaasdiGlobal ? currentUser?.vendorId : (quoteCustomer.originalCustomerId || quoteCustomer.customerId || quoteCustomer.id),
             customerName: quoteCustomer.name || quoteCustomer.displayName || quoteCustomer.companyName,
             gstin: quoteCustomer.gstin || '',
             customerDetails: {
-                customerId: quoteCustomer.originalCustomerId || quoteCustomer.customerId || quoteCustomer.id,
+                customerId: selectedCustomer?.isCaasdiGlobal ? currentUser?.vendorId : (quoteCustomer.originalCustomerId || quoteCustomer.customerId || quoteCustomer.id),
                 name: quoteCustomer.name || quoteCustomer.displayName || quoteCustomer.companyName,
                 companyName: quoteCustomer.companyName || quoteCustomer.name || '',
                 displayName: quoteCustomer.displayName || quoteCustomer.name || quoteCustomer.companyName || '',
@@ -1731,7 +1954,14 @@ const NewInvoiceComponentInner = ({ onBack, projectId, initialData, duplicateMod
                 method,
                 pdfUrlInPayload: invoiceData.pdfUrl,
                 payloadSize: jsonPayload.length,
-                firstChars: jsonPayload.substring(0, 200)
+                firstChars: jsonPayload.substring(0, 200),
+                customerId: invoiceData.customerId,
+                customerName: invoiceData.customerName,
+                customerDetails: invoiceData.customerDetails,
+                vendorId: invoiceData.vendorId,
+                currentUserVendorId: currentUser?.vendorId,
+                selectedCustomerData: selectedCustomer,
+                isCaasdiGlobal: selectedCustomer?.isCaasdiGlobal
             });
             
             const res = await fetch(url, {
@@ -1814,7 +2044,7 @@ const NewInvoiceComponentInner = ({ onBack, projectId, initialData, duplicateMod
                         <div className="col-span-2 space-y-6">
                              <div>
                                 <label className="block mb-2 text-lg font-medium text-gray-700 font-poppins">Customer Name*</label>
-                                <CustomerDropdown value={selectedCustomer} onChange={setSelectedCustomer} />
+                                <LockedCustomerDropdown value={selectedCustomer} onChange={setSelectedCustomer} />
                                 
                                 {/* Customer Details Section */}
                                 {selectedCustomer && (
@@ -1858,7 +2088,7 @@ const NewInvoiceComponentInner = ({ onBack, projectId, initialData, duplicateMod
                                                 <label className="block text-xs font-medium text-gray-600 mb-1">Billing Address</label>
                                                 {!editingCustomerDetails ? (
                                                     <div className="text-sm text-gray-800 bg-white p-2 rounded border min-h-[60px] whitespace-pre-wrap">
-                                                        {editableCustomerDetails.billingAddress || selectedCustomer?.billingAddress || 'No address provided'}
+                                                        {editableCustomerDetails.billingAddress || selectedCustomer?.billingAddress || CAASDI_GLOBAL_CUSTOMER.billingAddress || 'No address provided'}
                                                     </div>
                                                 ) : (
                                                     <textarea
@@ -1883,7 +2113,7 @@ const NewInvoiceComponentInner = ({ onBack, projectId, initialData, duplicateMod
                                                 <label className="block text-xs font-medium text-gray-600 mb-1">Shipping Address</label>
                                                 {!editingCustomerDetails ? (
                                                     <div className="text-sm text-gray-800 bg-white p-2 rounded border min-h-[60px] whitespace-pre-wrap">
-                                                        {editableCustomerDetails.shippingAddress || selectedCustomer?.shippingAddress || 'No address provided'}
+                                                        {editableCustomerDetails.shippingAddress || selectedCustomer?.shippingAddress || CAASDI_GLOBAL_CUSTOMER.shippingAddress || 'No address provided'}
                                                     </div>
                                                 ) : (
                                                     <textarea
@@ -1909,13 +2139,13 @@ const NewInvoiceComponentInner = ({ onBack, projectId, initialData, duplicateMod
                                             <div>
                                                 <label className="block text-xs font-medium text-gray-600 mb-1">Email</label>
                                                 <div className="text-sm text-gray-800 bg-white p-2 rounded border">
-                                                    {selectedCustomer.email || 'No email provided'}
+                                                    {selectedCustomer?.email || CAASDI_GLOBAL_CUSTOMER.email || 'No email provided'}
                                                 </div>
                                             </div>
                                             <div>
                                                 <label className="block text-xs font-medium text-gray-600 mb-1">Phone</label>
                                                 <div className="text-sm text-gray-800 bg-white p-2 rounded border">
-                                                    {selectedCustomer.phone || selectedCustomer.mobile || 'No phone provided'}
+                                                    {selectedCustomer?.phone || selectedCustomer?.mobile || CAASDI_GLOBAL_CUSTOMER.phone || 'No phone provided'}
                                                 </div>
                                             </div>
                                         </div>
@@ -1926,7 +2156,7 @@ const NewInvoiceComponentInner = ({ onBack, projectId, initialData, duplicateMod
                                                 <label className="block text-xs font-medium text-gray-600 mb-1">GSTIN</label>
                                                 {!editingCustomerDetails ? (
                                                     <div className="text-sm text-gray-800 bg-white p-2 rounded border">
-                                                        {selectedCustomer.gstin || selectedCustomer.gstNumber || 'No GSTIN provided'}
+                                                        {selectedCustomer?.gstin || selectedCustomer?.gstNumber || CAASDI_GLOBAL_CUSTOMER.gstin || 'No GSTIN provided'}
                                                     </div>
                                                 ) : (
                                                     <input
@@ -2051,6 +2281,7 @@ const NewInvoiceComponentInner = ({ onBack, projectId, initialData, duplicateMod
                     <div className="mt-8">
                         <div className="mb-4">
                             <h3 className="text-lg font-semibold text-gray-800">Item Table</h3>
+                            {console.log('🎬 TABLE RENDER - isIntraState value:', isIntraState)}
                         </div>
                         <div className="overflow-x-auto rounded-xl shadow border border-gray-200">
                             <table className="w-full">

@@ -32,9 +32,20 @@ const InvoicesPage = (props) => {
     if (props?.sourcePo) {
       const po = props.sourcePo;
       console.log('🧾 Converting Purchase Order to Invoice form:', po);
+      console.log('🧾 Checking PO for items - checking fields:');
+      console.log('  - po.items:', po.items);
+      console.log('  - po.itemsList:', po.itemsList);
+      console.log('  - po.lineItems:', po.lineItems);
+      console.log('  - po.products:', po.products);
 
       const customer = po.customerDetails || {};
-      const itemsFromPo = Array.isArray(po.itemsList) ? po.itemsList : [];
+      // Try multiple possible field names for items - PO can have items, itemsList, lineItems, etc
+      const itemsFromPo = Array.isArray(po.items) ? po.items : 
+                         (Array.isArray(po.itemsList) ? po.itemsList : 
+                         (Array.isArray(po.lineItems) ? po.lineItems : 
+                         (Array.isArray(po.products) ? po.products : [])));
+      console.log('✅ Final itemsFromPo extracted:', itemsFromPo);
+      console.log('📦 Length of items:', itemsFromPo.length);
 
       const initialFromPo = {
         // Treat this as a "template" for a new invoice, not an edit
@@ -63,6 +74,7 @@ const InvoicesPage = (props) => {
         referencePoNumber: po.id || po.customPoId || po.purchaseOrderId || null
       };
 
+      console.log('📋 Final initialFromPo with items:', initialFromPo);
       setEditingInvoice(initialFromPo);
       setShowNewInvoice(true);
 

@@ -855,6 +855,7 @@ const ElementsPanel = ({
       name: 'Cost Calculators',
       icon: <Calculator className="w-5 h-5" />,
       elements: [
+        { id: 'boq-generator', name: 'BOQ Generator', type: 'boq-generator', preview: 'Generate professional Bill of Quantities with cost breakdown', elementIcon: <FileDigit className="w-6 h-6 text-purple-600" /> },
         // { id: 'building-cost-calculator', name: 'Building Cost Calculator', type: 'cost-calculator', preview: 'Calculate total building construction costs', elementIcon: <Box className="w-6 h-6 text-blue-600" /> },
         { id: 'concrete-blocks-calculator', name: 'Concrete Blocks Calculator', type: 'cost-calculator', preview: 'Calculate the number of concrete blocks for your project', elementIcon: <Package className="w-6 h-6 text-orange-600" /> },
         { id: 'bricks-calculator', name: 'Bricks Calculator', type: 'cost-calculator', preview: 'Estimate the number of bricks required for walls', elementIcon: <Package className="w-6 h-6 text-red-600" /> },
