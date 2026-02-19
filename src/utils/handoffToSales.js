@@ -14,7 +14,7 @@ function getLegacyAuthToken() {
   }
 }
 
-export async function redirectToSalesWithHandoff() {
+export async function redirectToSalesWithHandoff(targetPath = '/') {
   const salesBase = config.SALES_URL || '';
   if (!salesBase) throw new Error('SALES_URL is not configured');
 
@@ -45,5 +45,8 @@ export async function redirectToSalesWithHandoff() {
   const code = data?.code;
   if (!code) throw new Error('handoff did not return code');
 
-  window.location.assign(`${salesBase}/?handoff=${encodeURIComponent(code)}`);
+  // Normalise: ensure targetPath starts with / and build clean URL
+  const path = targetPath.startsWith('/') ? targetPath : `/${targetPath}`;
+  const separator = path.includes('?') ? '&' : '?';
+  window.location.assign(`${salesBase}${path}${separator}handoff=${encodeURIComponent(code)}`);
 }

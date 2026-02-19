@@ -944,6 +944,26 @@ export const Header = () => {
               >
                 B2B <img src="https://c.animaapp.com/VmmSqCQF/img/guidance-shop.svg" alt="Shop" className="ml-2 w-4 h-4 lg:w-6 lg:h-6" />
               </button>
+              <button
+                className="w-auto px-3 h-[36px] bg-white bg-opacity-5 hover:bg-opacity-10 rounded-[9px] flex items-center justify-center text-white text-xs lg:text-sm font-semibold font-['Montserrat']"
+                onClick={async () => {
+                  if (!config.SALES_URL) {
+                    console.error('SALES_URL is not configured');
+                    alert('Tender URL is not configured. Please contact support.');
+                    return;
+                  }
+
+                  try {
+                    await redirectToSalesWithHandoff('/tender');
+                  } catch (e) {
+                    console.error('Tender handoff redirect failed:', e);
+                    alert('Unable to open Tender dashboard right now. Please try again.');
+                    navigate('/login');
+                  }
+                }}
+              >
+                Tender <img src="https://c.animaapp.com/VmmSqCQF/img/guidance-shop.svg" alt="Tender" className="ml-2 w-4 h-4 lg:w-6 lg:h-6" />
+              </button>
               <button className="w-auto px-3 h-[36px] bg-white bg-opacity-5 hover:bg-opacity-10 rounded-[9px] flex items-center justify-center text-white text-xs lg:text-sm font-semibold font-['Montserrat']"> Prompt <img src="https://c.animaapp.com/VmmSqCQF/img/vector.svg" alt="Prompt" className="ml-2 w-3 h-3 lg:w-4 lg:h-4" /> </button>
           </div>
           </div>
