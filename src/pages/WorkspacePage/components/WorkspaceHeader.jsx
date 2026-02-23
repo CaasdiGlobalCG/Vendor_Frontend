@@ -1,5 +1,5 @@
 import React, { useContext, useState, useEffect, useCallback } from 'react';
-import { ChevronDown, Plus, Save, MessageCircle, HelpCircle, X, ChevronLeft, ChevronRight, Lightbulb, MousePointer, Link2, Trash2, Users, Zap, Layout, Settings, CheckCircle } from 'lucide-react';
+import { ChevronDown, Plus, Save, MessageCircle, HelpCircle, X, ChevronLeft, ChevronRight, Lightbulb, MousePointer, Link2, Trash2, Users, Zap, Layout, Settings, CheckCircle, Calculator } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { VendorContext } from '../../../context/VendorContext';
 import config from '../../../config/env';
@@ -80,6 +80,7 @@ const WorkspaceHeader = ({
   onTemplatesClick,
   showPostServicesActions = false,
   onOpenPostServices,
+  onOpenCostCalculators,
   onOpenUpdateProgress,
   onOpenReviewProgress,
   onOpenClientReviewProgress,
@@ -397,6 +398,15 @@ const WorkspaceHeader = ({
               >
                 <MessageCircle className="w-4 h-4 text-gray-600" />
                 <span className="text-[10px] font-medium text-gray-500">Post Service</span>
+              </button>
+
+              <button
+                onClick={onOpenCostCalculators}
+                className="p-2 hover:bg-gray-100 rounded-lg transition-colors flex flex-col items-center space-y-1"
+                title="Cost Calculators"
+              >
+                <Calculator className="w-4 h-4 text-blue-600" />
+                <span className="text-[10px] font-medium text-gray-500">Calculators</span>
               </button>
               
               {isPM ? (

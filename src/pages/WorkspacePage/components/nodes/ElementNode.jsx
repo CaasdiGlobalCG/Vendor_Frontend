@@ -24,6 +24,13 @@ import SoilExcavationCalculator from '../forms/SoilExcavationCalculator';
 import SteelEstimationCalculator from '../forms/SteelEstimationCalculator';
 import VinylFlooringCalculator from '../forms/VinylFlooringCalculator';
 import BOQGenerator from '../forms/BOQGenerator';
+import CostCalculatorSummary from '../forms/CostCalculatorSummary';
+import ShipmentCard from '../forms/ShipmentCard';
+import FreightCostCalculator from '../forms/FreightCostCalculator';
+import RouteOptimizationBlock from '../forms/RouteOptimizationBlock';
+import ProofOfDeliveryBlock from '../forms/ProofOfDeliveryBlock';
+import ExceptionDelayReport from '../forms/ExceptionDelayReport';
+import CarrierPerformanceScorecard from '../forms/CarrierPerformanceScorecard';
 
 import TablePreviewModal from '../modals/TablePreviewModal';
 import { createTableHelpers, defaultTableData } from '../../utils/tableUtils';
@@ -1562,6 +1569,28 @@ const ElementNode = ({ id, data, isConnectable, selected }) => {
         }
         // Default to Concrete Blocks Calculator
         return <ConcreteBlocksCalculator data={data} nodeId={id} workspaceId={workspaceId} setNodes={setNodes} />;
+      
+      case 'cost-calculator-summary':
+        return <CostCalculatorSummary data={data} />;
+
+      // Logistics Elements
+      case 'logistics-shipment':
+        return <ShipmentCard data={data} nodeId={id} workspaceId={workspaceId} setNodes={setNodes} />;
+
+      case 'logistics-freight-cost':
+        return <FreightCostCalculator data={data} nodeId={id} workspaceId={workspaceId} setNodes={setNodes} />;
+
+      case 'logistics-route-optimization':
+        return <RouteOptimizationBlock data={data} nodeId={id} workspaceId={workspaceId} setNodes={setNodes} />;
+
+      case 'logistics-pod':
+        return <ProofOfDeliveryBlock data={data} nodeId={id} workspaceId={workspaceId} setNodes={setNodes} />;
+
+      case 'logistics-exception-report':
+        return <ExceptionDelayReport data={data} nodeId={id} workspaceId={workspaceId} setNodes={setNodes} />;
+
+      case 'logistics-carrier-scorecard':
+        return <CarrierPerformanceScorecard data={data} nodeId={id} workspaceId={workspaceId} setNodes={setNodes} />;
       
       case 'icon':
         return renderIconElement();

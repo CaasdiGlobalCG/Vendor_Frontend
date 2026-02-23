@@ -33,6 +33,7 @@ const ElementsSidebar = ({ isOpen, onClose, onElementSelect, userRole, currentUs
     { id: 'materials', name: 'Materials', icon: Package, color: 'bg-orange-100 text-orange-800' },
     { id: 'uploads', name: 'Uploads', icon: Upload, color: 'bg-cyan-100 text-cyan-800' },
     { id: 'cost-calculators', name: 'Cost Calculators', icon: Calculator, color: 'bg-violet-100 text-violet-800' },
+    { id: 'logistics', name: 'Logistics', icon: Package, color: 'bg-blue-100 text-blue-800' },
     { id: 'smart', name: 'Smart Elements', icon: Sparkles, color: 'bg-yellow-100 text-yellow-800' },
     { id: 'other', name: 'other elements', icon: Grid, color: 'bg-gray-100 text-gray-800' }
   ];
@@ -151,15 +152,15 @@ const ElementsSidebar = ({ isOpen, onClose, onElementSelect, userRole, currentUs
       { id: 'tools-equipment', name: 'Tools & Equipment', type: 'materials', preview: 'Request tools and equipment' }
     ],
     'cost-calculators': [
-      { id: 'boq-generator', name: 'BOQ Generator', type: 'boq-generator', preview: 'Generate professional Bill of Quantities with cost breakdown', icon: <FileDigit className="w-6 h-6 text-purple-600" /> },
-      // { id: 'building-cost-calculator', name: 'Building Cost Calculator', type: 'cost-calculator', preview: 'Calculate total building construction costs' },
-      { id: 'concrete-blocks-calculator', name: 'Concrete Blocks Calculator', type: 'cost-calculator', preview: 'Calculate the number of concrete blocks for your project', icon: <Package className="w-6 h-6 text-orange-600" /> },
-      { id: 'bricks-calculator', name: 'Bricks Calculator', type: 'cost-calculator', preview: 'Estimate the number of bricks required for walls', icon: <Package className="w-6 h-6 text-red-600" /> },
-      { id: 'concrete-calculator', name: 'Concrete Calculator', type: 'cost-calculator', preview: 'Calculate amount of concrete mix needed for foundations or columns', icon: <Layers className="w-6 h-6 text-gray-600" /> },
-      { id: 'flooring-calculator', name: 'Flooring Calculator', type: 'cost-calculator', preview: 'Plan flooring materials and get accurate cost estimates', icon: <Grid className="w-6 h-6 text-amber-700" /> },
-      { id: 'soil-excavation-calculator', name: 'Soil Excavation Calculator', type: 'cost-calculator', preview: 'Calculate volume of soil excavation for foundations', icon: <Plus className="w-6 h-6 text-yellow-700" /> },
-      { id: 'steel-cost-calculator', name: 'Steel Calculator', type: 'cost-calculator', preview: 'Estimate steel reinforcement required for structures', icon: <Layers className="w-6 h-6 text-slate-700" /> },
-      { id: 'vinyl-calculator', name: 'Vinyl Calculator', type: 'cost-calculator', preview: 'Calculate vinyl material and installation costs', icon: <Square className="w-6 h-6 text-green-600" /> }
+      { id: 'boq-generator', name: 'BOQ Generator', type: 'boq-generator', preview: 'Generate professional Bill of Quantities with cost breakdown', icon: <FileDigit className="w-6 h-6 text-purple-600" /> }
+    ],
+    logistics: [
+      { id: 'logistics-shipment', name: 'Shipment Card', type: 'logistics-shipment', preview: 'Track shipment lifecycle from origin to delivery' },
+      { id: 'logistics-freight-cost', name: 'Freight Cost Calculator', type: 'logistics-freight-cost', preview: 'Calculate freight costs with fuel surcharge and tolls' },
+      { id: 'logistics-route-optimization', name: 'Route Optimization', type: 'logistics-route-optimization', preview: 'Compare multiple delivery routes by cost and time' },
+      { id: 'logistics-pod', name: 'Proof of Delivery', type: 'logistics-pod', preview: 'Capture delivery signatures and photos' },
+      { id: 'logistics-exception-report', name: 'Exception Report', type: 'logistics-exception-report', preview: 'Report delays with auto-calculated penalties' },
+      { id: 'logistics-carrier-scorecard', name: 'Carrier Scorecard', type: 'logistics-carrier-scorecard', preview: 'Track carrier KPIs and performance metrics' }
     ],
     uploads: [],
     flowcharts: [

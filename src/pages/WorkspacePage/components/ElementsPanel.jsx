@@ -527,6 +527,24 @@ const DraggableElement = ({ element }) => {
         {element.type === 'cost-calculator' && element.elementIcon && (
           element.elementIcon
         )}
+        {element.type === 'logistics-shipment' && (
+          <Package className="w-6 h-6 text-blue-600" />
+        )}
+        {element.type === 'logistics-freight-cost' && (
+          <Calculator className="w-6 h-6 text-emerald-600" />
+        )}
+        {element.type === 'logistics-route-optimization' && (
+          <TrendingUp className="w-6 h-6 text-orange-600" />
+        )}
+        {element.type === 'logistics-pod' && (
+          <FileCheck className="w-6 h-6 text-green-600" />
+        )}
+        {element.type === 'logistics-exception-report' && (
+          <AlertCircle className="w-6 h-6 text-red-600" />
+        )}
+        {element.type === 'logistics-carrier-scorecard' && (
+          <BarChart3 className="w-6 h-6 text-indigo-600" />
+        )}
 
         </div>
         
@@ -855,15 +873,19 @@ const ElementsPanel = ({
       name: 'Cost Calculators',
       icon: <Calculator className="w-5 h-5" />,
       elements: [
-        { id: 'boq-generator', name: 'BOQ Generator', type: 'boq-generator', preview: 'Generate professional Bill of Quantities with cost breakdown', elementIcon: <FileDigit className="w-6 h-6 text-purple-600" /> },
-        // { id: 'building-cost-calculator', name: 'Building Cost Calculator', type: 'cost-calculator', preview: 'Calculate total building construction costs', elementIcon: <Box className="w-6 h-6 text-blue-600" /> },
-        { id: 'concrete-blocks-calculator', name: 'Concrete Blocks Calculator', type: 'cost-calculator', preview: 'Calculate the number of concrete blocks for your project', elementIcon: <Package className="w-6 h-6 text-orange-600" /> },
-        { id: 'bricks-calculator', name: 'Bricks Calculator', type: 'cost-calculator', preview: 'Estimate the number of bricks required for walls', elementIcon: <Package className="w-6 h-6 text-red-600" /> },
-        { id: 'concrete-calculator', name: 'Concrete Calculator', type: 'cost-calculator', preview: 'Calculate amount of concrete mix needed for foundations or columns', elementIcon: <Layers className="w-6 h-6 text-gray-600" /> },
-        { id: 'flooring-calculator', name: 'Flooring Calculator', type: 'cost-calculator', preview: 'Plan flooring materials and get accurate cost estimates', elementIcon: <Grid className="w-6 h-6 text-amber-700" /> },
-        { id: 'soil-excavation-calculator', name: 'Soil Excavation Calculator', type: 'cost-calculator', preview: 'Calculate volume of soil excavation for foundations', elementIcon: <Plus className="w-6 h-6 text-yellow-700" /> },
-        { id: 'steel-cost-calculator', name: 'Steel Calculator', type: 'cost-calculator', preview: 'Estimate steel reinforcement required for structures', elementIcon: <Layers className="w-6 h-6 text-slate-700" /> },
-        { id: 'vinyl-calculator', name: 'Vinyl Calculator', type: 'cost-calculator', preview: 'Calculate vinyl material and installation costs', elementIcon: <Square className="w-6 h-6 text-green-600" /> }
+        { id: 'boq-generator', name: 'BOQ Generator', type: 'boq-generator', preview: 'Generate professional Bill of Quantities with cost breakdown', elementIcon: <FileDigit className="w-6 h-6 text-purple-600" /> }
+      ]
+    },
+    logistics: {
+      name: 'Logistics',
+      icon: <Package className="w-5 h-5" />,
+      elements: [
+        { id: 'logistics-shipment', name: 'Shipment Card', type: 'logistics-shipment', preview: 'Track shipment lifecycle from origin to delivery' },
+        { id: 'logistics-freight-cost', name: 'Freight Cost Calculator', type: 'logistics-freight-cost', preview: 'Calculate freight costs with fuel surcharge and tolls' },
+        { id: 'logistics-route-optimization', name: 'Route Optimization', type: 'logistics-route-optimization', preview: 'Compare multiple delivery routes by cost and time' },
+        { id: 'logistics-pod', name: 'Proof of Delivery', type: 'logistics-pod', preview: 'Capture delivery signatures and photos' },
+        { id: 'logistics-exception-report', name: 'Exception Report', type: 'logistics-exception-report', preview: 'Report delays with auto-calculated penalties' },
+        { id: 'logistics-carrier-scorecard', name: 'Carrier Scorecard', type: 'logistics-carrier-scorecard', preview: 'Track carrier KPIs and performance metrics' }
       ]
     },
     flowcharts: {

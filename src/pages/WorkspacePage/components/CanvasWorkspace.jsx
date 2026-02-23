@@ -510,6 +510,11 @@ const edgeTypes = {
   const lastAddedNodeIdRef = useRef(null);
   // Flag to prevent workspace data refresh from overwriting local node changes
   const isUpdatingNodesLocallyRef = useRef(false);
+  // Flag to skip the next canvas data sync after an auto-save response
+  // This prevents the save response → setSelectedSubtask → sync effect → setNodesRaw loop
+  const skipNextSyncRef = useRef(false);
+  // Track the last subtask ID we synced for, so we can detect actual subtask switches
+  const lastSyncedSubtaskIdRef = useRef(selectedSubtask?.id || null);
 
   // Function to clear all elements from canvas
   const clearCanvas = () => {
@@ -650,6 +655,7 @@ const edgeTypes = {
 
   // Update canvas data when selectedSubtask changes
   // BUT: Skip this if we're currently updating nodes locally (to prevent losing new additions)
+  // Also skip if this was triggered by an auto-save response (skipNextSyncRef)
   useEffect(() => {
     // If we're actively updating nodes locally (like after drop), skip this refresh
     if (isUpdatingNodesLocallyRef.current) {
@@ -657,13 +663,36 @@ const edgeTypes = {
       return;
     }
 
+    // If the subtask ID actually changed (user switched subtasks), always do a full sync
+    const subtaskActuallyChanged = selectedSubtask?.id !== lastSyncedSubtaskIdRef.current;
+    
+    // If this was triggered by an auto-save response (not a subtask switch), skip it
+    // The auto-save just wrote local data to the backend - no need to re-read it
+    if (!subtaskActuallyChanged && skipNextSyncRef.current) {
+      console.log('⏭️ Skipping canvas data sync - triggered by auto-save response, not subtask switch');
+      skipNextSyncRef.current = false;
+      return;
+    }
+    
+    // If same subtask and we already have nodes, skip the sync
+    // (updatedAt changes from auto-save shouldn't overwrite local state)
+    if (!subtaskActuallyChanged && nodes.length > 0) {
+      console.log('⏭️ Skipping canvas data sync - same subtask, local nodes exist:', nodes.length);
+      return;
+    }
+
     const newCanvasData = getCanvasData();
     console.log('🔄 CanvasWorkspace: Updating canvas data for subtask change', {
       subtaskId: selectedSubtask?.id,
+      previousSubtaskId: lastSyncedSubtaskIdRef.current,
+      subtaskActuallyChanged,
       nodesCount: newCanvasData.nodes.length,
       edgesCount: newCanvasData.edges.length,
       zoomLevel: newCanvasData.zoomLevel
     });
+    
+    // Update the last synced subtask ID
+    lastSyncedSubtaskIdRef.current = selectedSubtask?.id;
     
     // Directly clear and set nodes to ensure fresh data for new subtask
     // Use setNodesRaw to bypass cleanup validation temporarily
@@ -684,7 +713,7 @@ const edgeTypes = {
       lastAddedNodeIdRef.current = null;
       console.log('📌 Cleared last added element reference');
     }
-  }, [selectedSubtask?.id, selectedSubtask?.updatedAt, workspace?.workspaceId, updateZoomLevel]);
+  }, [selectedSubtask?.id, selectedSubtask?.updatedAt, workspace?.workspaceId, updateZoomLevel, nodes.length]);
 
   // Auto-save workspace data when nodes or edges change
   useEffect(() => {
@@ -705,6 +734,9 @@ const edgeTypes = {
       // Debounce the save operation
       const timeoutId = setTimeout(async () => {
         try {
+          // Mark that the next sync should be skipped (it will be triggered by the save response
+          // updating selectedSubtask, but we don't want it to overwrite local nodes)
+          skipNextSyncRef.current = true;
           // Calling onSaveWorkspace (log removed for performance)
           await onSaveWorkspace(saveData);
           setSaveStatus('saved');
@@ -954,6 +986,10 @@ const edgeTypes = {
         ...(isImageBlock && imageBlockData && { imageBlockData: JSON.parse(JSON.stringify(imageBlockData)) }),
         // Store icon ID for icon elements
         ...(element.type === 'icon' && { id: element.id }),
+        // Store cost calculator data
+        ...(element.type === 'cost-calculator' && element.data && { ...element.data }),
+        // Store cost calculator summary data
+        ...(element.type === 'cost-calculator-summary' && element.data && { data: element.data }),
         // Store Smart Note data
         ...(isSmartNote && {
           label: element.data?.label || element.name || 'Smart Note',
@@ -2809,6 +2845,44 @@ const edgeTypes = {
       document.removeEventListener('elementDoubleClick', handleElementDoubleClick);
     };
   },  [getAutoPlacementPosition, setNodes]);
+
+  // Handle element addition from Cost Calculators Modal
+  useEffect(() => {
+    const handleElementFromCalculator = (event) => {
+      const element = event.detail;
+      console.log('📊 Adding calculator element to canvas:', element);
+      
+      const targetPosition = {
+        x: window.innerWidth / 2 - 150,
+        y: window.innerHeight / 2 - 150
+      };
+      
+      const newNode = createElementNode(element, targetPosition);
+      console.log('🆕 New calculator node created:', newNode);
+      
+      // Set flag to prevent workspace data refresh from overwriting this new node
+      isUpdatingNodesLocallyRef.current = true;
+      
+      setNodes((nds) => nds.concat(newNode));
+      
+      // Reset the flag after a brief delay to allow UI to update
+      setTimeout(() => {
+        isUpdatingNodesLocallyRef.current = false;
+        console.log('🔓 Unlocked canvas data updates after calculator node addition');
+      }, 100);
+      
+      // Add success feedback
+      setTimeout(() => {
+        console.log('✨ Calculator successfully added to canvas');
+      }, 100);
+    };
+
+    document.addEventListener('elementFromCalculator', handleElementFromCalculator);
+    
+    return () => {
+      document.removeEventListener('elementFromCalculator', handleElementFromCalculator);
+    };
+  }, []);
 
   // Handle zoom to element from Elements Overview
   useEffect(() => {

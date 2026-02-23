@@ -25,6 +25,7 @@ import ReviewProgressModal from './components/modals/ReviewProgressModal';
 import ProjectCompleteModal from './components/modals/ProjectCompleteModal';
 import PermissionsModal from './components/PermissionsModal';
 import InviteCASModal from './components/InviteCASModal';
+import CostCalculatorsModal from './components/modals/CostCalculatorsModal';
 import useWebSocketNotifications from '../../hooks/useWebSocketNotifications';
 import StartCallModal from './components/modals/StartCallModal';
 import IncomingCallNotification from './components/modals/IncomingCallNotification';
@@ -189,6 +190,7 @@ const WorkspacePage = () => {
   const [showReviewProgressModal, setShowReviewProgressModal] = useState(false);
   const [showClientReviewProgressModal, setShowClientReviewProgressModal] = useState(false);
   const [showProjectCompleteModal, setShowProjectCompleteModal] = useState(false);
+  const [showCostCalculatorsModal, setShowCostCalculatorsModal] = useState(false);
   
   // Video call states
   const [showStartCallModal, setShowStartCallModal] = useState(false);
@@ -1699,6 +1701,7 @@ const WorkspacePage = () => {
           onTemplatesClick={handleTemplatesClick}
           showPostServicesActions
           onOpenPostServices={() => setShowPostServicesModal(true)}
+          onOpenCostCalculators={() => setShowCostCalculatorsModal(true)}
           onOpenUpdateProgress={() => setShowUpdateProgressModal(true)}
           onOpenReviewProgress={() => setShowReviewProgressModal(true)}
           onOpenClientReviewProgress={() => setShowClientReviewProgressModal(true)}
@@ -1947,6 +1950,28 @@ const WorkspacePage = () => {
         onClose={() => setShowInviteCASModal(false)}
         workspace={workspace}
         onInviteSuccess={handleCASInviteSuccess}
+      />
+
+      {/* Cost Calculators Modal */}
+      <CostCalculatorsModal
+        isOpen={showCostCalculatorsModal}
+        onClose={() => setShowCostCalculatorsModal(false)}
+        onAddToCanvas={(calculatorData) => {
+          // Handle adding calculator to canvas
+          const elementData = {
+            type: calculatorData.type,
+            id: calculatorData.id,
+            name: calculatorData.name,
+            data: calculatorData.data,
+            preview: calculatorData.name
+          };
+          const event = new CustomEvent('elementFromCalculator', {
+            detail: elementData
+          });
+          document.dispatchEvent(event);
+          console.log('📊 Calculator added to canvas:', calculatorData);
+        }}
+        workspaceId={workspaceId}
       />
 
       {/* ========================================
