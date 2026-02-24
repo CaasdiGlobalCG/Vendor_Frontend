@@ -1,5 +1,6 @@
 import config from '../config/env';
 
+<<<<<<< Updated upstream
 function getLegacyAuthToken() {
   try {
     const raw = localStorage.getItem('authToken');
@@ -15,6 +16,20 @@ function getLegacyAuthToken() {
 }
 
 export async function redirectToSalesWithHandoff(targetPath = '/') {
+=======
+/**
+ * Redirect the user from Vendor app → Sales app using the one-time
+ * handoff code flow.  Auth is based on the httpOnly vg_auth cookie
+ * (credentials: 'include'). An explicit token can be passed via
+ * options.token if the caller already has one, but we never fish
+ * for stale JWTs from localStorage — that causes 401s when the JWT
+ * has expired while the cookie session is still valid.
+ *
+ * @param {Object} [options]
+ * @param {string} [options.token] - Optional Cognito JWT to send as Bearer
+ */
+export async function redirectToSalesWithHandoff(options = {}) {
+>>>>>>> Stashed changes
   const salesBase = config.SALES_URL || '';
   if (!salesBase) throw new Error('SALES_URL is not configured');
 
@@ -25,15 +40,15 @@ export async function redirectToSalesWithHandoff(targetPath = '/') {
     );
   } catch {}
 
-  const legacyToken = getLegacyAuthToken();
+  const token = options?.token;
   const res = await fetch('/api/auth/handoff', {
     method: 'POST',
     credentials: 'include',
     headers: {
-      ...(legacyToken ? { Authorization: `Bearer ${legacyToken}` } : {}),
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
       'Content-Type': 'application/json',
     },
-    body: JSON.stringify(legacyToken ? { token: legacyToken } : {}),
+    body: JSON.stringify(token ? { token } : {}),
   });
 
   if (!res.ok) {

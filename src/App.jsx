@@ -4,6 +4,8 @@ import HomePage from "./pages/HomePage";
 import { VendorProvider, VendorContext } from "./context/VendorContext";
 import { UserProvider, UserContext } from "./context/UserContext";
 import { NotificationProvider } from "./context/NotificationContext";
+import { RBACProvider } from "./rbac";
+import TeamPage from "./rbac/pages/TeamPage";
 import SignUp from "./components/SignUp";
 import Home from "./pages/Home/Home";
 import UserProjectPage from './pages/UserProjectPage/UserProjectPage'; // Assuming UserProjectPage is here
@@ -141,11 +143,13 @@ function App() {
   return (
       <UserProvider>
         <VendorProvider>
-          <ErrorBoundary>
-            <NotificationProvider>
-              <AppContent />
-            </NotificationProvider>
-          </ErrorBoundary>
+          <RBACProvider>
+            <ErrorBoundary>
+              <NotificationProvider>
+                <AppContent />
+              </NotificationProvider>
+            </ErrorBoundary>
+          </RBACProvider>
         </VendorProvider>
       </UserProvider>
   );
@@ -271,6 +275,7 @@ function AppContent() {
         <Route path="leads/sent" element={<SentLeadsPage />} />
         <Route path="workspace" element={<WorkspaceList />} />
         <Route path="notifications" element={<NotificationsPage />} />
+        <Route path="team" element={<TeamPage />} />
 
       </Route>
       {/* PM PO Management Route */}

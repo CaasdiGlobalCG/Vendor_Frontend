@@ -6,6 +6,7 @@ import { Auth } from "aws-amplify";
 import DateYearFunction from "./DateYearFunction";
 import { VendorContext } from "../../context/VendorContext";
 import { NotificationContext } from "../../context/NotificationContext";
+import { PermissionGate } from "../../rbac";
 import config from '../../config/env';
 import { redirectToClientWithHandoff } from '../../utils/handoffToClient';
 import { redirectToSalesWithHandoff } from '../../utils/handoffToSales';
@@ -650,15 +651,26 @@ export const Header = () => {
 
         {/* Desktop Navigation (Hidden on Mobile) */}
         <nav className="hidden lg:flex space-x-[30px] text-white text-base font-normal font-['Poppins'] flex-shrink-0"> {/* Added flex-shrink-0 */}
-          <NavLink to="/VendorDashboard" className={getNavLinkClass} end>Dashboard</NavLink>
-          <NavLink to="/VendorDashboard/projects" className={getNavLinkClass}>Projects</NavLink>
-          <NavLink to="/VendorDashboard/leads" className={getNavLinkClass}>Leads</NavLink>
-          <button 
-            onClick={() => navigate('/VendorDashboard/workspace')}
-            className="hover:text-emerald-200 transition-colors opacity-50 hover:opacity-100"
-          >
-            Workspace
-          </button>
+          <PermissionGate module="dashboard" action="view">
+            <NavLink to="/VendorDashboard" className={getNavLinkClass} end>Dashboard</NavLink>
+          </PermissionGate>
+          <PermissionGate module="projects" action="view">
+            <NavLink to="/VendorDashboard/projects" className={getNavLinkClass}>Projects</NavLink>
+          </PermissionGate>
+          <PermissionGate module="leads" action="view">
+            <NavLink to="/VendorDashboard/leads" className={getNavLinkClass}>Leads</NavLink>
+          </PermissionGate>
+          <PermissionGate module="workspace" action="view">
+            <button 
+              onClick={() => navigate('/VendorDashboard/workspace')}
+              className="hover:text-emerald-200 transition-colors opacity-50 hover:opacity-100"
+            >
+              Workspace
+            </button>
+          </PermissionGate>
+          <PermissionGate module="user_management" action="view">
+            <NavLink to="/VendorDashboard/team" className={getNavLinkClass}>Team</NavLink>
+          </PermissionGate>
           {/* <NavLink to="/pricing" className={getNavLinkClass}>Pricing</NavLink> */}
         </nav>
 
@@ -670,17 +682,30 @@ export const Header = () => {
           <div className="absolute top-[calc(100%+8px)] left-0 right-0 mx-4 bg-gray-900 bg-opacity-95 rounded-lg shadow-lg lg:hidden z-50"> {/* Increased z-index */}
              {/* Navigation Links */}
             <nav className="flex flex-col space-y-4 p-4 text-white text-base font-medium font-['Poppins']">
-              <NavLink to="/VendorDashboard" className={getMobileNavLinkClass} onClick={closeMobileMenu} end>Dashboard</NavLink>
-              <NavLink to="VendorDashboard/projects" className={getMobileNavLinkClass} onClick={closeMobileMenu}>Projects</NavLink>
-              <NavLink to="VendorDashboard/leads" className={getMobileNavLinkClass} onClick={closeMobileMenu}>Leads</NavLink>
-              <NavLink to="VendorDashboard/notifications" className={getMobileNavLinkClass} onClick={closeMobileMenu}>Notifications</NavLink>
-              <NavLink 
-                to="VendorDashboard/workspace" 
-                className={getMobileNavLinkClass} 
-                onClick={closeMobileMenu}
-              >
-                Workspace
-              </NavLink>
+              <PermissionGate module="dashboard" action="view">
+                <NavLink to="/VendorDashboard" className={getMobileNavLinkClass} onClick={closeMobileMenu} end>Dashboard</NavLink>
+              </PermissionGate>
+              <PermissionGate module="projects" action="view">
+                <NavLink to="VendorDashboard/projects" className={getMobileNavLinkClass} onClick={closeMobileMenu}>Projects</NavLink>
+              </PermissionGate>
+              <PermissionGate module="leads" action="view">
+                <NavLink to="VendorDashboard/leads" className={getMobileNavLinkClass} onClick={closeMobileMenu}>Leads</NavLink>
+              </PermissionGate>
+              <PermissionGate module="notifications" action="view">
+                <NavLink to="VendorDashboard/notifications" className={getMobileNavLinkClass} onClick={closeMobileMenu}>Notifications</NavLink>
+              </PermissionGate>
+              <PermissionGate module="workspace" action="view">
+                <NavLink 
+                  to="VendorDashboard/workspace" 
+                  className={getMobileNavLinkClass} 
+                  onClick={closeMobileMenu}
+                >
+                  Workspace
+                </NavLink>
+              </PermissionGate>
+              <PermissionGate module="user_management" action="view">
+                <NavLink to="VendorDashboard/team" className={getMobileNavLinkClass} onClick={closeMobileMenu}>Team</NavLink>
+              </PermissionGate>
               {/* If you had Pricing */}
               {/* <NavLink to="/pricing" className={getMobileNavLinkClass} onClick={closeMobileMenu}>Pricing</NavLink> */}
             </nav>
