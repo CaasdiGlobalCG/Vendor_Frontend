@@ -6,6 +6,7 @@ import { UserProvider, UserContext } from "./context/UserContext";
 import { NotificationProvider } from "./context/NotificationContext";
 import { RBACProvider } from "./rbac";
 import TeamPage from "./rbac/pages/TeamPage";
+import InviteAcceptPage from "./rbac/pages/InviteAcceptPage";
 import SignUp from "./components/SignUp";
 import Home from "./pages/Home/Home";
 import UserProjectPage from './pages/UserProjectPage/UserProjectPage'; // Assuming UserProjectPage is here
@@ -255,6 +256,7 @@ function AppContent() {
       <Route path="/home" element={<HomePage />} />
       <Route path="/signup" element={<SignUp />} />
       <Route path="/login" element={<Login />} />
+      <Route path="/invite/accept" element={<InviteAcceptPage />} />
       {/* Protect vendor onboarding routes behind RoleGuard */}
       <Route path="/Form1" element={<RoleGuard><Form1 /></RoleGuard>} />
       <Route path="/Form2" element={<Form2 />} />

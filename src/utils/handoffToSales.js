@@ -1,22 +1,5 @@
 import config from '../config/env';
 
-<<<<<<< Updated upstream
-function getLegacyAuthToken() {
-  try {
-    const raw = localStorage.getItem('authToken');
-    if (!raw) return null;
-    const token = String(raw).trim();
-    if (!token) return null;
-    const lowered = token.toLowerCase();
-    if (lowered === 'null' || lowered === 'undefined') return null;
-    return token;
-  } catch {
-    return null;
-  }
-}
-
-export async function redirectToSalesWithHandoff(targetPath = '/') {
-=======
 /**
  * Redirect the user from Vendor app → Sales app using the one-time
  * handoff code flow.  Auth is based on the httpOnly vg_auth cookie
@@ -25,11 +8,11 @@ export async function redirectToSalesWithHandoff(targetPath = '/') {
  * for stale JWTs from localStorage — that causes 401s when the JWT
  * has expired while the cookie session is still valid.
  *
+ * @param {string} [targetPath='/'] - Sales-side route to land on
  * @param {Object} [options]
  * @param {string} [options.token] - Optional Cognito JWT to send as Bearer
  */
-export async function redirectToSalesWithHandoff(options = {}) {
->>>>>>> Stashed changes
+export async function redirectToSalesWithHandoff(targetPath = '/', options = {}) {
   const salesBase = config.SALES_URL || '';
   if (!salesBase) throw new Error('SALES_URL is not configured');
 
