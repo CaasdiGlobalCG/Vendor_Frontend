@@ -25,6 +25,7 @@ import {
   removeMember,
   listRoles,
   listInvitations,
+  cancelInvitation,
 } from '../api/rbacApi';
 
 /**
@@ -158,6 +159,19 @@ export default function TeamPage() {
       fetchMembers();
     } catch (err) {
       showFeedback(err.message, 'error');
+    }
+  };
+
+  // ── Handle invitation cancellation ──
+  const handleCancelInvitation = async (inviteId) => {
+    if (!window.confirm('Cancel this invitation? The invite link will no longer work.')) return;
+    try {
+      await cancelInvitation(inviteId);
+      showFeedback('Invitation cancelled');
+      fetchInvitations();
+      fetchMembers(); // Refresh to remove the pending member row
+    } catch (err) {
+      showFeedback(err.message || 'Failed to cancel invitation', 'error');
     }
   };
 
@@ -337,7 +351,9 @@ export default function TeamPage() {
                       <th className="px-6 py-3 text-left font-medium">Email</th>
                       <th className="px-6 py-3 text-left font-medium">Role</th>
                       <th className="px-6 py-3 text-left font-medium">Sent</th>
+                      <th className="px-6 py-3 text-left font-medium">Status</th>
                       <th className="px-6 py-3 text-left font-medium">Expires</th>
+                      <th className="px-6 py-3 text-right font-medium">Action</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-100">
@@ -345,11 +361,27 @@ export default function TeamPage() {
                       <tr key={inv.inviteId} className="hover:bg-gray-50">
                         <td className="px-6 py-3 text-gray-900">{inv.email}</td>
                         <td className="px-6 py-3"><RoleBadge roleId={inv.roleId} roleName={inv.roleName} size="sm" /></td>
-                        <td className="px-6 py-3 text-gray-500">{formatDate(inv.createdAt)}</td>
                         <td className="px-6 py-3">
-                          {inv.isExpired
-                            ? <span className="text-red-500 text-xs font-medium">Expired</span>
-                            : <span className="text-gray-500">{formatDate(inv.expiresAt)}</span>}
+                          <span className="text-gray-900 text-xs">{timeAgo(inv.createdAt)}</span>
+                          <span className="block text-gray-400 text-[10px]">{formatDate(inv.createdAt)}</span>
+                        </td>
+                        <td className="px-6 py-3">
+                          {inv.isExpired ? (
+                            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium border bg-red-50 text-red-700 border-red-200">Expired</span>
+                          ) : (
+                            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium border bg-amber-50 text-amber-700 border-amber-200">Pending</span>
+                          )}
+                        </td>
+                        <td className="px-6 py-3 text-gray-500 text-xs">{formatDate(inv.expiresAt)}</td>
+                        <td className="px-6 py-3 text-right">
+                          <PermissionGate module="user_management" action="edit">
+                            <button
+                              onClick={() => handleCancelInvitation(inv.inviteId)}
+                              className="text-xs text-red-600 hover:text-red-700 hover:underline font-medium"
+                            >
+                              Cancel
+                            </button>
+                          </PermissionGate>
                         </td>
                       </tr>
                     ))}
@@ -442,8 +474,15 @@ function MemberRow({
       <td className="px-6 py-3">
         <StatusBadge status={member.status} />
       </td>
-      <td className="px-6 py-3 text-gray-500 text-xs">
-        {formatDate(member.joinedAt)}
+      <td className="px-6 py-3 text-xs">
+        {isInvited ? (
+          <>
+            <span className="text-amber-600">{timeAgo(member.joinedAt || member.createdAt)}</span>
+            <span className="block text-gray-400 text-[10px]">Invited {formatDate(member.joinedAt || member.createdAt)}</span>
+          </>
+        ) : (
+          <span className="text-gray-500">{formatDate(member.joinedAt)}</span>
+        )}
       </td>
       <td className="px-6 py-3 text-right">
         {!isSelf && !isInvited && (
@@ -541,6 +580,25 @@ function formatDate(iso) {
   if (!iso) return '—';
   try {
     return new Date(iso).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+  } catch {
+    return '—';
+  }
+}
+
+/** Convert ISO timestamp to human-readable relative time (e.g. "2 hours ago") */
+function timeAgo(iso) {
+  if (!iso) return '—';
+  try {
+    const diff = Date.now() - new Date(iso).getTime();
+    const mins = Math.floor(diff / 60000);
+    if (mins < 1) return 'Just now';
+    if (mins < 60) return `${mins}m ago`;
+    const hours = Math.floor(mins / 60);
+    if (hours < 24) return `${hours}h ago`;
+    const days = Math.floor(hours / 24);
+    if (days < 30) return `${days}d ago`;
+    const months = Math.floor(days / 30);
+    return `${months}mo ago`;
   } catch {
     return '—';
   }

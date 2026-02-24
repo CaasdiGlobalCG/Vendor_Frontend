@@ -2,10 +2,12 @@
 FROM node:20-alpine AS build
 
 # Accept build arguments for environment variables
+ARG VITE_VENDOR_URL
 ARG VITE_CLIENT_URL
 ARG VITE_SALES_URL
 
 # Set them as environment variables so Vite can access them during build
+ENV VITE_VENDOR_URL=${VITE_VENDOR_URL}
 ENV VITE_CLIENT_URL=${VITE_CLIENT_URL}
 ENV VITE_SALES_URL=${VITE_SALES_URL}
 

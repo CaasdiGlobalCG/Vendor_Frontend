@@ -176,3 +176,14 @@ export async function listInvitations(params = {}) {
   const qs = new URLSearchParams(params).toString();
   return rbacFetch(`/invitations${qs ? `?${qs}` : ''}`);
 }
+
+/**
+ * Cancel a pending invitation.
+ * @param {string} inviteId — The invitation to cancel
+ * @returns {Promise<{ success: boolean, message: string }>}
+ */
+export async function cancelInvitation(inviteId) {
+  return rbacFetch(`/invitations/${encodeURIComponent(inviteId)}`, {
+    method: 'DELETE',
+  });
+}

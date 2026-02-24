@@ -11,12 +11,14 @@ const resolveEnvValue = (value) => {
 
 const isDevMode = import.meta.env.MODE === 'development';
 
-const resolvedFrontendBase =
+const resolvedVendorUrl =
+  resolveEnvValue(import.meta.env.VITE_VENDOR_URL) ||
   resolveEnvValue(import.meta.env.VITE_VENDOR_FRONTEND_URL) ||
   (isDevMode ? DEV_FRONTEND_BASE_URL : PROD_FRONTEND_BASE_URL);
 
 // Use empty string for relative paths - Vite proxy handles /api in dev, same-origin in prod
-export const VENDOR_FRONTEND_URL = resolvedFrontendBase;
+export const VENDOR_FRONTEND_URL = resolvedVendorUrl;
+export const VENDOR_URL = resolvedVendorUrl;
 export const VENDOR_BACKEND_URL = ''; // Empty string = relative paths
 
 const resolvedClientUrl = resolveEnvValue(import.meta.env.VITE_CLIENT_URL) || '';
@@ -31,6 +33,7 @@ export const B2B_MARKETPLACE_URL = `${resolvedB2BMarketplaceBaseUrl.replace(/\/+
 
 const config = {
   VENDOR_FRONTEND_URL,
+  VENDOR_URL,
   VENDOR_BACKEND_URL,
   SALES_URL,
   CLIENT_URL,

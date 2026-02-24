@@ -66,6 +66,7 @@ jobs:
             ${{ steps.repo.outputs.REPO }}:${{ env.IMAGE_TAG }}
             ${{ steps.repo.outputs.REPO }}:latest
           build-args: |
+            VITE_VENDOR_URL=${{secrets.VITE_VENDOR_PROD_URL}}
             VITE_CLIENT_URL=${{secrets.VITE_CLIENT_PROD_URL}}
             VITE_SALES_URL=${{secrets.VITE_SALES_PROD_URL}}
           platforms: linux/amd64
@@ -74,6 +75,7 @@ jobs:
         if: steps.target.outputs.ENV == 'prod'
         run: |
           echo "Production build completed with:"
+          echo "VITE_VENDOR_URL is set: ${{ secrets.VITE_VENDOR_PROD_URL != '' }}"
           echo "VITE_CLIENT_URL is set: ${{ secrets.VITE_CLIENT_PROD_URL != '' }}"
           echo "VITE_SALES_URL is set: ${{ secrets.VITE_SALES_PROD_URL != '' }}"
 
@@ -87,6 +89,7 @@ jobs:
             ${{ steps.repo-staging.outputs.REPO_STAGING }}:${{ env.IMAGE_TAG }}
             ${{ steps.repo-staging.outputs.REPO_STAGING }}:latest
           build-args: |
+            VITE_VENDOR_URL=${{secrets.VITE_VENDOR_STAGING_URL}}
             VITE_CLIENT_URL=${{secrets.VITE_CLIENT_STAGING_URL}}
             VITE_SALES_URL=${{secrets.VITE_SALES_STAGING_URL}}
           platforms: linux/amd64
@@ -95,6 +98,7 @@ jobs:
         if: steps.target.outputs.ENV == 'staging'
         run: |
           echo "Staging build completed with:"
+          echo "VITE_VENDOR_URL is set: ${{ secrets.VITE_VENDOR_STAGING_URL != '' }}"
           echo "VITE_CLIENT_URL is set: ${{ secrets.VITE_CLIENT_STAGING_URL != '' }}"
           echo "VITE_SALES_URL is set: ${{ secrets.VITE_SALES_STAGING_URL != '' }}"
 
