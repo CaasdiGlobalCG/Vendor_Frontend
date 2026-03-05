@@ -8,6 +8,7 @@ import VideoCallModal from './VideoCallModal';
 import PermissionGuard, { PermissionButton, PermissionInput } from './PermissionGuard';
 import usePermissions from '../hooks/usePermissions';
 import config from '../../../config/env';
+import authFetch from '../../../utils/authFetch';
 
 const WorkspaceRightSidebar = ({
   sidebarCollapsed,
@@ -809,7 +810,7 @@ const WorkspaceRightSidebar = ({
                                                 throw new Error('File reference is missing required information');
                                               }
 
-                                              const response = await fetch(`${config.VENDOR_BACKEND_URL}/api/workspace-files/view-url`, {
+                                              const response = await authFetch(`${config.VENDOR_BACKEND_URL}/api/workspace-files/view-url`, {
                                                 method: 'POST',
                                                 headers: { 'Content-Type': 'application/json' },
                                                 credentials: 'include',

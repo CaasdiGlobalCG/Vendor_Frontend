@@ -115,25 +115,38 @@ export function EditablePermissionMatrix({
   }, [permissions, onChange, actions]);
 
   /**
-   * Toggle ALL permissions for a module row (select all / deselect all).
-   * WHY: Convenience control — clicks the module label checkbox.
+   * Toggle ALL permissions for every module in a category.
+   * WHY: Category-level "Select all" convenience control.
+   * @param {{ code: string }[]} modules - Modules within the category
    */
-  const toggleAllForModule = useCallback((moduleCode) => {
+  const toggleAllForCategory = useCallback((modules) => {
     if (!onChange) return;
-    const moduleActions = actions.map(a => `${moduleCode}:${a}`);
-    const managePerm = `${moduleCode}:manage`;
-    const allChecked = permSet.has(managePerm) ||
-      moduleActions.every(p => permSet.has(p));
+    // Build full list of individual action perms + manage perms for every module in category
+    const allPerms = [];
+    const allPermSet = new Set();
+    modules.forEach(({ code }) => {
+      actions.forEach(a => {
+        const p = `${code}:${a}`;
+        allPerms.push(p);
+        allPermSet.add(p);
+      });
+      allPermSet.add(`${code}:manage`);
+    });
 
-    if (allChecked) {
-      // Remove all permissions for this module
-      const modulePermSet = new Set([...moduleActions, managePerm]);
-      onChange(permissions.filter(p => !modulePermSet.has(p)));
+    // Check if every module in the category is fully checked
+    const allSelected = modules.every(({ code }) => {
+      if (permSet.has(`${code}:manage`)) return true;
+      return actions.every(a => permSet.has(`${code}:${a}`));
+    });
+
+    if (allSelected) {
+      // Deselect everything in this category
+      onChange(permissions.filter(p => !allPermSet.has(p)));
     } else {
-      // Add manage (which covers all)
-      const modulePermSet = new Set(moduleActions);
-      const cleaned = permissions.filter(p => !modulePermSet.has(p) && p !== managePerm);
-      onChange([...cleaned, managePerm]);
+      // Set manage for every module (Full Access) — cleaner than individual actions
+      const managePerms = modules.map(({ code }) => `${code}:manage`);
+      const cleaned = permissions.filter(p => !allPermSet.has(p));
+      onChange([...cleaned, ...managePerms]);
     }
   }, [permissions, onChange, actions, permSet]);
 
@@ -166,11 +179,20 @@ export function EditablePermissionMatrix({
 
         {/* ── Body: Category groups → Module rows ── */}
         <tbody className="bg-white divide-y divide-gray-100">
-          {groups.map(({ categoryKey, category, modules }) => (
+          {groups.map(({ categoryKey, category, modules }) => {
+            // Check if every module in this category is fully checked
+            const isCategoryAllChecked = !permSet.has('*:*') && modules.every(({ code }) => {
+              if (permSet.has(`${code}:manage`)) return true;
+              return actions.every(a => permSet.has(`${code}:${a}`));
+            });
+            // For *:* super admin, show as checked but disabled
+            const isCategoryChecked = permSet.has('*:*') || isCategoryAllChecked;
+
+            return (
             <React.Fragment key={categoryKey}>
               {/* ── Category Header ── */}
               <tr>
-                <td colSpan={actions.length + 2} className={`${cellPx} pt-4 pb-1`}>
+                <td colSpan={actions.length + 1} className={`${cellPx} pt-4 pb-1`}>
                   <div className="flex items-center gap-2">
                     <span
                       className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold border
@@ -183,6 +205,21 @@ export function EditablePermissionMatrix({
                     <span className="text-xs text-gray-400">{category.description}</span>
                   </div>
                 </td>
+                {/* Select-all checkbox above the Full Access column */}
+                <td className={`${cellPx} pt-4 pb-1 text-center`}>
+                  {editable && (
+                    <label className="inline-flex flex-col items-center gap-0.5 cursor-pointer" title={`Select / deselect all ${category.label} modules`}>
+                      <input
+                        type="checkbox"
+                        checked={isCategoryChecked}
+                        onChange={() => toggleAllForCategory(modules)}
+                        disabled={disabled || permSet.has('*:*')}
+                        className="h-4 w-4 rounded border-gray-300 text-teal-600 focus:ring-teal-500"
+                      />
+                      <span className="text-[10px] text-gray-400 select-none leading-tight">Select all</span>
+                    </label>
+                  )}
+                </td>
               </tr>
 
               {/* ── Module Rows ── */}
@@ -193,19 +230,9 @@ export function EditablePermissionMatrix({
 
                 return (
                   <tr key={code} className="hover:bg-gray-50 transition-colors">
-                    {/* Module name cell with optional select-all checkbox */}
+                    {/* Module name cell */}
                     <td className={`${cellPx} text-sm font-medium text-gray-900 pl-6`}>
                       <div className="flex items-center gap-2">
-                        {editable && (
-                          <input
-                            type="checkbox"
-                            checked={allChecked}
-                            onChange={() => toggleAllForModule(code)}
-                            disabled={disabled || permSet.has('*:*')}
-                            className="h-3.5 w-3.5 rounded border-gray-300 text-teal-600 focus:ring-teal-500"
-                            title="Select all / deselect all"
-                          />
-                        )}
                         <span>{config.label}</span>
                         {/* Show count badge in editable mode */}
                         {editable && checkedCount > 0 && !hasManage && (
@@ -272,7 +299,8 @@ export function EditablePermissionMatrix({
                 );
               })}
             </React.Fragment>
-          ))}
+            );
+          })}
         </tbody>
       </table>
 

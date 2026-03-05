@@ -7,6 +7,7 @@
 // ============================================================
 
 import config from '../../config/env';
+import authFetch from '../../utils/authFetch';
 
 /** @constant {string} Base URL for all RBAC API calls */
 const BASE_URL = `${config.VENDOR_BACKEND_URL}/api/rbac`;
@@ -33,7 +34,7 @@ function getHeaders() {
  * @throws {Error} With backend error message
  */
 async function rbacFetch(path, options = {}) {
-  const res = await fetch(`${BASE_URL}${path}`, {
+  const res = await authFetch(`${BASE_URL}${path}`, {
     credentials: 'include',
     headers: getHeaders(),
     ...options,
@@ -186,4 +187,23 @@ export async function cancelInvitation(inviteId) {
   return rbacFetch(`/invitations/${encodeURIComponent(inviteId)}`, {
     method: 'DELETE',
   });
+}
+
+// ──────────────────────────────────────
+// Activity / Audit Logs
+// ──────────────────────────────────────
+
+/**
+ * Fetch audit / activity logs.
+ * @param {{ userId?: string, action?: string, limit?: number, lastKey?: string }} params
+ * @returns {Promise<{ logs: Array, total: number, lastKey?: string, hasMore: boolean }>}
+ */
+export async function getAuditLogs(params = {}) {
+  const qs = new URLSearchParams();
+  if (params.userId) qs.set('userId', params.userId);
+  if (params.action) qs.set('action', params.action);
+  if (params.limit)  qs.set('limit', String(params.limit));
+  if (params.lastKey) qs.set('lastKey', params.lastKey);
+  const query = qs.toString();
+  return rbacFetch(`/audit-logs${query ? `?${query}` : ''}`);
 }

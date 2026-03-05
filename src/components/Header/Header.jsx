@@ -7,6 +7,7 @@ import DateYearFunction from "./DateYearFunction";
 import { VendorContext } from "../../context/VendorContext";
 import { NotificationContext } from "../../context/NotificationContext";
 import { PermissionGate } from "../../rbac";
+import { useRBAC } from '../../rbac/context/RBACContext';
 import config from '../../config/env';
 import { redirectToClientWithHandoff } from '../../utils/handoffToClient';
 import { redirectToSalesWithHandoff } from '../../utils/handoffToSales';
@@ -42,6 +43,11 @@ export const Header = () => {
   
   // Get notification data from context
   const { unreadCount, notifications, refreshNotifications } = useContext(NotificationContext);
+
+  // Get RBAC platform access — determines which switch buttons to show
+  const { platformAccess } = useRBAC();
+  const canAccessClient = Array.isArray(platformAccess) && platformAccess.includes('client');
+  const canAccessSales = Array.isArray(platformAccess) && platformAccess.includes('sales');
   
   // Get only pending leads that need approval
   const pendingNotifications = notifications?.filter(notification => 
@@ -712,7 +718,8 @@ export const Header = () => {
 
             {/* Mobile Controls Section (Vendor/Client Toggle, Icons) */}
             <div className="mt-2 mb-4 px-4 flex items-center justify-between">
-              {/* Updated Mobile Toggle */}
+              {/* Mobile Toggle — only shown if user has client platform access */}
+              {canAccessClient && (
               <div
                 className={`w-[59px] h-[23px] rounded-[17px] cursor-pointer relative ${isVendor ? 'bg-gradient-to-r from-teal-400 to-[#423e3e]' : 'bg-gradient-to-r from-[#423e3e] to-[#efcf4e]'}`}
             onClick={() => setIsVendor(!isVendor)}
@@ -726,6 +733,7 @@ export const Header = () => {
                 <div
                   className={`absolute top-1/2 -translate-y-1/2 w-[30%] h-[19px] bg-white rounded-full transition-all duration-200 ease-in-out ${ isVendor ? 'left-[5%]' : 'left-[65%]' }`} />
               </div>
+              )}
 
               {/* Icons */}
               <div className="flex items-center space-x-2 sm:space-x-3">
@@ -849,7 +857,8 @@ export const Header = () => {
                </svg>
              </button>
           </div>
-          {/* Updated Desktop Toggle */}
+          {/* Desktop Toggle — only shown if user has client platform access */}
+          {canAccessClient && (
           <div
              className={`w-[59px] h-[23px] rounded-[17px] cursor-pointer relative ${isVendor ? 'bg-gradient-to-r from-teal-400 to-[#423e3e]' : 'bg-gradient-to-r from-[#423e3e] to-[#efcf4e]'}`}
              onClick={async () => {
@@ -896,6 +905,7 @@ export const Header = () => {
              <div
                className={`absolute top-1/2 -translate-y-1/2 w-[30%] h-[19px] bg-white rounded-full transition-all duration-200 ease-in-out ${ isVendor ? 'left-[5%]' : 'left-[65%]' }`} />
           </div>
+          )}
         </div>
         </div>
 
@@ -949,6 +959,8 @@ export const Header = () => {
               >
                 GravityX <img src="https://c.animaapp.com/VmmSqCQF/img/guidance-shop.svg" alt="Shop" className="ml-2 w-4 h-4 lg:w-6 lg:h-6" />
               </button>
+              {/* B2B button — only if user has sales platform access */}
+              {canAccessSales && (
               <button
                 className="w-auto px-3 h-[36px] bg-white bg-opacity-5 hover:bg-opacity-10 rounded-[9px] flex items-center justify-center text-white text-xs lg:text-sm font-semibold font-['Montserrat']"
                 onClick={async () => {
@@ -962,13 +974,19 @@ export const Header = () => {
                     await redirectToSalesWithHandoff();
                   } catch (e) {
                     console.error('B2B handoff redirect failed:', e);
-                    alert('Unable to open B2B Sales dashboard right now. Please try again.');
-                    navigate('/login');
+                    // Show specific error if 403 (access denied), otherwise generic
+                    const is403 = e?.message?.includes('403');
+                    alert(is403
+                      ? 'You do not have access to the B2B Sales module. Please contact your administrator.'
+                      : 'Unable to open B2B Sales dashboard right now. Please try again.');
                   }
                 }}
               >
                 B2B <img src="https://c.animaapp.com/VmmSqCQF/img/guidance-shop.svg" alt="Shop" className="ml-2 w-4 h-4 lg:w-6 lg:h-6" />
               </button>
+              )}
+              {/* Tender button — only if user has sales platform access */}
+              {canAccessSales && (
               <button
                 className="w-auto px-3 h-[36px] bg-white bg-opacity-5 hover:bg-opacity-10 rounded-[9px] flex items-center justify-center text-white text-xs lg:text-sm font-semibold font-['Montserrat']"
                 onClick={async () => {
@@ -982,13 +1000,16 @@ export const Header = () => {
                     await redirectToSalesWithHandoff('/tender');
                   } catch (e) {
                     console.error('Tender handoff redirect failed:', e);
-                    alert('Unable to open Tender dashboard right now. Please try again.');
-                    navigate('/login');
+                    const is403 = e?.message?.includes('403');
+                    alert(is403
+                      ? 'You do not have access to the Tender module. Please contact your administrator.'
+                      : 'Unable to open Tender dashboard right now. Please try again.');
                   }
                 }}
               >
                 Tender <img src="https://c.animaapp.com/VmmSqCQF/img/guidance-shop.svg" alt="Tender" className="ml-2 w-4 h-4 lg:w-6 lg:h-6" />
               </button>
+              )}
               <button className="w-auto px-3 h-[36px] bg-white bg-opacity-5 hover:bg-opacity-10 rounded-[9px] flex items-center justify-center text-white text-xs lg:text-sm font-semibold font-['Montserrat']"> Prompt <img src="https://c.animaapp.com/VmmSqCQF/img/vector.svg" alt="Prompt" className="ml-2 w-3 h-3 lg:w-4 lg:h-4" /> </button>
           </div>
           </div>

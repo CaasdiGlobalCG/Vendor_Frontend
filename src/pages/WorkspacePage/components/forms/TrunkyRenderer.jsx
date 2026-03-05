@@ -2,6 +2,7 @@ import React, { useState, useEffect, useContext } from 'react';
 import { CheckCircle, Clock, Users, Package, AlertCircle, Settings } from 'lucide-react';
 import { VendorContext } from '../../../../context/VendorContext';
 import config from '../../../../config/env';
+import authFetch from '../../../../utils/authFetch';
 
 const TrunkyRenderer = ({ data }) => {
   const { currentUser } = useContext(VendorContext);
@@ -26,7 +27,7 @@ const TrunkyRenderer = ({ data }) => {
         setError(null);
 
         // First, try to get data for this specific workspace element
-        const response = await fetch(
+        const response = await authFetch(
           `/api/trunky/workspace/${workspaceId}/element/${elementId}`,
           {
             method: 'GET',
@@ -62,7 +63,7 @@ const TrunkyRenderer = ({ data }) => {
     // Fetch available tasks for selection
     const fetchAvailableTasks = async () => {
       try {
-        const response = await fetch(`/api/trunky/tasks`, {
+        const response = await authFetch(`/api/trunky/tasks`, {
           method: 'GET',
           headers: {
             'Content-Type': 'application/json',
@@ -91,7 +92,7 @@ const TrunkyRenderer = ({ data }) => {
   const handleTaskChange = async (taskId) => {
     try {
       setLoading(true);
-      const response = await fetch(`/api/trunky/tasks/${taskId}`, {
+      const response = await authFetch(`/api/trunky/tasks/${taskId}`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',

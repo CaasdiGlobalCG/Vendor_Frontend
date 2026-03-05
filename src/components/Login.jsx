@@ -10,6 +10,7 @@ import { Eye, EyeOff } from "lucide-react";
 import config from "../config/env";
 import PasskeyMFAVerification from "./PasskeyMFAVerification";
 import { redirectToClientWithHandoff } from "../utils/handoffToClient";
+import { redirectToSalesWithHandoff } from "../utils/handoffToSales";
 
 const carouselItems = [
   {
@@ -96,7 +97,13 @@ function Login() {
     return (await tryMeCookie()) || (await tryMeBearer());
   };
 
-  const routeVendor = ({ status, hasFilledForm }) => {
+  const routeVendor = ({ status, hasFilledForm, isTeamMember }) => {
+    // Team members are pre-approved — always go to dashboard
+    if (isTeamMember === true) {
+      navigate("/VendorDashboard", { replace: true });
+      return;
+    }
+
     const resolvedStatus = String(status || "").toLowerCase();
     const resolvedHasFilledForm = hasFilledForm === true;
 
@@ -131,6 +138,7 @@ function Login() {
 
       let verifyRoleSelected = null;
       let verifyLastSelectedRole = null;
+      let verifyIsTeamMember = false;
 
       try {
         const verifyRes = await fetch(`${config.VENDOR_BACKEND_URL}/api/auth/verify`, {
@@ -146,12 +154,50 @@ function Login() {
             localStorage.setItem("roleSelected", verifyRoleSelected ? "true" : "false");
           } catch {}
 
-          if (!verifyRoleSelected) {
+          // Team members always skip role-selection (their users record
+          // should have roleSelected=true, but guard against stale data).
+          verifyIsTeamMember = verifyData?.isTeamMember === true;
+          if (!verifyRoleSelected && !verifyIsTeamMember) {
             navigate("/role-selection", { replace: true });
             return;
           }
 
-          if (!explicitVendor && verifyLastSelectedRole === "client") {
+          // ── Platform-access-based auto-routing ──
+          // If the backend returned platformAccess, use it for intelligent routing.
+          // Single-platform users go directly to that platform.
+          // Multi-platform users use lastSelectedRole as tiebreaker.
+          const verifyPlatformAccess = Array.isArray(verifyData?.platformAccess)
+            ? verifyData.platformAccess
+            : null;
+
+          if (verifyPlatformAccess && !explicitVendor) {
+            const hasVendor = verifyPlatformAccess.includes('vendor');
+            const hasClient = verifyPlatformAccess.includes('client');
+            const hasSales = verifyPlatformAccess.includes('sales');
+
+            // Single-platform: auto-route without ambiguity
+            if (!hasVendor && hasClient && !hasSales) {
+              await redirectToClientWithHandoff({ token: idToken });
+              return;
+            }
+            if (!hasVendor && !hasClient && hasSales) {
+              await redirectToSalesWithHandoff('/', { token: idToken });
+              return;
+            }
+            // Multi-platform: use lastSelectedRole as tiebreaker
+            if (hasVendor && (hasClient || hasSales)) {
+              if (verifyLastSelectedRole === 'client' && hasClient) {
+                await redirectToClientWithHandoff({ token: idToken });
+                return;
+              }
+              if (verifyLastSelectedRole === 'sales' && hasSales) {
+                await redirectToSalesWithHandoff('/', { token: idToken });
+                return;
+              }
+              // else: fall through to vendor dashboard (default)
+            }
+          } else if (!explicitVendor && verifyLastSelectedRole === "client") {
+            // Fallback: no platformAccess data — use legacy lastSelectedRole check
             await redirectToClientWithHandoff({ token: idToken });
             return;
           }
@@ -191,6 +237,7 @@ function Login() {
         role: "vendor",
         status: vendorMe.data.status,
         hasFilledForm: vendorMe.data.hasFilledForm,
+        isTeamMember: vendorMe.data.isTeamMember === true,
       };
 
       setVendorUser(vendorUser);
@@ -239,7 +286,7 @@ function Login() {
         return;
       }
 
-      routeVendor({ status: vendorMe.data.status, hasFilledForm: vendorMe.data.hasFilledForm });
+      routeVendor({ status: vendorMe.data.status, hasFilledForm: vendorMe.data.hasFilledForm, isTeamMember: vendorMe.data.isTeamMember === true || verifyIsTeamMember });
     } catch (error) {
       console.error("Error logging in:", error);
 
@@ -274,7 +321,7 @@ function Login() {
       await Promise.resolve(hydrateCurrentUser?.());
       const vendorMe = await fetchVendorMe(null);
       if (vendorMe?.success && vendorMe?.data) {
-        routeVendor({ status: vendorMe.data.status, hasFilledForm: vendorMe.data.hasFilledForm });
+        routeVendor({ status: vendorMe.data.status, hasFilledForm: vendorMe.data.hasFilledForm, isTeamMember: vendorMe.data.isTeamMember === true });
       } else {
         navigate("/Form1", { replace: true });
       }

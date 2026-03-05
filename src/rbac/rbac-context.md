@@ -31,21 +31,39 @@ src/rbac/
 ## External Dependencies
 - `../../context/VendorContext` — RBACContext waits for VendorContext hydration
 - `../../config/env` — API base URL (VENDOR_BACKEND_URL)
+- `../../utils/authFetch` — Drop-in `fetch` wrapper with 401 retry + silent Cognito refresh (since 05-03-2026)
 - `localStorage.getItem('authToken')` — Bearer token fallback for dual-auth
+
+## Auth Resilience (authFetch — since 05-03-2026)
+- All authenticated fetch calls in `rbacApi.js` and `RBACContext.jsx` use `authFetch` instead of raw `fetch`
+- On 401: `Auth.currentSession()` refreshes JWT via Cognito refresh token → `POST /api/auth/session` re-establishes cookie → original request retried
+- Singleton promise dedup prevents concurrent refresh storms
 
 ## Backend Endpoints
 | Endpoint | Phase | Status | Used By |
 |----------|-------|--------|---------|
 | `GET /api/rbac/me` | 1 | ✅ Live | RBACContext |
-| `GET /api/rbac/members` | 2 | ❌ Stub | MemberList |
-| `POST /api/rbac/members/invite` | 2 | ❌ Stub | InviteMemberModal |
-| `PATCH /api/rbac/members/:id/role` | 2 | ❌ Stub | MemberList |
-| `DELETE /api/rbac/members/:id` | 2 | ❌ Stub | MemberList |
-| `GET /api/rbac/roles` | 2 | ❌ Stub | InviteMemberModal |
-| `GET /api/rbac/invitations` | 2 | ❌ Stub | TeamPage |
+| `GET /api/rbac/members` | 2 | ✅ Live | TeamPage (MemberList) |
+| `POST /api/rbac/members/invite` | 2 | ✅ Live | InviteMemberModal |
+| `PATCH /api/rbac/members/:id/role` | 2 | ✅ Live | TeamPage (role change) |
+| `DELETE /api/rbac/members/:id` | 2 | ✅ Live | TeamPage (remove member) |
+| `GET /api/rbac/roles` | 2 | ✅ Live | InviteMemberModal, TeamPage |
+| `GET /api/rbac/invitations` | 2 | ✅ Live | TeamPage (invitations tab) |
+| `DELETE /api/rbac/invitations/:inviteId` | 2 | ✅ Live | TeamPage (cancel invite) |
+| `GET /api/rbac/invite/validate?token=` | 2.5C | ✅ Live | InviteAcceptPage |
+| `POST /api/rbac/invite/accept` | 2.5C | ✅ Live | InviteAcceptPage |
 
 ## Routes
 - `/VendorDashboard/team` → TeamPage (nested under VendorDashboard layout)
+- `/invite/accept` → InviteAcceptPage (public, no auth required)
+
+## Team Member Login Flow (Frontend Side)
+- `Login.jsx` → after `/api/auth/verify`, checks `isTeamMember` — if true, skips role-selection
+- `Login.jsx` → `routeVendor({ isTeamMember: true })` navigates directly to `/VendorDashboard`
+- `App.jsx` → `VendorGuard` early-returns for `currentUser.isTeamMember === true` (bypasses onboarding checks)
+- `VendorContext.jsx` → reads `isTeamMember` from `/me` response, propagates to all consumers
+- `RBACContext.jsx` → waits for VendorContext hydration, passes `vendorId` hint to `/api/rbac/me`
+- For full details, see `Documents/RBAC/Team_Member_Login_Flow.md`.
 
 ## Nav Gating
 Header nav items are wrapped with `<PermissionGate>`:

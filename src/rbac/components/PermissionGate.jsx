@@ -57,9 +57,8 @@ export function PermissionGate({
 }) {
   const { can, canAny, canAll, isSuperAdmin, isLoading, hasRBAC } = usePermission();
 
-  // While RBAC is loading OR no RBAC membership exists, render children (permissive).
-  // Phase 1: all legacy users may not have RBAC entries — never hide nav from them.
-  // Phase 2: hasRBAC will be true for managed users, so gates will enforce properly.
+  // Org owner / legacy user without RBAC membership → always show (they are Super Admin).
+  // Team members (hasRBAC=true) → check permissions below.
   if (isLoading || !hasRBAC) return children;
 
   // Super admin only gate

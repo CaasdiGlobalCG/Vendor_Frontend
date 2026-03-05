@@ -1,6 +1,7 @@
 import React, { useState, useRef } from 'react';
 import { X, Upload, File, Image, FileText, Archive, Music, Video, Paperclip, Trash2, Eye } from 'lucide-react';
 import config from '../../../config/env';
+import authFetch from '../../../utils/authFetch';
 
 const FileUploadModal = ({ 
   isOpen, 
@@ -112,7 +113,7 @@ const FileUploadModal = ({
         if (taskId) formData.append('taskId', taskId);
         if (subtaskId) formData.append('subtaskId', subtaskId);
 
-        const response = await fetch(`/api/workspace-files/upload`, {
+        const response = await authFetch(`/api/workspace-files/upload`, {
           method: 'POST',
           body: formData,
           credentials: 'include' // Include cookies for authenticated requests

@@ -36,6 +36,11 @@ export function usePermission() {
   const can = useCallback((module, action) => {
     if (permissionSet.has('*:*')) return true;
     if (permissionSet.has(`${module}:manage`)) return true;
+    if (action === 'view') {
+      for (const perm of permissionSet) {
+        if (perm.startsWith(`${module}:`)) return true;
+      }
+    }
     return permissionSet.has(`${module}:${action}`);
   }, [permissions]);
 

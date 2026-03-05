@@ -1,4 +1,5 @@
 import config from '../config/env';
+import authFetch from './authFetch';
 
 /**
  * Upload a file to S3 via the backend API
@@ -49,7 +50,7 @@ export const uploadFileToS3 = async (file, email, documentType, section) => {
       headers: headers
     });
     
-    const response = await fetch(uploadUrl.toString(), {
+    const response = await authFetch(uploadUrl.toString(), {
       method: 'POST',
       body: formData,
       credentials: 'include',
@@ -136,7 +137,7 @@ export const deleteFileFromS3 = async (email, documentType, section) => {
     }
 
     // Use the full URL with the backend server port
-    const response = await fetch(`/api/files/delete`, {
+    const response = await authFetch(`/api/files/delete`, {
       method: 'DELETE',
       headers: headers,
       body: JSON.stringify({

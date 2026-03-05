@@ -17,6 +17,8 @@ import { RoleBadge } from '../components/RoleBadge';
 import { EditablePermissionMatrix } from '../components/EditablePermissionMatrix';
 import { PermissionGate } from '../components/PermissionGate';
 import { InviteModal } from '../components/InviteModal';
+import { EditRoleModal } from '../components/EditRoleModal';
+import ActivityLogTab from '../components/ActivityLogTab';
 import RolesTab from '../components/RolesTab';
 import {
   listMembers,
@@ -65,6 +67,9 @@ export default function TeamPage() {
 
   // ── Remove confirmation state ──
   const [removingMember, setRemovingMember] = useState(null);
+
+  // ── Edit role modal state ──
+  const [editingRoleId, setEditingRoleId] = useState(null);
 
   // ── Feedback ──
   const [feedback, setFeedback] = useState(null);
@@ -123,9 +128,9 @@ export default function TeamPage() {
   };
 
   // ── Handle invite submit (called by InviteModal) ──
-  const handleInvite = async ({ email, roleId, message, permissionOverrides }) => {
+  const handleInvite = async ({ email, roleId, message, permissionOverrides, platformAccess }) => {
     try {
-      await inviteMember({ email, roleId, message, permissionOverrides });
+      await inviteMember({ email, roleId, message, permissionOverrides, platformAccess });
       showFeedback(`Invitation sent to ${email}`);
       setShowInviteModal(false);
       fetchMembers();
@@ -240,6 +245,7 @@ export default function TeamPage() {
             { key: 'invitations', label: 'Invitations', count: invitations.length },
             { key: 'roles', label: 'Roles', count: roles.length },
             { key: 'matrix', label: 'My Permissions' },
+            { key: 'activity', label: 'Activity Log' },
           ].map(({ key, label, count }) => (
             <button
               key={key}
@@ -320,6 +326,7 @@ export default function TeamPage() {
                     removingMember={removingMember}
                     setRemovingMember={setRemovingMember}
                     onRemove={handleRemove}
+                    onEditRole={setEditingRoleId}
                   />
                 ))}
               </tbody>
@@ -418,12 +425,32 @@ export default function TeamPage() {
         </div>
       )}
 
+      {/* Activity Log Tab */}
+      {activeTab === 'activity' && (
+        <ActivityLogTab members={members} />
+      )}
+
       {/* ── Invite Modal ── */}
       {showInviteModal && (
         <InviteModal
           roles={roles}
           onSubmit={handleInvite}
           onClose={() => setShowInviteModal(false)}
+        />
+      )}
+
+      {/* ── Edit Role Modal ── */}
+      {editingRoleId && (
+        <EditRoleModal
+          roleId={editingRoleId}
+          onClose={() => setEditingRoleId(null)}
+          onUpdated={() => {
+            setEditingRoleId(null);
+            fetchRoles();
+            fetchMembers();
+            showFeedback('Role updated successfully');
+          }}
+          onError={(msg) => showFeedback(msg, 'error')}
         />
       )}
     </div>
@@ -438,7 +465,7 @@ export default function TeamPage() {
 function MemberRow({
   member, currentUserId, assignableRoles,
   changingRoleFor, setChangingRoleFor, newRoleId, setNewRoleId, onRoleChange,
-  removingMember, setRemovingMember, onRemove,
+  removingMember, setRemovingMember, onRemove, onEditRole,
 }) {
   const isSelf = member.userId === currentUserId;
   const isInvited = member.status === 'invited';
@@ -501,6 +528,14 @@ function MemberRow({
                     className="text-xs text-teal-600 hover:text-teal-700 font-medium"
                   >
                     Change Role
+                  </button>
+                </PermissionGate>
+                <PermissionGate module="user_management" action="manage">
+                  <button
+                    onClick={() => onEditRole?.(member.roleId)}
+                    className="text-xs text-indigo-600 hover:text-indigo-700 font-medium"
+                  >
+                    Edit Role
                   </button>
                 </PermissionGate>
                 <PermissionGate module="user_management" action="edit">

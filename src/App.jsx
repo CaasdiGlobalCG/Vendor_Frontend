@@ -7,6 +7,8 @@ import { NotificationProvider } from "./context/NotificationContext";
 import { RBACProvider } from "./rbac";
 import TeamPage from "./rbac/pages/TeamPage";
 import InviteAcceptPage from "./rbac/pages/InviteAcceptPage";
+import { ModuleGuard } from "./rbac/components/ModuleGuard";
+import UnauthorizedPage from "./pages/UnauthorizedPage";
 import SignUp from "./components/SignUp";
 import Home from "./pages/Home/Home";
 import UserProjectPage from './pages/UserProjectPage/UserProjectPage'; // Assuming UserProjectPage is here
@@ -257,6 +259,7 @@ function AppContent() {
       <Route path="/signup" element={<SignUp />} />
       <Route path="/login" element={<Login />} />
       <Route path="/invite/accept" element={<InviteAcceptPage />} />
+      <Route path="/unauthorized" element={<UnauthorizedPage />} />
       {/* Protect vendor onboarding routes behind RoleGuard */}
       <Route path="/Form1" element={<RoleGuard><Form1 /></RoleGuard>} />
       <Route path="/Form2" element={<Form2 />} />
@@ -271,13 +274,13 @@ function AppContent() {
       {/* Nested route for VendorDashboard */}
       <Route path="/VendorDashboard" element={<RoleGuard><VendorGuard><Layout /></VendorGuard></RoleGuard>}>
         <Route index element={<VendorDashboard mockProjects={mockProjects} />} />
-        <Route path="projects" element={<ProjectsPage mockProjects={mockProjects} />} />
-        <Route path="leads" element={<LeadsPage />} />
-        <Route path="leads/newleads" element={<NewLeadsPage />} />
-        <Route path="leads/sent" element={<SentLeadsPage />} />
-        <Route path="workspace" element={<WorkspaceList />} />
+        <Route path="projects" element={<ModuleGuard module="projects"><ProjectsPage mockProjects={mockProjects} /></ModuleGuard>} />
+        <Route path="leads" element={<ModuleGuard module="leads"><LeadsPage /></ModuleGuard>} />
+        <Route path="leads/newleads" element={<ModuleGuard module="leads"><NewLeadsPage /></ModuleGuard>} />
+        <Route path="leads/sent" element={<ModuleGuard module="leads"><SentLeadsPage /></ModuleGuard>} />
+        <Route path="workspace" element={<ModuleGuard module="workspace"><WorkspaceList /></ModuleGuard>} />
         <Route path="notifications" element={<NotificationsPage />} />
-        <Route path="team" element={<TeamPage />} />
+        <Route path="team" element={<ModuleGuard module="user_management"><TeamPage /></ModuleGuard>} />
 
       </Route>
       {/* PM PO Management Route */}
@@ -332,6 +335,10 @@ function VendorGuard({ children }) {
     // Avoid redirecting during hydration; otherwise users can briefly land on dashboard
     // and then get sent to Form1 due to an intermediate/unknown hasFilledForm state.
     if (isHydratingUser) return;
+
+    // Team members are pre-approved — always allow dashboard access.
+    // Their permissions are controlled by RBAC, not the onboarding gate.
+    if (currentUser?.isTeamMember === true) return;
 
     // Only redirect when we have a resolved user AND a resolved hasFilledForm boolean.
     const hasFilledFormRaw = currentUser?.hasFilledForm;

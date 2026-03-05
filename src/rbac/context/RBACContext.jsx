@@ -11,6 +11,7 @@
 import React, { createContext, useState, useEffect, useCallback, useContext, useMemo } from 'react';
 import { VendorContext } from '../../context/VendorContext';
 import config from '../../config/env';
+import authFetch from '../../utils/authFetch';
 
 export const RBACContext = createContext(null);
 
@@ -43,6 +44,7 @@ export const RBACProvider = ({ children }) => {
     accessibleModules: [],
     allModules: [],
     roleLevels: {},
+    platformAccess: [],
     isLoading: true,
     isFallback: false,
     hasRBAC: false,
@@ -71,7 +73,7 @@ export const RBACProvider = ({ children }) => {
         ? `${config.VENDOR_BACKEND_URL}/api/rbac/me?vendorId=${encodeURIComponent(vendorId)}`
         : `${config.VENDOR_BACKEND_URL}/api/rbac/me`;
 
-      const res = await fetch(url, {
+      const res = await authFetch(url, {
         credentials: 'include',
         headers,
       });
@@ -88,6 +90,7 @@ export const RBACProvider = ({ children }) => {
           permissions: ['*:*'],
           permissionMap: { '*': ['*'] },
           accessibleModules: ['*'],
+          platformAccess: ['vendor', 'client', 'sales'],
           isFallback: true,
         }));
         return;
@@ -107,6 +110,7 @@ export const RBACProvider = ({ children }) => {
           permissions: ['*:*'],
           permissionMap: { '*': ['*'] },
           accessibleModules: ['*'],
+          platformAccess: ['vendor', 'client', 'sales'],
           isFallback: true,
         }));
         return;
@@ -119,6 +123,7 @@ export const RBACProvider = ({ children }) => {
         accessibleModules: data.accessibleModules || [],
         allModules: data.allModules || [],
         roleLevels: data.roleLevels || {},
+        platformAccess: data.platformAccess || ['vendor'],
         isLoading: false,
         isFallback: data._fallback || false,
         hasRBAC: data.hasRBAC ?? true,
@@ -136,6 +141,7 @@ export const RBACProvider = ({ children }) => {
         permissions: ['*:*'],
         permissionMap: { '*': ['*'] },
         accessibleModules: ['*'],
+        platformAccess: ['vendor', 'client', 'sales'],
         isFallback: true,
       }));
     }
@@ -154,6 +160,7 @@ export const RBACProvider = ({ children }) => {
         accessibleModules: [],
         allModules: [],
         roleLevels: {},
+        platformAccess: [],
         isLoading: false,
         isFallback: false,
         hasRBAC: false,

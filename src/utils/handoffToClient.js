@@ -21,7 +21,7 @@ export async function redirectToClientWithHandoff(options = {}) {
       ...(token ? { Authorization: `Bearer ${token}` } : {}),
       'Content-Type': 'application/json',
     },
-    body: JSON.stringify(token ? { token } : {}),
+    body: JSON.stringify({ ...(token ? { token } : {}), targetPlatform: 'client' }),
   });
 
   if (!res.ok) {

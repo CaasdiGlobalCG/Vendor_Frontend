@@ -5,6 +5,7 @@ import { AuthProvider } from '../../../../../context/AuthContext';
 import { convertMeasurementToFeet, needsConversion } from '../../../../../utils/unitConverter';
 import { calculateRatePerSqft, calculateTotalRate, checkRateConsistency, determineCalculationTarget, formatCurrency } from '../../../../../utils/rateCalculator';
 import config from '../../../../../config/env';
+import authFetch from '../../../../../utils/authFetch';
 import html2pdf from 'html2pdf.js';
 import { createRoot } from 'react-dom/client';
 import StandardPreview from '../shared/StandardPreview.jsx';
@@ -1664,7 +1665,7 @@ const NewInvoiceComponentInner = ({ onBack, projectId, initialData, duplicateMod
             console.log('Uploading PDF to S3 via backend:', { fileName, fileSize: pdfBlob.size });
             
             // Use backend endpoint to avoid CORS issues
-            const response = await fetch(`/api/files/upload`, {
+            const response = await authFetch(`/api/files/upload`, {
                 method: 'POST',
                 body: formData,
                 credentials: 'include'

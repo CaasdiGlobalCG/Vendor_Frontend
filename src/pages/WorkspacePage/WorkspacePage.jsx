@@ -32,6 +32,7 @@ import IncomingCallNotification from './components/modals/IncomingCallNotificati
 import ActiveCallInterface from './components/modals/ActiveCallInterface';
 import useVideoCall from '../../hooks/useVideoCall';
 import config from '../../config/env';
+import authFetch from '../../utils/authFetch';
 
 const WorkspacePage = () => {
   const navigate = useNavigate();
@@ -1554,7 +1555,7 @@ const WorkspacePage = () => {
       const callData = notification.data;
       
       // Decline the call via API
-      await fetch('/api/calls/decline', {
+      await authFetch('/api/calls/decline', {
         method: 'POST',
         credentials: 'include',
         headers: {
@@ -1581,7 +1582,7 @@ const WorkspacePage = () => {
       console.log('🛑 Ending call:', activeCall?.meetingId);
       
       // End the call via API
-      await fetch('/api/calls/end', {
+      await authFetch('/api/calls/end', {
         method: 'POST',
         credentials: 'include',
         headers: {

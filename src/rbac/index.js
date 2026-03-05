@@ -15,6 +15,7 @@ export { usePermission } from './hooks/usePermission';
 
 // ── Components ──
 export { PermissionGate, PermissionText } from './components/PermissionGate';
+export { ModuleGuard } from './components/ModuleGuard';
 export { RoleBadge } from './components/RoleBadge';
 export { PermissionMatrix } from './components/PermissionMatrix';
 export { MemberList } from './components/MemberList';

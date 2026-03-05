@@ -1,6 +1,7 @@
 import React, { useContext, useEffect, useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { VendorContext } from '../../context/VendorContext';
+import { PermissionGate } from '../../rbac/components/PermissionGate';
 import { ArrowPathIcon, RectangleGroupIcon } from '@heroicons/react/24/outline';
 import config from '../../config/env';
 
@@ -244,14 +245,16 @@ const WorkspaceList = () => {
                   )}
                 </div>
 
-                <button
-                  type="button"
-                  onClick={() => openWorkspace(item)}
-                  className="inline-flex items-center gap-2 bg-gradient-to-r from-emerald-500 to-teal-600 text-white text-sm font-semibold px-5 py-2.5 rounded-xl shadow-md hover:from-emerald-600 hover:to-teal-700 hover:shadow-lg transition-all"
-                >
-                  <RectangleGroupIcon className="w-4 h-4" />
-                  Open workspace
-                </button>
+                <PermissionGate module="workspace" action="view">
+                  <button
+                    type="button"
+                    onClick={() => openWorkspace(item)}
+                    className="inline-flex items-center gap-2 bg-gradient-to-r from-emerald-500 to-teal-600 text-white text-sm font-semibold px-5 py-2.5 rounded-xl shadow-md hover:from-emerald-600 hover:to-teal-700 hover:shadow-lg transition-all"
+                  >
+                    <RectangleGroupIcon className="w-4 h-4" />
+                    Open workspace
+                  </button>
+                </PermissionGate>
               </div>
             </div>
           ))}

@@ -1,5 +1,6 @@
 import React, { createContext, useState, useEffect, useCallback } from "react";
 import config from "../config/env";
+import authFetch from "../utils/authFetch";
 
 export const VendorContext = createContext();
 
@@ -29,9 +30,10 @@ export const VendorProvider = ({ children }) => {
       let status = null;
       let hasFilledForm = null;
       let email = null;
+      let isTeamMember = false;
 
       const tryMe = async () => {
-        const res = await fetch(`${config.VENDOR_BACKEND_URL}/api/vendor/me`, {
+        const res = await authFetch(`${config.VENDOR_BACKEND_URL}/api/vendor/me`, {
           credentials: 'include',
         });
         if (!res.ok) return { ok: false, status: res.status };
@@ -67,6 +69,7 @@ export const VendorProvider = ({ children }) => {
         status = v?.status != null ? String(v.status).trim() : null;
         hasFilledForm = typeof v?.hasFilledForm === 'boolean' ? v.hasFilledForm : null;
         email = email || v?.email || v?.vendorDetails?.primaryContactEmail || null;
+        isTeamMember = v?.isTeamMember === true;
       }
 
       // If neither token nor session resolves a user, clear state.
@@ -84,6 +87,7 @@ export const VendorProvider = ({ children }) => {
         name,
         status,
         hasFilledForm,
+        isTeamMember,
       });
     } catch (error) {
       console.error('VendorContext - Failed to hydrate current user:', error);

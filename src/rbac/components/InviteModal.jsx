@@ -10,6 +10,7 @@
 import React, { useState } from 'react';
 import { getRoleDetails, createRole } from '../api/rbacApi';
 import { EditablePermissionMatrix } from './EditablePermissionMatrix';
+import { usePermission } from '../hooks/usePermission';
 
 /** Hierarchy level options (excludes Super Admin = 0) */
 const HIERARCHY_OPTIONS = [
@@ -27,11 +28,19 @@ const HIERARCHY_OPTIONS = [
  * @param {Function} props.onClose  — close the modal
  */
 export function InviteModal({ roles, onSubmit, onClose }) {
+
+  // ── Permission check: can this user create roles? ──
+  const { can } = usePermission();
+  const canCreateRoles = can('user_management', 'manage');
+
   // ── Common fields ──
   const [email, setEmail] = useState('');
   const [message, setMessage] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState(null);
+
+  // Platform access is auto-derived from permissions on the backend
+  // — no manual platform selection needed
 
   // ── Role mode toggle: 'select' | 'create' ──
   const [roleMode, setRoleMode] = useState('select');
@@ -189,10 +198,12 @@ export function InviteModal({ roles, onSubmit, onClose }) {
                 className={`flex-1 px-3 py-2 text-sm font-medium transition-colors ${
                   roleMode === 'select' ? 'bg-teal-600 text-white' : 'bg-gray-50 text-gray-600 hover:bg-gray-100'
                 }`}>Select Existing Role</button>
+              {canCreateRoles && (
               <button type="button" onClick={() => handleModeSwitch('create')}
                 className={`flex-1 px-3 py-2 text-sm font-medium transition-colors ${
                   roleMode === 'create' ? 'bg-teal-600 text-white' : 'bg-gray-50 text-gray-600 hover:bg-gray-100'
                 }`}>+ Create New Role</button>
+              )}
             </div>
 
             {/* ====== EXISTING ROLE MODE ====== */}
@@ -360,6 +371,14 @@ export function InviteModal({ roles, onSubmit, onClose }) {
                 </div>
               </div>
             )}
+          </div>
+
+          {/* ── Platform Access Info ── */}
+          <div className="bg-blue-50 border border-blue-200 rounded-lg px-4 py-3">
+            <p className="text-xs text-blue-700">
+              <span className="font-medium">Platform access</span> is automatically determined by the
+              permissions assigned to this member's role. No manual platform selection is needed.
+            </p>
           </div>
 
           {/* Message */}

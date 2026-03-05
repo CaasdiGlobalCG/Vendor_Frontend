@@ -6,6 +6,7 @@ import { Link, useNavigate } from 'react-router-dom';
 // Using Heroicons consistent with the project
 import { CheckIcon, XMarkIcon, ClockIcon, DocumentArrowDownIcon, PaperClipIcon, RectangleGroupIcon } from '@heroicons/react/24/solid'; // Removed file upload icons
 import { VendorContext } from '../../context/VendorContext';
+import { PermissionGate } from '../../rbac/components/PermissionGate';
 import config from '../../config/env';
 // Expect 'project' prop and onApprove/onReject from LeadsPage
 const ProjectRequestCard = ({ project, onApprove, onReject, isCompareMode, isSelected, onSelectRequest }) => {
@@ -439,94 +440,100 @@ const ProjectRequestCard = ({ project, onApprove, onReject, isCompareMode, isSel
                 <div className="flex space-x-2 mt-4 sm:mt-0 flex-shrink-0">
                     {/* Workspace Button - Only show for PM-approved collaborative projects */}
                     {project.pmDecision?.approved && project.pmDecision?.workspaceAccess ? (
+                      <PermissionGate module="workspace" action="view">
                         <button
-                            onClick={openWorkspace}
-                            disabled={isCompareMode}
-                            title={isCompareMode ? "Cancel Compare mode to access workspace" : "Open collaborative workspace with PM"}
-                            // APPLIED: Gradient, larger size, bolder font, stronger shadow, and hover scale effect
-                            className={`flex items-center justify-center gap-2 bg-gradient-to-r from-green-500 to-emerald-600 text-white text-sm font-bold px-5 py-3 rounded-xl shadow-lg transition-all duration-200 transform hover:scale-105 ${
-                                isCompareMode ? 'opacity-50 cursor-not-allowed hover:from-green-500 hover:to-emerald-600 transform-none' : 'hover:from-green-600 hover:to-emerald-700 hover:shadow-xl'
-                            }`}
+                          onClick={openWorkspace}
+                          disabled={isCompareMode}
+                          title={isCompareMode ? "Cancel Compare mode to access workspace" : "Open collaborative workspace with PM"}
+                          // APPLIED: Gradient, larger size, bolder font, stronger shadow, and hover scale effect
+                          className={`flex items-center justify-center gap-2 bg-gradient-to-r from-green-500 to-emerald-600 text-white text-sm font-bold px-5 py-3 rounded-xl shadow-lg transition-all duration-200 transform hover:scale-105 ${
+                            isCompareMode ? 'opacity-50 cursor-not-allowed hover:from-green-500 hover:to-emerald-600 transform-none' : 'hover:from-green-600 hover:to-emerald-700 hover:shadow-xl'
+                          }`}
                         >
-                            <RectangleGroupIcon className="h-4 w-4" />
-                            <span className="hidden sm:inline">Collaborative</span>
+                          <RectangleGroupIcon className="h-4 w-4" />
+                          <span className="hidden sm:inline">Collaborative</span>
                         </button>
+                      </PermissionGate>
                     ) : project.status === 'approved' && project.sentByPmId ? (
+                      <PermissionGate module="workspace" action="view">
                         <button
-                            onClick={openWorkspace}
-                            disabled={isCompareMode}
-                            title={isCompareMode ? "Cancel Compare mode to access workspace" : "Awaiting PM approval for collaborative workspace"}
-                            // APPLIED: Gradient, larger size, bolder font, stronger shadow, and hover scale effect
-                            className={`flex items-center justify-center gap-2 bg-gradient-to-r from-amber-500 to-yellow-600 text-white text-sm font-bold px-5 py-3 rounded-xl shadow-lg transition-all duration-200 transform hover:scale-105 ${
-                                isCompareMode ? 'opacity-50 cursor-not-allowed hover:from-amber-500 hover:to-yellow-600 transform-none' : 'hover:from-amber-600 hover:to-yellow-700 hover:shadow-xl'
-                            }`}
+                          onClick={openWorkspace}
+                          disabled={isCompareMode}
+                          title={isCompareMode ? "Cancel Compare mode to access workspace" : "Awaiting PM approval for collaborative workspace"}
+                          // APPLIED: Gradient, larger size, bolder font, stronger shadow, and hover scale effect
+                          className={`flex items-center justify-center gap-2 bg-gradient-to-r from-amber-500 to-yellow-600 text-white text-sm font-bold px-5 py-3 rounded-xl shadow-lg transition-all duration-200 transform hover:scale-105 ${
+                            isCompareMode ? 'opacity-50 cursor-not-allowed hover:from-amber-500 hover:to-yellow-600 transform-none' : 'hover:from-amber-600 hover:to-yellow-700 hover:shadow-xl'
+                          }`}
                         >
-                            <RectangleGroupIcon className="h-4 w-4" />
-                            <span className="hidden sm:inline">Pending PM</span>
+                          <RectangleGroupIcon className="h-4 w-4" />
+                          <span className="hidden sm:inline">Pending PM</span>
                         </button>
+                      </PermissionGate>
                     ) : null}
                     
                     {isPending ? ( // Only show approve/reject buttons if status is null (pending)
-                        <>
+                        <PermissionGate module="leads" action="edit">
+                          <>
                             <button
-                                onClick={handleApprove}
-                                // Disable button in compare mode or while loading
-                                disabled={isCompareMode || isApproving || isRejecting}
-                                title={
-                                    isCompareMode ? "Cancel Compare mode to accept" : 
-                                    isApproving ? "Accepting..." : 
-                                    isRejecting ? "Processing reject..." : 
-                                    "Accept this lead (quotation upload required)"
-                                }
-                                // APPLIED: Gradient, larger size, bolder font, stronger shadow, and hover scale effect
-                                className={`flex items-center justify-center gap-2 bg-gradient-to-r from-emerald-500 to-teal-600 text-white text-sm font-bold px-5 py-3 rounded-xl shadow-lg transition-all duration-200 transform hover:scale-105 ${
-                                    (isCompareMode || isApproving || isRejecting) ? 'opacity-50 cursor-not-allowed hover:from-emerald-500 hover:to-teal-600 transform-none' : 'hover:from-emerald-600 hover:to-teal-700 hover:shadow-xl'
-                                }`}
+                              onClick={handleApprove}
+                              // Disable button in compare mode or while loading
+                              disabled={isCompareMode || isApproving || isRejecting}
+                              title={
+                                isCompareMode ? "Cancel Compare mode to accept" : 
+                                isApproving ? "Accepting..." : 
+                                isRejecting ? "Processing reject..." : 
+                                "Accept this lead (quotation upload required)"
+                              }
+                              // APPLIED: Gradient, larger size, bolder font, stronger shadow, and hover scale effect
+                              className={`flex items-center justify-center gap-2 bg-gradient-to-r from-emerald-500 to-teal-600 text-white text-sm font-bold px-5 py-3 rounded-xl shadow-lg transition-all duration-200 transform hover:scale-105 ${
+                                (isCompareMode || isApproving || isRejecting) ? 'opacity-50 cursor-not-allowed hover:from-emerald-500 hover:to-teal-600 transform-none' : 'hover:from-emerald-600 hover:to-teal-700 hover:shadow-xl'
+                              }`}
                             >
-                                {isApproving ? (
-                                    <>
-                                        <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                                        </svg>
-                                        Processing
-                                    </>
-                                ) : (
-                                    <>
-                                        <CheckIcon className="h-4 w-4" /> Accept with Quotation
-                                    </>
-                                )}
+                              {isApproving ? (
+                                <>
+                                  <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                  </svg>
+                                  Processing
+                                </>
+                              ) : (
+                                <>
+                                  <CheckIcon className="h-4 w-4" /> Accept with Quotation
+                                </>
+                              )}
                             </button>
                             <button
-                                onClick={handleReject}
-                                // Disable button in compare mode or while loading
-                                disabled={isCompareMode || isApproving || isRejecting}
-                                title={
-                                    isCompareMode ? "Cancel Compare mode to reject" : 
-                                    isRejecting ? "Rejecting..." : 
-                                    isApproving ? "Processing approve..." : 
-                                    "Reject this lead"
-                                }
-                                // APPLIED: Gradient, larger size, bolder font, stronger shadow, and hover scale effect
-                                className={`flex items-center justify-center gap-2 bg-gradient-to-r from-red-500 to-rose-600 text-white px-5 py-3 rounded-xl shadow-lg transition-all duration-200 transform hover:scale-105 font-bold ${
-                                    (isCompareMode || isApproving || isRejecting) ? 'opacity-50 cursor-not-allowed hover:from-red-500 hover:to-rose-600 transform-none' : 'hover:from-red-600 hover:to-rose-700 hover:shadow-xl'
-                                }`}
+                              onClick={handleReject}
+                              // Disable button in compare mode or while loading
+                              disabled={isCompareMode || isApproving || isRejecting}
+                              title={
+                                isCompareMode ? "Cancel Compare mode to reject" : 
+                                isRejecting ? "Rejecting..." : 
+                                isApproving ? "Processing approve..." : 
+                                "Reject this lead"
+                              }
+                              // APPLIED: Gradient, larger size, bolder font, stronger shadow, and hover scale effect
+                              className={`flex items-center justify-center gap-2 bg-gradient-to-r from-red-500 to-rose-600 text-white px-5 py-3 rounded-xl shadow-lg transition-all duration-200 transform hover:scale-105 font-bold ${
+                                (isCompareMode || isApproving || isRejecting) ? 'opacity-50 cursor-not-allowed hover:from-red-500 hover:to-rose-600 transform-none' : 'hover:from-red-600 hover:to-rose-700 hover:shadow-xl'
+                              }`}
                             >
-                                {isRejecting ? (
-                                    <>
-                                        <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                                        </svg>
-                                        Processing
-                                    </>
-                                ) : (
-                                    <>
-                                        <XMarkIcon className="h-4 w-4" /> Reject
-                                    </>
-                                )}
+                              {isRejecting ? (
+                                <>
+                                  <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                  </svg>
+                                  Processing
+                                </>
+                              ) : (
+                                <>
+                                  <XMarkIcon className="h-4 w-4" /> Reject
+                                </>
+                              )}
                             </button>
-                        </>
+                          </>
+                        </PermissionGate>
                     ) : (
                         // APPLIED: Styled Final Status Chip (larger size, bolder font, border, bg/text colors)
                         <span className={`text-sm font-bold px-5 py-3 rounded-xl border-2 ${project.status === 'approved' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-red-50 text-red-700 border-red-200'}`}>
