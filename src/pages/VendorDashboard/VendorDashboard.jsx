@@ -78,15 +78,27 @@ const generateRealisticRevenueData = (years) => {
 // Generate 5 years of monthly data ending today
 const realisticRevenueData = generateRealisticRevenueData(5);
 
+const PROJECTS_CACHE_KEY = 'vd_projects_cache';
+const WORKSPACE_STATUSES_CACHE_KEY = 'vd_workspace_statuses_cache';
+
+const readCache = (key) => {
+  try { return JSON.parse(sessionStorage.getItem(key)); } catch { return null; }
+};
+const writeCache = (key, value) => {
+  try { sessionStorage.setItem(key, JSON.stringify(value)); } catch {}
+};
+
 export const VendorDashboard = () => {
   const { currentUser, vendorData, setVendorData, setUser } = useContext(VendorContext);
   const [vendorName, setVendorName] = useState("");
-  const [projects, setProjects] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [projects, setProjects] = useState(() => readCache(PROJECTS_CACHE_KEY) || []);
+  // Show loading only when there is no cached data to display
+  const [isLoading, setIsLoading] = useState(() => !(readCache(PROJECTS_CACHE_KEY)?.length > 0));
   const [error, setError] = useState(null);
-  const [workspaceStatuses, setWorkspaceStatuses] = useState({}); // { projectId: status }
+  const [workspaceStatuses, setWorkspaceStatuses] = useState(() => readCache(WORKSPACE_STATUSES_CACHE_KEY) || {});
   const [userHasPasskey, setUserHasPasskey] = useState(false);
   const [checkingPasskey, setCheckingPasskey] = useState(true);
+  const [tenders, setTenders] = useState([]);
   
   // State to track API call status
   const [vendorInfoFetched, setVendorInfoFetched] = useState(false);
@@ -228,7 +240,8 @@ export const VendorDashboard = () => {
   const fetchProjects = useCallback(async () => {
     if (projectsFetched) return;
     try {
-      setIsLoading(true);
+      // Only show loading spinner when there's nothing cached to display
+      if (projects.length === 0) setIsLoading(true);
       const vendorId = currentUser?.vendorId || vendorData?.vendorId || currentUser?.id;
       if (!vendorId) {
         setIsLoading(false);
@@ -271,6 +284,7 @@ export const VendorDashboard = () => {
         }));
       }
       setProjects(workspaceProjects);
+      writeCache(PROJECTS_CACHE_KEY, workspaceProjects);
       // Fetch real workspace status for each project
       const statusMap = {};
       await Promise.all(
@@ -285,6 +299,7 @@ export const VendorDashboard = () => {
         })
       );
       setWorkspaceStatuses(statusMap);
+      writeCache(WORKSPACE_STATUSES_CACHE_KEY, statusMap);
       setProjectsFetched(true);
       setIsLoading(false);
     } catch (error) {
@@ -347,6 +362,37 @@ export const VendorDashboard = () => {
     ? Math.round((completedProjects / totalProjects) * 100) 
     : 0;
     
+  // Fetch real tenders for this vendor from the proxy route
+  useEffect(() => {
+    const vendorId = vendorData?.vendorId || currentUser?.vendorId || currentUser?.id;
+    if (!vendorId) return;
+
+    const fetchTenders = async () => {
+      try {
+        const res = await fetch(`/api/vendor/tenders?vendorId=${encodeURIComponent(vendorId)}`, {
+          credentials: 'include',
+        });
+        const json = await res.json();
+        if (json.success && Array.isArray(json.data) && json.data.length > 0) {
+          setTenders(
+            json.data.map((t) => ({
+              title: t.title || t.tenderTitle || 'Untitled Tender',
+              description: t.description || t.tenderDescription || '',
+              closingDate: t.closingDate
+                ? new Date(t.closingDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })
+                : t.deadline || '',
+              amount: t.amount || t.budget || t.estimatedValue || '',
+            }))
+          );
+        }
+      } catch (err) {
+        console.warn('[VendorDashboard] Could not load tenders:', err.message);
+      }
+    };
+
+    fetchTenders();
+  }, [vendorData?.vendorId, currentUser?.vendorId, currentUser?.id]);
+
   // Log vendor data for debugging - only once on mount
   useEffect(() => {
     console.log("VendorDashboard - Current User:", currentUser);
@@ -403,7 +449,7 @@ export const VendorDashboard = () => {
 
         {/* Right Column */}
         <div className="space-y-4 mt-4 lg:mt-0 min-w-0">
-          <TenderCarousel tenders={mockTenders} />
+          <TenderCarousel tenders={tenders.length > 0 ? tenders : mockTenders} />
           <RevenueChart data={realisticRevenueData} />
         </div>
       </div>

@@ -30,7 +30,9 @@ const WorkspaceMain = ({
   onCreateSubtask,  onActivityCreated,
   userRole,
   userPermissions,
-  onZoomChange
+  onZoomChange,
+  canvasWebSocket,
+  workspaceCollaborators,
 }) => {
   const canvasRef = useRef(null);
   
@@ -158,6 +160,8 @@ const WorkspaceMain = ({
             userRole={userRole}
             userPermissions={userPermissions}
             onZoomChange={onZoomChange}
+            canvasWebSocket={canvasWebSocket}
+            workspaceCollaborators={workspaceCollaborators}
           />
         ) : (
           // Show subtasks list when task is selected but no subtask

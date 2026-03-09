@@ -172,9 +172,10 @@ export const NotificationProvider = ({ children }) => {
   
   // Helper function to add a notification to state
   const addNotification = (notification) => {
+    if (!notification || !notification.id) return;
     setNotifications(prev => {
       // Check if notification already exists to avoid duplicates
-      const exists = prev.some(n => n.id === notification.id);
+      const exists = prev.some(n => n && n.id === notification.id);
       if (exists) {
         console.log('NotificationContext - Notification already exists, not adding duplicate:', notification.id);
         return prev;
@@ -310,7 +311,7 @@ export const NotificationProvider = ({ children }) => {
       
       // Always update notifications to ensure we have the latest data
       // This ensures we don't miss any notifications that might have been created recently
-      const currentIds = new Set(notifications.map(n => n.id));
+      const currentIds = new Set(notifications.filter(n => n).map(n => n.id));
       
       // Check if data.notifications exists and is an array before filtering
       const newNotifications = (data.notifications && Array.isArray(data.notifications)) 
@@ -365,9 +366,9 @@ export const NotificationProvider = ({ children }) => {
         setNotifications(prev => {
           // Keep WebSocket-only notifications (call invitations, call_ended, call_declined)
           const wsOnlyNotifications = prev.filter(n => 
-            n.type === 'call_invitation' || 
+            n && (n.type === 'call_invitation' || 
             n.type === 'call_ended' || 
-            n.type === 'call_declined'
+            n.type === 'call_declined')
           );
           
           // Merge WebSocket notifications with fetched notifications, removing duplicates
@@ -384,7 +385,7 @@ export const NotificationProvider = ({ children }) => {
         
         // Update the unread count based on all notifications (including WebSocket ones)
         setNotifications(allNotifs => {
-          const validUnreadCount = allNotifs.filter(n => !n.isRead).length;
+          const validUnreadCount = allNotifs.filter(n => n && !n.isRead).length;
           setUnreadCount(validUnreadCount);
           return allNotifs; // Don't modify, just read
         });

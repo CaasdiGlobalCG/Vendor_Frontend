@@ -3,7 +3,8 @@ import { useParams } from 'react-router-dom';
 import { getWorkspaceById, updateWorkspace } from '../../utils/workspaceApi';
 import { persistIsImportant, persistDeadline, persistTextContent, persistNodeDataPatch, getTimeLeft as calculateTimeLeft, formatTimeLeft } from '../../utils/nodePersistence';
 import { Handle, Position, useReactFlow } from 'reactflow';
-import { Download, Eye, ExternalLink, X, ArrowRight, Check, X as XIcon, Menu, Star, Heart, Info, HelpCircle, Lock, Send, MoreVertical, Copy, Edit2, Trash2, FileText } from 'lucide-react';
+import { Download, Eye, ExternalLink, X, ArrowRight, Check, X as XIcon, Menu, Star, Heart, Info, HelpCircle, Lock, Send, MoreVertical, Copy, Edit2, Trash2, FileText, MessageCircle } from 'lucide-react';
+import CommentThread from '../comments/CommentThread';
 import { VendorContext } from '../../../../context/VendorContext';
 import FormTemplate from '../forms/FormTemplate';
 import TableRenderer from '../forms/TableRenderer';
@@ -49,6 +50,10 @@ const ElementNode = ({ id, data, isConnectable, selected }) => {
   // Menu dropdown state
   const [showMenuDropdown, setShowMenuDropdown] = useState(false);
   const menuDropdownRef = useRef(null);
+
+  // Comment thread state
+  const [showComments, setShowComments] = useState(false);
+  const commentPopoverRef = useRef(null);
   
 
   
@@ -106,7 +111,60 @@ const ElementNode = ({ id, data, isConnectable, selected }) => {
   const { currentUser } = useContext(VendorContext);
   const [inputValue, setInputValue] = useState(data?.inputValue || '');
   const [textareaValue, setTextareaValue] = useState(data?.textareaValue || '');
+  const [commentBoxOpen, setCommentBoxOpen] = useState(!data?.textareaValue?.trim()); // open if empty, closed if already has content
   const [checkboxValue, setCheckboxValue] = useState(false);
+
+  // Comment handlers
+  const nodeComments = data.comments || [];
+  const unresolvedCommentCount = nodeComments.filter(c => !c.resolved).length;
+
+  const handleAddComment = async (nodeId, comment) => {
+    const updatedComments = [...nodeComments, comment];
+    try {
+      await persistNodeDataPatch(nodeId, { comments: updatedComments }, setNodes, workspaceId);
+      // Send @mention notifications via API
+      if (comment.mentionedUserIds && comment.mentionedUserIds.length > 0) {
+        try {
+          await fetch('/api/workspace/comments/mention', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              workspaceId,
+              nodeId,
+              elementName: data.name || data.type || 'element',
+              commentText: comment.text,
+              authorName: comment.authorName,
+              mentionedUserIds: comment.mentionedUserIds,
+            }),
+          });
+        } catch (err) {
+          console.error('Failed to send mention notifications:', err);
+        }
+      }
+    } catch (err) {
+      console.error('Failed to add comment:', err);
+    }
+  };
+
+  const handleResolveComment = async (nodeId, commentId) => {
+    const updatedComments = nodeComments.map(c =>
+      c.id === commentId ? { ...c, resolved: !c.resolved, resolvedAt: !c.resolved ? new Date().toISOString() : null } : c
+    );
+    try {
+      await persistNodeDataPatch(nodeId, { comments: updatedComments }, setNodes, workspaceId);
+    } catch (err) {
+      console.error('Failed to resolve comment:', err);
+    }
+  };
+
+  const handleDeleteComment = async (nodeId, commentId) => {
+    const updatedComments = nodeComments.filter(c => c.id !== commentId);
+    try {
+      await persistNodeDataPatch(nodeId, { comments: updatedComments }, setNodes, workspaceId);
+    } catch (err) {
+      console.error('Failed to delete comment:', err);
+    }
+  };
   const [radioValue, setRadioValue] = useState('');
   
   // Auto-save refs for debouncing
@@ -1801,6 +1859,206 @@ const ElementNode = ({ id, data, isConnectable, selected }) => {
     );
   }
 
+  // ============================================================
+  // Figma-style Comment Pin for textarea type
+  // Collapsed = avatar pin only | Hover/Click = expand comment box
+  // ============================================================
+  if (data.type === 'textarea') {
+    const authorName = data.addedBy || currentUser?.name || 'You';
+    const authorInitial = authorName.charAt(0).toUpperCase();
+    const isLocked = ['sent_to_pm', 'pm_approved', 'client_approved', 'locked'].includes(data.approvalStatus || 'draft');
+    const hasContent = !!(textareaValue && textareaValue.trim());
+    const addedDate = data.addedAt ? new Date(data.addedAt) : new Date();
+    const timeAgo = (() => {
+      const diff = Date.now() - addedDate.getTime();
+      const mins = Math.floor(diff / 60000);
+      if (mins < 1) return 'just now';
+      if (mins < 60) return `${mins}m ago`;
+      const hrs = Math.floor(mins / 60);
+      if (hrs < 24) return `${hrs}h ago`;
+      const days = Math.floor(hrs / 24);
+      return `${days}d ago`;
+    })();
+
+    // Submit handler — save immediately and collapse
+    const handleCommentSubmit = async () => {
+      if (!textareaValue?.trim() || isLocked) return;
+      try {
+        await persistTextContent(id, textareaValue, 'textareaValue', setNodes, workspaceId);
+      } catch (err) {
+        console.error('Failed to save comment:', err);
+      }
+      setCommentBoxOpen(false);
+    };
+
+    return (
+      <div
+        className={`relative group ${selected ? 'z-10' : ''}`}
+        style={{ width: 36, height: 36 }}
+      >
+        {/* Connection Handles */}
+        <Handle type="source" position={Position.Top} id="top-out" style={{ left: '48%' }}
+          className="w-2.5 h-2.5 !bg-gray-400 !border-2 !border-white opacity-0 group-hover:opacity-100 transition-opacity" isConnectable={isConnectable} />
+        <Handle type="target" position={Position.Top} id="top-in" style={{ left: '52%' }}
+          className="w-2.5 h-2.5 !bg-gray-400 !border-2 !border-white opacity-0 group-hover:opacity-100 transition-opacity" isConnectable={isConnectable} />
+        <Handle type="source" position={Position.Right} id="right-out" style={{ top: '48%' }}
+          className="w-2.5 h-2.5 !bg-gray-400 !border-2 !border-white opacity-0 group-hover:opacity-100 transition-opacity" isConnectable={isConnectable} />
+        <Handle type="target" position={Position.Right} id="right-in" style={{ top: '52%' }}
+          className="w-2.5 h-2.5 !bg-gray-400 !border-2 !border-white opacity-0 group-hover:opacity-100 transition-opacity" isConnectable={isConnectable} />
+        <Handle type="source" position={Position.Bottom} id="bottom-out" style={{ left: '48%' }}
+          className="w-2.5 h-2.5 !bg-gray-400 !border-2 !border-white opacity-0 group-hover:opacity-100 transition-opacity" isConnectable={isConnectable} />
+        <Handle type="target" position={Position.Bottom} id="bottom-in" style={{ left: '52%' }}
+          className="w-2.5 h-2.5 !bg-gray-400 !border-2 !border-white opacity-0 group-hover:opacity-100 transition-opacity" isConnectable={isConnectable} />
+        <Handle type="source" position={Position.Left} id="left-out" style={{ top: '48%' }}
+          className="w-2.5 h-2.5 !bg-gray-400 !border-2 !border-white opacity-0 group-hover:opacity-100 transition-opacity" isConnectable={isConnectable} />
+        <Handle type="target" position={Position.Left} id="left-in" style={{ top: '52%' }}
+          className="w-2.5 h-2.5 !bg-gray-400 !border-2 !border-white opacity-0 group-hover:opacity-100 transition-opacity" isConnectable={isConnectable} />
+
+        {/* ── Avatar Pin (always visible) ── */}
+        <div
+          className={`
+            w-9 h-9 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 text-white
+            flex items-center justify-center text-sm font-bold shadow-lg border-2 border-white
+            cursor-pointer transition-transform hover:scale-110
+            ${isImportant ? 'ring-2 ring-yellow-400 ring-offset-1' : ''}
+          `}
+          onClick={(e) => { e.stopPropagation(); setCommentBoxOpen(true); }}
+        >
+          {authorInitial}
+        </div>
+
+        {/* Sequence number badge */}
+        {data.sequenceNumber && (
+          <div className="absolute -top-1.5 -right-1.5 z-30 w-5 h-5 bg-gradient-to-br from-green-500 to-emerald-600 text-white rounded-full flex items-center justify-center text-[9px] font-bold shadow-md border-2 border-white">
+            {data.sequenceNumber}
+          </div>
+        )}
+
+        {/* Small dot indicator when has content (so user knows there's a comment) */}
+        {hasContent && !commentBoxOpen && (
+          <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-blue-500 rounded-full border-2 border-white z-20" />
+        )}
+
+        {/* ── Comment Box — opens on pin click OR hover ── */}
+        <div
+          className={`
+            absolute top-10 left-0 z-40 transition-all duration-200 origin-top-left
+            ${commentBoxOpen
+              ? 'opacity-100 scale-100 pointer-events-auto'
+              : 'opacity-0 scale-95 pointer-events-none group-hover:opacity-100 group-hover:scale-100 group-hover:pointer-events-auto'
+            }
+          `}
+          style={{ minWidth: 260, maxWidth: 320 }}
+        >
+          {/* Speech-bubble triangle */}
+          <div className="w-3 h-3 bg-white border-l border-t border-gray-200 rotate-45 absolute -top-1.5 left-3 z-10" />
+
+          <div className={`bg-white rounded-xl shadow-2xl border overflow-hidden mt-1 ${
+            selected ? 'border-blue-500 ring-2 ring-blue-200' : 'border-gray-200'
+          } ${isImportant ? 'border-yellow-400 bg-yellow-50 ring-2 ring-yellow-200' : ''}`}>
+
+            {/* Header — author + timestamp + menu */}
+            <div className="flex items-center justify-between px-3 py-2 bg-gray-50 border-b border-gray-100">
+              <div className="flex items-center space-x-2">
+                <div className="w-5 h-5 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 text-white flex items-center justify-center text-[9px] font-bold flex-shrink-0">
+                  {authorInitial}
+                </div>
+                <span className="text-xs font-semibold text-gray-700 truncate max-w-[120px]">{authorName}</span>
+                <span className="text-[10px] text-gray-400">{timeAgo}</span>
+              </div>
+              <div className="flex items-center space-x-1">
+                {isImportant && (
+                  <span className="text-[10px] px-1.5 py-0.5 bg-yellow-200 text-yellow-800 rounded font-medium">★</span>
+                )}
+                {isLocked && (
+                  <Lock className="w-3 h-3 text-gray-400" />
+                )}
+                <div className="relative" ref={menuDropdownRef}>
+                  <button
+                    onClick={() => setShowMenuDropdown(!showMenuDropdown)}
+                    className="p-0.5 text-gray-300 hover:text-gray-600 hover:bg-gray-200 rounded transition-all"
+                  >
+                    <MoreVertical className="w-3.5 h-3.5" />
+                  </button>
+                  {showMenuDropdown && (
+                    <div className="absolute right-0 mt-1 w-36 bg-white border border-gray-200 rounded-lg shadow-xl z-50 py-1">
+                      <button onClick={handleDuplicate} className="w-full px-3 py-1.5 text-left text-xs text-gray-700 hover:bg-gray-50 flex items-center space-x-2">
+                        <Copy className="w-3 h-3 text-gray-400" /><span>Duplicate</span>
+                      </button>
+                      <button onClick={() => { const newImportantState = !isImportant; setIsImportant(newImportantState); persistIsImportant(id, newImportantState, setNodes, workspaceId).catch(err => console.error('Failed to persist:', err)); }}
+                        className="w-full px-3 py-1.5 text-left text-xs text-gray-700 hover:bg-gray-50 flex items-center space-x-2">
+                        <Star className="w-3 h-3 text-yellow-500" /><span>{isImportant ? 'Unmark Important' : 'Mark Important'}</span>
+                      </button>
+                      <button onClick={handleDelete} className="w-full px-3 py-1.5 text-left text-xs text-red-600 hover:bg-red-50 flex items-center space-x-2">
+                        <Trash2 className="w-3 h-3 text-red-400" /><span>Delete</span>
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* Text area body + send button */}
+            <div className="px-3 py-2">
+              <div className="flex items-end space-x-2">
+                <textarea
+                  value={textareaValue}
+                  onChange={(e) => !isLocked && setTextareaValue(e.target.value)}
+                  className={`flex-1 text-sm leading-relaxed bg-transparent border-0 resize-none focus:outline-none focus:ring-0 p-0 placeholder-gray-400 ${
+                    isLocked ? 'text-gray-400 cursor-not-allowed' : 'text-gray-700'
+                  }`}
+                  placeholder={isLocked ? 'Locked' : 'Type a comment...'}
+                  rows={Math.max(1, Math.min(6, (textareaValue || '').split('\n').length))}
+                  onClick={(e) => e.stopPropagation()}
+                  onKeyDown={(e) => {
+                    e.stopPropagation();
+                    // Ctrl/Cmd + Enter to submit
+                    if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') {
+                      e.preventDefault();
+                      handleCommentSubmit();
+                    }
+                  }}
+                  onFocus={(e) => { e.stopPropagation(); setCommentBoxOpen(true); }}
+                  readOnly={isLocked}
+                  style={{ minHeight: '28px', maxHeight: '160px', overflow: 'auto' }}
+                />
+                {/* Send / Enter button */}
+                {textareaValue?.trim() && !isLocked && (
+                  <button
+                    onClick={(e) => { e.stopPropagation(); handleCommentSubmit(); }}
+                    className="flex-shrink-0 w-7 h-7 rounded-full bg-blue-500 hover:bg-blue-600 text-white flex items-center justify-center transition-colors shadow-sm mb-0.5"
+                    title="Save comment (Ctrl+Enter)"
+                  >
+                    <Send className="w-3.5 h-3.5" style={{ transform: 'rotate(-45deg)', marginLeft: '1px' }} />
+                  </button>
+                )}
+              </div>
+            </div>
+
+            {/* Footer — approval status badge */}
+            {data.approvalStatus && data.approvalStatus !== 'pending' && (
+              <div className="px-3 py-1.5 border-t border-gray-100 bg-gray-50">
+                <span className={`inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium ${
+                  data.approvalStatus === 'client_approved' ? 'bg-green-100 text-green-700' :
+                  data.approvalStatus === 'pm_approved' ? 'bg-blue-100 text-blue-700' :
+                  data.approvalStatus === 'rejected' ? 'bg-red-100 text-red-700' :
+                  data.approvalStatus === 'sent_to_pm' ? 'bg-yellow-100 text-yellow-700' :
+                  'bg-gray-100 text-gray-600'
+                }`}>
+                  {data.approvalStatus === 'client_approved' ? '✓ Approved' :
+                   data.approvalStatus === 'pm_approved' ? '✓ PM Approved' :
+                   data.approvalStatus === 'rejected' ? '✗ Rejected' :
+                   data.approvalStatus === 'sent_to_pm' ? '⏳ Pending' :
+                   data.approvalStatus}
+                </span>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   // Determine wrapper classes based on element type
   const getWrapperClasses = () => {
     const baseClasses = `${isImportant ? 'bg-yellow-50' : 'bg-white'} border-2 rounded-xl shadow-xl relative group transition-all`;
@@ -2109,6 +2367,23 @@ const ElementNode = ({ id, data, isConnectable, selected }) => {
                 </div>
               )}
             </div>
+
+            {/* Comment Thread Button — icon only, sits next to menu */}
+            <button
+              onClick={(e) => { e.stopPropagation(); setShowComments(!showComments); }}
+              className={`relative p-1 rounded transition-all duration-200 ${
+                showComments ? 'text-blue-600 bg-blue-100' :
+                'text-gray-400 hover:text-blue-600 hover:bg-blue-50'
+              }`}
+              title={`Comments${unresolvedCommentCount > 0 ? ` (${unresolvedCommentCount})` : ''}`}
+            >
+              <MessageCircle className="w-4 h-4" />
+              {unresolvedCommentCount > 0 && (
+                <span className="absolute -top-1 -right-1 w-3.5 h-3.5 bg-blue-500 text-white rounded-full text-[8px] font-bold flex items-center justify-center border border-white">
+                  {unresolvedCommentCount}
+                </span>
+              )}
+            </button>
             
             {isTableElement() && (
               <button
@@ -2410,7 +2685,40 @@ const ElementNode = ({ id, data, isConnectable, selected }) => {
           E
         </div>
       )}
-      
+
+      {/* Comment count badge — bottom-left corner */}
+      {unresolvedCommentCount > 0 && !showComments && (
+        <button
+          onClick={(e) => { e.stopPropagation(); setShowComments(true); }}
+          className="absolute -bottom-2 -left-2 z-20 flex items-center space-x-0.5 px-1.5 py-0.5 bg-blue-500 text-white rounded-full text-[10px] font-bold shadow-md border-2 border-white hover:bg-blue-600 transition-colors cursor-pointer"
+          title={`${unresolvedCommentCount} comment${unresolvedCommentCount !== 1 ? 's' : ''}`}
+        >
+          <MessageCircle className="w-3 h-3" />
+          <span>{unresolvedCommentCount}</span>
+        </button>
+      )}
+
+      {/* Comment Thread Popover */}
+      {showComments && (
+        <div
+          ref={commentPopoverRef}
+          className="absolute top-0 -right-[320px] z-50"
+          style={{ width: 300 }}
+          onClick={(e) => e.stopPropagation()}
+        >
+          <CommentThread
+            nodeId={id}
+            comments={nodeComments}
+            collaborators={data.workspaceCollaborators || []}
+            onAddComment={handleAddComment}
+            onResolve={handleResolveComment}
+            onDeleteComment={handleDeleteComment}
+            isLocked={isElementLocked()}
+            onClose={() => setShowComments(false)}
+          />
+        </div>
+      )}
+
       {/* Table Preview Modal */}
       {showPreview && isTableElement() && (
         <TablePreviewModal

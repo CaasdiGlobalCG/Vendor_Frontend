@@ -27,6 +27,7 @@ import PermissionsModal from './components/PermissionsModal';
 import InviteCASModal from './components/InviteCASModal';
 import CostCalculatorsModal from './components/modals/CostCalculatorsModal';
 import useWebSocketNotifications from '../../hooks/useWebSocketNotifications';
+import useCanvasWebSocket from '../../hooks/useCanvasWebSocket';
 import StartCallModal from './components/modals/StartCallModal';
 import IncomingCallNotification from './components/modals/IncomingCallNotification';
 import ActiveCallInterface from './components/modals/ActiveCallInterface';
@@ -133,6 +134,11 @@ const WorkspacePage = () => {
     markAllAsRead,
     fetchNotifications
   } = useWebSocketNotifications(userId, userType);
+
+  // Canvas WebSocket hook for real-time collaboration
+  const canvasWebSocket = useCanvasWebSocket(workspaceId, currentUser, {
+    enabled: !!workspaceId && !!currentUser,
+  });
   
   // Debug logging (only when needed)
   if (!currentUser) {
@@ -1755,6 +1761,8 @@ const WorkspacePage = () => {
             onActivityCreated={triggerActivityRefresh}
             userRole={detectedUserRole}
             userPermissions={userPermissions}
+            canvasWebSocket={canvasWebSocket}
+            workspaceCollaborators={workspaceCollaborators}
           />
 
           <WorkspaceRightSidebar

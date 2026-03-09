@@ -28,7 +28,20 @@ import ContextMenu from './ContextMenu';
 import TaskCardConfigModal from './modals/TaskCardConfigModal';
 import { getFlowchartTemplate } from '../utils/flowchartTemplates';
 import { getWorkspaceById } from '../utils/workspaceApi';
+import { registerCanvasEmitter, unregisterCanvasEmitter } from '../utils/nodePersistence';
 import config from '../../../config/env';
+import RemoteCursor from './RemoteCursor';
+import {
+  nodeChangesToOps,
+  edgeChangesToOps,
+  createNodeAddOp,
+  createEdgeAddOp,
+  createNodeUpdateOp,
+  createNodeMoveOp,
+  createZoomChangeOp,
+  OperationBatcher,
+  applyRemoteOperation,
+} from '../utils/operationManager';
 
 // Custom CSS to ensure controls work properly and add auto-connection effects
 const controlsCSS = `
@@ -101,7 +114,9 @@ const edgeTypes = {
   onActivityCreated,
   userRole,
   userPermissions,
-  onZoomChange
+  onZoomChange,
+  canvasWebSocket,
+  workspaceCollaborators,
 }, ref) => {
   const { currentUser } = useContext(VendorContext);
 
@@ -364,7 +379,7 @@ const edgeTypes = {
   // Clean up nodes on initialization to remove orphaned parent references
   const initialNodes = cleanupOrphanedNodesHelper(canvasData.nodes);
   const [nodes, setNodesRaw, onNodesChange] = useNodesState(initialNodes);
-  const [edges, setEdges, onEdgesChange] = useEdgesState(canvasData.edges);
+  const [edges, setEdgesRaw, onEdgesChange] = useEdgesState(canvasData.edges);
   
   // Undo/Redo History Management
   const historyRef = useRef({
@@ -408,9 +423,9 @@ const edgeTypes = {
     if (previousSnapshot) {
       console.log('⏮️ Undo:', previousSnapshot);
       setNodesRaw(previousSnapshot.nodes);
-      setEdges(previousSnapshot.edges);
+      setEdgesRaw(previousSnapshot.edges);
     }
-  }, [createSnapshot, setNodesRaw, setEdges]);
+  }, [createSnapshot, setNodesRaw, setEdgesRaw]);
 
   // Redo function
   const handleRedo = useCallback(() => {
@@ -427,9 +442,9 @@ const edgeTypes = {
     if (nextSnapshot) {
       console.log('⏭️ Redo:', nextSnapshot);
       setNodesRaw(nextSnapshot.nodes);
-      setEdges(nextSnapshot.edges);
+      setEdgesRaw(nextSnapshot.edges);
     }
-  }, [createSnapshot, setNodesRaw, setEdges]);
+  }, [createSnapshot, setNodesRaw, setEdgesRaw]);
 
   // Keyboard shortcuts for Undo/Redo
   useEffect(() => {
@@ -460,25 +475,72 @@ const edgeTypes = {
     return () => document.removeEventListener('keydown', handleKeyDown);
   }, [handleUndo, handleRedo]);
   
+  // ── Refs for WebSocket-aware setNodes/setEdges wrappers ──
+  // Using refs so the wrappers stay referentially stable (no re-renders)
+  const emitOpRef = useRef(null);       // will point to emitOp
+  const taskIdRef = useRef(null);       // tracks selectedTask.id
+  const subtaskIdRef = useRef(null);    // tracks selectedSubtask.id
+
   // Wrapper around setNodes to validate parent-child relationships
+  // AND auto-emit NODE_ADD ops for newly added nodes via WebSocket
   const setNodes = useCallback((updateFn) => {
     try {
-      // If it's a function, call it with current nodes
       if (typeof updateFn === 'function') {
         setNodesRaw(currentNodes => {
           const updatedNodes = updateFn(currentNodes);
-          // Validate and clean before applying
           const validatedNodes = cleanupOrphanedNodesHelper(updatedNodes);
+
+          // Auto-detect & emit NODE_ADD for any new nodes
+          if (!isApplyingRemoteRef.current && Array.isArray(validatedNodes)) {
+            const prevIds = new Set(currentNodes.map(n => n.id));
+            const newNodes = validatedNodes.filter(n => !prevIds.has(n.id));
+            for (const node of newNodes) {
+              emitOpRef.current?.(createNodeAddOp(node, taskIdRef.current, subtaskIdRef.current));
+            }
+          }
+
           return validatedNodes;
         });
       } else {
-        // If it's an array, validate directly
-        const validatedNodes = cleanupOrphanedNodesHelper(updateFn);
-        setNodesRaw(validatedNodes);
+        // Array replacement — need callback form to compare previous
+        setNodesRaw(currentNodes => {
+          const validatedNodes = cleanupOrphanedNodesHelper(updateFn);
+
+          if (!isApplyingRemoteRef.current && Array.isArray(validatedNodes)) {
+            const prevIds = new Set(currentNodes.map(n => n.id));
+            const newNodes = validatedNodes.filter(n => !prevIds.has(n.id));
+            for (const node of newNodes) {
+              emitOpRef.current?.(createNodeAddOp(node, taskIdRef.current, subtaskIdRef.current));
+            }
+          }
+
+          return validatedNodes;
+        });
       }
     } catch (err) {
       console.error('❌ Error in setNodes wrapper:', err);
-      // Fail silently to prevent crashes
+    }
+  }, []);
+
+  // Wrapper around setEdges to auto-emit EDGE_ADD ops for newly added edges
+  const setEdges = useCallback((updateFn) => {
+    try {
+      setEdgesRaw(currentEdges => {
+        const next = typeof updateFn === 'function' ? updateFn(currentEdges) : updateFn;
+
+        // Auto-detect & emit EDGE_ADD for any new edges
+        if (!isApplyingRemoteRef.current && Array.isArray(next)) {
+          const prevIds = new Set(currentEdges.map(e => e.id));
+          const newEdges = next.filter(e => e.id && !prevIds.has(e.id));
+          for (const edge of newEdges) {
+            emitOpRef.current?.(createEdgeAddOp(edge, taskIdRef.current, subtaskIdRef.current));
+          }
+        }
+
+        return next;
+      });
+    } catch (err) {
+      console.error('❌ Error in setEdges wrapper:', err);
     }
   }, []);
 
@@ -508,6 +570,10 @@ const edgeTypes = {
 
   // Track the last added element for auto-connection
   const lastAddedNodeIdRef = useRef(null);
+  // Keep a ref of workspaceCollaborators so the node-loading effect can inject them immediately
+  const workspaceCollaboratorsRef = useRef(workspaceCollaborators || []);
+  // Counter to re-trigger collabs sync after canvas data loads from DynamoDB
+  const [canvasLoadedCounter, setCanvasLoadedCounter] = useState(0);
   // Flag to prevent workspace data refresh from overwriting local node changes
   const isUpdatingNodesLocallyRef = useRef(false);
   // Flag to skip the next canvas data sync after an auto-save response
@@ -695,12 +761,19 @@ const edgeTypes = {
     lastSyncedSubtaskIdRef.current = selectedSubtask?.id;
     
     // Directly clear and set nodes to ensure fresh data for new subtask
-    // Use setNodesRaw to bypass cleanup validation temporarily
+    // Use setNodesRaw/setEdgesRaw to bypass WS emission (this is data loading, not user action)
     if (Array.isArray(newCanvasData.nodes)) {
-      setNodesRaw(newCanvasData.nodes);
+      // Inject latest workspaceCollaborators from ref so @mention works immediately
+      const collabs = workspaceCollaboratorsRef.current;
+      const nodesWithCollabs = collabs.length > 0
+        ? newCanvasData.nodes.map(n => ({ ...n, data: { ...n.data, workspaceCollaborators: collabs } }))
+        : newCanvasData.nodes;
+      setNodesRaw(nodesWithCollabs);
+      // Bump counter so the sync effect re-runs if collaborators loaded later
+      setCanvasLoadedCounter(c => c + 1);
     }
     if (Array.isArray(newCanvasData.edges)) {
-      setEdges(newCanvasData.edges);
+      setEdgesRaw(newCanvasData.edges);
     }
     updateZoomLevel(newCanvasData.zoomLevel);
     
@@ -715,58 +788,154 @@ const edgeTypes = {
     }
   }, [selectedSubtask?.id, selectedSubtask?.updatedAt, workspace?.workspaceId, updateZoomLevel, nodes.length]);
 
-  // Auto-save workspace data when nodes or edges change
-  useEffect(() => {
-    // Auto-save effect triggered (log removed for performance)
+  // ====================================================================
+  // WebSocket-based real-time sync (replaces the old 2-second HTTP auto-save)
+  // ====================================================================
 
-    const wsId = workspace?.workspaceId || workspace?.id || workspace?._id;
+  // Flag to suppress emitting ops when applying remote changes
+  const isApplyingRemoteRef = useRef(false);
+
+  // Operation batcher — batches rapid ops (e.g., drag) into 50ms windows
+  const batcherRef = useRef(null);
+  useEffect(() => {
+    if (canvasWebSocket?.emitOperation) {
+      batcherRef.current = new OperationBatcher(canvasWebSocket.emitOperation, 50);
+    }
+    return () => {
+      batcherRef.current?.destroy();
+      batcherRef.current = null;
+    };
+  }, [canvasWebSocket?.emitOperation]);
+
+  // Helper to emit an op through the batcher or directly
+  const emitOp = useCallback((op) => {
+    if (isApplyingRemoteRef.current) return; // Don't echo remote ops back
+    if (batcherRef.current) {
+      batcherRef.current.add(op);
+    } else if (canvasWebSocket?.emitOperation) {
+      canvasWebSocket.emitOperation(op);
+    }
+  }, [canvasWebSocket]);
+
+  // Keep refs in sync so the stable setNodes/setEdges wrappers can access current values
+  useEffect(() => { emitOpRef.current = emitOp; }, [emitOp]);
+  useEffect(() => { taskIdRef.current = selectedTask?.id || null; }, [selectedTask?.id]);
+  useEffect(() => { subtaskIdRef.current = selectedSubtask?.id || null; }, [selectedSubtask?.id]);
+
+  // Register the global emitter so nodePersistence.js can use WebSocket
+  useEffect(() => {
+    if (canvasWebSocket?.isConnected && emitOp) {
+      registerCanvasEmitter(emitOp, selectedTask?.id || null, selectedSubtask?.id || null);
+    } else {
+      unregisterCanvasEmitter();
+    }
+    return () => unregisterCanvasEmitter();
+  }, [canvasWebSocket?.isConnected, emitOp, selectedTask?.id, selectedSubtask?.id]);
+
+  // Keep workspaceCollaborators ref in sync
+  useEffect(() => {
+    workspaceCollaboratorsRef.current = workspaceCollaborators || [];
+  }, [workspaceCollaborators]);
+
+  // Keep workspaceCollaborators in sync on existing nodes (for @mention autocomplete)
+  // Runs when collaborators change OR when canvas data is freshly loaded (canvasLoadedCounter)
+  useEffect(() => {
+    if (!workspaceCollaborators || workspaceCollaborators.length === 0) return;
+    setNodesRaw(nds => nds.map(n => {
+      if (n.data && JSON.stringify(n.data.workspaceCollaborators) !== JSON.stringify(workspaceCollaborators)) {
+        return { ...n, data: { ...n.data, workspaceCollaborators } };
+      }
+      return n;
+    }));
+  }, [workspaceCollaborators, canvasLoadedCounter]);
+
+  // Send initial snapshot when WebSocket connects and canvas data is loaded
+  useEffect(() => {
+    if (canvasWebSocket?.isConnected && canvasWebSocket?.initSnapshot && nodes.length > 0) {
+      const taskId = selectedTask?.id || null;
+      const subtaskId = selectedSubtask?.id || null;
+      canvasWebSocket.initSnapshot({ nodes, edges, zoomLevel, taskId, subtaskId });
+    }
+  // Only run when connection state changes, not on every node change
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [canvasWebSocket?.isConnected, selectedSubtask?.id]);
+
+  // Handle incoming remote operations
+  useEffect(() => {
+    if (!canvasWebSocket?.setOnRemoteOperation) return;
+
+    canvasWebSocket.setOnRemoteOperation((op) => {
+      isApplyingRemoteRef.current = true;
+      try {
+        applyRemoteOperation(op, setNodesRaw, setEdgesRaw, updateZoomLevel);
+      } finally {
+        // Use microtask to ensure the flag is reset after React batches state updates
+        queueMicrotask(() => { isApplyingRemoteRef.current = false; });
+      }
+    });
+
+    return () => canvasWebSocket.setOnRemoteOperation(null);
+  }, [canvasWebSocket, setNodesRaw, setEdgesRaw, updateZoomLevel]);
+
+  // Handle full state responses (on reconnect)
+  useEffect(() => {
+    if (!canvasWebSocket?.setOnFullState) return;
+
+    canvasWebSocket.setOnFullState((data) => {
+      isApplyingRemoteRef.current = true;
+      try {
+        if (data.nodes) setNodesRaw(data.nodes);
+        if (data.edges) setEdgesRaw(data.edges);
+        if (data.zoomLevel != null) updateZoomLevel(data.zoomLevel);
+      } finally {
+        queueMicrotask(() => { isApplyingRemoteRef.current = false; });
+      }
+    });
+
+    return () => canvasWebSocket.setOnFullState(null);
+  }, [canvasWebSocket, setNodesRaw, setEdgesRaw, updateZoomLevel]);
+
+  // Remote cursor tracking via mouse move on the canvas
+  const lastCursorEmitRef = useRef(0);
+  const handleCanvasMouseMove = useCallback((event) => {
+    if (!canvasWebSocket?.emitCursor) return;
+    const now = Date.now();
+    if (now - lastCursorEmitRef.current < 100) return; // Throttle to 10fps
+    lastCursorEmitRef.current = now;
+    canvasWebSocket.emitCursor(event.clientX, event.clientY);
+  }, [canvasWebSocket]);
+
+  // Fallback HTTP auto-save: only triggers every 30s IF WebSocket is disconnected
+  useEffect(() => {
+    if (canvasWebSocket?.isConnected) {
+      // WebSocket is handling sync — show status indicator
+      setSaveStatus('saved');
+      return;
+    }
+
+    // Fallback: old HTTP save for when WS is not available
     if (onSaveWorkspace && workspace?.workspaceId) {
-      const saveData = {
-        nodes,
-        edges,
-        zoomLevel,
-        canvasSettings: {}
-      };
-      
-      // Preparing to save data (log removed for performance)
+      const saveData = { nodes, edges, zoomLevel, canvasSettings: {} };
       setSaveStatus('saving');
-      
-      // Debounce the save operation
+
       const timeoutId = setTimeout(async () => {
         try {
-          // Mark that the next sync should be skipped (it will be triggered by the save response
-          // updating selectedSubtask, but we don't want it to overwrite local nodes)
           skipNextSyncRef.current = true;
-          // Calling onSaveWorkspace (log removed for performance)
           await onSaveWorkspace(saveData);
           setSaveStatus('saved');
           setLastSaved(new Date());
-          // Save successful (log removed for performance)
-          
-          // Add to history after successful save
           pushToHistory();
-          
-          // Reset to idle after showing saved status
-          setTimeout(() => {
-            setSaveStatus('idle');
-          }, 1000);
+          setTimeout(() => setSaveStatus('idle'), 1000);
         } catch (error) {
-          console.error('❌ CanvasWorkspace: Save failed:', error);
+          console.error('❌ CanvasWorkspace: HTTP fallback save failed:', error);
           setSaveStatus('error');
-          setTimeout(() => {
-            setSaveStatus('idle');
-          }, 3000);
+          setTimeout(() => setSaveStatus('idle'), 3000);
         }
-      }, 2000); // Save after 2 seconds of inactivity
+      }, 30000); // 30s fallback (was 2s)
 
-      return () => {
-        // Clearing save timeout (log removed for performance)
-        clearTimeout(timeoutId);
-      };
-    } else {
-      console.log('⚠️ CanvasWorkspace: Auto-save skipped - no data or save function');
+      return () => clearTimeout(timeoutId);
     }
-  }, [nodes, edges, zoomLevel, onSaveWorkspace, workspace?.workspaceId, selectedSubtask?.id]);
+  }, [nodes, edges, zoomLevel, onSaveWorkspace, workspace?.workspaceId, selectedSubtask?.id, canvasWebSocket?.isConnected]);
 
   // Update nodes and edges when workspace data changes
   // useEffect(() => {
@@ -1007,6 +1176,12 @@ const edgeTypes = {
         }),
         // Store workspaceId for all nodes (needed for MaterialsRenderer and other components)
         workspaceId: workspace?.workspaceId || null,
+
+        // Workspace collaborators for @mention in comments
+        workspaceCollaborators: workspaceCollaborators || [],
+
+        // Comments thread
+        comments: [],
         
         // Element metadata - who added and when
         addedBy: currentUser?.name || currentUser?.email || 'Unknown User',
@@ -3247,9 +3422,11 @@ const edgeTypes = {
     };
     
     setEdges((eds) => addEdge(newEdge, eds));
+    // EDGE_ADD is now auto-emitted by the setEdges wrapper — no manual emit needed
+
     openEdgeLabelModal(edgeId);
     console.log('✅ Connection created (awaiting label):', newEdge);
-  }, [setEdges, openEdgeLabelModal]);
+  }, [setEdges, openEdgeLabelModal, emitOp, selectedTask?.id, selectedSubtask?.id]);
 
   // Handle drag over
   const onDragOver = useCallback((event) => {
@@ -3910,6 +4087,21 @@ const edgeTypes = {
               <span className="sr-only">Preview</span>
             </button>
 
+            {/* Real-time sync indicator */}
+            {canvasWebSocket && (
+              <div className="flex items-center gap-1 px-2 py-1 rounded-lg bg-gray-100 text-xs">
+                <div className={`w-2 h-2 rounded-full ${canvasWebSocket.isConnected ? 'bg-green-500' : 'bg-red-500'}`} />
+                <span className="text-gray-600">
+                  {canvasWebSocket.isConnected ? 'Live' : 'Offline'}
+                </span>
+                {canvasWebSocket.connectedUsers?.length > 1 && (
+                  <span className="text-gray-500 ml-1">
+                    · {canvasWebSocket.connectedUsers.length} users
+                  </span>
+                )}
+              </div>
+            )}
+
             <button 
               onClick={async () => {
                 console.log('🔄 Manual save triggered');
@@ -3969,13 +4161,32 @@ const edgeTypes = {
         onDragOver={canEdit ? onDragOver : undefined}
         onDragEnter={canEdit ? onDragEnter : undefined}
         onDragLeave={onDragLeave}
+        onMouseMove={handleCanvasMouseMove}
       >
+        {/* Remote Cursors Overlay */}
+        {canvasWebSocket?.remoteCursors && Object.entries(canvasWebSocket.remoteCursors).map(([cursorUserId, cursor]) => (
+          <RemoteCursor key={cursorUserId} userId={cursorUserId} userName={cursor.userName} x={cursor.x} y={cursor.y} />
+        ))}
+
         <ReactFlow
           style={{ width: '100%', height: '100%' }}
           nodes={nodes}
           edges={edges}
-          onNodesChange={canEdit ? onNodesChange : undefined}
-          onEdgesChange={canEdit ? onEdgesChange : undefined}
+          onNodesChange={canEdit ? (changes) => {
+            onNodesChange(changes);
+            // Emit position/dimension/remove changes as ops
+            if (!isApplyingRemoteRef.current) {
+              const ops = nodeChangesToOps(changes, selectedTask?.id, selectedSubtask?.id);
+              ops.forEach(op => emitOp(op));
+            }
+          } : undefined}
+          onEdgesChange={canEdit ? (changes) => {
+            onEdgesChange(changes);
+            if (!isApplyingRemoteRef.current) {
+              const ops = edgeChangesToOps(changes, selectedTask?.id, selectedSubtask?.id);
+              ops.forEach(op => emitOp(op));
+            }
+          } : undefined}
           onNodesDelete={canEdit ? onNodesDelete : undefined}
           onEdgesDelete={canEdit ? onEdgesDelete : undefined}
           onConnect={canEdit ? onConnect : undefined}

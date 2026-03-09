@@ -12,6 +12,7 @@ import config from '../../config/env';
 import { redirectToClientWithHandoff } from '../../utils/handoffToClient';
 import { redirectToSalesWithHandoff } from '../../utils/handoffToSales';
 import GlobalSearchOverlay from "./GlobalSearchOverlay";
+import AiPromptPanel from "./AiPromptPanel";
 /**
  * Header
  *
@@ -30,7 +31,22 @@ export const Header = () => {
   const [isVendor, setIsVendor] = useState(true);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [showNotificationDropdown, setShowNotificationDropdown] = useState(false);
+  const [isAiPromptOpen, setIsAiPromptOpen] = useState(false);
+  const [redirectingTo, setRedirectingTo] = useState(null); // 'Graviyx' | 'Sales' | 'Tender' | null
   const notificationDropdownRef = useRef(null);
+
+  // ── Global keyboard shortcuts ──
+  useEffect(() => {
+    const handleGlobalKeyDown = (e) => {
+      // Cmd+K / Ctrl+K → toggle AI prompt panel
+      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+        e.preventDefault();
+        setIsAiPromptOpen((prev) => !prev);
+      }
+    };
+    window.addEventListener('keydown', handleGlobalKeyDown);
+    return () => window.removeEventListener('keydown', handleGlobalKeyDown);
+  }, []);
   
   // Get current location
   const location = useLocation();
@@ -51,7 +67,7 @@ export const Header = () => {
   
   // Get only pending leads that need approval
   const pendingNotifications = notifications?.filter(notification => 
-    notification.isPending && !notification.isRead
+    notification && notification.isPending && !notification.isRead
   ) || [];
   
   // Handle clicks outside notification dropdown
@@ -931,6 +947,19 @@ export const Header = () => {
             <div className="mr-4"><DateYearFunction /></div>
             {/* Wrapper for B2B and Prompt buttons */}
             <div className="flex items-center gap-2 lg:gap-4">
+              {/* Redirect loading overlay */}
+              {redirectingTo && (
+                <div className="fixed inset-0 z-[9999] flex flex-col items-center justify-center bg-black/80 backdrop-blur-sm">
+                  <div className="flex flex-col items-center gap-4">
+                    <svg className="animate-spin w-12 h-12 text-white" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4l3-3-3-3v4a8 8 0 100 16v-4l-3 3 3 3v-4a8 8 0 01-8-8z" />
+                    </svg>
+                    <p className="text-white text-lg font-semibold font-['Montserrat']">Opening {redirectingTo}…</p>
+                    <p className="text-white/60 text-sm">You will be redirected shortly</p>
+                  </div>
+                </div>
+              )}
               <button
                 className="w-auto px-3 h-[36px] bg-white bg-opacity-5 hover:bg-opacity-10 rounded-[9px] flex items-center justify-center text-white text-xs lg:text-sm font-semibold font-['Montserrat']"
                 onClick={async () => {
@@ -943,7 +972,7 @@ export const Header = () => {
                   }
 
                   if (!idToken) {
-                    alert('You need to be logged in to access GravityX.');
+                    alert('You need to be logged in to access Graviyx.');
                     navigate('/login');
                     return;
                   }
@@ -954,10 +983,11 @@ export const Header = () => {
                     return;
                   }
 
+                  setRedirectingTo('Graviyx');
                   window.location.href = `${b2bMarketplaceUrl}/?token=${encodeURIComponent(idToken)}`;
                 }}
               >
-                GravityX <img src="https://c.animaapp.com/VmmSqCQF/img/guidance-shop.svg" alt="Shop" className="ml-2 w-4 h-4 lg:w-6 lg:h-6" />
+                Graviyx <svg className="ml-2 w-4 h-4 lg:w-5 lg:h-5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" /></svg>
               </button>
               {/* B2B button — only if user has sales platform access */}
               {canAccessSales && (
@@ -970,9 +1000,11 @@ export const Header = () => {
                     return;
                   }
 
+                  setRedirectingTo('Sales');
                   try {
                     await redirectToSalesWithHandoff();
                   } catch (e) {
+                    setRedirectingTo(null);
                     console.error('B2B handoff redirect failed:', e);
                     // Show specific error if 403 (access denied), otherwise generic
                     const is403 = e?.message?.includes('403');
@@ -982,7 +1014,7 @@ export const Header = () => {
                   }
                 }}
               >
-                B2B <img src="https://c.animaapp.com/VmmSqCQF/img/guidance-shop.svg" alt="Shop" className="ml-2 w-4 h-4 lg:w-6 lg:h-6" />
+                Sales <svg className="ml-2 w-4 h-4 lg:w-5 lg:h-5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" /></svg>
               </button>
               )}
               {/* Tender button — only if user has sales platform access */}
@@ -996,9 +1028,11 @@ export const Header = () => {
                     return;
                   }
 
+                  setRedirectingTo('Tender');
                   try {
                     await redirectToSalesWithHandoff('/tender');
                   } catch (e) {
+                    setRedirectingTo(null);
                     console.error('Tender handoff redirect failed:', e);
                     const is403 = e?.message?.includes('403');
                     alert(is403
@@ -1007,14 +1041,21 @@ export const Header = () => {
                   }
                 }}
               >
-                Tender <img src="https://c.animaapp.com/VmmSqCQF/img/guidance-shop.svg" alt="Tender" className="ml-2 w-4 h-4 lg:w-6 lg:h-6" />
+                Tender <svg className="ml-2 w-4 h-4 lg:w-5 lg:h-5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
               </button>
               )}
-              <button className="w-auto px-3 h-[36px] bg-white bg-opacity-5 hover:bg-opacity-10 rounded-[9px] flex items-center justify-center text-white text-xs lg:text-sm font-semibold font-['Montserrat']"> Prompt <img src="https://c.animaapp.com/VmmSqCQF/img/vector.svg" alt="Prompt" className="ml-2 w-3 h-3 lg:w-4 lg:h-4" /> </button>
+              <button
+                className="w-auto px-3 h-[36px] bg-white bg-opacity-5 hover:bg-opacity-10 rounded-[9px] flex items-center justify-center text-white text-xs lg:text-sm font-semibold font-['Montserrat'] transition-all duration-200"
+                onClick={() => setIsAiPromptOpen(true)}
+              >
+                Prompt <img src="https://c.animaapp.com/VmmSqCQF/img/vector.svg" alt="Prompt" className="ml-2 w-3 h-3 lg:w-4 lg:h-4" />
+              </button>
           </div>
           </div>
         </div>
       )}
+      {/* AI Prompt Side Panel */}
+      <AiPromptPanel isOpen={isAiPromptOpen} onClose={() => setIsAiPromptOpen(false)} />
       {/* Global Search Overlay */}
       <GlobalSearchOverlay
         isOpen={isSearchOpen}

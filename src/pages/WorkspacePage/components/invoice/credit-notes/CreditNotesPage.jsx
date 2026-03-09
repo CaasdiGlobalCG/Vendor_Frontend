@@ -31,6 +31,7 @@ const CreditNotesPage = () => {
   });
   const [showPreviewModal, setShowPreviewModal] = useState(false);
   const [previewCreditNoteId, setPreviewCreditNoteId] = useState(null);
+  const [actionLoading, setActionLoading] = useState(null);
 
   // API Base URL
   // Using relative paths - no API_BASE_URL needed
@@ -175,7 +176,8 @@ const CreditNotesPage = () => {
           bg: 'bg-green-50',
           text: 'text-green-700',
           border: 'border-green-200',
-          dot: 'bg-green-500'
+          dot: 'bg-green-500',
+          label: 'Approved',
         };
       case 'pending':
       case 'draft':
@@ -183,14 +185,56 @@ const CreditNotesPage = () => {
           bg: 'bg-yellow-50',
           text: 'text-yellow-700',
           border: 'border-yellow-200',
-          dot: 'bg-yellow-500'
+          dot: 'bg-yellow-500',
+          label: status || 'Draft',
+        };
+      case 'pending_vendor':
+        return {
+          bg: 'bg-orange-50',
+          text: 'text-orange-700',
+          border: 'border-orange-200',
+          dot: 'bg-orange-500',
+          label: 'Credit Note Requested',
+        };
+      case 'acknowledged':
+        return {
+          bg: 'bg-blue-50',
+          text: 'text-blue-700',
+          border: 'border-blue-200',
+          dot: 'bg-blue-500',
+          label: 'Acknowledged',
+        };
+      case 'vendor_processing':
+        return {
+          bg: 'bg-indigo-50',
+          text: 'text-indigo-700',
+          border: 'border-indigo-200',
+          dot: 'bg-indigo-500',
+          label: 'Processing',
+        };
+      case 'vendor_issued':
+        return {
+          bg: 'bg-green-50',
+          text: 'text-green-700',
+          border: 'border-green-200',
+          dot: 'bg-green-500',
+          label: 'Issued',
+        };
+      case 'rejected':
+        return {
+          bg: 'bg-red-50',
+          text: 'text-red-700',
+          border: 'border-red-200',
+          dot: 'bg-red-500',
+          label: 'Rejected',
         };
       default:
         return {
           bg: 'bg-gray-50',
           text: 'text-gray-600',
           border: 'border-gray-200',
-          dot: 'bg-gray-400'
+          dot: 'bg-gray-400',
+          label: status || 'Draft',
         };
     }
   };
@@ -392,7 +436,7 @@ const CreditNotesPage = () => {
                       <td className="py-4 px-6 text-center">
                         <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium border ${statusConfig.bg} ${statusConfig.text} ${statusConfig.border}`}>
                           <div className={`w-2 h-2 ${statusConfig.dot} rounded-full mr-2`}></div>
-                          {note.status || 'Draft'}
+                          {statusConfig.label || note.status || 'Draft'}
                         </span>
                       </td>
                       <td className="py-4 px-6 text-right">
@@ -415,6 +459,44 @@ const CreditNotesPage = () => {
                           <button className="p-2 text-gray-400 hover:text-green-600 hover:bg-green-50 rounded-lg transition-colors duration-200" title="Download">
                             <Download className="w-4 h-4" />
                           </button>
+                          {(note.status || '').toLowerCase() === 'pending_vendor' && (
+                            <button
+                              onClick={async () => {
+                                try {
+                                  setActionLoading(note.creditNoteId);
+                                  const headers = {
+                                    'Content-Type': 'application/json',
+                                    'x-user-info': JSON.stringify({
+                                      vendorId: currentUser.vendorId,
+                                      email: currentUser?.email,
+                                      role: 'vendor',
+                                      name: currentUser?.name,
+                                    }),
+                                  };
+                                  const response = await fetch(
+                                    `/api/workspace/credit-notes/${note.creditNoteId}/status`,
+                                    {
+                                      method: 'PATCH',
+                                      headers,
+                                      body: JSON.stringify({ status: 'acknowledged' }),
+                                    }
+                                  );
+                                  if (response.ok) {
+                                    handleBackToCreditNotes();
+                                  }
+                                } catch (err) {
+                                  console.error('Error acknowledging credit note request:', err);
+                                } finally {
+                                  setActionLoading(null);
+                                }
+                              }}
+                              disabled={actionLoading === note.creditNoteId}
+                              className="px-3 py-1 text-xs font-medium text-white bg-orange-600 rounded-lg hover:bg-orange-700 transition-colors duration-200 disabled:opacity-50"
+                              title="Acknowledge credit note request"
+                            >
+                              {actionLoading === note.creditNoteId ? '...' : 'Acknowledge'}
+                            </button>
+                          )}
                         </div>
                       </td>
                     </tr>

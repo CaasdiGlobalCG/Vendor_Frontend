@@ -1,5 +1,33 @@
 import axios from 'axios';
 import { updateWorkspace, getWorkspaceById } from './workspaceApi';
+import { createNodeUpdateOp } from './operationManager';
+
+// ---- WebSocket-aware global emitter ----
+// CanvasWorkspace sets this when canvasWebSocket is available.
+// nodePersistence functions check it first — if set, they emit a tiny
+// NODE_UPDATE op over WebSocket instead of the heavy GET-then-PUT HTTP cycle.
+let _globalEmitOp = null;
+let _globalTaskId = null;
+let _globalSubtaskId = null;
+
+/**
+ * Called by CanvasWorkspace to register the current WebSocket emitter.
+ * This avoids prop-drilling emitOp into every node component.
+ */
+export const registerCanvasEmitter = (emitOp, taskId, subtaskId) => {
+  _globalEmitOp = emitOp;
+  _globalTaskId = taskId;
+  _globalSubtaskId = subtaskId;
+};
+
+/**
+ * Called on unmount / when WebSocket disconnects.
+ */
+export const unregisterCanvasEmitter = () => {
+  _globalEmitOp = null;
+  _globalTaskId = null;
+  _globalSubtaskId = null;
+};
 
 const isApprovalFlowInProgress = () => {
   try {
@@ -65,6 +93,26 @@ export const persistNodeDataPatch = async (nodeId, dataPatch, setNodes, workspac
     console.log('⏸️ Skipping persistNodeDataPatch - approval submission in progress');
     return;
   }
+
+  // ---- Fast path: emit via WebSocket if available ----
+  if (_globalEmitOp) {
+    const op = createNodeUpdateOp(nodeId, dataPatch, _globalTaskId, _globalSubtaskId);
+    _globalEmitOp(op);
+
+    // Also update local React state immediately (optimistic)
+    if (typeof setNodes === 'function') {
+      setNodes((currentNodes) =>
+        currentNodes.map((node) =>
+          node.id === nodeId
+            ? { ...node, data: { ...(node.data || {}), ...(dataPatch || {}) } }
+            : node
+        )
+      );
+    }
+    return;
+  }
+
+  // ---- Fallback: original HTTP read-then-write ----
 
   const workspace = await getWorkspaceById(workspaceId);
   const subtaskLocation = findSubtaskContainingNode(workspace, nodeId);
@@ -154,6 +202,21 @@ export const persistIsImportant = async (nodeId, isImportant, setNodes, workspac
     }
 
     console.log('💾 Persisting isImportant:', { nodeId, isImportant });
+
+    // ---- Fast path: WebSocket ----
+    if (_globalEmitOp) {
+      const op = createNodeUpdateOp(nodeId, { isImportant }, _globalTaskId, _globalSubtaskId);
+      _globalEmitOp(op);
+      setNodes((currentNodes) =>
+        currentNodes.map(node =>
+          node.id === nodeId ? { ...node, data: { ...node.data, isImportant } } : node
+        )
+      );
+      console.log('✅ isImportant persisted via WebSocket');
+      return;
+    }
+
+    // ---- Fallback: HTTP ----
     
     // Fetch the latest workspace data
     const workspace = await getWorkspaceById(workspaceId);
@@ -266,6 +329,21 @@ export const persistDeadline = async (nodeId, deadline, setNodes, workspaceId) =
                        (deadline ? new Date(deadline).toISOString() : null);
     
     console.log('📅 Converted deadline to ISO:', isoDeadline);
+
+    // ---- Fast path: WebSocket ----
+    if (_globalEmitOp) {
+      const op = createNodeUpdateOp(nodeId, { deadline: isoDeadline }, _globalTaskId, _globalSubtaskId);
+      _globalEmitOp(op);
+      setNodes((currentNodes) =>
+        currentNodes.map(node =>
+          node.id === nodeId ? { ...node, data: { ...node.data, deadline: isoDeadline } } : node
+        )
+      );
+      console.log('✅ Deadline persisted via WebSocket');
+      return;
+    }
+
+    // ---- Fallback: HTTP ----
     
     // Fetch the latest workspace data
     const workspace = await getWorkspaceById(workspaceId);
@@ -408,6 +486,22 @@ export const persistTextContent = async (nodeId, content, contentType, setNodes,
     }
 
     console.log('💾 Persisting text content:', { nodeId, contentType, length: content.length });
+
+    // ---- Fast path: WebSocket ----
+    if (_globalEmitOp) {
+      const patch = { [contentType]: content, lastModifiedAt: new Date().toISOString() };
+      const op = createNodeUpdateOp(nodeId, patch, _globalTaskId, _globalSubtaskId);
+      _globalEmitOp(op);
+      setNodes((currentNodes) =>
+        currentNodes.map(node =>
+          node.id === nodeId ? { ...node, data: { ...node.data, ...patch } } : node
+        )
+      );
+      console.log('✅ Text content persisted via WebSocket');
+      return;
+    }
+
+    // ---- Fallback: HTTP ----
     
     // Fetch the latest workspace data
     const workspace = await getWorkspaceById(workspaceId);

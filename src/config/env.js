@@ -1,6 +1,7 @@
 const PROD_FRONTEND_BASE_URL = 'https://www.caasdiglobal.in';
 const DEV_FRONTEND_BASE_URL = 'http://localhost:5173';
 const DEFAULT_B2B_MARKETPLACE_BASE_URL = 'https://www.graviyx.com';
+const DEV_B2B_MARKETPLACE_BASE_URL = 'http://localhost:5176';
 
 const resolveEnvValue = (value) => {
   if (typeof value !== 'string') {
@@ -24,7 +25,8 @@ export const VENDOR_BACKEND_URL = ''; // Empty string = relative paths
 const resolvedClientUrl = resolveEnvValue(import.meta.env.VITE_CLIENT_URL) || '';
 const resolvedSalesUrl = resolveEnvValue(import.meta.env.VITE_SALES_URL) || '';
 const resolvedB2BMarketplaceBaseUrl =
-  resolveEnvValue(import.meta.env.VITE_B2B_MARKETPLACE_URL) || DEFAULT_B2B_MARKETPLACE_BASE_URL;
+  resolveEnvValue(import.meta.env.VITE_B2B_MARKETPLACE_URL) ||
+  (isDevMode ? DEV_B2B_MARKETPLACE_BASE_URL : DEFAULT_B2B_MARKETPLACE_BASE_URL);
 
 export const CLIENT_URL = resolvedClientUrl;
 export const SALES_URL = resolvedSalesUrl;
