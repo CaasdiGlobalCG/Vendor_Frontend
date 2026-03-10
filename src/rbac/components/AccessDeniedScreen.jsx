@@ -16,11 +16,22 @@ import { VendorContext } from '../../context/VendorContext';
  * Place this as the first child inside <RBACProvider>.
  */
 export function AccessDeniedGuard({ children }) {
-  const { accessDenied } = useRBAC();
+  const { accessDenied, isLoading } = useRBAC();
 
-  if (!accessDenied) return children;
+  // Block rendering until RBAC has resolved — prevents flash of protected content
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-teal-600" />
+      </div>
+    );
+  }
 
-  return <AccessDeniedScreen code={accessDenied.code} message={accessDenied.message} />;
+  if (accessDenied) {
+    return <AccessDeniedScreen code={accessDenied.code} message={accessDenied.message} />;
+  }
+
+  return children;
 }
 
 /** Full-page access-denied screen */
