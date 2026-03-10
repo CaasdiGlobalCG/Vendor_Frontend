@@ -110,80 +110,27 @@ export default function RolesTab({ roles = [], meta = {}, onRefresh, showFeedbac
         </div>
       </div>
 
-      {/* ── Roles Table ── */}
-      <div className="overflow-x-auto">
-        <table className="w-full text-sm">
-          <thead className="bg-gray-50 text-gray-500 text-xs uppercase">
-            <tr>
-              <th className="px-4 py-3 text-left font-medium">Role Name</th>
-              <th className="px-4 py-3 text-left font-medium">Type</th>
-              <th className="px-4 py-3 text-left font-medium">Level</th>
-              <th className="px-4 py-3 text-center font-medium">Permissions</th>
-              <th className="px-4 py-3 text-right font-medium">Actions</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-gray-100">
-            {roles.map((role) => (
-              <tr key={role.roleId} className="hover:bg-gray-50">
-                <td className="px-4 py-3">
-                  <RoleBadge roleId={role.roleId} roleName={role.roleName} />
-                </td>
-                <td className="px-4 py-3">
-                  <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium border
-                    ${role.isSystem
-                      ? 'bg-blue-50 text-blue-700 border-blue-200'
-                      : 'bg-amber-50 text-amber-700 border-amber-200'
-                    }`}
-                  >
-                    {role.isSystem ? 'System' : 'Custom'}
-                  </span>
-                </td>
-                <td className="px-4 py-3 text-xs text-gray-500">
-                  {HIERARCHY_LABELS[role.level] || `Level ${role.level}`}
-                </td>
-                <td className="px-4 py-3 text-center">
-                  <span className="text-xs text-gray-500">
-                    {role.permissions?.includes('*:*')
-                      ? 'Full Access'
-                      : `${(role.permissions || []).length} perms`
-                    }
-                  </span>
-                </td>
-                <td className="px-4 py-3 text-right">
-                  <div className="flex items-center gap-2 justify-end">
-                    <button
-                      onClick={() => handleViewClick(role)}
-                      className="text-xs text-gray-500 hover:text-gray-700 font-medium"
-                    >
-                      View
-                    </button>
-                    {role.canEdit && (
-                      <PermissionGate module="user_management" action="manage">
-                        <button
-                          onClick={() => handleEditClick(role)}
-                          className="text-xs text-teal-600 hover:text-teal-700 font-medium"
-                        >
-                          Edit
-                        </button>
-                      </PermissionGate>
-                    )}
-                    {!role.isSystem && (
-                      <PermissionGate module="user_management" action="manage">
-                        <button
-                          onClick={() => setDeletingRole(role)}
-                          className="text-xs text-red-500 hover:text-red-600 font-medium"
-                        >
-                          Delete
-                        </button>
-                      </PermissionGate>
-                    )}
-                  </div>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+      {/* ── System Roles ── */}
+      <RoleSection
+        title="System Roles"
+        subtitle="Built-in roles that cannot be deleted"
+        roles={roles.filter((r) => r.isSystem)}
+        onViewClick={handleViewClick}
+        onEditClick={handleEditClick}
+        onDeleteClick={setDeletingRole}
+      />
+
+      {/* ── Custom Roles ── */}
+      {roles.some((r) => !r.isSystem) && (
+        <RoleSection
+          title="Custom Roles"
+          subtitle="Organization-specific roles created by your team"
+          roles={roles.filter((r) => !r.isSystem)}
+          onViewClick={handleViewClick}
+          onEditClick={handleEditClick}
+          onDeleteClick={setDeletingRole}
+        />
+      )}
 
       {/* ── Modals ── */}
       {showCreate && (
@@ -433,7 +380,7 @@ function EditRoleModal({ role, onClose, onUpdated, onError }) {
   );
   const [saving, setSaving] = useState(false);
 
-  const isSuperAdmin = role.level === 0;
+  const isSuperAdmin = role.roleLevel === 0;
   const isSystem = role.isSystem;
 
   const handleSubmit = async (e) => {
@@ -462,7 +409,7 @@ function EditRoleModal({ role, onClose, onUpdated, onError }) {
             </h3>
             <p className="text-xs text-gray-500 mt-0.5">
               {isSystem ? 'System role — name cannot be changed' : 'Custom role'}
-              {' · '}Level {role.level} ({HIERARCHY_LABELS[role.level] || 'Custom'})
+              {' · '}{HIERARCHY_LABELS[role.roleLevel] || `Level ${role.roleLevel}`}
             </p>
           </div>
           <button onClick={onClose} className="text-gray-400 hover:text-gray-600 text-xl leading-none">&times;</button>
@@ -625,7 +572,7 @@ function ViewRoleModal({ role, onClose }) {
           <div>
             <h3 className="text-lg font-medium text-gray-900">{role.roleName}</h3>
             <p className="text-xs text-gray-500 mt-0.5">
-              {role.isSystem ? 'System' : 'Custom'} role · Level {role.level} ({HIERARCHY_LABELS[role.level] || 'Custom'})
+              {role.isSystem ? 'System' : 'Custom'} role · {HIERARCHY_LABELS[role.roleLevel] || `Level ${role.roleLevel}`}
               {role.memberCount != null && ` · ${role.memberCount} member${role.memberCount !== 1 ? 's' : ''}`}
             </p>
             {role.description && (
@@ -667,6 +614,63 @@ function ModalOverlay({ children, onClose }) {
       onClick={(e) => { if (e.target === e.currentTarget) onClose?.(); }}
     >
       {children}
+    </div>
+  );
+}
+
+/** Reusable role table section (System / Custom) */
+function RoleSection({ title, subtitle, roles, onViewClick, onEditClick, onDeleteClick }) {
+  if (!roles.length) return null;
+  return (
+    <div>
+      <div className="mb-2">
+        <h3 className="text-sm font-medium text-gray-700">{title}</h3>
+        {subtitle && <p className="text-xs text-gray-400">{subtitle}</p>}
+      </div>
+      <div className="overflow-x-auto border border-gray-200 rounded-lg">
+        <table className="w-full text-sm">
+          <thead className="bg-gray-50 text-gray-500 text-xs uppercase">
+            <tr>
+              <th className="px-4 py-3 text-left font-medium">Role Name</th>
+              <th className="px-4 py-3 text-left font-medium">Level</th>
+              <th className="px-4 py-3 text-center font-medium">Permissions</th>
+              <th className="px-4 py-3 text-right font-medium">Actions</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-gray-100">
+            {roles.map((role) => (
+              <tr key={role.roleId} className="hover:bg-gray-50">
+                <td className="px-4 py-3">
+                  <RoleBadge roleId={role.roleId} roleName={role.roleName} />
+                </td>
+                <td className="px-4 py-3 text-xs text-gray-500">
+                  {HIERARCHY_LABELS[role.roleLevel] || `Level ${role.roleLevel}`}
+                </td>
+                <td className="px-4 py-3 text-center">
+                  <span className="text-xs text-gray-500">
+                    {role.permissions?.includes('*:*') ? 'Full Access' : `${(role.permissions || []).length} perms`}
+                  </span>
+                </td>
+                <td className="px-4 py-3 text-right">
+                  <div className="flex items-center gap-2 justify-end">
+                    <button onClick={() => onViewClick(role)} className="text-xs text-gray-500 hover:text-gray-700 font-medium">View</button>
+                    {role.canEdit && (
+                      <PermissionGate module="user_management" action="manage">
+                        <button onClick={() => onEditClick(role)} className="text-xs text-teal-600 hover:text-teal-700 font-medium">Edit</button>
+                      </PermissionGate>
+                    )}
+                    {!role.isSystem && (
+                      <PermissionGate module="user_management" action="manage">
+                        <button onClick={() => onDeleteClick(role)} className="text-xs text-red-500 hover:text-red-600 font-medium">Delete</button>
+                      </PermissionGate>
+                    )}
+                  </div>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 }

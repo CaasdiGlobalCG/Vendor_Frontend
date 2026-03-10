@@ -20,6 +20,7 @@ import { InviteModal } from '../components/InviteModal';
 import { EditRoleModal } from '../components/EditRoleModal';
 import ActivityLogTab from '../components/ActivityLogTab';
 import RolesTab from '../components/RolesTab';
+import { RemovalReasonModal } from '../components/RemovalReasonModal';
 import {
   listMembers,
   inviteMember,
@@ -39,7 +40,7 @@ import {
  *   4. Permission Matrix
  */
 export default function TeamPage() {
-  const { role, isFallback, permissions, isLoading, accessibleModules, refresh: refreshRBAC } = useRBAC();
+  const { role, userId, isFallback, permissions, isLoading, accessibleModules, refresh: refreshRBAC } = useRBAC();
   const { currentUser } = useContext(VendorContext);
 
   // ── Member state ──
@@ -66,7 +67,7 @@ export default function TeamPage() {
   const [newRoleId, setNewRoleId] = useState('');
 
   // ── Remove confirmation state ──
-  const [removingMember, setRemovingMember] = useState(null);
+  const [removingMember, setRemovingMember] = useState(null); // { userId, email }
 
   // ── Edit role modal state ──
   const [editingRoleId, setEditingRoleId] = useState(null);
@@ -155,15 +156,15 @@ export default function TeamPage() {
     }
   };
 
-  // ── Handle member removal ──
-  const handleRemove = async (userId) => {
+  // ── Handle member removal (called from RemovalReasonModal) ──
+  const handleRemove = async (userId, reason) => {
     try {
-      await removeMember(userId);
+      await removeMember(userId, reason);
       showFeedback('Member removed');
       setRemovingMember(null);
       fetchMembers();
     } catch (err) {
-      showFeedback(err.message, 'error');
+      throw err; // Let RemovalReasonModal handle error display
     }
   };
 
@@ -316,16 +317,14 @@ export default function TeamPage() {
                   <MemberRow
                     key={member.userId}
                     member={member}
-                    currentUserId={role?.userId || currentUser?.sub}
+                    currentUserId={userId || currentUser?.sub}
                     assignableRoles={assignableRoles}
                     changingRoleFor={changingRoleFor}
                     setChangingRoleFor={setChangingRoleFor}
                     newRoleId={newRoleId}
                     setNewRoleId={setNewRoleId}
                     onRoleChange={handleRoleChange}
-                    removingMember={removingMember}
-                    setRemovingMember={setRemovingMember}
-                    onRemove={handleRemove}
+                    onStartRemove={(uid, email) => setRemovingMember({ userId: uid, email })}
                     onEditRole={setEditingRoleId}
                   />
                 ))}
@@ -453,6 +452,15 @@ export default function TeamPage() {
           onError={(msg) => showFeedback(msg, 'error')}
         />
       )}
+
+      {/* ── Removal Reason Modal ── */}
+      {removingMember && (
+        <RemovalReasonModal
+          memberEmail={removingMember.email}
+          onConfirm={(reason) => handleRemove(removingMember.userId, reason)}
+          onClose={() => setRemovingMember(null)}
+        />
+      )}
     </div>
   );
 }
@@ -465,7 +473,7 @@ export default function TeamPage() {
 function MemberRow({
   member, currentUserId, assignableRoles,
   changingRoleFor, setChangingRoleFor, newRoleId, setNewRoleId, onRoleChange,
-  removingMember, setRemovingMember, onRemove, onEditRole,
+  onStartRemove, onEditRole,
 }) {
   const isSelf = member.userId === currentUserId;
   const isInvited = member.status === 'invited';
@@ -514,40 +522,30 @@ function MemberRow({
       <td className="px-6 py-3 text-right">
         {!isSelf && !isInvited && (
           <div className="flex items-center gap-2 justify-end">
-            {removingMember === member.userId ? (
-              <>
-                <span className="text-xs text-red-600">Remove?</span>
-                <button onClick={() => onRemove(member.userId)} className="text-xs text-red-600 font-medium hover:text-red-700">Yes</button>
-                <button onClick={() => setRemovingMember(null)} className="text-xs text-gray-400 hover:text-gray-600">No</button>
-              </>
-            ) : (
-              <>
-                <PermissionGate module="user_management" action="edit">
-                  <button
-                    onClick={() => { setChangingRoleFor(member.userId); setNewRoleId(member.roleId); }}
-                    className="text-xs text-teal-600 hover:text-teal-700 font-medium"
-                  >
-                    Change Role
-                  </button>
-                </PermissionGate>
-                <PermissionGate module="user_management" action="manage">
-                  <button
-                    onClick={() => onEditRole?.(member.roleId)}
-                    className="text-xs text-indigo-600 hover:text-indigo-700 font-medium"
-                  >
-                    Edit Role
-                  </button>
-                </PermissionGate>
-                <PermissionGate module="user_management" action="edit">
-                  <button
-                    onClick={() => setRemovingMember(member.userId)}
-                    className="text-xs text-red-500 hover:text-red-600 font-medium"
-                  >
-                    Remove
-                  </button>
-                </PermissionGate>
-              </>
-            )}
+            <PermissionGate module="user_management" action="edit">
+              <button
+                onClick={() => { setChangingRoleFor(member.userId); setNewRoleId(member.roleId); }}
+                className="text-xs text-teal-600 hover:text-teal-700 font-medium"
+              >
+                Change Role
+              </button>
+            </PermissionGate>
+            <PermissionGate module="user_management" action="manage">
+              <button
+                onClick={() => onEditRole?.(member.roleId)}
+                className="text-xs text-indigo-600 hover:text-indigo-700 font-medium"
+              >
+                Edit Role
+              </button>
+            </PermissionGate>
+            <PermissionGate module="user_management" action="edit">
+              <button
+                onClick={() => onStartRemove(member.userId, member.email)}
+                className="text-xs text-red-500 hover:text-red-600 font-medium"
+              >
+                Remove
+              </button>
+            </PermissionGate>
           </div>
         )}
       </td>

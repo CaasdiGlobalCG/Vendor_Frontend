@@ -5,6 +5,7 @@ import { VendorProvider, VendorContext } from "./context/VendorContext";
 import { UserProvider, UserContext } from "./context/UserContext";
 import { NotificationProvider } from "./context/NotificationContext";
 import { RBACProvider } from "./rbac";
+import { AccessDeniedGuard } from "./rbac/components/AccessDeniedScreen";
 import TeamPage from "./rbac/pages/TeamPage";
 import InviteAcceptPage from "./rbac/pages/InviteAcceptPage";
 import { ModuleGuard } from "./rbac/components/ModuleGuard";
@@ -147,11 +148,13 @@ function App() {
       <UserProvider>
         <VendorProvider>
           <RBACProvider>
-            <ErrorBoundary>
-              <NotificationProvider>
-                <AppContent />
-              </NotificationProvider>
-            </ErrorBoundary>
+            <AccessDeniedGuard>
+              <ErrorBoundary>
+                <NotificationProvider>
+                  <AppContent />
+                </NotificationProvider>
+              </ErrorBoundary>
+            </AccessDeniedGuard>
           </RBACProvider>
         </VendorProvider>
       </UserProvider>

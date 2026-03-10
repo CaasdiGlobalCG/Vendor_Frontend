@@ -39,6 +39,7 @@ export const RBACProvider = ({ children }) => {
 
   const [rbacState, setRbacState] = useState({
     role: null,
+    userId: null,
     permissions: [],
     permissionMap: {},
     accessibleModules: [],
@@ -49,6 +50,7 @@ export const RBACProvider = ({ children }) => {
     isFallback: false,
     hasRBAC: false,
     error: null,
+    accessDenied: null,
   });
 
   /**
@@ -58,7 +60,7 @@ export const RBACProvider = ({ children }) => {
    */
   const fetchRBAC = useCallback(async () => {
     try {
-      setRbacState(prev => ({ ...prev, isLoading: true, error: null }));
+      setRbacState(prev => ({ ...prev, isLoading: true, error: null, accessDenied: null }));
 
       const headers = { 'Content-Type': 'application/json' };
       const token = localStorage.getItem('authToken');
@@ -79,6 +81,26 @@ export const RBACProvider = ({ children }) => {
       });
 
       if (!res.ok) {
+        // Check for access-revoked (removed/suspended member)
+        if (res.status === 403) {
+          const body = await res.json().catch(() => ({}));
+          if (body.code === 'RBAC_001' || body.code === 'RBAC_002') {
+            console.warn('[RBAC] Access denied:', body.code, body.message);
+            setRbacState(prev => ({
+              ...prev,
+              isLoading: false,
+              hasRBAC: false,
+              role: null,
+              permissions: [],
+              permissionMap: {},
+              accessibleModules: [],
+              platformAccess: [],
+              isFallback: false,
+              accessDenied: { code: body.code, message: body.message || 'Your access has been revoked.' },
+            }));
+            return;
+          }
+        }
         // Non-200 — user may not have RBAC yet (Phase 1 is fine with this)
         console.warn('[RBAC] /api/rbac/me returned', res.status);
         setRbacState(prev => ({
@@ -118,6 +140,7 @@ export const RBACProvider = ({ children }) => {
 
       setRbacState({
         role: data.role || null,
+        userId: data.userId || null,
         permissions: data.permissions || [],
         permissionMap: data.permissionMap || {},
         accessibleModules: data.accessibleModules || [],
@@ -165,6 +188,7 @@ export const RBACProvider = ({ children }) => {
         isFallback: false,
         hasRBAC: false,
         error: null,
+        accessDenied: null,
       });
       return;
     }

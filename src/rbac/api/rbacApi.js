@@ -105,10 +105,15 @@ export async function changeMemberRole(memberId, roleId) {
 /**
  * Remove a member from the org.
  * @param {string} memberId — Target user's ID
+ * @param {string} reason — Reason for removal (required)
  * @returns {Promise<Object>} { success }
  */
-export async function removeMember(memberId) {
-  return rbacFetch(`/members/${memberId}`, { method: 'DELETE' });
+export async function removeMember(memberId, reason) {
+  return rbacFetch(`/members/${memberId}`, {
+    method: 'DELETE',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ reason }),
+  });
 }
 
 /**
