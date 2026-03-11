@@ -158,11 +158,13 @@ const useCanvasWebSocket = (workspaceId, currentUser, options = {}) => {
       // Reconnect with exponential backoff (skip for intentional close)
       if (event.code !== 1000 && reconnectAttempts.current < maxReconnectAttempts) {
         const delay = Math.min(1000 * Math.pow(2, reconnectAttempts.current), 30000);
-        console.log(`🎨 Canvas WS: Reconnecting in ${delay}ms (attempt ${reconnectAttempts.current + 1})`);
+        console.log(`🎨 Canvas WS: Reconnecting in ${delay}ms (attempt ${reconnectAttempts.current + 1}/${maxReconnectAttempts})`);
         reconnectTimeoutRef.current = setTimeout(() => {
           reconnectAttempts.current += 1;
           connect();
         }, delay);
+      } else if (event.code !== 1000) {
+        console.warn('🎨 Canvas WS: Max reconnect attempts reached, status will stay Offline');
       }
     };
 
@@ -221,6 +223,8 @@ const useCanvasWebSocket = (workspaceId, currentUser, options = {}) => {
 
   // ---- Connect on mount / workspace change ----
   useEffect(() => {
+    console.log('🎨 Canvas WS effect:', { enabled, workspaceId, hasConnect: !!connect });
+
     if (enabled && workspaceId) {
       connect();
     }
@@ -237,7 +241,7 @@ const useCanvasWebSocket = (workspaceId, currentUser, options = {}) => {
       setConnectedUsers([]);
       setRemoteCursors({});
     };
-  }, [workspaceId, enabled]); // Stable deps — no reconnect on user data changes
+  }, [workspaceId, enabled, connect]); // connect included for React correctness
 
   // ---- Keepalive ping every 30s ----
   useEffect(() => {
