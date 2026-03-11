@@ -22,14 +22,11 @@ const useWebSocketNotifications = (userId, userType = 'vendor') => {
     if (!uid) return;
 
     try {
-      // Close existing connection if any
+      // Close existing connection if any — do NOT nullify handlers; stale checks handle it
       if (wsRef.current) {
-        wsRef.current.onopen = null;
-        wsRef.current.onclose = null;
-        wsRef.current.onerror = null;
-        wsRef.current.onmessage = null;
+        console.log('🔔 Notification WS: Closing existing connection (readyState:', wsRef.current.readyState, ')');
         if (wsRef.current.readyState === WebSocket.OPEN || wsRef.current.readyState === WebSocket.CONNECTING) {
-          wsRef.current.close();
+          wsRef.current.close(1000, 'Replacing connection');
         }
         wsRef.current = null;
       }
@@ -43,8 +40,12 @@ const useWebSocketNotifications = (userId, userType = 'vendor') => {
       wsRef.current = ws;
 
       ws.onopen = () => {
-        if (wsRef.current !== ws) { ws.close(); return; }
-        console.log('WebSocket connected for user:', uid);
+        if (wsRef.current !== ws) {
+          console.log('🔔 Notification WS: Stale onopen, closing');
+          ws.close();
+          return;
+        }
+        console.log('🔔 Notification WS: Connected for user:', uid);
         setIsConnected(true);
         reconnectAttempts.current = 0;
       };
@@ -100,8 +101,11 @@ const useWebSocketNotifications = (userId, userType = 'vendor') => {
       };
 
       ws.onclose = (event) => {
-        if (wsRef.current !== ws) return;
-        console.log('WebSocket disconnected:', event.code, event.reason);
+        if (wsRef.current !== ws) {
+          console.log('🔔 Notification WS: Stale onclose (code:', event.code, '), ignoring');
+          return;
+        }
+        console.log('🔔 Notification WS: Disconnected:', event.code, event.reason);
         setIsConnected(false);
         
         if (event.code !== 1000 && reconnectAttempts.current < maxReconnectAttempts) {
@@ -116,8 +120,11 @@ const useWebSocketNotifications = (userId, userType = 'vendor') => {
       };
 
       ws.onerror = (error) => {
-        if (wsRef.current !== ws) return;
-        console.error('WebSocket error:', error);
+        if (wsRef.current !== ws) {
+          console.log('🔔 Notification WS: Stale onerror, ignoring');
+          return;
+        }
+        console.error('🔔 Notification WS: Error:', error);
         setIsConnected(false);
       };
 
@@ -127,17 +134,16 @@ const useWebSocketNotifications = (userId, userType = 'vendor') => {
   }, []); // Stable — identity values from refs
 
   const disconnect = () => {
+    console.log('🔔 Notification WS: Disconnect/cleanup running');
     if (connectTimerRef.current) {
       clearTimeout(connectTimerRef.current);
     }
     if (reconnectTimeoutRef.current) {
       clearTimeout(reconnectTimeoutRef.current);
     }
+    // Do NOT nullify handlers — stale checks (wsRef.current !== ws) handle it.
     if (wsRef.current) {
-      wsRef.current.onopen = null;
-      wsRef.current.onclose = null;
-      wsRef.current.onerror = null;
-      wsRef.current.onmessage = null;
+      console.log('🔔 Notification WS: Closing WS (readyState:', wsRef.current.readyState, ')');
       wsRef.current.close(1000, 'Component unmounting');
       wsRef.current = null;
     }

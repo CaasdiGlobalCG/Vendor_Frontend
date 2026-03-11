@@ -118,14 +118,11 @@ const useCanvasWebSocket = (workspaceId, currentUser, options = {}) => {
   const connect = useCallback(() => {
     if (!workspaceId) return;
 
-    // Close existing
+    // Close existing — do NOT nullify handlers; stale checks handle it
     if (wsRef.current) {
-      wsRef.current.onopen = null;
-      wsRef.current.onclose = null;
-      wsRef.current.onerror = null;
-      wsRef.current.onmessage = null;
+      console.log('🎨 Canvas WS: Closing existing connection (readyState:', wsRef.current.readyState, ')');
       if (wsRef.current.readyState === WebSocket.OPEN || wsRef.current.readyState === WebSocket.CONNECTING) {
-        wsRef.current.close();
+        wsRef.current.close(1000, 'Replacing connection');
       }
       wsRef.current = null;
     }
@@ -142,10 +139,15 @@ const useCanvasWebSocket = (workspaceId, currentUser, options = {}) => {
     console.log('🎨 Canvas WS: Connecting to', wsUrl);
     const ws = new WebSocket(wsUrl);
     wsRef.current = ws;
+    console.log('🎨 Canvas WS: WebSocket created, readyState:', ws.readyState);
 
     ws.onopen = () => {
-      // Stale check: if this WS was replaced by a newer one, ignore
-      if (wsRef.current !== ws) { ws.close(); return; }
+      // Stale check: if this WS was replaced by a newer one, close & ignore
+      if (wsRef.current !== ws) {
+        console.log('🎨 Canvas WS: Stale onopen (replaced), closing');
+        ws.close();
+        return;
+      }
       console.log('🎨 Canvas WS: Connected to workspace', workspaceId);
       setIsConnected(true);
       reconnectAttempts.current = 0;
@@ -163,7 +165,10 @@ const useCanvasWebSocket = (workspaceId, currentUser, options = {}) => {
 
     ws.onclose = (event) => {
       // Stale check: only handle close for the current WS
-      if (wsRef.current !== ws) return;
+      if (wsRef.current !== ws) {
+        console.log('🎨 Canvas WS: Stale onclose (code:', event.code, '), ignoring');
+        return;
+      }
       console.log('🎨 Canvas WS: Disconnected', event.code, event.reason);
       setIsConnected(false);
 
@@ -181,7 +186,10 @@ const useCanvasWebSocket = (workspaceId, currentUser, options = {}) => {
     };
 
     ws.onerror = (err) => {
-      if (wsRef.current !== ws) return;
+      if (wsRef.current !== ws) {
+        console.log('🎨 Canvas WS: Stale onerror, ignoring');
+        return;
+      }
       console.error('🎨 Canvas WS: Error', err);
     };
   }, [workspaceId]); // Only workspaceId — identity from refs
@@ -235,30 +243,29 @@ const useCanvasWebSocket = (workspaceId, currentUser, options = {}) => {
   }, []);
 
   // ---- Connect on mount / workspace change ----
-  // Uses a short debounce (300ms) to let React's hydration + re-renders settle
-  // before opening the WebSocket. Prevents "closed before establishment" errors
-  // caused by rapid effect cleanup during the ~300ms WS handshake via ALB.
+  // Uses a 500ms debounce (staggered from notification WS at 300ms) to let
+  // React's hydration + re-renders settle before opening the WebSocket.
   useEffect(() => {
     console.log('🎨 Canvas WS effect:', { enabled, workspaceId, hasConnect: !!connect });
 
     if (enabled && workspaceId) {
       connectTimerRef.current = setTimeout(() => {
         connect();
-      }, 300);
+      }, 500);
     }
 
     return () => {
+      console.log('🎨 Canvas WS: Cleanup running');
       if (connectTimerRef.current) {
         clearTimeout(connectTimerRef.current);
       }
       if (reconnectTimeoutRef.current) {
         clearTimeout(reconnectTimeoutRef.current);
       }
+      // Do NOT nullify handlers — stale checks (wsRef.current !== ws) handle it.
+      // Nullifying handlers silently kills connections still in CONNECTING state.
       if (wsRef.current) {
-        wsRef.current.onopen = null;
-        wsRef.current.onclose = null;
-        wsRef.current.onerror = null;
-        wsRef.current.onmessage = null;
+        console.log('🎨 Canvas WS: Cleanup closing WS (readyState:', wsRef.current.readyState, ')');
         wsRef.current.close(1000, 'Component unmount');
         wsRef.current = null;
       }
