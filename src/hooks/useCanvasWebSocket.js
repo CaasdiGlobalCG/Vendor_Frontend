@@ -19,6 +19,7 @@ const useCanvasWebSocket = (workspaceId, currentUser, options = {}) => {
 
   const wsRef = useRef(null);
   const reconnectTimeoutRef = useRef(null);
+  const connectTimerRef = useRef(null);
   const reconnectAttempts = useRef(0);
   const maxReconnectAttempts = 10;
 
@@ -119,7 +120,13 @@ const useCanvasWebSocket = (workspaceId, currentUser, options = {}) => {
 
     // Close existing
     if (wsRef.current) {
-      wsRef.current.close();
+      wsRef.current.onopen = null;
+      wsRef.current.onclose = null;
+      wsRef.current.onerror = null;
+      wsRef.current.onmessage = null;
+      if (wsRef.current.readyState === WebSocket.OPEN || wsRef.current.readyState === WebSocket.CONNECTING) {
+        wsRef.current.close();
+      }
       wsRef.current = null;
     }
 
@@ -137,12 +144,15 @@ const useCanvasWebSocket = (workspaceId, currentUser, options = {}) => {
     wsRef.current = ws;
 
     ws.onopen = () => {
+      // Stale check: if this WS was replaced by a newer one, ignore
+      if (wsRef.current !== ws) { ws.close(); return; }
       console.log('🎨 Canvas WS: Connected to workspace', workspaceId);
       setIsConnected(true);
       reconnectAttempts.current = 0;
     };
 
     ws.onmessage = (event) => {
+      if (wsRef.current !== ws) return;
       try {
         const data = JSON.parse(event.data);
         handleMessageRef.current(data);
@@ -152,6 +162,8 @@ const useCanvasWebSocket = (workspaceId, currentUser, options = {}) => {
     };
 
     ws.onclose = (event) => {
+      // Stale check: only handle close for the current WS
+      if (wsRef.current !== ws) return;
       console.log('🎨 Canvas WS: Disconnected', event.code, event.reason);
       setIsConnected(false);
 
@@ -169,6 +181,7 @@ const useCanvasWebSocket = (workspaceId, currentUser, options = {}) => {
     };
 
     ws.onerror = (err) => {
+      if (wsRef.current !== ws) return;
       console.error('🎨 Canvas WS: Error', err);
     };
   }, [workspaceId]); // Only workspaceId — identity from refs
@@ -222,18 +235,30 @@ const useCanvasWebSocket = (workspaceId, currentUser, options = {}) => {
   }, []);
 
   // ---- Connect on mount / workspace change ----
+  // Uses a short debounce (300ms) to let React's hydration + re-renders settle
+  // before opening the WebSocket. Prevents "closed before establishment" errors
+  // caused by rapid effect cleanup during the ~300ms WS handshake via ALB.
   useEffect(() => {
     console.log('🎨 Canvas WS effect:', { enabled, workspaceId, hasConnect: !!connect });
 
     if (enabled && workspaceId) {
-      connect();
+      connectTimerRef.current = setTimeout(() => {
+        connect();
+      }, 300);
     }
 
     return () => {
+      if (connectTimerRef.current) {
+        clearTimeout(connectTimerRef.current);
+      }
       if (reconnectTimeoutRef.current) {
         clearTimeout(reconnectTimeoutRef.current);
       }
       if (wsRef.current) {
+        wsRef.current.onopen = null;
+        wsRef.current.onclose = null;
+        wsRef.current.onerror = null;
+        wsRef.current.onmessage = null;
         wsRef.current.close(1000, 'Component unmount');
         wsRef.current = null;
       }
@@ -241,7 +266,7 @@ const useCanvasWebSocket = (workspaceId, currentUser, options = {}) => {
       setConnectedUsers([]);
       setRemoteCursors({});
     };
-  }, [workspaceId, enabled, connect]); // connect included for React correctness
+  }, [workspaceId, enabled, connect]);
 
   // ---- Keepalive ping every 30s ----
   useEffect(() => {
