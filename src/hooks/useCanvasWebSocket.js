@@ -6,6 +6,9 @@ import { useEffect, useRef, useState, useCallback } from 'react';
  * Connects to the Canvas WebSocket server, emits operations,
  * receives remote operations, and manages presence (cursors).
  *
+ * Uses refs for user identity to prevent unnecessary WebSocket reconnections
+ * when currentUser updates (e.g., role detection, context hydration).
+ *
  * @param {string} workspaceId — The workspace being edited
  * @param {object} currentUser — { userId, userName, role }
  * @param {object} options — { enabled: boolean }
@@ -27,72 +30,26 @@ const useCanvasWebSocket = (workspaceId, currentUser, options = {}) => {
   const onRemoteOperationRef = useRef(null);
   const onFullStateRef = useRef(null);
 
+  // Derive identity values
   const userId = currentUser?.id || currentUser?.userId || currentUser?.vendorId || currentUser?.pmId || 'anonymous';
   const userName = currentUser?.name || currentUser?.userName || 'Anonymous';
   const userRole = currentUser?.role || 'vendor';
 
-  // ---- Connect ----
-  const connect = useCallback(() => {
-    if (!workspaceId || !enabled) return;
+  // ---- Refs for identity — prevents WebSocket reconnection on every currentUser change ----
+  const userIdRef = useRef(userId);
+  const userNameRef = useRef(userName);
+  const userRoleRef = useRef(userRole);
 
-    // Close existing
-    if (wsRef.current) {
-      wsRef.current.close();
-      wsRef.current = null;
-    }
+  useEffect(() => { userIdRef.current = userId; }, [userId]);
+  useEffect(() => { userNameRef.current = userName; }, [userName]);
+  useEffect(() => { userRoleRef.current = userRole; }, [userRole]);
 
-    const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-    const wsHost = window.location.host;
-    const params = new URLSearchParams({
-      userId,
-      userName,   // URLSearchParams already encodes — no double-encode
-      userRole,
-    });
-    const wsUrl = `${wsProtocol}//${wsHost}/api/workspace/ws/${workspaceId}?${params.toString()}`;
+  // ---- Message handler via ref — avoids stale closures in WebSocket onmessage ----
+  const handleMessageRef = useRef(null);
 
-    console.log('🎨 Canvas WS: Connecting to', wsUrl);
-    const ws = new WebSocket(wsUrl);
-    wsRef.current = ws;
-
-    ws.onopen = () => {
-      console.log('🎨 Canvas WS: Connected to workspace', workspaceId);
-      setIsConnected(true);
-      reconnectAttempts.current = 0;
-    };
-
-    ws.onmessage = (event) => {
-      try {
-        const data = JSON.parse(event.data);
-        handleMessage(data);
-      } catch (err) {
-        console.error('🎨 Canvas WS: Error parsing message', err);
-      }
-    };
-
-    ws.onclose = (event) => {
-      console.log('🎨 Canvas WS: Disconnected', event.code, event.reason);
-      setIsConnected(false);
-
-      // Reconnect with exponential backoff
-      if (event.code !== 1000 && reconnectAttempts.current < maxReconnectAttempts) {
-        const delay = Math.min(1000 * Math.pow(2, reconnectAttempts.current), 30000);
-        console.log(`🎨 Canvas WS: Reconnecting in ${delay}ms (attempt ${reconnectAttempts.current + 1})`);
-        reconnectTimeoutRef.current = setTimeout(() => {
-          reconnectAttempts.current += 1;
-          connect();
-        }, delay);
-      }
-    };
-
-    ws.onerror = (err) => {
-      console.error('🎨 Canvas WS: Error', err);
-    };
-  }, [workspaceId, userId, userName, userRole, enabled]);
-
-  // ---- Message handler ----
-  const handleMessage = useCallback((data) => {
-    // Ignore messages from self
-    if (data._from === userId && data.type !== 'CONNECTED' && data.type !== 'FULL_STATE') {
+  handleMessageRef.current = (data) => {
+    // Ignore messages from self (canvas ops have _from, cursors use userId)
+    if (data._from === userIdRef.current && data.type !== 'CONNECTED' && data.type !== 'FULL_STATE') {
       return;
     }
 
@@ -154,7 +111,65 @@ const useCanvasWebSocket = (workspaceId, currentUser, options = {}) => {
       default:
         console.log('🎨 Canvas WS: Unknown message type', data.type);
     }
-  }, [userId]);
+  };
+
+  // ---- Connect (stable — only depends on workspaceId) ----
+  const connect = useCallback(() => {
+    if (!workspaceId) return;
+
+    // Close existing
+    if (wsRef.current) {
+      wsRef.current.close();
+      wsRef.current = null;
+    }
+
+    const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+    const wsHost = window.location.host;
+    const params = new URLSearchParams({
+      userId: userIdRef.current,
+      userName: userNameRef.current,
+      userRole: userRoleRef.current,
+    });
+    const wsUrl = `${wsProtocol}//${wsHost}/api/workspace/ws/${workspaceId}?${params.toString()}`;
+
+    console.log('🎨 Canvas WS: Connecting to', wsUrl);
+    const ws = new WebSocket(wsUrl);
+    wsRef.current = ws;
+
+    ws.onopen = () => {
+      console.log('🎨 Canvas WS: Connected to workspace', workspaceId);
+      setIsConnected(true);
+      reconnectAttempts.current = 0;
+    };
+
+    ws.onmessage = (event) => {
+      try {
+        const data = JSON.parse(event.data);
+        handleMessageRef.current(data);
+      } catch (err) {
+        console.error('🎨 Canvas WS: Error parsing message', err);
+      }
+    };
+
+    ws.onclose = (event) => {
+      console.log('🎨 Canvas WS: Disconnected', event.code, event.reason);
+      setIsConnected(false);
+
+      // Reconnect with exponential backoff (skip for intentional close)
+      if (event.code !== 1000 && reconnectAttempts.current < maxReconnectAttempts) {
+        const delay = Math.min(1000 * Math.pow(2, reconnectAttempts.current), 30000);
+        console.log(`🎨 Canvas WS: Reconnecting in ${delay}ms (attempt ${reconnectAttempts.current + 1})`);
+        reconnectTimeoutRef.current = setTimeout(() => {
+          reconnectAttempts.current += 1;
+          connect();
+        }, delay);
+      }
+    };
+
+    ws.onerror = (err) => {
+      console.error('🎨 Canvas WS: Error', err);
+    };
+  }, [workspaceId]); // Only workspaceId — identity from refs
 
   // ---- Emit operation ----
   const emitOperation = useCallback((op) => {
@@ -222,7 +237,7 @@ const useCanvasWebSocket = (workspaceId, currentUser, options = {}) => {
       setConnectedUsers([]);
       setRemoteCursors({});
     };
-  }, [workspaceId, enabled, connect]);
+  }, [workspaceId, enabled]); // Stable deps — no reconnect on user data changes
 
   // ---- Keepalive ping every 30s ----
   useEffect(() => {

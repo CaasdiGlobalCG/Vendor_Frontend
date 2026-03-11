@@ -45,6 +45,7 @@ import './App.css';
 import NewCustomerPage from "./pages/WorkspacePage/components/invoice/customers/NewCustomerPage";
 import PMPOManagementPage from "./pages/PMDashboard/PMPOManagementPage";
 import VendorPOResponsePage from "./pages/WorkspacePage/components/invoice/purchase-orders/VendorPOResponsePage";
+import VendorSettings from "./pages/Settings/VendorSettings";
 
 // Error Boundary Component
 class ErrorBoundary extends Component {
@@ -286,6 +287,8 @@ function AppContent() {
         <Route path="team" element={<ModuleGuard module="user_management"><TeamPage /></ModuleGuard>} />
 
       </Route>
+      {/* Settings */}
+      <Route path="/settings" element={<RoleGuard><VendorSettings /></RoleGuard>} />
       {/* PM PO Management Route */}
       <Route path="/pm/po-management" element={<RoleGuard><PMPOManagementPage /></RoleGuard>} />
       {/* Vendor PO Response Route */}
