@@ -17,9 +17,12 @@ import { VendorContext } from '../../context/VendorContext';
  */
 export function AccessDeniedGuard({ children }) {
   const { accessDenied, isLoading } = useRBAC();
+  const { currentUser, isHydratingUser } = useContext(VendorContext);
 
-  // Block rendering until RBAC has resolved — prevents flash of protected content
-  if (isLoading) {
+  // Only block while RBAC is loading IF the user is already authenticated.
+  // During handoff exchange or initial hydration, let children render
+  // so the boot flow can proceed.
+  if (isLoading && !!currentUser && !isHydratingUser) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-teal-600" />
