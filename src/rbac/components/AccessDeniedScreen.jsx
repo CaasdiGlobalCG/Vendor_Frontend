@@ -36,7 +36,7 @@ function AccessDeniedScreen({ code, message }) {
   const isSuspended = code === 'RBAC_002';
   const title = isSuspended ? 'Account Suspended' : 'Access Revoked';
   const description = message || (isSuspended
-    ? 'Your account has been temporarily suspended by an administrator.'
+    ? 'Your account has been temporarily suspended by an administrator boyy.'
     : 'Your access to this organization has been revoked.');
 
   return (
