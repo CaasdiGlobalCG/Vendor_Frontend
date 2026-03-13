@@ -186,7 +186,7 @@ function AppContent() {
     // console.log("Check mirroring");
     console.log("App initialized - VendorContext user:", vendorUser);
     console.log("App initialized - UserContext user:", userContextUser);
-    console.log("Added GitHub Actions");
+    console.log("Forced push to trigger deployment after backend refactor. Ignore if you see this in commit history.");
   }, []);
 
   // Client → Vendor switch: accept one-time handoff code and set vendor httpOnly cookie.
