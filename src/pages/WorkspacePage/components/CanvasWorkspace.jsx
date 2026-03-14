@@ -905,7 +905,8 @@ const edgeTypes = {
     canvasWebSocket.emitCursor(event.clientX, event.clientY);
   }, [canvasWebSocket]);
 
-  // Fallback HTTP auto-save: only triggers every 30s IF WebSocket is disconnected
+  // Fallback HTTP auto-save: only triggers every 5s IF WebSocket is disconnected
+  // Uses a short debounce so data persists even when WS is down
   useEffect(() => {
     if (canvasWebSocket?.isConnected) {
       // WebSocket is handling sync — show status indicator
@@ -931,7 +932,7 @@ const edgeTypes = {
           setSaveStatus('error');
           setTimeout(() => setSaveStatus('idle'), 3000);
         }
-      }, 30000); // 30s fallback (was 2s)
+      }, 5000); // 5s debounce — short enough to persist before navigation
 
       return () => clearTimeout(timeoutId);
     }

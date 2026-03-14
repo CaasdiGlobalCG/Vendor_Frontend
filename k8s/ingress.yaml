@@ -11,9 +11,8 @@ metadata:
     alb.ingress.kubernetes.io/ssl-redirect: "443"
     alb.ingress.kubernetes.io/group.name: sales-app
     alb.ingress.kubernetes.io/certificate-arn: arn:aws:acm:us-east-1:286757679229:certificate/d177e09f-e457-4d3d-8b65-4e21e3fdb9d6
-    # WebSocket support for API backend
-    alb.ingress.kubernetes.io/conditions.vendor-backend: |
-      [{"Field":"path-pattern","Values":["*"]}]
+    # WebSocket support — keep ALB connection alive for long-lived WS
+    alb.ingress.kubernetes.io/load-balancer-attributes: idle_timeout.timeout_seconds=3600
     alb.ingress.kubernetes.io/target-group-attributes: |
       deregistration_delay.timeout_seconds=30,
       stickiness.enabled=true,

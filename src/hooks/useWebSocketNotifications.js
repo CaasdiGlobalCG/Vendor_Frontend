@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useCallback } from 'react';
 import config from '../config/env';
 
 const useWebSocketNotifications = (userId, userType = 'vendor') => {
@@ -7,33 +7,51 @@ const useWebSocketNotifications = (userId, userType = 'vendor') => {
   const [isConnected, setIsConnected] = useState(false);
   const wsRef = useRef(null);
   const reconnectTimeoutRef = useRef(null);
+  const connectTimerRef = useRef(null);
   const reconnectAttempts = useRef(0);
   const maxReconnectAttempts = 5;
 
+  // Refs for identity — prevents reconnection when userId/userType object identity changes
+  const userIdRef = useRef(userId);
+  const userTypeRef = useRef(userType);
+  useEffect(() => { userIdRef.current = userId; }, [userId]);
+  useEffect(() => { userTypeRef.current = userType; }, [userType]);
 
-  const connect = () => {
-    if (!userId) return;
+  const connect = useCallback(() => {
+    const uid = userIdRef.current;
+    if (!uid) return;
 
     try {
-      // Close existing connection if any
+      // Close existing connection if any — do NOT nullify handlers; stale checks handle it
       if (wsRef.current) {
-        wsRef.current.close();
+        console.log('🔔 Notification WS: Closing existing connection (readyState:', wsRef.current.readyState, ')');
+        if (wsRef.current.readyState === WebSocket.OPEN || wsRef.current.readyState === WebSocket.CONNECTING) {
+          wsRef.current.close(1000, 'Replacing connection');
+        }
+        wsRef.current = null;
       }
 
-      // Create WebSocket connection using window.location.host to go through Vite proxy
+      // Create WebSocket connection using window.location.host
       const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
       const wsHost = window.location.host;
-      const wsUrl = `${wsProtocol}//${wsHost}/api/notifications/ws/${userId}?userType=${userType}`;
+      const wsUrl = `${wsProtocol}//${wsHost}/api/notifications/ws/${uid}?userType=${userTypeRef.current}`;
       console.log('useWebSocketNotifications - Connecting to:', wsUrl);
-      wsRef.current = new WebSocket(wsUrl);
+      const ws = new WebSocket(wsUrl);
+      wsRef.current = ws;
 
-      wsRef.current.onopen = () => {
-        console.log('WebSocket connected for user:', userId);
+      ws.onopen = () => {
+        if (wsRef.current !== ws) {
+          console.log('🔔 Notification WS: Stale onopen, closing');
+          ws.close();
+          return;
+        }
+        console.log('🔔 Notification WS: Connected for user:', uid);
         setIsConnected(true);
         reconnectAttempts.current = 0;
       };
 
-      wsRef.current.onmessage = (event) => {
+      ws.onmessage = (event) => {
+        if (wsRef.current !== ws) return;
         try {
           const data = JSON.parse(event.data);
           
@@ -43,7 +61,6 @@ const useWebSocketNotifications = (userId, userType = 'vendor') => {
             // Format call notifications properly
             let formattedNotification;
             if (notification.type === 'call_invitation' || notification.type === 'call_ended' || notification.type === 'call_declined') {
-              // Call notifications come pre-formatted from backend
               formattedNotification = {
                 ...notification,
                 time: notification.timestamp ? new Date(notification.timestamp).toLocaleTimeString() : 'Just now',
@@ -52,14 +69,12 @@ const useWebSocketNotifications = (userId, userType = 'vendor') => {
                 isSaved: false
               };
             } else {
-              // Other notifications use as-is
               formattedNotification = notification;
             }
             
             setNotifications(prev => [formattedNotification, ...prev]);
             setUnreadCount(prev => prev + 1);
             
-            // Show browser notification if permission is granted
             if (Notification.permission === 'granted') {
               new Notification(formattedNotification.title || formattedNotification.message, {
                 body: formattedNotification.message,
@@ -68,31 +83,31 @@ const useWebSocketNotifications = (userId, userType = 'vendor') => {
               });
             }
 
-            // Play notification sound
             try {
               const audio = new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBSuBzvLZiTYIG2m98OScTgwOUarm7blmGgU7k9n1unEiBC13yO/eizEIHWq+8+OWT');
               audio.volume = 0.3;
-              audio.play().catch(() => {
-                // Ignore errors if audio can't play (e.g., user hasn't interacted with page)
-              });
+              audio.play().catch(() => {});
             } catch (error) {
               // Ignore audio errors
             }
           } else if (data.type === 'connection') {
             console.log('WebSocket connection established:', data);
           } else if (data.type === 'pong') {
-            console.log('WebSocket pong received');
+            // keepalive response
           }
         } catch (error) {
           console.error('Error parsing WebSocket message:', error);
         }
       };
 
-      wsRef.current.onclose = (event) => {
-        console.log('WebSocket disconnected:', event.code, event.reason);
+      ws.onclose = (event) => {
+        if (wsRef.current !== ws) {
+          console.log('🔔 Notification WS: Stale onclose (code:', event.code, '), ignoring');
+          return;
+        }
+        console.log('🔔 Notification WS: Disconnected:', event.code, event.reason);
         setIsConnected(false);
         
-        // Attempt to reconnect if not a normal closure
         if (event.code !== 1000 && reconnectAttempts.current < maxReconnectAttempts) {
           const delay = Math.min(1000 * Math.pow(2, reconnectAttempts.current), 30000);
           console.log(`Attempting to reconnect in ${delay}ms (attempt ${reconnectAttempts.current + 1})`);
@@ -104,22 +119,33 @@ const useWebSocketNotifications = (userId, userType = 'vendor') => {
         }
       };
 
-      wsRef.current.onerror = (error) => {
-        console.error('WebSocket error:', error);
+      ws.onerror = (error) => {
+        if (wsRef.current !== ws) {
+          console.log('🔔 Notification WS: Stale onerror, ignoring');
+          return;
+        }
+        console.error('🔔 Notification WS: Error:', error);
         setIsConnected(false);
       };
 
     } catch (error) {
       console.error('Error creating WebSocket connection:', error);
     }
-  };
+  }, []); // Stable — identity values from refs
 
   const disconnect = () => {
+    console.log('🔔 Notification WS: Disconnect/cleanup running');
+    if (connectTimerRef.current) {
+      clearTimeout(connectTimerRef.current);
+    }
     if (reconnectTimeoutRef.current) {
       clearTimeout(reconnectTimeoutRef.current);
     }
+    // Do NOT nullify handlers — stale checks (wsRef.current !== ws) handle it.
     if (wsRef.current) {
+      console.log('🔔 Notification WS: Closing WS (readyState:', wsRef.current.readyState, ')');
       wsRef.current.close(1000, 'Component unmounting');
+      wsRef.current = null;
     }
   };
 
@@ -198,17 +224,19 @@ const useWebSocketNotifications = (userId, userType = 'vendor') => {
     }
   }, []);
 
-  // Connect when userId is available
+  // Connect when userId is available (debounce to let React settle)
   useEffect(() => {
     if (userId) {
-      connect();
+      connectTimerRef.current = setTimeout(() => {
+        connect();
+      }, 300);
       fetchNotifications();
     }
 
     return () => {
       disconnect();
     };
-  }, [userId, userType]);
+  }, [userId, userType, connect]);
 
   // Send ping every 30 seconds to keep connection alive
   useEffect(() => {

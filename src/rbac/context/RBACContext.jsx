@@ -101,39 +101,41 @@ export const RBACProvider = ({ children }) => {
             return;
           }
         }
-        // Non-200 — user may not have RBAC yet (Phase 1 is fine with this)
+        // Non-200, non-403 — RBAC backend error. Block access instead of granting Super Admin.
         console.warn('[RBAC] /api/rbac/me returned', res.status);
         setRbacState(prev => ({
           ...prev,
           isLoading: false,
           hasRBAC: false,
-          // Phase 1 fallback: treat as Super Admin so UI stays fully accessible
-          role: { roleId: 'super_admin', roleName: 'Super Admin', roleLevel: 0, isSuperAdmin: true },
-          permissions: ['*:*'],
-          permissionMap: { '*': ['*'] },
-          accessibleModules: ['*'],
-          platformAccess: ['vendor', 'client', 'sales'],
-          isFallback: true,
+          role: null,
+          permissions: [],
+          permissionMap: {},
+          accessibleModules: [],
+          platformAccess: [],
+          isFallback: false,
+          accessDenied: { code: 'RBAC_ERROR', message: 'Unable to verify your access. Please try again later.' },
         }));
         return;
       }
 
       const data = await res.json();
 
-      // Backend may return 200 with hasRBAC: false when org can't be resolved.
-      // In that case, apply Phase 1 Super Admin fallback so UI stays accessible.
+      // Backend returns 200 with hasRBAC: false when user has no org membership.
+      // This means the user was removed (records deleted) or never had access.
+      // Block access instead of granting Super Admin.
       if (data.hasRBAC === false) {
-        console.warn('[RBAC] Backend returned hasRBAC:false — applying Phase 1 fallback');
+        console.warn('[RBAC] Backend returned hasRBAC:false — user has no organization membership');
         setRbacState(prev => ({
           ...prev,
           isLoading: false,
           hasRBAC: false,
-          role: { roleId: 'super_admin', roleName: 'Super Admin', roleLevel: 0, isSuperAdmin: true },
-          permissions: ['*:*'],
-          permissionMap: { '*': ['*'] },
-          accessibleModules: ['*'],
-          platformAccess: ['vendor', 'client', 'sales'],
-          isFallback: true,
+          role: null,
+          permissions: [],
+          permissionMap: {},
+          accessibleModules: [],
+          platformAccess: [],
+          isFallback: false,
+          accessDenied: { code: 'NO_ORG', message: data.message || 'You are not a member of any organization.' },
         }));
         return;
       }
@@ -154,18 +156,19 @@ export const RBACProvider = ({ children }) => {
       });
     } catch (err) {
       console.error('[RBAC] Failed to fetch /api/rbac/me:', err);
-      // Phase 1 fallback: don't break the app
+      // Block access when RBAC system is unreachable — never grant Super Admin on error
       setRbacState(prev => ({
         ...prev,
         isLoading: false,
         error: err.message,
         hasRBAC: false,
-        role: { roleId: 'super_admin', roleName: 'Super Admin', roleLevel: 0, isSuperAdmin: true },
-        permissions: ['*:*'],
-        permissionMap: { '*': ['*'] },
-        accessibleModules: ['*'],
-        platformAccess: ['vendor', 'client', 'sales'],
-        isFallback: true,
+        role: null,
+        permissions: [],
+        permissionMap: {},
+        accessibleModules: [],
+        platformAccess: [],
+        isFallback: false,
+        accessDenied: { code: 'RBAC_ERROR', message: 'Unable to verify your access. Please try again later.' },
       }));
     }
   }, [currentUser?.vendorId]);

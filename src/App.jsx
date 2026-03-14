@@ -45,6 +45,7 @@ import './App.css';
 import NewCustomerPage from "./pages/WorkspacePage/components/invoice/customers/NewCustomerPage";
 import PMPOManagementPage from "./pages/PMDashboard/PMPOManagementPage";
 import VendorPOResponsePage from "./pages/WorkspacePage/components/invoice/purchase-orders/VendorPOResponsePage";
+import VendorSettings from "./pages/Settings/VendorSettings";
 
 // Error Boundary Component
 class ErrorBoundary extends Component {
@@ -185,7 +186,7 @@ function AppContent() {
     // console.log("Check mirroring");
     console.log("App initialized - VendorContext user:", vendorUser);
     console.log("App initialized - UserContext user:", userContextUser);
-    console.log("Added GitHub Actions");
+    console.log("Forced push to trigger deployment after backend refactor. Ignore if you see this in commit history.");
   }, []);
 
   // Client → Vendor switch: accept one-time handoff code and set vendor httpOnly cookie.
@@ -286,6 +287,8 @@ function AppContent() {
         <Route path="team" element={<ModuleGuard module="user_management"><TeamPage /></ModuleGuard>} />
 
       </Route>
+      {/* Settings */}
+      <Route path="/settings" element={<RoleGuard><VendorSettings /></RoleGuard>} />
       {/* PM PO Management Route */}
       <Route path="/pm/po-management" element={<RoleGuard><PMPOManagementPage /></RoleGuard>} />
       {/* Vendor PO Response Route */}
