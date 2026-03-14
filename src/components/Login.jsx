@@ -144,6 +144,19 @@ function Login() {
         const verifyRes = await fetch(`${config.VENDOR_BACKEND_URL}/api/auth/verify`, {
           headers: { Authorization: `Bearer ${idToken}` },
         });
+        if (verifyRes.status === 403) {
+          const deniedBody = await verifyRes.json().catch(() => ({}));
+          const deniedCode = deniedBody?.code;
+          const deniedMessage = deniedBody?.message || 'Your access to this organization has been restricted.';
+          setAlertMessage(
+            deniedCode === 'RBAC_002'
+              ? deniedMessage
+              : deniedMessage
+          );
+          setAlertType('error');
+          setShowAlert(true);
+          return;
+        }
         if (verifyRes.ok) {
           const verifyData = await verifyRes.json();
           verifyRoleSelected = verifyData?.roleSelected === true;
@@ -208,13 +221,30 @@ function Login() {
 
       // Establish vendor cookie session (sid).
       try {
-        await fetch(`${config.VENDOR_BACKEND_URL}/api/auth/session`, {
+        const sessionRes = await fetch(`${config.VENDOR_BACKEND_URL}/api/auth/session`, {
           method: "POST",
           credentials: "include",
           headers: { Authorization: `Bearer ${idToken}` },
         });
+        if (sessionRes.status === 403) {
+          const deniedBody = await sessionRes.json().catch(() => ({}));
+          setAlertMessage(deniedBody?.message || 'Your access to this organization has been revoked.');
+          setAlertType('error');
+          setShowAlert(true);
+          return;
+        }
+        if (!sessionRes.ok) {
+          setAlertMessage('Unable to establish login session. Please try again.');
+          setAlertType('error');
+          setShowAlert(true);
+          return;
+        }
       } catch (sessionErr) {
         console.warn("Failed to establish vendor cookie session:", sessionErr);
+        setAlertMessage('Unable to establish login session. Please try again.');
+        setAlertType('error');
+        setShowAlert(true);
+        return;
       }
 
       const vendorMe = await fetchVendorMe(idToken);
