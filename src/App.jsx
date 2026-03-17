@@ -46,6 +46,8 @@ import NewCustomerPage from "./pages/WorkspacePage/components/invoice/customers/
 import PMPOManagementPage from "./pages/PMDashboard/PMPOManagementPage";
 import VendorPOResponsePage from "./pages/WorkspacePage/components/invoice/purchase-orders/VendorPOResponsePage";
 import VendorSettings from "./pages/Settings/VendorSettings";
+import SupportPage from "./pages/support/SupportPage";
+import SupportTicketDetail from "./pages/support/SupportTicketDetail";
 
 // Error Boundary Component
 class ErrorBoundary extends Component {
@@ -124,12 +126,26 @@ const mockProjects = [
 const Layout = () => {
   const { currentUser: vendorUser } = useContext(VendorContext);
   const { currentUser: userContextUser } = useContext(UserContext);
+  const location = useLocation();
+
+  // Hide header and use full-height layout on support pages
+  const isSupport = location.pathname.includes('/support');
   
   // Log context values on mount
   useEffect(() => {
     console.log("Layout mounted - VendorContext user:", vendorUser);
     console.log("Layout mounted - UserContext user:", userContextUser);
   }, [vendorUser, userContextUser]);
+
+  if (isSupport) {
+    return (
+      <div className="h-screen flex flex-col overflow-hidden">
+        <main className="flex-1 overflow-hidden">
+          <Outlet />
+        </main>
+      </div>
+    );
+  }
 
   return (
     <div className="bg-white min-h-screen ">{/* Or your default page background */}
@@ -285,6 +301,8 @@ function AppContent() {
         <Route path="workspace" element={<ModuleGuard module="workspace"><WorkspaceList /></ModuleGuard>} />
         <Route path="notifications" element={<NotificationsPage />} />
         <Route path="team" element={<ModuleGuard module="user_management"><TeamPage /></ModuleGuard>} />
+        <Route path="support" element={<SupportPage />} />
+        <Route path="support/:ticketId" element={<SupportTicketDetail />} />
 
       </Route>
       {/* Settings */}

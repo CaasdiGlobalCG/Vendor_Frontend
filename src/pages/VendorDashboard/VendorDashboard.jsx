@@ -1,4 +1,5 @@
 import React, { useContext, useEffect, useState, useCallback } from "react";
+import { LifeBuoy } from 'lucide-react';
 import { RevenueChart } from "../../components/RevenueChart/RevenueChart";
 import { StatCard } from "../../components/StatCard/StatCard";
 import { ProjectList } from "../../components/ProjectList/ProjectList";
@@ -7,6 +8,7 @@ import PasskeyRegistrationBanner from "../../components/PasskeyRegistrationBanne
 import { VendorContext } from "../../context/VendorContext";
 import { useLocation, useNavigate } from "react-router-dom";
 import config from '../../config/env';
+
 
 const mockTenders = [
   {
@@ -453,6 +455,17 @@ export const VendorDashboard = () => {
           <RevenueChart data={realisticRevenueData} />
         </div>
       </div>
+
+      {/* Floating Support Button */}
+      <button
+        onClick={() => navigate('/VendorDashboard/support')}
+        className="fixed bottom-6 right-6 z-30 flex items-center gap-2 px-4 py-3 text-white text-sm font-semibold rounded-2xl shadow-lg hover:shadow-xl transition-all"
+        style={{background:'linear-gradient(135deg,rgba(9,91,73,1) 0%,rgba(4,50,40,1) 100%)'}}
+        title="Open Support Centre"
+      >
+        <LifeBuoy size={18} />
+        <span className="hidden sm:inline">Support</span>
+      </button>
     </div>
   );
 };
