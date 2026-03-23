@@ -21,11 +21,14 @@ import { EditRoleModal } from '../components/EditRoleModal';
 import ActivityLogTab from '../components/ActivityLogTab';
 import RolesTab from '../components/RolesTab';
 import { RemovalReasonModal } from '../components/RemovalReasonModal';
+import { SuspensionModal } from '../components/SuspensionModal';
 import {
   listMembers,
   inviteMember,
   changeMemberRole,
   removeMember,
+  suspendMember,
+  unsuspendMember,
   listRoles,
   listInvitations,
   cancelInvitation,
@@ -68,6 +71,9 @@ export default function TeamPage() {
 
   // ── Remove confirmation state ──
   const [removingMember, setRemovingMember] = useState(null); // { userId, email }
+
+  // ── Suspension modal state ──
+  const [suspensionTarget, setSuspensionTarget] = useState(null); // { userId, email, mode }
 
   // ── Edit role modal state ──
   const [editingRoleId, setEditingRoleId] = useState(null);
@@ -165,6 +171,33 @@ export default function TeamPage() {
       fetchMembers();
     } catch (err) {
       throw err; // Let RemovalReasonModal handle error display
+    }
+  };
+
+  const handleSuspend = async ({ userId: targetUserId, reason, durationDays }) => {
+    try {
+      let suspendedUntil;
+      if (durationDays) {
+        suspendedUntil = new Date(Date.now() + durationDays * 24 * 60 * 60 * 1000).toISOString();
+      }
+
+      await suspendMember(targetUserId, { reason, suspendedUntil });
+      showFeedback('Member suspended');
+      setSuspensionTarget(null);
+      fetchMembers();
+    } catch (err) {
+      throw err;
+    }
+  };
+
+  const handleUnsuspend = async ({ userId: targetUserId, reason }) => {
+    try {
+      await unsuspendMember(targetUserId, reason || undefined);
+      showFeedback('Member unsuspended');
+      setSuspensionTarget(null);
+      fetchMembers();
+    } catch (err) {
+      throw err;
     }
   };
 
@@ -324,6 +357,8 @@ export default function TeamPage() {
                     newRoleId={newRoleId}
                     setNewRoleId={setNewRoleId}
                     onRoleChange={handleRoleChange}
+                    onSuspend={(uid, email) => setSuspensionTarget({ userId: uid, email, mode: 'suspend' })}
+                    onUnsuspend={(uid, email) => setSuspensionTarget({ userId: uid, email, mode: 'unsuspend' })}
                     onStartRemove={(uid, email) => setRemovingMember({ userId: uid, email })}
                     onEditRole={setEditingRoleId}
                   />
@@ -461,6 +496,21 @@ export default function TeamPage() {
           onClose={() => setRemovingMember(null)}
         />
       )}
+
+      {/* ── Suspension Modal ── */}
+      {suspensionTarget && (
+        <SuspensionModal
+          mode={suspensionTarget.mode}
+          memberEmail={suspensionTarget.email}
+          onConfirm={({ reason, durationDays }) => {
+            if (suspensionTarget.mode === 'suspend') {
+              return handleSuspend({ userId: suspensionTarget.userId, reason, durationDays });
+            }
+            return handleUnsuspend({ userId: suspensionTarget.userId, reason });
+          }}
+          onClose={() => setSuspensionTarget(null)}
+        />
+      )}
     </div>
   );
 }
@@ -473,7 +523,7 @@ export default function TeamPage() {
 function MemberRow({
   member, currentUserId, assignableRoles,
   changingRoleFor, setChangingRoleFor, newRoleId, setNewRoleId, onRoleChange,
-  onStartRemove, onEditRole,
+  onSuspend, onUnsuspend, onStartRemove, onEditRole,
 }) {
   const isSelf = member.userId === currentUserId;
   const isInvited = member.status === 'invited';
@@ -537,6 +587,23 @@ function MemberRow({
               >
                 Edit Role
               </button>
+            </PermissionGate>
+            <PermissionGate module="user_management" action="edit">
+              {member.status === 'suspended' ? (
+                <button
+                  onClick={() => onUnsuspend(member.userId, member.email)}
+                  className="text-xs text-emerald-600 hover:text-emerald-700 font-medium"
+                >
+                  Unsuspend
+                </button>
+              ) : (
+                <button
+                  onClick={() => onSuspend(member.userId, member.email)}
+                  className="text-xs text-amber-600 hover:text-amber-700 font-medium"
+                >
+                  Suspend
+                </button>
+              )}
             </PermissionGate>
             <PermissionGate module="user_management" action="edit">
               <button

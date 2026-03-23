@@ -117,6 +117,32 @@ export async function removeMember(memberId, reason) {
 }
 
 /**
+ * Suspend a member from the org.
+ * @param {string} memberId
+ * @param {{ reason: string, suspendedUntil?: string|null }} payload
+ * @returns {Promise<{ success: boolean, message: string }>}
+ */
+export async function suspendMember(memberId, payload) {
+  return rbacFetch(`/members/${encodeURIComponent(memberId)}/suspend`, {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  });
+}
+
+/**
+ * Unsuspend a member and restore active status.
+ * @param {string} memberId
+ * @param {string} [reason]
+ * @returns {Promise<{ success: boolean, message: string }>}
+ */
+export async function unsuspendMember(memberId, reason) {
+  return rbacFetch(`/members/${encodeURIComponent(memberId)}/unsuspend`, {
+    method: 'POST',
+    body: JSON.stringify(reason ? { reason } : {}),
+  });
+}
+
+/**
  * List all available roles for the org.
  * @returns {Promise<Object>} { roles, meta }
  */

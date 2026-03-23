@@ -82,6 +82,10 @@ function Login() {
       const res = await fetch(`${config.VENDOR_BACKEND_URL}/api/vendor/me`, {
         credentials: "include",
       });
+      if (res.status === 403) {
+        const body = await res.json().catch(() => ({}));
+        return { success: false, accessDenied: body };
+      }
       if (!res.ok) return null;
       return res.json();
     };
@@ -90,6 +94,10 @@ function Login() {
       const res = await fetch(`${config.VENDOR_BACKEND_URL}/api/vendor/me`, {
         headers: { Authorization: `Bearer ${idToken}` },
       });
+      if (res.status === 403) {
+        const body = await res.json().catch(() => ({}));
+        return { success: false, accessDenied: body };
+      }
       if (!res.ok) return null;
       return res.json();
     };
@@ -248,6 +256,13 @@ function Login() {
       }
 
       const vendorMe = await fetchVendorMe(idToken);
+
+      if (vendorMe?.accessDenied?.code === 'RBAC_001' || vendorMe?.accessDenied?.code === 'RBAC_002') {
+        setAlertMessage(vendorMe?.accessDenied?.message || 'Your access to this organization has been restricted.');
+        setAlertType('error');
+        setShowAlert(true);
+        return;
+      }
 
       if (!vendorMe?.success || !vendorMe?.data) {
         setAlertMessage("Failed to retrieve vendor details. Please try again or contact support.");
