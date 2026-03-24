@@ -70,6 +70,7 @@ src/rbac/
 - Auth transition screens now use a shared skeleton component (`components/loading/AuthSkeletonScreen.jsx`) for consistent UX across handoff, login gate, and role-guard loading states.
 - Header cross-app switches (`Client`, `Sales`, `Tender`) now also use the same `AuthSkeletonScreen` overlay while redirect handoff is in progress.
 - `AccessDeniedGuard` uses the same skeleton while RBAC access is resolving, preventing spinner-style visual mismatch before deny/allow is known.
+- Vendor app now treats inbound switch query markers (`transition=1`, `fromClient=true`, `fromSales=true`) as a transition phase: it raises auth-transition state, attempts hydration, and renders `AuthSkeletonScreen` before rendering login/dashboard.
 - `App.jsx` + `Login.jsx` + `VendorGuard` now share `src/utils/vendorAuthRouting.js` for consistent destination logic (`/VendorDashboard`, `/Auditorapprove`, `/Form1`).
 - `VendorContext.jsx` → reads `isTeamMember` from `/me` response, propagates to all consumers
 - `RBACContext.jsx` → waits for VendorContext hydration, passes `vendorId` hint to `/api/rbac/me`

@@ -211,6 +211,16 @@ function AppContent() {
   const navigate = useNavigate();
   const location = useLocation();
   const [isExchangingHandoff, setIsExchangingHandoff] = useState(false);
+  const [isInboundSwitchLoading, setIsInboundSwitchLoading] = useState(false);
+
+  const inboundSwitchMarker = useMemo(() => {
+    const params = new URLSearchParams(location.search);
+    return (
+      params.get('transition') === '1' ||
+      params.get('fromClient') === 'true' ||
+      params.get('fromSales') === 'true'
+    );
+  }, [location.search]);
 
   // Synchronous check to avoid a 1-frame flash of the '/' page.
   // useEffect runs after first paint, so we gate rendering here when handoff is present.
@@ -230,6 +240,37 @@ function AppContent() {
     console.log("App initialized - UserContext user:", userContextUser);
     console.log("Forced push to trigger deployment after backend refactor. Ignore if you see this in commit history.");
   }, []);
+
+  // Sales/Client -> Vendor fallback return path should always show a transition skeleton first.
+  useEffect(() => {
+    if (!inboundSwitchMarker) return;
+
+    let isCancelled = false;
+    setIsInboundSwitchLoading(true);
+    sessionStorage.setItem(AUTH_TRANSITION_KEY, 'true');
+    sessionStorage.setItem(AUTH_TRANSITION_STARTED_AT_KEY, String(Date.now()));
+
+    (async () => {
+      try {
+        await Promise.resolve(hydrateCurrentUser?.());
+      } catch {}
+      if (isCancelled) return;
+
+      const params = new URLSearchParams(location.search);
+      params.delete('transition');
+      params.delete('fromSales');
+      // Keep `fromClient` and `role` when present so login keeps explicit vendor intent.
+      navigate({ search: params.toString() }, { replace: true });
+
+      setTimeout(() => {
+        if (!isCancelled) setIsInboundSwitchLoading(false);
+      }, 250);
+    })();
+
+    return () => {
+      isCancelled = true;
+    };
+  }, [inboundSwitchMarker, location.search, navigate, hydrateCurrentUser]);
 
   // Client → Vendor switch: accept one-time handoff code and set vendor httpOnly cookie.
   useEffect(() => {
@@ -285,7 +326,7 @@ function AppContent() {
     };
   }, [location.search, navigate, hydrateCurrentUser]);
 
-  if (handoffParam || isExchangingHandoff) {
+  if (handoffParam || isExchangingHandoff || isInboundSwitchLoading) {
     return <AuthSkeletonScreen message="Switching to Vendor..." />;
   }
 
