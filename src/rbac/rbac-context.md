@@ -69,6 +69,8 @@ src/rbac/
 - `/login` now runs behind `LoginRouteGate` in `App.jsx`, so active transition/hydration shows a neutral loading screen instead of rendering the login form for a frame.
 - Auth transition screens now use a shared skeleton component (`components/loading/AuthSkeletonScreen.jsx`) for consistent UX across handoff, login gate, and role-guard loading states.
 - Header cross-app switches (`Client`, `Sales`, `Tender`) now also use the same `AuthSkeletonScreen` overlay while redirect handoff is in progress.
+- Vendor header `Vendor/Client` toggle gradients now match Client app top-right toggle styling (Client: blue/sky, Vendor: teal/green) so cross-platform switch controls look consistent in both placements.
+- Vendor header toggle dimensions (desktop + mobile) now match Client top-right toggle dimensions (`76px x 24px`, `18px` radius, `24px x 19px` knob) for exact size/length parity across apps.
 - `AccessDeniedGuard` uses the same skeleton while RBAC access is resolving, preventing spinner-style visual mismatch before deny/allow is known.
 - Vendor app now treats inbound switch query markers (`transition=1`, `fromClient=true`, `fromSales=true`) as a transition phase: it raises auth-transition state, attempts hydration, and renders `AuthSkeletonScreen` before rendering login/dashboard.
 - `App.jsx` + `Login.jsx` + `VendorGuard` now share `src/utils/vendorAuthRouting.js` for consistent destination logic (`/VendorDashboard`, `/Auditorapprove`, `/Form1`).

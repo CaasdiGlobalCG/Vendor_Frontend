@@ -738,17 +738,17 @@ export const Header = () => {
               {/* Mobile Toggle — only shown if user has client platform access */}
               {canAccessClient && (
               <div
-                className={`w-[59px] h-[23px] rounded-[17px] cursor-pointer relative ${isVendor ? 'bg-gradient-to-r from-teal-400 to-[#423e3e]' : 'bg-gradient-to-r from-[#423e3e] to-[#efcf4e]'}`}
+                className={`w-[76px] h-[24px] rounded-[18px] cursor-pointer relative ${isVendor ? 'bg-gradient-to-r from-[#0F766E] via-[#14B8A6] to-[#22C55E]' : 'bg-gradient-to-r from-[#1D4ED8] via-[#2563EB] to-[#38BDF8]'}`}
             onClick={() => setIsVendor(!isVendor)}
                 role="button" aria-label="Toggle Vendor/Client mode" tabIndex={0}
           >
             {isVendor ? (
-                  <span className="text-white text-[8px] font-medium absolute right-[5%] top-1/2 -translate-y-1/2">Vendor</span>
+                  <span className="text-white text-[8px] font-medium absolute right-[8%] top-1/2 -translate-y-1/2">Vendor</span>
                 ) : (
-                  <span className="text-white text-[8px] font-medium absolute left-[10%] top-1/2 -translate-y-1/2">Client</span>
+                  <span className="text-white text-[8px] font-medium absolute left-[9%] top-1/2 -translate-y-1/2">Client</span>
                 )}
                 <div
-                  className={`absolute top-1/2 -translate-y-1/2 w-[30%] h-[19px] bg-white rounded-full transition-all duration-200 ease-in-out ${ isVendor ? 'left-[5%]' : 'left-[65%]' }`} />
+                  className={`absolute top-1/2 -translate-y-1/2 w-[24px] h-[19px] bg-white rounded-full transition-all duration-200 ease-in-out ${ isVendor ? 'left-[6%]' : 'left-[66%]' }`} />
               </div>
               )}
 
@@ -877,7 +877,7 @@ export const Header = () => {
           {/* Desktop Toggle — only shown if user has client platform access */}
           {canAccessClient && (
           <div
-             className={`w-[59px] h-[23px] rounded-[17px] cursor-pointer relative ${isVendor ? 'bg-gradient-to-r from-teal-400 to-[#423e3e]' : 'bg-gradient-to-r from-[#423e3e] to-[#efcf4e]'}`}
+             className={`w-[76px] h-[24px] rounded-[18px] cursor-pointer relative ${isVendor ? 'bg-gradient-to-r from-[#0F766E] via-[#14B8A6] to-[#22C55E]' : 'bg-gradient-to-r from-[#1D4ED8] via-[#2563EB] to-[#38BDF8]'}`}
              onClick={async () => {
                const next = !isVendor;
                setIsVendor(next);
@@ -915,12 +915,12 @@ export const Header = () => {
              role="button" aria-label="Toggle Vendor/Client mode" tabIndex={0}
            >
              {isVendor ? (
-               <span className="text-white text-[8px] font-medium absolute right-[5%] top-1/2 -translate-y-1/2">Vendor</span>
+               <span className="text-white text-[8px] font-medium absolute right-[8%] top-1/2 -translate-y-1/2">Vendor</span>
              ) : (
-               <span className="text-white text-[8px] font-medium absolute left-[10%] top-1/2 -translate-y-1/2">Client</span>
+               <span className="text-white text-[8px] font-medium absolute left-[9%] top-1/2 -translate-y-1/2">Client</span>
              )}
              <div
-               className={`absolute top-1/2 -translate-y-1/2 w-[30%] h-[19px] bg-white rounded-full transition-all duration-200 ease-in-out ${ isVendor ? 'left-[5%]' : 'left-[65%]' }`} />
+               className={`absolute top-1/2 -translate-y-1/2 w-[24px] h-[19px] bg-white rounded-full transition-all duration-200 ease-in-out ${ isVendor ? 'left-[6%]' : 'left-[66%]' }`} />
           </div>
           )}
         </div>
