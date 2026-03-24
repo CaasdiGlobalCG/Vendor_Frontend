@@ -1,5 +1,5 @@
 import { Routes, Route, useNavigate, useLocation } from "react-router-dom";
-import { useEffect, useContext, useState, useMemo } from "react";
+import { useEffect, useContext, useState, useMemo, useRef } from "react";
 import HomePage from "./pages/HomePage";
 import { VendorProvider, VendorContext } from "./context/VendorContext";
 import { UserProvider, UserContext } from "./context/UserContext";
@@ -48,6 +48,7 @@ import VendorPOResponsePage from "./pages/WorkspacePage/components/invoice/purch
 import VendorSettings from "./pages/Settings/VendorSettings";
 import SupportPage from "./pages/support/SupportPage";
 import SupportTicketDetail from "./pages/support/SupportTicketDetail";
+import { getVendorDestination } from "./utils/vendorAuthRouting";
 
 // Error Boundary Component
 class ErrorBoundary extends Component {
@@ -121,6 +122,30 @@ const mockProjects = [
     endDate: "2023-11-15"
   }
 ];
+
+const AUTH_TRANSITION_KEY = 'vendorAuthTransitionInProgress';
+const AUTH_TRANSITION_STARTED_AT_KEY = 'vendorAuthTransitionStartedAt';
+const AUTH_TRANSITION_MAX_MS = 12000;
+
+function isAuthTransitionActive() {
+  try {
+    const active = sessionStorage.getItem(AUTH_TRANSITION_KEY) === 'true';
+    if (!active) return false;
+
+    const startedAtRaw = sessionStorage.getItem(AUTH_TRANSITION_STARTED_AT_KEY);
+    const startedAt = Number(startedAtRaw || 0);
+    if (!Number.isFinite(startedAt) || startedAt <= 0) return true;
+
+    const stillFresh = Date.now() - startedAt <= AUTH_TRANSITION_MAX_MS;
+    if (!stillFresh) {
+      sessionStorage.removeItem(AUTH_TRANSITION_KEY);
+      sessionStorage.removeItem(AUTH_TRANSITION_STARTED_AT_KEY);
+    }
+    return stillFresh;
+  } catch {
+    return false;
+  }
+}
 
 // Layout component with app initialization logging
 const Layout = () => {
@@ -277,7 +302,7 @@ function AppContent() {
       <Route path="/verification" element={<Verification />} />
       <Route path="/home" element={<HomePage />} />
       <Route path="/signup" element={<SignUp />} />
-      <Route path="/login" element={<Login />} />
+      <Route path="/login" element={<LoginRouteGate><Login /></LoginRouteGate>} />
       <Route path="/invite/accept" element={<InviteAcceptPage />} />
       <Route path="/unauthorized" element={<UnauthorizedPage />} />
       {/* Protect vendor onboarding routes behind RoleGuard */}
@@ -331,23 +356,136 @@ function AppContent() {
 
 export default App;
 
+function LoginRouteGate({ children }) {
+  const navigate = useNavigate();
+  const { currentUser, isHydratingUser } = useContext(VendorContext);
+
+  useEffect(() => {
+    if (isHydratingUser) return;
+    if (!currentUser) return;
+
+    const destination = getVendorDestination({
+      status: currentUser?.status,
+      hasFilledForm: currentUser?.hasFilledForm,
+      isTeamMember: currentUser?.isTeamMember === true,
+    });
+    navigate(destination, { replace: true });
+  }, [navigate, currentUser, isHydratingUser]);
+
+  const transitionActive = isAuthTransitionActive();
+  if (transitionActive || isHydratingUser) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-white">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600" />
+      </div>
+    );
+  }
+
+  if (currentUser) return null;
+
+  return children;
+}
+
 // Guard to ensure role is selected before accessing protected routes
 function RoleGuard({ children }) {
   const navigate = useNavigate();
-  const { currentUser, isHydratingUser } = useContext(VendorContext);
-  useEffect(() => {
-    const checkRole = async () => {
-      // With cookie-based auth, role-selection is driven by vendor backend state.
-      // If we're authenticated, allow navigation and let VendorGuard handle onboarding.
-      if (isHydratingUser) return;
-      if (currentUser) return;
+  const location = useLocation();
+  const { currentUser, isHydratingUser, hydrateCurrentUser } = useContext(VendorContext);
+  const [isGuardLoading, setIsGuardLoading] = useState(true);
+  const hasRetriedRef = useRef(false);
+  const redirectTimerRef = useRef(null);
 
-      if (window.location.pathname !== '/login') {
-        navigate('/login', { replace: true });
+  useEffect(() => {
+    let isCancelled = false;
+    if (redirectTimerRef.current) {
+      clearTimeout(redirectTimerRef.current);
+      redirectTimerRef.current = null;
+    }
+
+    const scheduleLoginRedirect = () => {
+      const isAuthTransitioning = isAuthTransitionActive();
+      redirectTimerRef.current = setTimeout(() => {
+        if (!isCancelled && location.pathname !== '/login') {
+          // If a login transition is still active, skip redirect and wait for next cycle.
+          if (isAuthTransitionActive()) return;
+          navigate('/login', { replace: true });
+        }
+      }, isAuthTransitioning ? 1400 : 450);
+    };
+
+    const resolveGuard = async () => {
+      // Never force redirects while already on login.
+      if (location.pathname === '/login') {
+        hasRetriedRef.current = false;
+        if (!isCancelled) setIsGuardLoading(false);
+        return;
+      }
+
+      // Provider hydration in progress.
+      if (isHydratingUser) {
+        if (!isCancelled) setIsGuardLoading(true);
+        return;
+      }
+
+      // Authenticated: allow and reset retry state.
+      if (currentUser) {
+        if (!isCancelled) {
+          hasRetriedRef.current = false;
+          setIsGuardLoading(false);
+        }
+        sessionStorage.removeItem(AUTH_TRANSITION_KEY);
+        return;
+      }
+
+      const isAuthTransitioning = isAuthTransitionActive();
+
+      // Unauthenticated and not yet retried: attempt one guarded re-hydration.
+      if (!hasRetriedRef.current) {
+        hasRetriedRef.current = true;
+        if (!isCancelled) setIsGuardLoading(true);
+        try {
+          await Promise.resolve(hydrateCurrentUser?.());
+        } catch {
+          // Ignore and continue to fallback redirect path.
+        }
+        if (!isCancelled) scheduleLoginRedirect();
+        return;
+      }
+
+      // Already retried and still unauthenticated: fallback to login.
+      if (!isCancelled) {
+        setIsGuardLoading(true);
+        if (isAuthTransitioning) {
+          // Allow one more settle window for async context propagation before redirect.
+          try {
+            await Promise.resolve(hydrateCurrentUser?.());
+          } catch {}
+        }
+        scheduleLoginRedirect();
       }
     };
-    checkRole();
-  }, [navigate, currentUser, isHydratingUser]);
+
+    resolveGuard();
+
+    return () => {
+      isCancelled = true;
+      if (redirectTimerRef.current) {
+        clearTimeout(redirectTimerRef.current);
+        redirectTimerRef.current = null;
+      }
+    };
+  }, [navigate, location.pathname, currentUser, isHydratingUser, hydrateCurrentUser]);
+
+  if (isGuardLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-white">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600" />
+      </div>
+    );
+  }
+
+  if (!currentUser) return null;
+
   return children;
 }
 
@@ -368,24 +506,14 @@ function VendorGuard({ children }) {
     const hasFilledFormRaw = currentUser?.hasFilledForm;
     if (typeof hasFilledFormRaw !== 'boolean') return;
 
-    const status = String(currentUser?.status || '').trim().toLowerCase();
+    const destination = getVendorDestination({
+      status: currentUser?.status,
+      hasFilledForm: hasFilledFormRaw,
+      isTeamMember: currentUser?.isTeamMember === true,
+    });
 
-    // Approved vendors should never be bounced back to onboarding.
-    if (status === 'approved') return;
-
-    // If the vendor is already in a review state, do not send them back to Form1.
-    if (status === 'pending') {
-      if (hasFilledFormRaw === true) {
-        navigate('/Auditorapprove', { replace: true });
-      } else {
-        navigate('/Form1', { replace: true });
-      }
-      return;
-    }
-
-    if (hasFilledFormRaw === false) {
-      navigate('/Form1', { replace: true });
-      return;
+    if (destination !== '/VendorDashboard') {
+      navigate(destination, { replace: true });
     }
   }, [navigate, currentUser, isHydratingUser]);
   return children;

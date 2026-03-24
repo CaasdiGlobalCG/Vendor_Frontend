@@ -3,6 +3,8 @@ import config from "../config/env";
 import authFetch from "../utils/authFetch";
 
 export const VendorContext = createContext();
+const AUTH_TRANSITION_KEY = 'vendorAuthTransitionInProgress';
+const AUTH_TRANSITION_STARTED_AT_KEY = 'vendorAuthTransitionStartedAt';
 
 // Define initial data with proper structure to avoid undefined properties
 const initialData = {
@@ -36,7 +38,15 @@ export const VendorProvider = ({ children }) => {
         const res = await authFetch(`${config.VENDOR_BACKEND_URL}/api/vendor/me`, {
           credentials: 'include',
         });
-        if (!res.ok) return { ok: false, status: res.status };
+        if (!res.ok) {
+          let body = null;
+          try {
+            body = await res.json();
+          } catch {
+            body = null;
+          }
+          return { ok: false, status: res.status, body };
+        }
         const me = await res.json();
         return { ok: true, me };
       };
@@ -72,13 +82,28 @@ export const VendorProvider = ({ children }) => {
         isTeamMember = v?.isTeamMember === true;
       }
 
+      if (
+        meAttempt?.status === 403 &&
+        (meAttempt?.body?.code === 'RBAC_001' || meAttempt?.body?.code === 'RBAC_002')
+      ) {
+        setCurrentUser(null);
+        return {
+          ok: false,
+          status: 403,
+          accessDenied: {
+            code: meAttempt.body.code,
+            message: meAttempt.body.message || 'Your access to this organization has been restricted.',
+          },
+        };
+      }
+
       // If neither token nor session resolves a user, clear state.
       if (!email && !vendorId) {
         setCurrentUser(null);
-        return;
+        return { ok: false, status: meAttempt?.status || 401 };
       }
 
-      setCurrentUser({
+      const hydratedUser = {
         email,
         role: 'vendor',
         lastSelectedRole: null,
@@ -88,12 +113,20 @@ export const VendorProvider = ({ children }) => {
         status,
         hasFilledForm,
         isTeamMember,
-      });
+      };
+
+      setCurrentUser(hydratedUser);
+      return { ok: true, user: hydratedUser };
     } catch (error) {
       console.error('VendorContext - Failed to hydrate current user:', error);
       setCurrentUser(null);
+      return { ok: false, error };
     } finally {
       setIsHydratingUser(false);
+      try {
+        sessionStorage.removeItem(AUTH_TRANSITION_KEY);
+        sessionStorage.removeItem(AUTH_TRANSITION_STARTED_AT_KEY);
+      } catch {}
     }
   }, []);
 

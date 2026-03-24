@@ -11,6 +11,10 @@ import config from "../config/env";
 import PasskeyMFAVerification from "./PasskeyMFAVerification";
 import { redirectToClientWithHandoff } from "../utils/handoffToClient";
 import { redirectToSalesWithHandoff } from "../utils/handoffToSales";
+import { getVendorDestination, isRejectedVendor } from "../utils/vendorAuthRouting";
+
+const AUTH_TRANSITION_KEY = 'vendorAuthTransitionInProgress';
+const AUTH_TRANSITION_STARTED_AT_KEY = 'vendorAuthTransitionStartedAt';
 
 const carouselItems = [
   {
@@ -39,7 +43,7 @@ function Login() {
   const location = useLocation();
   const navigate = useNavigate();
 
-  const { setUser: setVendorUser, hydrateCurrentUser } = useContext(VendorContext);
+  const { hydrateCurrentUser } = useContext(VendorContext);
   const { setCurrentUser: setAppUser } = useContext(UserContext);
 
   const from = location.state?.from;
@@ -77,67 +81,25 @@ function Login() {
   const togglePasswordVisibility = () => setShowPassword((v) => !v);
   const handleSignUpRedirect = () => navigate("/signup");
 
-  const fetchVendorMe = async (idToken) => {
-    const tryMeCookie = async () => {
-      const res = await fetch(`${config.VENDOR_BACKEND_URL}/api/vendor/me`, {
-        credentials: "include",
-      });
-      if (res.status === 403) {
-        const body = await res.json().catch(() => ({}));
-        return { success: false, accessDenied: body };
-      }
-      if (!res.ok) return null;
-      return res.json();
-    };
-
-    const tryMeBearer = async () => {
-      const res = await fetch(`${config.VENDOR_BACKEND_URL}/api/vendor/me`, {
-        headers: { Authorization: `Bearer ${idToken}` },
-      });
-      if (res.status === 403) {
-        const body = await res.json().catch(() => ({}));
-        return { success: false, accessDenied: body };
-      }
-      if (!res.ok) return null;
-      return res.json();
-    };
-
-    return (await tryMeCookie()) || (await tryMeBearer());
-  };
-
   const routeVendor = ({ status, hasFilledForm, isTeamMember }) => {
-    // Team members are pre-approved — always go to dashboard
-    if (isTeamMember === true) {
-      navigate("/VendorDashboard", { replace: true });
-      return;
-    }
-
-    const resolvedStatus = String(status || "").toLowerCase();
-    const resolvedHasFilledForm = hasFilledForm === true;
-
-    if (resolvedStatus === "approved") {
-      navigate("/VendorDashboard", { replace: true });
-      return;
-    }
-    if (resolvedStatus === "rejected") {
+    if (isRejectedVendor(status)) {
       setAlertMessage("Your vendor application has been rejected. Please contact support.");
       setAlertType("error");
       setShowAlert(true);
-      navigate("/Form1", { replace: true });
-      return;
-    }
-    if (resolvedStatus === "pending" && resolvedHasFilledForm) {
-      navigate("/Auditorapprove", { replace: true });
-      return;
     }
 
-    navigate("/Form1", { replace: true });
+    navigate(
+      getVendorDestination({ status, hasFilledForm, isTeamMember }),
+      { replace: true }
+    );
   };
 
   const handleLogin = async (e) => {
     e.preventDefault();
     setLoading(true);
     setShowAlert(false);
+    sessionStorage.setItem(AUTH_TRANSITION_KEY, 'true');
+    sessionStorage.setItem(AUTH_TRANSITION_STARTED_AT_KEY, String(Date.now()));
 
     try {
       const cognitoUser = await Auth.signIn(email, password);
@@ -255,43 +217,28 @@ function Login() {
         return;
       }
 
-      const vendorMe = await fetchVendorMe(idToken);
+      // Single source of truth: hydrate user only through VendorContext (/api/vendor/me).
+      const hydrated = await Promise.resolve(hydrateCurrentUser?.());
 
-      if (vendorMe?.accessDenied?.code === 'RBAC_001' || vendorMe?.accessDenied?.code === 'RBAC_002') {
-        setAlertMessage(vendorMe?.accessDenied?.message || 'Your access to this organization has been restricted.');
+      if (hydrated?.accessDenied?.code === 'RBAC_001' || hydrated?.accessDenied?.code === 'RBAC_002') {
+        setAlertMessage(hydrated?.accessDenied?.message || 'Your access to this organization has been restricted.');
         setAlertType('error');
         setShowAlert(true);
         return;
       }
 
-      if (!vendorMe?.success || !vendorMe?.data) {
+      if (!hydrated?.ok || !hydrated?.user) {
         setAlertMessage("Failed to retrieve vendor details. Please try again or contact support.");
         setAlertType("error");
         setShowAlert(true);
         return;
       }
 
-      const vendorId = vendorMe.data.vendorId || vendorMe.data.id || null;
-      const vendorEmail = vendorMe.data.email || cognitoUser?.attributes?.email || email;
-      const vendorName = vendorMe.data.name || cognitoUser?.attributes?.name || cognitoUser?.username || "";
-
-      const vendorUser = {
-        vendorId,
-        email: vendorEmail,
-        name: vendorName,
-        role: "vendor",
-        status: vendorMe.data.status,
-        hasFilledForm: vendorMe.data.hasFilledForm,
-        isTeamMember: vendorMe.data.isTeamMember === true,
-      };
-
-      setVendorUser(vendorUser);
+      const vendorUser = hydrated.user;
+      const vendorId = vendorUser.vendorId || null;
+      const vendorEmail = vendorUser.email || cognitoUser?.attributes?.email || email;
+      const vendorName = vendorUser.name || cognitoUser?.attributes?.name || cognitoUser?.username || "";
       setAppUser(vendorUser);
-
-      // Ensure VendorContext is hydrated from cookies for subsequent guards.
-      try {
-        await Promise.resolve(hydrateCurrentUser?.());
-      } catch {}
 
       // Passkey MFA (if enabled)
       try {
@@ -309,8 +256,8 @@ function Login() {
               vendorId,
               email: vendorEmail,
               name: vendorName,
-              userStatus: vendorMe.data.status,
-              hasFilledForm: vendorMe.data.hasFilledForm,
+              userStatus: vendorUser.status,
+              hasFilledForm: vendorUser.hasFilledForm,
             });
             setShowMFAVerification(true);
             return;
@@ -331,7 +278,7 @@ function Login() {
         return;
       }
 
-      routeVendor({ status: vendorMe.data.status, hasFilledForm: vendorMe.data.hasFilledForm, isTeamMember: vendorMe.data.isTeamMember === true || verifyIsTeamMember });
+      routeVendor({ status: vendorUser.status, hasFilledForm: vendorUser.hasFilledForm, isTeamMember: vendorUser.isTeamMember === true || verifyIsTeamMember });
     } catch (error) {
       console.error("Error logging in:", error);
 
@@ -354,6 +301,8 @@ function Login() {
 
       setAlertType((t) => (t === "warning" ? "warning" : "error"));
       setShowAlert(true);
+      sessionStorage.removeItem(AUTH_TRANSITION_KEY);
+      sessionStorage.removeItem(AUTH_TRANSITION_STARTED_AT_KEY);
     } finally {
       setLoading(false);
     }
@@ -361,18 +310,25 @@ function Login() {
 
   const handleMFASuccess = async () => {
     try {
+      sessionStorage.setItem(AUTH_TRANSITION_KEY, 'true');
+      sessionStorage.setItem(AUTH_TRANSITION_STARTED_AT_KEY, String(Date.now()));
       setShowMFAVerification(false);
       // After passkey success, backend should have the cookie session; hydrate & route.
-      await Promise.resolve(hydrateCurrentUser?.());
-      const vendorMe = await fetchVendorMe(null);
-      if (vendorMe?.success && vendorMe?.data) {
-        routeVendor({ status: vendorMe.data.status, hasFilledForm: vendorMe.data.hasFilledForm, isTeamMember: vendorMe.data.isTeamMember === true });
+      const hydrated = await Promise.resolve(hydrateCurrentUser?.());
+      if (hydrated?.ok && hydrated?.user) {
+        routeVendor({
+          status: hydrated.user.status,
+          hasFilledForm: hydrated.user.hasFilledForm,
+          isTeamMember: hydrated.user.isTeamMember === true,
+        });
       } else {
         navigate("/Form1", { replace: true });
       }
     } catch (e) {
       console.warn("MFA success handling failed:", e);
       navigate("/Form1", { replace: true });
+      sessionStorage.removeItem(AUTH_TRANSITION_KEY);
+      sessionStorage.removeItem(AUTH_TRANSITION_STARTED_AT_KEY);
     }
   };
 

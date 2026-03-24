@@ -59,8 +59,15 @@ src/rbac/
 
 ## Team Member Login Flow (Frontend Side)
 - `Login.jsx` → after `/api/auth/verify`, checks `isTeamMember` — if true, skips role-selection
-- `Login.jsx` → `routeVendor({ isTeamMember: true })` navigates directly to `/VendorDashboard`
+- `Login.jsx` no longer performs its own `/api/vendor/me` fetch. It now uses `VendorContext.hydrateCurrentUser()` as the single source of truth for user bootstrap.
+- `Login.jsx` → `routeVendor({ isTeamMember: true })` (via shared `getVendorDestination`) navigates directly to `/VendorDashboard`
 - `App.jsx` → `VendorGuard` early-returns for `currentUser.isTeamMember === true` (bypasses onboarding checks)
+- `App.jsx` → `RoleGuard` performs one guarded `hydrateCurrentUser()` retry before redirecting to `/login`, and shows a short loading state while resolving auth. This prevents brief dashboard/login/dashboard flicker caused by transient auth state during navigation.
+- `App.jsx` → `RoleGuard` now also defers fallback `/login` redirect briefly (cleanup-safe timeout) after retry; this avoids loading → login → dashboard/client flash when auth state resolves slightly late.
+- `App.jsx` → `RoleGuard` was refactored to a non-reentrant guard flow using refs for retry/timer control, preventing effect re-entry races while preserving existing route behavior.
+- `Login.jsx` + `VendorContext.jsx` + `RoleGuard` now coordinate with a transient session flag (`vendorAuthTransitionInProgress`) so fallback login redirects are suppressed while post-login hydration is still in-flight.
+- `/login` now runs behind `LoginRouteGate` in `App.jsx`, so active transition/hydration shows a neutral loading screen instead of rendering the login form for a frame.
+- `App.jsx` + `Login.jsx` + `VendorGuard` now share `src/utils/vendorAuthRouting.js` for consistent destination logic (`/VendorDashboard`, `/Auditorapprove`, `/Form1`).
 - `VendorContext.jsx` → reads `isTeamMember` from `/me` response, propagates to all consumers
 - `RBACContext.jsx` → waits for VendorContext hydration, passes `vendorId` hint to `/api/rbac/me`
 - For full details, see `Documents/RBAC/Team_Member_Login_Flow.md`.
