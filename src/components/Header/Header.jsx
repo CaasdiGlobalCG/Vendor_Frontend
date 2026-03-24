@@ -13,6 +13,7 @@ import { redirectToClientWithHandoff } from '../../utils/handoffToClient';
 import { redirectToSalesWithHandoff } from '../../utils/handoffToSales';
 import GlobalSearchOverlay from "./GlobalSearchOverlay";
 import AiPromptPanel from "./AiPromptPanel";
+import AuthSkeletonScreen from "../loading/AuthSkeletonScreen";
 /**
  * Header
  *
@@ -949,15 +950,8 @@ export const Header = () => {
             <div className="flex items-center gap-2 lg:gap-4">
               {/* Redirect loading overlay */}
               {redirectingTo && (
-                <div className="fixed inset-0 z-[9999] flex flex-col items-center justify-center bg-black/80 backdrop-blur-sm">
-                  <div className="flex flex-col items-center gap-4">
-                    <svg className="animate-spin w-12 h-12 text-white" fill="none" viewBox="0 0 24 24">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4l3-3-3-3v4a8 8 0 100 16v-4l-3 3 3 3v-4a8 8 0 01-8-8z" />
-                    </svg>
-                    <p className="text-white text-lg font-semibold font-['Montserrat']">Opening {redirectingTo}…</p>
-                    <p className="text-white/60 text-sm">You will be redirected shortly</p>
-                  </div>
+                <div className="fixed inset-0 z-[9999]">
+                  <AuthSkeletonScreen message={`Opening ${redirectingTo}...`} />
                 </div>
               )}
               <button

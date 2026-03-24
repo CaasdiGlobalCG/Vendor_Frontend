@@ -10,6 +10,7 @@
 import React, { useContext } from 'react';
 import { useRBAC } from '../context/RBACContext';
 import { VendorContext } from '../../context/VendorContext';
+import AuthSkeletonScreen from '../../components/loading/AuthSkeletonScreen';
 
 /**
  * AccessDeniedGuard — wraps app content and blocks rendering if accessDenied is set.
@@ -20,11 +21,7 @@ export function AccessDeniedGuard({ children }) {
 
   // Block rendering until RBAC has resolved — prevents flash of protected content
   if (isLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-teal-600" />
-      </div>
-    );
+    return <AuthSkeletonScreen message="Checking your access permissions..." />;
   }
 
   if (accessDenied) {

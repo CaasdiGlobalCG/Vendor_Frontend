@@ -6,23 +6,41 @@ import React from 'react';
  */
 export default function AuthSkeletonScreen({ message = 'Loading your workspace...' }) {
   return (
-    <div className="min-h-screen bg-white flex items-center justify-center px-6">
-      <div className="w-full max-w-2xl">
-        <div className="mx-auto mb-8 h-10 w-40 rounded-md bg-slate-200/80 animate-pulse" />
-
-        <div className="space-y-4">
-          <div className="h-4 w-3/4 rounded bg-slate-200/80 animate-pulse" />
-          <div className="h-4 w-5/6 rounded bg-slate-200/70 animate-pulse" />
-          <div className="h-4 w-2/3 rounded bg-slate-200/60 animate-pulse" />
+    <div className="min-h-screen bg-[#f5f7f6] px-4 py-5 md:px-6">
+      <div className="mx-auto w-full max-w-6xl">
+        <div className="rounded-[20px] bg-[linear-gradient(90deg,rgba(9,91,73,1)_0%,rgba(0,0,0,1)_100%)] p-5 shadow-2xl md:p-6">
+          <div className="flex items-center justify-between gap-4">
+            <div className="h-8 w-14 rounded bg-white/25 animate-pulse" />
+            <div className="hidden md:flex items-center gap-3">
+              <div className="h-3 w-20 rounded bg-white/20 animate-pulse" />
+              <div className="h-3 w-20 rounded bg-white/20 animate-pulse" />
+              <div className="h-3 w-20 rounded bg-white/20 animate-pulse" />
+              <div className="h-3 w-20 rounded bg-white/20 animate-pulse" />
+            </div>
+            <div className="h-9 w-36 rounded-xl bg-white/15 animate-pulse" />
+          </div>
+          <div className="mt-10 flex items-end justify-between gap-4">
+            <div className="space-y-3">
+              <div className="h-4 w-44 rounded bg-white/20 animate-pulse" />
+              <div className="h-3 w-56 rounded bg-white/15 animate-pulse" />
+            </div>
+            <div className="hidden md:flex items-center gap-3">
+              <div className="h-9 w-24 rounded-lg bg-white/15 animate-pulse" />
+              <div className="h-9 w-24 rounded-lg bg-white/15 animate-pulse" />
+              <div className="h-9 w-24 rounded-lg bg-white/15 animate-pulse" />
+            </div>
+          </div>
         </div>
 
-        <div className="mt-10 grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="h-24 rounded-xl bg-slate-100 animate-pulse" />
-          <div className="h-24 rounded-xl bg-slate-100 animate-pulse" />
-          <div className="h-24 rounded-xl bg-slate-100 animate-pulse" />
+        <div className="mt-6 grid grid-cols-1 gap-4 lg:grid-cols-3">
+          <div className="h-28 rounded-2xl bg-white shadow-sm animate-pulse" />
+          <div className="h-28 rounded-2xl bg-white shadow-sm animate-pulse" />
+          <div className="h-28 rounded-2xl bg-white shadow-sm animate-pulse" />
         </div>
 
-        <p className="mt-8 text-center text-sm text-slate-500">{message}</p>
+        <div className="mt-4 h-64 rounded-2xl bg-white shadow-sm animate-pulse" />
+
+        <p className="mt-6 text-center text-sm text-slate-600">{message}</p>
       </div>
     </div>
   );

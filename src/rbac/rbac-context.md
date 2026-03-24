@@ -68,6 +68,8 @@ src/rbac/
 - `Login.jsx` + `VendorContext.jsx` + `RoleGuard` now coordinate with a transient session flag (`vendorAuthTransitionInProgress`) so fallback login redirects are suppressed while post-login hydration is still in-flight.
 - `/login` now runs behind `LoginRouteGate` in `App.jsx`, so active transition/hydration shows a neutral loading screen instead of rendering the login form for a frame.
 - Auth transition screens now use a shared skeleton component (`components/loading/AuthSkeletonScreen.jsx`) for consistent UX across handoff, login gate, and role-guard loading states.
+- Header cross-app switches (`Client`, `Sales`, `Tender`) now also use the same `AuthSkeletonScreen` overlay while redirect handoff is in progress.
+- `AccessDeniedGuard` uses the same skeleton while RBAC access is resolving, preventing spinner-style visual mismatch before deny/allow is known.
 - `App.jsx` + `Login.jsx` + `VendorGuard` now share `src/utils/vendorAuthRouting.js` for consistent destination logic (`/VendorDashboard`, `/Auditorapprove`, `/Form1`).
 - `VendorContext.jsx` → reads `isTeamMember` from `/me` response, propagates to all consumers
 - `RBACContext.jsx` → waits for VendorContext hydration, passes `vendorId` hint to `/api/rbac/me`
