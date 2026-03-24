@@ -49,6 +49,7 @@ import VendorSettings from "./pages/Settings/VendorSettings";
 import SupportPage from "./pages/support/SupportPage";
 import SupportTicketDetail from "./pages/support/SupportTicketDetail";
 import { getVendorDestination } from "./utils/vendorAuthRouting";
+import AuthSkeletonScreen from "./components/loading/AuthSkeletonScreen";
 
 // Error Boundary Component
 class ErrorBoundary extends Component {
@@ -285,14 +286,7 @@ function AppContent() {
   }, [location.search, navigate, hydrateCurrentUser]);
 
   if (handoffParam || isExchangingHandoff) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-white">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-4 text-gray-700">Switching to Vendor…</p>
-        </div>
-      </div>
-    );
+    return <AuthSkeletonScreen message="Switching to Vendor..." />;
   }
 
   return (
@@ -374,11 +368,7 @@ function LoginRouteGate({ children }) {
 
   const transitionActive = isAuthTransitionActive();
   if (transitionActive || isHydratingUser) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-white">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600" />
-      </div>
-    );
+    return <AuthSkeletonScreen message="Preparing your sign-in session..." />;
   }
 
   if (currentUser) return null;
@@ -477,11 +467,7 @@ function RoleGuard({ children }) {
   }, [navigate, location.pathname, currentUser, isHydratingUser, hydrateCurrentUser]);
 
   if (isGuardLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-white">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600" />
-      </div>
-    );
+    return <AuthSkeletonScreen message="Validating your access..." />;
   }
 
   if (!currentUser) return null;
