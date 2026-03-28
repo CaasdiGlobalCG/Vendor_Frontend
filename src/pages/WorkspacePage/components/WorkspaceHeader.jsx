@@ -80,6 +80,7 @@ const WorkspaceHeader = ({
   onLayoutsClick,
   onTextClick,
   onTemplatesClick,
+  onWorkflowBuilderClick,
   showPostServicesActions = false,
   onOpenPostServices,
   onOpenUpdateProgress,
@@ -429,6 +430,21 @@ const WorkspaceHeader = ({
             >
               <Plus className="w-4 h-4" />
               <span>Templates</span>
+            </button>
+
+            <button
+              data-tour="workflow-builder-btn"
+              disabled={!isCanvasActive || shouldDisableEditing}
+              onClick={isCanvasActive && !shouldDisableEditing ? onWorkflowBuilderClick : undefined}
+              className={`flex items-center space-x-2 px-3 py-2 rounded-lg text-sm font-normal transition-all duration-200 ${
+                isCanvasActive && !shouldDisableEditing
+                  ? 'text-gray-700 hover:shadow-md cursor-pointer'
+                  : 'text-gray-400 cursor-not-allowed'
+              }`}
+              title={shouldDisableEditing ? 'Project is completed - editing disabled' : 'Open Workflow Builder'}
+            >
+              <Plus className="w-4 h-4" />
+              <span>Workflow Builder</span>
             </button>
           </div>
         </div>

@@ -1,5 +1,5 @@
 import React from 'react';
-import { X, FileText, CreditCard, Calculator, ClipboardList } from 'lucide-react';
+import { X, FileText, CreditCard, Calculator, ClipboardList, ClipboardCheck, HelpCircle, ShieldCheck, CloudSun } from 'lucide-react';
 
 const TemplatesPanel = ({ isOpen, onClose, onTemplateSelect }) => {
   if (!isOpen) return null;
@@ -44,6 +44,38 @@ const TemplatesPanel = ({ isOpen, onClose, onTemplateSelect }) => {
       description: 'Create a detailed RFQ and send it directly to procurement',
       color: 'bg-orange-100 text-orange-600',
       hoverColor: 'hover:bg-orange-50'
+    },
+    {
+      id: 'execution-work-order',
+      name: 'Site Work Order',
+      icon: <ClipboardCheck className="w-5 h-5" />,
+      description: 'Issue executable work scope with assignee, location, and due date',
+      color: 'bg-indigo-100 text-indigo-600',
+      hoverColor: 'hover:bg-indigo-50'
+    },
+    {
+      id: 'execution-rfi',
+      name: 'RFI / Clarification',
+      icon: <HelpCircle className="w-5 h-5" />,
+      description: 'Raise technical queries linked to drawings and execution blockers',
+      color: 'bg-cyan-100 text-cyan-700',
+      hoverColor: 'hover:bg-cyan-50'
+    },
+    {
+      id: 'execution-inspection',
+      name: 'Inspection Request',
+      icon: <ShieldCheck className="w-5 h-5" />,
+      description: 'Create QA/QC checkpoints for execution stages and approvals',
+      color: 'bg-teal-100 text-teal-700',
+      hoverColor: 'hover:bg-teal-50'
+    },
+    {
+      id: 'execution-daily-site-log',
+      name: 'Daily Site Log',
+      icon: <CloudSun className="w-5 h-5" />,
+      description: 'Capture daily work done, labor, equipment, blockers, and weather',
+      color: 'bg-amber-100 text-amber-700',
+      hoverColor: 'hover:bg-amber-50'
     }
   ];
 

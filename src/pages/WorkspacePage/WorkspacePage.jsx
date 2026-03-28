@@ -35,6 +35,8 @@ import StartCallModal from './components/modals/StartCallModal';
 import IncomingCallNotification from './components/modals/IncomingCallNotification';
 import ActiveCallInterface from './components/modals/ActiveCallInterface';
 import ProcurementRFQModal from './components/modals/ProcurementRFQModal';
+import ExecutionRequestModal from './components/modals/ExecutionRequestModal';
+import WorkflowBuilderModal from './components/modals/WorkflowBuilderModal';
 import useVideoCall from '../../hooks/useVideoCall';
 import config from '../../config/env';
 import authFetch from '../../utils/authFetch';
@@ -246,6 +248,9 @@ const WorkspacePage = () => {
   const [selectedTextElement, setSelectedTextElement] = useState(null);
   const [showManageBOQModal, setShowManageBOQModal] = useState(false);
   const [showProcurementRFQModal, setShowProcurementRFQModal] = useState(false);
+  const [showExecutionRequestModal, setShowExecutionRequestModal] = useState(false);
+  const [showWorkflowBuilderModal, setShowWorkflowBuilderModal] = useState(false);
+  const [executionTemplateType, setExecutionTemplateType] = useState('execution-work-order');
   const [showPostServicesModal, setShowPostServicesModal] = useState(false);
   const [showUpdateProgressModal, setShowUpdateProgressModal] = useState(false);
   const [showReviewProgressModal, setShowReviewProgressModal] = useState(false);
@@ -1636,6 +1641,17 @@ const WorkspacePage = () => {
     setShowInvoiceTool(false);
   };
 
+  const handleWorkflowBuilderClick = () => {
+    setShowWorkflowBuilderModal(true);
+    setShowTemplatesPanel(false);
+    setShowTextPanel(false);
+    setShowLayoutsPanel(false);
+    setShowElementsSidebar(false);
+    setShowElementsPanel(false);
+    setSelectedCategory(null);
+    setShowInvoiceTool(false);
+  };
+
   const handleTemplateSelect = (templateId) => {
     if (templateId === 'quotations-invoices') {
       // Navigate to invoices route instead of showing overlay
@@ -1667,6 +1683,15 @@ const WorkspacePage = () => {
       setSelectedCategory(null);
     } else if (templateId === 'cost-calculators') {
       setShowCostCalculatorsModal(true);
+      setShowTemplatesPanel(false);
+      setShowTextPanel(false);
+      setShowLayoutsPanel(false);
+      setShowElementsSidebar(false);
+      setShowElementsPanel(false);
+      setSelectedCategory(null);
+    } else if (templateId === 'execution-work-order' || templateId === 'execution-rfi' || templateId === 'execution-inspection' || templateId === 'execution-daily-site-log') {
+      setExecutionTemplateType(templateId);
+      setShowExecutionRequestModal(true);
       setShowTemplatesPanel(false);
       setShowTextPanel(false);
       setShowLayoutsPanel(false);
@@ -2002,6 +2027,7 @@ const WorkspacePage = () => {
           onLayoutsClick={handleLayoutsClick}
           onTextClick={handleTextClick}
           onTemplatesClick={handleTemplatesClick}
+          onWorkflowBuilderClick={handleWorkflowBuilderClick}
           showPostServicesActions
           onOpenPostServices={() => setShowPostServicesModal(true)}
           onOpenUpdateProgress={() => setShowUpdateProgressModal(true)}
@@ -2252,6 +2278,35 @@ const WorkspacePage = () => {
           triggerActivityRefresh();
         }}
       />
+
+      <ExecutionRequestModal
+        isOpen={showExecutionRequestModal}
+        onClose={() => setShowExecutionRequestModal(false)}
+        templateType={executionTemplateType}
+        workspace={workspace}
+        currentUser={currentUser}
+        onSubmitted={async (executionPayload) => {
+          const canvasRef = window?.canvasWorkspaceRef?.current;
+          if (canvasRef?.addExecutionRequestNode) {
+            await canvasRef.addExecutionRequestNode(executionPayload);
+          } else {
+            sessionStorage.setItem('pendingExecutionRequestNode', JSON.stringify({ payload: executionPayload }));
+            document.dispatchEvent(new CustomEvent('addExecutionRequestNode', {
+              detail: executionPayload
+            }));
+          }
+          triggerActivityRefresh();
+        }}
+      />
+
+      <WorkflowBuilderModal
+        isOpen={showWorkflowBuilderModal}
+        onClose={() => setShowWorkflowBuilderModal(false)}
+        workspaceId={workspaceId}
+        currentUser={currentUser}
+        workspaceName={workspace?.title || workspace?.projectName || 'Current Workspace'}
+      />
+
       {/* Post Services Modal */}
       <PostServicesModal
         isOpen={showPostServicesModal}

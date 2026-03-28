@@ -28,6 +28,7 @@ import GroupingToolbar from './GroupingToolbar';
 import ContextMenu from './ContextMenu';
 import TaskCardConfigModal from './modals/TaskCardConfigModal';
 import ProcurementRFQDetailsModal from './modals/ProcurementRFQDetailsModal';
+import ExecutionRequestDetailsModal from './modals/ExecutionRequestDetailsModal';
 import { getFlowchartTemplate } from '../utils/flowchartTemplates';
 import { getWorkspaceById } from '../utils/workspaceApi';
 import { registerCanvasEmitter, unregisterCanvasEmitter } from '../utils/nodePersistence';
@@ -128,7 +129,14 @@ const edgeTypes = {
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [headerOffset, setHeaderOffset] = useState(0);
   const [showClearConfirmation, setShowClearConfirmation] = useState(false);
+  const [isPenMode, setIsPenMode] = useState(false);
+  const [penColor, setPenColor] = useState('#ef4444');
+  const [penThickness, setPenThickness] = useState(3);
+  const [drawingPaths, setDrawingPaths] = useState([]);
   const previousOverflowRef = useRef('');
+  const canvasOverlayRef = useRef(null);
+  const isPointerDrawingRef = useRef(false);
+  const activePathIdRef = useRef(null);
 
   const updateOffset = useCallback(() => {
     const headerElements = Array.from(
@@ -692,6 +700,8 @@ const edgeTypes = {
   const [pendingTaskCardInitialData, setPendingTaskCardInitialData] = useState(null);
   const [showProcurementRFQDetailsModal, setShowProcurementRFQDetailsModal] = useState(false);
   const [selectedProcurementRFQNode, setSelectedProcurementRFQNode] = useState(null);
+  const [showExecutionRequestDetailsModal, setShowExecutionRequestDetailsModal] = useState(false);
+  const [selectedExecutionRequestNode, setSelectedExecutionRequestNode] = useState(null);
 
   // Edge labeling state
   const [edgeLabelModal, setEdgeLabelModal] = useState({ 
@@ -991,6 +1001,71 @@ const edgeTypes = {
     canvasWebSocket.emitCursor(event.clientX, event.clientY);
   }, [canvasWebSocket]);
 
+  const getOverlayPoint = useCallback((event) => {
+    const overlay = canvasOverlayRef.current;
+    if (!overlay) return null;
+
+    const rect = overlay.getBoundingClientRect();
+    return {
+      x: Math.max(0, Math.min(rect.width, event.clientX - rect.left)),
+      y: Math.max(0, Math.min(rect.height, event.clientY - rect.top)),
+    };
+  }, []);
+
+  const handlePenPointerDown = useCallback((event) => {
+    if (!isPenMode || !canEdit) return;
+    const startPoint = getOverlayPoint(event);
+    if (!startPoint) return;
+
+    const pathId = `pen_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+    const newPath = {
+      id: pathId,
+      color: penColor,
+      thickness: penThickness,
+      points: [startPoint],
+    };
+
+    isPointerDrawingRef.current = true;
+    activePathIdRef.current = pathId;
+    setDrawingPaths((prev) => [...prev, newPath]);
+  }, [canEdit, getOverlayPoint, isPenMode, penColor, penThickness]);
+
+  const handlePenPointerMove = useCallback((event) => {
+    if (!isPenMode || !canEdit || !isPointerDrawingRef.current) return;
+    const point = getOverlayPoint(event);
+    const activePathId = activePathIdRef.current;
+    if (!point || !activePathId) return;
+
+    setDrawingPaths((prev) =>
+      prev.map((path) => {
+        if (path.id !== activePathId) return path;
+        return {
+          ...path,
+          points: [...path.points, point],
+        };
+      })
+    );
+  }, [canEdit, getOverlayPoint, isPenMode]);
+
+  const stopPenDrawing = useCallback(() => {
+    isPointerDrawingRef.current = false;
+    activePathIdRef.current = null;
+  }, []);
+
+  const handlePenPointerUp = useCallback(() => {
+    if (!isPenMode || !canEdit) return;
+    stopPenDrawing();
+  }, [canEdit, isPenMode, stopPenDrawing]);
+
+  useEffect(() => {
+    const handleGlobalPointerUp = () => {
+      stopPenDrawing();
+    };
+
+    window.addEventListener('pointerup', handleGlobalPointerUp);
+    return () => window.removeEventListener('pointerup', handleGlobalPointerUp);
+  }, [stopPenDrawing]);
+
   // Fallback HTTP auto-save: only triggers every 5s IF WebSocket is disconnected
   // Uses a short debounce so data persists even when WS is down
   useEffect(() => {
@@ -1236,6 +1311,7 @@ const edgeTypes = {
         ...(customData && element.type === 'list' && { customListData: customData }),
         // File data if provided
         ...(element.type === 'file' && element.fileData && { fileData: element.fileData }),
+        ...(element.type === 'file' && customData?.fileData && { fileData: customData.fileData }),
         // Store chart ID for chart elements
         ...(element.type === 'chart' && { id: element.id }),
         // Store list ID for list elements
@@ -1272,6 +1348,10 @@ const edgeTypes = {
         }),
         // Store workspaceId for all nodes (needed for MaterialsRenderer and other components)
         workspaceId: workspace?.workspaceId || null,
+        taskId: selectedTask?.id || null,
+        subtaskId: selectedSubtask?.id || null,
+        taskName: selectedTask?.name || selectedTask?.title || null,
+        subtaskName: selectedSubtask?.name || selectedSubtask?.title || null,
 
         // Workspace collaborators for @mention in comments
         workspaceCollaborators: workspaceCollaborators || [],
@@ -2875,6 +2955,12 @@ const edgeTypes = {
       setShowProcurementRFQDetailsModal(true);
       return;
     }
+
+    if (node?.data?.type === 'execution-request' && node?.data?.executionRequestData) {
+      setSelectedExecutionRequestNode(node.data);
+      setShowExecutionRequestDetailsModal(true);
+      return;
+    }
     
     // Handle manual selection mode
     if (isSelectionMode) {
@@ -3011,6 +3097,183 @@ const edgeTypes = {
     });
   }, [createElementNode, getAutoPlacementPosition, setNodes, trackActivity]);
 
+  const addExecutionRequestNodeToCanvas = useCallback(async (payload) => {
+    const request = payload?.executionRequest;
+    if (!request) return;
+
+    const basePosition = {
+      x: window.innerWidth / 2 - 220,
+      y: window.innerHeight / 2 - 120,
+    };
+    const targetPosition = getAutoPlacementPosition(basePosition);
+
+    const requestId = request.requestId || `EXE-${Date.now()}`;
+    const element = {
+      id: 'execution-request',
+      name: `${request.templateType || 'execution'} • ${requestId}`,
+      type: 'execution-request',
+      preview: `${request.title || 'Execution request'} • ${request.status || 'Open'}`,
+    };
+
+    const newNode = createElementNode(element, targetPosition);
+    newNode.data.executionRequestData = payload;
+    newNode.data.requestId = requestId;
+    newNode.data.requestStatus = request.status || 'Open';
+    newNode.data.category = 'execution';
+
+    setNodes((nds) => nds.concat(newNode));
+
+    await trackActivity('element_added', 'create', 'element', {
+      elementId: newNode.id,
+      elementType: 'execution-request',
+      position: targetPosition,
+      details: {
+        elementName: element.name,
+        requestId,
+        requestType: request.templateType,
+        title: request.title,
+        status: request.status,
+        canvasAction: true,
+        addedVia: 'execution-template',
+      },
+    });
+  }, [createElementNode, getAutoPlacementPosition, setNodes, trackActivity]);
+
+  const addDrawingFilesToCanvas = useCallback(async (uploadedFiles = [], options = {}) => {
+    if (!Array.isArray(uploadedFiles) || uploadedFiles.length === 0) return;
+
+    const imageExtensions = ['jpg', 'jpeg', 'png', 'webp', 'bmp', 'gif', 'tif', 'tiff'];
+    const classifyAsImage = (file) => {
+      const mimeType = String(file?.fileType || '').toLowerCase();
+      if (mimeType.startsWith('image/')) return true;
+      const extension = String(file?.fileName || '').split('.').pop()?.toLowerCase();
+      return imageExtensions.includes(extension);
+    };
+
+    const basePosition = {
+      x: window.innerWidth / 2 - 240,
+      y: window.innerHeight / 2 - 180,
+    };
+
+    const createdNodes = uploadedFiles.map((file, index) => {
+      const targetPosition = getAutoPlacementPosition({
+        x: basePosition.x + (index % 3) * 40,
+        y: basePosition.y + Math.floor(index / 3) * 60,
+      });
+
+      const isImage = classifyAsImage(file);
+      if (isImage) {
+        const imageBlockData = {
+          imageUrl: file.s3Url,
+          caption: file.fileName,
+          timestamp: file.uploadedAt ? new Date(file.uploadedAt).toLocaleString() : '',
+          geotag: '',
+          annotations: [],
+          fileId: file.fileId,
+          fileType: file.fileType,
+          fileSize: file.fileSize,
+          s3Key: file.s3Key,
+        };
+
+        const imageElement = {
+          id: 'image-block',
+          name: `Drawing: ${file.fileName}`,
+          type: 'image-block',
+          preview: file.fileName,
+          imageBlockData,
+        };
+
+        const imageNode = createElementNode(imageElement, targetPosition, { imageBlockData });
+        imageNode.data.linkedFile = {
+          fileId: file.fileId,
+          fileName: file.fileName,
+          fileType: file.fileType,
+          fileSize: file.fileSize,
+          s3Key: file.s3Key,
+          s3Url: file.s3Url,
+          uploadedAt: file.uploadedAt,
+          taskId: file.taskId || selectedTask?.id || null,
+          subtaskId: file.subtaskId || selectedSubtask?.id || null,
+        };
+        imageNode.data.category = 'drawing';
+        return imageNode;
+      }
+
+      const fileData = {
+        fileId: file.fileId,
+        name: file.fileName,
+        size: file.fileSize,
+        type: file.fileType,
+        s3Key: file.s3Key,
+        url: file.s3Url,
+        uploadedAt: file.uploadedAt,
+      };
+
+      const fileElement = {
+        id: 'file',
+        name: `File: ${file.fileName}`,
+        type: 'file',
+        preview: file.fileName,
+        fileData,
+      };
+
+      const fileNode = createElementNode(fileElement, targetPosition, { fileData });
+      fileNode.data.linkedFile = {
+        fileId: file.fileId,
+        fileName: file.fileName,
+        fileType: file.fileType,
+        fileSize: file.fileSize,
+        s3Key: file.s3Key,
+        s3Url: file.s3Url,
+        uploadedAt: file.uploadedAt,
+        taskId: file.taskId || selectedTask?.id || null,
+        subtaskId: file.subtaskId || selectedSubtask?.id || null,
+      };
+      fileNode.data.category = 'attachment';
+      return fileNode;
+    });
+
+    setNodes((nds) => nds.concat(createdNodes));
+
+    await trackActivity('element_added', 'create', 'element', {
+      elementId: createdNodes[0]?.id,
+      elementType: 'file-upload-batch',
+      position: createdNodes[0]?.position,
+      details: {
+        source: options?.source || 'workspace-file-upload',
+        count: createdNodes.length,
+        taskId: selectedTask?.id,
+        subtaskId: selectedSubtask?.id,
+        fileNames: uploadedFiles.map((file) => file.fileName),
+      },
+    });
+  }, [createElementNode, getAutoPlacementPosition, selectedTask?.id, selectedSubtask?.id, setNodes, trackActivity]);
+
+  const undoPenStroke = useCallback(() => {
+    setDrawingPaths((prev) => prev.slice(0, -1));
+  }, []);
+
+  const clearPenDrawings = useCallback(() => {
+    setDrawingPaths([]);
+  }, []);
+
+  const setDrawingMode = useCallback((active) => {
+    const enabled = Boolean(active);
+    setIsPenMode(enabled);
+    if (!enabled) {
+      stopPenDrawing();
+    }
+  }, [stopPenDrawing]);
+
+  const setDrawingToolSettings = useCallback((settings = {}) => {
+    if (typeof settings.color === 'string' && settings.color.trim()) {
+      setPenColor(settings.color);
+    }
+    if (Number.isFinite(settings.thickness)) {
+      setPenThickness(Math.max(1, Math.min(12, Number(settings.thickness))));
+    }
+  }, []);
+
   useImperativeHandle(ref, () => ({
     zoomIn: handleZoomIn,
     zoomOut: handleZoomOut,
@@ -3019,6 +3282,12 @@ const edgeTypes = {
     getNodes: () => nodes,
     getEdges: () => edges,
     addProcurementRFQNode: addProcurementRFQNodeToCanvas,
+    addExecutionRequestNode: addExecutionRequestNodeToCanvas,
+    addDrawingFilesToCanvas,
+    setDrawingMode,
+    setDrawingToolSettings,
+    clearPenDrawings,
+    undoPenStroke,
   }));
 
   // Listen for global canvasFitView event (from keyboard shortcut Ctrl+Shift+1)
@@ -3045,6 +3314,24 @@ const edgeTypes = {
       sessionStorage.removeItem('pendingProcurementRFQNode');
     }
   }, [selectedSubtask?.id, addProcurementRFQNodeToCanvas]);
+
+  useEffect(() => {
+    if (!selectedSubtask?.id) return;
+
+    const pendingRaw = sessionStorage.getItem('pendingExecutionRequestNode');
+    if (!pendingRaw) return;
+
+    try {
+      const pending = JSON.parse(pendingRaw);
+      if (pending?.payload?.executionRequest) {
+        addExecutionRequestNodeToCanvas(pending.payload);
+      }
+      sessionStorage.removeItem('pendingExecutionRequestNode');
+    } catch (error) {
+      console.warn('Could not parse pending execution request payload:', error);
+      sessionStorage.removeItem('pendingExecutionRequestNode');
+    }
+  }, [selectedSubtask?.id, addExecutionRequestNodeToCanvas]);
 
   // Handle viewport changes to update zoom level
   const onViewportChange = useCallback((viewport) => {
@@ -3384,6 +3671,42 @@ const edgeTypes = {
       document.removeEventListener('addProcurementRFQNode', handleAddProcurementRFQNode);
     };
   }, [addProcurementRFQNodeToCanvas]);
+
+  useEffect(() => {
+    const handleAddExecutionRequestNode = async (event) => {
+      await addExecutionRequestNodeToCanvas(event.detail);
+    };
+
+    document.addEventListener('addExecutionRequestNode', handleAddExecutionRequestNode);
+    return () => {
+      document.removeEventListener('addExecutionRequestNode', handleAddExecutionRequestNode);
+    };
+  }, [addExecutionRequestNodeToCanvas]);
+
+  useEffect(() => {
+    const handleOpenRequestDetails = (event) => {
+      const { nodeId, requestType } = event.detail || {};
+      if (!nodeId || !requestType) return;
+
+      const matchedNode = nodes.find((node) => node.id === nodeId);
+      if (!matchedNode) return;
+
+      if (requestType === 'procurement-rfq-request' && matchedNode.data?.procurementRFQData) {
+        setSelectedProcurementRFQNode(matchedNode.data);
+        setShowProcurementRFQDetailsModal(true);
+      }
+
+      if (requestType === 'execution-request' && matchedNode.data?.executionRequestData) {
+        setSelectedExecutionRequestNode(matchedNode.data);
+        setShowExecutionRequestDetailsModal(true);
+      }
+    };
+
+    document.addEventListener('openRequestDetails', handleOpenRequestDetails);
+    return () => {
+      document.removeEventListener('openRequestDetails', handleOpenRequestDetails);
+    };
+  }, [nodes]);
 
   // Handle element addition from Cost Calculators Modal
   useEffect(() => {
@@ -4592,6 +4915,32 @@ const edgeTypes = {
         onDragLeave={onDragLeave}
         onMouseMove={handleCanvasMouseMove}
       >
+        <div
+          ref={canvasOverlayRef}
+          className={`absolute inset-0 z-20 ${isPenMode ? 'pointer-events-auto cursor-crosshair touch-none' : 'pointer-events-none'}`}
+          onPointerDown={handlePenPointerDown}
+          onPointerMove={handlePenPointerMove}
+          onPointerUp={handlePenPointerUp}
+        >
+          <svg className="w-full h-full">
+            {drawingPaths.map((path) => {
+              if (!path.points || path.points.length === 0) return null;
+              const points = path.points.map((pt) => `${pt.x},${pt.y}`).join(' ');
+              return (
+                <polyline
+                  key={path.id}
+                  points={points}
+                  fill="none"
+                  stroke={path.color}
+                  strokeWidth={path.thickness}
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              );
+            })}
+          </svg>
+        </div>
+
         {/* Remote Cursors Overlay */}
         {!performanceMode && canvasWebSocket?.remoteCursors && Object.entries(canvasWebSocket.remoteCursors).map(([cursorUserId, cursor]) => (
           <RemoteCursor key={cursorUserId} userId={cursorUserId} userName={cursor.userName} x={cursor.x} y={cursor.y} />
@@ -4630,17 +4979,17 @@ const edgeTypes = {
             console.log('✅ ReactFlow instance initialized:', instance);
           }}
           onViewportChange={onViewportChange}
-          nodesDraggable
-          nodesConnectable={canEdit}
-          elementsSelectable={canEdit}
+          nodesDraggable={!isPenMode}
+          nodesConnectable={canEdit && !isPenMode}
+          elementsSelectable={canEdit && !isPenMode}
           onDragLeave={onDragLeave}
           nodeTypes={nodeTypes}
           edgeTypes={edgeTypes}
           defaultViewport={{ x: 0, y: 0, zoom: 1 }}
           minZoom={0.1}
           maxZoom={2}
-          panOnDrag={[2]}
-          panOnScroll
+          panOnDrag={isPenMode ? false : [2]}
+          panOnScroll={!isPenMode}
           panOnScrollMode="free"
           panActivationKey={canEdit ? 'Space' : undefined}
           connectionLineType="smoothstep"
@@ -5051,6 +5400,15 @@ const edgeTypes = {
           setSelectedProcurementRFQNode(null);
         }}
         nodeData={selectedProcurementRFQNode}
+      />
+
+      <ExecutionRequestDetailsModal
+        isOpen={showExecutionRequestDetailsModal}
+        onClose={() => {
+          setShowExecutionRequestDetailsModal(false);
+          setSelectedExecutionRequestNode(null);
+        }}
+        nodeData={selectedExecutionRequestNode}
       />
 
       {edgeLabelModal.isOpen && (

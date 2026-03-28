@@ -435,6 +435,13 @@ const WorkspaceRightSidebar = ({
 
     try {
       setSendingMessage(true);
+
+      const canvasRef = window?.canvasWorkspaceRef?.current;
+      if (canvasRef?.addDrawingFilesToCanvas) {
+        await canvasRef.addDrawingFilesToCanvas(uploadedFiles, {
+          source: 'right-sidebar-upload',
+        });
+      }
       
       // Create a message with file attachments
       const messageData = {
@@ -949,7 +956,13 @@ const WorkspaceRightSidebar = ({
                       permission="canViewFiles"
                       workspace={workspace}
                       userRole={userRole}
-                      onClick={() => setShowFileUpload(true)}
+                      onClick={() => {
+                        if (!selectedSubtask?.id) {
+                          alert('Please select a subtask before uploading drawings or files.');
+                          return;
+                        }
+                        setShowFileUpload(true);
+                      }}
                       className="p-1 hover:bg-gray-200 rounded-lg transition-colors"
                       title="Upload files"
                       showTooltip={false}
@@ -1322,6 +1335,8 @@ const WorkspaceRightSidebar = ({
         onFilesSelected={handleFilesSelected}
         workspaceId={workspaceId}
         vendorId={currentUser?.id || currentUser?.vendorId}
+        taskId={selectedTask?.id}
+        subtaskId={selectedSubtask?.id}
       />
 
       {/* Video Call Modal */}

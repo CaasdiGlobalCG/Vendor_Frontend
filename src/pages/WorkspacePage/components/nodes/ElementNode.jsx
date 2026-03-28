@@ -1608,6 +1608,80 @@ const ElementNode = ({ id, data, isConnectable, selected }) => {
       case 'document-block':
         return <DocumentBlockRenderer data={data} nodeId={id} workspaceId={workspaceId} setNodes={setNodes} />;
 
+      case 'procurement-rfq-request': {
+        const request = data.procurementRFQData?.request || {};
+        const rfq = data.procurementRFQData?.rfqFormData || {};
+        const product = rfq.productDetails || {};
+        const logistics = rfq.tradeLogistics || {};
+
+        return (
+          <div className="space-y-3">
+            <div className="rounded-lg border border-orange-200 bg-orange-50 p-3">
+              <p className="text-xs font-semibold text-orange-900 uppercase tracking-wide">Procurement RFQ</p>
+              <div className="mt-2 space-y-1 text-xs text-gray-700">
+                <p><span className="font-medium">Item:</span> {product.productName || request.item || '-'}</p>
+                <p><span className="font-medium">Qty:</span> {request.quantity || rfq.quantityPricing?.quantity || '-'} {rfq.quantityPricing?.quantityUnit || ''}</p>
+                <p><span className="font-medium">Priority:</span> {request.priority || '-'}</p>
+                <p><span className="font-medium">Required By:</span> {logistics.requiredByDate || request.requiredByDate || '-'}</p>
+              </div>
+            </div>
+
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                document.dispatchEvent(new CustomEvent('openRequestDetails', {
+                  detail: { nodeId: id, requestType: 'procurement-rfq-request' }
+                }));
+              }}
+              className="w-full inline-flex items-center justify-center gap-2 rounded-lg border border-blue-200 bg-blue-50 px-3 py-2 text-xs font-semibold text-blue-700 hover:bg-blue-100"
+            >
+              <Eye className="w-3.5 h-3.5" />
+              View Full RFQ
+            </button>
+          </div>
+        );
+      }
+
+      case 'execution-request': {
+        const request = data.executionRequestData?.executionRequest || {};
+        const isDailyLog = request.templateType === 'execution-daily-site-log';
+
+        return (
+          <div className="space-y-3">
+            <div className="rounded-lg border border-indigo-200 bg-indigo-50 p-3">
+              <p className="text-xs font-semibold text-indigo-900 uppercase tracking-wide">Execution Preview</p>
+              <div className="mt-2 space-y-1 text-xs text-gray-700">
+                <p><span className="font-medium">Status:</span> {request.status || '-'}</p>
+                <p><span className="font-medium">Location:</span> {request.location || '-'}</p>
+                <p><span className="font-medium">Assignee:</span> {request.assignee || '-'}</p>
+                {isDailyLog ? (
+                  <>
+                    <p><span className="font-medium">Skilled / Unskilled:</span> {request.laborSkilled || 0} / {request.laborUnskilled || 0}</p>
+                    <p><span className="font-medium">Weather:</span> {request.weatherConditions || '-'}</p>
+                    <p className="line-clamp-2"><span className="font-medium">Work Done:</span> {request.workCompletedToday || '-'}</p>
+                  </>
+                ) : (
+                  <p><span className="font-medium">Priority:</span> {request.priority || '-'}</p>
+                )}
+              </div>
+            </div>
+
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                document.dispatchEvent(new CustomEvent('openRequestDetails', {
+                  detail: { nodeId: id, requestType: 'execution-request' }
+                }));
+              }}
+              className="w-full inline-flex items-center justify-center gap-2 rounded-lg border border-blue-200 bg-blue-50 px-3 py-2 text-xs font-semibold text-blue-700 hover:bg-blue-100"
+            >
+              <Eye className="w-3.5 h-3.5" />
+              View Full Request
+            </button>
+          </div>
+        );
+      }
+
       case 'task-card':
       case 'task-card-progress':
         return <TaskCardRenderer data={data} />;

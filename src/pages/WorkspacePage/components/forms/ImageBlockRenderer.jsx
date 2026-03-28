@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { UploadCloud, MapPin, Clock, Image as ImageIcon, Trash2, Plus, Eye, Download, X, Loader2 } from 'lucide-react';
 import { persistNodeDataPatch } from '../../utils/nodePersistence';
+import authFetch from '../../../../utils/authFetch';
 
 const defaultAnnotations = [
   { id: 'ann-1', text: 'Highlight key progress', position: 'top-left' }
@@ -126,6 +127,8 @@ const ImageBlockRenderer = ({ data, nodeId, workspaceId, setNodes }) => {
       formData.append('workspaceId', workspaceId);
       formData.append('nodeId', nodeId);
       formData.append('fileType', 'image-block');
+      if (data?.taskId) formData.append('taskId', data.taskId);
+      if (data?.subtaskId) formData.append('subtaskId', data.subtaskId);
 
       console.log('📤 Uploading image to S3...', {
         fileName: file.name,
@@ -135,9 +138,10 @@ const ImageBlockRenderer = ({ data, nodeId, workspaceId, setNodes }) => {
       });
 
       // Upload to S3 via backend API
-      const response = await fetch('/api/workspace-files/upload', {
+      const response = await authFetch('/api/workspace-files/upload', {
         method: 'POST',
-        body: formData
+        body: formData,
+        credentials: 'include'
       });
 
       if (!response.ok) {
