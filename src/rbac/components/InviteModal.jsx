@@ -173,14 +173,24 @@ export function InviteModal({ roles, onSubmit, onClose }) {
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
       <div className="bg-white rounded-xl shadow-xl w-full max-w-3xl mx-4 max-h-[90vh] flex flex-col">
         {/* Header */}
-        <div className="flex items-center justify-between p-5 border-b border-gray-200">
-          <h3 className="text-lg font-medium text-gray-900">Invite Team Member</h3>
+        <div className="flex items-start justify-between gap-4 p-5 border-b border-teal-100 bg-gradient-to-r from-teal-50 to-cyan-50">
+          <div>
+            <p className="text-[11px] font-semibold tracking-wide uppercase text-teal-700">Team Access</p>
+            <h3 className="text-lg font-semibold text-gray-900">Invite Team Member</h3>
+            <p className="text-sm text-gray-600 mt-1">
+              Assign an existing role or create a custom role in one flow.
+            </p>
+          </div>
           <button onClick={onClose} className="text-gray-400 hover:text-gray-600 text-xl leading-none">&times;</button>
         </div>
 
         {/* Body */}
         <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-5 space-y-4">
           {error && <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">{error}</div>}
+
+          <div className="rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-xs text-gray-600">
+            Steps: add recipient email, choose how to assign a role, then optionally tune permissions before sending.
+          </div>
 
           {/* Email */}
           <div>
@@ -209,6 +219,11 @@ export function InviteModal({ roles, onSubmit, onClose }) {
             {/* ====== EXISTING ROLE MODE ====== */}
             {roleMode === 'select' && (
               <>
+                {assignableRoles.length === 0 && (
+                  <div className="mb-3 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800">
+                    You currently cannot assign any role. Contact a higher-level admin to grant assignment access.
+                  </div>
+                )}
                 <select required value={roleId} onChange={(e) => handleRoleChange(e.target.value)}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-teal-500 focus:border-teal-500">
                   <option value="">Select a role...</option>
@@ -262,6 +277,10 @@ export function InviteModal({ roles, onSubmit, onClose }) {
             {/* ====== CREATE NEW ROLE MODE ====== */}
             {roleMode === 'create' && (
               <div className="space-y-3">
+                <div className="rounded-lg border border-teal-200 bg-teal-50 px-3 py-2 text-xs text-teal-800">
+                  New roles are reusable for future invitations. Role level controls hierarchy and assignment authority.
+                </div>
+
                 {/* Name + Hierarchy row */}
                 <div className="grid grid-cols-2 gap-3">
                   <div>
@@ -391,7 +410,7 @@ export function InviteModal({ roles, onSubmit, onClose }) {
 
         {/* Footer */}
         <div className="flex justify-end gap-3 p-5 border-t border-gray-200">
-          <button type="button" onClick={onClose} className="px-4 py-2 text-sm text-gray-600 hover:text-gray-800">Cancel</button>
+          <button type="button" onClick={onClose} className="px-4 py-2 text-sm text-gray-600 hover:text-gray-800 border border-gray-200 rounded-lg">Cancel</button>
           <button onClick={handleSubmit} disabled={isDisabled}
             className="px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white text-sm font-medium rounded-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2">
             {submitting ? (

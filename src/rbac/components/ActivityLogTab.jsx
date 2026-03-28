@@ -64,6 +64,8 @@ export default function ActivityLogTab({ members = [] }) {
   const [dateFilter, setDateFilter] = useState('');
   const [selectedLog, setSelectedLog] = useState(null);
 
+  const activeFilterCount = [actionFilter, userFilter, dateFilter].filter(Boolean).length;
+
   // ── Build email lookup map ──
   const emailMap = {};
   for (const m of members) {
@@ -123,23 +125,33 @@ export default function ActivityLogTab({ members = [] }) {
   return (
     <div className="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
       {/* Header + Filters */}
-      <div className="px-6 py-4 border-b border-gray-200">
-        <div className="flex items-center justify-between flex-wrap gap-3">
+      <div className="px-6 py-4 border-b border-gray-200 bg-gradient-to-r from-teal-50/60 to-cyan-50/40">
+        <div className="flex items-start justify-between flex-wrap gap-3">
           <div>
-            <h2 className="text-lg font-medium text-gray-900">Activity Log</h2>
+            <h2 className="text-lg font-semibold text-gray-900">Activity Log</h2>
             <p className="text-xs text-gray-500 mt-0.5">
               {isSuperAdmin
                 ? 'All activity across your organisation'
                 : 'Your recent activity'}
             </p>
+            <div className="mt-2 flex items-center gap-2 flex-wrap">
+              <span className="inline-flex items-center rounded-full border border-teal-200 bg-teal-100/70 px-2 py-0.5 text-[11px] font-medium text-teal-800">
+                {logs.length} loaded
+              </span>
+              {activeFilterCount > 0 && (
+                <span className="inline-flex items-center rounded-full border border-amber-200 bg-amber-100/70 px-2 py-0.5 text-[11px] font-medium text-amber-800">
+                  {activeFilterCount} active filter{activeFilterCount > 1 ? 's' : ''}
+                </span>
+              )}
+            </div>
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 flex-wrap">
             {/* Action type filter */}
             <select
               value={actionFilter}
               onChange={(e) => setActionFilter(e.target.value)}
-              className="text-xs border border-gray-300 rounded-lg px-2 py-1.5 bg-white"
+              className="text-xs border border-gray-300 rounded-lg px-2.5 py-1.5 bg-white min-w-[140px]"
             >
               <option value="">All actions</option>
               {ACTION_OPTIONS.map((a) => (
@@ -152,7 +164,7 @@ export default function ActivityLogTab({ members = [] }) {
               <select
                 value={userFilter}
                 onChange={(e) => setUserFilter(e.target.value)}
-                className="text-xs border border-gray-300 rounded-lg px-2 py-1.5 bg-white max-w-[200px]"
+                className="text-xs border border-gray-300 rounded-lg px-2.5 py-1.5 bg-white max-w-[220px]"
               >
                 <option value="">All members</option>
                 {members.map((m) => (
@@ -168,14 +180,27 @@ export default function ActivityLogTab({ members = [] }) {
               type="date"
               value={dateFilter}
               onChange={(e) => setDateFilter(e.target.value)}
-              className="text-[11px] border border-gray-300 rounded-lg px-2 py-1.5 bg-white"
+              className="text-[11px] border border-gray-300 rounded-lg px-2.5 py-1.5 bg-white"
             />
+
+            {activeFilterCount > 0 && (
+              <button
+                onClick={() => {
+                  setActionFilter('');
+                  setUserFilter('');
+                  setDateFilter('');
+                }}
+                className="text-[11px] text-gray-600 hover:text-gray-800 font-medium px-2 py-1 border border-gray-300 rounded-lg bg-white"
+              >
+                Clear filters
+              </button>
+            )}
 
             {/* Refresh */}
             <button
               onClick={fetchLogs}
               disabled={loading}
-              className="text-[11px] text-teal-600 hover:text-teal-700 font-medium disabled:opacity-50"
+              className="text-[11px] text-teal-700 hover:text-teal-800 font-semibold disabled:opacity-50 px-2 py-1 border border-teal-200 rounded-lg bg-white"
             >
               Refresh
             </button>
@@ -220,7 +245,7 @@ export default function ActivityLogTab({ members = [] }) {
         return filtered.length > 0 ? (
           <div className="overflow-x-auto">
             <table className="w-full text-left">
-              <thead className="bg-gray-50 border-b border-gray-200">
+              <thead className="bg-gray-50 border-b border-gray-200 sticky top-0 z-10">
                 <tr>
                   <th className="px-3 py-2 text-[10px] font-semibold text-gray-500 uppercase tracking-wider w-[40px]">#</th>
                   <th className="px-3 py-2 text-[10px] font-semibold text-gray-500 uppercase tracking-wider">Initiated By</th>
@@ -246,6 +271,12 @@ export default function ActivityLogTab({ members = [] }) {
         ) : (
           <div className="px-6 py-8 text-center">
             <p className="text-xs text-gray-500">No logs match the selected date</p>
+            <button
+              onClick={() => setDateFilter('')}
+              className="mt-2 text-xs font-medium text-teal-700 hover:text-teal-800"
+            >
+              Clear date filter
+            </button>
           </div>
         );
       })()}
@@ -286,10 +317,12 @@ function LogRow({ log, index, emailMap, isSelected, onSelect }) {
   if (details.oldRoleName && details.newRoleName) detailParts.push(`${details.oldRoleName} → ${details.newRoleName}`);
   if (details.reason) detailParts.push(details.reason);
 
+  const isEven = index % 2 === 0;
+
   return (
     <>
       <tr
-        className={`hover:bg-gray-50/60 transition-colors cursor-pointer ${isSelected ? 'bg-teal-50/40' : ''}`}
+        className={`hover:bg-gray-50/60 transition-colors cursor-pointer ${isEven ? 'bg-gray-50/30' : ''} ${isSelected ? 'bg-teal-50/40' : ''}`}
         onClick={onSelect}
       >
         <td className="px-3 py-1.5 text-[10px] text-gray-400 font-mono">{index}</td>
@@ -299,6 +332,11 @@ function LogRow({ log, index, emailMap, isSelected, onSelect }) {
           <span className="text-[11px] text-gray-800 font-medium truncate block max-w-[180px]" title={actorEmail}>
             {actorEmail}
           </span>
+          {actorName && (
+            <span className="text-[10px] text-gray-500 truncate block max-w-[180px]" title={actorName}>
+              {actorName}
+            </span>
+          )}
         </td>
 
         {/* Action */}

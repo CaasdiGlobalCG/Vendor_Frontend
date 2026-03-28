@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useContext } from 'react';
 import { Link } from 'react-router-dom';
-import { ChevronLeftIcon, ChevronRightIcon } from '@heroicons/react/24/solid';
-import { ArrowPathIcon, FunnelIcon } from '@heroicons/react/24/outline';
+import { ArrowPathIcon, MagnifyingGlassIcon } from '@heroicons/react/24/outline';
 import ProjectCard from '../../components/ProjectPage/ProjectCard';
 import { VendorContext } from '../../context/VendorContext';
 import { useRBAC } from '../../rbac/context/RBACContext';
@@ -14,6 +13,7 @@ import config from '../../config/env';
 
 const ProjectsPage = () => {
     const [activeFilter, setActiveFilter] = useState('All');
+    const [projectSearch, setProjectSearch] = useState('');
     const [projects, setProjects] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
@@ -160,13 +160,36 @@ const ProjectsPage = () => {
         fetchProjectsAndApprovedLeads();
     }, [currentUser, hasProjectScopeRestriction]);
 
-    // Filter projects based on activeFilter
-    const displayedProjects = projects.filter(project => {
-        if (activeFilter === 'All') return true;
-        if (activeFilter === 'New') return project.status === null;
-        if (activeFilter === 'Confirmed') return project.status === 'active';
-        return project.status === activeFilter;
-    });
+    const matchesFilter = (project, filter) => {
+        if (filter === 'All') return true;
+        if (filter === 'New') return project.status === null;
+        if (filter === 'Confirmed') return project.status === 'active';
+        return project.status === filter;
+    };
+
+    const searchQuery = projectSearch.trim().toLowerCase();
+    const displayedProjects = projects
+        .filter((project) => matchesFilter(project, activeFilter))
+        .filter((project) => {
+            if (!searchQuery) return true;
+            const haystack = [
+                project?.name,
+                project?.manager,
+                project?.description,
+                project?.id,
+                project?.projectId,
+                project?.clientId,
+            ]
+                .filter(Boolean)
+                .join(' ')
+                .toLowerCase();
+            return haystack.includes(searchQuery);
+        });
+
+    const filterCounts = filters.reduce((acc, filter) => {
+        acc[filter] = projects.filter((project) => matchesFilter(project, filter)).length;
+        return acc;
+    }, {});
 
     // Format date for display
     const formatDate = (date) => {
@@ -199,91 +222,127 @@ const ProjectsPage = () => {
     };
 
     return (
-        <div className="p-5 space-y-6">
-            {/* Page Header Section */}
-            <div className="flex flex-wrap justify-between items-center gap-4">
-                <div className="flex items-center gap-3">
-                    {/* Back button - Link or onClick handler */}
-                    <button className="text-gray-600 hover:text-black">
-                        <ChevronLeftIcon className="h-6 w-6" />
-                    </button>
+        <div className="mx-auto w-full max-w-[1600px] space-y-6 px-3 py-6 sm:px-5 lg:px-8 xl:px-10">
+            <div className="rounded-2xl border border-emerald-200/60 bg-gradient-to-r from-emerald-700 via-teal-700 to-cyan-700 px-6 py-6 shadow-sm">
+                <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
                     <div>
-                        <h1 className="text-xl font-semibold text-gray-800">Projects list</h1>
-                        <p className="text-sm text-gray-500">An overview of all projects</p>
+                        <p className="text-xs uppercase tracking-[0.18em] text-emerald-100/90">Delivery Overview</p>
+                        <h1 className="mt-1 text-2xl font-semibold text-white font-['Poppins']">Projects List</h1>
+                        <p className="mt-2 max-w-3xl text-sm text-emerald-50/95">
+                            Review active engagements, workspace readiness, and ownership details in one place.
+                        </p>
+                        <div className="mt-4 flex flex-wrap gap-2">
+                            <span className="inline-flex items-center rounded-full border border-white/35 bg-white/15 px-2.5 py-1 text-xs font-medium text-white">
+                                {projects.length} total
+                            </span>
+                            <span className="inline-flex items-center rounded-full border border-white/35 bg-white/15 px-2.5 py-1 text-xs font-medium text-white">
+                                {displayedProjects.length} visible
+                            </span>
+                            <span className="inline-flex items-center rounded-full border border-white/35 bg-white/15 px-2.5 py-1 text-xs font-medium text-white">
+                                {filterCounts.Pending || 0} pending
+                            </span>
+                        </div>
                     </div>
-                </div>
-                <div className="flex flex-wrap items-center gap-3">
-                    {/* Date Navigation */}
-                    <div className="flex items-center text-sm text-gray-600">
-                        <button className="p-1 hover:bg-gray-200 rounded">
-                            <ChevronLeftIcon className="h-5 w-5" />
-                        </button>
-                        <span className="mx-2 font-medium">{formatDate(new Date())}</span>
-                        <button className="p-1 hover:bg-gray-200 rounded">
-                            <ChevronRightIcon className="h-5 w-5" />
-                        </button>
+
+                    <div className="flex flex-wrap items-center gap-2">
+                        <span className="rounded-lg border border-white/30 bg-white/10 px-3 py-2 text-xs font-medium text-white/90">
+                            Updated {formatDate(new Date())}
+                        </span>
+                        <Link
+                            to="/VendorDashboard/leads"
+                            className="inline-flex items-center gap-1.5 rounded-lg border border-white/35 bg-white/15 px-3 py-2 text-sm font-medium text-white transition-colors hover:bg-white/25"
+                        >
+                            Leads
+                            <ArrowPathIcon className="h-4 w-4" />
+                        </Link>
                     </div>
-                    {/* Leads Button - Changed to Link */}
-                    <Link
-                       to="/VendorDashboard/leads"
-                       className="flex items-center gap-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 text-sm font-medium px-3 py-1.5 rounded-lg border border-emerald-200"
-                    >
-                        Leads
-                        <ArrowPathIcon className="h-4 w-4" />
-                    </Link>
                 </div>
             </div>
 
-            {/* Filter Tabs Section */}
-            <div className="flex flex-wrap items-center gap-2">
-                {filters.map((filter) => (
-                    <button
-                        key={filter}
-                        onClick={() => setActiveFilter(filter)}
-                        className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors duration-150 ease-in-out flex items-center gap-1.5 ${
-                            activeFilter === filter
-                                ? 'bg-white text-emerald-700 shadow-sm ring-1 ring-black ring-opacity-5'
-                                : 'bg-gray-200/60 text-gray-600 hover:bg-gray-300/80'
-                        }`}
-                    >
-                        {filter === 'New' && <span className="h-2 w-2 bg-emerald-500 rounded-full"></span>}
-                        {filter}
-                    </button>
-                ))}
-                <button className="ml-auto p-2 rounded-lg bg-gray-200/60 text-gray-600 hover:bg-gray-300/80 lg:hidden">
-                    <FunnelIcon className="h-5 w-5" />
-                </button>
+            <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
+                <div className="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
+                    <div className="relative w-full xl:max-w-sm">
+                        <input
+                            type="text"
+                            value={projectSearch}
+                            onChange={(e) => setProjectSearch(e.target.value)}
+                            placeholder="Search by project, manager, or ID"
+                            className="h-10 w-full rounded-lg border border-gray-300 bg-white pl-10 pr-3 text-sm text-gray-700 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-100"
+                        />
+                        <MagnifyingGlassIcon className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+                    </div>
+
+                    <div className="flex flex-wrap items-center gap-2">
+                        {filters.map((filter) => (
+                            <button
+                                key={filter}
+                                onClick={() => setActiveFilter(filter)}
+                                className={`inline-flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
+                                    activeFilter === filter
+                                        ? 'border border-emerald-200 bg-emerald-50 text-emerald-700'
+                                        : 'border border-gray-200 bg-gray-50 text-gray-600 hover:bg-gray-100'
+                                }`}
+                            >
+                                {filter}
+                                <span className={`rounded-full px-1.5 py-0.5 text-[11px] ${
+                                    activeFilter === filter ? 'bg-white text-emerald-700' : 'bg-white text-gray-500'
+                                }`}>
+                                    {filterCounts[filter] || 0}
+                                </span>
+                            </button>
+                        ))}
+                    </div>
+                </div>
             </div>
 
-            {/* Project Cards Section */}
             <div className="space-y-4">
                 {accessFeedback ? (
-                    <div className="text-sm text-red-700 bg-red-50 border border-red-200 rounded-lg px-3 py-2">
+                    <div className={`rounded-lg border px-3 py-2 text-sm ${
+                        accessFeedback.toLowerCase().includes('success')
+                            ? 'border-green-200 bg-green-50 text-green-700'
+                            : 'border-red-200 bg-red-50 text-red-700'
+                    }`}>
                         {accessFeedback}
                     </div>
                 ) : null}
 
                 {loading ? (
-                    <div className="flex justify-center items-center py-8">
-                        <ArrowPathIcon className="h-8 w-8 text-emerald-600 animate-spin" />
+                    <div className="rounded-xl border border-gray-200 bg-white py-10 text-center shadow-sm">
+                        <ArrowPathIcon className="mx-auto h-8 w-8 animate-spin text-emerald-600" />
+                        <p className="mt-2 text-sm text-gray-500">Loading projects...</p>
                     </div>
                 ) : error ? (
-                    <div className="text-center text-red-500 py-8">
+                    <div className="rounded-xl border border-red-200 bg-red-50 py-10 text-center text-red-700">
                         {error}
                     </div>
                 ) : displayedProjects.length > 0 ? (
-                    displayedProjects.map((project) => (
-                        <ProjectCard
-                            key={project.id || project.projectId}
-                            project={project}
-                            canManageAccess={canManageProjectAccess}
-                            onManageAccess={openProjectAccess}
-                        />
-                    ))
+                    <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
+                        {displayedProjects.map((project) => (
+                            <ProjectCard
+                                key={project.id || project.projectId}
+                                project={project}
+                                canManageAccess={canManageProjectAccess}
+                                onManageAccess={openProjectAccess}
+                            />
+                        ))}
+                    </div>
                 ) : hasProjectScopeRestriction ? (
-                    <p className="text-center text-gray-500 py-8">You do not have access to any projects.</p>
+                    <div className="rounded-xl border border-gray-200 bg-white py-12 text-center text-sm text-gray-500 shadow-sm">
+                        You do not have access to any projects.
+                    </div>
                 ) : (
-                    <p className="text-center text-gray-500 py-8">No projects found matching the filter.</p>
+                    <div className="rounded-xl border border-gray-200 bg-white py-12 text-center shadow-sm">
+                        <p className="text-sm text-gray-600">No projects found matching the current filter.</p>
+                        <button
+                            onClick={() => {
+                                setActiveFilter('All');
+                                setProjectSearch('');
+                            }}
+                            className="mt-2 text-xs font-medium text-emerald-700 hover:text-emerald-800"
+                        >
+                            Clear filters
+                        </button>
+                    </div>
                 )}
             </div>
 

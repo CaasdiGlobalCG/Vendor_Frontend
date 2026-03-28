@@ -55,6 +55,10 @@ export default function RolesTab({ roles = [], meta = {}, onRefresh, showFeedbac
   const [deletingRole, setDeletingRole] = useState(null);
   const [viewingRole, setViewingRole] = useState(null);
 
+  const systemRoles = roles.filter((r) => r.isSystem);
+  const customRoles = roles.filter((r) => !r.isSystem);
+  const assignableCount = roles.filter((r) => r.canAssign).length;
+
   // ── Open edit modal with full role details ──
   const handleEditClick = useCallback(async (role) => {
     try {
@@ -76,19 +80,35 @@ export default function RolesTab({ roles = [], meta = {}, onRefresh, showFeedbac
   }, [showFeedback]);
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-5">
       {/* ── Header with Create button ── */}
-      <div className="flex items-center justify-between">
-        <div>
-          <p className="text-sm text-gray-500">
-            {roles.length} role{roles.length !== 1 ? 's' : ''} total
-            {meta.maxCustomRoles != null && (
-              <span className="ml-2 text-xs text-gray-400">
-                ({meta.customRoleCount || 0}/{meta.maxCustomRoles === 9999 ? '∞' : meta.maxCustomRoles} custom roles used)
-              </span>
-            )}
-          </p>
+      <div className="rounded-xl border border-gray-200 bg-gradient-to-r from-white to-teal-50/40 p-4">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+          <div>
+            <h3 className="text-base font-semibold text-gray-900">Role Library</h3>
+            <p className="mt-1 text-sm text-gray-600">
+              Keep hierarchy clean and assign only roles below your own authority level.
+            </p>
+            <p className="mt-1 text-xs text-gray-500">
+              {roles.length} role{roles.length !== 1 ? 's' : ''} total
+              {meta.maxCustomRoles != null && (
+                <span className="ml-1.5">
+                  · {meta.customRoleCount || 0}/{meta.maxCustomRoles === 9999 ? '∞' : meta.maxCustomRoles} custom roles used
+                </span>
+              )}
+            </p>
+          </div>
+
+          <div className="grid grid-cols-3 gap-2 sm:w-[280px]">
+            <MiniMetric label="System" value={systemRoles.length} />
+            <MiniMetric label="Custom" value={customRoles.length} />
+            <MiniMetric label="Assignable" value={assignableCount} />
+          </div>
         </div>
+      </div>
+
+      <div className="flex items-center justify-between">
+        <div />
         <div className="flex items-center gap-2">
           <button onClick={onRefresh} className="text-xs text-teal-600 hover:text-teal-700 font-medium">
             Refresh
@@ -114,18 +134,18 @@ export default function RolesTab({ roles = [], meta = {}, onRefresh, showFeedbac
       <RoleSection
         title="System Roles"
         subtitle="Built-in roles that cannot be deleted"
-        roles={roles.filter((r) => r.isSystem)}
+        roles={systemRoles}
         onViewClick={handleViewClick}
         onEditClick={handleEditClick}
         onDeleteClick={setDeletingRole}
       />
 
       {/* ── Custom Roles ── */}
-      {roles.some((r) => !r.isSystem) && (
+      {customRoles.length > 0 && (
         <RoleSection
           title="Custom Roles"
           subtitle="Organization-specific roles created by your team"
-          roles={roles.filter((r) => !r.isSystem)}
+          roles={customRoles}
           onViewClick={handleViewClick}
           onEditClick={handleEditClick}
           onDeleteClick={setDeletingRole}
@@ -618,18 +638,27 @@ function ModalOverlay({ children, onClose }) {
   );
 }
 
+function MiniMetric({ label, value }) {
+  return (
+    <div className="rounded-lg border border-gray-200 bg-white px-2.5 py-2 text-center">
+      <p className="text-[10px] uppercase tracking-wide text-gray-500">{label}</p>
+      <p className="mt-0.5 text-sm font-semibold text-gray-800">{value}</p>
+    </div>
+  );
+}
+
 /** Reusable role table section (System / Custom) */
 function RoleSection({ title, subtitle, roles, onViewClick, onEditClick, onDeleteClick }) {
   if (!roles.length) return null;
   return (
-    <div>
-      <div className="mb-2">
-        <h3 className="text-sm font-medium text-gray-700">{title}</h3>
-        {subtitle && <p className="text-xs text-gray-400">{subtitle}</p>}
+    <div className="rounded-xl border border-gray-200 bg-white p-4">
+      <div className="mb-3">
+        <h3 className="text-sm font-semibold text-gray-800">{title}</h3>
+        {subtitle && <p className="text-xs text-gray-500">{subtitle}</p>}
       </div>
       <div className="overflow-x-auto border border-gray-200 rounded-lg">
         <table className="w-full text-sm">
-          <thead className="bg-gray-50 text-gray-500 text-xs uppercase">
+          <thead className="bg-gray-50 text-gray-500 text-xs uppercase tracking-wide">
             <tr>
               <th className="px-4 py-3 text-left font-medium">Role Name</th>
               <th className="px-4 py-3 text-left font-medium">Level</th>
@@ -639,29 +668,51 @@ function RoleSection({ title, subtitle, roles, onViewClick, onEditClick, onDelet
           </thead>
           <tbody className="divide-y divide-gray-100">
             {roles.map((role) => (
-              <tr key={role.roleId} className="hover:bg-gray-50">
+              <tr key={role.roleId} className="hover:bg-gray-50/80 transition-colors">
                 <td className="px-4 py-3">
-                  <RoleBadge roleId={role.roleId} roleName={role.roleName} />
+                  <div className="flex items-center gap-2">
+                    <RoleBadge roleId={role.roleId} roleName={role.roleName} />
+                    {role.isSystem && (
+                      <span className="rounded-full border border-slate-200 bg-slate-50 px-2 py-0.5 text-[10px] font-medium text-slate-600">
+                        Locked
+                      </span>
+                    )}
+                  </div>
                 </td>
-                <td className="px-4 py-3 text-xs text-gray-500">
+                <td className="px-4 py-3 text-xs font-medium text-gray-600">
                   {HIERARCHY_LABELS[role.roleLevel] || `Level ${role.roleLevel}`}
                 </td>
                 <td className="px-4 py-3 text-center">
-                  <span className="text-xs text-gray-500">
+                  <span className="inline-flex items-center rounded-full border border-gray-200 bg-gray-50 px-2 py-0.5 text-xs text-gray-600">
                     {role.permissions?.includes('*:*') ? 'Full Access' : `${(role.permissions || []).length} perms`}
                   </span>
                 </td>
                 <td className="px-4 py-3 text-right">
                   <div className="flex items-center gap-2 justify-end">
-                    <button onClick={() => onViewClick(role)} className="text-xs text-gray-500 hover:text-gray-700 font-medium">View</button>
+                    <button
+                      onClick={() => onViewClick(role)}
+                      className="rounded-md border border-gray-200 bg-white px-2 py-1 text-xs font-medium text-gray-600 hover:bg-gray-50"
+                    >
+                      View
+                    </button>
                     {role.canEdit && (
                       <PermissionGate module="user_management" action="manage">
-                        <button onClick={() => onEditClick(role)} className="text-xs text-teal-600 hover:text-teal-700 font-medium">Edit</button>
+                        <button
+                          onClick={() => onEditClick(role)}
+                          className="rounded-md border border-teal-200 bg-teal-50 px-2 py-1 text-xs font-medium text-teal-700 hover:bg-teal-100"
+                        >
+                          Edit
+                        </button>
                       </PermissionGate>
                     )}
                     {!role.isSystem && (
                       <PermissionGate module="user_management" action="manage">
-                        <button onClick={() => onDeleteClick(role)} className="text-xs text-red-500 hover:text-red-600 font-medium">Delete</button>
+                        <button
+                          onClick={() => onDeleteClick(role)}
+                          className="rounded-md border border-red-200 bg-red-50 px-2 py-1 text-xs font-medium text-red-700 hover:bg-red-100"
+                        >
+                          Delete
+                        </button>
                       </PermissionGate>
                     )}
                   </div>

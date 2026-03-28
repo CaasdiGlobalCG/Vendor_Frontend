@@ -155,10 +155,15 @@ export function EditablePermissionMatrix({
   const headerPx = compact ? 'px-2 py-2' : 'px-3 py-3';
 
   return (
-    <div className="overflow-x-auto">
+    <div className="overflow-x-auto bg-white">
+      <div className="border-b border-gray-200 bg-gray-50 px-4 py-2 text-[11px] text-gray-600">
+        {editable
+          ? 'Tip: use category select-all for fast setup, then fine-tune module permissions as needed.'
+          : 'This matrix reflects your current effective permissions and module access.'}
+      </div>
       <table className="min-w-full divide-y divide-gray-200">
         {/* ── Header Row ── */}
-        <thead className="bg-gray-50">
+        <thead className="bg-gray-50 sticky top-0 z-10">
           <tr>
             <th className={`${headerPx} text-left text-xs font-medium text-gray-500 uppercase tracking-wider`}>
               Module

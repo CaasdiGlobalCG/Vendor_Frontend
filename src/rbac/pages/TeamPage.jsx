@@ -10,8 +10,9 @@
 //              RoleBadge, PermissionGate, RolesTab
 // ============================================================
 
-import React, { useState, useEffect, useContext, useCallback } from 'react';
+import React, { useState, useEffect, useContext, useCallback, useMemo } from 'react';
 import { useRBAC } from '../context/RBACContext';
+import { usePermission } from '../hooks/usePermission';
 import { VendorContext } from '../../context/VendorContext';
 import config from '../../config/env';
 import { RoleBadge } from '../components/RoleBadge';
@@ -63,6 +64,10 @@ export default function TeamPage() {
 
   // ── Tab state ──
   const [activeTab, setActiveTab] = useState('members');
+
+  // ── Local UX filters (client-side only) ──
+  const [memberSearch, setMemberSearch] = useState('');
+  const [memberStatusFilter, setMemberStatusFilter] = useState('all');
 
   // ── Invite modal state ──
   const [showInviteModal, setShowInviteModal] = useState(false);
@@ -299,31 +304,54 @@ export default function TeamPage() {
 
   const assignableRoles = roles.filter((r) => r.canAssign);
 
+  // Local-only summary cards for quicker scanning in admin flows.
+  const memberStats = useMemo(() => {
+    const base = { total: members.length, active: 0, invited: 0, suspended: 0 };
+    for (const member of members) {
+      const status = member?.status || 'active';
+      if (status === 'invited') base.invited += 1;
+      else if (status === 'suspended') base.suspended += 1;
+      else base.active += 1;
+    }
+    return base;
+  }, [members]);
+
+  const filteredMembers = useMemo(() => {
+    const q = memberSearch.trim().toLowerCase();
+    return members.filter((member) => {
+      const status = (member?.status || 'active').toLowerCase();
+      const statusMatch = memberStatusFilter === 'all' || status === memberStatusFilter;
+      const searchMatch = !q
+        || String(member?.email || '').toLowerCase().includes(q)
+        || String(member?.roleName || '').toLowerCase().includes(q);
+      return statusMatch && searchMatch;
+    });
+  }, [members, memberSearch, memberStatusFilter]);
+
   return (
-    <div className="max-w-6xl mx-auto px-4 sm:px-6 py-6 space-y-6">
+    <div className="mx-auto w-full max-w-[1600px] px-3 py-6 sm:px-5 lg:px-8 xl:px-10 space-y-6">
       {/* ── Page Header ── */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-semibold text-gray-900 font-['Poppins']">
-            Team & Permissions
-          </h1>
-          <p className="text-sm text-gray-500 mt-1">
-            Manage your organization's team members and access controls
-          </p>
+      <div className="rounded-2xl border border-teal-200/60 bg-gradient-to-r from-teal-700 via-teal-700 to-emerald-700 px-6 py-6 shadow-sm">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <p className="text-xs uppercase tracking-[0.18em] text-teal-100/90">Administration</p>
+            <h1 className="mt-1 text-2xl font-semibold text-white font-['Poppins']">Team & Permissions</h1>
+            <p className="mt-2 text-sm text-teal-50/95">
+              Control who can access what, assign the right roles, and keep governance clear as your SaaS team scales.
+            </p>
+          </div>
+          <PermissionGate module="user_management" action="create">
+            <button
+              onClick={() => setShowInviteModal(true)}
+              className="inline-flex items-center gap-2 rounded-lg border border-white/30 bg-white/15 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-white/25"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+              </svg>
+              Invite Member
+            </button>
+          </PermissionGate>
         </div>
-        <PermissionGate module="user_management" action="create">
-          <button
-            onClick={() => setShowInviteModal(true)}
-            className="px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white text-sm font-medium rounded-lg
-                       flex items-center gap-2 transition-colors"
-          >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-                d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-            </svg>
-            Invite Member
-          </button>
-        </PermissionGate>
       </div>
 
       {/* ── Feedback Toast ── */}
@@ -332,10 +360,23 @@ export default function TeamPage() {
       {/* ── Phase 1 Indicator ── */}
       {isFallback && <Phase1Banner />}
 
+      {/* ── Team Summary Cards ── */}
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+        <StatTile label="Total Members" value={memberStats.total} tone="teal" />
+        <StatTile label="Active" value={memberStats.active} tone="green" />
+        <StatTile label="Invited" value={memberStats.invited} tone="amber" />
+        <StatTile label="Suspended" value={memberStats.suspended} tone="red" />
+      </div>
+
       {/* ── Your Access Card ── */}
       <div className="bg-white border border-gray-200 rounded-xl p-6 shadow-sm">
-        <h2 className="text-lg font-medium text-gray-900 mb-4">Your Access</h2>
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <h2 className="text-lg font-medium text-gray-900">Your Access</h2>
+          <span className="inline-flex w-fit items-center rounded-full border border-gray-200 bg-gray-50 px-2.5 py-1 text-xs font-medium text-gray-600">
+            Authority Level {role?.roleLevel ?? '—'}
+          </span>
+        </div>
+        <div className="mt-4 grid grid-cols-1 gap-6 sm:grid-cols-3">
           <InfoBlock label="Account" value={currentUser?.email || '—'} />
           <div>
             <p className="text-xs text-gray-500 uppercase tracking-wider mb-1.5">Role</p>
@@ -346,8 +387,8 @@ export default function TeamPage() {
       </div>
 
       {/* ── Tab Navigation ── */}
-      <div className="border-b border-gray-200">
-        <nav className="flex gap-6 px-1" aria-label="Team management tabs">
+      <div className="overflow-x-auto border-b border-gray-200">
+        <nav className="flex w-max min-w-full gap-5 px-1" aria-label="Team management tabs">
           {[
             { key: 'members', label: 'Members', count: members.length },
             { key: 'invitations', label: 'Invitations', count: invitations.length },
@@ -358,7 +399,7 @@ export default function TeamPage() {
             <button
               key={key}
               onClick={() => setActiveTab(key)}
-              className={`pb-3 text-sm font-medium border-b-2 transition-colors
+              className={`pb-3 text-sm font-medium border-b-2 whitespace-nowrap transition-colors
                 ${activeTab === key
                   ? 'border-teal-600 text-teal-600'
                   : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
@@ -381,16 +422,46 @@ export default function TeamPage() {
       {/* Members Tab */}
       {activeTab === 'members' && (
         <div className="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
-          <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
+          <div className="px-6 py-4 border-b border-gray-200 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
             <div>
               <h2 className="text-lg font-medium text-gray-900">Team Members</h2>
               <p className="text-xs text-gray-500 mt-1">
-                {members.length} member{members.length !== 1 ? 's' : ''}
+                {filteredMembers.length} of {members.length} member{members.length !== 1 ? 's' : ''}
               </p>
             </div>
-            <button onClick={fetchMembers} className="text-xs text-teal-600 hover:text-teal-700 font-medium">
-              Refresh
-            </button>
+
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+              <div className="relative">
+                <input
+                  type="text"
+                  value={memberSearch}
+                  onChange={(e) => setMemberSearch(e.target.value)}
+                  placeholder="Search by email or role"
+                  className="h-9 w-full min-w-[220px] rounded-lg border border-gray-300 bg-white pl-9 pr-3 text-sm text-gray-700 focus:border-teal-500 focus:outline-none focus:ring-2 focus:ring-teal-100"
+                />
+                <svg className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="m21 21-4.35-4.35m1.85-5.65a7.5 7.5 0 1 1-15 0 7.5 7.5 0 0 1 15 0Z" />
+                </svg>
+              </div>
+
+              <select
+                value={memberStatusFilter}
+                onChange={(e) => setMemberStatusFilter(e.target.value)}
+                className="h-9 rounded-lg border border-gray-300 bg-white px-3 text-sm text-gray-700 focus:border-teal-500 focus:outline-none focus:ring-2 focus:ring-teal-100"
+              >
+                <option value="all">All statuses</option>
+                <option value="active">Active</option>
+                <option value="invited">Invited</option>
+                <option value="suspended">Suspended</option>
+              </select>
+
+              <button
+                onClick={fetchMembers}
+                className="h-9 rounded-lg border border-teal-200 bg-teal-50 px-3 text-xs font-semibold uppercase tracking-wide text-teal-700 transition-colors hover:bg-teal-100"
+              >
+                Refresh
+              </button>
+            </div>
           </div>
 
           {membersLoading ? (
@@ -407,23 +478,37 @@ export default function TeamPage() {
           <div className="p-8 text-center text-sm text-gray-500">
             No members found. Invite someone to get started.
           </div>
+        ) : filteredMembers.length === 0 ? (
+          <div className="p-10 text-center">
+            <p className="text-sm font-medium text-gray-700">No members match your current filters.</p>
+            <button
+              onClick={() => {
+                setMemberSearch('');
+                setMemberStatusFilter('all');
+              }}
+              className="mt-2 text-xs font-medium text-teal-600 hover:text-teal-700"
+            >
+              Clear search and filters
+            </button>
+          </div>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead className="bg-gray-50 text-gray-500 text-xs uppercase">
+            <table className="w-full min-w-[1080px] text-sm">
+              <thead className="sticky top-0 z-10 bg-gray-50 text-gray-500 text-[11px] uppercase">
                 <tr>
-                  <th className="px-6 py-3 text-left font-medium">Email</th>
-                  <th className="px-6 py-3 text-left font-medium">Role</th>
-                  <th className="px-6 py-3 text-left font-medium">Access Scope</th>
-                  <th className="px-6 py-3 text-left font-medium">Status</th>
-                  <th className="px-6 py-3 text-left font-medium">Joined</th>
-                  <th className="px-6 py-3 text-right font-medium">Actions</th>
+                  <th className="w-[30%] px-4 py-3 text-left font-medium lg:px-5">Member</th>
+                  <th className="w-[15%] px-4 py-3 text-left font-medium lg:px-5">Role</th>
+                  <th className="w-[20%] px-4 py-3 text-left font-medium lg:px-5">Access Scope</th>
+                  <th className="w-[12%] px-4 py-3 text-left font-medium lg:px-5">Status</th>
+                  <th className="w-[13%] px-4 py-3 text-left font-medium lg:px-5">Joined</th>
+                  <th className="w-[10%] px-4 py-3 text-right font-medium lg:px-5">Manage</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
-                {members.map((member) => (
+                {filteredMembers.map((member, index) => (
                   <MemberRow
                     key={member.userId}
+                    rowIndex={index}
                     member={member}
                     currentUserId={userId || currentUser?.sub}
                     assignableRoles={assignableRoles}
@@ -611,24 +696,35 @@ export default function TeamPage() {
 // SUB-COMPONENTS
 // ──────────────────────────────────────
 
-/** Single member table row with inline role change + remove actions */
+/** Single member table row with compact contextual actions */
 function MemberRow({
+  rowIndex,
   member, currentUserId, assignableRoles,
   changingRoleFor, setChangingRoleFor, newRoleId, setNewRoleId, onRoleChange,
   onSuspend, onUnsuspend, onStartRemove, onEditRole, onEditScopes,
 }) {
   const isSelf = member.userId === currentUserId;
   const isInvited = member.status === 'invited';
+  const memberInitial = String(member?.email || '?').charAt(0).toUpperCase();
+  const isMutedRow = rowIndex % 2 === 1;
 
   return (
-    <tr className="hover:bg-gray-50">
-      <td className="px-6 py-3">
-        <div className="flex items-center gap-2">
-          <span className="text-gray-900">{member.email}</span>
-          {isSelf && <span className="text-[10px] bg-teal-50 text-teal-700 px-1.5 py-0.5 rounded font-medium">You</span>}
+    <tr className={`hover:bg-gray-50/90 transition-colors ${isMutedRow ? 'bg-gray-50/35' : ''}`}>
+      <td className="px-4 py-3 lg:px-5">
+        <div className="flex items-center gap-3">
+          <span className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-teal-200 bg-teal-50 text-xs font-semibold text-teal-700">
+            {memberInitial}
+          </span>
+          <div>
+            <p className="text-sm font-medium text-gray-900">{member.email}</p>
+            <div className="mt-0.5 flex items-center gap-1.5">
+              {isSelf && <span className="text-[10px] bg-teal-50 text-teal-700 px-1.5 py-0.5 rounded font-medium">You</span>}
+              {isInvited && <span className="text-[10px] bg-amber-50 text-amber-700 px-1.5 py-0.5 rounded font-medium">Pending acceptance</span>}
+            </div>
+          </div>
         </div>
       </td>
-      <td className="px-6 py-3">
+      <td className="px-4 py-3 lg:px-5">
         {changingRoleFor === member.userId ? (
           <div className="flex items-center gap-2">
             <select
@@ -641,88 +737,172 @@ function MemberRow({
                 <option key={r.roleId} value={r.roleId}>{r.roleName}</option>
               ))}
             </select>
-            <button onClick={() => onRoleChange(member.userId)} className="text-xs text-teal-600 hover:text-teal-700 font-medium">Save</button>
-            <button onClick={() => setChangingRoleFor(null)} className="text-xs text-gray-400 hover:text-gray-600">Cancel</button>
+            <button
+              onClick={() => onRoleChange(member.userId)}
+              className="rounded-md border border-teal-200 bg-teal-50 px-2 py-1 text-xs font-medium text-teal-700 hover:bg-teal-100"
+            >
+              Save
+            </button>
+            <button
+              onClick={() => setChangingRoleFor(null)}
+              className="rounded-md border border-gray-200 bg-white px-2 py-1 text-xs text-gray-500 hover:bg-gray-50"
+            >
+              Cancel
+            </button>
           </div>
         ) : (
           <RoleBadge roleId={member.roleId} roleName={member.roleName} size="sm" />
         )}
       </td>
-      <td className="px-6 py-3">
+      <td className="px-4 py-3 lg:px-5">
         <ScopeSummary
           projectAccess={member.projectAccess}
           workspaceAccess={member.workspaceAccess}
         />
       </td>
-      <td className="px-6 py-3">
+      <td className="px-4 py-3 lg:px-5">
         <StatusBadge status={member.status} />
       </td>
-      <td className="px-6 py-3 text-xs">
+      <td className="px-4 py-3 text-xs lg:px-5">
         {isInvited ? (
           <>
             <span className="text-amber-600">{timeAgo(member.joinedAt || member.createdAt)}</span>
             <span className="block text-gray-400 text-[10px]">Invited {formatDate(member.joinedAt || member.createdAt)}</span>
           </>
         ) : (
-          <span className="text-gray-500">{formatDate(member.joinedAt)}</span>
+          <>
+            <span className="text-gray-600">{timeAgo(member.joinedAt)}</span>
+            <span className="block text-gray-400 text-[10px]">{formatDate(member.joinedAt)}</span>
+          </>
         )}
       </td>
-      <td className="px-6 py-3 text-right">
-        {!isSelf && !isInvited && (
-          <div className="flex items-center gap-2 justify-end">
-            <PermissionGate module="user_management" action="edit">
-              <button
-                onClick={() => { setChangingRoleFor(member.userId); setNewRoleId(member.roleId); }}
-                className="text-xs text-teal-600 hover:text-teal-700 font-medium"
-              >
-                Change Role
-              </button>
-            </PermissionGate>
-            <PermissionGate module="user_management" action="manage">
-              <button
-                onClick={() => onEditRole?.(member.roleId)}
-                className="text-xs text-indigo-600 hover:text-indigo-700 font-medium"
-              >
-                Edit Role
-              </button>
-            </PermissionGate>
-            <PermissionGate module="user_management" action="edit">
-              <button
-                onClick={() => onEditScopes(member)}
-                className="text-xs text-blue-600 hover:text-blue-700 font-medium"
-              >
-                Edit Scope
-              </button>
-            </PermissionGate>
-            <PermissionGate module="user_management" action="edit">
-              {member.status === 'suspended' ? (
-                <button
-                  onClick={() => onUnsuspend(member.userId, member.email)}
-                  className="text-xs text-emerald-600 hover:text-emerald-700 font-medium"
-                >
-                  Unsuspend
-                </button>
-              ) : (
-                <button
-                  onClick={() => onSuspend(member.userId, member.email)}
-                  className="text-xs text-amber-600 hover:text-amber-700 font-medium"
-                >
-                  Suspend
-                </button>
-              )}
-            </PermissionGate>
-            <PermissionGate module="user_management" action="edit">
-              <button
-                onClick={() => onStartRemove(member.userId, member.email)}
-                className="text-xs text-red-500 hover:text-red-600 font-medium"
-              >
-                Remove
-              </button>
-            </PermissionGate>
-          </div>
+      <td className="px-4 py-3 text-right lg:px-5">
+        {!isSelf && !isInvited ? (
+          <MemberActionsMenu
+            member={member}
+            changingRoleFor={changingRoleFor}
+            setChangingRoleFor={setChangingRoleFor}
+            setNewRoleId={setNewRoleId}
+            onSuspend={onSuspend}
+            onUnsuspend={onUnsuspend}
+            onStartRemove={onStartRemove}
+            onEditRole={onEditRole}
+            onEditScopes={onEditScopes}
+          />
+        ) : (
+          <span className="text-[11px] text-gray-400">—</span>
         )}
       </td>
     </tr>
+  );
+}
+
+/** Compact row actions menu to avoid rendering all action buttons at once */
+function MemberActionsMenu({
+  member,
+  changingRoleFor,
+  setChangingRoleFor,
+  setNewRoleId,
+  onSuspend,
+  onUnsuspend,
+  onStartRemove,
+  onEditRole,
+  onEditScopes,
+}) {
+  const { can } = usePermission();
+  const canEditMembers = can('user_management', 'edit');
+  const canManageMembers = can('user_management', 'manage');
+
+  if (!canEditMembers && !canManageMembers) {
+    return <span className="text-[11px] text-gray-400">No actions</span>;
+  }
+
+  const closeMenu = (event) => {
+    const details = event.currentTarget.closest('details');
+    if (details) details.removeAttribute('open');
+  };
+
+  const runAction = (event, callback) => {
+    callback();
+    closeMenu(event);
+  };
+
+  const actionClass = 'block w-full rounded-md px-3 py-2 text-left text-xs font-medium text-gray-700 transition-colors hover:bg-gray-50';
+
+  return (
+    <details className="relative inline-block text-left">
+      <summary className="list-none rounded-lg border border-gray-300 bg-white px-2.5 py-1.5 text-xs font-semibold text-gray-700 shadow-sm transition-colors hover:bg-gray-50 cursor-pointer [&::-webkit-details-marker]:hidden">
+        <span className="inline-flex items-center gap-1">
+          Manage
+          <svg className="h-3.5 w-3.5 text-gray-500" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+            <path fillRule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.51a.75.75 0 01-1.08 0l-4.25-4.51a.75.75 0 01.02-1.06z" clipRule="evenodd" />
+          </svg>
+        </span>
+      </summary>
+
+      <div className="absolute right-0 z-20 mt-1.5 w-44 rounded-xl border border-gray-200 bg-white p-1 shadow-xl">
+        {canEditMembers && (
+          <button
+            type="button"
+            onClick={(event) => runAction(event, () => {
+              setChangingRoleFor(member.userId);
+              setNewRoleId(member.roleId);
+            })}
+            className={actionClass}
+          >
+            {changingRoleFor === member.userId ? 'Role editor open' : 'Change role'}
+          </button>
+        )}
+
+        {canManageMembers && (
+          <button
+            type="button"
+            onClick={(event) => runAction(event, () => onEditRole?.(member.roleId))}
+            className={actionClass}
+          >
+            Edit role template
+          </button>
+        )}
+
+        {canEditMembers && (
+          <button
+            type="button"
+            onClick={(event) => runAction(event, () => onEditScopes(member))}
+            className={actionClass}
+          >
+            Edit access scope
+          </button>
+        )}
+
+        {canEditMembers && (member.status === 'suspended' ? (
+          <button
+            type="button"
+            onClick={(event) => runAction(event, () => onUnsuspend(member.userId, member.email))}
+            className={actionClass}
+          >
+            Unsuspend member
+          </button>
+        ) : (
+          <button
+            type="button"
+            onClick={(event) => runAction(event, () => onSuspend(member.userId, member.email))}
+            className={actionClass}
+          >
+            Suspend member
+          </button>
+        ))}
+
+        {canEditMembers && (
+          <button
+            type="button"
+            onClick={(event) => runAction(event, () => onStartRemove(member.userId, member.email))}
+            className="block w-full rounded-md px-3 py-2 text-left text-xs font-medium text-red-700 transition-colors hover:bg-red-50"
+          >
+            Remove member
+          </button>
+        )}
+      </div>
+    </details>
   );
 }
 
@@ -894,6 +1074,22 @@ function AccessScopeModal({
 }
 
 /* InviteModal extracted to ../components/InviteModal.jsx */
+
+function StatTile({ label, value, tone = 'teal' }) {
+  const tones = {
+    teal: 'border-teal-200 bg-teal-50 text-teal-700',
+    green: 'border-green-200 bg-green-50 text-green-700',
+    amber: 'border-amber-200 bg-amber-50 text-amber-700',
+    red: 'border-red-200 bg-red-50 text-red-700',
+  };
+
+  return (
+    <div className={`rounded-xl border px-4 py-3 shadow-sm ${tones[tone] || tones.teal}`}>
+      <p className="text-[11px] uppercase tracking-wider">{label}</p>
+      <p className="mt-1 text-2xl font-semibold leading-none">{value}</p>
+    </div>
+  );
+}
 
 /** Simple label + value block for the access card */
 function InfoBlock({ label, value }) {

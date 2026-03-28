@@ -69,10 +69,10 @@ function AccessDeniedScreen({ code, message }) {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
-      <div className="max-w-md w-full text-center">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-teal-50 flex items-center justify-center px-4 py-8">
+      <div className="max-w-xl w-full rounded-2xl border border-gray-200 bg-white p-8 shadow-lg text-center">
         {/* Icon */}
-        <div className={`mx-auto w-16 h-16 rounded-full ${iconBg} flex items-center justify-center mb-6`}>
+        <div className={`mx-auto w-16 h-16 rounded-full ${iconBg} flex items-center justify-center mb-4`}>
           {isNoOrg || isError ? (
             <svg className={`w-8 h-8 ${iconColor}`} fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" d="M18 18.72a9.094 9.094 0 0 0 3.741-.479 3 3 0 0 0-4.682-2.72m.94 3.198.001.031c0 .225-.012.447-.037.666A11.944 11.944 0 0 1 12 21c-2.17 0-4.207-.576-5.963-1.584A6.062 6.062 0 0 1 6 18.719m12 0a5.971 5.971 0 0 0-.941-3.197m0 0A5.995 5.995 0 0 0 12 12.75a5.995 5.995 0 0 0-5.058 2.772m0 0a3 3 0 0 0-4.681 2.72 8.986 8.986 0 0 0 3.74.477m.94-3.197a5.971 5.971 0 0 0-.94 3.197M15 6.75a3 3 0 1 1-6 0 3 3 0 0 1 6 0Zm6 3a2.25 2.25 0 1 1-4.5 0 2.25 2.25 0 0 1 4.5 0Zm-13.5 0a2.25 2.25 0 1 1-4.5 0 2.25 2.25 0 0 1 4.5 0Z" />
@@ -84,23 +84,23 @@ function AccessDeniedScreen({ code, message }) {
           )}
         </div>
 
-        <h1 className="text-2xl font-bold text-gray-900 mb-2">{title}</h1>
-        <p className="text-gray-600 mb-8">{description}</p>
+        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-gray-500">Account Access</p>
+        <h1 className="mt-2 text-2xl font-bold text-gray-900">{title}</h1>
+        <p className="mt-3 text-gray-600">{description}</p>
 
-        <div className="bg-white border border-gray-200 rounded-xl p-4 mb-6 text-left">
-          <p className="text-sm text-gray-500">
+        <div className="mt-6 bg-gray-50 border border-gray-200 rounded-xl p-4 text-left">
+          <p className="text-sm text-gray-600 leading-relaxed">
             {isError
-              ? 'This is usually temporary. Please try refreshing the page or logging in again. If the problem persists, contact your administrator.'
+              ? 'This is usually temporary. Please try refreshing the page or signing in again. If the issue persists, contact your administrator.'
               : isNoOrg
-              ? 'If you were recently removed, please contact your organization administrator. If you need access to a new organization, ask an admin to send you an invitation.'
-              : 'If you believe this is a mistake, please contact your organization administrator for assistance.'}
+              ? 'If you were recently removed, contact your organization administrator. If you need access to a new organization, request a fresh invitation.'
+              : 'If you believe this is incorrect, contact your organization administrator to review your role and access status.'}
           </p>
         </div>
 
         <button
           onClick={handleReturnToLogin}
-          className="w-full px-4 py-2.5 bg-teal-600 text-white font-medium rounded-lg
-                     hover:bg-teal-700 transition-colors"
+          className="mt-7 w-full px-4 py-2.5 bg-teal-600 text-white font-medium rounded-lg hover:bg-teal-700 transition-colors"
         >
           Return to Login
         </button>
