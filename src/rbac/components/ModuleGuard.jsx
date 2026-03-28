@@ -1,8 +1,7 @@
 // ============================================================
 // FILE: rbac/components/ModuleGuard.jsx
 // PURPOSE: Route-level guard that redirects to /unauthorized when a
-//          team member lacks ANY permission for a given module.
-//          Org owners (no RBAC membership) bypass the check.
+//          user lacks RBAC membership or module permissions.
 // CONNECTS TO: usePermission (canAccessModule), RBACContext (hasRBAC),
 //              /unauthorized route (redirect target)
 // ============================================================
@@ -13,11 +12,11 @@ import { usePermission } from '../hooks/usePermission';
 
 /**
  * ModuleGuard — wraps a route element and blocks access when
- * the user has RBAC membership but lacks permissions for the module.
+ * the user lacks RBAC membership or lacks permissions for the module.
  *
  * Rules:
  *   1. RBAC loading       → render children (avoid flash)
- *   2. No RBAC membership → render children (org owner / legacy user)
+ *   2. No RBAC membership → redirect to /unauthorized
  *   3. Has RBAC + access  → render children
  *   4. Has RBAC + denied  → redirect to /unauthorized
  *
@@ -36,8 +35,8 @@ export function ModuleGuard({ module, children }) {
   // While loading RBAC → show children (prevents content flash)
   if (isLoading) return children;
 
-  // Org owner / legacy user without RBAC membership → allow everything
-  if (!hasRBAC) return children;
+  // No RBAC membership
+  if (!hasRBAC) return <Navigate to="/unauthorized" replace />;
 
   // Super Admin → always allow
   if (isSuperAdmin) return children;

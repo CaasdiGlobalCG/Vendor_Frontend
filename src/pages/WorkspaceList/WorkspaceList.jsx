@@ -1,7 +1,11 @@
 import React, { useContext, useEffect, useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { VendorContext } from '../../context/VendorContext';
+import { useRBAC } from '../../rbac/context/RBACContext';
+import { usePermission } from '../../rbac/hooks/usePermission';
 import { PermissionGate } from '../../rbac/components/PermissionGate';
+import ResourceMemberAccessModal from '../../rbac/components/ResourceMemberAccessModal';
+import { getWorkspaceMemberAccess, updateWorkspaceMemberAccess } from '../../rbac/api/rbacApi';
 import {
   ArrowPathIcon,
   RectangleGroupIcon,
@@ -65,6 +69,7 @@ const ThumbnailDecoration = ({ index }) => {
 
 const WorkspaceList = () => {
   const { currentUser } = useContext(VendorContext);
+  const { accessScopes, hasRBAC, role, permissions = [] } = useRBAC();
   const navigate = useNavigate();
 
   const [workspaces, setWorkspaces] = useState([]);
@@ -72,12 +77,42 @@ const WorkspaceList = () => {
   const [error, setError] = useState(null);
   const [hoveredCard, setHoveredCard] = useState(null);
   const [thumbnails, setThumbnails] = useState({}); // leadId → { thumbnailUrl, ... }
+  const [accessModalOpen, setAccessModalOpen] = useState(false);
+  const [activeWorkspaceAccess, setActiveWorkspaceAccess] = useState(null);
+  const [resolvingWorkspaceLeadId, setResolvingWorkspaceLeadId] = useState('');
+  const [accessFeedback, setAccessFeedback] = useState('');
+  const { can } = usePermission();
+  const isSuperAdminRole = role?.roleId === 'super_admin' || role?.isSuperAdmin === true;
+  const hasWildcardPermission = Array.isArray(permissions) && permissions.includes('*:*');
+  const canManageWorkspaceAccess =
+    hasRBAC && (
+    isSuperAdminRole ||
+    hasWildcardPermission ||
+    can('workspace', 'manage') ||
+    can('workspace', 'edit') ||
+    can('user_management', 'manage') ||
+    can('user_management', 'edit'));
+  const hasWorkspaceScopeRestriction = Boolean(
+    accessScopes &&
+    !accessScopes.allowAllWorkspaces &&
+    Array.isArray(accessScopes.workspaceIds) &&
+    accessScopes.workspaceIds.length === 0 &&
+    !accessScopes.allowAllProjects &&
+    Array.isArray(accessScopes.projectIds) &&
+    accessScopes.projectIds.length === 0
+  );
 
   useEffect(() => {
     const fetchWorkspaceLeads = async () => {
       try {
         setLoading(true);
         setError(null);
+
+        if (hasWorkspaceScopeRestriction) {
+          setWorkspaces([]);
+          setLoading(false);
+          return;
+        }
 
         if (!currentUser || (!currentUser.vendorId && !currentUser.id)) {
           setError('You must be logged in to view workspaces.');
@@ -86,10 +121,13 @@ const WorkspaceList = () => {
         }
 
         const vendorId = currentUser.vendorId || currentUser.id;
+        const token = localStorage.getItem('authToken');
+        const authHeaders = token ? { Authorization: `Bearer ${token}` } : {};
 
         const res = await fetch(`${config.VENDOR_BACKEND_URL}/api/vendor-leads`, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 'Content-Type': 'application/json', ...authHeaders },
+          credentials: 'include',
           body: JSON.stringify({ vendorId }),
         });
 
@@ -132,7 +170,8 @@ const WorkspaceList = () => {
           try {
             const thumbRes = await fetch(`${config.VENDOR_BACKEND_URL}/api/workspaces/thumbnails/batch`, {
               method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
+              headers: { 'Content-Type': 'application/json', ...authHeaders },
+              credentials: 'include',
               body: JSON.stringify({ leadIds: mapped.map(m => m.leadId) }),
             });
             if (thumbRes.ok) {
@@ -155,7 +194,7 @@ const WorkspaceList = () => {
     };
 
     fetchWorkspaceLeads();
-  }, [currentUser]);
+  }, [currentUser, hasWorkspaceScopeRestriction]);
 
   const openWorkspace = async (item) => {
     try {
@@ -207,6 +246,57 @@ const WorkspaceList = () => {
     }
   };
 
+  const resolveWorkspaceForLead = async (item) => {
+    if (!currentUser || (!currentUser.vendorId && !currentUser.id)) {
+      throw new Error('You must be logged in to manage workspace access.');
+    }
+
+    const vendorId = currentUser.vendorId || currentUser.id;
+    const token = localStorage.getItem('authToken');
+    const authHeaders = token ? { Authorization: `Bearer ${token}` } : {};
+
+    const response = await fetch(`${config.VENDOR_BACKEND_URL}/api/workspace-access/collaborative`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', ...authHeaders },
+      credentials: 'include',
+      body: JSON.stringify({
+        projectId: item.projectId,
+        pmId: item.pmId,
+        vendorId,
+        leadId: item.leadId,
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error(`Failed to resolve workspace (${response.status})`);
+    }
+
+    const payload = await response.json();
+    const workspaceId = payload?.workspace?.workspaceId;
+    if (!workspaceId) {
+      throw new Error('Workspace id was not returned.');
+    }
+    return workspaceId;
+  };
+
+  const openWorkspaceAccess = async (item) => {
+    try {
+      setAccessFeedback('');
+      setResolvingWorkspaceLeadId(item.leadId);
+      const workspaceId = await resolveWorkspaceForLead(item);
+
+      setActiveWorkspaceAccess({
+        workspaceId,
+        label: item.leadTitle || item.projectName || workspaceId,
+      });
+      setAccessModalOpen(true);
+    } catch (err) {
+      setAccessFeedback(err?.message || 'Failed to open workspace access editor.');
+    } finally {
+      setResolvingWorkspaceLeadId('');
+    }
+  };
+
   const subtitle = useMemo(() => {
     return 'These workspaces are created for PM-approved collaborative projects where workspace access has been granted.';
   }, []);
@@ -243,6 +333,12 @@ const WorkspaceList = () => {
       </div>
 
       {/* ── states ── */}
+      {accessFeedback ? (
+        <div className="rounded-lg border border-red-200 bg-red-50 text-red-700 px-4 py-2 text-sm">
+          {accessFeedback}
+        </div>
+      ) : null}
+
       {loading ? (
         <div className="flex justify-center items-center py-16">
           <ArrowPathIcon className="h-8 w-8 text-emerald-600 animate-spin" />
@@ -260,10 +356,19 @@ const WorkspaceList = () => {
         </div>
       ) : workspaces.length === 0 ? (
         <div className="bg-gray-50 border border-gray-200 text-gray-700 px-4 py-8 rounded-lg">
-          <h2 className="text-base font-semibold mb-1">No workspaces available yet</h2>
-          <p className="text-sm text-gray-600">
-            Once a Project Manager approves your lead and grants workspace access, the workspace will appear here.
-          </p>
+          {hasWorkspaceScopeRestriction ? (
+            <>
+              <h2 className="text-base font-semibold mb-1">No workspace access</h2>
+              <p className="text-sm text-gray-600">You do not have access to any projects or workspaces.</p>
+            </>
+          ) : (
+            <>
+              <h2 className="text-base font-semibold mb-1">No workspaces available yet</h2>
+              <p className="text-sm text-gray-600">
+                Once a Project Manager approves your lead and grants workspace access, the workspace will appear here.
+              </p>
+            </>
+          )}
         </div>
       ) : (
         /* ───────────── GRID OF CARDS ───────────── */
@@ -417,20 +522,53 @@ const WorkspaceList = () => {
                 </div>
 
                 <PermissionGate module="workspace" action="view">
-                  <button
-                    type="button"
-                    onClick={() => openWorkspace(item)}
-                    className="inline-flex items-center gap-2 bg-gradient-to-r from-emerald-500 to-teal-600 text-white text-sm font-semibold px-5 py-2.5 rounded-xl shadow-md hover:from-emerald-600 hover:to-teal-700 hover:shadow-lg transition-all"
-                  >
-                    <RectangleGroupIcon className="w-4 h-4" />
-                    Open workspace
-                  </button>
+                  <div className="flex flex-wrap items-center gap-2">
+                    {canManageWorkspaceAccess ? (
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          openWorkspaceAccess(item);
+                        }}
+                        disabled={resolvingWorkspaceLeadId === item.leadId}
+                        className="inline-flex items-center gap-2 bg-white border border-teal-300 text-teal-700 text-sm font-semibold px-4 py-2.5 rounded-xl hover:bg-teal-50 transition-all disabled:opacity-60"
+                      >
+                        {resolvingWorkspaceLeadId === item.leadId ? 'Preparing...' : 'Manage Access'}
+                      </button>
+                    ) : null}
+
+                    <button
+                      type="button"
+                      onClick={() => openWorkspace(item)}
+                      className="inline-flex items-center gap-2 bg-gradient-to-r from-emerald-500 to-teal-600 text-white text-sm font-semibold px-5 py-2.5 rounded-xl shadow-md hover:from-emerald-600 hover:to-teal-700 hover:shadow-lg transition-all"
+                    >
+                      <RectangleGroupIcon className="w-4 h-4" />
+                      Open workspace
+                    </button>
+                  </div>
                 </PermissionGate>
               </div>
             );
           })}
         </div>
       )}
+
+      <ResourceMemberAccessModal
+        isOpen={accessModalOpen}
+        onClose={() => {
+          setAccessModalOpen(false);
+          setActiveWorkspaceAccess(null);
+        }}
+        resourceType="workspace"
+        resourceId={activeWorkspaceAccess?.workspaceId}
+        resourceLabel={activeWorkspaceAccess?.label}
+        loadAccess={getWorkspaceMemberAccess}
+        saveAccess={updateWorkspaceMemberAccess}
+        onSaved={() => {
+          setAccessFeedback('Workspace member access updated successfully.');
+          setTimeout(() => setAccessFeedback(''), 2500);
+        }}
+      />
     </div>
   );
 };

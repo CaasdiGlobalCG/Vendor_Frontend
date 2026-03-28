@@ -13,6 +13,7 @@
 import React, { useState, useEffect, useContext, useCallback } from 'react';
 import { useRBAC } from '../context/RBACContext';
 import { VendorContext } from '../../context/VendorContext';
+import config from '../../config/env';
 import { RoleBadge } from '../components/RoleBadge';
 import { EditablePermissionMatrix } from '../components/EditablePermissionMatrix';
 import { PermissionGate } from '../components/PermissionGate';
@@ -29,6 +30,7 @@ import {
   removeMember,
   suspendMember,
   unsuspendMember,
+  updateMemberAccessScopes,
   listRoles,
   listInvitations,
   cancelInvitation,
@@ -77,6 +79,14 @@ export default function TeamPage() {
 
   // ── Edit role modal state ──
   const [editingRoleId, setEditingRoleId] = useState(null);
+
+  // ── Access scope editor state ──
+  const [scopeEditorMember, setScopeEditorMember] = useState(null);
+  const [scopeProjects, setScopeProjects] = useState([]);
+  const [scopeWorkspaces, setScopeWorkspaces] = useState([]);
+  const [scopeProjectIds, setScopeProjectIds] = useState([]);
+  const [scopeWorkspaceIds, setScopeWorkspaceIds] = useState([]);
+  const [scopeLoading, setScopeLoading] = useState(false);
 
   // ── Feedback ──
   const [feedback, setFeedback] = useState(null);
@@ -214,6 +224,70 @@ export default function TeamPage() {
     }
   };
 
+  // ── Load project/workspace options for scope editor ──
+  const loadScopeCatalog = useCallback(async () => {
+    if (!currentUser?.vendorId && !currentUser?.id) return;
+
+    const vendorId = currentUser.vendorId || currentUser.id;
+    const token = localStorage.getItem('authToken');
+    const headers = token ? { Authorization: `Bearer ${token}` } : {};
+
+    setScopeLoading(true);
+    try {
+      const [projectsRes, workspacesRes] = await Promise.all([
+        fetch(`${config.VENDOR_BACKEND_URL}/api/projects/vendor/${vendorId}`, {
+          credentials: 'include',
+          headers,
+        }),
+        fetch(`${config.VENDOR_BACKEND_URL}/api/workspaces/vendor/${vendorId}`, {
+          credentials: 'include',
+          headers,
+        }),
+      ]);
+
+      const projectsData = projectsRes.ok ? await projectsRes.json() : [];
+      const workspacesData = workspacesRes.ok ? await workspacesRes.json() : [];
+
+      setScopeProjects(Array.isArray(projectsData) ? projectsData : []);
+      setScopeWorkspaces(Array.isArray(workspacesData) ? workspacesData : []);
+    } catch (err) {
+      console.error('[TeamPage] Failed to load scope catalog:', err);
+      setScopeProjects([]);
+      setScopeWorkspaces([]);
+    } finally {
+      setScopeLoading(false);
+    }
+  }, [currentUser?.vendorId, currentUser?.id]);
+
+  const openScopeEditor = async (member) => {
+    setScopeEditorMember(member);
+    setScopeProjectIds(Array.isArray(member.projectAccess) ? member.projectAccess : []);
+    setScopeWorkspaceIds(Array.isArray(member.workspaceAccess) ? member.workspaceAccess : []);
+    await loadScopeCatalog();
+  };
+
+  const closeScopeEditor = () => {
+    setScopeEditorMember(null);
+    setScopeProjectIds([]);
+    setScopeWorkspaceIds([]);
+  };
+
+  const handleScopeSave = async () => {
+    if (!scopeEditorMember?.userId) return;
+    try {
+      await updateMemberAccessScopes(scopeEditorMember.userId, {
+        projectIds: scopeProjectIds,
+        workspaceIds: scopeWorkspaceIds,
+      });
+      showFeedback('Member access scopes updated');
+      closeScopeEditor();
+      fetchMembers();
+      refreshRBAC();
+    } catch (err) {
+      showFeedback(err.message || 'Failed to update access scopes', 'error');
+    }
+  };
+
   // Loading state — shown while RBAC context is fetching
   if (isLoading) {
     return <TeamPageLoading />;
@@ -340,6 +414,7 @@ export default function TeamPage() {
                 <tr>
                   <th className="px-6 py-3 text-left font-medium">Email</th>
                   <th className="px-6 py-3 text-left font-medium">Role</th>
+                  <th className="px-6 py-3 text-left font-medium">Access Scope</th>
                   <th className="px-6 py-3 text-left font-medium">Status</th>
                   <th className="px-6 py-3 text-left font-medium">Joined</th>
                   <th className="px-6 py-3 text-right font-medium">Actions</th>
@@ -361,6 +436,7 @@ export default function TeamPage() {
                     onUnsuspend={(uid, email) => setSuspensionTarget({ userId: uid, email, mode: 'unsuspend' })}
                     onStartRemove={(uid, email) => setRemovingMember({ userId: uid, email })}
                     onEditRole={setEditingRoleId}
+                    onEditScopes={openScopeEditor}
                   />
                 ))}
               </tbody>
@@ -511,6 +587,22 @@ export default function TeamPage() {
           onClose={() => setSuspensionTarget(null)}
         />
       )}
+
+      {/* ── Access Scope Modal ── */}
+      {scopeEditorMember && (
+        <AccessScopeModal
+          member={scopeEditorMember}
+          projects={scopeProjects}
+          workspaces={scopeWorkspaces}
+          selectedProjectIds={scopeProjectIds}
+          selectedWorkspaceIds={scopeWorkspaceIds}
+          setSelectedProjectIds={setScopeProjectIds}
+          setSelectedWorkspaceIds={setScopeWorkspaceIds}
+          isLoading={scopeLoading}
+          onSave={handleScopeSave}
+          onClose={closeScopeEditor}
+        />
+      )}
     </div>
   );
 }
@@ -523,7 +615,7 @@ export default function TeamPage() {
 function MemberRow({
   member, currentUserId, assignableRoles,
   changingRoleFor, setChangingRoleFor, newRoleId, setNewRoleId, onRoleChange,
-  onSuspend, onUnsuspend, onStartRemove, onEditRole,
+  onSuspend, onUnsuspend, onStartRemove, onEditRole, onEditScopes,
 }) {
   const isSelf = member.userId === currentUserId;
   const isInvited = member.status === 'invited';
@@ -555,6 +647,12 @@ function MemberRow({
         ) : (
           <RoleBadge roleId={member.roleId} roleName={member.roleName} size="sm" />
         )}
+      </td>
+      <td className="px-6 py-3">
+        <ScopeSummary
+          projectAccess={member.projectAccess}
+          workspaceAccess={member.workspaceAccess}
+        />
       </td>
       <td className="px-6 py-3">
         <StatusBadge status={member.status} />
@@ -589,6 +687,14 @@ function MemberRow({
               </button>
             </PermissionGate>
             <PermissionGate module="user_management" action="edit">
+              <button
+                onClick={() => onEditScopes(member)}
+                className="text-xs text-blue-600 hover:text-blue-700 font-medium"
+              >
+                Edit Scope
+              </button>
+            </PermissionGate>
+            <PermissionGate module="user_management" action="edit">
               {member.status === 'suspended' ? (
                 <button
                   onClick={() => onUnsuspend(member.userId, member.email)}
@@ -617,6 +723,173 @@ function MemberRow({
         )}
       </td>
     </tr>
+  );
+}
+
+function ScopeSummary({ projectAccess, workspaceAccess }) {
+  const projects = Array.isArray(projectAccess) ? projectAccess : [];
+  const workspaces = Array.isArray(workspaceAccess) ? workspaceAccess : [];
+
+  const projectLabel = projects.includes('*')
+    ? 'All projects'
+    : projects.length > 0
+      ? `${projects.length} project${projects.length > 1 ? 's' : ''}`
+      : 'No projects';
+
+  const workspaceLabel = workspaces.includes('*')
+    ? 'All workspaces'
+    : workspaces.length > 0
+      ? `${workspaces.length} workspace${workspaces.length > 1 ? 's' : ''}`
+      : 'No workspaces';
+
+  return (
+    <div className="flex flex-col gap-1">
+      <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] border bg-blue-50 text-blue-700 border-blue-200 w-fit">
+        {projectLabel}
+      </span>
+      <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] border bg-indigo-50 text-indigo-700 border-indigo-200 w-fit">
+        {workspaceLabel}
+      </span>
+    </div>
+  );
+}
+
+function AccessScopeModal({
+  member,
+  projects,
+  workspaces,
+  selectedProjectIds,
+  selectedWorkspaceIds,
+  setSelectedProjectIds,
+  setSelectedWorkspaceIds,
+  isLoading,
+  onSave,
+  onClose,
+}) {
+  const toggleValue = (current, value, setter) => {
+    if (value === '*') {
+      setter(current.includes('*') ? [] : ['*']);
+      return;
+    }
+    const withoutWildcard = current.filter((item) => item !== '*');
+    if (withoutWildcard.includes(value)) {
+      setter(withoutWildcard.filter((item) => item !== value));
+    } else {
+      setter([...withoutWildcard, value]);
+    }
+  };
+
+  const isAllProjects = selectedProjectIds.includes('*');
+  const isAllWorkspaces = selectedWorkspaceIds.includes('*');
+
+  return (
+    <div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center p-4">
+      <div className="bg-white rounded-xl w-full max-w-3xl shadow-xl border border-gray-200">
+        <div className="px-6 py-4 border-b border-gray-200">
+          <h3 className="text-lg font-semibold text-gray-900">Edit Access Scope</h3>
+          <p className="text-xs text-gray-500 mt-1">{member.email}</p>
+        </div>
+
+        <div className="px-6 py-5 grid grid-cols-1 md:grid-cols-2 gap-6 max-h-[60vh] overflow-y-auto">
+          <div>
+            <div className="flex items-center justify-between mb-2">
+              <h4 className="text-sm font-medium text-gray-900">Projects</h4>
+              <button
+                className={`text-xs px-2 py-1 rounded border ${isAllProjects ? 'bg-blue-100 text-blue-700 border-blue-200' : 'bg-gray-50 text-gray-600 border-gray-200'}`}
+                onClick={() => toggleValue(selectedProjectIds, '*', setSelectedProjectIds)}
+                type="button"
+              >
+                All Projects
+              </button>
+            </div>
+
+            <div className="space-y-2 border border-gray-200 rounded-lg p-3">
+              {isLoading ? (
+                <p className="text-xs text-gray-500">Loading projects...</p>
+              ) : projects.length === 0 ? (
+                <p className="text-xs text-gray-500">No projects found.</p>
+              ) : (
+                projects.map((project) => {
+                  const id = project.projectId || project.id;
+                  return (
+                    <label key={id} className="flex items-start gap-2 text-sm text-gray-700">
+                      <input
+                        type="checkbox"
+                        disabled={isAllProjects}
+                        checked={!isAllProjects && selectedProjectIds.includes(id)}
+                        onChange={() => toggleValue(selectedProjectIds, id, setSelectedProjectIds)}
+                        className="mt-0.5"
+                      />
+                      <span>
+                        <span className="font-medium text-gray-900">{project.name || project.projectName || id}</span>
+                        <span className="block text-[11px] text-gray-500">{id}</span>
+                      </span>
+                    </label>
+                  );
+                })
+              )}
+            </div>
+          </div>
+
+          <div>
+            <div className="flex items-center justify-between mb-2">
+              <h4 className="text-sm font-medium text-gray-900">Workspaces</h4>
+              <button
+                className={`text-xs px-2 py-1 rounded border ${isAllWorkspaces ? 'bg-indigo-100 text-indigo-700 border-indigo-200' : 'bg-gray-50 text-gray-600 border-gray-200'}`}
+                onClick={() => toggleValue(selectedWorkspaceIds, '*', setSelectedWorkspaceIds)}
+                type="button"
+              >
+                All Workspaces
+              </button>
+            </div>
+
+            <div className="space-y-2 border border-gray-200 rounded-lg p-3">
+              {isLoading ? (
+                <p className="text-xs text-gray-500">Loading workspaces...</p>
+              ) : workspaces.length === 0 ? (
+                <p className="text-xs text-gray-500">No workspaces found.</p>
+              ) : (
+                workspaces.map((workspace) => {
+                  const id = workspace.workspaceId || workspace.id;
+                  return (
+                    <label key={id} className="flex items-start gap-2 text-sm text-gray-700">
+                      <input
+                        type="checkbox"
+                        disabled={isAllWorkspaces}
+                        checked={!isAllWorkspaces && selectedWorkspaceIds.includes(id)}
+                        onChange={() => toggleValue(selectedWorkspaceIds, id, setSelectedWorkspaceIds)}
+                        className="mt-0.5"
+                      />
+                      <span>
+                        <span className="font-medium text-gray-900">{workspace.title || workspace.name || id}</span>
+                        <span className="block text-[11px] text-gray-500">{id}</span>
+                      </span>
+                    </label>
+                  );
+                })
+              )}
+            </div>
+          </div>
+        </div>
+
+        <div className="px-6 py-4 border-t border-gray-200 flex items-center justify-end gap-2">
+          <button
+            type="button"
+            onClick={onClose}
+            className="px-4 py-2 rounded-lg border border-gray-300 text-sm text-gray-600 hover:bg-gray-50"
+          >
+            Cancel
+          </button>
+          <button
+            type="button"
+            onClick={onSave}
+            className="px-4 py-2 rounded-lg bg-teal-600 text-white text-sm hover:bg-teal-700"
+          >
+            Save Scope
+          </button>
+        </div>
+      </div>
+    </div>
   );
 }
 

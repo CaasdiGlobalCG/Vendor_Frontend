@@ -4,6 +4,10 @@ import { ChevronLeftIcon, ChevronRightIcon } from '@heroicons/react/24/solid';
 import { ArrowPathIcon, FunnelIcon } from '@heroicons/react/24/outline';
 import ProjectCard from '../../components/ProjectPage/ProjectCard';
 import { VendorContext } from '../../context/VendorContext';
+import { useRBAC } from '../../rbac/context/RBACContext';
+import { usePermission } from '../../rbac/hooks/usePermission';
+import ResourceMemberAccessModal from '../../rbac/components/ResourceMemberAccessModal';
+import { getProjectMemberAccess, updateProjectMemberAccess } from '../../rbac/api/rbacApi';
 import config from '../../config/env';
 // API base URL - hardcoded for now, can be changed to use import.meta.env with Vite
 
@@ -13,9 +17,31 @@ const ProjectsPage = () => {
     const [projects, setProjects] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+    const [accessModalOpen, setAccessModalOpen] = useState(false);
+    const [activeProjectAccess, setActiveProjectAccess] = useState(null);
+    const [accessFeedback, setAccessFeedback] = useState('');
     const { currentUser } = useContext(VendorContext);
+    const { accessScopes, hasRBAC, role, permissions = [] } = useRBAC();
+    const { can } = usePermission();
     
     const filters = ['All', 'New', 'Pending', 'Confirmed', 'Rejected', 'Completed'];
+    const isSuperAdminRole = role?.roleId === 'super_admin' || role?.isSuperAdmin === true;
+    const hasWildcardPermission = Array.isArray(permissions) && permissions.includes('*:*');
+
+    const canManageProjectAccess =
+        hasRBAC && (
+        isSuperAdminRole ||
+        hasWildcardPermission ||
+        can('projects', 'manage') ||
+        can('projects', 'edit') ||
+        can('user_management', 'manage') ||
+        can('user_management', 'edit'));
+    const hasProjectScopeRestriction = Boolean(
+        accessScopes &&
+        !accessScopes.allowAllProjects &&
+        Array.isArray(accessScopes.projectIds) &&
+        accessScopes.projectIds.length === 0
+    );
 
     // Local helper to map new lead statuses to legacy labels
     const mapLeadStatus = (newStatus) => {
@@ -38,6 +64,13 @@ const ProjectsPage = () => {
     // Fetch projects (including approved leads) when component mounts or when currentUser changes
     useEffect(() => {
         const fetchProjectsAndApprovedLeads = async () => {
+            if (hasProjectScopeRestriction) {
+                setProjects([]);
+                setLoading(false);
+                setError(null);
+                return;
+            }
+
             if (!currentUser || (!currentUser.id && !currentUser.vendorId)) {
                 setError("You must be logged in to view projects");
                 setLoading(false);
@@ -47,14 +80,20 @@ const ProjectsPage = () => {
             try {
                 setLoading(true);
                 const vendorId = currentUser.vendorId || currentUser.id;
+                const token = localStorage.getItem('authToken');
+                const authHeaders = token ? { Authorization: `Bearer ${token}` } : {};
                 console.log("Fetching projects for vendor ID:", vendorId);
 
                 // Fetch vendor projects and vendor leads in parallel
                 const [projectsRes, leadsRes] = await Promise.all([
-                    fetch(`${config.VENDOR_BACKEND_URL}/api/projects/vendor/${vendorId}`),
+                    fetch(`${config.VENDOR_BACKEND_URL}/api/projects/vendor/${vendorId}`, {
+                        headers: authHeaders,
+                        credentials: 'include',
+                    }),
                     fetch(`${config.VENDOR_BACKEND_URL}/api/vendor-leads`, {
                         method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
+                        headers: { 'Content-Type': 'application/json', ...authHeaders },
+                        credentials: 'include',
                         body: JSON.stringify({ vendorId })
                     })
                 ]);
@@ -119,7 +158,7 @@ const ProjectsPage = () => {
         };
 
         fetchProjectsAndApprovedLeads();
-    }, [currentUser]);
+    }, [currentUser, hasProjectScopeRestriction]);
 
     // Filter projects based on activeFilter
     const displayedProjects = projects.filter(project => {
@@ -133,6 +172,30 @@ const ProjectsPage = () => {
     const formatDate = (date) => {
         const options = { year: 'numeric', month: 'long', day: 'numeric' };
         return new Date().toLocaleDateString('en-US', options);
+    };
+
+    const resolveProjectId = (project) => {
+        return String(project?.projectId || project?.id || project?.clientId || '').trim();
+    };
+
+    const openProjectAccess = (project) => {
+        const projectId = resolveProjectId(project);
+        if (!projectId) {
+            setAccessFeedback('Unable to resolve a project ID for this card.');
+            return;
+        }
+
+        setAccessFeedback('');
+        setActiveProjectAccess({
+            projectId,
+            label: project?.name || project?.projectName || projectId,
+        });
+        setAccessModalOpen(true);
+    };
+
+    const closeProjectAccess = () => {
+        setAccessModalOpen(false);
+        setActiveProjectAccess(null);
     };
 
     return (
@@ -194,6 +257,12 @@ const ProjectsPage = () => {
 
             {/* Project Cards Section */}
             <div className="space-y-4">
+                {accessFeedback ? (
+                    <div className="text-sm text-red-700 bg-red-50 border border-red-200 rounded-lg px-3 py-2">
+                        {accessFeedback}
+                    </div>
+                ) : null}
+
                 {loading ? (
                     <div className="flex justify-center items-center py-8">
                         <ArrowPathIcon className="h-8 w-8 text-emerald-600 animate-spin" />
@@ -204,12 +273,33 @@ const ProjectsPage = () => {
                     </div>
                 ) : displayedProjects.length > 0 ? (
                     displayedProjects.map((project) => (
-                        <ProjectCard key={project.id || project.projectId} project={project} />
+                        <ProjectCard
+                            key={project.id || project.projectId}
+                            project={project}
+                            canManageAccess={canManageProjectAccess}
+                            onManageAccess={openProjectAccess}
+                        />
                     ))
+                ) : hasProjectScopeRestriction ? (
+                    <p className="text-center text-gray-500 py-8">You do not have access to any projects.</p>
                 ) : (
                     <p className="text-center text-gray-500 py-8">No projects found matching the filter.</p>
                 )}
             </div>
+
+            <ResourceMemberAccessModal
+                isOpen={accessModalOpen}
+                onClose={closeProjectAccess}
+                resourceType="project"
+                resourceId={activeProjectAccess?.projectId}
+                resourceLabel={activeProjectAccess?.label}
+                loadAccess={getProjectMemberAccess}
+                saveAccess={updateProjectMemberAccess}
+                onSaved={() => {
+                    setAccessFeedback('Project member access updated successfully.');
+                    setTimeout(() => setAccessFeedback(''), 2500);
+                }}
+            />
         </div>
     );
 };

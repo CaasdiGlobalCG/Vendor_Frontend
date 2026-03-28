@@ -57,9 +57,11 @@ export function PermissionGate({
 }) {
   const { can, canAny, canAll, isSuperAdmin, isLoading, hasRBAC } = usePermission();
 
-  // Org owner / legacy user without RBAC membership → always show (they are Super Admin).
-  // Team members (hasRBAC=true) → check permissions below.
-  if (isLoading || !hasRBAC) return children;
+  // While RBAC state is loading, keep rendering to avoid visual flashes.
+  if (isLoading) return children;
+
+  // No RBAC context means denied.
+  if (!hasRBAC) return fallback;
 
   // Super admin only gate
   if (superAdminOnly) {

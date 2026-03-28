@@ -46,6 +46,7 @@ export const RBACProvider = ({ children }) => {
     allModules: [],
     roleLevels: {},
     platformAccess: [],
+    accessScopes: null,
     isLoading: true,
     isFallback: false,
     hasRBAC: false,
@@ -95,6 +96,7 @@ export const RBACProvider = ({ children }) => {
               permissionMap: {},
               accessibleModules: [],
               platformAccess: [],
+              accessScopes: null,
               isFallback: false,
               accessDenied: { code: body.code, message: body.message || 'Your access has been revoked.' },
             }));
@@ -112,6 +114,7 @@ export const RBACProvider = ({ children }) => {
           permissionMap: {},
           accessibleModules: [],
           platformAccess: [],
+          accessScopes: null,
           isFallback: false,
           accessDenied: { code: 'RBAC_ERROR', message: 'Unable to verify your access. Please try again later.' },
         }));
@@ -134,6 +137,7 @@ export const RBACProvider = ({ children }) => {
           permissionMap: {},
           accessibleModules: [],
           platformAccess: [],
+          accessScopes: null,
           isFallback: false,
           accessDenied: { code: 'NO_ORG', message: data.message || 'You are not a member of any organization.' },
         }));
@@ -149,6 +153,7 @@ export const RBACProvider = ({ children }) => {
         allModules: data.allModules || [],
         roleLevels: data.roleLevels || {},
         platformAccess: data.platformAccess || ['vendor'],
+        accessScopes: data.accessScopes || null,
         isLoading: false,
         isFallback: data._fallback || false,
         hasRBAC: data.hasRBAC ?? true,
@@ -167,6 +172,7 @@ export const RBACProvider = ({ children }) => {
         permissionMap: {},
         accessibleModules: [],
         platformAccess: [],
+        accessScopes: null,
         isFallback: false,
         accessDenied: { code: 'RBAC_ERROR', message: 'Unable to verify your access. Please try again later.' },
       }));
@@ -187,6 +193,7 @@ export const RBACProvider = ({ children }) => {
         allModules: [],
         roleLevels: {},
         platformAccess: [],
+        accessScopes: null,
         isLoading: false,
         isFallback: false,
         hasRBAC: false,

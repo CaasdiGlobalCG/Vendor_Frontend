@@ -9,7 +9,7 @@ the entire `src/rbac/` directory can be extracted into a standalone package.
 ```
 src/rbac/
 ├── api/
-│   └── rbacApi.js              # API service layer (fetch wrapper + Phase 2 stubs)
+│   └── rbacApi.js              # API service layer (fetch wrapper + member scope update API)
 ├── components/
 │   ├── PermissionGate.jsx      # Declarative permission gating (<PermissionGate module="x" action="y">)
 │   ├── PermissionMatrix.jsx    # Visual grid of user's permissions across all modules
@@ -46,10 +46,15 @@ src/rbac/
 | `GET /api/rbac/members` | 2 | ✅ Live | TeamPage (MemberList) |
 | `POST /api/rbac/members/invite` | 2 | ✅ Live | InviteMemberModal |
 | `PATCH /api/rbac/members/:id/role` | 2 | ✅ Live | TeamPage (role change) |
+| `PATCH /api/rbac/members/:id/access-scopes` | 2 | ✅ Live | Team management scope assignment |
 | `DELETE /api/rbac/members/:id` | 2 | ✅ Live | TeamPage (remove member) |
 | `GET /api/rbac/roles` | 2 | ✅ Live | InviteMemberModal, TeamPage |
 | `GET /api/rbac/invitations` | 2 | ✅ Live | TeamPage (invitations tab) |
 | `DELETE /api/rbac/invitations/:inviteId` | 2 | ✅ Live | TeamPage (cancel invite) |
+| `GET /api/projects/:id/member-access` | 3 | ✅ Live | ProjectsPage direct assignment modal |
+| `PATCH /api/projects/:id/member-access` | 3 | ✅ Live | ProjectsPage direct assignment modal |
+| `GET /api/workspaces/:id/member-access` | 3 | ✅ Live | WorkspaceList direct assignment modal |
+| `PATCH /api/workspaces/:id/member-access` | 3 | ✅ Live | WorkspaceList direct assignment modal |
 | `GET /api/rbac/invite/validate?token=` | 2.5C | ✅ Live | InviteAcceptPage |
 | `POST /api/rbac/invite/accept` | 2.5C | ✅ Live | InviteAcceptPage |
 
@@ -88,10 +93,41 @@ Header nav items are wrapped with `<PermissionGate>`:
 | Workspace | `workspace` | `view` |
 | Team | `user_management` | `view` |
 
+## Scoped Visibility UX (Projects and Workspaces)
+- `RBACContext` now stores `accessScopes` from `/api/rbac/me`.
+- `ProjectsPage` behavior:
+	- If project scope is explicitly empty, the page shows: "You do not have access to any projects."
+	- Project fetch now includes cookie auth and bearer fallback.
+- `WorkspaceList` behavior:
+	- If both project/workspace scopes are explicitly empty, the page shows: "You do not have access to any projects or workspaces."
+	- Workspace lead and thumbnail fetches now include cookie auth and bearer fallback.
+
+## Team Scope Management UX
+- Team member rows now include scope summaries (projects/workspaces).
+- `Edit Scope` action opens a modal to assign:
+	- explicit project IDs
+	- explicit workspace IDs
+	- wildcard (`*`) for all projects/workspaces
+- Save action calls `PATCH /api/rbac/members/:id/access-scopes`.
+
+## Resource-Local Assignment UX (Phase 3)
+- Added reusable modal component: `ResourceMemberAccessModal`.
+- Projects screen:
+	- Project cards now include `Manage Access` action (permission-gated by super admin / wildcard / `projects:manage|edit` / `user_management:manage|edit`).
+	- Modal reads/writes via project member-access endpoints.
+- Workspace list screen:
+	- Workspace cards now include `Manage Access` action (permission-gated by super admin / wildcard / `workspace:manage|edit` / `user_management:manage|edit`).
+	- Modal resolves workspace id then reads/writes via workspace member-access endpoints.
+
+## Matrix Clarity Update
+- Permission matrix module labels were updated for clarity:
+	- `Projects & Access`
+	- `Workspace & Access`
+
 ## Phase 1 Behavior
 - All legacy users are backfilled as Super Admin with `*:*` permission
-- If `/api/rbac/me` fails, falls back to Super Admin (isFallback=true)
-- All nav items visible to all users (gating infrastructure in place for Phase 2)
+- If `/api/rbac/me` fails, frontend blocks access and shows RBAC access-denied state
+- Users without RBAC membership are blocked from module routes
 - TeamPage shows current user's role info + permission matrix
 - Team member management UI is placeholder (coming Phase 2)
 

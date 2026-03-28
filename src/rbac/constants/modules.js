@@ -36,9 +36,9 @@ export const MODULE_CATEGORIES = {
 export const VENDOR_MODULE_CONFIG = {
   // ── Core Modules ──
   dashboard:       { label: 'Dashboard',         icon: 'LayoutDashboard', navPath: '/VendorDashboard',          navOrder: 1, category: 'core' },
-  projects:        { label: 'Projects',          icon: 'FolderKanban',    navPath: '/VendorDashboard/projects', navOrder: 2, category: 'core' },
+  projects:        { label: 'Projects & Access', icon: 'FolderKanban',    navPath: '/VendorDashboard/projects', navOrder: 2, category: 'core' },
   leads:           { label: 'Leads',             icon: 'Users',           navPath: '/VendorDashboard/leads',    navOrder: 3, category: 'core' },
-  workspace:       { label: 'Workspace',         icon: 'Briefcase',       navPath: '/VendorDashboard/workspace', navOrder: 4, category: 'core' },
+  workspace:       { label: 'Workspace & Access', icon: 'Briefcase',       navPath: '/VendorDashboard/workspace', navOrder: 4, category: 'core' },
   products:        { label: 'Products',          icon: 'Package',         category: 'core' },
   inventory:       { label: 'Inventory',         icon: 'Warehouse',       category: 'core' },
   purchase_orders: { label: 'Purchase Orders',   icon: 'ClipboardList',   category: 'core' },

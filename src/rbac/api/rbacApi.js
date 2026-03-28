@@ -48,6 +48,21 @@ async function rbacFetch(path, options = {}) {
   return res.json();
 }
 
+async function resourceFetch(path, options = {}) {
+  const res = await authFetch(`${config.VENDOR_BACKEND_URL}/api${path}`, {
+    credentials: 'include',
+    headers: getHeaders(),
+    ...options,
+  });
+
+  if (!res.ok) {
+    const error = await res.json().catch(() => ({ message: res.statusText }));
+    throw new Error(error.message || `Resource API error: ${res.status}`);
+  }
+
+  return res.json();
+}
+
 // ──────────────────────────────────────
 // Phase 1 — Available NOW
 // ──────────────────────────────────────
@@ -99,6 +114,19 @@ export async function changeMemberRole(memberId, roleId) {
   return rbacFetch(`/members/${memberId}/role`, {
     method: 'PATCH',
     body: JSON.stringify({ roleId }),
+  });
+}
+
+/**
+ * Update a member's project/workspace access scopes.
+ * @param {string} memberId — Target user's ID
+ * @param {{ projectIds?: string[], workspaceIds?: string[] }} payload
+ * @returns {Promise<Object>} { success, member }
+ */
+export async function updateMemberAccessScopes(memberId, payload) {
+  return rbacFetch(`/members/${encodeURIComponent(memberId)}/access-scopes`, {
+    method: 'PATCH',
+    body: JSON.stringify(payload || {}),
   });
 }
 
@@ -237,4 +265,26 @@ export async function getAuditLogs(params = {}) {
   if (params.lastKey) qs.set('lastKey', params.lastKey);
   const query = qs.toString();
   return rbacFetch(`/audit-logs${query ? `?${query}` : ''}`);
+}
+
+export async function getProjectMemberAccess(projectId) {
+  return resourceFetch(`/projects/${encodeURIComponent(projectId)}/member-access`);
+}
+
+export async function updateProjectMemberAccess(projectId, payload) {
+  return resourceFetch(`/projects/${encodeURIComponent(projectId)}/member-access`, {
+    method: 'PATCH',
+    body: JSON.stringify(payload || {}),
+  });
+}
+
+export async function getWorkspaceMemberAccess(workspaceId) {
+  return resourceFetch(`/workspaces/${encodeURIComponent(workspaceId)}/member-access`);
+}
+
+export async function updateWorkspaceMemberAccess(workspaceId, payload) {
+  return resourceFetch(`/workspaces/${encodeURIComponent(workspaceId)}/member-access`, {
+    method: 'PATCH',
+    body: JSON.stringify(payload || {}),
+  });
 }

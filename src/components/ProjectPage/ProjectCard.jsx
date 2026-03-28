@@ -198,7 +198,7 @@ import { ClockIcon } from '@heroicons/react/24/outline';
 import { VendorContext } from '../../context/VendorContext';
 import config from '../../config/env';
 
-const ProjectCard = ({ project }) => {
+const ProjectCard = ({ project, onManageAccess, canManageAccess = false }) => {
     const navigate = useNavigate();
     const { currentUser } = useContext(VendorContext);
     const [isExpanded, setIsExpanded] = useState(false);
@@ -385,19 +385,35 @@ const ProjectCard = ({ project }) => {
                         <p className="font-bold text-gray-800">{project.closeDate || '—'}</p>
                     </div>
                 </div>
-                <button 
+                <div className="flex items-center gap-2">
+                  {canManageAccess && onManageAccess ? (
+                    <button
+                    type="button"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      onManageAccess(project);
+                    }}
+                    className="bg-white border border-teal-300 text-teal-700 hover:bg-teal-50 text-sm font-semibold px-4 py-2.5 rounded-xl transition-all duration-200"
+                    >
+                    Manage Access
+                    </button>
+                  ) : null}
+
+                  <button 
                     onClick={openWorkspace}
                     className="bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white text-sm font-bold px-6 py-3 rounded-xl shadow-lg transition-all duration-200 transform hover:scale-105 hover:shadow-xl"
-                >
+                  >
                     {/* APPLIED: Flex container for text and icon */}
                     <span className="flex items-center gap-2">
-                        {/* APPLIED: Workspace Icon SVG */}
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
-                        </svg>
-                        Workspace
+                      {/* APPLIED: Workspace Icon SVG */}
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
+                      </svg>
+                      Workspace
                     </span>
-                </button>
+                  </button>
+                </div>
             </div>
         </div>
     );
