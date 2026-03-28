@@ -51,9 +51,18 @@ const PMLogin = () => {
       );
 
       if (pmUser) {
+        const persistedPmUser = {
+          ...pmUser,
+          accessedFrom: 'pm-dashboard',
+          timestamp: Date.now()
+        };
+
+        sessionStorage.setItem('pmUser', JSON.stringify(persistedPmUser));
+        localStorage.setItem('pmUser', JSON.stringify(persistedPmUser));
+
         // Set PM user in context
         setUser({
-          ...pmUser,
+          ...persistedPmUser,
           vendorId: pmUser.id, // For compatibility with existing system
           isAuthenticated: true
         });
@@ -74,9 +83,18 @@ const PMLogin = () => {
     // Clear any existing user data first
     logout();
     console.log("PM Quick Login: Cleared all existing user data");
+
+    const persistedPmUser = {
+      ...pmUser,
+      accessedFrom: 'pm-dashboard',
+      timestamp: Date.now()
+    };
+
+    sessionStorage.setItem('pmUser', JSON.stringify(persistedPmUser));
+    localStorage.setItem('pmUser', JSON.stringify(persistedPmUser));
     
     setUser({
-      ...pmUser,
+      ...persistedPmUser,
       vendorId: pmUser.id,
       isAuthenticated: true
     });

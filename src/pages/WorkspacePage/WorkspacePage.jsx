@@ -99,6 +99,21 @@ const WorkspacePage = () => {
                    (pmUserFromStorage?.role === 'pm' ? 'pm' : null) ||
                    (isCAS ? 'cas' : null) ||
                    (isPM ? 'pm' : 'vendor');
+
+  const getAuthToken = useCallback(() => (
+    localStorage.getItem('authToken') ||
+    sessionStorage.getItem('authToken') ||
+    ''
+  ), []);
+
+  const buildAuthHeaders = useCallback((baseHeaders = {}) => {
+    const headers = { ...baseHeaders };
+    const token = getAuthToken();
+    if (token && !headers.Authorization) {
+      headers.Authorization = `Bearer ${token}`;
+    }
+    return headers;
+  }, [getAuthToken]);
   
 
   
@@ -306,7 +321,9 @@ const WorkspacePage = () => {
     
     try {
       console.log('🔄 Refetching workspace data...');
-      const response = await fetch(`/api/workspaces/${workspaceId}`);
+      const response = await authFetch(`/api/workspaces/${workspaceId}`, {
+        headers: buildAuthHeaders()
+      });
       if (response.ok) {
         const freshWorkspaceData = await response.json();
         setWorkspace(freshWorkspaceData);
@@ -325,7 +342,7 @@ const WorkspacePage = () => {
     } catch (error) {
       console.error('❌ Failed to refetch workspace:', error);
     }
-  }, [workspaceId, selectedTask, selectedSubtask]);
+  }, [workspaceId, selectedTask, selectedSubtask, buildAuthHeaders]);
   
   // Listen for workspace unlock notifications and refresh workspace data
   useEffect(() => {
@@ -802,7 +819,9 @@ const WorkspacePage = () => {
         setWorkspaceLoading(true);
         
         // Try to load workspace from API
-        let response = await fetch(`/api/workspaces/${workspaceId}`);
+        let response = await authFetch(`/api/workspaces/${workspaceId}`, {
+          headers: buildAuthHeaders()
+        });
         
         if (!response.ok) {
           throw new Error(`HTTP error! Status: ${response.status}`);
@@ -821,15 +840,15 @@ const WorkspacePage = () => {
         let userClientId = null;
         
         try {
-          const collaboratorsRes = await fetch(`/api/workspaces/${workspaceId}/collaborators`, {
-            headers: {
+          const collaboratorsRes = await authFetch(`/api/workspaces/${workspaceId}/collaborators`, {
+            headers: buildAuthHeaders({
               'x-user-info': JSON.stringify({
                 vendorId: currentUser.vendorId,
                 email: currentUser?.email,
                 role: 'vendor',
                 name: currentUser?.name
               })
-            }
+            })
           });
           
           if (collaboratorsRes.ok) {
@@ -935,7 +954,7 @@ const WorkspacePage = () => {
     };
 
     loadWorkspace();
-  }, [workspaceId, currentUser]);
+  }, [workspaceId, currentUser, buildAuthHeaders]);
 
   // Listen for approval completion events and refresh workspace
   useEffect(() => {
@@ -944,7 +963,9 @@ const WorkspacePage = () => {
       
       // Refresh workspace data to get the updated approval status
       try {
-        const response = await fetch(`/api/workspaces/${event.detail.workspaceId}`);
+        const response = await authFetch(`/api/workspaces/${event.detail.workspaceId}`, {
+          headers: buildAuthHeaders()
+        });
         if (response.ok) {
           const freshWorkspaceData = await response.json();
           setWorkspace(freshWorkspaceData);
@@ -966,7 +987,7 @@ const WorkspacePage = () => {
 
     window.addEventListener('approvalCompleted', handleApprovalCompleted);
     return () => window.removeEventListener('approvalCompleted', handleApprovalCompleted);
-  }, [selectedTask, selectedSubtask]);
+  }, [selectedTask, selectedSubtask, buildAuthHeaders]);
   const saveWorkspace = async (workspaceData) => {
     // IMPORTANT: Skip canvas saves if approval submission is in progress
     // This prevents stale canvas data from overwriting newly submitted approvals

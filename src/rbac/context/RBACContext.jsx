@@ -63,6 +63,40 @@ export const RBACProvider = ({ children }) => {
     try {
       setRbacState(prev => ({ ...prev, isLoading: true, error: null, accessDenied: null }));
 
+      // Legacy PM mode can navigate to workspace without a Cognito token.
+      // In that mode, avoid calling /api/rbac/me (it always returns 401)
+      // and provide a permissive local RBAC shape for UI rendering.
+      const hasVendorAuthToken = Boolean(localStorage.getItem('authToken'));
+      if (currentUser?.role === 'pm' && !hasVendorAuthToken) {
+        setRbacState({
+          role: {
+            roleId: 'legacy_pm',
+            roleName: 'Project Manager',
+            roleLevel: 0,
+            isSuperAdmin: true,
+          },
+          userId: currentUser?.pmId || currentUser?.id || null,
+          permissions: ['*:*'],
+          permissionMap: { workspace: ['view', 'create', 'edit', 'delete'] },
+          accessibleModules: ['workspace', 'projects', 'quotations', 'invoices'],
+          allModules: ['workspace', 'projects', 'quotations', 'invoices'],
+          roleLevels: {},
+          platformAccess: ['vendor'],
+          accessScopes: {
+            projectIds: ['*'],
+            workspaceIds: ['*'],
+            allowAllProjects: true,
+            allowAllWorkspaces: true,
+          },
+          isLoading: false,
+          isFallback: true,
+          hasRBAC: true,
+          error: null,
+          accessDenied: null,
+        });
+        return;
+      }
+
       const headers = { 'Content-Type': 'application/json' };
       const token = localStorage.getItem('authToken');
       if (token) {
