@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useContext, useRef } from 'react';
-import { ChevronDown, MoreHorizontal, CheckCircle, AlertTriangle, FileText, MessageCircle, Paperclip, Send, Video, Edit3, Hand, Clock, User, Zap, Maximize2, Plus, Trash2, Move, Palette, Expand, Download, Eye, Bell, X, Info, Edit2, Check } from 'lucide-react';
+import { ChevronDown, MoreHorizontal, CheckCircle, AlertTriangle, FileText, MessageCircle, Paperclip, Send, Video, Edit3, Hand, Clock, User, Zap, Maximize2, Plus, Trash2, Move, Palette, Expand, Download, Eye, Bell, X, Info, Edit2, Check, Pin, PinOff } from 'lucide-react';
 import { VendorContext } from '../../../context/VendorContext';
 import ActivityFullScreen from './ActivityFullScreen';
 import FullScreenMessages from './FullScreenMessages';
@@ -9,6 +9,7 @@ import PermissionGuard, { PermissionButton, PermissionInput } from './Permission
 import usePermissions from '../hooks/usePermissions';
 import config from '../../../config/env';
 import authFetch from '../../../utils/authFetch';
+import { renderMentions } from '../utils/renderMentions';
 
 const WorkspaceRightSidebar = ({
   sidebarCollapsed,
@@ -21,7 +22,12 @@ const WorkspaceRightSidebar = ({
   workspace, // For permission checking
   userRole, // For permission checking
   canvasElements = [], // Elements on the canvas
-  onZoomToElement // Callback to zoom to an element
+  onZoomToElement, // Callback to zoom to an element
+  focusMode,
+  isPinned,
+  onTogglePin,
+  onMouseEnter,
+  onMouseLeave,
 }) => {
   const { currentUser } = useContext(VendorContext);
   const [realTimeActivities, setRealTimeActivities] = useState([]);
@@ -606,8 +612,36 @@ const WorkspaceRightSidebar = ({
       loadRecentActivities();
     }
   }, [onActivityCreated]);
+  // In focus mode when not pinned, render as overlay
+  const isOverlay = focusMode && !isPinned && !sidebarCollapsed;
+
   return (
-    <div className={`${sidebarCollapsed ? 'w-0 overflow-hidden' : 'w-96'} bg-white-50 border-l border-gray-100 flex flex-col flex-shrink-0 transition-all duration-300 ease-in-out`}>
+    <div
+      className={`
+        ${sidebarCollapsed ? 'w-0 overflow-hidden' : 'w-96'}
+        ${isOverlay ? 'absolute right-0 top-0 bottom-0 z-20 shadow-2xl' : ''}
+        bg-white border-l border-gray-100 flex flex-col flex-shrink-0
+        transition-all duration-300 ease-in-out
+      `}
+      onMouseEnter={onMouseEnter}
+      onMouseLeave={onMouseLeave}
+    >
+      {/* Pin control in focus mode */}
+      {focusMode && !sidebarCollapsed && (
+        <div className="flex items-center justify-start px-3 pt-2">
+          <button
+            onClick={onTogglePin}
+            className="p-1.5 rounded-md hover:bg-gray-100 transition-colors group"
+            title={isPinned ? 'Unpin panel (Ctrl+Shift+R)' : 'Pin panel (Ctrl+Shift+R)'}
+            aria-label={isPinned ? 'Unpin right panel' : 'Pin right panel'}
+          >
+            {isPinned
+              ? <PinOff className="w-3.5 h-3.5 text-blue-600 group-hover:text-blue-700" />
+              : <Pin className="w-3.5 h-3.5 text-gray-400 group-hover:text-gray-600" />}
+          </button>
+        </div>
+      )}
+
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col overflow-hidden p-4 gap-4 min-h-0">
         {/* Accordion: Recent Activity */}
@@ -762,7 +796,7 @@ const WorkspaceRightSidebar = ({
                         <div className={`${isCurrentUser ? 'text-right' : ''}`}>
                           <div className={`${isCurrentUser ? 'bg-blue-600 text-white rounded-tr-sm' : 'bg-gray-50 text-gray-900 rounded-tl-sm'} rounded-2xl px-3 py-1.5 w-full`}>
                             <p className="text-sm leading-tight break-words whitespace-pre-wrap">
-                              {message.content}
+                              {renderMentions(message.content)}
                             </p>
 
                             {message.attachments && message.attachments.length > 0 && (

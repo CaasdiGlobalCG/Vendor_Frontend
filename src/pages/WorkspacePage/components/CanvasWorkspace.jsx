@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useEffect, useContext, useRef, useImperativeHandle, forwardRef } from 'react';
-import { Plus, Save, Eye, X, Users, Grid, Maximize2, Minimize2 } from 'lucide-react';
+import { Plus, Save, Eye, X, Users, Grid, Maximize2, Minimize2, Check, Gauge } from 'lucide-react';
 import { VendorContext } from '../../../context/VendorContext';
 import ReactFlow, { 
   useNodesState, 
@@ -7,6 +7,7 @@ import ReactFlow, {
   addEdge, 
   Background,
   Controls,
+  MiniMap,
   Panel
 } from 'reactflow';
 import 'reactflow/dist/style.css';
@@ -26,6 +27,7 @@ import GroupingModal from './modals/GroupingModal';
 import GroupingToolbar from './GroupingToolbar';
 import ContextMenu from './ContextMenu';
 import TaskCardConfigModal from './modals/TaskCardConfigModal';
+import ProcurementRFQDetailsModal from './modals/ProcurementRFQDetailsModal';
 import { getFlowchartTemplate } from '../utils/flowchartTemplates';
 import { getWorkspaceById } from '../utils/workspaceApi';
 import { registerCanvasEmitter, unregisterCanvasEmitter } from '../utils/nodePersistence';
@@ -84,6 +86,7 @@ const controlsCSS = `
 import SmartNoteNode from './nodes/SmartNoteNode';
 import CalendarNode from './nodes/CalendarNode';
 import ApprovalBoardNode from './nodes/ApprovalBoardNode';
+import AIHelperNode from './nodes/AIHelperNode';
 
 // Node types
 const nodeTypes = {
@@ -94,6 +97,7 @@ const nodeTypes = {
   smartNote: SmartNoteNode,
   calendarNode: CalendarNode,
   approvalBoard: ApprovalBoardNode,
+  aiHelper: AIHelperNode,
 };
 
 // Edge types
@@ -111,6 +115,7 @@ const edgeTypes = {
   onToggleSidebars,
   workspace,
   onSaveWorkspace,
+  onRefreshWorkspace,
   onActivityCreated,
   userRole,
   userPermissions,
@@ -158,6 +163,54 @@ const edgeTypes = {
       y: basePosition.y + offset.y
     };
   }, []);
+
+  const safeClone = useCallback((value) => {
+    try {
+      return JSON.parse(JSON.stringify(value));
+    } catch (error) {
+      console.warn('⚠️ Failed to deep clone node payload, using shallow copy fallback', error);
+      return value;
+    }
+  }, []);
+
+  const createDuplicatedNodeFromSource = useCallback((sourceNode, options = {}) => {
+    const {
+      offsetX = 50,
+      offsetY = 50,
+      copiedFromSubtaskId = null,
+      copiedFromSubtaskName = null,
+    } = options;
+
+    const timestamp = Date.now();
+    const newId = `${sourceNode?.data?.type || 'element'}_${timestamp}_${Math.random().toString(36).slice(2, 9)}`;
+    const clonedData = safeClone(sourceNode.data || {});
+    const nowIso = new Date().toISOString();
+
+    const duplicatedNode = {
+      ...sourceNode,
+      id: newId,
+      selected: false,
+      position: {
+        x: (sourceNode.position?.x || 0) + offsetX,
+        y: (sourceNode.position?.y || 0) + offsetY,
+      },
+      data: {
+        ...clonedData,
+        ...(clonedData.id && { id: newId }),
+        ...(clonedData.flowchartGroup && {
+          flowchartGroup: `${clonedData.flowchartGroup}_duplicate_${timestamp}`
+        }),
+        duplicateSourceNodeId: sourceNode.id,
+        duplicateSourceSubtaskId: copiedFromSubtaskId || selectedSubtask?.id || null,
+        duplicateSourceSubtaskName: copiedFromSubtaskName || selectedSubtask?.name || null,
+        duplicatedAt: nowIso,
+        lastUpdatedAt: nowIso,
+        lastUpdatedBy: currentUser?.name || currentUser?.email || 'Unknown User',
+      }
+    };
+
+    return duplicatedNode;
+  }, [safeClone, selectedSubtask?.id, selectedSubtask?.name, currentUser?.name, currentUser?.email]);
 
   
   // Check if user can edit canvas
@@ -637,6 +690,8 @@ const edgeTypes = {
   const [showTaskCardModal, setShowTaskCardModal] = useState(false);
   const [pendingTaskCardElement, setPendingTaskCardElement] = useState(null);
   const [pendingTaskCardInitialData, setPendingTaskCardInitialData] = useState(null);
+  const [showProcurementRFQDetailsModal, setShowProcurementRFQDetailsModal] = useState(false);
+  const [selectedProcurementRFQNode, setSelectedProcurementRFQNode] = useState(null);
 
   // Edge labeling state
   const [edgeLabelModal, setEdgeLabelModal] = useState({ 
@@ -674,6 +729,37 @@ const edgeTypes = {
   // Saving state
   const [saveStatus, setSaveStatus] = useState('idle'); // 'idle', 'saving', 'saved', 'error'
   const [lastSaved, setLastSaved] = useState(null);
+  const [performanceMode, setPerformanceMode] = useState(() => localStorage.getItem('workspace-canvas-performance') === 'on');
+  const [duplicateToAllState, setDuplicateToAllState] = useState({
+    isVisible: false,
+    isLoading: false,
+    total: 0,
+    processed: 0,
+    message: '',
+  });
+
+  const closeDuplicateToAllState = useCallback(() => {
+    setDuplicateToAllState({
+      isVisible: false,
+      isLoading: false,
+      total: 0,
+      processed: 0,
+      message: '',
+    });
+  }, []);
+
+  useEffect(() => {
+    localStorage.setItem('workspace-canvas-performance', performanceMode ? 'on' : 'off');
+  }, [performanceMode]);
+
+  const renderedEdges = React.useMemo(() => {
+    if (!performanceMode) return edges;
+    return edges.map((edge) => ({
+      ...edge,
+      animated: false,
+      className: edge.className === 'auto-connected-edge' ? '' : edge.className,
+    }));
+  }, [edges, performanceMode]);
 
   // Wrapped cleanup function using the helper
   const cleanupOrphanedNodes = useCallback((nodesToClean) => {
@@ -1071,8 +1157,9 @@ const edgeTypes = {
     const isSmartNote = element.type === 'smart-note' || element.nodeType === 'smartNote';
     const isCalendarEvent = element.type === 'calendar-event' || element.nodeType === 'calendarNode';
     const isApprovalBoard = element.type === 'approval-board' || element.nodeType === 'approvalBoard';
+    const isAIHelper = element.type === 'ai-helper' || element.nodeType === 'aiHelper';
     
-    console.log('🔍 Element type checks:', { isLayout, isText, isTurnkey, isSmartNote, isCalendarEvent, isApprovalBoard });
+    console.log('🔍 Element type checks:', { isLayout, isText, isTurnkey, isSmartNote, isCalendarEvent, isApprovalBoard, isAIHelper });
     
     let nodeType = 'elementNode';
     if (isLayout) nodeType = 'layoutNode';
@@ -1081,6 +1168,7 @@ const edgeTypes = {
     if (isSmartNote) nodeType = 'smartNote';
     if (isCalendarEvent) nodeType = 'calendarNode';
     if (isApprovalBoard) nodeType = 'approvalBoard';
+    if (isAIHelper) nodeType = 'aiHelper';
     
     const nodeId = `${element.type}_${Date.now()}`;
     const taskCardData = isTaskCard
@@ -1173,6 +1261,13 @@ const edgeTypes = {
         // Store Approval Board data
         ...(isApprovalBoard && {
           label: element.data?.label || element.name || 'Approval Board',
+          ...(element.data || {})
+        }),
+        // Store AI Helper data
+        ...(isAIHelper && {
+          label: element.data?.label || element.name || 'AI Helper',
+          taskName: selectedTask?.title || '',
+          subtaskName: selectedSubtask?.title || '',
           ...(element.data || {})
         }),
         // Store workspaceId for all nodes (needed for MaterialsRenderer and other components)
@@ -2518,44 +2613,11 @@ const edgeTypes = {
     const duplicateOffset = 50; // Offset for positioning duplicates
     
     for (const node of selectedNodes) {
-      // Generate new unique ID
-      const newId = `${node.data.type}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-      
-      // Calculate new position (offset from original)
-      const newPosition = {
-        x: node.position.x + duplicateOffset,
-        y: node.position.y + duplicateOffset
-      };
-      
-      // Create duplicated node with all original data
-      const duplicatedNode = {
-        ...node,
-        id: newId,
-        position: newPosition,
-        selected: false, // Don't select the duplicate initially
-        data: {
-          ...node.data,
-          // Update any ID references in the data
-          ...(node.data.id && { id: newId }),
-          // For flowchart elements, create new group if needed
-          ...(node.data.flowchartGroup && { 
-            flowchartGroup: `${node.data.flowchartGroup}_duplicate_${Date.now()}` 
-          }),
-          // For custom data elements, deep clone the data
-          ...(node.data.customTableData && { 
-            customTableData: JSON.parse(JSON.stringify(node.data.customTableData)) 
-          }),
-          ...(node.data.customChartData && { 
-            customChartData: JSON.parse(JSON.stringify(node.data.customChartData)) 
-          }),
-          ...(node.data.customListData && { 
-            customListData: JSON.parse(JSON.stringify(node.data.customListData)) 
-          }),
-          ...(node.data.fileData && { 
-            fileData: JSON.parse(JSON.stringify(node.data.fileData)) 
-          })
-        }
-      };
+      const duplicatedNode = createDuplicatedNodeFromSource(node, {
+        offsetX: duplicateOffset,
+        offsetY: duplicateOffset,
+      });
+      const newPosition = duplicatedNode.position;
       
       duplicatedNodes.push(duplicatedNode);
       
@@ -2590,11 +2652,229 @@ const edgeTypes = {
     });
     
     console.log('🎉 Element duplication completed successfully!');
-  }, [nodes, setNodes, trackActivity]);
+  }, [nodes, setNodes, trackActivity, createDuplicatedNodeFromSource]);
+
+  // Handle node-level three-dot menu actions emitted by ElementNode
+  useEffect(() => {
+    const handleElementDuplicate = (event) => {
+      const nodeId = event?.detail?.nodeId;
+      if (!nodeId) return;
+
+      const sourceNode = nodes.find((node) => node.id === nodeId);
+      if (!sourceNode) {
+        console.warn('⚠️ Duplicate event received for missing node:', nodeId);
+        return;
+      }
+
+      const duplicatedNode = createDuplicatedNodeFromSource(sourceNode, {
+        offsetX: 50,
+        offsetY: 50,
+      });
+      setNodes((nds) => [...nds, duplicatedNode]);
+    };
+
+    const handleElementDuplicateToAllSubtasks = async (event) => {
+      const nodeId = event?.detail?.nodeId;
+      if (!nodeId) return;
+
+      if (!workspace?.workspaceId || !selectedTask?.id || !selectedSubtask?.id) {
+        setDuplicateToAllState({
+          isVisible: true,
+          isLoading: false,
+          total: 0,
+          processed: 0,
+          message: 'Select a task and subtask before duplicating across subtasks.',
+        });
+        return;
+      }
+
+      const sourceNode = nodes.find((node) => node.id === nodeId);
+      if (!sourceNode) {
+        setDuplicateToAllState({
+          isVisible: true,
+          isLoading: false,
+          total: 0,
+          processed: 0,
+          message: 'Could not find the selected element to duplicate.',
+        });
+        return;
+      }
+
+      const sourceTask = (workspace.tasks || []).find((task) => task.id === selectedTask.id) || selectedTask;
+      const targetSubtasks = (sourceTask.subtasks || []).filter((subtask) => subtask.id !== selectedSubtask.id);
+
+      if (targetSubtasks.length === 0) {
+        setDuplicateToAllState({
+          isVisible: true,
+          isLoading: false,
+          total: 0,
+          processed: 0,
+          message: 'No other subtasks available in this task.',
+        });
+        return;
+      }
+
+      setDuplicateToAllState({
+        isVisible: true,
+        isLoading: true,
+        total: targetSubtasks.length,
+        processed: 0,
+        message: 'Duplicating element to all subtasks. Please wait...',
+      });
+
+      let successCount = 0;
+      let failedCount = 0;
+
+      for (let i = 0; i < targetSubtasks.length; i += 1) {
+        const targetSubtask = targetSubtasks[i];
+        const targetCanvas = targetSubtask.canvasData || { nodes: [], edges: [], zoomLevel: 100 };
+        const targetNodes = targetCanvas.nodes || [];
+
+        const duplicateAlreadyExists = targetNodes.some(
+          (node) =>
+            node?.data?.duplicateSourceNodeId === sourceNode.id &&
+            node?.data?.duplicateSourceSubtaskId === selectedSubtask.id
+        );
+
+        if (duplicateAlreadyExists) {
+          setDuplicateToAllState((prev) => ({
+            ...prev,
+            processed: Math.min(prev.total, prev.processed + 1),
+          }));
+          continue;
+        }
+
+        const duplicatedNode = createDuplicatedNodeFromSource(sourceNode, {
+          offsetX: 40 + (i % 3) * 20,
+          offsetY: 40 + (i % 3) * 20,
+          copiedFromSubtaskId: selectedSubtask.id,
+          copiedFromSubtaskName: selectedSubtask.name,
+        });
+
+        duplicatedNode.data = {
+          ...duplicatedNode.data,
+          copiedToSubtaskId: targetSubtask.id,
+          copiedToSubtaskName: targetSubtask.name,
+          duplicatedAcrossSubtasks: true,
+        };
+
+        try {
+          const response = await fetch(
+            `/api/workspaces/${workspace.workspaceId}/tasks/${selectedTask.id}/subtasks/${targetSubtask.id}/canvas`,
+            {
+              method: 'PUT',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                nodes: [...targetNodes, duplicatedNode],
+                edges: targetCanvas.edges || [],
+                zoomLevel: targetCanvas.zoomLevel || 100,
+              }),
+            }
+          );
+
+          if (!response.ok) {
+            failedCount += 1;
+            setDuplicateToAllState((prev) => ({
+              ...prev,
+              processed: Math.min(prev.total, prev.processed + 1),
+            }));
+            continue;
+          }
+
+          successCount += 1;
+          setDuplicateToAllState((prev) => ({
+            ...prev,
+            processed: Math.min(prev.total, prev.processed + 1),
+          }));
+        } catch (error) {
+          console.error('❌ Failed duplicating node to subtask:', targetSubtask.id, error);
+          failedCount += 1;
+          setDuplicateToAllState((prev) => ({
+            ...prev,
+            processed: Math.min(prev.total, prev.processed + 1),
+          }));
+        }
+      }
+
+      try {
+        await trackActivity(
+          'element_duplicated_to_all_subtasks',
+          'update',
+          'element',
+          {
+            elementId: sourceNode.id,
+            elementType: sourceNode?.data?.type || 'unknown',
+            details: {
+              sourceTaskId: selectedTask.id,
+              sourceSubtaskId: selectedSubtask.id,
+              copiedCount: successCount,
+              failedCount,
+            }
+          }
+        );
+      } catch (error) {
+        console.error('❌ Failed to track duplicate-to-all-subtasks activity:', error);
+      }
+
+      if (typeof onRefreshWorkspace === 'function') {
+        await onRefreshWorkspace();
+      }
+
+      if (successCount > 0 && failedCount === 0) {
+        setDuplicateToAllState((prev) => ({
+          ...prev,
+          isLoading: false,
+          processed: prev.total,
+          message: `Element duplicated to ${successCount} subtasks.`,
+        }));
+      } else if (successCount > 0) {
+        setDuplicateToAllState((prev) => ({
+          ...prev,
+          isLoading: false,
+          processed: prev.total,
+          message: `Element duplicated to ${successCount} subtasks. ${failedCount} failed.`,
+        }));
+      } else {
+        setDuplicateToAllState((prev) => ({
+          ...prev,
+          isLoading: false,
+          processed: prev.total,
+          message: 'Could not duplicate the element to other subtasks.',
+        }));
+      }
+    };
+
+    window.addEventListener('element-duplicate', handleElementDuplicate);
+    window.addEventListener('element-duplicate-to-all-subtasks', handleElementDuplicateToAllSubtasks);
+
+    return () => {
+      window.removeEventListener('element-duplicate', handleElementDuplicate);
+      window.removeEventListener('element-duplicate-to-all-subtasks', handleElementDuplicateToAllSubtasks);
+    };
+  }, [
+    nodes,
+    setNodes,
+    workspace?.workspaceId,
+    workspace?.tasks,
+    selectedTask,
+    selectedSubtask,
+    createDuplicatedNodeFromSource,
+    setDuplicateToAllState,
+    onRefreshWorkspace,
+    trackActivity,
+  ]);
 
   // Handle node selection to detect flowchart group selection and manual selection
   const onNodeClick = useCallback((event, node) => {
     event.stopPropagation();
+
+    if (node?.data?.type === 'procurement-rfq-request' && node?.data?.procurementRFQData) {
+      setSelectedProcurementRFQNode(node.data);
+      setShowProcurementRFQDetailsModal(true);
+      return;
+    }
     
     // Handle manual selection mode
     if (isSelectionMode) {
@@ -2612,7 +2892,7 @@ const edgeTypes = {
       // Otherwise, select the entire flowchart group
       selectFlowchartGroup(node.data.flowchartGroup);
     }
-  }, [nodes, edges, isSelectionMode, handleManualNodeSelection]);
+  }, [isSelectionMode, handleManualNodeSelection]);
 
   const handleEdgeClick = useCallback((event, edge) => {
     event.stopPropagation();
@@ -2685,6 +2965,52 @@ const edgeTypes = {
     }
   };
 
+  const addProcurementRFQNodeToCanvas = useCallback(async (payload) => {
+    if (!payload || !payload.request) return;
+
+    const basePosition = {
+      x: window.innerWidth / 2 - 220,
+      y: window.innerHeight / 2 - 160,
+    };
+    const targetPosition = getAutoPlacementPosition(basePosition);
+
+    const productName =
+      payload?.rfqFormData?.productDetails?.productName ||
+      payload?.request?.item ||
+      'RFQ Item';
+    const requestId = payload?.request?.requestId || `RFQ-${Date.now()}`;
+    const quantity = payload?.request?.quantity || payload?.rfqFormData?.quantityPricing?.quantity || 1;
+
+    const element = {
+      id: 'procurement-rfq-request',
+      name: `Procurement RFQ ${requestId}`,
+      type: 'procurement-rfq-request',
+      preview: `${productName} x ${quantity}`,
+    };
+
+    const newNode = createElementNode(element, targetPosition);
+    newNode.data.procurementRFQData = payload;
+    newNode.data.requestId = requestId;
+    newNode.data.requestStatus = payload?.request?.status || 'Pending';
+    newNode.data.category = 'procurement';
+
+    setNodes((nds) => nds.concat(newNode));
+
+    await trackActivity('element_added', 'create', 'element', {
+      elementId: newNode.id,
+      elementType: 'procurement-rfq-request',
+      position: targetPosition,
+      details: {
+        elementName: element.name,
+        requestId,
+        productName,
+        quantity,
+        canvasAction: true,
+        addedVia: 'procurement-rfq-template',
+      },
+    });
+  }, [createElementNode, getAutoPlacementPosition, setNodes, trackActivity]);
+
   useImperativeHandle(ref, () => ({
     zoomIn: handleZoomIn,
     zoomOut: handleZoomOut,
@@ -2692,7 +3018,33 @@ const edgeTypes = {
     setZoomLevel: handleSetZoomLevel,
     getNodes: () => nodes,
     getEdges: () => edges,
+    addProcurementRFQNode: addProcurementRFQNodeToCanvas,
   }));
+
+  // Listen for global canvasFitView event (from keyboard shortcut Ctrl+Shift+1)
+  useEffect(() => {
+    const handler = () => handleFitView();
+    document.addEventListener('canvasFitView', handler);
+    return () => document.removeEventListener('canvasFitView', handler);
+  }, [reactFlowInstance]);
+
+  useEffect(() => {
+    if (!selectedSubtask?.id) return;
+
+    const pendingRaw = sessionStorage.getItem('pendingProcurementRFQNode');
+    if (!pendingRaw) return;
+
+    try {
+      const pending = JSON.parse(pendingRaw);
+      if (pending?.payload?.request) {
+        addProcurementRFQNodeToCanvas(pending.payload);
+      }
+      sessionStorage.removeItem('pendingProcurementRFQNode');
+    } catch (error) {
+      console.warn('Could not parse pending procurement RFQ node payload:', error);
+      sessionStorage.removeItem('pendingProcurementRFQNode');
+    }
+  }, [selectedSubtask?.id, addProcurementRFQNodeToCanvas]);
 
   // Handle viewport changes to update zoom level
   const onViewportChange = useCallback((viewport) => {
@@ -3021,6 +3373,17 @@ const edgeTypes = {
       document.removeEventListener('elementDoubleClick', handleElementDoubleClick);
     };
   },  [getAutoPlacementPosition, setNodes]);
+
+  useEffect(() => {
+    const handleAddProcurementRFQNode = async (event) => {
+      await addProcurementRFQNodeToCanvas(event.detail);
+    };
+
+    document.addEventListener('addProcurementRFQNode', handleAddProcurementRFQNode);
+    return () => {
+      document.removeEventListener('addProcurementRFQNode', handleAddProcurementRFQNode);
+    };
+  }, [addProcurementRFQNodeToCanvas]);
 
   // Handle element addition from Cost Calculators Modal
   useEffect(() => {
@@ -3368,6 +3731,62 @@ const edgeTypes = {
     document.addEventListener('updateTextElement', handleUpdateTextElement);
     return () => document.removeEventListener('updateTextElement', handleUpdateTextElement);
   }, [setNodes]);
+
+  // AI Helper: respond to context requests from AIHelperNode
+  useEffect(() => {
+    const handleAIContextRequest = () => {
+      document.dispatchEvent(new CustomEvent('aiContextResponse', {
+        detail: { nodes, edges }
+      }));
+    };
+    document.addEventListener('aiContextRequest', handleAIContextRequest);
+    return () => document.removeEventListener('aiContextRequest', handleAIContextRequest);
+  }, [nodes, edges]);
+
+  // AI Helper: add generated nodes to the canvas
+  useEffect(() => {
+    const handleAIGenerateNodes = (event) => {
+      const { nodes: generatedNodes, sourceNodeId } = event.detail;
+      if (!generatedNodes?.length) return;
+
+      const sourceNode = nodes.find(n => n.id === sourceNodeId);
+      const startX = sourceNode ? sourceNode.position.x + 350 : 400;
+      const startY = sourceNode ? sourceNode.position.y : 200;
+
+      generatedNodes.forEach((genNode, i) => {
+        const element = {
+          type: genNode.type || 'textbox',
+          name: genNode.name || `Step ${i + 1}`,
+          nodeType: 'elementNode',
+        };
+        const position = { x: startX, y: startY + i * 220 };
+        const newNode = createElementNode(element, position);
+        if (newNode) {
+          setNodes(nds => [...nds, newNode]);
+        }
+      });
+    };
+    document.addEventListener('aiGenerateNodes', handleAIGenerateNodes);
+    return () => document.removeEventListener('aiGenerateNodes', handleAIGenerateNodes);
+  }, [nodes, setNodes, createElementNode]);
+
+  // Add element to canvas from command palette or external triggers
+  useEffect(() => {
+    const handleAddElement = (event) => {
+      const element = event.detail;
+      if (!element) return;
+      const center = reactFlowInstance?.getViewport();
+      const position = findNonCollidingPosition(
+        { x: (center?.x ? -center.x + 400 : 400), y: (center?.y ? -center.y + 300 : 300) }
+      );
+      const newNode = createElementNode(element, position);
+      if (newNode) {
+        setNodes(nds => [...nds, newNode]);
+      }
+    };
+    document.addEventListener('addElementToCanvas', handleAddElement);
+    return () => document.removeEventListener('addElementToCanvas', handleAddElement);
+  }, [reactFlowInstance, setNodes, createElementNode]);
 
   // Keyboard shortcuts
   useEffect(() => {
@@ -4088,6 +4507,15 @@ const edgeTypes = {
               <span className="sr-only">Preview</span>
             </button>
 
+            <button
+              onClick={() => setPerformanceMode((prev) => !prev)}
+              className={`p-2 border rounded-lg transition-colors flex items-center justify-center focus:outline-none focus:ring-2 focus:ring-blue-500 ${performanceMode ? 'border-amber-300 bg-amber-50 text-amber-700 hover:bg-amber-100' : 'border-gray-200 hover:bg-gray-50 text-gray-700'}`}
+              title={performanceMode ? 'Disable performance mode' : 'Enable performance mode for large canvases'}
+              aria-label={performanceMode ? 'Disable performance mode' : 'Enable performance mode'}
+            >
+              <Gauge className="w-5 h-5" />
+            </button>
+
             {/* Real-time sync indicator */}
             {canvasWebSocket && (
               <div className="flex items-center gap-1 px-2 py-1 rounded-lg bg-gray-100 text-xs">
@@ -4165,14 +4593,14 @@ const edgeTypes = {
         onMouseMove={handleCanvasMouseMove}
       >
         {/* Remote Cursors Overlay */}
-        {canvasWebSocket?.remoteCursors && Object.entries(canvasWebSocket.remoteCursors).map(([cursorUserId, cursor]) => (
+        {!performanceMode && canvasWebSocket?.remoteCursors && Object.entries(canvasWebSocket.remoteCursors).map(([cursorUserId, cursor]) => (
           <RemoteCursor key={cursorUserId} userId={cursorUserId} userName={cursor.userName} x={cursor.x} y={cursor.y} />
         ))}
 
         <ReactFlow
           style={{ width: '100%', height: '100%' }}
           nodes={nodes}
-          edges={edges}
+          edges={renderedEdges}
           onNodesChange={canEdit ? (changes) => {
             onNodesChange(changes);
             // Emit position/dimension/remove changes as ops
@@ -4217,18 +4645,21 @@ const edgeTypes = {
           panActivationKey={canEdit ? 'Space' : undefined}
           connectionLineType="smoothstep"
           connectionLineStyle={{ strokeWidth: 2, stroke: '#6b7280' }}
+          onlyRenderVisibleElements={performanceMode}
           deleteKey={null}
           className={`bg-white transition-all duration-200 ${
             isDraggingOver ? 'bg-blue-50 ring-4 ring-blue-300' : ''
           }`}
         >
-          {/* Grid Background */}
-          <Background 
-            color="#a0a0a0" 
-            gap={24} 
-            size={1.6}
-            variant="dots"
-          />
+          {/* Grid Background — subtle Figma-style dots */}
+          {!performanceMode && (
+            <Background 
+              color="#d1d5db" 
+              gap={20} 
+              size={1}
+              variant="dots"
+            />
+          )}
           
           {/* Controls (zoom, fit view, etc.) */}
           <Controls 
@@ -4239,6 +4670,30 @@ const edgeTypes = {
             showInteractive={true}
             fitViewOptions={{ padding: 0.1 }}
           />
+
+          {/* MiniMap — bottom-left overview of the canvas */}
+          {!performanceMode && (
+            <MiniMap
+              position="bottom-left"
+              nodeColor={(node) => {
+                switch (node.type) {
+                  case 'textNode': return '#818cf8';
+                  case 'layoutNode': return '#34d399';
+                  case 'turnkeyNode': return '#f59e0b';
+                  case 'smartNote': return '#fbbf24';
+                  case 'calendarNode': return '#60a5fa';
+                  case 'approvalBoard': return '#f87171';
+                  case 'aiHelper': return '#a78bfa';
+                  default: return '#6b7280';
+                }
+              }}
+              nodeStrokeWidth={3}
+              maskColor="rgba(0,0,0,0.08)"
+              style={{ width: 160, height: 100, borderRadius: 8, border: '1px solid #e5e7eb', background: '#ffffff' }}
+              zoomable
+              pannable
+            />
+          )}
           
           {/* Top Panel with Instructions and Connection Tools */}
           <Panel position="top-right" className="mt-4 mr-4">
@@ -4470,6 +4925,53 @@ const edgeTypes = {
       </div>
       </div>
 
+      {duplicateToAllState.isVisible && (
+        <div className="fixed inset-0 z-[90] bg-black/40 backdrop-blur-[1px] flex items-center justify-center px-4">
+          <div className="w-full max-w-md bg-white rounded-xl shadow-2xl border border-gray-200 p-5">
+            <div className="flex items-start gap-3">
+              <div className={`mt-0.5 w-8 h-8 rounded-full flex items-center justify-center ${duplicateToAllState.isLoading ? 'bg-blue-100' : 'bg-emerald-100'}`}>
+                {duplicateToAllState.isLoading ? (
+                  <div className="animate-spin rounded-full h-4 w-4 border-2 border-blue-600 border-t-transparent" />
+                ) : (
+                  <Check className="w-4 h-4 text-emerald-600" />
+                )}
+              </div>
+              <div className="flex-1">
+                <h3 className="text-sm font-semibold text-gray-900">
+                  {duplicateToAllState.isLoading ? 'Duplicating Element' : 'Duplication Result'}
+                </h3>
+                <p className="text-xs text-gray-600 mt-1">{duplicateToAllState.message}</p>
+              </div>
+            </div>
+
+            {duplicateToAllState.total > 0 && (
+              <div className="mt-4">
+                <div className="flex items-center justify-between text-[11px] text-gray-600 mb-1">
+                  <span>Progress</span>
+                  <span>{duplicateToAllState.processed}/{duplicateToAllState.total}</span>
+                </div>
+                <div className="h-2 rounded-full bg-gray-100 overflow-hidden">
+                  <div
+                    className="h-full bg-blue-500 transition-all duration-200"
+                    style={{ width: `${Math.min(100, Math.round((duplicateToAllState.processed / Math.max(1, duplicateToAllState.total)) * 100))}%` }}
+                  />
+                </div>
+              </div>
+            )}
+
+            <div className="mt-5 flex justify-end">
+              <button
+                onClick={closeDuplicateToAllState}
+                disabled={duplicateToAllState.isLoading}
+                className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${duplicateToAllState.isLoading ? 'bg-gray-100 text-gray-400 cursor-not-allowed' : 'bg-blue-600 text-white hover:bg-blue-700'}`}
+              >
+                OK
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Table Configuration Modal */}
       <TableConfigModal
         isOpen={showTableModal}
@@ -4541,6 +5043,16 @@ const edgeTypes = {
         onEdit={handleContextMenuEdit}
         userPermissions={{ canEdit }}
       />
+
+      <ProcurementRFQDetailsModal
+        isOpen={showProcurementRFQDetailsModal}
+        onClose={() => {
+          setShowProcurementRFQDetailsModal(false);
+          setSelectedProcurementRFQNode(null);
+        }}
+        nodeData={selectedProcurementRFQNode}
+      />
+
       {edgeLabelModal.isOpen && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black bg-opacity-50">
           <div className="bg-white rounded-xl shadow-2xl w-full max-w-sm p-4">

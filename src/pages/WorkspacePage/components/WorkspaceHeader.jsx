@@ -1,5 +1,5 @@
-import React, { useContext, useState, useEffect, useCallback } from 'react';
-import { ChevronDown, Plus, Save, MessageCircle, HelpCircle, X, ChevronLeft, ChevronRight, Lightbulb, MousePointer, Link2, Trash2, Users, Zap, Layout, Settings, CheckCircle, Calculator } from 'lucide-react';
+import React, { useContext, useState, useEffect, useCallback, useRef } from 'react';
+import { ChevronDown, Plus, Save, MessageCircle, HelpCircle, X, ChevronLeft, ChevronRight, Lightbulb, MousePointer, Link2, Trash2, Users, Zap, Layout, Settings, CheckCircle, MoreHorizontal, Search } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { VendorContext } from '../../../context/VendorContext';
 import config from '../../../config/env';
@@ -74,13 +74,14 @@ const tutorialSteps = [
 
 const WorkspaceHeader = ({
   isCanvasActive = false,
+  syncStatus = 'idle',
+  lastSavedAt = null,
   onElementsClick,
   onLayoutsClick,
   onTextClick,
   onTemplatesClick,
   showPostServicesActions = false,
   onOpenPostServices,
-  onOpenCostCalculators,
   onOpenUpdateProgress,
   onOpenReviewProgress,
   onOpenClientReviewProgress,
@@ -296,6 +297,58 @@ const WorkspaceHeader = ({
     window.location.reload();
   };
 
+  const getSyncBadge = () => {
+    const lastSavedText = lastSavedAt
+      ? new Date(lastSavedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+      : null;
+
+    switch (syncStatus) {
+      case 'saving':
+        return {
+          label: 'Syncing...',
+          subLabel: 'Saving latest updates',
+          dotClass: 'bg-amber-500 animate-pulse',
+          containerClass: 'border-amber-200 bg-amber-50 text-amber-800',
+        };
+      case 'offline':
+        return {
+          label: 'Offline',
+          subLabel: 'Changes may not sync',
+          dotClass: 'bg-rose-500',
+          containerClass: 'border-rose-200 bg-rose-50 text-rose-800',
+        };
+      case 'error':
+        return {
+          label: 'Sync issue',
+          subLabel: 'Retrying automatically',
+          dotClass: 'bg-rose-500',
+          containerClass: 'border-rose-200 bg-rose-50 text-rose-800',
+        };
+      case 'live':
+      default:
+        return {
+          label: 'Live',
+          subLabel: lastSavedText ? `Saved ${lastSavedText}` : 'All changes synced',
+          dotClass: 'bg-emerald-500',
+          containerClass: 'border-emerald-200 bg-emerald-50 text-emerald-800',
+        };
+    }
+  };
+
+  const syncBadge = getSyncBadge();
+
+  const [showOverflowMenu, setShowOverflowMenu] = useState(false);
+  const overflowRef = useRef(null);
+
+  // Close overflow menu on outside click
+  useEffect(() => {
+    const handler = (e) => {
+      if (overflowRef.current && !overflowRef.current.contains(e.target)) setShowOverflowMenu(false);
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, []);
+
   return (
     <div className="bg-white border-b border-gray-200 px-2 py-1" data-workspace-header>
       <div className="flex items-center justify-between relative">
@@ -387,123 +440,124 @@ const WorkspaceHeader = ({
           </h1>
         </div>
 
-        {/* Right side actions */}
-        <div className="flex items-center space-x-3">
+        {/* Right side actions — compact with overflow */}
+        <div className="flex items-center space-x-1.5">
+          <div
+            className={`hidden lg:flex items-center gap-1.5 px-2 py-1 rounded-md border text-[10px] font-medium ${syncBadge.containerClass}`}
+            title={syncBadge.subLabel}
+            aria-live="polite"
+          >
+            <span className={`inline-block w-2 h-2 rounded-full ${syncBadge.dotClass}`} />
+            <span>{syncBadge.label}</span>
+          </div>
+
+          {/* Primary actions always visible */}
           {showPostServicesActions && (
             <>
               <button
                 onClick={onOpenPostServices}
-                className="p-2 hover:bg-gray-100 rounded-lg transition-colors flex flex-col items-center space-y-1"
+                className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors flex items-center space-x-1"
                 title="Post Services"
               >
                 <MessageCircle className="w-4 h-4 text-gray-600" />
-                <span className="text-[10px] font-medium text-gray-500">Post Service</span>
+                <span className="text-[10px] font-medium text-gray-500 hidden xl:inline">Post Service</span>
               </button>
-
-              <button
-                onClick={onOpenCostCalculators}
-                className="p-2 hover:bg-gray-100 rounded-lg transition-colors flex flex-col items-center space-y-1"
-                title="Cost Calculators"
-              >
-                <Calculator className="w-4 h-4 text-blue-600" />
-                <span className="text-[10px] font-medium text-gray-500">Calculators</span>
-              </button>
-              
-              {isPM ? (
-                <>
-                  <button
-                    onClick={onOpenReviewProgress}
-                    className="p-2 hover:bg-gray-100 rounded-lg transition-colors flex flex-col items-center space-y-1"
-                    title="Review Progress"
-                  >
-                    <Zap className="w-4 h-4 text-orange-600" />
-                    <span className="text-[10px] font-medium text-gray-500">Review Progress</span>
-                  </button>
-                  <button
-                    onClick={onOpenProjectComplete}
-                    className="p-2 hover:bg-gray-100 rounded-lg transition-colors flex flex-col items-center space-y-1"
-                    title="Project Complete Request"
-                  >
-                    <CheckCircle className="w-4 h-4 text-blue-600" />
-                    <span className="text-[10px] font-medium text-gray-500">Complete Request</span>
-                  </button>
-                </>
-              ) : isClient ? (
-                <>
-                  <button
-                    onClick={onOpenClientReviewProgress}
-                    className="p-2 hover:bg-gray-100 rounded-lg transition-colors flex flex-col items-center space-y-1"
-                    title="Approve Progress"
-                  >
-                    <Zap className="w-4 h-4 text-green-600" />
-                    <span className="text-[10px] font-medium text-gray-500">Approve Progress</span>
-                  </button>
-                  <button
-                    onClick={onOpenProjectComplete}
-                    className="p-2 hover:bg-gray-100 rounded-lg transition-colors flex flex-col items-center space-y-1"
-                    title="Project Complete Request"
-                  >
-                    <CheckCircle className="w-4 h-4 text-blue-600" />
-                    <span className="text-[10px] font-medium text-gray-500">Complete Request</span>
-                  </button>
-                </>
-              ) : (
-                <button
-                  onClick={onOpenUpdateProgress}
-                  disabled={shouldDisableEditing}
-                  className={`p-2 rounded-lg transition-colors flex flex-col items-center space-y-1 ${
-                    shouldDisableEditing ? 'opacity-50 cursor-not-allowed' : 'hover:bg-gray-100'
-                  }`}
-                  title={shouldDisableEditing ? 'Project is completed - updates disabled' : 'Update Progress'}
-                >
-                  <Zap className="w-4 h-4 text-gray-600" />
-                  <span className="text-[10px] font-medium text-gray-500">Update Progress</span>
-                </button>
-              )}
             </>
           )}
 
-          {/* B2B / Graviyx Button - available to everyone in workspace */}
-          <button
-            onClick={async () => {
-              const targetHome = config.B2B_MARKETPLACE_URL;
-              if (!targetHome) {
-                alert('B2B marketplace URL is not configured. Please contact support.');
-                return;
-              }
+          {/* Overflow menu for secondary actions */}
+          {showPostServicesActions && (
+            <div ref={overflowRef} className="relative">
+              <button
+                onClick={() => setShowOverflowMenu(prev => !prev)}
+                className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors"
+                title="More actions"
+                aria-label="More workspace actions"
+                aria-expanded={showOverflowMenu}
+              >
+                <MoreHorizontal className="w-4 h-4 text-gray-500" />
+              </button>
 
-              let idToken = '';
-              try {
-                const session = await Auth.currentSession();
-                idToken = session.getIdToken().getJwtToken();
-              } catch {
-                idToken = localStorage.getItem('authToken') || '';
-              }
+              {showOverflowMenu && (
+                <div className="absolute right-0 top-full mt-1 w-48 bg-white border border-gray-200 rounded-lg shadow-lg z-50 py-1">
+                  {isPM ? (
+                    <>
+                      <button onClick={() => { onOpenReviewProgress(); setShowOverflowMenu(false); }} className="w-full flex items-center space-x-2 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50">
+                        <Zap className="w-4 h-4 text-orange-600" />
+                        <span>Review Progress</span>
+                      </button>
+                      <button onClick={() => { onOpenProjectComplete(); setShowOverflowMenu(false); }} className="w-full flex items-center space-x-2 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50">
+                        <CheckCircle className="w-4 h-4 text-blue-600" />
+                        <span>Complete Request</span>
+                      </button>
+                    </>
+                  ) : isClient ? (
+                    <>
+                      <button onClick={() => { onOpenClientReviewProgress(); setShowOverflowMenu(false); }} className="w-full flex items-center space-x-2 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50">
+                        <Zap className="w-4 h-4 text-green-600" />
+                        <span>Approve Progress</span>
+                      </button>
+                      <button onClick={() => { onOpenProjectComplete(); setShowOverflowMenu(false); }} className="w-full flex items-center space-x-2 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50">
+                        <CheckCircle className="w-4 h-4 text-blue-600" />
+                        <span>Complete Request</span>
+                      </button>
+                    </>
+                  ) : (
+                    <button
+                      onClick={() => { if (!shouldDisableEditing) { onOpenUpdateProgress(); setShowOverflowMenu(false); } }}
+                      disabled={shouldDisableEditing}
+                      className={`w-full flex items-center space-x-2 px-3 py-2 text-sm ${shouldDisableEditing ? 'text-gray-300 cursor-not-allowed' : 'text-gray-700 hover:bg-gray-50'}`}
+                    >
+                      <Zap className="w-4 h-4 text-gray-600" />
+                      <span>Update Progress</span>
+                    </button>
+                  )}
 
-              if (idToken) {
-                window.location.href = `${targetHome}/?token=${encodeURIComponent(idToken)}`;
-                return;
-              }
+                  <div className="border-t border-gray-100 my-1" />
 
-              // No token available (PM/CAS/etc). Still allow navigation to login.
-              const base = targetHome.replace(/\/home\/?$/, '');
-              window.location.href = `${base}/signup`;
-            }}
-            className="p-2 hover:bg-emerald-50 rounded-lg transition-colors flex flex-col items-center space-y-1"
-            title="Open B2B Marketplace (Graviyx)"
-          >
-            <Link2 className="w-4 h-4 text-emerald-700" />
-            <span className="text-[10px] font-medium text-gray-500">B2B</span>
-          </button>
+                  <button
+                    onClick={async () => {
+                      setShowOverflowMenu(false);
+                      const targetHome = config.B2B_MARKETPLACE_URL;
+                      if (!targetHome) { alert('B2B marketplace URL is not configured.'); return; }
+                      let idToken = '';
+                      try { const session = await Auth.currentSession(); idToken = session.getIdToken().getJwtToken(); } catch { idToken = localStorage.getItem('authToken') || ''; }
+                      if (idToken) { window.location.href = `${targetHome}/?token=${encodeURIComponent(idToken)}`; return; }
+                      const base = targetHome.replace(/\/home\/?$/, '');
+                      window.location.href = `${base}/signup`;
+                    }}
+                    className="w-full flex items-center space-x-2 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50"
+                  >
+                    <Link2 className="w-4 h-4 text-emerald-700" />
+                    <span>B2B Marketplace</span>
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
 
-          {/* Help Button - Small icon style */}
+          {/* Help Button — always visible */}
           <button
             data-tour="help-btn"
             onClick={openTutorial}
-            className="p-2 hover:bg-purple-50 rounded-full transition-all duration-200 group border border-purple-200 hover:border-purple-400 bg-gradient-to-r from-purple-50 to-indigo-50 hover:from-purple-100 hover:to-indigo-100"
+            className="p-1.5 hover:bg-purple-50 rounded-full transition-all duration-200 group border border-purple-200 hover:border-purple-400 bg-gradient-to-r from-purple-50 to-indigo-50 hover:from-purple-100 hover:to-indigo-100"
             title="Workspace Tutorial"
           >
-            <HelpCircle className="w-5 h-5 text-purple-600 group-hover:scale-110 transition-transform" />
+            <HelpCircle className="w-4 h-4 text-purple-600 group-hover:scale-110 transition-transform" />
+          </button>
+
+          {/* Command Palette shortcut hint */}
+          <button
+            onClick={() => {
+              const event = new KeyboardEvent('keydown', { key: 'k', ctrlKey: true, bubbles: true });
+              window.dispatchEvent(event);
+            }}
+            className="hidden md:flex items-center gap-1.5 px-2 py-1 text-xs text-gray-400 bg-gray-50 hover:bg-gray-100 border border-gray-200 rounded-lg transition-colors"
+            title="Open command palette (Ctrl+K)"
+          >
+            <Search className="w-3 h-3" />
+            <span className="text-[10px]">Search</span>
+            <kbd className="ml-0.5 px-1 py-0.5 text-[9px] bg-white border border-gray-200 rounded">⌘K</kbd>
           </button>
         </div>
       </div>

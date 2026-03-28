@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Plus } from 'lucide-react';
 
-const AddTaskModal = ({ isOpen, onClose, onAddTask }) => {
+const AddTaskModal = ({ isOpen, onClose, onAddTask, memberOptions = [] }) => {
   const [newTask, setNewTask] = useState({
     title: '',
     description: '',
@@ -118,10 +118,12 @@ const AddTaskModal = ({ isOpen, onClose, onAddTask }) => {
                 disabled={isSubmitting}
                 className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all duration-200 bg-gray-50/50 hover:bg-gray-50 appearance-none cursor-pointer text-sm"
               >
-                <option value="">Select team member</option>
-                <option value="user1">👤 John Doe - Developer</option>
-                <option value="user2">👤 Jane Smith - Designer</option>
-                <option value="user3">👤 Mike Johnson - PM</option>
+                <option value="">Unassigned</option>
+                {memberOptions.map((member) => (
+                  <option key={member.id} value={member.id}>
+                    👤 {member.label}
+                  </option>
+                ))}
               </select>
               <div className="absolute right-4 top-1/2 transform -translate-y-1/2 pointer-events-none">
                 <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">

@@ -13,8 +13,11 @@ import {
   TextPanel,
   TemplatesPanel
 } from './components';
-import { Sparkles, FileText, Calendar, CheckCircle, StickyNote, ClipboardCheck } from 'lucide-react';
+import { Sparkles, FileText, Calendar, CheckCircle, StickyNote, ClipboardCheck, PanelLeft, PanelRight, Maximize2, ZoomIn, Eye, Layout, HelpCircle, Keyboard } from 'lucide-react';
 import ManageBOQModal from './components/ManageBOQModal';
+import CommandPalette from './components/CommandPalette';
+import KeyboardShortcutsOverlay from './components/KeyboardShortcutsOverlay';
+import { ToastProvider } from './components/ToastProvider';
 import { UploadProvider } from './components/forms/UploadManager';
 import { VendorContext } from '../../context/VendorContext';
 import InvoiceToolReplica from './components/InvoiceToolReplica';
@@ -31,6 +34,7 @@ import useCanvasWebSocket from '../../hooks/useCanvasWebSocket';
 import StartCallModal from './components/modals/StartCallModal';
 import IncomingCallNotification from './components/modals/IncomingCallNotification';
 import ActiveCallInterface from './components/modals/ActiveCallInterface';
+import ProcurementRFQModal from './components/modals/ProcurementRFQModal';
 import useVideoCall from '../../hooks/useVideoCall';
 import config from '../../config/env';
 import authFetch from '../../utils/authFetch';
@@ -163,6 +167,41 @@ const WorkspacePage = () => {
   const [detectedUserRole, setDetectedUserRole] = useState(userRole);
   const [detectedClientId, setDetectedClientId] = useState(null);
   
+  // ── Focus-mode layout state (canvas-first UX) ──────────────────────
+  // Persist per-workspace so each workspace remembers its layout
+  const layoutKey = `ws-layout-${workspaceId}`;
+  const savedLayout = useMemo(() => {
+    try { return JSON.parse(localStorage.getItem(layoutKey)) || {}; } catch { return {}; }
+  }, [layoutKey]);
+
+  // Mobile/touch detection
+  const [isMobile, setIsMobile] = useState(() => window.innerWidth < 768);
+  useEffect(() => {
+    const onResize = () => setIsMobile(window.innerWidth < 768);
+    window.addEventListener('resize', onResize);
+    return () => window.removeEventListener('resize', onResize);
+  }, []);
+
+  const [focusMode, setFocusMode] = useState(() => savedLayout.focusMode !== false); // ON by default
+  const [leftPanelPinned, setLeftPanelPinned] = useState(() => !!savedLayout.leftPinned);
+  const [rightPanelPinned, setRightPanelPinned] = useState(() => !!savedLayout.rightPinned);
+  const [leftPanelHover, setLeftPanelHover] = useState(false);
+  const [rightPanelHover, setRightPanelHover] = useState(false);
+  // Mobile: explicit toggle instead of hover
+  const [mobileLeftOpen, setMobileLeftOpen] = useState(false);
+  const [mobileRightOpen, setMobileRightOpen] = useState(false);
+
+  // NOTE: Derived panel visibility is computed below, after selectedTask is declared
+
+  // Persist layout prefs
+  useEffect(() => {
+    localStorage.setItem(layoutKey, JSON.stringify({
+      focusMode,
+      leftPinned: leftPanelPinned,
+      rightPinned: rightPanelPinned,
+    }));
+  }, [layoutKey, focusMode, leftPanelPinned, rightPanelPinned]);
+
   // UI state
   const [activeTab, setActiveTab] = useState('Task');
   const [zoomLevel, setZoomLevel] = useState(100);
@@ -172,6 +211,9 @@ const WorkspacePage = () => {
   const [showAddTaskModal, setShowAddTaskModal] = useState(false);
   const [showAddSubtaskModal, setShowAddSubtaskModal] = useState(false);
   const [activityRefreshTrigger, setActivityRefreshTrigger] = useState(0);
+  const [saveOpsInFlight, setSaveOpsInFlight] = useState(0);
+  const [lastSavedAt, setLastSavedAt] = useState(null);
+  const [saveError, setSaveError] = useState(null);
 
   // Function to trigger activity refresh (memoized)
   const triggerActivityRefresh = useCallback(() => {
@@ -180,7 +222,18 @@ const WorkspacePage = () => {
   }, []);
   const [selectedTask, setSelectedTask] = useState(null);
   const [selectedSubtask, setSelectedSubtask] = useState(null);
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+
+  // Derived panel visibility (must be after selectedTask declaration)
+  const needsTaskSelection = !selectedTask;
+  const leftPanelVisible = isMobile
+    ? mobileLeftOpen
+    : (needsTaskSelection || !focusMode || leftPanelPinned || leftPanelHover);
+  const rightPanelVisible = isMobile
+    ? mobileRightOpen
+    : (!focusMode || rightPanelPinned || rightPanelHover);
+  const sidebarCollapsed = isMobile ? !mobileLeftOpen : (!needsTaskSelection && focusMode && !leftPanelPinned && !leftPanelHover);
+
+  // sidebarCollapsed is now derived from focusMode state above
   const [selectedLayer, setSelectedLayer] = useState(null);
   const [selectedLayerItem, setSelectedLayerItem] = useState(null);
   const [showElementsSidebar, setShowElementsSidebar] = useState(false);
@@ -192,6 +245,7 @@ const WorkspacePage = () => {
   const [showInvoiceTool, setShowInvoiceTool] = useState(false);
   const [selectedTextElement, setSelectedTextElement] = useState(null);
   const [showManageBOQModal, setShowManageBOQModal] = useState(false);
+  const [showProcurementRFQModal, setShowProcurementRFQModal] = useState(false);
   const [showPostServicesModal, setShowPostServicesModal] = useState(false);
   const [showUpdateProgressModal, setShowUpdateProgressModal] = useState(false);
   const [showReviewProgressModal, setShowReviewProgressModal] = useState(false);
@@ -467,6 +521,16 @@ const WorkspacePage = () => {
           color: 'bg-green-50 border-green-200 text-green-800 hover:bg-green-100',
           nodeType: 'approvalBoard',
           data: { label: 'Approval Board' }
+        },
+        { 
+          id: 'ai-helper', 
+          name: 'AI Helper', 
+          type: 'ai-helper', 
+          preview: 'Summarize, suggest next steps, or generate flows with AI',
+          icon: <Sparkles className="w-4 h-4 mr-2 text-purple-600" />,
+          color: 'bg-purple-50 border-purple-200 text-purple-800 hover:bg-purple-100',
+          nodeType: 'aiHelper',
+          data: { label: 'AI Helper' }
         }
       ]
     },
@@ -928,6 +992,8 @@ const WorkspacePage = () => {
 
     // If we have a selected subtask, save to that subtask's canvas
     if (selectedTask && selectedSubtask) {
+      setSaveOpsInFlight((prev) => prev + 1);
+      setSaveError(null);
       try {
         console.log('🚀 WorkspacePage: Saving to subtask canvas');
         const response = await fetch(`/api/workspaces/${workspaceId}/tasks/${selectedTask.id}/subtasks/${selectedSubtask.id}/canvas`, {
@@ -951,6 +1017,7 @@ const WorkspacePage = () => {
 
         const result = await response.json();
         console.log('✅ WorkspacePage: Subtask canvas saved successfully', result);
+        setLastSavedAt(Date.now());
         
         // Update the workspace with the latest data
         setWorkspace(result.workspace);
@@ -969,10 +1036,15 @@ const WorkspacePage = () => {
         
       } catch (error) {
         console.error('❌ WorkspacePage: Error saving subtask canvas:', error);
+        setSaveError(error?.message || 'Failed to sync canvas changes');
         throw error;
+      } finally {
+        setSaveOpsInFlight((prev) => Math.max(0, prev - 1));
       }
     } else {
       // Fallback to general workspace canvas save
+      setSaveOpsInFlight((prev) => prev + 1);
+      setSaveError(null);
       try {
         console.log('🚀 WorkspacePage: Making API call to save general workspace canvas');
         const response = await fetch(`/api/workspaces/${workspaceId}/canvas`, {
@@ -996,14 +1068,25 @@ const WorkspacePage = () => {
 
         const result = await response.json();
         console.log('✅ WorkspacePage: Workspace saved successfully', result);
+        setLastSavedAt(Date.now());
         // Update the workspace with the latest data
         setWorkspace(result.workspace);
       } catch (error) {
         console.error('❌ WorkspacePage: Error saving workspace:', error);
+        setSaveError(error?.message || 'Failed to sync workspace changes');
         throw error; // Re-throw to let CanvasWorkspace handle the error state
+      } finally {
+        setSaveOpsInFlight((prev) => Math.max(0, prev - 1));
       }
     }
   };
+
+  const syncStatus = useMemo(() => {
+    if (saveOpsInFlight > 0) return 'saving';
+    if (saveError) return 'error';
+    if (canvasWebSocket && !canvasWebSocket.isConnected) return 'offline';
+    return 'live';
+  }, [saveOpsInFlight, saveError, canvasWebSocket]);
 
   // Auto-save workspace data periodically
   useEffect(() => {
@@ -1126,21 +1209,77 @@ const WorkspacePage = () => {
 
   // Removed duplicate elementOptions declaration
 
-  // Toggle sidebar function
-  const toggleSidebars = () => {
-    setSidebarCollapsed(!sidebarCollapsed);
-  };
+  // Toggle sidebar function (legacy compat — now toggles focus mode)
+  const toggleSidebars = useCallback(() => {
+    setFocusMode(prev => !prev);
+  }, []);
+
+  const toggleLeftPin = useCallback(() => setLeftPanelPinned(p => !p), []);
+  const toggleRightPin = useCallback(() => setRightPanelPinned(p => !p), []);
+
+  // ── Command Palette & Shortcuts Overlay state ──────────────────
+  const [showCommandPalette, setShowCommandPalette] = useState(false);
+  const [showShortcutsOverlay, setShowShortcutsOverlay] = useState(false);
+
+  // Build command palette commands list
+  const paletteCommands = useMemo(() => [
+    { id: 'focus-mode', label: focusMode ? 'Exit Focus Mode' : 'Enter Focus Mode', category: 'Layout', icon: <Maximize2 className="w-4 h-4" />, shortcut: 'Ctrl+Shift+H', keywords: ['focus', 'hide', 'panels', 'canvas'], action: () => setFocusMode(p => !p) },
+    { id: 'pin-left', label: leftPanelPinned ? 'Unpin Left Panel' : 'Pin Left Panel', category: 'Layout', icon: <PanelLeft className="w-4 h-4" />, shortcut: 'Ctrl+Shift+L', keywords: ['left', 'sidebar', 'pin', 'tasks'], action: () => setLeftPanelPinned(p => !p) },
+    { id: 'pin-right', label: rightPanelPinned ? 'Unpin Right Panel' : 'Pin Right Panel', category: 'Layout', icon: <PanelRight className="w-4 h-4" />, shortcut: 'Ctrl+Shift+R', keywords: ['right', 'sidebar', 'pin', 'activity'], action: () => setRightPanelPinned(p => !p) },
+    { id: 'fit-view', label: 'Fit Canvas to View', category: 'Canvas', icon: <ZoomIn className="w-4 h-4" />, shortcut: 'Ctrl+Shift+1', keywords: ['fit', 'zoom', 'center', 'reset'], action: () => document.dispatchEvent(new CustomEvent('canvasFitView')) },
+    { id: 'add-task', label: 'Add New Task', category: 'Tasks', icon: <CheckCircle className="w-4 h-4" />, keywords: ['create', 'task', 'new'], action: () => setShowAddTaskModal(true) },
+    { id: 'add-subtask', label: 'Add Subtask', category: 'Tasks', icon: <FileText className="w-4 h-4" />, keywords: ['create', 'subtask', 'new'], action: () => selectedTask && setShowAddSubtaskModal(true) },
+    { id: 'elements', label: 'Open Elements Panel', category: 'Panels', icon: <Layout className="w-4 h-4" />, keywords: ['elements', 'sidebar', 'components', 'drag'], action: () => handleElementsClick() },
+    { id: 'layouts', label: 'Open Layouts Panel', category: 'Panels', icon: <Layout className="w-4 h-4" />, keywords: ['layouts', 'template', 'grid'], action: () => handleLayoutsClick() },
+    { id: 'text', label: 'Open Text Panel', category: 'Panels', icon: <FileText className="w-4 h-4" />, keywords: ['text', 'annotation', 'label'], action: () => handleTextClick() },
+    { id: 'templates', label: 'Open Templates Panel', category: 'Panels', icon: <Sparkles className="w-4 h-4" />, keywords: ['templates', 'flowchart', 'preset'], action: () => handleTemplatesClick() },
+    { id: 'post-services', label: 'Post Service', category: 'Actions', icon: <FileText className="w-4 h-4" />, keywords: ['post', 'service', 'publish'], action: () => setShowPostServicesModal(true) },
+    { id: 'shortcuts', label: 'Show Keyboard Shortcuts', category: 'Help', icon: <Keyboard className="w-4 h-4" />, shortcut: '?', keywords: ['keyboard', 'shortcuts', 'help', 'keys'], action: () => setShowShortcutsOverlay(true) },
+    { id: 'ai-helper', label: 'Add AI Helper Block', category: 'Canvas', icon: <Sparkles className="w-4 h-4" />, keywords: ['ai', 'helper', 'summarize', 'suggest', 'generate', 'flow', 'assistant'], action: () => {
+      document.dispatchEvent(new CustomEvent('addElementToCanvas', { detail: { type: 'ai-helper', name: 'AI Helper', nodeType: 'aiHelper', data: { label: 'AI Helper' } } }));
+    }},
+  ], [focusMode, leftPanelPinned, rightPanelPinned, selectedTask]);
 
   // Add keyboard shortcuts and ensure full-page display
   React.useEffect(() => {
     const handleKeyDown = (event) => {
       if (event.key === 'Escape') {
+        // Close any open overlay panel first, then close window
+        if (leftPanelHover) { setLeftPanelHover(false); return; }
+        if (rightPanelHover) { setRightPanelHover(false); return; }
         window.close();
       }
-      // Toggle sidebars with Ctrl+Shift+H (common in design tools)
+      // Command palette with Ctrl+K
+      if ((event.ctrlKey || event.metaKey) && event.key === 'k') {
+        event.preventDefault();
+        setShowCommandPalette(prev => !prev);
+        return;
+      }
+      // Keyboard shortcuts overlay with ? (when not typing in an input)
+      if (event.key === '?' && !['INPUT', 'TEXTAREA', 'SELECT'].includes(event.target.tagName)) {
+        event.preventDefault();
+        setShowShortcutsOverlay(prev => !prev);
+        return;
+      }
+      // Toggle focus mode with Ctrl+Shift+H (hides all panels)
       if (event.ctrlKey && event.shiftKey && event.key === 'H') {
         event.preventDefault();
-        toggleSidebars();
+        setFocusMode(prev => !prev);
+      }
+      // Toggle left panel pin with Ctrl+Shift+L
+      if (event.ctrlKey && event.shiftKey && event.key === 'L') {
+        event.preventDefault();
+        setLeftPanelPinned(p => !p);
+      }
+      // Toggle right panel pin with Ctrl+Shift+R
+      if (event.ctrlKey && event.shiftKey && event.key === 'R') {
+        event.preventDefault();
+        setRightPanelPinned(p => !p);
+      }
+      // Fit to view with Ctrl+Shift+1
+      if (event.ctrlKey && event.shiftKey && event.key === '1') {
+        event.preventDefault();
+        document.dispatchEvent(new CustomEvent('canvasFitView'));
       }
     };
 
@@ -1167,6 +1306,32 @@ const WorkspacePage = () => {
 
   // Use workspace tasks or empty array
   const [tasks, setTasks] = useState([]);
+
+  const taskMemberOptions = useMemo(() => {
+    const members = Array.isArray(workspaceCollaborators) ? workspaceCollaborators : [];
+    const normalized = members
+      .map((member) => {
+        const id = member.vendorId || member.userId || member.id;
+        if (!id) return null;
+        const name = member.name || member.userName || member.email || 'Member';
+        const role = member.role || member.userRole || null;
+        return {
+          id,
+          label: name,
+          role: role || null,
+        };
+      })
+      .filter(Boolean);
+
+    const uniqueById = new Map();
+    normalized.forEach((member) => {
+      if (!uniqueById.has(member.id)) {
+        uniqueById.set(member.id, member);
+      }
+    });
+
+    return Array.from(uniqueById.values());
+  }, [workspaceCollaborators]);
   
   // Update tasks when workspace loads
   useEffect(() => {
@@ -1210,6 +1375,7 @@ const WorkspacePage = () => {
       name: taskData.title,
           description: taskData.description || '',
           priority: taskData.priority || 'medium',
+          assignedUserId: taskData.accessedBy || null,
           userId: currentUser?.id || 'unknown',
           userEmail: currentUser?.email || 'unknown@example.com',
           userName: currentUser?.name || 'Unknown User'
@@ -1238,7 +1404,8 @@ const WorkspacePage = () => {
   };
 
   // Add subtask via API
-  const addSubtask = async (subtaskData) => {
+  const addSubtask = async (subtaskData, options = {}) => {
+    const { autoSelect = true } = options;
     if (!selectedTask || !workspaceId) {
       console.error('Cannot add subtask: missing selectedTask or workspaceId');
       return;
@@ -1259,6 +1426,9 @@ const WorkspacePage = () => {
         body: JSON.stringify({
       name: subtaskData.title,
           description: subtaskData.description || '',
+          dependsOnSubtaskId: subtaskData.dependsOnSubtaskId || 'auto-previous',
+          flowOrder: subtaskData.flowOrder ? Number(subtaskData.flowOrder) : undefined,
+          assignedUserId: subtaskData.assignedTo || null,
           userId: currentUser?.id || 'unknown',
           userEmail: currentUser?.email || 'unknown@example.com',
           userName: currentUser?.name || 'Unknown User'
@@ -1272,30 +1442,25 @@ const WorkspacePage = () => {
       const result = await response.json();
       console.log('✅ WorkspacePage: Subtask added successfully', result);
       
-      // Update local tasks state
-    const updatedTasks = tasks.map(task => 
-      task.id === selectedTask.id 
-          ? result.task
-        : task
-    );
-    
-    setTasks(updatedTasks);
-    
-    // Update selected task to reflect new subtask
-    const updatedSelectedTask = updatedTasks.find(task => task.id === selectedTask.id);
-    setSelectedTask(updatedSelectedTask);
-    
-    // CRITICAL: Select the newly created subtask so canvas shows empty data
-    // This prevents elements from being copied from the previous subtask
-    setSelectedSubtask(result.subtask);
-    console.log('✨ WorkspacePage: Auto-selected new subtask', {
-      subtaskId: result.subtask.id,
-      subtaskName: result.subtask.name
-    });
-      
-      // Refresh workspace data
+      // Refresh workspace data and local tasks from API response
       const updatedWorkspace = result.workspace;
       setWorkspace(updatedWorkspace);
+      if (Array.isArray(updatedWorkspace?.tasks)) {
+        setTasks(updatedWorkspace.tasks);
+        const updatedSelectedTask = updatedWorkspace.tasks.find(task => task.id === selectedTask.id);
+        if (updatedSelectedTask) {
+          setSelectedTask(updatedSelectedTask);
+        }
+      }
+
+      if (autoSelect) {
+        // Select newly created subtask when coming from full modal flow
+        setSelectedSubtask(result.subtask);
+        console.log('✨ WorkspacePage: Auto-selected new subtask', {
+          subtaskId: result.subtask.id,
+          subtaskName: result.subtask.name
+        });
+      }
       
     } catch (error) {
       console.error('❌ WorkspacePage: Error adding subtask:', error);
@@ -1304,8 +1469,95 @@ const WorkspacePage = () => {
     }
   };
 
+  const updateTaskDetails = async (taskId, updates = {}) => {
+    if (!workspaceId || !taskId) return;
+
+    try {
+      const response = await fetch(`/api/workspaces/${workspaceId}/tasks/${taskId}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(updates),
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! Status: ${response.status}`);
+      }
+
+      const result = await response.json();
+      if (result.workspace?.tasks) {
+        setWorkspace(result.workspace);
+        setTasks(result.workspace.tasks);
+        if (selectedTask?.id) {
+          const updatedSelectedTask = result.workspace.tasks.find((task) => task.id === selectedTask.id);
+          if (updatedSelectedTask) {
+            setSelectedTask(updatedSelectedTask);
+          }
+        }
+      }
+    } catch (error) {
+      console.error('❌ WorkspacePage: Error updating task:', error);
+      throw error;
+    }
+  };
+
+  const updateSubtaskDetails = async (taskId, subtaskId, updates = {}) => {
+    if (!workspaceId || !taskId || !subtaskId) return;
+
+    try {
+      const response = await fetch(`/api/workspaces/${workspaceId}/tasks/${taskId}/subtasks/${subtaskId}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(updates),
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! Status: ${response.status}`);
+      }
+
+      const result = await response.json();
+      if (result.workspace?.tasks) {
+        setWorkspace(result.workspace);
+        setTasks(result.workspace.tasks);
+        const updatedTask = result.workspace.tasks.find((task) => task.id === taskId);
+        if (updatedTask) {
+          if (selectedTask?.id === taskId) {
+            setSelectedTask(updatedTask);
+          }
+          if (selectedSubtask?.id === subtaskId) {
+            const updatedSubtask = (updatedTask.subtasks || []).find((subtask) => subtask.id === subtaskId);
+            if (updatedSubtask) {
+              setSelectedSubtask(updatedSubtask);
+            }
+          }
+        }
+      }
+    } catch (error) {
+      console.error('❌ WorkspacePage: Error updating subtask:', error);
+      throw error;
+    }
+  };
+
+  const renameTask = async (taskId, name) => {
+    const trimmedName = (name || '').trim();
+    if (!trimmedName) return;
+    await updateTaskDetails(taskId, { name: trimmedName });
+  };
+
+  const renameSubtask = async (taskId, subtaskId, name) => {
+    const trimmedName = (name || '').trim();
+    if (!trimmedName) return;
+    await updateSubtaskDetails(taskId, subtaskId, { name: trimmedName });
+  };
+
   const handleTaskClick = (task) => {
     setSelectedTask(task);
+    setSelectedSubtask(null);
+    setSelectedLayer(null);
+    setSelectedLayerItem(null);
   };
 
   const handleBackToHome = () => {
@@ -1400,6 +1652,22 @@ const WorkspacePage = () => {
       setShowManageBOQModal(true);
       setShowTemplatesPanel(false);
       // Close other panels
+      setShowTextPanel(false);
+      setShowLayoutsPanel(false);
+      setShowElementsSidebar(false);
+      setShowElementsPanel(false);
+      setSelectedCategory(null);
+    } else if (templateId === 'procurement-rfq') {
+      setShowProcurementRFQModal(true);
+      setShowTemplatesPanel(false);
+      setShowTextPanel(false);
+      setShowLayoutsPanel(false);
+      setShowElementsSidebar(false);
+      setShowElementsPanel(false);
+      setSelectedCategory(null);
+    } else if (templateId === 'cost-calculators') {
+      setShowCostCalculatorsModal(true);
+      setShowTemplatesPanel(false);
       setShowTextPanel(false);
       setShowLayoutsPanel(false);
       setShowElementsSidebar(false);
@@ -1648,6 +1916,7 @@ const WorkspacePage = () => {
   }
 
   return (
+    <ToastProvider>
     <UploadProvider 
       workspaceId={workspaceId}
       vendorId={currentUser?.vendorId || currentUser?.userId || currentUser?.id}
@@ -1684,6 +1953,31 @@ const WorkspacePage = () => {
             padding: 0 !important;
             overflow: hidden !important;
           }
+          /* Canvas-first: panel overlay transitions use transform for zero-layout-shift */
+          .panel-overlay-left {
+            transform: translateX(-100%);
+            transition: transform 0.3s cubic-bezier(0.4,0,0.2,1);
+          }
+          .panel-overlay-left.visible {
+            transform: translateX(0);
+          }
+          .panel-overlay-right {
+            transform: translateX(100%);
+            transition: transform 0.3s cubic-bezier(0.4,0,0.2,1);
+          }
+          .panel-overlay-right.visible {
+            transform: translateX(0);
+          }
+          /* Reduce motion support */
+          @media (prefers-reduced-motion: reduce) {
+            .panel-overlay-left, .panel-overlay-right {
+              transition: none;
+            }
+          }
+          /* Mobile safe area for bottom bar */
+          .safe-area-pb {
+            padding-bottom: max(0.5rem, env(safe-area-inset-bottom));
+          }
         `}
       </style>
       
@@ -1702,13 +1996,14 @@ const WorkspacePage = () => {
         
         <WorkspaceHeader 
           isCanvasActive={!!selectedSubtask} 
+          syncStatus={syncStatus}
+          lastSavedAt={lastSavedAt}
           onElementsClick={handleElementsClick}
           onLayoutsClick={handleLayoutsClick}
           onTextClick={handleTextClick}
           onTemplatesClick={handleTemplatesClick}
           showPostServicesActions
           onOpenPostServices={() => setShowPostServicesModal(true)}
-          onOpenCostCalculators={() => setShowCostCalculatorsModal(true)}
           onOpenUpdateProgress={() => setShowUpdateProgressModal(true)}
           onOpenReviewProgress={() => setShowReviewProgressModal(true)}
           onOpenClientReviewProgress={() => setShowClientReviewProgressModal(true)}
@@ -1721,9 +2016,49 @@ const WorkspacePage = () => {
           selectedSubtask={selectedSubtask}
         />
         
-        <div className="flex h-[calc(100vh-160px)]">
+        <div className="flex h-[calc(100vh-160px)] relative">
+          {/* Mobile panel toggle buttons — fixed bottom bar */}
+          {isMobile && (
+            <div className="fixed bottom-0 left-0 right-0 z-40 bg-white border-t border-gray-200 flex items-center justify-around px-4 py-2 safe-area-pb">
+              <button
+                onClick={() => { setMobileLeftOpen(p => !p); setMobileRightOpen(false); }}
+                className={`flex items-center space-x-1 px-3 py-2 rounded-lg text-xs font-medium transition-colors ${mobileLeftOpen ? 'bg-blue-100 text-blue-700' : 'text-gray-600 hover:bg-gray-100'}`}
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h7" /></svg>
+                <span>Tasks</span>
+              </button>
+              <button
+                onClick={() => { setMobileRightOpen(p => !p); setMobileLeftOpen(false); }}
+                className={`flex items-center space-x-1 px-3 py-2 rounded-lg text-xs font-medium transition-colors ${mobileRightOpen ? 'bg-blue-100 text-blue-700' : 'text-gray-600 hover:bg-gray-100'}`}
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                <span>Activity</span>
+              </button>
+            </div>
+          )}
+
+          {/* Mobile backdrop overlay */}
+          {isMobile && (mobileLeftOpen || mobileRightOpen) && (
+            <div
+              className="fixed inset-0 bg-black/30 z-10"
+              onClick={() => { setMobileLeftOpen(false); setMobileRightOpen(false); }}
+            />
+          )}
+
+          {/* Left edge hover handle — visible tab that reveals left panel in focus mode (desktop only) */}
+          {!isMobile && focusMode && !leftPanelPinned && !leftPanelVisible && (
+            <div
+              className="absolute left-0 top-0 bottom-0 w-3 z-30 cursor-pointer group"
+              onMouseEnter={() => setLeftPanelHover(true)}
+              title="Hover to show Tasks panel"
+            >
+              {/* Visible handle indicator */}
+              <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1.5 h-12 bg-gray-300 group-hover:bg-blue-400 rounded-r-full transition-colors" />
+            </div>
+          )}
+
           <WorkspaceSidebar
-            sidebarCollapsed={sidebarCollapsed}
+            sidebarCollapsed={!leftPanelVisible}
             activeTab={activeTab}
             setActiveTab={setActiveTab}
             selectedTask={selectedTask}
@@ -1732,9 +2067,18 @@ const WorkspacePage = () => {
             onTaskClick={handleTaskClick}
             onSubtaskClick={handleSubtaskClick}
             onShowAddTaskModal={() => setShowAddTaskModal(true)}
+            onQuickAddTask={addTask}
+            onRenameTask={renameTask}
+            onUpdateTask={updateTaskDetails}
+            memberOptions={taskMemberOptions}
             workspace={workspace}
             userRole={detectedUserRole}
             onLeaveWorkspace={handleLeaveWorkspace}
+            focusMode={focusMode}
+            isPinned={leftPanelPinned}
+            onTogglePin={toggleLeftPin}
+            onMouseEnter={() => setLeftPanelHover(true)}
+            onMouseLeave={() => setLeftPanelHover(false)}
           />
 
           <WorkspaceMain
@@ -1752,8 +2096,12 @@ const WorkspacePage = () => {
             onShowAddSubtaskModal={() => setShowAddSubtaskModal(true)}
             onLayerItemClick={handleLayerItemClick}
             onToggleSidebars={toggleSidebars}
+            onRenameSubtask={renameSubtask}
+            onUpdateSubtask={updateSubtaskDetails}
+            memberOptions={taskMemberOptions}
             workspace={workspace}
             onSaveWorkspace={saveWorkspace}
+            onRefreshWorkspace={refetchWorkspace}
             tasks={tasks}
             onZoomChange={handleZoomChange}
             onCreateTask={addTask}
@@ -1763,10 +2111,23 @@ const WorkspacePage = () => {
             userPermissions={userPermissions}
             canvasWebSocket={canvasWebSocket}
             workspaceCollaborators={workspaceCollaborators}
+            focusMode={focusMode}
           />
 
+          {/* Right edge hover handle — visible tab (desktop only) */}
+          {!isMobile && focusMode && !rightPanelPinned && !rightPanelVisible && (
+            <div
+              className="absolute right-0 top-0 bottom-0 w-3 z-30 cursor-pointer group"
+              onMouseEnter={() => setRightPanelHover(true)}
+              title="Hover to show Activity panel"
+            >
+              {/* Visible handle indicator */}
+              <div className="absolute right-0 top-1/2 -translate-y-1/2 w-1.5 h-12 bg-gray-300 group-hover:bg-blue-400 rounded-l-full transition-colors" />
+            </div>
+          )}
+
           <WorkspaceRightSidebar
-            sidebarCollapsed={sidebarCollapsed}
+            sidebarCollapsed={!rightPanelVisible}
             selectedSubtask={selectedSubtask}
             selectedTask={selectedTask}
             recentActivities={recentActivities}
@@ -1788,6 +2149,11 @@ const WorkspacePage = () => {
               });
               document.dispatchEvent(event);
             }}
+            focusMode={focusMode}
+            isPinned={rightPanelPinned}
+            onTogglePin={toggleRightPin}
+            onMouseEnter={() => setRightPanelHover(true)}
+            onMouseLeave={() => setRightPanelHover(false)}
           />
         </div>
       </div>
@@ -1797,6 +2163,7 @@ const WorkspacePage = () => {
         isOpen={showAddTaskModal}
         onClose={() => setShowAddTaskModal(false)}
         onAddTask={addTask}
+        memberOptions={taskMemberOptions}
       />
 
       {/* Add Subtask Modal */}
@@ -1805,6 +2172,8 @@ const WorkspacePage = () => {
         onClose={() => setShowAddSubtaskModal(false)}
         onAddSubtask={addSubtask}
         parentTaskName={selectedTask?.name}
+        existingSubtasks={selectedTask?.subtasks || []}
+        memberOptions={taskMemberOptions}
       />
 
       {/* Elements Sidebar */}
@@ -1861,6 +2230,26 @@ const WorkspacePage = () => {
         onTablesExtracted={(tables) => {
           // Future: handle extracted tables here if needed
           console.log('BOQ tables extracted from template modal:', tables);
+        }}
+      />
+
+      <ProcurementRFQModal
+        isOpen={showProcurementRFQModal}
+        onClose={() => setShowProcurementRFQModal(false)}
+        workspaceId={workspaceId}
+        workspace={workspace}
+        currentUser={currentUser}
+        onSubmitted={(rfqPayload) => {
+          const canvasRef = window?.canvasWorkspaceRef?.current;
+          if (canvasRef?.addProcurementRFQNode) {
+            canvasRef.addProcurementRFQNode(rfqPayload);
+          } else {
+            sessionStorage.setItem('pendingProcurementRFQNode', JSON.stringify({ payload: rfqPayload }));
+            document.dispatchEvent(new CustomEvent('addProcurementRFQNode', {
+              detail: rfqPayload
+            }));
+          }
+          triggerActivityRefresh();
         }}
       />
       {/* Post Services Modal */}
@@ -2034,7 +2423,21 @@ const WorkspacePage = () => {
 
 
 
+      {/* Command Palette */}
+      <CommandPalette
+        isOpen={showCommandPalette}
+        onClose={() => setShowCommandPalette(false)}
+        commands={paletteCommands}
+      />
+
+      {/* Keyboard Shortcuts Overlay */}
+      <KeyboardShortcutsOverlay
+        isOpen={showShortcutsOverlay}
+        onClose={() => setShowShortcutsOverlay(false)}
+      />
+
     </UploadProvider>
+    </ToastProvider>
   );
 };
 

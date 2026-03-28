@@ -1,5 +1,5 @@
 import React, { useRef, useState, useEffect, useCallback } from 'react';
-import { Hand } from 'lucide-react';
+import { Hand, Maximize2, Minimize2, Users, Wifi, WifiOff } from 'lucide-react';
 import BreadcrumbNavigation from './BreadcrumbNavigation';
 import CanvasWorkspace from './CanvasWorkspace';
 import TaskSubtasksView from './TaskSubtasksView';
@@ -21,10 +21,14 @@ const WorkspaceMain = ({
   onBackToLayer,
   onSubtaskClick,
   onShowAddSubtaskModal,
+  onRenameSubtask,
+  onUpdateSubtask,
+  memberOptions,
   onLayerItemClick,
   onToggleSidebars,
   workspace,
   onSaveWorkspace,
+  onRefreshWorkspace,
   tasks,
   onCreateTask,
   onCreateSubtask,  onActivityCreated,
@@ -33,6 +37,7 @@ const WorkspaceMain = ({
   onZoomChange,
   canvasWebSocket,
   workspaceCollaborators,
+  focusMode,
 }) => {
   const canvasRef = useRef(null);
   
@@ -123,7 +128,7 @@ const WorkspaceMain = ({
   };
 
   return (
-    <div className={`flex-1 bg-white relative transition-all duration-300 ease-in-out ${sidebarCollapsed ? '' : 'border-l border-r border-gray-200'}`}>
+    <div className="flex-1 bg-gray-50 relative transition-all duration-300 ease-in-out min-w-0">
       {/* Breadcrumb Navigation */}
       <BreadcrumbNavigation
         selectedTask={selectedTask}
@@ -134,6 +139,18 @@ const WorkspaceMain = ({
         onBackToTask={onBackToTask}
         onBackToLayer={onBackToLayer}
       />
+
+      {/* Focus mode toggle button — always visible */}
+      <button
+        onClick={onToggleSidebars}
+        className="absolute top-14 left-3 z-10 p-2 bg-white/90 backdrop-blur-sm border border-gray-200 rounded-lg shadow-sm hover:bg-gray-50 transition-colors group"
+        title={focusMode ? 'Show panels (Ctrl+Shift+H)' : 'Focus mode (Ctrl+Shift+H)'}
+        aria-label={focusMode ? 'Exit focus mode' : 'Enter focus mode'}
+      >
+        {focusMode
+          ? <Minimize2 className="w-4 h-4 text-gray-500 group-hover:text-gray-700" />
+          : <Maximize2 className="w-4 h-4 text-gray-500 group-hover:text-gray-700" />}
+      </button>
 
       {/* Main Workspace Content */}
       {!tasks || tasks.length === 0 ? (
@@ -156,6 +173,7 @@ const WorkspaceMain = ({
             onToggleSidebars={onToggleSidebars}
             workspace={workspace}
             onSaveWorkspace={onSaveWorkspace}
+            onRefreshWorkspace={onRefreshWorkspace}
             onActivityCreated={onActivityCreated}
             userRole={userRole}
             userPermissions={userPermissions}
@@ -167,8 +185,13 @@ const WorkspaceMain = ({
           // Show subtasks list when task is selected but no subtask
           <TaskSubtasksView
             selectedTask={selectedTask}
+            workspaceId={workspace?.workspaceId}
             onSubtaskClick={onSubtaskClick}
             onShowAddSubtaskModal={onShowAddSubtaskModal}
+            onQuickAddSubtask={onCreateSubtask}
+            onRenameSubtask={onRenameSubtask}
+            onUpdateSubtask={onUpdateSubtask}
+            memberOptions={memberOptions}
           />
         )
       ) : selectedLayer ? (
@@ -191,9 +214,47 @@ const WorkspaceMain = ({
         </div>
       )}
 
-      {/* Enhanced Zoom Controls - Figma style */}
+      {/* Enhanced Zoom Controls + Status Bar */}
       {selectedSubtask && (
-        <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 bg-white border border-gray-200 rounded-xl shadow-xl px-3 py-2 flex items-center space-x-3">
+        <div className="absolute bottom-8 left-1/2 z-30 transform -translate-x-1/2 bg-white/95 backdrop-blur-sm border border-gray-200 rounded-xl shadow-xl px-3 py-2 flex items-center space-x-3">
+          {/* Collaborators indicator */}
+          {workspaceCollaborators && workspaceCollaborators.length > 0 && (
+            <>
+              <div className="flex items-center gap-1.5" title={`${workspaceCollaborators.length} collaborator${workspaceCollaborators.length > 1 ? 's' : ''} online`}>
+                <div className="flex -space-x-1.5">
+                  {workspaceCollaborators.slice(0, 3).map((collab, i) => (
+                    <div
+                      key={collab.userId || i}
+                      className="w-6 h-6 rounded-full border-2 border-white flex items-center justify-center text-[9px] font-bold text-white"
+                      style={{ backgroundColor: ['#3b82f6', '#8b5cf6', '#ef4444', '#10b981', '#f59e0b'][i % 5], zIndex: 3 - i }}
+                      title={collab.name || collab.userName || 'Collaborator'}
+                    >
+                      {(collab.name || collab.userName || '?').charAt(0).toUpperCase()}
+                    </div>
+                  ))}
+                  {workspaceCollaborators.length > 3 && (
+                    <div className="w-6 h-6 rounded-full border-2 border-white bg-gray-200 flex items-center justify-center text-[9px] font-semibold text-gray-600">
+                      +{workspaceCollaborators.length - 3}
+                    </div>
+                  )}
+                </div>
+                <span className="text-[10px] text-gray-400 font-medium">{workspaceCollaborators.length}</span>
+              </div>
+              <div className="w-px h-5 bg-gray-200"></div>
+            </>
+          )}
+
+          {/* Connection status dot */}
+          {canvasWebSocket && (
+            <>
+              <div className="flex items-center gap-1" title={canvasWebSocket.isConnected ? 'Connected' : 'Disconnected'}>
+                <div className={`w-1.5 h-1.5 rounded-full ${canvasWebSocket.isConnected ? 'bg-emerald-400' : 'bg-red-400'}`} />
+                <span className="text-[10px] text-gray-400">{canvasWebSocket.isConnected ? 'Live' : 'Offline'}</span>
+              </div>
+              <div className="w-px h-5 bg-gray-200"></div>
+            </>
+          )}
+
           <button className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors" title="Zoom Out" onClick={handleZoomOut}>
             <svg className="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM13 10H7" />
@@ -205,7 +266,7 @@ const WorkspaceMain = ({
             </svg>
           </button>
           <div className="w-px h-5 bg-gray-200"></div>
-          <button className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors" title="Hand Tool" onClick={handleFitView}>
+          <button className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors" title="Fit View" onClick={handleFitView}>
             <Hand className="w-4 h-4 text-gray-600" />
           </button>
           <button className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors" title="Select Tool">
@@ -213,8 +274,6 @@ const WorkspaceMain = ({
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 15l-2 5L9 9l11 4-5 2zm0 0l5 5M7.188 2.239l.777 2.897M5.136 7.965l-2.898-.777M13.95 4.05l-2.122 2.122m-5.657 5.656l-2.122 2.122" />
             </svg>
           </button>
-          <div className="w-px h-5 bg-gray-200"></div>
-          <span className="text-sm text-gray-700 font-semibold px-3 py-1 bg-gray-50 rounded-lg">{zoomLevel}%</span>
           <div className="w-px h-5 bg-gray-200"></div>
           <div className="flex items-center gap-1 px-2.5 py-0.5 bg-gray-50 rounded-md">
             <input

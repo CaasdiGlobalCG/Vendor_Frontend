@@ -1,14 +1,34 @@
 import React, { useState } from 'react';
-import { Plus } from 'lucide-react';
+import { Plus, ChevronDown, ChevronUp } from 'lucide-react';
 
-const AddSubtaskModal = ({ isOpen, onClose, onAddSubtask, parentTaskName }) => {
+const AddSubtaskModal = ({
+  isOpen,
+  onClose,
+  onAddSubtask,
+  parentTaskName,
+  existingSubtasks = [],
+  memberOptions = []
+}) => {
   const [newSubtask, setNewSubtask] = useState({
     title: '',
     description: '',
     assignedTo: '',
-    priority: 'medium'
+    priority: 'medium',
+    dependsOnSubtaskId: 'auto-previous',
+    flowOrder: ''
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showAdvancedFlowOptions, setShowAdvancedFlowOptions] = useState(false);
+  const [createAndAddAnother, setCreateAndAddAnother] = useState(false);
+
+  const getDefaultSubtaskState = () => ({
+    title: '',
+    description: '',
+    assignedTo: '',
+    priority: 'medium',
+    dependsOnSubtaskId: 'auto-previous',
+    flowOrder: ''
+  });
 
   const handleSubmit = async () => {
     if (!newSubtask.title.trim() || isSubmitting) return;
@@ -16,8 +36,10 @@ const AddSubtaskModal = ({ isOpen, onClose, onAddSubtask, parentTaskName }) => {
     setIsSubmitting(true);
     try {
       await onAddSubtask(newSubtask);
-      setNewSubtask({ title: '', description: '', assignedTo: '', priority: 'medium' });
-      onClose();
+      setNewSubtask(getDefaultSubtaskState());
+      if (!createAndAddAnother) {
+        onClose();
+      }
     } catch (error) {
       console.error('AddSubtaskModal: error while creating subtask', error);
       // Parent already alerts; keep modal open
@@ -28,7 +50,9 @@ const AddSubtaskModal = ({ isOpen, onClose, onAddSubtask, parentTaskName }) => {
 
   const handleClose = () => {
     if (isSubmitting) return;
-    setNewSubtask({ title: '', description: '', assignedTo: '', priority: 'medium' });
+    setNewSubtask(getDefaultSubtaskState());
+    setShowAdvancedFlowOptions(false);
+    setCreateAndAddAnother(false);
     onClose();
   };
 
@@ -118,10 +142,12 @@ const AddSubtaskModal = ({ isOpen, onClose, onAddSubtask, parentTaskName }) => {
                 disabled={isSubmitting}
                 className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all duration-200 bg-gray-50/50 hover:bg-gray-50 appearance-none cursor-pointer text-sm"
               >
-                <option value="">Select team member</option>
-                <option value="user1">👤 John Doe - Developer</option>
-                <option value="user2">👤 Jane Smith - Designer</option>
-                <option value="user3">👤 Mike Johnson - PM</option>
+                <option value="">Unassigned</option>
+                {memberOptions.map((member) => (
+                  <option key={member.id} value={member.id}>
+                    👤 {member.label}
+                  </option>
+                ))}
               </select>
               <div className="absolute right-4 top-1/2 transform -translate-y-1/2 pointer-events-none">
                 <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -158,6 +184,81 @@ const AddSubtaskModal = ({ isOpen, onClose, onAddSubtask, parentTaskName }) => {
               ))}
             </div>
           </div>
+
+          <div className="border border-gray-200 rounded-xl bg-gray-50/60">
+            <button
+              type="button"
+              onClick={() => setShowAdvancedFlowOptions((prev) => !prev)}
+              className="w-full px-4 py-3 flex items-center justify-between text-left"
+            >
+              <span className="text-xs font-semibold text-gray-700">Advanced flow options</span>
+              {showAdvancedFlowOptions ? (
+                <ChevronUp className="w-4 h-4 text-gray-500" />
+              ) : (
+                <ChevronDown className="w-4 h-4 text-gray-500" />
+              )}
+            </button>
+
+            {showAdvancedFlowOptions && (
+              <div className="px-4 pb-4 space-y-4 border-t border-gray-200">
+                <div className="space-y-2 pt-3">
+                  <label className="text-xs font-semibold text-gray-700 flex items-center space-x-2">
+                    <div className="w-2 h-2 bg-sky-500 rounded-full"></div>
+                    <span>Sequence After</span>
+                  </label>
+                  <div className="relative">
+                    <select
+                      value={newSubtask.dependsOnSubtaskId}
+                      onChange={(e) => setNewSubtask({ ...newSubtask, dependsOnSubtaskId: e.target.value })}
+                      disabled={isSubmitting}
+                      className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500 transition-all duration-200 bg-white hover:bg-gray-50 appearance-none cursor-pointer text-sm"
+                    >
+                      <option value="auto-previous">Auto: previous subtask</option>
+                      <option value="none">None: independent</option>
+                      {existingSubtasks.map((subtask) => (
+                        <option key={subtask.id} value={subtask.id}>
+                          {subtask.name}
+                        </option>
+                      ))}
+                    </select>
+                    <div className="absolute right-4 top-1/2 transform -translate-y-1/2 pointer-events-none">
+                      <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                      </svg>
+                    </div>
+                  </div>
+                  <p className="text-[11px] text-gray-500">Use this only when you need custom dependency ordering.</p>
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-xs font-semibold text-gray-700 flex items-center space-x-2">
+                    <div className="w-2 h-2 bg-cyan-500 rounded-full"></div>
+                    <span>Step Number (optional)</span>
+                  </label>
+                  <input
+                    type="number"
+                    min="1"
+                    value={newSubtask.flowOrder}
+                    onChange={(e) => setNewSubtask({ ...newSubtask, flowOrder: e.target.value })}
+                    disabled={isSubmitting}
+                    className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-cyan-500/20 focus:border-cyan-500 transition-all duration-200 bg-white hover:bg-gray-50 text-sm"
+                    placeholder={`Auto (${existingSubtasks.length + 1})`}
+                  />
+                </div>
+              </div>
+            )}
+          </div>
+
+          <label className="flex items-center gap-2 text-xs text-gray-700">
+            <input
+              type="checkbox"
+              checked={createAndAddAnother}
+              onChange={(e) => setCreateAndAddAnother(e.target.checked)}
+              disabled={isSubmitting}
+              className="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+            />
+            Create and add another subtask
+          </label>
         </div>
 
         {/* Modal Footer */}

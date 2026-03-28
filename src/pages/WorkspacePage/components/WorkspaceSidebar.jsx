@@ -1,5 +1,5 @@
 import React from 'react';
-import { Plus } from 'lucide-react';
+import { Plus, Pin, PinOff } from 'lucide-react';
 import TaskTab from './TaskTab';
 import LayersTab from './LayersTab';
 import AssetsTab from './AssetsTab';
@@ -15,9 +15,18 @@ const WorkspaceSidebar = ({
   onTaskClick,
   onSubtaskClick,
   onShowAddTaskModal,
+  onQuickAddTask,
+  onRenameTask,
+  onUpdateTask,
+  memberOptions,
   workspace, // For permission checking
   userRole, // For permission checking
-  onLeaveWorkspace
+  onLeaveWorkspace,
+  focusMode,
+  isPinned,
+  onTogglePin,
+  onMouseEnter,
+  onMouseLeave,
 }) => {
   const handleLeaveClick = () => {
     if (typeof onLeaveWorkspace === 'function') {
@@ -25,8 +34,36 @@ const WorkspaceSidebar = ({
     }
   };
 
+  // In focus mode when not pinned, render as overlay
+  const isOverlay = focusMode && !isPinned && !sidebarCollapsed;
+
   return (
-    <div className={`${sidebarCollapsed ? 'w-0 overflow-hidden' : 'w-72'} bg-white border-r border-gray-200 flex flex-col flex-shrink-0 transition-all duration-300 ease-in-out`}>
+    <div
+      className={`
+        ${sidebarCollapsed ? 'w-0 overflow-hidden' : 'w-72'}
+        ${isOverlay ? 'absolute left-0 top-0 bottom-0 z-20 shadow-2xl' : ''}
+        bg-white border-r border-gray-200 flex flex-col flex-shrink-0
+        transition-all duration-300 ease-in-out
+      `}
+      onMouseEnter={onMouseEnter}
+      onMouseLeave={onMouseLeave}
+    >
+      {/* Pin / Focus controls */}
+      {focusMode && !sidebarCollapsed && (
+        <div className="flex items-center justify-end px-3 pt-2">
+          <button
+            onClick={onTogglePin}
+            className="p-1.5 rounded-md hover:bg-gray-100 transition-colors group"
+            title={isPinned ? 'Unpin panel (Ctrl+Shift+L)' : 'Pin panel (Ctrl+Shift+L)'}
+            aria-label={isPinned ? 'Unpin left panel' : 'Pin left panel'}
+          >
+            {isPinned
+              ? <PinOff className="w-3.5 h-3.5 text-blue-600 group-hover:text-blue-700" />
+              : <Pin className="w-3.5 h-3.5 text-gray-400 group-hover:text-gray-600" />}
+          </button>
+        </div>
+      )}
+
       {/* Tabs - Made more prominent */}
       <div className="bg-gray-50 border-b border-gray-200">
         <div className="flex">
@@ -59,7 +96,12 @@ const WorkspaceSidebar = ({
           selectedTask={selectedTask}
           selectedSubtask={selectedSubtask}
           onTaskClick={onTaskClick}
+          onSubtaskClick={onSubtaskClick}
           onShowAddTaskModal={onShowAddTaskModal}
+          onQuickAddTask={onQuickAddTask}
+          onRenameTask={onRenameTask}
+          onUpdateTask={onUpdateTask}
+          memberOptions={memberOptions}
           workspace={workspace}
           userRole={userRole}
         />

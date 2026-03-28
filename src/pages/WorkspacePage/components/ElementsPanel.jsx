@@ -716,6 +716,16 @@ const ElementsPanel = ({
           color: 'bg-green-50 border-green-200 text-green-800 hover:bg-green-100',
           nodeType: 'approvalBoard',
           data: { label: 'Approval Board' }
+        },
+        {
+          id: 'ai-helper',
+          name: 'AI Helper',
+          type: 'ai-helper',
+          preview: 'Summarize, suggest next steps, or generate flows with AI',
+          icon: <Sparkles className="w-4 h-4 mr-2 text-purple-600" />,
+          color: 'bg-purple-50 border-purple-200 text-purple-800 hover:bg-purple-100',
+          nodeType: 'aiHelper',
+          data: { label: 'AI Helper' }
         }
       ]
     },

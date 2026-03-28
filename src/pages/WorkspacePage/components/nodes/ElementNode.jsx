@@ -808,6 +808,14 @@ const ElementNode = ({ id, data, isConnectable, selected }) => {
     window.dispatchEvent(event);
   };
 
+  const handleDuplicateToAllSubtasks = async () => {
+    setShowMenuDropdown(false);
+    const event = new CustomEvent('element-duplicate-to-all-subtasks', {
+      detail: { nodeId: id, nodeData: data }
+    });
+    window.dispatchEvent(event);
+  };
+
   const handleEdit = () => {
     setShowMenuDropdown(false);
     // The element is already in edit mode by default when selected
@@ -2351,11 +2359,28 @@ const ElementNode = ({ id, data, isConnectable, selected }) => {
                     <span>Duplicate</span>
                   </button>
                   <button
+                    onClick={handleDuplicateToAllSubtasks}
+                    className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100 flex items-center space-x-2 transition-colors"
+                  >
+                    <Copy className="w-4 h-4 text-gray-500" />
+                    <span>Duplicate to all subtasks</span>
+                  </button>
+                  <button
                     onClick={handleEdit}
                     className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100 flex items-center space-x-2 transition-colors"
                   >
                     <Edit2 className="w-4 h-4 text-gray-500" />
                     <span>Edit</span>
+                  </button>
+                  <button
+                    onClick={() => {
+                      setShowComments(true);
+                      setShowMenuDropdown(false);
+                    }}
+                    className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100 flex items-center space-x-2 transition-colors"
+                  >
+                    <MessageCircle className="w-4 h-4 text-gray-500" />
+                    <span>Comments</span>
                   </button>
                   <button
                     onClick={handleDelete}

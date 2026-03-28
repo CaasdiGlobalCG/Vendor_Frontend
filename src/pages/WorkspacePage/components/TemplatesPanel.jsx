@@ -1,5 +1,5 @@
 import React from 'react';
-import { X, FileText, CreditCard, Calculator } from 'lucide-react';
+import { X, FileText, CreditCard, Calculator, ClipboardList } from 'lucide-react';
 
 const TemplatesPanel = ({ isOpen, onClose, onTemplateSelect }) => {
   if (!isOpen) return null;
@@ -28,27 +28,30 @@ const TemplatesPanel = ({ isOpen, onClose, onTemplateSelect }) => {
       description: 'Bill of Quantities management and cost estimation',
       color: 'bg-purple-100 text-purple-600',
       hoverColor: 'hover:bg-purple-50'
+    },
+    {
+      id: 'cost-calculators',
+      name: 'Cost Calculators',
+      icon: <Calculator className="w-5 h-5" />,
+      description: 'Open construction cost calculators and add results to canvas',
+      color: 'bg-blue-100 text-blue-600',
+      hoverColor: 'hover:bg-blue-50'
+    },
+    {
+      id: 'procurement-rfq',
+      name: 'Procurement RFQ Form',
+      icon: <ClipboardList className="w-5 h-5" />,
+      description: 'Create a detailed RFQ and send it directly to procurement',
+      color: 'bg-orange-100 text-orange-600',
+      hoverColor: 'hover:bg-orange-50'
     }
   ];
 
   const handleTemplateClick = (templateId) => {
     console.log('Template selected:', templateId);
-    
-    if (templateId === 'quotations-invoices') {
-      // Call the onTemplateSelect prop to notify parent component
-      if (onTemplateSelect) {
-        onTemplateSelect('quotations-invoices');
-      }
-    } else if (templateId === 'payments') {
-      // Handle payments functionality
-      if (onTemplateSelect) {
-        onTemplateSelect('payments');
-      }
-    } else if (templateId === 'boq') {
-      // Handle BOQ functionality
-      if (onTemplateSelect) {
-        onTemplateSelect('boq');
-      }
+
+    if (onTemplateSelect) {
+      onTemplateSelect(templateId);
     }
   };
 
