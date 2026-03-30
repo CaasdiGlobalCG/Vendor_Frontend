@@ -1,6 +1,5 @@
 import { useState, useEffect, useContext, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import { Auth } from "aws-amplify";
 import { VendorContext } from "../../context/VendorContext";
 import config from "../../config/env";
 import authFetch from "../../utils/authFetch";
@@ -151,7 +150,7 @@ export default function VendorSettings() {
       // Fetch vendor record directly from /me for the freshest data
       let vd = vendorData?.vendorDetails || {};
       let cd = vendorData?.companyDetails || {};
-      let imgUrl = vendorData?.profileImageUrl || null;
+      let imgUrl = vendorData?.profileImage?.url || null;
 
       try {
         const meRes = await authFetch(`${config.VENDOR_BACKEND_URL}/api/vendor/me`, { credentials: "include" });
@@ -160,7 +159,7 @@ export default function VendorSettings() {
           const v = meData?.data || meData?.vendor || {};
           vd = v.vendorDetails || vd;
           cd = v.companyDetails || cd;
-          imgUrl = v.profileImageUrl || imgUrl;
+          imgUrl = v.profileImage?.url || imgUrl;
         }
       } catch { /* fall back to context data */ }
 
@@ -230,28 +229,72 @@ export default function VendorSettings() {
     }
   };
 
-  /* ── Change password (Cognito) ────────────────── */
+  /* ── Change password (Backend API) ────────────– */
   const handleChangePassword = async () => {
-    setPwdError(""); setPwdSuccess("");
+    setPwdError("");
+    setPwdSuccess("");
+    
     if (!passwords.current || !passwords.new || !passwords.confirm) {
-      setPwdError("All fields are required"); return;
+      setPwdError("All fields are required");
+      return;
     }
+    
     if (passwords.new.length < 8) {
-      setPwdError("New password must be at least 8 characters"); return;
+      setPwdError("New password must be at least 8 characters");
+      return;
     }
+    
     if (passwords.new !== passwords.confirm) {
-      setPwdError("New passwords do not match"); return;
+      setPwdError("New passwords do not match");
+      return;
     }
+    
+    if (!/[A-Z]/.test(passwords.new)) {
+      setPwdError("Password must contain at least one uppercase letter");
+      return;
+    }
+    
+    if (!/[a-z]/.test(passwords.new)) {
+      setPwdError("Password must contain at least one lowercase letter");
+      return;
+    }
+    
+    if (!/[0-9]/.test(passwords.new)) {
+      setPwdError("Password must contain at least one number");
+      return;
+    }
+    
+    if (!/[^A-Za-z0-9]/.test(passwords.new)) {
+      setPwdError("Password must contain at least one special character");
+      return;
+    }
+    
     setSaving(true);
     try {
-      const user = await Auth.currentAuthenticatedUser();
-      await Auth.changePassword(user, passwords.current, passwords.new);
+      const res = await authFetch(`${config.VENDOR_BACKEND_URL}/api/vendor/change-password`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          currentPassword: passwords.current,
+          newPassword: passwords.new,
+          confirmPassword: passwords.confirm
+        }),
+        credentials: "include"
+      });
+      
+      const data = await res.json();
+      
+      if (!res.ok) {
+        setPwdError(data.message || "Failed to change password");
+        return;
+      }
+      
       setPwdSuccess("Password changed successfully!");
       setPasswords({ current: "", new: "", confirm: "" });
       showToast("Password changed successfully");
     } catch (err) {
-      const msg = err.message || "Password change failed";
-      setPwdError(msg.includes("Incorrect") ? "Current password is incorrect" : msg);
+      console.error("Error changing password:", err);
+      setPwdError(err.message || "An error occurred while changing password");
     } finally {
       setSaving(false);
     }

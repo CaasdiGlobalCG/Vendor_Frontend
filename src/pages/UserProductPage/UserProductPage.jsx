@@ -1,5 +1,5 @@
 import React from "react";
-import { useState, useEffect, useContext } from "react";
+import { useState, useEffect, useContext, useCallback, useRef } from "react";
 import {
   Search,
   Plus,
@@ -28,6 +28,7 @@ import { UserContext } from "../../context/UserContext";
 import { VendorContext } from "../../context/VendorContext";
 import AppHeader from "../../components/AppHeader/Appheader";
 import UserProfileCard from '../../components/UserProfileCard/UserProfileCard'; // Import the new component
+import VendorTabPanel from '../../components/layout/VendorTabPanel';
 import config from '../../config/env';
 import { redirectToSalesWithHandoff } from '../../utils/handoffToSales';
 
@@ -37,6 +38,9 @@ export default function UserPortfolio() {
   const navigate = useNavigate();
   
   const [activeTab, setActiveTab] = useState("products");
+  const servicesFetchedRef = React.useRef(false);
+  const productsFetchedRef = React.useRef(false);
+  const lastTabRef = React.useRef("products");
   const [productSearchQuery, setProductSearchQuery] = useState("");
   const [expandedProductId, setExpandedProductId] = useState(null);
   const [showAddProductForm, setShowAddProductForm] = useState(false);
@@ -60,6 +64,8 @@ export default function UserPortfolio() {
       phone: 'Loading...',
       location: 'Loading...',
       email: currentUser?.email || vendorUser?.email || 'Loading...',
+      gstNumber: '',
+      panNumber: '',
   });
   const [profileFormData, setProfileFormData] = useState({ ...profileData });
   const [imagePreview, setImagePreview] = useState(profileData.imageUrl);
@@ -126,11 +132,13 @@ const [selectedCountry, setSelectedCountry] = useState('');
               const newProfileData = {
                   name: vendor.vendorDetails?.primaryContactName || currentUser?.name || vendorUser?.name || '',
                   vendorId: `#${vendor._id.substring(0, 6)}` || '#CXV001',
-                  image: profilePlaceholder, // Use placeholder for now
+                  image: vendor.profileImage?.url || profilePlaceholder,
                   companyName: vendor.companyDetails?.companyName || vendor.vendorDetails?.companyName || '',
                   phone: vendor.vendorDetails?.primaryContactPhone || '',
                   location: `${vendor.companyDetails?.state || ''}, ${vendor.companyDetails?.country || ''}`,
                     email: vendor.vendorDetails?.primaryContactEmail || vendor.email || currentUser?.email || vendorUser?.email || '',
+                  gstNumber: vendor.companyDetails?.gstNumber || '',
+                  panNumber: vendor.companyDetails?.panNumber || '',
               };
               
               // Set profile data immediately
@@ -166,7 +174,7 @@ const [selectedCountry, setSelectedCountry] = useState('');
     }, 500);
     
     return () => clearTimeout(timer);
-  }, [currentUser, vendorUser, profileData.email, dataFetched, setVendorData]);
+  }, []);
 
   useEffect(() => {
     if (isProfileModalOpen) {
@@ -222,11 +230,13 @@ const [selectedCountry, setSelectedCountry] = useState('');
       };
   }, [imagePreview]);
 
-  const handleProfileEditClick = () => {
-    // Update profile form data when opening the modal to ensure it has the latest data
-    setProfileFormData({...profileData});
+  const profileDataRef = useRef(profileData);
+  profileDataRef.current = profileData;
+
+  const handleProfileEditClick = useCallback(() => {
+    setProfileFormData({...profileDataRef.current});
     setIsProfileModalOpen(true);
-};
+  }, []);
 
 const handleProfileCloseModal = () => {
     setIsProfileModalOpen(false);
@@ -325,6 +335,14 @@ const handleProfileSave = async () => {
           companyDetails: vendorUpdateData.companyDetails
       });
       
+      // Update profile image if a new one was uploaded
+      if (result.data && result.data.profileImage && result.data.profileImage.url) {
+          setProfileData(prevData => ({
+              ...prevData,
+              image: result.data.profileImage.url
+          }));
+      }
+      
       // Close modal
       setIsProfileModalOpen(false);
       
@@ -368,6 +386,8 @@ const [editProductData, setEditProductData] = useState(null);
   const [serviceSearchQuery, setServiceSearchQuery] = useState("");
   const [expandedServiceId, setExpandedServiceId] = useState(null);
   const [showAddServiceForm, setShowAddServiceForm] = useState(false);
+  const [currentProductPage, setCurrentProductPage] = useState(1);
+  const [currentServicePage, setCurrentServicePage] = useState(1);
   const [newServiceCustomFields, setNewServiceCustomFields] = useState([]); // ADD THIS LINE
   const [newProductCustomFields, setNewProductCustomFields] = useState([]); // Add product custom fields
 
@@ -757,8 +777,13 @@ const [editProductData, setEditProductData] = useState(null);
   // const [servicesLoading, setServicesLoading] = useState(false);
   // const [servicesError, setServicesError] = useState(null);
 
-  // Fetch products from backend
+  // Fetch products from backend (lazy: only when products tab is active)
   useEffect(() => {
+    // Track tab changes without causing re-renders
+    lastTabRef.current = activeTab;
+
+    if (activeTab !== 'products') return;
+
     let isMounted = true;
 
     const fetchProducts = async () => {
@@ -803,6 +828,7 @@ const [editProductData, setEditProductData] = useState(null);
 
         if (isMounted) {
           setProducts(normalized);
+          productsFetchedRef.current = true;
         }
       } catch (error) {
         console.error('Error fetching products:', error);
@@ -817,9 +843,12 @@ const [editProductData, setEditProductData] = useState(null);
       }
     };
 
-    fetchProducts();
+    // Only fetch on mount/first visit; skip if already loaded
+    if (!productsFetchedRef.current) {
+      fetchProducts();
+    }
 
-    // Refresh when user returns to tab (best UX after Add/Edit in Sales app)
+    // Refresh when user returns to browser tab (best UX after Add/Edit in Sales app)
     const onFocus = () => fetchProducts();
     const onVisibilityChange = () => {
       if (document.visibilityState === 'visible') fetchProducts();
@@ -834,51 +863,6 @@ const [editProductData, setEditProductData] = useState(null);
       document.removeEventListener('visibilitychange', onVisibilityChange);
     };
   }, [currentUser?.vendorId]);
-  
-  // Fetch services from backend
-  useEffect(() => {
-    const fetchServices = async () => {
-      if (!currentUser) return;
-      
-      try {
-        setServicesLoading(true);
-        setServicesError(null);
-
-        const token = localStorage.getItem('authToken');
-        const response = await fetch(`${config.VENDOR_BACKEND_URL}/api/vendor/services`, {
-          credentials: 'include',
-          headers: token ? { Authorization: `Bearer ${token}` } : undefined,
-        });
-        
-        if (!response.ok) {
-          // If 404, use default data and don't show error
-          if (response.status === 404) {
-            console.log("Services API not implemented yet, using default data");
-            return;
-          }
-          throw new Error(`Server responded with status: ${response.status}`);
-        }
-        
-        const data = await response.json();
-        console.log("Services data response:", data);
-        
-        if (data.success && data.data && data.data.length > 0) {
-          setServices(data.data);
-        } else {
-          // If no services found, set empty array
-          setServices([]);
-        }
-      } catch (error) {
-        console.error('Error fetching services:', error);
-        setServicesError('Failed to load services. Using default data.');
-        // Keep using default data on error
-      } finally {
-        setServicesLoading(false);
-      }
-    };
-    
-    fetchServices();
-  }, [currentUser?.email]);
 
   // Default services data
   const defaultServices = [
@@ -1015,8 +999,11 @@ const [editProductData, setEditProductData] = useState(null);
   const [servicesLoading, setServicesLoading] = useState(false);
   const [servicesError, setServicesError] = useState(null);
   
-  // Fetch services from backend (with fallback to static data)
+  // Fetch services from backend (lazy: only when services tab is first activated)
   useEffect(() => {
+    if (activeTab !== 'services') return;
+    if (servicesFetchedRef.current) return;
+
     const fetchServices = async () => {
       if (!currentUser) return;
       
@@ -1045,6 +1032,7 @@ const [editProductData, setEditProductData] = useState(null);
         if (data.success && data.data && data.data.length > 0) {
           setServices(data.data);
         }
+        servicesFetchedRef.current = true;
       } catch (error) {
         console.error('Error fetching services:', error);
         setServicesError('Failed to load services. Using default data.');
@@ -1055,7 +1043,7 @@ const [editProductData, setEditProductData] = useState(null);
     };
     
     fetchServices();
-  }, [currentUser?.email]);
+  }, [currentUser?.email, activeTab]);
   //   
 
   // Filter products based on search query
@@ -1069,6 +1057,72 @@ const [editProductData, setEditProductData] = useState(null);
     service.name?.toLowerCase().includes(serviceSearchQuery.toLowerCase()) ||
     service.serviceType?.toLowerCase().includes(serviceSearchQuery.toLowerCase())
   );
+
+  const itemsPerPage = 5;
+  const totalProductPages = Math.max(1, Math.ceil(filteredProducts.length / itemsPerPage));
+  const totalServicePages = Math.max(1, Math.ceil(filteredServices.length / itemsPerPage));
+  const paginatedProducts = filteredProducts.slice(
+    (currentProductPage - 1) * itemsPerPage,
+    currentProductPage * itemsPerPage
+  );
+  const paginatedServices = filteredServices.slice(
+    (currentServicePage - 1) * itemsPerPage,
+    currentServicePage * itemsPerPage
+  );
+
+  useEffect(() => {
+    setCurrentProductPage(1);
+    setExpandedProductId(null);
+  }, [productSearchQuery]);
+
+  useEffect(() => {
+    setCurrentServicePage(1);
+    setExpandedServiceId(null);
+  }, [serviceSearchQuery]);
+
+  useEffect(() => {
+    if (currentProductPage > totalProductPages) {
+      setCurrentProductPage(totalProductPages);
+    }
+  }, [currentProductPage, totalProductPages]);
+
+  useEffect(() => {
+    if (currentServicePage > totalServicePages) {
+      setCurrentServicePage(totalServicePages);
+    }
+  }, [currentServicePage, totalServicePages]);
+
+  const renderPaginationControls = (currentPage, totalPages, onPageChange) => {
+    if (totalPages <= 1) {
+      return null;
+    }
+
+    return (
+      <div className="flex items-center justify-between border-t border-gray-100 px-6 py-4">
+        <p className="text-sm text-gray-500">
+          Page {currentPage} of {totalPages}
+        </p>
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => onPageChange(Math.max(1, currentPage - 1))}
+            disabled={currentPage === 1}
+            className="rounded-md border border-gray-200 px-3 py-2 text-sm font-medium text-gray-600 transition-colors hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            Previous
+          </button>
+          <button
+            type="button"
+            onClick={() => onPageChange(Math.min(totalPages, currentPage + 1))}
+            disabled={currentPage === totalPages}
+            className="rounded-md border border-gray-200 px-3 py-2 text-sm font-medium text-gray-600 transition-colors hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            Next
+          </button>
+        </div>
+      </div>
+    );
+  };
 
   const toggleSection = (label) => {
   setExpandedSections((prev) => ({
@@ -1262,7 +1316,7 @@ const [editProductData, setEditProductData] = useState(null);
     
     setIsAddingService(true);
     try {
-      if (!currentUser?.email) {
+      if (!currentUser?.email && !vendorUser?.email && !profileData.email) {
         alert("You must be logged in to add a service");
         return;
       }
@@ -1273,7 +1327,7 @@ const [editProductData, setEditProductData] = useState(null);
       
       // Create form data for file upload
       const formData = new FormData();
-      formData.append('email', currentUser.email);
+      formData.append('email', currentUser?.email || vendorUser?.email || profileData.email);
       
       // Add service data
       formData.append('serviceData', JSON.stringify(newService));
@@ -1289,10 +1343,12 @@ const [editProductData, setEditProductData] = useState(null);
       }
       
       // Send data to backend
+      const token = localStorage.getItem('authToken');
       const response = await fetch(`${config.VENDOR_BACKEND_URL}/api/vendor/services`, {
         method: 'POST',
         body: formData,
-        credentials: 'include'
+        credentials: 'include',
+        headers: token ? { Authorization: `Bearer ${token}` } : {}
       });
       
       if (!response.ok) {
@@ -1343,14 +1399,14 @@ const [editProductData, setEditProductData] = useState(null);
   
   const handleUpdateService = async () => {
     try {
-      if (!currentUser?.email || !editServiceData?.id) {
+      if (!editServiceData?.id || (!currentUser?.email && !vendorUser?.email && !profileData.email)) {
         alert("Missing required information");
         return;
       }
       
       // Create form data for file upload
       const formData = new FormData();
-      formData.append('email', currentUser.email);
+      formData.append('email', currentUser?.email || vendorUser?.email || profileData.email);
       formData.append('serviceId', editServiceData.id);
       
       // Process custom fields if any
@@ -1387,10 +1443,12 @@ const [editProductData, setEditProductData] = useState(null);
       }
       
       // Send data to backend
+      const token = localStorage.getItem('authToken');
       const response = await fetch(`${config.VENDOR_BACKEND_URL}/api/vendor/services`, {
         method: 'PUT',
         body: formData,
-        credentials: 'include'
+        credentials: 'include',
+        headers: token ? { Authorization: `Bearer ${token}` } : {}
       });
       
       if (!response.ok) {
@@ -1423,7 +1481,7 @@ const [editProductData, setEditProductData] = useState(null);
   
   const handleDeleteService = async (serviceId) => {
     try {
-      if (!currentUser?.email || !serviceId) {
+      if (!serviceId || (!currentUser?.email && !vendorUser?.email && !profileData.email)) {
         alert("Missing required information");
         return;
       }
@@ -1433,13 +1491,15 @@ const [editProductData, setEditProductData] = useState(null);
       }
       
       // Send delete request to backend
+      const token = localStorage.getItem('authToken');
       const response = await fetch(`${config.VENDOR_BACKEND_URL}/api/vendor/services`, {
         method: 'DELETE',
         headers: {
           'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
         },
         body: JSON.stringify({
-          email: currentUser.email,
+          email: currentUser?.email || vendorUser?.email || profileData.email,
           serviceId: serviceId
         }),
         credentials: 'include'
@@ -1537,52 +1597,58 @@ const [editProductData, setEditProductData] = useState(null);
   const [isAddingService, setIsAddingService] = useState(false);
 
   return (
-    <div className="min-h-screen bg-white font-sans w-full pb-64 p-5">
+    <div className="min-h-screen bg-slate-50 font-sans w-full pb-24">
       <AppHeader />
       
-      <div className="absolute flex flex-col lg:flex-row gap-8 px-4 md:px-8 py-4 w-full max-w-[1400px] mx-auto left-0 right-0" style={{ top: '30%', marginLeft: 'auto', marginRight: 'auto', minHeight: '100vh' }}>
+      <div className="mx-auto mt-4 flex w-full max-w-[1400px] flex-col gap-8 px-4 py-8 md:px-8 lg:flex-row">
           
           {/* Profile Card */}
           <UserProfileCard
               profileData={profileData}
-              loading={loading}
+              loading={!dataFetched && loading}
               error={error}
               onEditProfileClick={handleProfileEditClick}
           />
       
           {/* Right Column: Products & Services Tabs */}
-          <section className="w-full lg:w-2/3 bg-white rounded-lg shadow-md p-6 flex-grow min-w-[500px]">
-            <Tabs defaultValue="products" className="w-full">
-              <TabsList className="w-full grid grid-cols-2 border-b rounded-none">
-                <TabsTrigger
-                  value="products"
-                  className="data-[state=active]:border-b-2 data-[state=active]:border-emerald-500 rounded-none"
-                >
-                  Products
-                </TabsTrigger>
-                <TabsTrigger
-                  value="services"
-                  className="data-[state=active]:border-b-2 data-[state=active]:border-emerald-500 rounded-none"
-                >
-                  Services
-                </TabsTrigger>
-              </TabsList>
+          <VendorTabPanel
+            title="Catalog"
+            description="Manage your products and services from one clean workspace."
+            bodyClassName="p-0"
+          >
+            <Tabs defaultValue="products" value={activeTab} onValueChange={setActiveTab} className="w-full">
+              <div className="border-b border-slate-200 px-6 py-4">
+                <TabsList className="grid h-auto w-fit grid-cols-2 rounded-2xl bg-slate-100 p-1">
+                  <TabsTrigger
+                    value="products"
+                    className="rounded-xl px-6 py-2.5 text-sm font-medium text-slate-600 transition-all data-[state=active]:bg-white data-[state=active]:text-emerald-700 data-[state=active]:shadow-sm"
+                  >
+                    Products
+                  </TabsTrigger>
+                  <TabsTrigger
+                    value="services"
+                    className="rounded-xl px-6 py-2.5 text-sm font-medium text-slate-600 transition-all data-[state=active]:bg-white data-[state=active]:text-emerald-700 data-[state=active]:shadow-sm"
+                  >
+                    Services
+                  </TabsTrigger>
+                </TabsList>
+              </div>
 
               {/* Products Tab Content */}
               <TabsContent value="products" className="p-0 m-0">
-                <div className="p-4 flex justify-between">
-                  <div className="relative w-full max-w-sm">
-                    <Search className="absolute left-3 top-2.5 h-4 w-4 text-gray-400" />
+                <div className="p-6 flex flex-col md:flex-row gap-4 border-b border-gray-100">
+                  <div className="relative flex-1">
+                    <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
                     <Input
-                      placeholder="Search here"
-                      className="pl-10 pr-4 py-2 w-full"
+                      placeholder="Search products..."
+                      className="pl-10 pr-4 py-2.5 w-full border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-sm"
                       value={productSearchQuery}
                       onChange={(e) => setProductSearchQuery(e.target.value)}
                     />
                   </div>
                   <Button
                     variant="primary"
-                    className="bg-emerald-700 hover:bg-emerald-800"
+                    className="bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-700 hover:to-emerald-800 text-white px-6 py-2.5 rounded-md font-medium text-sm shadow-sm hover:shadow-md transition-all"
                     onClick={async () => {
                       if (!config.SALES_URL) {
                         console.error('SALES_URL is not configured');
@@ -1600,24 +1666,24 @@ const [editProductData, setEditProductData] = useState(null);
                     }}
                   >
                     <Plus className="mr-2 h-4 w-4" />
-                    Add New Product
+                    Add Product
                   </Button>
                 </div>
-                <div className="space-y-2 p-4">
-                  {filteredProducts.map((product) => (
+                <div className="space-y-3 p-6">
+                  {paginatedProducts.map((product) => (
                     <div key={product.id}>
-                      <div className="border rounded-md p-4 hover:bg-gray-50 transition-colors">
+                      <div className="border border-gray-200 rounded-lg p-4 hover:shadow-md hover:border-gray-300 transition-all duration-200 bg-white">
                         {/* Header Row */}
                         <div className="flex justify-between items-start">
-                          <div>
+                          <div className="flex-1">
                             <div className="flex items-center gap-2">
-                              <h3 className="text-lg font-medium text-gray-900">{product.name}</h3>
+                              <h3 className="text-base font-semibold text-gray-900">{product.name}</h3>
                               <svg
                                 xmlns="http://www.w3.org/2000/svg"
                                 width="16"
                                 height="16"
                                 fill="currentColor"
-                                className="bi bi-pencil-square text-emerald-500 cursor-pointer"
+                                className="text-emerald-600 cursor-pointer hover:text-emerald-700 transition-colors"
                                 viewBox="0 0 16 16"
                                 onClick={(e) => {
                                   e.stopPropagation();
@@ -1644,94 +1710,95 @@ const [editProductData, setEditProductData] = useState(null);
                                 </svg>
                               )}
                             </div>
-                            <p className="text-sm text-gray-500">{product.category}</p>
+                            <p className="text-xs text-gray-500 mt-1">{product.category}</p>
                           </div>
 
                           {/* Expand / Collapse Icon */}
                           <div
-                            className="cursor-pointer mt-1"
+                            className="cursor-pointer ml-4"
                             onClick={() => handleProductArrowClick(product.id)}
                           >
                             {expandedProductId === product.id ? (
-                              <ChevronUp className="h-5 w-5 text-gray-400" />
+                              <ChevronUp className="h-5 w-5 text-gray-400 hover:text-gray-600 transition-colors" />
                             ) : (
-                              <ChevronDown className="h-5 w-5 text-gray-400" />
+                              <ChevronDown className="h-5 w-5 text-gray-400 hover:text-gray-600 transition-colors" />
                             )}
                           </div>
                         </div>
 
                         {/* Expanded Content */}
                         {expandedProductId === product.id && (
-                          <div className="mt-6 transition-all duration-500 ease-in-out">
+                          <div className="mt-4 pt-4 border-t border-gray-100 transition-all duration-300 ease-in-out">
                             {/* Info Grid */}
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-y-4 gap-x-8 text-sm text-gray-700">
-                              <div>Product name</div>
-                              <div className="font-semibold text-black">{product.name}</div>
-                              <div>Product type</div>
-                              <div className="font-semibold text-black">{product.category}</div>
-                              <div>Key features</div>
-                              <div className="font-semibold text-black">{product.keyFeatures}</div>
-                              <div>Target Customers / Users</div>
-                              <div className="font-semibold text-black">{product.targetCustomers}</div>
-                              <div>Usage/Application Areas</div>
-                              <div className="font-semibold text-black">{product.usageAreas}</div>
-                              <div>Available Sizes / Variants</div>
-                              <div className="font-semibold text-black">{product.availableSizes}</div>
-                              <div>Packaging / Delivery</div>
-                              <div className="font-semibold text-black">{product.packagingDelivery}</div>
-                              <div>Certifications / Quality Standards</div>
-                              <div className="font-semibold text-black">{product.certifications}</div>
-                              <div>Support / Installation Services</div>
-                              <div className="font-semibold text-black">{product.supportServices}</div>
-                              <div>CatLog demo</div>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
+                              <div className="text-gray-600">Product name</div>
+                              <div className="font-semibold text-gray-900">{product.name}</div>
+                              <div className="text-gray-600">Product type</div>
+                              <div className="font-semibold text-gray-900">{product.category}</div>
+                              <div className="text-gray-600">Key features</div>
+                              <div className="font-semibold text-gray-900">{product.keyFeatures}</div>
+                              <div className="text-gray-600">Target Customers / Users</div>
+                              <div className="font-semibold text-gray-900">{product.targetCustomers}</div>
+                              <div className="text-gray-600">Usage/Application Areas</div>
+                              <div className="font-semibold text-gray-900">{product.usageAreas}</div>
+                              <div className="text-gray-600">Available Sizes / Variants</div>
+                              <div className="font-semibold text-gray-900">{product.availableSizes}</div>
+                              <div className="text-gray-600">Packaging / Delivery</div>
+                              <div className="font-semibold text-gray-900">{product.packagingDelivery}</div>
+                              <div className="text-gray-600">Certifications / Quality Standards</div>
+                              <div className="font-semibold text-gray-900">{product.certifications}</div>
+                              <div className="text-gray-600">Support / Installation Services</div>
+                              <div className="font-semibold text-gray-900">{product.supportServices}</div>
+                              <div className="text-gray-600">Catalog Demo</div>
                               <div>
                                 {product.catalogDemo ? (
                                   <a
                                     href={product.catalogDemo}
-                                    className="text-blue-600 underline"
+                                    className="text-emerald-600 hover:text-emerald-700 underline"
                                     target="_blank"
                                     rel="noopener noreferrer"
                                   >
-                                    {product.catalogDemo}
+                                    View
                                   </a>
                                 ) : (
-                                  <span className="text-gray-500">No catalog link provided</span>
+                                  <span className="text-gray-400 text-xs">Not provided</span>
                                 )}
                               </div>
                               
                               {/* Custom fields if any */}
                               {product.customFields && product.customFields.map((field, index) => (
                                 <React.Fragment key={index}>
-                                  <div>{field.label}</div>
-                                  <div className="font-semibold text-black">{field.value}</div>
+                                  <div className="text-gray-600">{field.label}</div>
+                                  <div className="font-semibold text-gray-900">{field.value}</div>
                                 </React.Fragment>
                               ))}
                             </div>
 
                             {/* Images */}
-                            <div className="flex flex-wrap gap-6 mt-8 justify-center">
-                              {product.images && product.images.length > 0 ? (
-                                product.images.map((image, index) => (
-                                  <img
-                                    key={index}
-                                    src={(typeof image === 'string' ? image : image?.url) || "https://via.placeholder.com/150"}
-                                    alt={`Product ${index + 1}`}
-                                    className={`w-44 h-36 object-cover border-2 ${index === 0 ? 'border-blue-500' : 'border-transparent'} rounded`}
-                                  />
-                                ))
-                              ) : (
-                                <div className="text-gray-500">No images available</div>
-                              )}
-                            </div>
+                            {product.images && product.images.length > 0 && (
+                              <div className="mt-6 pt-6 border-t border-gray-100">
+                                <p className="text-xs font-semibold text-gray-600 mb-3 uppercase tracking-wide">Images</p>
+                                <div className="flex flex-wrap gap-3">
+                                  {product.images.map((image, index) => (
+                                    <img
+                                      key={index}
+                                      src={(typeof image === 'string' ? image : image?.url) || "https://via.placeholder.com/120"}
+                                      alt={`Product ${index + 1}`}
+                                      className="w-24 h-24 object-cover rounded-md border border-gray-200 hover:border-emerald-500 transition-colors"
+                                    />
+                                  ))}
+                                </div>
+                              </div>
+                            )}
                             
                             {/* Delete button */}
-                            <div className="mt-6 flex justify-end">
+                            <div className="mt-6 pt-6 border-t border-gray-100 flex justify-end">
                               <button
                                 onClick={(e) => {
                                   e.stopPropagation();
                                   handleDeleteProduct(product.id);
                                 }}
-                                className="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded"
+                                className="px-4 py-2 text-xs font-medium bg-red-50 hover:bg-red-100 text-red-600 rounded-md transition-colors"
                               >
                                 Delete Product
                               </button>
@@ -1742,43 +1809,47 @@ const [editProductData, setEditProductData] = useState(null);
                     </div>
                   ))}
                 </div>
+                {renderPaginationControls(currentProductPage, totalProductPages, (page) => {
+                  setExpandedProductId(null);
+                  setCurrentProductPage(page);
+                })}
               </TabsContent>
 
               {/* Services Tab Content */}
               <TabsContent value="services" className="p-0 m-0">
-                <div className="p-4 flex justify-between">
-                  <div className="relative w-full max-w-sm">
-                    <Search className="absolute left-3 top-2.5 h-4 w-4 text-gray-400" />
+                <div className="p-6 flex flex-col md:flex-row gap-4 border-b border-gray-100">
+                  <div className="relative flex-1">
+                    <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
                     <Input
-                      placeholder="Search here"
-                      className="pl-10 pr-4 py-2 w-full"
+                      placeholder="Search services..."
+                      className="pl-10 pr-4 py-2.5 w-full border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-sm"
                       value={serviceSearchQuery}
                       onChange={(e) => setServiceSearchQuery(e.target.value)}
                     />
                   </div>
                   <Button
                     size="sm"
-                    className="bg-gradient-to-l from-[#095B49] to-[#000000] hover:opacity-90"
+                    className="bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-700 hover:to-emerald-800 text-white px-6 py-2.5 rounded-md font-medium text-sm shadow-sm hover:shadow-md transition-all"
                     onClick={() => setShowAddServiceForm(true)}
                   >
-                    <Plus className="h-4 w-4 mr-1" /> Add
+                    <Plus className="h-4 w-4 mr-2" /> Add Service
                   </Button>
                 </div>
-                <div className="space-y-2 p-4">
-                  {filteredServices.map((service) => (
+                <div className="space-y-3 p-6">
+                  {paginatedServices.map((service) => (
                     <div key={service.id}>
-                      <div className="border rounded-md p-6 hover:bg-gray-50 transition-colors">
+                      <div className="border border-gray-200 rounded-lg p-4 hover:shadow-md hover:border-gray-300 transition-all duration-200 bg-white">
                         {/* Header: Name, Edit, Dropdown */}
-                        <div className="flex justify-between items-center">
-                          <div>
+                        <div className="flex justify-between items-start">
+                          <div className="flex-1">
                             <div className="flex items-center gap-2">
-                              <h3 className="font-medium">{service.name}</h3>
+                              <h3 className="text-base font-semibold text-gray-900">{service.name}</h3>
                               <svg
                                 xmlns="http://www.w3.org/2000/svg"
                                 width="16"
                                 height="16"
                                 fill="currentColor"
-                                className="bi bi-pencil-square text-emerald-500 cursor-pointer"
+                                className="text-emerald-600 cursor-pointer hover:text-emerald-700 transition-colors"
                                 viewBox="0 0 16 16"
                                 onClick={(e) => {
                                   e.stopPropagation();
@@ -1883,9 +1954,13 @@ const [editProductData, setEditProductData] = useState(null);
                     </div>
                   ))}
                 </div>
+                {renderPaginationControls(currentServicePage, totalServicePages, (page) => {
+                  setExpandedServiceId(null);
+                  setCurrentServicePage(page);
+                })}
               </TabsContent>
             </Tabs>
-          </section>
+          </VendorTabPanel>
       </div>
       
       {/* Edit Profile Modal */}
@@ -1907,7 +1982,6 @@ const [editProductData, setEditProductData] = useState(null);
                                 <input id="profileImage" name="profileImage" type="file" accept="image/png, image/jpeg, image/gif" onChange={handleProfileFileChange} className="hidden" />
                             </div>
                             {/* Input Fields */}
-                            <div><label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">Name</label><input type="text" id="name" name="name" value={profileFormData.name} onChange={handleProfileInputChange} className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent" required /></div>
                             <div><label htmlFor="companyName" className="block text-sm font-medium text-gray-700 mb-1">Company Name</label><input type="text" id="companyName" name="companyName" value={profileFormData.companyName} onChange={handleProfileInputChange} className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent" /></div>
                             <div>
                                 <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-1">Phone</label>

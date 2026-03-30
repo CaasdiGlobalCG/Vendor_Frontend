@@ -15,6 +15,7 @@ import profileplaceholder from '../../assets/profileplaceholder.jpg' // Adjust t
 import AppHeader from "../../components/AppHeader/Appheader";
 import { useLocation } from 'react-router-dom'; // Added useLocation
 import UserProfileCard from '../../components/UserProfileCard/UserProfileCard'; // Import the new component
+import VendorTabPanel from '../../components/layout/VendorTabPanel';
 import config from '../../config/env';
 
 export default function CompanyProfile() {
@@ -40,6 +41,8 @@ export default function CompanyProfile() {
       phone: 'Loading...',
       location: 'Loading...',
       email: currentUser?.email || vendorUser?.email || 'Loading...',
+      gstNumber: '',
+      panNumber: '',
   });
   const [profileFormData, setProfileFormData] = useState({ ...profileData });
   const [imagePreview, setImagePreview] = useState(profileData.image);
@@ -111,11 +114,13 @@ export default function CompanyProfile() {
           const newProfileData = {
             name: vendor.vendorDetails?.primaryContactName || currentUser?.name || vendorUser?.name || '',
             vendorId: `#${vendor._id.substring(0, 6)}` || '#CXV001',
-            image: profileplaceholder, // Use placeholder for now
+            image: vendor.profileImage?.url || profileplaceholder,
             companyName: vendor.companyDetails?.companyName || vendor.vendorDetails?.companyName || '',
             phone: vendor.vendorDetails?.primaryContactPhone || '',
             location: `${vendor.companyDetails?.state || ''}, ${vendor.companyDetails?.country || ''}`,
             email: vendor.vendorDetails?.primaryContactEmail || vendor.email || currentUser?.email || vendorUser?.email || '',
+            gstNumber: vendor.companyDetails?.gstNumber || '',
+            panNumber: vendor.companyDetails?.panNumber || '',
           };
           
           // Set profile data immediately
@@ -355,6 +360,14 @@ const handleProfileSave = async () => {
             companyDetails: vendorUpdateData.companyDetails
         });
         
+        // Update profile image if a new one was uploaded
+        if (result.data && result.data.profileImage && result.data.profileImage.url) {
+            setProfileData(prevData => ({
+                ...prevData,
+                image: result.data.profileImage.url
+            }));
+        }
+        
         // Close modal
         setIsProfileModalOpen(false);
         
@@ -516,11 +529,11 @@ const handleCompanySave = async (e) => {
 
 
   return (
-    <div className="min-h-screen bg-white font-sans w-full pb-64 p-5">
+    <div className="min-h-screen bg-slate-50 font-sans w-full pb-24">
       {/* Header Banner */}
       <AppHeader />
 
-      <div className="absolute flex flex-col lg:flex-row gap-8 px-4 md:px-8 py-4 w-full max-w-[1400px] mx-auto left-0 right-0" style={{ top: '30%', marginLeft: 'auto', marginRight: 'auto', minHeight: '100vh' }}>
+      <div className="mx-auto mt-4 flex w-full max-w-[1400px] flex-col gap-8 px-4 py-8 md:px-8 lg:flex-row">
         {/* Profile Card */}
         <UserProfileCard
           profileData={profileData}
@@ -531,22 +544,24 @@ const handleCompanySave = async (e) => {
         />
 
         {/* Company Details */}
-        <section className="w-full lg:w-2/3 bg-white rounded-lg shadow-md p-6 flex-grow min-w-[500px]">
-          <div className="flex justify-between items-center mb-6">
-            <h2 className="text-xl font-bold">Company Detail</h2>
+        <VendorTabPanel
+          title="Company details"
+          description="Manage the business information shown across your vendor portfolio."
+          actions={(
             <div className="flex items-center gap-2">
               <button className="p-2">
                 <Download className="w-5 h-5 text-gray-600" />
               </button>
-              {/* Company Edit button - now opens modal with pre-filled data */}
               <button 
                 onClick={handleCompanyEditClick} 
-                className="text-blue-500 font-medium hover:underline text-base"
+                className="rounded-full border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-100"
               >
                 Edit
               </button>
             </div>
-          </div>
+          )}
+          bodyClassName="p-6"
+        >
 
           <div className="space-y-4 text-sm">
             <DetailRow 
@@ -633,7 +648,7 @@ const handleCompanySave = async (e) => {
               value={vendorData.companyDetails?.socialImpact || "Not specified"}
             />
           </div>
-        </section>
+        </VendorTabPanel>
   
       {isProfileModalOpen && (
                       <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 p-4 transition-opacity duration-300 ease-in-out">
@@ -653,7 +668,6 @@ const handleCompanySave = async (e) => {
                                       <input id="profileImage" name="profileImage" type="file" accept="image/png, image/jpeg, image/gif" onChange={handleProfileFileChange} className="hidden" />
                                   </div>
                                   {/* Input Fields */}
-                                  <div><label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">Name</label><input type="text" id="name" name="name" value={profileFormData.name} onChange={handleProfileInputChange} className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent" required /></div>
                                   <div><label htmlFor="companyName" className="block text-sm font-medium text-gray-700 mb-1">Company Name</label><input type="text" id="companyName" name="companyName" value={profileFormData.companyName} onChange={handleProfileInputChange} className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent" /></div>
                                   <div>
                                       <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-1">Phone</label>

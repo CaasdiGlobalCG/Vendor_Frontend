@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useContext } from 'react';
-import { Mail, MapPin, Phone, BuildingIcon as LucideBuildingIcon } from 'lucide-react'; // Renamed to avoid conflict if a local BuildingIcon is passed
+import { Mail, MapPin, Phone, BuildingIcon as LucideBuildingIcon, Camera } from 'lucide-react'; // Renamed to avoid conflict if a local BuildingIcon is passed
 import { UserContext } from '../../context/UserContext';
 import { VendorContext } from '../../context/VendorContext';
 import config from '../../config/env';
@@ -19,7 +19,7 @@ const DefaultBuildingIcon = () => (
 );
 
 
-export default function UserProfileCard({
+function UserProfileCard({
   profileData: externalProfileData,
   loading: externalLoading,
   error: externalError,
@@ -47,7 +47,7 @@ export default function UserProfileCard({
   
   // Determine whether to use external or internal data
   const profileData = externalProfileData || internalProfileData;
-  const loading = externalLoading || internalLoading;
+  const loading = !externalProfileData && (externalLoading || internalLoading);
   const error = externalError || internalError;
 
   // Debug logging
@@ -249,7 +249,7 @@ export default function UserProfileCard({
 
   if (!profileData) {
     return (
-      <section className="w-full lg:w-1/3 min-w-[300px] max-w-[350px] bg-white rounded-lg shadow-md p-4 lg:sticky lg:top-8">
+      <section className="w-full lg:w-1/3 min-w-0 max-w-[380px] rounded-[28px] border border-slate-200 bg-white p-6 shadow-[0_20px_50px_rgba(15,23,42,0.08)] lg:sticky lg:top-24">
         <div className="flex flex-col items-center justify-center h-64 w-full">
           <p className="text-center text-gray-600 mb-4">No profile data available.</p>
           {!vendorId && !userEmail && (
@@ -275,46 +275,60 @@ export default function UserProfileCard({
   }
 
   return (
-    <section className="w-full lg:w-1/3 min-w-[300px] max-w-[350px] bg-white rounded-lg shadow-md p-4 lg:sticky lg:top-8">
+    <section className="w-full lg:w-1/3 min-w-0 max-w-[380px] rounded-[28px] border border-slate-200 bg-white p-6 shadow-[0_20px_50px_rgba(15,23,42,0.08)] lg:sticky lg:top-24">
       <div className="flex flex-col items-center w-full">
-        <div className="relative w-28 h-28 lg:w-32 lg:h-32 mb-2 -mt-16">
+        <div className="relative -mt-20 mb-3 h-28 w-28 cursor-pointer rounded-full ring-4 ring-white shadow-lg transition-transform duration-200 hover:-translate-y-1 lg:h-32 lg:w-32 group" onClick={onEditProfileClick}>
           <img
             src={profileData.image}
             alt={profileData.name}
-            className="absolute top-0 rounded-full object-cover border-6 border-white w-full h-full"
-            onError={(e) => { e.target.onerror = null; e.target.src = "https://images.app.goo.gl/DWEbTsdssMENZXe27"; }} // Generic placeholder
-            style={profileData.imageStyle || {}} // Allow passing custom styles for image if needed
+            className="absolute top-0 h-full w-full rounded-full border-4 border-white object-cover transition-opacity group-hover:opacity-75"
+            onError={(e) => { e.target.onerror = null; e.target.src = "https://images.app.goo.gl/DWEbTsdssMENZXe27"; }}
+            style={profileData.imageStyle || {}}
           />
+          <div className="absolute inset-0 rounded-full bg-black bg-opacity-50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+            <Camera className="w-8 h-8 text-white" />
+          </div>
         </div>
-        <h1 className="text-xl lg:text-2xl font-bold text-gray-800 mt-2 text-center">
+        <p className="mt-1 text-xs font-medium uppercase tracking-[0.22em] text-slate-400">Vendor profile</p>
+        <h1 className="mt-3 text-xl font-bold text-slate-900 text-center lg:text-2xl">
           {profileData.vendorId || 'Vendor'}
         </h1>
-        <p className="text-gray-500 mb-3 text-center text-base">
-          {profileData.name}
-        </p>
-        
-        <div className="w-full space-y-2 mt-2 text-left">
-          <div className="flex items-start gap-2">
+        <p className="mt-1 text-sm text-slate-500 text-center">Click the avatar or button below to edit profile details.</p>
+
+        <div className="mt-5 w-full space-y-3 text-left">
+          <div className="flex items-start gap-3 rounded-2xl border border-slate-100 bg-slate-50/80 p-3">
             <div className="w-5 flex-shrink-0 text-gray-700 pt-1"><BuildingIcon className="h-5 w-5" /></div>
             <div><p className="text-sm text-gray-500 leading-tight">Company name</p><p className="font-medium text-base">{profileData.companyName}</p></div>
           </div>
-          <div className="flex items-start gap-2">
+          <div className="flex items-start gap-3 rounded-2xl border border-slate-100 bg-slate-50/80 p-3">
             <div className="w-5 flex-shrink-0 text-gray-700 pt-1"><Phone className="h-5 w-5" /></div>
             <div><p className="text-sm text-gray-500 leading-tight">Phone</p><p className="font-medium text-base">{profileData.phone}</p></div>
           </div>
-          <div className="flex items-start gap-2">
+          <div className="flex items-start gap-3 rounded-2xl border border-slate-100 bg-slate-50/80 p-3">
             <div className="w-5 flex-shrink-0 text-gray-700 pt-1"><MapPin className="h-5 w-5" /></div>
             <div><p className="text-sm text-gray-500 leading-tight">Location</p><p className="font-medium text-base">{profileData.location}</p></div>
           </div>
-          <div className="flex items-start gap-2">
+          <div className="flex items-start gap-3 rounded-2xl border border-slate-100 bg-slate-50/80 p-3">
             <div className="w-5 flex-shrink-0 text-gray-700 pt-1"><Mail className="h-5 w-5" /></div>
             <div><p className="text-sm text-gray-500 leading-tight">Email</p><p className="font-medium text-base">{profileData.email}</p></div>
           </div>
+          {profileData.gstNumber && profileData.gstNumber !== 'Not provided' && (
+            <div className="flex items-start gap-3 rounded-2xl border border-slate-100 bg-slate-50/80 p-3">
+              <div className="w-5 flex-shrink-0 text-gray-700 pt-1"><BuildingIcon className="h-5 w-5" /></div>
+              <div><p className="text-sm text-gray-500 leading-tight">GST Number</p><p className="font-medium text-base">{profileData.gstNumber}</p></div>
+            </div>
+          )}
+          {profileData.panNumber && profileData.panNumber !== 'Not provided' && (
+            <div className="flex items-start gap-3 rounded-2xl border border-slate-100 bg-slate-50/80 p-3">
+              <div className="w-5 flex-shrink-0 text-gray-700 pt-1"><BuildingIcon className="h-5 w-5" /></div>
+              <div><p className="text-sm text-gray-500 leading-tight">PAN Number</p><p className="font-medium text-base">{profileData.panNumber}</p></div>
+            </div>
+          )}
         </div>
         
         <button
           onClick={onEditProfileClick}
-          className="w-full mt-4 bg-gradient-to-l from-[#095B49] to-[#000000] text-white py-2 px-4 rounded-md hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 transition-opacity text-base"
+          className="mt-6 w-full rounded-2xl bg-gradient-to-l from-[#095B49] to-[#000000] px-4 py-3 text-base font-medium text-white transition-opacity hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2"
         >
           Edit Profile
         </button>
@@ -322,3 +336,5 @@ export default function UserProfileCard({
     </section>
   );
 }
+
+export default React.memo(UserProfileCard);

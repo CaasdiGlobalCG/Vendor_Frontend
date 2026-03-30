@@ -1478,7 +1478,7 @@ import axios from 'axios';
 import config from '../../config/env';
 
 import {
-    Mail, Award, Share2, MapPin, Phone, ChevronDown, Eye, Download, Settings, Edit,
+    Mail, Award, Share2, MapPin, Phone, ChevronDown, Eye, Download, Settings, Edit, Plus,
     X as CloseIcon // Use X as CloseIcon for modal close
 } from "lucide-react";
 import { TrashIcon } from '@heroicons/react/24/outline';
@@ -1487,6 +1487,7 @@ import { VendorContext } from "../../context/VendorContext";
 import profilePlaceholder from '../../assets/profileplaceholder.jpg'
 import AppHeader from "../../components/AppHeader/Appheader";
 import UserProfileCard from '../../components/UserProfileCard/UserProfileCard'; // Import the new component
+import VendorTabPanel from '../../components/layout/VendorTabPanel';
 
 const BuildingIcon = () => (
     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -1582,18 +1583,18 @@ export default function UserProjectPage() {
     const [dataFetched, setDataFetched] = useState(false);
     
     const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
-    const [profileData, setProfileData] = useState({
-        name: currentUser?.name || vendorUser?.name || 'Loading...',
-        vendorId: '#Loading',
-        image: profilePlaceholder,
-        companyName: 'Loading...',
-        phone: 'Loading...',
-        location: 'Loading...',
-        email: currentUser?.email || vendorUser?.email || 'Loading...',
-    });
+    const [profileData, setProfileData] = useState(() => ({
+        name: vendorData?.vendorDetails?.primaryContactName || currentUser?.name || vendorUser?.name || '',
+        vendorId: vendorData?.vendorDetails ? `#${vendorUser?.vendorId?.substring(0, 6) || 'CXV001'}` : '#Loading',
+        image: vendorData?.profileImage?.url || profilePlaceholder,
+        companyName: vendorData?.companyDetails?.companyName || vendorData?.vendorDetails?.companyName || '',
+        phone: vendorData?.vendorDetails?.primaryContactPhone || '',
+        location: `${vendorData?.companyDetails?.state || ''}, ${vendorData?.companyDetails?.country || ''}`.replace(/^, |, $/, '') || '',
+        email: vendorData?.vendorDetails?.primaryContactEmail || currentUser?.email || vendorUser?.email || '',
+    }));
     const [profileFormData, setProfileFormData] = useState({ ...profileData });
     const [imagePreview, setImagePreview] = useState(profileData.image);
-    const [projects, setProjects] = useState([]); // Initialize with empty array
+    const [projects, setProjects] = useState(initialProjectsData); // Start with sample data
     const [sortOrder, setSortOrder] = useState('recent');
     const [expandedProjects, setExpandedProjects] = useState({});
     const [projectsLoading, setProjectsLoading] = useState(true);
@@ -1646,15 +1647,17 @@ export default function UserProjectPage() {
                 if (data.success && data.data) {
                     const vendor = data.data;
                     
-                    // Prepare profile data first
+                    // Prepare profile data with all fields
                     const newProfileData = {
                         name: vendor.vendorDetails?.primaryContactName || currentUser?.name || vendorUser?.name || '',
                         vendorId: `#${vendor._id.substring(0, 6)}` || '#CXV001',
-                        image: profilePlaceholder, // Use placeholder for now
+                        image: vendor.profileImage?.url || profilePlaceholder,
                         companyName: vendor.companyDetails?.companyName || vendor.vendorDetails?.companyName || '',
                         phone: vendor.vendorDetails?.primaryContactPhone || '',
-                        location: `${vendor.companyDetails?.state || ''}, ${vendor.companyDetails?.country || ''}`,
+                        location: `${vendor.companyDetails?.state || ''}, ${vendor.companyDetails?.country || ''}`.replace(/^, |, $/, '') || '',
                         email: vendor.vendorDetails?.primaryContactEmail || vendor.email || currentUser?.email || vendorUser?.email || '',
+                        gstNumber: vendor.companyDetails?.gstNumber || '',
+                        panNumber: vendor.companyDetails?.panNumber || '',
                     };
                     
                     // Set profile data immediately
@@ -1690,7 +1693,7 @@ export default function UserProjectPage() {
         }, 500);
         
         return () => clearTimeout(timer);
-    }, [currentUser, vendorUser, profileData.email, dataFetched, setVendorData]);
+    }, []);
 
     // Initialize profile form data when modal opens
     useEffect(() => {
@@ -1738,7 +1741,7 @@ export default function UserProjectPage() {
                 const data = await response.json();
                 console.log("Projects data response:", data);
                 
-                if (data.success && data.data) {
+                if (data.success && data.data && data.data.length > 0) {
                     // Initialize expandedProjects based on initiallyExpanded flag
                     const initialExpandedState = {};
                     data.data.forEach(project => {
@@ -1749,7 +1752,7 @@ export default function UserProjectPage() {
                     // Set the projects data
                     setProjects(data.data);
                 } else {
-                    // If no projects found, use dummy data for now
+                    // If no projects found, use sample data
                     setProjects(initialProjectsData);
                     
                     // Initialize expandedProjects for dummy data
@@ -1786,7 +1789,7 @@ export default function UserProjectPage() {
         }, 600); // Slightly longer delay than vendor data fetch
         
         return () => clearTimeout(timer);
-    }, [currentUser, vendorUser, profileData.email]);
+    }, []);
 
     const handleProfileEditClick = () => {
         setIsProfileModalOpen(true);
@@ -1886,6 +1889,14 @@ export default function UserProjectPage() {
                 vendorDetails: vendorUpdateData.vendorDetails,
                 companyDetails: vendorUpdateData.companyDetails
             });
+            
+            // Update profile image if a new one was uploaded
+            if (result.data && result.data.profileImage && result.data.profileImage.url) {
+                setProfileData(prevData => ({
+                    ...prevData,
+                    image: result.data.profileImage.url
+                }));
+            }
             
             // Close modal
             setIsProfileModalOpen(false);
@@ -2153,18 +2164,22 @@ export default function UserProjectPage() {
             // Validate required fields
             if (!newProject.title || !newProject.description) {
                 alert("Please fill in at least the title and description fields");
+                setIsAddingProject(false);
                 return;
             }
             
             // Create FormData for file uploads
             const formData = new FormData();
             
-            // Add project data as JSON
+            // Add project data as JSON with both vendorId and email
             const projectData = {
                 ...newProject,
                 date: new Date(),
-                vendorEmail: currentUser?.email,
+                vendorId: vendorUser?.vendorId || vendorUser?.id,
+                vendorEmail: currentUser?.email || vendorUser?.email,
             };
+            
+            console.log('Sending project data:', { title: projectData.title, vendorId: projectData.vendorId, vendorEmail: projectData.vendorEmail });
             
             // Remove actual file objects from the JSON data
             const projectDataForJson = { ...projectData };
@@ -2193,12 +2208,12 @@ export default function UserProjectPage() {
                 body: formData,
             });
             
-            if (!response.ok) {
-                throw new Error(`Server responded with status: ${response.status}`);
-            }
-            
             const result = await response.json();
-            console.log("Project added result:", result);
+            console.log("Project add response:", result);
+            
+            if (!response.ok) {
+                throw new Error(result.message || result.error || `Server responded with status: ${response.status}`);
+            }
             
             if (result.success && result.data) {
                 // Add the new project to the state with the ID from the backend
@@ -2241,7 +2256,7 @@ export default function UserProjectPage() {
                 // Show success message
                 alert("Project added successfully!");
             } else {
-                throw new Error("Failed to add project");
+                throw new Error(result.message || "Failed to add project");
             }
         } catch (error) {
             console.error("Error adding project:", error);
@@ -2285,63 +2300,57 @@ export default function UserProjectPage() {
 
     return (
         <>
-            <div className="min-h-screen bg-gray-50 font-sans p-5">
+            <div className="min-h-screen bg-slate-50 font-sans">
                 {/* Header */}
                 <AppHeader />
 
                 {/* Main Content Area */}
-                <main className="container mx-auto px-4 py-8 -mt-24 relative z-10" style={{top: '90px'}}>
-                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
-                        {/* Profile Section Column - Updated Responsive Version */}
-                        <div className="lg:col-span-1 w-full lg:sticky lg:top-8">
-                            <UserProfileCard
-                                profileData={profileData}
-                                loading={loading}
-                                error={error}
-                                onEditProfileClick={handleProfileEditClick}
-                            />
-                        </div>
+                <div className="mx-auto mt-4 flex w-full max-w-[1400px] flex-col gap-8 px-4 py-8 md:px-8 lg:flex-row">
+                    {/* Profile Card */}
+                    <UserProfileCard
+                        profileData={profileData}
+                        loading={!dataFetched && loading}
+                        error={error}
+                        onEditProfileClick={handleProfileEditClick}
+                    />
 
-                        {/* Project Section Column */}
-                        <div className="lg:col-span-2">
-                            <div className="bg-white rounded-lg shadow-md p-6 w-full">
-                                {/* Project Header & Sorting */}
-                                <div className="flex justify-between items-center mb-6">
-                                    <div>
-                                        {/* REVERTED: Changed text-2xl back to text-xl */}
-                                        <h2 className="text-xl font-bold text-gray-800">Projects</h2>
-                                        <p className="text-sm text-gray-500">Recent works and collaborations</p>
-                                    </div>
-                                    <div className="flex gap-3">
-                                    <button
-                                        onClick={() => setShowAddModal(true)}
-                                        className="bg-gradient-to-l from-[#095B49] to-[#000000] text-white px-4 py-2 rounded-md text-sm shadow"
-                                    >
-                                    + Add Project
-                                    </button>
-                                    {/* Sort Dropdown */}
-                                    <div className="relative">
-                                        <label htmlFor="sortOrder" className="sr-only">Sort projects</label>
-                                        <select
-                                            id="sortOrder"
-                                            value={sortOrder}
-                                            onChange={handleSortChange}
-                                            className="appearance-none bg-gray-100 border border-gray-300 px-4 py-2 pr-8 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-emerald-500 focus:border-emerald-500 cursor-pointer"
+                    {/* Projects Section */}
+                    <VendorTabPanel
+                        title="Projects"
+                        description="Recent works, case studies, and active collaborations."
+                        bodyClassName="p-6"
+                        actions={(
+                                    <div className="flex gap-3 flex-wrap">
+                                        <button
+                                            onClick={() => setShowAddModal(true)}
+                                            className="bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-700 hover:to-emerald-800 text-white px-6 py-2.5 rounded-md text-sm font-medium shadow-sm hover:shadow-md transition-all whitespace-nowrap"
                                         >
-                                            <option value="recent">Recent</option>
-                                            <option value="oldest">Oldest</option>
-                                        </select>
-                                        <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-gray-500">
-                                            <ChevronDown size={16} />
+                                            + Add Project
+                                        </button>
+                                        {/* Sort Dropdown */}
+                                        <div className="relative">
+                                            <label htmlFor="sortOrder" className="sr-only">Sort projects</label>
+                                            <select
+                                                id="sortOrder"
+                                                value={sortOrder}
+                                                onChange={handleSortChange}
+                                                className="appearance-none bg-white border border-gray-200 px-4 py-2.5 pr-10 rounded-md text-sm font-medium text-gray-700 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent cursor-pointer hover:bg-gray-50 transition-colors"
+                                            >
+                                                <option value="recent">Recent First</option>
+                                                <option value="oldest">Oldest First</option>
+                                            </select>
+                                            <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400">
+                                                <ChevronDown size={18} />
+                                            </div>
                                         </div>
                                     </div>
-                                    </div>
-                                </div>
+                        )}
+                    >
 
                                 {showAddModal && (
                                     <div className="fixed inset-0 bg-black bg-opacity-30 z-50 flex items-center justify-center p-4">
                                         <div className="bg-white rounded-lg shadow-lg w-full max-w-3xl p-6 overflow-y-auto max-h-[90vh]">
-                                            <h3 className="text-2xl font-bold mb-6 text-gray-800">Add New Project</h3>
+                                            <h3 className="text-xl font-bold mb-6 text-gray-800">Add New Project</h3>
 
                                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                                 {/* Text Inputs */}
@@ -2552,135 +2561,185 @@ export default function UserProjectPage() {
                                     </div>
                                 )}
 
-                                {/* Project Items List */}
-                                <div className="space-y-4">
+                                {/* Project Cards Grid */}
+                                <div className="space-y-3 mt-6">
                                     {projects.length > 0 ? (
-                                        projects.map((project) => {
-                                            const isExpanded = expandedProjects[project.id || project._id];
-                                            return (
-                                                <div key={project.id || project._id} className="border rounded-lg overflow-hidden hover:shadow-sm transition-shadow duration-200">
-                                                    {/* Project Header (Clickable) */}
-                                                    <div
-                                                        className={`p-4 flex justify-between items-start cursor-pointer ${isExpanded ? 'bg-emerald-50 border-b' : 'bg-gray-50 hover:bg-gray-100'}`}
-                                                        onClick={() => toggleProjectExpansion(project.id || project._id)}
-                                                        aria-expanded={isExpanded}
-                                                        aria-controls={`project-details-${project.id || project._id}`}
-                                                    >
-                                                        {/* Header Content */}
-                                                        <div>
-                                                            <h3 className="font-bold flex items-center gap-2 text-gray-800">
+                                        projects.map((project) => (
+                                            <div key={project.id || project._id} className="bg-white border border-gray-200 rounded-lg hover:shadow-md hover:border-gray-300 transition-all duration-200 overflow-hidden">
+                                                {/* Card Header */}
+                                                <div className="p-4 border-b border-gray-100">
+                                                    <div className="flex justify-between items-start mb-2">
+                                                        <div className="flex-1">
+                                                            <h3 className="font-semibold text-gray-900 text-base">
                                                                 {project.title}
-                                                                {project.isNew && <span className="bg-emerald-100 text-emerald-800 text-xs px-2 py-0.5 rounded-full font-semibold">NEW</span>}
                                                             </h3>
-                                                            <p className={`text-sm text-gray-600 mt-1 ${isExpanded ? '' : 'line-clamp-2'}`}>
-                                                                {project.description}
-                                                            </p>
+                                                            {project.isNew && (
+                                                                <span className="inline-block mt-2 bg-emerald-100 text-emerald-700 text-xs px-2.5 py-1 rounded-full font-medium">NEW</span>
+                                                            )}
                                                         </div>
-                                                        {/* Actions */}
-                                                        <div className="flex items-center space-x-2 flex-shrink-0">
+                                                        <div className="flex gap-2 ml-4">
                                                             <button
-                                                                onClick={(e) => {
-                                                                    e.stopPropagation();
-                                                                    handleProjectEditClick(project);
-                                                                }}
-                                                                className="text-gray-500 hover:text-emerald-600 focus:outline-none"
+                                                                onClick={() => handleProjectEditClick(project)}
+                                                                className="text-gray-400 hover:text-emerald-600 p-1 hover:bg-gray-100 rounded transition-colors"
                                                                 title="Edit Project"
                                                             >
-                                                                <Edit size={18} />
+                                                                <Edit size={16} />
                                                             </button>
                                                             <button
-                                                                className="text-gray-500 hover:text-gray-800 flex-shrink-0 ml-2 mt-1"
-                                                                aria-label={isExpanded ? 'Collapse details' : 'Expand details'}
+                                                                onClick={() => handleDeleteProject(project._id || project.id)}
+                                                                className="text-gray-400 hover:text-red-600 p-1 hover:bg-gray-100 rounded transition-colors"
+                                                                title="Delete Project"
                                                             >
-                                                                <ChevronDown size={20} className={`transform transition-transform duration-200 ${isExpanded ? 'rotate-180' : 'rotate-0'}`} />
+                                                                <TrashIcon className="h-4 w-4" />
                                                             </button>
                                                         </div>
                                                     </div>
+                                                    <p className="text-xs text-gray-500 line-clamp-2">
+                                                        {project.description}
+                                                    </p>
+                                                </div>
 
-                                                    {/* Project Details (Conditionally Rendered) */}
-                                                    <div
-                                                        id={`project-details-${project.id || project._id}`}
-                                                        className={`transition-all duration-300 ease-in-out overflow-hidden ${isExpanded ? 'max-h-[1500px] opacity-100' : 'max-h-0 opacity-0'}`}
-                                                    >
-                                                        {/* Render details only when expanded */}
-                                                        {isExpanded && (
-                                                            <div className="p-4 space-y-4">
-                                                                <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-3">
-                                                                    {project.client && <div> <h4 className="text-sm font-medium text-gray-500 mb-0.5">Client</h4> <p className="font-medium text-gray-800">{project.client}</p> </div>}
-                                                                    {project.duration && <div> <h4 className="text-sm font-medium text-gray-500 mb-0.5">Project duration</h4> <p className="font-medium text-gray-800">{project.duration}</p> </div>}
-                                                                    {project.category && <div> <h4 className="text-sm font-medium text-gray-500 mb-0.5">Work category</h4> <p className="font-medium text-gray-800">{project.category}</p> </div>}
-                                                                    {project.team && <div> <h4 className="text-sm font-medium text-gray-500 mb-0.5">Team involved</h4> <p className="font-medium text-gray-800">{project.team}</p> </div>}
-                                                                    {project.objective && <div className="md:col-span-2"> <h4 className="text-sm font-medium text-gray-500 mb-0.5">Objective</h4> <p className="font-medium text-gray-800">{project.objective}</p> </div>}
-                                                                    {project.features && <div className="md:col-span-2"> <h4 className="text-sm font-medium text-gray-500 mb-0.5">Key features</h4> <p className="font-medium text-gray-800">{project.features}</p> </div>}
-                                                                    {project.impact && <div className="md:col-span-2"> <h4 className="text-sm font-medium text-gray-500 mb-0.5">Business impact</h4> <p className="font-medium text-gray-800">{project.impact}</p> </div>}
-                                                                    {project.deliverables && <div className="md:col-span-2"> <h4 className="text-sm font-medium text-gray-500 mb-0.5">Deliverables</h4> <p className="font-medium text-gray-800">{project.deliverables}</p> </div>}
-                                                                    {project.compliance && <div className="md:col-span-2"> <h4 className="text-sm font-medium text-gray-500 mb-0.5">Compliance</h4> <p className="font-medium text-gray-800">{project.compliance}</p> </div>}
-                                                                    
-                                                                </div>
-                                                                {/* Documents Section */}
-                                                                {project.documents && project.documents.length > 0 && (
-                                                                    <div className="pt-2">
-                                                                        <h4 className="text-sm font-medium text-gray-500 mb-1">Documents</h4>
-                                                                        <div className="space-y-2">
-                                                                            {project.documents.map(doc => (
-                                                                                <div key={doc.id} className="flex items-center justify-between p-2 border rounded-md bg-gray-50 hover:bg-gray-100">
-                                                                                    <span className="text-sm text-gray-700 font-medium truncate pr-2">{doc.name}</span>
-                                                                                    <div className="flex gap-3 flex-shrink-0">
-                                                                                        <a href={doc.url || '#'} target="_blank" rel="noopener noreferrer" className="text-gray-500 hover:text-emerald-600" title="View"> <Eye size={18} /> </a>
-                                                                                        <a href={doc.url || '#'} download={doc.name} className="text-gray-500 hover:text-emerald-600" title="Download"> <Download size={18} /> </a>
-                                                                                    </div>
-                                                                                </div>
-                                                                            ))}
-                                                                        </div>
-                                                                    </div>
-                                                                    
-                                                                )}
-                                                                {project.photos && project.photos.length > 0 && (
-                                                                    <div className="pt-2">
-                                                                        <h4 className="text-sm font-medium text-gray-500 mb-2">Photos</h4>
-                                                                        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2">
-                                                                            {project.photos.slice(0, 5).map((photo, index) => (
-                                                                                <div key={`photo-${index}`} className="relative group">
-                                                                                    <img
-                                                                                        src={getPhotoUrl(photo)}
-                                                                                        alt={`Project Photo ${index + 1}`}
-                                                                                        className="w-full h-24 object-cover rounded"
-                                                                                    />
-                                                                                    <button
-                                                                                        type="button"
-                                                                                        onClick={() => handleRemovePhoto(index)}
-                                                                                        className="absolute top-1 right-1 bg-white text-red-500 hover:text-red-700 rounded-full p-1 shadow group-hover:opacity-100 opacity-75"
-                                                                                        title="Remove"
-                                                                                    >
-                                                                                        <TrashIcon className="h-4 w-4" />
-                                                                                    </button>
-                                                                                </div>
-                                                                            ))}
-                                                                        </div>
-                                                                    </div>
-                                                                )}
-                                                            </div>
-                                                            
+                                                {/* Card Content */}
+                                                <div className="p-4 space-y-3">
+                                                    <div className="grid grid-cols-2 gap-3">
+                                                        {project.client && (
+                                                            <>
+                                                                <div className="text-xs font-medium text-gray-500 uppercase tracking-wide">Client</div>
+                                                                <div className="font-semibold text-gray-900 text-xs">{project.client}</div>
+                                                            </>
+                                                        )}
+                                                        {project.duration && (
+                                                            <>
+                                                                <div className="text-xs font-medium text-gray-500 uppercase tracking-wide">Duration</div>
+                                                                <div className="font-semibold text-gray-900 text-xs">{project.duration}</div>
+                                                            </>
+                                                        )}
+                                                        {project.category && (
+                                                            <>
+                                                                <div className="text-xs font-medium text-gray-500 uppercase tracking-wide">Category</div>
+                                                                <div className="font-semibold text-gray-900 text-xs">{project.category}</div>
+                                                            </>
+                                                        )}
+                                                        {project.team && (
+                                                            <>
+                                                                <div className="text-xs font-medium text-gray-500 uppercase tracking-wide">Team</div>
+                                                                <div className="font-semibold text-gray-900 text-xs">{project.team}</div>
+                                                            </>
                                                         )}
                                                     </div>
-                                                </div>
-                                            );
-                                        })
-                                    ) : (
-                                        <p className="text-center text-gray-500 py-4">No projects match the current criteria.</p>
-                                    )}
 
-                                    {/* More Button - CORRECTED condition to projects.length > 10 */}
-                                    {projects.length > 10 && (
-                                        <div className="text-right pt-2">
-                                            <button className="text-emerald-600 hover:text-emerald-800 text-sm font-medium">View More Projects...</button>
+                                                    {/* Expandable Details */}
+                                                    <button
+                                                        onClick={() => toggleProjectExpansion(project.id || project._id)}
+                                                        className="w-full mt-4 pt-4 border-t border-gray-100 text-emerald-600 hover:text-emerald-700 text-sm font-medium flex items-center justify-center gap-2 transition-colors"
+                                                    >
+                                                        {expandedProjects[project.id || project._id] ? 'Show Less' : 'Show More Details'}
+                                                        <ChevronDown 
+                                                            size={16} 
+                                                            className={`transform transition-transform ${expandedProjects[project.id || project._id] ? 'rotate-180' : ''}`}
+                                                        />
+                                                    </button>
+
+                                                    {/* Expandable Content */}
+                                                    {expandedProjects[project.id || project._id] && (
+                                                        <div className="pt-4 border-t border-gray-100 space-y-4">
+                                                            {project.objective && (
+                                                                <div>
+                                                                    <h4 className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">Objective</h4>
+                                                                    <p className="text-sm text-gray-700">{project.objective}</p>
+                                                                </div>
+                                                            )}
+                                                            {project.features && (
+                                                                <div>
+                                                                    <h4 className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">Key Features</h4>
+                                                                    <p className="text-sm text-gray-700">{project.features}</p>
+                                                                </div>
+                                                            )}
+                                                            {project.impact && (
+                                                                <div>
+                                                                    <h4 className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">Impact</h4>
+                                                                    <p className="text-sm text-gray-700">{project.impact}</p>
+                                                                </div>
+                                                            )}
+                                                            {project.deliverables && (
+                                                                <div>
+                                                                    <h4 className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">Deliverables</h4>
+                                                                    <p className="text-sm text-gray-700">{project.deliverables}</p>
+                                                                </div>
+                                                            )}
+                                                            {project.compliance && (
+                                                                <div>
+                                                                    <h4 className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">Compliance</h4>
+                                                                    <p className="text-sm text-gray-700">{project.compliance}</p>
+                                                                </div>
+                                                            )}
+
+                                                            {/* Documents */}
+                                                            {project.documents && project.documents.length > 0 && (
+                                                                <div className="pt-2">
+                                                                    <h4 className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-2">Documents</h4>
+                                                                    <div className="space-y-2">
+                                                                        {project.documents.map(doc => (
+                                                                            <div key={doc.id} className="flex items-center justify-between p-2 bg-gray-50 rounded border border-gray-200">
+                                                                                <span className="text-xs text-gray-700 font-medium truncate pr-2">{doc.name}</span>
+                                                                                <div className="flex gap-2 flex-shrink-0">
+                                                                                    <a href={doc.url || '#'} target="_blank" rel="noopener noreferrer" className="text-gray-500 hover:text-emerald-600" title="View">
+                                                                                        <Eye size={16} />
+                                                                                    </a>
+                                                                                    <a href={doc.url || '#'} download={doc.name} className="text-gray-500 hover:text-emerald-600" title="Download">
+                                                                                        <Download size={16} />
+                                                                                    </a>
+                                                                                </div>
+                                                                            </div>
+                                                                        ))}
+                                                                    </div>
+                                                                </div>
+                                                            )}
+
+                                                            {/* Photos */}
+                                                            {project.photos && project.photos.length > 0 && (
+                                                                <div className="pt-2">
+                                                                    <h4 className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-2">Photos</h4>
+                                                                    <div className="grid grid-cols-3 gap-2">
+                                                                        {project.photos.slice(0, 3).map((photo, index) => (
+                                                                            <div key={`photo-${index}`} className="relative group">
+                                                                                <img
+                                                                                    src={getPhotoUrl(photo)}
+                                                                                    alt={`Project Photo ${index + 1}`}
+                                                                                    className="w-full h-20 object-cover rounded border border-gray-200"
+                                                                                />
+                                                                                {project.photos.length > 3 && index === 2 && (
+                                                                                    <div className="absolute inset-0 bg-black bg-opacity-50 rounded flex items-center justify-center">
+                                                                                        <span className="text-white text-sm font-medium">+{project.photos.length - 3}</span>
+                                                                                    </div>
+                                                                                )}
+                                                                            </div>
+                                                                        ))}
+                                                                    </div>
+                                                                </div>
+                                                            )}
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        ))
+                                    ) : (
+                                        <div>
+                                            <div className="text-center py-12 bg-gray-50 rounded-lg border border-gray-200">
+                                                <p className="text-gray-500 text-sm mb-4">No projects yet. Start by creating your first project!</p>
+                                                <button
+                                                    onClick={() => setShowAddModal(true)}
+                                                    className="inline-flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors"
+                                                >
+                                                    <Plus size={16} />
+                                                    Create Project
+                                                </button>
+                                            </div>
                                         </div>
                                     )}
                                 </div>
-                            </div>
+                            </VendorTabPanel>
                         </div>
-                    </div>
-                </main>
             </div>
             
             {/* Edit Profile Modal */}
@@ -2702,7 +2761,6 @@ export default function UserProjectPage() {
                                 <input id="profileImage" name="profileImage" type="file" accept="image/png, image/jpeg, image/gif" onChange={handleProfileFileChange} className="hidden" />
                             </div>
                             {/* Input Fields */}
-                            <div><label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">Name</label><input type="text" id="name" name="name" value={profileFormData.name} onChange={handleProfileInputChange} className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent" required /></div>
                             <div><label htmlFor="companyName" className="block text-sm font-medium text-gray-700 mb-1">Company Name</label><input type="text" id="companyName" name="companyName" value={profileFormData.companyName} onChange={handleProfileInputChange} className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent" /></div>
                             <div>
                                 <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-1">Phone</label>

@@ -14,6 +14,8 @@ import SignUp from "./components/SignUp";
 import Home from "./pages/Home/Home";
 import UserProjectPage from './pages/UserProjectPage/UserProjectPage'; // Assuming UserProjectPage is here
 import UserPortfolio from './pages/UserProductPage/UserProductPage'; // Assuming UserProductPage is here
+import SharedProfile from './pages/SharedProfile/SharedProfile'; // Import SharedProfile for public sharing
+import SharePage from './pages/ShareProfile/SharePage'; // Import SharePage for sharing functionality
 import { VendorDashboard } from "./pages/VendorDashboard/VendorDashboard";
 import WorkspacePage from "./pages/WorkspacePage";
 import WorkspaceList from "./pages/WorkspaceList/WorkspaceList";
@@ -372,6 +374,8 @@ function AppContent() {
       {/* Vendor PO Response Route */}
       <Route path="/workspace/po-responses" element={<RoleGuard><VendorPOResponsePage /></RoleGuard>} />
       {/* Removed EditCompany route as it's now handled with a modal */}
+      <Route path="/shared-profile/:vendorId" element={<SharedProfile />} />
+      <Route path="/share" element={<RoleGuard><SharePage /></RoleGuard>} />
       <Route path="/vendor-home" element={<Home />} />
       <Route path="/userproject" element={<UserProjectPage />} />
       <Route path="/userproduct" element={<UserPortfolio />} />

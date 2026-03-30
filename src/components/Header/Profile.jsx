@@ -30,6 +30,11 @@ const countryStateData = {
 export const Profile = () => {
     const { currentUser, vendorData } = useContext(VendorContext);
     const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
+    const gstNumber = vendorData?.companyDetails?.gstNumber
+        || vendorData?.vendorDetails?.gstin
+        || vendorData?.companyDetails?.taxIdentificationNumber
+        || currentUser?.gstin
+        || 'Not Available';
     
     // Initialize profile data from context
     const [profileData, setProfileData] = useState({
@@ -194,7 +199,7 @@ export const Profile = () => {
         <div className="min-h-screen bg-gray-50 font-sans">
             <section className="bg-gradient-to-r from-[#095B49] to-[#000000] text-white rounded-xl p-4 relative rounded-b-lg" style={{ height: "200px" }}>
                     <div className="absolute top-2 left-4 text-xs text-white/80">
-                      GSTIN:{vendorData?.vendorDetails?.gstin || 'Not Available'}
+                                            GSTIN:{gstNumber}
                     </div>
             
                     {/* Top right icons */}
