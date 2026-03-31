@@ -109,6 +109,8 @@ function Login() {
       let verifyRoleSelected = null;
       let verifyLastSelectedRole = null;
       let verifyIsTeamMember = false;
+      let verifyRole = null;
+      let verifyOrgType = null;
 
       try {
         const verifyRes = await fetch(`${config.VENDOR_BACKEND_URL}/api/auth/verify`, {
@@ -129,6 +131,8 @@ function Login() {
         }
         if (verifyRes.ok) {
           const verifyData = await verifyRes.json();
+          verifyRole = (verifyData?.role || '').toString().toLowerCase();
+          verifyOrgType = (verifyData?.orgType || '').toString().toLowerCase();
           verifyRoleSelected = verifyData?.roleSelected === true;
           verifyLastSelectedRole = (verifyData?.lastSelectedRole || "").toString().toLowerCase();
 
@@ -142,6 +146,16 @@ function Login() {
           verifyIsTeamMember = verifyData?.isTeamMember === true;
           if (!verifyRoleSelected && !verifyIsTeamMember) {
             navigate("/role-selection", { replace: true });
+            return;
+          }
+
+          if (!explicitVendor && (verifyOrgType === 'client' || verifyRole === 'client')) {
+            await redirectToClientWithHandoff({ token: idToken });
+            return;
+          }
+
+          if (!explicitVendor && (verifyOrgType === 'sales' || verifyRole === 'sales')) {
+            await redirectToSalesWithHandoff('/', { token: idToken });
             return;
           }
 
@@ -228,6 +242,17 @@ function Login() {
       }
 
       if (!hydrated?.ok || !hydrated?.user) {
+        if (!explicitVendor && hydrated?.status === 404) {
+          if (verifyOrgType === 'client' || verifyLastSelectedRole === 'client' || verifyRole === 'client') {
+            await redirectToClientWithHandoff({ token: idToken });
+            return;
+          }
+          if (verifyOrgType === 'sales' || verifyLastSelectedRole === 'sales' || verifyRole === 'sales') {
+            await redirectToSalesWithHandoff('/', { token: idToken });
+            return;
+          }
+        }
+
         setAlertMessage("Failed to retrieve vendor details. Please try again or contact support.");
         setAlertType("error");
         setShowAlert(true);
