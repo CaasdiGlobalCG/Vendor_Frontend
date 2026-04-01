@@ -1594,7 +1594,7 @@ export default function UserProjectPage() {
     }));
     const [profileFormData, setProfileFormData] = useState({ ...profileData });
     const [imagePreview, setImagePreview] = useState(profileData.image);
-    const [projects, setProjects] = useState(initialProjectsData); // Start with sample data
+    const [projects, setProjects] = useState([]); // Start with empty projects array
     const [sortOrder, setSortOrder] = useState('recent');
     const [expandedProjects, setExpandedProjects] = useState({});
     const [projectsLoading, setProjectsLoading] = useState(true);
@@ -1610,6 +1610,7 @@ export default function UserProjectPage() {
     const [selectedState, setSelectedState] = useState('');
     const [phoneCountryCode, setPhoneCountryCode] = useState('');
     const [phoneNumberWithoutCode, setPhoneNumberWithoutCode] = useState('');
+    const [showAddModal, setShowAddModal] = useState(false);
 
     // First useEffect just to log context values
     useEffect(() => {
@@ -1752,31 +1753,19 @@ export default function UserProjectPage() {
                     // Set the projects data
                     setProjects(data.data);
                 } else {
-                    // If no projects found, use sample data
-                    setProjects(initialProjectsData);
-                    
-                    // Initialize expandedProjects for dummy data
-                    const initialExpandedState = {};
-                    initialProjectsData.forEach(project => {
-                        initialExpandedState[project.id] = project.initiallyExpanded || false;
-                    });
-                    setExpandedProjects(initialExpandedState);
+                    // If no projects found, set to empty
+                    setProjects([]);
+                    setExpandedProjects({});
                 }
                 
                 setProjectsLoading(false);
             } catch (error) {
                 console.error('Error fetching projects:', error);
-                setProjectsError("Failed to fetch projects. Using sample data.");
+                setProjectsError("Failed to fetch projects.");
                 
-                // Fallback to dummy data on error
-                setProjects(initialProjectsData);
-                
-                // Initialize expandedProjects for dummy data
-                const initialExpandedState = {};
-                initialProjectsData.forEach(project => {
-                    initialExpandedState[project.id] = project.initiallyExpanded || false;
-                });
-                setExpandedProjects(initialExpandedState);
+                // Fallback to empty on error
+                setProjects([]);
+                setExpandedProjects({});
                 
                 setProjectsLoading(false);
             }
@@ -1790,6 +1779,19 @@ export default function UserProjectPage() {
         
         return () => clearTimeout(timer);
     }, []);
+
+    // Manage body overflow when modals are open
+    useEffect(() => {
+      if (isProfileModalOpen || isProjectModalOpen || showAddModal) {
+        document.body.style.overflow = 'hidden';
+      } else {
+        document.body.style.overflow = 'unset';
+      }
+      
+      return () => {
+        document.body.style.overflow = 'unset';
+      };
+    }, [isProfileModalOpen, isProjectModalOpen, showAddModal]);
 
     const handleProfileEditClick = () => {
         setIsProfileModalOpen(true);
@@ -2135,7 +2137,6 @@ export default function UserProjectPage() {
         navigate(path);
     };
 
-    const [showAddModal, setShowAddModal] = useState(false);
     const [newProject, setNewProject] = useState({
         id: '',
         title: '',
@@ -2348,11 +2349,17 @@ export default function UserProjectPage() {
                     >
 
                                 {showAddModal && (
-                                    <div className="fixed inset-0 bg-black bg-opacity-30 z-50 flex items-center justify-center p-4">
-                                        <div className="bg-white rounded-lg shadow-lg w-full max-w-3xl p-6 overflow-y-auto max-h-[90vh]">
-                                            <h3 className="text-xl font-bold mb-6 text-gray-800">Add New Project</h3>
+                                    <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 sm:p-6">
+                                        <div className="bg-white rounded-xl shadow-xl w-full max-w-2xl max-h-[90vh] flex flex-col overflow-hidden">
+                                            <div className="flex justify-between items-center px-6 py-4 border-b border-gray-200 flex-shrink-0 bg-white">
+                                                <h3 className="text-xl font-bold text-gray-800">Add New Project</h3>
+                                                <button onClick={() => setShowAddModal(false)} className="text-gray-400 hover:text-gray-600 transition-colors">
+                                                    <CloseIcon size={20} />
+                                                </button>
+                                            </div>
 
-                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                            <div className="overflow-y-auto p-6 flex-1 bg-white">
+                                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                                 {/* Text Inputs */}
                                                 <input
                                                     type="text"
@@ -2529,11 +2536,13 @@ export default function UserProjectPage() {
                                                 </div>
                                             </div>
 
+                                            </div>
+
                                             {/* Action Buttons */}
-                                            <div className="flex justify-end gap-3 mt-8">
+                                            <div className="flex justify-end gap-3 pt-6 border-t mt-6 border-gray-200 bg-white">
                                                 <button
                                                     onClick={() => setShowAddModal(false)}
-                                                    className="px-4 py-2 text-sm rounded-md border border-gray-300 text-gray-700 hover:bg-gray-100"
+                                                    className="px-4 py-2 text-sm rounded-md bg-gray-200 text-gray-800 hover:bg-gray-300 focus:outline-none transition-colors"
                                                 >
                                                     Cancel
                                                 </button>
@@ -2563,7 +2572,14 @@ export default function UserProjectPage() {
 
                                 {/* Project Cards Grid */}
                                 <div className="space-y-3 mt-6">
-                                    {projects.length > 0 ? (
+                                    {projectsLoading ? (
+                                        <div className="flex justify-center items-center py-10">
+                                            <svg className="animate-spin h-8 w-8 text-[#095B49]" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                            </svg>
+                                        </div>
+                                    ) : projects.length > 0 ? (
                                         projects.map((project) => (
                                             <div key={project.id || project._id} className="bg-white border border-gray-200 rounded-lg hover:shadow-md hover:border-gray-300 transition-all duration-200 overflow-hidden">
                                                 {/* Card Header */}
@@ -2744,17 +2760,18 @@ export default function UserProjectPage() {
             
             {/* Edit Profile Modal */}
             {isProfileModalOpen && (
-                <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 p-4 transition-opacity duration-300 ease-in-out">
-                    <div className="bg-white rounded-lg shadow-xl p-6 w-full max-w-md max-h-[90vh] overflow-y-auto transform transition-all duration-300 ease-in-out scale-100">
+                <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 sm:p-6">
+                    <div className="bg-white rounded-xl shadow-xl w-full max-w-2xl max-h-[90vh] flex flex-col overflow-hidden">
                         {/* Modal Header */}
-                        <div className="flex justify-between items-center mb-4 border-b pb-2">
+                        <div className="flex justify-between items-center px-6 py-4 border-b border-gray-200 flex-shrink-0 bg-white">
                             <h2 className="text-xl font-semibold text-gray-800">Edit Profile</h2>
-                            <button onClick={handleProfileCloseModal} className="text-gray-400 hover:text-gray-600">
+                            <button onClick={handleProfileCloseModal} className="text-gray-400 hover:text-gray-600 transition-colors">
                                 <CloseIcon size={20} />
                             </button>
                         </div>
                         {/* Modal Form */}
-                        <form onSubmit={(e) => e.preventDefault()} className="space-y-4">
+                        <div className="overflow-y-auto p-6 flex-1 bg-white">
+                            <form onSubmit={(e) => e.preventDefault()} className="space-y-4">
                             <div className="flex flex-col items-center space-y-3">
                                 <img src={imagePreview} alt="Profile Preview" className="w-32 h-32 rounded-full object-cover border-2 border-gray-300 shadow-sm" onError={(e) => { e.target.onerror = null; e.target.src = "https://via.placeholder.com/160"; }} />
                                 <label htmlFor="profileImage" className="cursor-pointer bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-medium px-4 py-2 rounded-md transition-colors">Change Image</label>
@@ -2834,28 +2851,30 @@ export default function UserProjectPage() {
                             </div>
                             <div><label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">Email</label><input type="email" id="email" name="email" value={profileFormData.email} onChange={handleProfileInputChange} className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent" required /></div>
                             {/* Action Buttons */}
-                            <div className="flex justify-end gap-3 pt-4 border-t mt-6">
+                            <div className="flex justify-end gap-3 pt-6 border-t mt-6 border-gray-200">
                                 <button type="button" onClick={handleProfileCloseModal} className="px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-400 transition-colors">Cancel</button>
                                 <button type="button" onClick={handleProfileSave} className="px-4 py-2 bg-gradient-to-l from-[#095B49] to-[#000000] text-white rounded-md hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 transition-opacity">Save Changes</button>
                             </div>
                         </form>
+                        </div>
                     </div>
                 </div>
             )}
 
             {/* Edit Project Modal */}
             {isProjectModalOpen && editingProject && (
-                <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 p-4 transition-opacity duration-300 ease-in-out">
-                    <div className="bg-white rounded-lg shadow-xl p-6 w-full max-w-lg max-h-[90vh] overflow-y-auto transform transition-all duration-300 ease-in-out scale-100">
+                <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 sm:p-6">
+                    <div className="bg-white rounded-xl shadow-xl w-full max-w-2xl max-h-[90vh] flex flex-col overflow-hidden">
                         {/* Modal Header */}
-                        <div className="flex justify-between items-center mb-4 border-b pb-2">
+                        <div className="flex justify-between items-center px-6 py-4 border-b border-gray-200 flex-shrink-0 bg-white">
                             <h2 className="text-xl font-semibold text-gray-800">Edit Project</h2>
-                            <button onClick={handleProjectCloseModal} className="text-gray-400 hover:text-gray-600">
+                            <button onClick={handleProjectCloseModal} className="text-gray-400 hover:text-gray-600 transition-colors">
                                 <CloseIcon size={20} />
                             </button>
                         </div>
                         {/* Modal Form */}
-                        <form onSubmit={(e) => e.preventDefault()} className="space-y-4">
+                        <div className="overflow-y-auto p-6 flex-1 bg-white">
+                            <form onSubmit={(e) => e.preventDefault()} className="space-y-4">
                             <div><label htmlFor="editTitle" className="block text-sm font-medium text-gray-700 mb-1">Title</label><input type="text" id="editTitle" name="title" value={projectFormData.title || ''} onChange={handleProjectInputChange} className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent" required /></div>
                             <div><label htmlFor="editDescription" className="block text-sm font-medium text-gray-700 mb-1">Description</label><textarea id="editDescription" name="description" value={projectFormData.description || ''} onChange={handleProjectInputChange} className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"></textarea></div>
                             <div><label htmlFor="editClient" className="block text-sm font-medium text-gray-700 mb-1">Client</label><input type="text" id="editClient" name="client" value={projectFormData.client || ''} onChange={handleProjectInputChange} className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent" /></div>
@@ -2956,11 +2975,12 @@ export default function UserProjectPage() {
                                 </p>
                             </div>
                             {/* Action Buttons */}
-                            <div className="flex justify-end gap-3 pt-4 border-t mt-6">
+                            <div className="flex justify-end gap-3 pt-6 border-t mt-6 border-gray-200">
                                 <button type="button" onClick={handleProjectCloseModal} className="px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-400 transition-colors">Cancel</button>
                                 <button type="button" onClick={handleProjectSave} className="px-4 py-2 bg-gradient-to-l from-[#095B49] to-[#000000] text-white rounded-md hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 transition-opacity">Save Changes</button>
                             </div>
                         </form>
+                        </div>
                     </div>
                 </div>
             )}

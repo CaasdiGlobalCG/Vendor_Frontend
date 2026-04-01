@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState, useContext } from "react";
+import React, { useEffect, useMemo, useState, useContext, useRef } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { Auth } from "aws-amplify";
 
@@ -9,6 +9,7 @@ import background from "../assets/loginbackground.png";
 import { Eye, EyeOff } from "lucide-react";
 import config from "../config/env";
 import PasskeyMFAVerification from "./PasskeyMFAVerification";
+import TOTPVerificationModal from "./TOTPVerificationModal";
 import { redirectToClientWithHandoff } from "../utils/handoffToClient";
 import { redirectToSalesWithHandoff } from "../utils/handoffToSales";
 import { getVendorDestination, isRejectedVendor } from "../utils/vendorAuthRouting";
@@ -42,6 +43,7 @@ const carouselItems = [
 function Login() {
   const location = useLocation();
   const navigate = useNavigate();
+  const totpModeRef = useRef(false);
 
   const { hydrateCurrentUser } = useContext(VendorContext);
   const { setCurrentUser: setAppUser } = useContext(UserContext);
@@ -66,17 +68,31 @@ function Login() {
   const [mfaUserId, setMfaUserId] = useState(null);
   const [mfaUserData, setMfaUserData] = useState(null);
 
+  // TOTP verification state
+  const [showTOTPVerification, setShowTOTPVerification] = useState(false);
+  const [totpUserData, setTotpUserData] = useState(null);
+
+  // Check if this is an explicit vendor login
   const explicitVendor = useMemo(() => {
     const qp = new URLSearchParams(location.search);
     return qp.get("fromClient") === "true" || qp.get("role") === "vendor" || Boolean(qp.get("handoff"));
   }, [location.search]);
 
+  // Carousel rotation
   useEffect(() => {
     const interval = setInterval(() => {
       setCurrentCarouselIndex((prevIndex) => (prevIndex + 1) % carouselItems.length);
     }, 5000);
     return () => clearInterval(interval);
   }, []);
+
+  // ═══ DEBUG: Track TOTP modal state ═══
+  useEffect(() => {
+    console.log('[Login] showTOTPVerification state changed:', showTOTPVerification);
+    if (showTOTPVerification) {
+      console.log('[Login] TOTP Modal should be visible! totpUserData:', totpUserData);
+    }
+  }, [showTOTPVerification]);
 
   const togglePasswordVisibility = () => setShowPassword((v) => !v);
   const handleSignUpRedirect = () => navigate("/signup");
@@ -231,6 +247,43 @@ function Login() {
         return;
       }
 
+      // ═══ TOTP MFA Check BEFORE hydrating user ═══
+      // Check MFA status FIRST - if TOTP required, don't hydrate context yet
+      const vendorEmail = cognitoUser?.attributes?.email || email;
+      let hasTOTP = false;
+      try {
+        const mfaStatusRes = await fetch(
+          `${config.VENDOR_BACKEND_URL}/api/vendor/mfa/status`,
+          { credentials: "include" }
+        );
+        if (mfaStatusRes.ok) {
+          const mfaStatusData = await mfaStatusRes.json();
+          hasTOTP = mfaStatusData.data?.totpEnabled === true;
+          console.log('[Login] MFA Status Check (before hydration):', {
+            totpEnabled: hasTOTP,
+            mfaData: mfaStatusData.data
+          });
+        }
+      } catch (mfaErr) {
+        console.warn("[Login] MFA status check failed:", mfaErr);
+      }
+
+      // If TOTP required, show modal BEFORE hydrating user context
+      if (hasTOTP) {
+        console.log('[Login] TOTP enabled BEFORE hydration - showing modal without updating context');
+        totpModeRef.current = true;
+        
+        // Store the email for TOTP verification
+        setTotpUserData({
+          email: vendorEmail,
+          fromCognito: true // Flag that we haven't hydrated yet
+        });
+        setShowTOTPVerification(true);
+        console.log('[Login] TOTP modal shown - throwing to skip hydration');
+        throw new Error('TOTP_VERIFICATION_REQUIRED');
+      }
+
+      // ═══ Only hydrate user context if TOTP not required ═══
       // Single source of truth: hydrate user only through VendorContext (/api/vendor/me).
       const hydrated = await Promise.resolve(hydrateCurrentUser?.());
 
@@ -261,8 +314,18 @@ function Login() {
 
       const vendorUser = hydrated.user;
       const vendorId = vendorUser.vendorId || null;
-      const vendorEmail = vendorUser.email || cognitoUser?.attributes?.email || email;
       const vendorName = vendorUser.name || cognitoUser?.attributes?.name || cognitoUser?.username || "";
+
+      // ═══ DEBUG: Log vendor user data ═══
+      console.log('[Login] Vendor User Data:', {
+        totpEnabled: vendorUser.totpEnabled,
+        vendorId,
+        email: vendorEmail,
+        status: vendorUser.status,
+        allFields: vendorUser
+      });
+
+      // Now set app user (this triggers routing)
       setAppUser(vendorUser);
 
       // Passkey MFA (if enabled)
@@ -307,6 +370,12 @@ function Login() {
     } catch (error) {
       console.error("Error logging in:", error);
 
+      // Handle TOTP verification requirement - not an error, just a flow control
+      if (error?.message === 'TOTP_VERIFICATION_REQUIRED') {
+        console.log('[Login] TOTP verification required - modal should be showing');
+        return;
+      }
+
       if (error?.code === "UserNotConfirmedException") {
         alert("Your account needs verification. We'll send you to the verification page.");
         navigate("/verification", { state: { email: email || emailFromState } });
@@ -329,7 +398,13 @@ function Login() {
       sessionStorage.removeItem(AUTH_TRANSITION_KEY);
       sessionStorage.removeItem(AUTH_TRANSITION_STARTED_AT_KEY);
     } finally {
-      setLoading(false);
+      // Don't clear loading state if TOTP verification modal is showing
+      // Check ref synchronously since state updates haven't processed yet
+      if (!totpModeRef.current) {
+        setLoading(false);
+      } else {
+        console.log('[Login] TOTP mode active - keeping loading=true to prevent premature routing');
+      }
     }
   };
 
@@ -361,6 +436,82 @@ function Login() {
     setShowMFAVerification(false);
     setMfaUserId(null);
     setMfaUserData(null);
+  };
+
+  const handleTOTPSuccess = async () => {
+    try {
+      // Reset TOTP mode flag
+      totpModeRef.current = false;
+      sessionStorage.setItem(AUTH_TRANSITION_KEY, 'true');
+      sessionStorage.setItem(AUTH_TRANSITION_STARTED_AT_KEY, String(Date.now()));
+      setShowTOTPVerification(false);
+      
+      // Now hydrate user context since TOTP is verified
+      console.log('[Login] TOTP verified, now hydrating user context');
+      setLoading(true);
+      
+      const hydrated = await Promise.resolve(hydrateCurrentUser?.());
+      if (hydrated?.ok && hydrated?.user) {
+        console.log('[Login] User hydrated after TOTP success');
+        
+        // Check if passkey is also required
+        const vendorEmail = totpUserData?.email || email;
+        try {
+          const passkeyStatusRes = await fetch(
+            `${config.VENDOR_BACKEND_URL}/api/auth/passkey/user-status?email=${encodeURIComponent(vendorEmail)}`,
+            { credentials: "include" }
+          );
+          if (passkeyStatusRes.ok) {
+            const passkeyStatusData = await passkeyStatusRes.json();
+            const userHasPasskey = passkeyStatusData.data?.hasPasskey === true;
+            const userIdForMFA = passkeyStatusData.data?.userId;
+            if (userHasPasskey && userIdForMFA) {
+              // Both TOTP and Passkey enabled - show passkey after TOTP
+              console.log('[Login] Passkey also enabled, showing passkey modal');
+              setMfaUserId(userIdForMFA);
+              setMfaUserData({
+                vendorId: hydrated.user.vendorId,
+                email: vendorEmail,
+                name: hydrated.user.name,
+                userStatus: hydrated.user.status,
+                hasFilledForm: hydrated.user.hasFilledForm,
+              });
+              setShowMFAVerification(true);
+              setLoading(false);
+              return;
+            }
+          }
+        } catch (passkeyErr) {
+          console.warn("Error checking passkey status after TOTP:", passkeyErr);
+        }
+        
+        // Only TOTP was required, proceed to routing
+        routeVendor({
+          status: hydrated.user.status,
+          hasFilledForm: hydrated.user.hasFilledForm,
+          isTeamMember: hydrated.user.isTeamMember === true,
+        });
+      } else {
+        console.error('[Login] Failed to hydrate user after TOTP success');
+        navigate("/Form1", { replace: true });
+      }
+    } catch (e) {
+      console.warn("TOTP success handling failed:", e);
+      navigate("/Form1", { replace: true });
+      sessionStorage.removeItem(AUTH_TRANSITION_KEY);
+      sessionStorage.removeItem(AUTH_TRANSITION_STARTED_AT_KEY);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleTOTPCancel = () => {
+    totpModeRef.current = false;
+    setShowTOTPVerification(false);
+    setTotpUserData(null);
+    // Log the user out by clearing session
+    sessionStorage.removeItem(AUTH_TRANSITION_KEY);
+    sessionStorage.removeItem(AUTH_TRANSITION_STARTED_AT_KEY);
   };
 
   const handleForgotPassword = async (e) => {
@@ -619,6 +770,14 @@ function Login() {
           userEmail={mfaUserData?.email || email}
           onSuccess={handleMFASuccess}
           onCancel={handleMFACancel}
+        />
+      )}
+
+      {showTOTPVerification && (
+        <TOTPVerificationModal
+          userEmail={totpUserData?.email || email}
+          onSuccess={handleTOTPSuccess}
+          onCancel={handleTOTPCancel}
         />
       )}
     </div>

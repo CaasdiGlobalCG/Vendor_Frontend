@@ -147,7 +147,14 @@ const ProjectsPage = () => {
                     }
                 }
 
-                setProjects(mergedProjects);
+                // Filter out projects with name 'test' or 'default' (case-insensitive)
+                const filteredProjects = mergedProjects.filter(
+                    (project) => {
+                        const name = (project.name || '').toLowerCase();
+                        return name !== 'test' && name !== 'default';
+                    }
+                );
+                setProjects(filteredProjects);
                 setError(null);
             } catch (err) {
                 console.error("Error fetching projects / approved leads:", err);

@@ -44,6 +44,7 @@ export default function UserPortfolio() {
   const [productSearchQuery, setProductSearchQuery] = useState("");
   const [expandedProductId, setExpandedProductId] = useState(null);
   const [showAddProductForm, setShowAddProductForm] = useState(false);
+  const [showAddServiceForm, setShowAddServiceForm] = useState(false);
   const [dynamicFields, setDynamicFields] = useState([]);
   const [customFields, setCustomFields] = useState([]); // ADD THIS LINE
   const [editProduct, setEditProduct] = useState(null);
@@ -230,6 +231,19 @@ const [selectedCountry, setSelectedCountry] = useState('');
       };
   }, [imagePreview]);
 
+  // Manage body overflow when modals are open
+  useEffect(() => {
+    if (isProfileModalOpen || showAddProductForm || showAddServiceForm) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+    
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, [isProfileModalOpen, showAddProductForm, showAddServiceForm]);
+
   const profileDataRef = useRef(profileData);
   profileDataRef.current = profileData;
 
@@ -385,7 +399,6 @@ const [editProductData, setEditProductData] = useState(null);
 
   const [serviceSearchQuery, setServiceSearchQuery] = useState("");
   const [expandedServiceId, setExpandedServiceId] = useState(null);
-  const [showAddServiceForm, setShowAddServiceForm] = useState(false);
   const [currentProductPage, setCurrentProductPage] = useState(1);
   const [currentServicePage, setCurrentServicePage] = useState(1);
   const [newServiceCustomFields, setNewServiceCustomFields] = useState([]); // ADD THIS LINE
@@ -1965,17 +1978,18 @@ const [editProductData, setEditProductData] = useState(null);
       
       {/* Edit Profile Modal */}
       {isProfileModalOpen && (
-                <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 p-4 transition-opacity duration-300 ease-in-out">
-                    <div className="bg-white rounded-lg shadow-xl p-6 w-full max-w-md max-h-[90vh] overflow-y-auto transform transition-all duration-300 ease-in-out scale-100">
+                <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 sm:p-6">
+                    <div className="bg-white rounded-xl shadow-xl w-full max-w-2xl max-h-[90vh] flex flex-col overflow-hidden">
                         {/* Modal Header */}
-                        <div className="flex justify-between items-center mb-4 border-b pb-2">
+                        <div className="flex justify-between items-center px-6 py-4 border-b border-gray-200 flex-shrink-0 bg-white">
                             <h2 className="text-xl font-semibold text-gray-800">Edit Profile</h2>
-                            <button onClick={handleProfileCloseModal} className="text-gray-400 hover:text-gray-600">
+                            <button onClick={handleProfileCloseModal} className="text-gray-400 hover:text-gray-600 transition-colors">
                                 <CloseIcon size={20} />
                             </button>
                         </div>
                         {/* Modal Form */}
-                        <form onSubmit={(e) => e.preventDefault()} className="space-y-4">
+                        <div className="overflow-y-auto p-6 flex-1 bg-white">
+                            <form onSubmit={(e) => e.preventDefault()} className="space-y-4">
                             <div className="flex flex-col items-center space-y-3">
                                 <img src={imagePreview} alt="Profile Preview" className="w-32 h-32 rounded-full object-cover border-2 border-gray-300 shadow-sm" onError={(e) => { e.target.onerror = null; e.target.src = "https://via.placeholder.com/160"; }} />
                                 <label htmlFor="profileImage" className="cursor-pointer bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-medium px-4 py-2 rounded-md transition-colors">Change Image</label>
@@ -2051,30 +2065,33 @@ const [editProductData, setEditProductData] = useState(null);
                             </div>
                             <div><label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">Email</label><input type="email" id="email" name="email" value={profileFormData.email} onChange={handleProfileInputChange} className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent" required /></div>
                             {/* Action Buttons */}
-                            <div className="flex justify-end gap-3 pt-4 border-t mt-6">
+                            <div className="flex justify-end gap-3 pt-6 border-t mt-6 border-gray-200">
                                 <button type="button" onClick={handleProfileCloseModal} className="px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-400 transition-colors">Cancel</button>
                                 <button type="button" onClick={handleProfileSave} className="px-4 py-2 bg-gradient-to-l from-[#095B49] to-[#000000] text-white rounded-md hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 transition-opacity">Save Changes</button>
                             </div>
                         </form>
+                        </div>
                     </div>
                 </div>
             )}
 
       {/* Add product form modal */}
       {showAddProductForm && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
-          <div className="bg-white rounded-2xl shadow-xl p-8 w-full max-w-5xl overflow-y-auto max-h-[90vh] relative">
-            <button
-              onClick={handleCloseProductAddForm}
-              className="absolute top-4 right-4 text-gray-500 hover:text-gray-700"
-            >
-              <X size={20} />
-            </button>
-
-            <h2 className="text-2xl font-semibold mb-6 text-gray-800 border-b pb-2">
-              Add New Product
-            </h2>
+        <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 sm:p-6">
+          <div className="bg-white rounded-xl shadow-xl w-full max-w-2xl max-h-[90vh] flex flex-col overflow-hidden">
+            <div className="flex justify-between items-center px-6 py-4 border-b border-gray-200 flex-shrink-0 bg-white">
+                <h2 className="text-xl font-semibold text-gray-800">
+                  Add New Product
+                </h2>
+                <button
+                  onClick={handleCloseProductAddForm}
+                  className="text-gray-400 hover:text-gray-600 transition-colors"
+                >
+                  <X size={20} />
+                </button>
+            </div>
             
+            <div className="overflow-y-auto flex-1 p-6 bg-white">
             <div className="pb-1rem">
               {/* Add your form inputs and dynamic fields here */}
             </div>
@@ -2170,17 +2187,17 @@ const [editProductData, setEditProductData] = useState(null);
             </div>
 
             {/* Form Actions */}
-            <div className="mt-8 flex justify-end gap-4">
+            <div className="flex justify-end gap-3 pt-6 border-t mt-6 border-gray-200 bg-white">
               <button
                 onClick={handleCloseProductAddForm}
-                className="border border-gray-300 px-4 py-2 rounded-md hover:bg-gray-100"
+                className="px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-400 transition-colors"
               >
                 Cancel
               </button>
               <button
                 onClick={handleAddProduct}
                 disabled={isAddingProduct}
-                className={`bg-emerald-700 hover:bg-emerald-800 text-white font-medium px-6 py-2 rounded-md transition ${
+                className={`bg-gradient-to-l from-[#095B49] to-[#000000] text-white font-medium px-4 py-2 rounded-md hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 transition-opacity ${
                   isAddingProduct ? 'opacity-70 cursor-not-allowed' : ''
                 }`}
               >
@@ -2197,23 +2214,28 @@ const [editProductData, setEditProductData] = useState(null);
                 )}
               </button>
             </div>
+            </div>
           </div>
         </div>
       )}
 
       {/* Add service modal */}
       {showAddServiceForm && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
-          <div className="bg-white rounded-2xl shadow-xl p-8 w-full max-w-5xl overflow-y-auto max-h-[90vh] relative">
-            <button
-              onClick={handleCloseServiceAddForm}
-              className="absolute top-4 right-8 text-gray-500 hover:text-gray-700"
-            >
-              <X size={20} />
-            </button>
-            <h2 className="text-2xl font-semibold mb-6 text-gray-800 border-b pb-2">
-              Add New Service
-            </h2>
+        <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 sm:p-6">
+          <div className="bg-white rounded-xl shadow-xl w-full max-w-2xl max-h-[90vh] flex flex-col overflow-hidden">
+            <div className="flex justify-between items-center px-6 py-4 border-b border-gray-200 flex-shrink-0 bg-white">
+                <h2 className="text-xl font-semibold text-gray-800">
+                  Add New Service
+                </h2>
+                <button
+                  onClick={handleCloseServiceAddForm}
+                  className="text-gray-400 hover:text-gray-600 transition-colors"
+                >
+                  <X size={20} />
+                </button>
+            </div>
+            
+            <div className="overflow-y-auto flex-1 p-6 bg-white">
             <div className="pb-1rem">
               {/* Add your form inputs and dynamic fields here */}
             </div>
@@ -2321,17 +2343,17 @@ const [editProductData, setEditProductData] = useState(null);
             </div>
 
             {/* Action Buttons */}
-            <div className="mt-8 flex justify-end gap-4">
+            <div className="flex justify-end gap-3 pt-6 border-t mt-6 border-gray-200 bg-white">
               <button
                 onClick={handleCloseServiceAddForm}
-                className="border border-gray-300 px-4 py-2 rounded-md hover:bg-gray-100"
+                className="px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-400 transition-colors"
               >
                 Cancel
               </button>
               <button
                 onClick={handleAddService}
                 disabled={isAddingService}
-                className={`bg-emerald-700 hover:bg-emerald-800 text-white font-medium px-6 py-2 rounded-md transition ${
+                className={`bg-gradient-to-l from-[#095B49] to-[#000000] text-white font-medium px-4 py-2 rounded-md hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 transition-opacity ${
                   isAddingService ? 'opacity-70 cursor-not-allowed' : ''
                 }`}
               >
@@ -2347,6 +2369,7 @@ const [editProductData, setEditProductData] = useState(null);
                   'Add Service'
                 )}
               </button>
+            </div>
             </div>
           </div>
         </div>

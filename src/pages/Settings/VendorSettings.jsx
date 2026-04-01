@@ -1,5 +1,7 @@
 import { useState, useEffect, useContext, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
+import { Auth } from "aws-amplify";
+import QRCode from "qrcode";
 import { VendorContext } from "../../context/VendorContext";
 import config from "../../config/env";
 import authFetch from "../../utils/authFetch";
@@ -127,6 +129,18 @@ export default function VendorSettings() {
   // Security
   const [mfaEnabled, setMfaEnabled] = useState(false);
   const [sessions, setSessions] = useState([]);
+  const [showMfaSetup, setShowMfaSetup] = useState(false);
+  const [totpSecret, setTotpSecret] = useState(null);
+  const [totpUri, setTotpUri] = useState(null);
+  const [qrCodeUrl, setQrCodeUrl] = useState(null);
+  const [totpCode, setTotpCode] = useState("");
+  const [totpVerified, setTotpVerified] = useState(false);
+  const [backupCodes, setBackupCodes] = useState([]);
+  const [mfaError, setMfaError] = useState("");
+  const [mfaSuccess, setMfaSuccess] = useState("");
+  const [showTestCode, setShowTestCode] = useState(false);
+  const [testCodeData, setTestCodeData] = useState(null);
+  const [testCodeLoading, setTestCodeLoading] = useState(false);
 
   /* ── Sidebar nav items ────────────────────────── */
   const navItems = [
@@ -160,6 +174,9 @@ export default function VendorSettings() {
           vd = v.vendorDetails || vd;
           cd = v.companyDetails || cd;
           imgUrl = v.profileImage?.url || imgUrl;
+          
+          // Load MFA status from vendor data
+          setMfaEnabled(v.totpEnabled === true);
         }
       } catch { /* fall back to context data */ }
 
@@ -170,7 +187,13 @@ export default function VendorSettings() {
         companyName: cd.companyName || vd.companyName || "",
         state: cd.state || "",
         country: cd.country || "",
-        gstin: vd.gstin || "",
+        gstin: cd.gstNumber || "",
+      });
+      console.log('[VendorSettings] Loaded profile:', {
+        primaryContactName: vd.primaryContactName,
+        firstName: vd.firstName,
+        email: vd.primaryContactEmail,
+        phone: vd.phoneNumber,
       });
       setProfileImagePreview(imgUrl);
 
@@ -193,6 +216,13 @@ export default function VendorSettings() {
 
   useEffect(() => { loadSettings(); }, [loadSettings]);
 
+  /* ── Load MFA status from vendorData ────────── */
+  useEffect(() => {
+    if (vendorData?.totpEnabled === true) {
+      setMfaEnabled(true);
+    }
+  }, [vendorData]);
+
   /* ── Save profile ─────────────────────────────── */
   const handleSaveProfile = async () => {
     setSaving(true);
@@ -208,6 +238,7 @@ export default function VendorSettings() {
         companyName: profile.companyName,
         state: profile.state,
         country: profile.country,
+        gstNumber: profile.gstin,
       }));
       if (profileImage) formData.append("profileImage", profileImage);
 
@@ -229,7 +260,7 @@ export default function VendorSettings() {
     }
   };
 
-  /* ── Change password (Backend API) ────────────– */
+  /* ── Change password (AWS Cognito) ────────────– */
   const handleChangePassword = async () => {
     setPwdError("");
     setPwdSuccess("");
@@ -271,30 +302,35 @@ export default function VendorSettings() {
     
     setSaving(true);
     try {
-      const res = await authFetch(`${config.VENDOR_BACKEND_URL}/api/vendor/change-password`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          currentPassword: passwords.current,
-          newPassword: passwords.new,
-          confirmPassword: passwords.confirm
-        }),
-        credentials: "include"
-      });
+      const user = await Auth.currentAuthenticatedUser();
       
-      const data = await res.json();
-      
-      if (!res.ok) {
-        setPwdError(data.message || "Failed to change password");
-        return;
-      }
+      // Use AWS Cognito to change password
+      await Auth.changePassword(user, passwords.current, passwords.new);
       
       setPwdSuccess("Password changed successfully!");
       setPasswords({ current: "", new: "", confirm: "" });
-      showToast("Password changed successfully");
+      showToast("Password changed successfully. Please log in again with your new password.");
+      
+      // Optionally logout and redirect to login after successful password change
+      setTimeout(() => {
+        Auth.signOut();
+        navigate("/login");
+      }, 2000);
     } catch (err) {
       console.error("Error changing password:", err);
-      setPwdError(err.message || "An error occurred while changing password");
+      
+      // Map Cognito error messages to user-friendly messages
+      if (err.code === "NotAuthorizedException") {
+        setPwdError("Current password is incorrect");
+      } else if (err.code === "InvalidPasswordException") {
+        setPwdError("The password did not conform to policy. It must be at least 8 characters and contain uppercase, lowercase, number, and special character.");
+      } else if (err.code === "UserNotFoundException") {
+        setPwdError("User not found");
+      } else if (err.code === "LimitExceededException") {
+        setPwdError("Too many attempts. Please try again later.");
+      } else {
+        setPwdError(err.message || "Failed to change password");
+      }
     } finally {
       setSaving(false);
     }
@@ -329,11 +365,222 @@ export default function VendorSettings() {
 
   /* ── Logout ───────────────────────────────────── */
   const handleLogout = async () => {
+    const confirmed = window.confirm(
+      'Sign out from all devices?\n\n' +
+      'This will log you out from all active sessions. ' +
+      'You will need to log in again on all devices.'
+    );
+
+    if (!confirmed) return;
+
     try {
+      setSaving(true);
+      
+      // Call the global sign out endpoint
+      const res = await authFetch(`${config.VENDOR_BACKEND_URL}/api/auth/logout/all-devices`, {
+        method: 'POST',
+        credentials: 'include'
+      });
+
+      if (!res.ok) {
+        console.error('Global sign out failed:', res.status);
+      }
+
+      // Regardless of backend response, log out locally
       await logout();
       navigate("/login");
-    } catch {
+    } catch (err) {
+      console.error('Error during logout:', err);
+      // Still log out locally even if global sign out fails
+      await logout();
       navigate("/login");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  /* ── Setup TOTP - Call backend to generate secret ──────── */
+  const handleSetupTOTP = async () => {
+    setMfaError("");
+    setMfaSuccess("");
+    setSaving(true);
+    try {
+      const res = await authFetch(`${config.VENDOR_BACKEND_URL}/api/vendor/mfa/setup`, {
+        method: "POST",
+        credentials: "include"
+      });
+
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.message || "Failed to setup TOTP");
+      }
+
+      const data = await res.json();
+      const qrData = data.data;
+
+      // Generate QR code image
+      const qrDataUrl = await QRCode.toDataURL(qrData.qrCode);
+
+      setTotpSecret(qrData.secret);
+      setTotpUri(qrData.qrCode);
+      setQrCodeUrl(qrDataUrl);
+      setBackupCodes([]);  // Reset backup codes - will be set on verification
+      setTotpCode("");
+      setTotpVerified(false);  // Reset verification state
+      setShowMfaSetup(true);
+    } catch (err) {
+      console.error("Error setting up TOTP:", err);
+      setMfaError(err.message || "Failed to setup TOTP");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  /* ── Test TOTP code - fetch expected code for current secret ────────────── */
+  const handleTestCode = async () => {
+    if (!totpSecret) {
+      setMfaError("TOTP secret is not available");
+      return;
+    }
+
+    setTestCodeLoading(true);
+    try {
+      const res = await authFetch(`${config.VENDOR_BACKEND_URL}/api/vendor/mfa/test-code`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ totpSecret: totpSecret.trim() }),
+        credentials: "include"
+      });
+
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.message || "Failed to generate test code");
+      }
+
+      const data = await res.json();
+      setTestCodeData(data.data);
+      setShowTestCode(true);
+    } catch (err) {
+      console.error("Error fetching test code:", err);
+      setMfaError("Failed to generate test code: " + (err.message || "Unknown error"));
+    } finally {
+      setTestCodeLoading(false);
+    }
+  };
+
+  /* ── Verify TOTP code and enable MFA ────────────────── */
+  const handleVerifyTOTP = async () => {
+    setMfaError("");
+    const trimmedCode = totpCode.trim();
+    
+    // More aggressive cleaning: remove ALL non-ASCII-digit characters
+    // This handles Unicode digits, spaces, dashes, etc.
+    let cleanedCode = "";
+    for (let i = 0; i < trimmedCode.length; i++) {
+      const char = trimmedCode[i];
+      const code = char.charCodeAt(0);
+      // Only keep ASCII digits 0-9 (codes 48-57)
+      if (code >= 48 && code <= 57) {
+        cleanedCode += char;
+      }
+    }
+    
+    if (!cleanedCode || cleanedCode.length !== 6) {
+      setMfaError("Please enter exactly 6 digits from your authenticator app");
+      return;
+    }
+
+    setSaving(true);
+    
+    // Log details for debugging
+    console.log('=== TOTP Verification Debug ===');
+    console.log('Secret (to be sent):', totpSecret);
+    console.log('Secret length:', totpSecret?.length);
+    console.log('Code (to be sent):', cleanedCode);
+    console.log('Timestamp:', new Date().toISOString());
+    
+    try {
+      const res = await authFetch(`${config.VENDOR_BACKEND_URL}/api/vendor/mfa/verify-setup`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          totpSecret: totpSecret?.trim?.() || totpSecret,
+          verificationCode: cleanedCode
+        }),
+        credentials: "include"
+      });
+
+      if (!res.ok) {
+        const err = await res.json();
+        console.log('Backend response:', err);
+        
+        // Provide better error messages based on response
+        let errorMessage = err.message || "Failed to verify TOTP code";
+        
+        if (errorMessage.includes("doesn't match") || errorMessage.includes("Expected") || errorMessage.includes("Invalid")) {
+          errorMessage = "❌ Code mismatch detected!\n\n" +
+            "Your authenticator generated: " + cleanedCode + "\n" +
+            "Server expected something different.\n\n" +
+            "This usually means the secret in your authenticator app doesn't match the QR code secret.\n\n" +
+            "⚡ FIX:\n" +
+            "1. Delete this entry from your authenticator app\n" +
+            "2. Click 'Cancel' below\n" +
+            "3. Click 'Enable Two-Factor Authentication' again\n" +
+            "4. Scan the NEW QR code (or copy the secret code)\n" +
+            "5. Try again with codes from the NEW setup\n\n" +
+            (err.debug?.expectedCode ? `Server generated: ${err.debug.expectedCode}` : '');
+        }
+        
+        if (err.debug?.codeLength === 0) {
+          errorMessage = "Code cannot be empty";
+        } else if (err.debug?.codeLength && err.debug.codeLength !== 6) {
+          errorMessage = `Invalid length: ${err.debug.codeLength} digits entered, need 6`;
+        } else if (err.debug && err.debug.isNumeric === false) {
+          errorMessage = "Error: Code contains non-digit characters. Only 0-9 allowed.";
+        }
+        
+        throw new Error(errorMessage);
+      }
+
+      const data = await res.json();
+      setMfaSuccess("Two-Factor Authentication enabled successfully!");
+      setMfaEnabled(true);
+      setTotpVerified(true);
+      setBackupCodes(data.data?.backupCodes || []);
+      showToast("Two-Factor Authentication enabled");
+    } catch (err) {
+      console.error("Error verifying TOTP:", err);
+      setMfaError(err.message || "Failed to verify TOTP code");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  /* ── Disable 2FA ────────────────────────────── */
+  const handleDisableMFA = async () => {
+    if (!window.confirm("Are you sure you want to disable Two-Factor Authentication? Your account will be less secure.")) {
+      return;
+    }
+
+    setSaving(true);
+    try {
+      const res = await authFetch(`${config.VENDOR_BACKEND_URL}/api/vendor/mfa/disable`, {
+        method: "POST",
+        credentials: "include"
+      });
+
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.message || "Failed to disable MFA");
+      }
+
+      setMfaEnabled(false);
+      showToast("Two-Factor Authentication disabled");
+    } catch (err) {
+      console.error("Error disabling MFA:", err);
+      showToast(err.message || "Failed to disable MFA", "error");
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -548,19 +795,223 @@ export default function VendorSettings() {
             </SectionCard>
 
             {/* Two-Factor Authentication */}
-            <SectionCard icon={Smartphone} title="Two-Factor Authentication" description="Add an extra layer of security to your account">
-              <div className="flex items-center justify-between py-3">
-                <div className="flex items-start gap-3">
-                  <div className="w-10 h-10 rounded-lg bg-blue-50 flex items-center justify-center">
-                    <Shield className="w-5 h-5 text-blue-600" />
+            <SectionCard icon={Shield} title="Two-Factor Authentication" description="Add an extra layer of security with authenticator app">
+              {!showMfaSetup ? (
+                <div className="space-y-4">
+                  {/* Status Row */}
+                  <div className="flex items-center justify-between py-4 border-b border-gray-100">
+                    <div className="flex items-start gap-3">
+                      <div className={`w-10 h-10 rounded-lg ${mfaEnabled ? "bg-emerald-50" : "bg-blue-50"} flex items-center justify-center`}>
+                        <Shield className={`w-5 h-5 ${mfaEnabled ? "text-emerald-600" : "text-blue-600"}`} />
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium text-gray-900">
+                          {mfaEnabled ? "Authenticator App Enabled" : "Authenticator App"}
+                        </p>
+                        <p className="text-xs text-gray-500 mt-0.5">
+                          {mfaEnabled 
+                            ? "Use an authenticator app on your phone to generate verification codes" 
+                            : "Get a verification code from an authenticator app on every login for added security"}
+                        </p>
+                      </div>
+                    </div>
+                    <span className={`text-xs font-medium px-3 py-1 rounded-full ${
+                      mfaEnabled 
+                        ? "bg-emerald-100 text-emerald-700" 
+                        : "bg-gray-100 text-gray-600"
+                    }`}>
+                      {mfaEnabled ? "Active" : "Inactive"}
+                    </span>
                   </div>
-                  <div>
-                    <p className="text-sm font-medium text-gray-900">Two-Step Verification</p>
-                    <p className="text-xs text-gray-500 mt-0.5">Use an authenticator app to generate one-time codes</p>
+
+                  {/* Setup Button or Disable Button */}
+                  <div className="flex gap-3 pt-3">
+                    {mfaEnabled ? (
+                      <button
+                        onClick={handleDisableMFA}
+                        disabled={saving}
+                        className="px-4 py-2.5 text-sm font-medium rounded-lg border border-red-300 text-red-600 hover:bg-red-50 transition-colors disabled:opacity-50 flex items-center gap-2"
+                      >
+                        {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <X className="w-4 h-4" />}
+                        Disable 2FA
+                      </button>
+                    ) : (
+                      <button
+                        onClick={handleSetupTOTP}
+                        disabled={saving}
+                        className="px-4 py-2.5 text-sm font-medium bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                      >
+                        {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Shield className="w-4 h-4" />}
+                        Set Up Now
+                      </button>
+                    )}
                   </div>
                 </div>
-                <span className="text-xs font-medium px-3 py-1 rounded-full bg-gray-100 text-gray-500">Coming Soon</span>
-              </div>
+              ) : (
+                // TOTP Setup Form
+                <div className="space-y-6">
+                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                    <p className="text-sm text-blue-900">
+                      📱 Scan the QR code with your authenticator app (Google Authenticator, Microsoft Authenticator, Authy, etc.)
+                    </p>
+                  </div>
+
+                  {!totpVerified ? (
+                    <>
+                      {/* QR Code Display */}
+                      {qrCodeUrl && (
+                        <div className="flex flex-col items-center gap-4">
+                          <div className="bg-white p-4 rounded-lg border border-gray-200">
+                            <img src={qrCodeUrl} alt="TOTP QR Code" className="w-48 h-48" />
+                          </div>
+                          <div className="text-center">
+                            <p className="text-xs text-gray-600 mb-2">Can't scan? Enter this code manually:</p>
+                            <code className="block text-sm font-mono bg-gray-100 rounded px-3 py-2 text-gray-900 break-all">
+                              {totpSecret}
+                            </code>
+                          </div>
+                        </div>
+                      )}
+
+                      {mfaError && (
+                        <div className="flex items-center gap-2 text-red-600 bg-red-50 rounded-lg px-3 py-2">
+                          <AlertCircle className="w-4 h-4 flex-shrink-0" />
+                          <span className="text-sm">{mfaError}</span>
+                        </div>
+                      )}
+
+                      {/* Verification Code Input */}
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Enter the 6-digit code from your authenticator app
+                        </label>
+                        <input
+                          type="text"
+                          inputMode="numeric"
+                          maxLength="6"
+                          value={totpCode}
+                          onChange={(e) => {
+                            // Only allow ASCII digits 0-9
+                            let cleaned = "";
+                            for (let i = 0; i < e.target.value.length; i++) {
+                              const code = e.target.value.charCodeAt(i);
+                              if (code >= 48 && code <= 57) { // 0-9
+                                cleaned += e.target.value[i];
+                              }
+                            }
+                            setTotpCode(cleaned);
+                          }}
+                          placeholder="000000"
+                          className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-center text-2xl tracking-widest font-mono"
+                        />
+                        <p className="text-xs text-gray-500 mt-1">The code refreshes every 30 seconds. Match it with the "Current" code shown below.</p>
+                        
+                        {/* Test Code Section */}
+                        <button
+                          type="button"
+                          onClick={handleTestCode}
+                          disabled={testCodeLoading || !totpSecret}
+                          className="mt-3 px-3 py-1.5 text-xs font-medium text-blue-600 border border-blue-200 rounded hover:bg-blue-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          {testCodeLoading ? "Generating..." : "🔍 Show Expected Code"}
+                        </button>
+
+                        {showTestCode && testCodeData && (
+                          <div className="mt-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                            <p className="text-xs font-medium text-blue-900 mb-2">Expected Codes (for debugging):</p>
+                            <div className="space-y-1 font-mono text-sm">
+                              <p className="text-blue-600"><strong>Current:</strong> {testCodeData.currentCode}</p>
+                              <p className="text-gray-600 text-xs">Previous: {testCodeData.previousCode}</p>
+                              <p className="text-gray-600 text-xs">Next: {testCodeData.nextCode}</p>
+                            </div>
+                            <p className="text-xs text-blue-700 mt-2">Compare these with your authenticator app. If they don't match, check that your device's time is correct.</p>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Action Buttons */}
+                      <div className="flex gap-3 justify-end pt-4 border-t border-gray-100">
+                        <button
+                          onClick={() => {
+                            setShowMfaSetup(false);
+                            setTotpCode("");
+                            setTotpSecret("");
+                            setQrCodeUrl("");
+                            setTotpVerified(false);
+                            setMfaError("");
+                            setMfaSuccess("");
+                            setShowTestCode(false);
+                            setTestCodeData(null);
+                          }}
+                          className="px-4 py-2.5 text-sm font-medium text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+                        >
+                          Cancel
+                        </button>
+                        <button
+                          onClick={handleVerifyTOTP}
+                          disabled={saving || !totpCode || totpCode.length !== 6}
+                          className="px-6 py-2.5 text-sm font-medium bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                        >
+                          {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
+                          Verify & Enable
+                        </button>
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      {/* Success and Backup Codes */}
+                      <div className="flex items-center gap-2 text-emerald-600 bg-emerald-50 rounded-lg px-3 py-2">
+                        <Check className="w-4 h-4 flex-shrink-0" />
+                        <span className="text-sm">Two-Factor Authentication enabled successfully!</span>
+                      </div>
+
+                      <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                        <p className="text-sm font-medium text-yellow-900 mb-2">
+                          ⚠️ Save your backup codes in a safe place. You can use these to access your account if you lose your authenticator device.
+                        </p>
+                      </div>
+
+                      {/* Backup Codes Display */}
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-3">
+                          Backup Codes
+                        </label>
+                        <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
+                          <div className="grid grid-cols-2 gap-2">
+                            {backupCodes.map((code, index) => (
+                              <div key={index} className="font-mono text-sm bg-white p-2 rounded border border-gray-200 text-center">
+                                {code}
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                        <p className="text-xs text-gray-500 mt-2">Each code can only be used once. Keep them somewhere secure.</p>
+                      </div>
+
+                      {/* Done Button */}
+                      <div className="flex gap-3 justify-end pt-4 border-t border-gray-100">
+                        <button
+                          onClick={() => {
+                            setShowMfaSetup(false);
+                            setTotpCode("");
+                            setTotpSecret("");
+                            setQrCodeUrl("");
+                            setTotpVerified(false);
+                            setBackupCodes([]);
+                            setMfaError("");
+                            setMfaSuccess("");
+                            setMfaEnabled(true);
+                          }}
+                          className="px-6 py-2.5 text-sm font-medium bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors flex items-center gap-2"
+                        >
+                          <Check className="w-4 h-4" />
+                          Done
+                        </button>
+                      </div>
+                    </>
+                  )}
+                </div>
+              )}
             </SectionCard>
 
             {/* Active Sessions */}
@@ -573,9 +1024,10 @@ export default function VendorSettings() {
                   </div>
                   <button
                     onClick={handleLogout}
-                    className="px-4 py-2 text-sm font-medium text-red-600 bg-red-50 rounded-lg hover:bg-red-100 transition-colors flex items-center gap-2"
+                    disabled={saving}
+                    className="px-4 py-2 text-sm font-medium text-red-600 bg-red-50 rounded-lg hover:bg-red-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
                   >
-                    <LogOut className="w-4 h-4" />
+                    {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <LogOut className="w-4 h-4" />}
                     Sign Out
                   </button>
                 </div>
