@@ -117,6 +117,7 @@ function Login() {
     sessionStorage.setItem(AUTH_TRANSITION_KEY, 'true');
     sessionStorage.setItem(AUTH_TRANSITION_STARTED_AT_KEY, String(Date.now()));
 
+
     try {
       const cognitoUser = await Auth.signIn(email, password);
       const session = await Auth.currentSession();
@@ -127,6 +128,7 @@ function Login() {
       let verifyIsTeamMember = false;
       let verifyRole = null;
       let verifyOrgType = null;
+      let verifyPlatformAccess = null;
 
       try {
         const verifyRes = await fetch(`${config.VENDOR_BACKEND_URL}/api/auth/verify`, {
@@ -151,6 +153,14 @@ function Login() {
           verifyOrgType = (verifyData?.orgType || '').toString().toLowerCase();
           verifyRoleSelected = verifyData?.roleSelected === true;
           verifyLastSelectedRole = (verifyData?.lastSelectedRole || "").toString().toLowerCase();
+          verifyPlatformAccess = Array.isArray(verifyData?.platformAccess)
+            ? verifyData.platformAccess
+            : null;
+
+          // Debug logs for routing
+          console.log("explicitVendor:", explicitVendor, "Query Params:", location.search);
+          console.log("verifyLastSelectedRole:", verifyLastSelectedRole);
+          console.log("verifyPlatformAccess:", verifyPlatformAccess);
 
           // Legacy hint only; guards should rely on /verify.
           try {
@@ -179,10 +189,6 @@ function Login() {
           // If the backend returned platformAccess, use it for intelligent routing.
           // Single-platform users go directly to that platform.
           // Multi-platform users use lastSelectedRole as tiebreaker.
-          const verifyPlatformAccess = Array.isArray(verifyData?.platformAccess)
-            ? verifyData.platformAccess
-            : null;
-
           if (verifyPlatformAccess && !explicitVendor) {
             const hasVendor = verifyPlatformAccess.includes('vendor');
             const hasClient = verifyPlatformAccess.includes('client');
@@ -209,10 +215,17 @@ function Login() {
               }
               // else: fall through to vendor dashboard (default)
             }
-          } else if (!explicitVendor && verifyLastSelectedRole === "client") {
-            // Fallback: no platformAccess data — use legacy lastSelectedRole check
+          }
+          // Fallback: no platformAccess data — use legacy lastSelectedRole check
+          if (!explicitVendor && verifyLastSelectedRole === "client") {
             await redirectToClientWithHandoff({ token: idToken });
             return;
+          }
+          // NEW: Fallback for vendor
+          if (!explicitVendor && verifyLastSelectedRole === "vendor") {
+            console.log("Routing to vendor dashboard based on last selected role.");
+            // We have hydrated vendorUser later, so just continue to vendor dashboard logic
+            // (do not return here, let the normal vendor routing proceed)
           }
         }
       } catch (verifyErr) {
