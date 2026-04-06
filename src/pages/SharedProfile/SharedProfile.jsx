@@ -20,6 +20,7 @@ export default function SharedProfile() {
   const { vendorId } = useParams();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
+  const isPdfRender = searchParams.get('render') === 'pdf';
   const [vendorData, setVendorData] = useState(null);
   const [profileData, setProfileData] = useState(null);
   const [projects, setProjects] = useState([]);
@@ -70,12 +71,16 @@ export default function SharedProfile() {
   };
 
   useEffect(() => {
-    const visitorKey = `visitor_submitted_${vendorId}`;
-    const hasSubmitted = localStorage.getItem(visitorKey);
-    setShowDetailsForm(!hasSubmitted);
+    if (isPdfRender) {
+      setShowDetailsForm(false);
+    } else {
+      const visitorKey = `visitor_submitted_${vendorId}`;
+      const hasSubmitted = localStorage.getItem(visitorKey);
+      setShowDetailsForm(!hasSubmitted);
+    }
     fetchSharedData();
     fetchSalesMetrics();
-  }, [vendorId]);
+  }, [isPdfRender, vendorId]);
 
   const fetchSharedData = async () => {
     try {
@@ -318,7 +323,11 @@ export default function SharedProfile() {
       )}
 
       {!showDetailsForm && (
-        <PortfolioLayout companyName={companyName} accentColor={portfolioConfig.accentColor}>
+        <PortfolioLayout
+          companyName={companyName}
+          accentColor={portfolioConfig.accentColor}
+          downloadUrl={`${config.VENDOR_BACKEND_URL}/api/vendor/shared/${vendorId}/pdf${window.location.search}`}
+        >
           <CoverPage
             pageTitle="Cover"
             companyName={companyName}
