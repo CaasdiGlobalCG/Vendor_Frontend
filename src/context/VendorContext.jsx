@@ -1,6 +1,7 @@
 import React, { createContext, useState, useEffect, useCallback } from "react";
 import config from "../config/env";
 import authFetch from "../utils/authFetch";
+import { isInviteAcceptRoute } from "../public-routes/inviteRoute";
 
 export const VendorContext = createContext();
 const AUTH_TRANSITION_KEY = 'vendorAuthTransitionInProgress';
@@ -22,15 +23,9 @@ export const VendorProvider = ({ children }) => {
   const [isHydratingUser, setIsHydratingUser] = useState(true);
   const [vendorData, setVendorData] = useState(initialData);
 
-  const isInviteAcceptRoute = useCallback(() => {
+  const isPublicInviteRoute = useCallback(() => {
     if (typeof window === 'undefined') return false;
-    const path = (window.location.pathname || '').toLowerCase().replace(/\/+$/, '');
-    const hash = (window.location.hash || '').toLowerCase();
-    return (
-      path === '/invite/accept' ||
-      path.startsWith('/invite/accept/') ||
-      hash.includes('/invite/accept')
-    );
+    return isInviteAcceptRoute(window.location);
   }, []);
 
   const hydrateCurrentUser = useCallback(async () => {
@@ -148,13 +143,13 @@ export const VendorProvider = ({ children }) => {
 
   // Hydrate on first mount
   useEffect(() => {
-    if (isInviteAcceptRoute()) {
+    if (isPublicInviteRoute()) {
       setCurrentUser(null);
       setIsHydratingUser(false);
       return;
     }
     hydrateCurrentUser();
-  }, [hydrateCurrentUser, isInviteAcceptRoute]);
+  }, [hydrateCurrentUser, isPublicInviteRoute]);
 
   // Set current user and reset vendor data if needed
   const setUser = (user) => {

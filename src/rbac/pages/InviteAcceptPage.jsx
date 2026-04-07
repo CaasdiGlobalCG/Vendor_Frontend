@@ -49,7 +49,12 @@ export default function InviteAcceptPage() {
 
     try {
       const res = await fetch(
-        `${BASE_URL}/api/rbac/invite/validate?token=${encodeURIComponent(token)}`
+        `${BASE_URL}/api/rbac/invite/validate?token=${encodeURIComponent(token)}`,
+        {
+          method: 'GET',
+          credentials: 'omit',
+          headers: { Accept: 'application/json' },
+        }
       );
       const data = await res.json();
 
@@ -105,6 +110,7 @@ export default function InviteAcceptPage() {
     try {
       const res = await fetch(`${BASE_URL}/api/rbac/invite/accept`, {
         method: 'POST',
+        credentials: 'omit',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           token,

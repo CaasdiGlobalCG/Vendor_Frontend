@@ -7,7 +7,7 @@ import { NotificationProvider } from "./context/NotificationContext";
 import { RBACProvider } from "./rbac";
 import { AccessDeniedGuard } from "./rbac/components/AccessDeniedScreen";
 import TeamPage from "./rbac/pages/TeamPage";
-import InviteAcceptPage from "./rbac/pages/InviteAcceptPage";
+import PublicInviteRoutes from "./public-routes/PublicInviteRoutes";
 import { ModuleGuard } from "./rbac/components/ModuleGuard";
 import UnauthorizedPage from "./pages/UnauthorizedPage";
 import SignUp from "./components/SignUp";
@@ -52,6 +52,7 @@ import SupportPage from "./pages/support/SupportPage";
 import SupportTicketDetail from "./pages/support/SupportTicketDetail";
 import { getVendorDestination } from "./utils/vendorAuthRouting";
 import AuthSkeletonScreen from "./components/loading/AuthSkeletonScreen";
+import { isInviteAcceptRoute } from "./public-routes/inviteRoute";
 
 // Error Boundary Component
 class ErrorBoundary extends Component {
@@ -190,23 +191,16 @@ const Layout = () => {
 
 function App() {
   const location = useLocation();
-  const isInviteAcceptRoute = useMemo(() => {
-    const normalizedPath = (location.pathname || '').toLowerCase().replace(/\/+$/, '');
-    const hashPath = (location.hash || '').toLowerCase();
-    return (
-      normalizedPath === '/invite/accept' ||
-      normalizedPath.startsWith('/invite/accept/') ||
-      hashPath.includes('/invite/accept')
-    );
-  }, [location.pathname, location.hash]);
+  const isPublicInviteRoute = useMemo(
+    () => isInviteAcceptRoute(location),
+    [location.pathname, location.hash]
+  );
 
   // Keep invite acceptance fully public by avoiding global auth providers here.
-  if (isInviteAcceptRoute) {
+  if (isPublicInviteRoute) {
     return (
       <ErrorBoundary>
-        <Routes>
-          <Route path="/invite/accept" element={<InviteAcceptPage />} />
-        </Routes>
+        <PublicInviteRoutes />
       </ErrorBoundary>
     );
   }

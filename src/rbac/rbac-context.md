@@ -84,6 +84,8 @@ src/rbac/
 - `App.jsx` + `Login.jsx` + `VendorGuard` now share `src/utils/vendorAuthRouting.js` for consistent destination logic (`/VendorDashboard`, `/Auditorapprove`, `/Form1`).
 - `App.jsx` now uses a robust invite-route detector (pathname + hash variants) and keeps `/invite/accept` isolated from global auth providers to prevent accidental auth hydration on invite links.
 - `VendorContext.jsx` now skips initial `hydrateCurrentUser()` on invite-accept routes, so invitees without an active session do not trigger `/api/vendor/me` 401 + Cognito refresh warnings before token validation.
+- Invite-route isolation was extracted to `src/public-routes/inviteRoute.js` + `src/public-routes/PublicInviteRoutes.jsx` to keep `App.jsx` thin and avoid scattered route checks.
+- `InviteAcceptPage.jsx` now calls validate/accept with `credentials: 'omit'` so public invite APIs are not coupled to any stale browser session cookie.
 - `VendorContext.jsx` → reads `isTeamMember` from `/me` response, propagates to all consumers
 - `RBACContext.jsx` → waits for VendorContext hydration, passes `vendorId` hint to `/api/rbac/me`
 - For full details, see `Documents/RBAC/Team_Member_Login_Flow.md`.
