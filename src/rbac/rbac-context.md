@@ -82,6 +82,8 @@ src/rbac/
 - `AccessDeniedGuard` uses the same skeleton while RBAC access is resolving, preventing spinner-style visual mismatch before deny/allow is known.
 - Vendor app now treats inbound switch query markers (`transition=1`, `fromClient=true`, `fromSales=true`) as a transition phase: it raises auth-transition state, attempts hydration, and renders `AuthSkeletonScreen` before rendering login/dashboard.
 - `App.jsx` + `Login.jsx` + `VendorGuard` now share `src/utils/vendorAuthRouting.js` for consistent destination logic (`/VendorDashboard`, `/Auditorapprove`, `/Form1`).
+- `App.jsx` now uses a robust invite-route detector (pathname + hash variants) and keeps `/invite/accept` isolated from global auth providers to prevent accidental auth hydration on invite links.
+- `VendorContext.jsx` now skips initial `hydrateCurrentUser()` on invite-accept routes, so invitees without an active session do not trigger `/api/vendor/me` 401 + Cognito refresh warnings before token validation.
 - `VendorContext.jsx` → reads `isTeamMember` from `/me` response, propagates to all consumers
 - `RBACContext.jsx` → waits for VendorContext hydration, passes `vendorId` hint to `/api/rbac/me`
 - For full details, see `Documents/RBAC/Team_Member_Login_Flow.md`.

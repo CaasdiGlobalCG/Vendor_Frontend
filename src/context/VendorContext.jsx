@@ -22,6 +22,17 @@ export const VendorProvider = ({ children }) => {
   const [isHydratingUser, setIsHydratingUser] = useState(true);
   const [vendorData, setVendorData] = useState(initialData);
 
+  const isInviteAcceptRoute = useCallback(() => {
+    if (typeof window === 'undefined') return false;
+    const path = (window.location.pathname || '').toLowerCase().replace(/\/+$/, '');
+    const hash = (window.location.hash || '').toLowerCase();
+    return (
+      path === '/invite/accept' ||
+      path.startsWith('/invite/accept/') ||
+      hash.includes('/invite/accept')
+    );
+  }, []);
+
   const hydrateCurrentUser = useCallback(async () => {
     try {
       setIsHydratingUser(true);
@@ -137,8 +148,13 @@ export const VendorProvider = ({ children }) => {
 
   // Hydrate on first mount
   useEffect(() => {
+    if (isInviteAcceptRoute()) {
+      setCurrentUser(null);
+      setIsHydratingUser(false);
+      return;
+    }
     hydrateCurrentUser();
-  }, [hydrateCurrentUser]);
+  }, [hydrateCurrentUser, isInviteAcceptRoute]);
 
   // Set current user and reset vendor data if needed
   const setUser = (user) => {

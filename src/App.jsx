@@ -189,6 +189,28 @@ const Layout = () => {
 };
 
 function App() {
+  const location = useLocation();
+  const isInviteAcceptRoute = useMemo(() => {
+    const normalizedPath = (location.pathname || '').toLowerCase().replace(/\/+$/, '');
+    const hashPath = (location.hash || '').toLowerCase();
+    return (
+      normalizedPath === '/invite/accept' ||
+      normalizedPath.startsWith('/invite/accept/') ||
+      hashPath.includes('/invite/accept')
+    );
+  }, [location.pathname, location.hash]);
+
+  // Keep invite acceptance fully public by avoiding global auth providers here.
+  if (isInviteAcceptRoute) {
+    return (
+      <ErrorBoundary>
+        <Routes>
+          <Route path="/invite/accept" element={<InviteAcceptPage />} />
+        </Routes>
+      </ErrorBoundary>
+    );
+  }
+
   return (
       <UserProvider>
         <VendorProvider>
@@ -340,7 +362,6 @@ function AppContent() {
       <Route path="/home" element={<HomePage />} />
       <Route path="/signup" element={<SignUp />} />
       <Route path="/login" element={<LoginRouteGate><Login /></LoginRouteGate>} />
-      <Route path="/invite/accept" element={<InviteAcceptPage />} />
       <Route path="/unauthorized" element={<UnauthorizedPage />} />
       {/* Protect vendor onboarding routes behind RoleGuard */}
       <Route path="/Form1" element={<RoleGuard><Form1 /></RoleGuard>} />
