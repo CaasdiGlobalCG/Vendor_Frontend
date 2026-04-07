@@ -72,6 +72,9 @@ src/rbac/
 - `App.jsx` → `RoleGuard` was refactored to a non-reentrant guard flow using refs for retry/timer control, preventing effect re-entry races while preserving existing route behavior.
 - `Login.jsx` + `VendorContext.jsx` + `RoleGuard` now coordinate with a transient session flag (`vendorAuthTransitionInProgress`) so fallback login redirects are suppressed while post-login hydration is still in-flight.
 - `/login` now runs behind `LoginRouteGate` in `App.jsx`, so active transition/hydration shows a neutral loading screen instead of rendering the login form for a frame.
+- Post-login cross-platform decision logic is isolated in `src/utils/postLoginPlatformResolver.js` and used by `Login.jsx` as the single routing decision source.
+- Successful vendor login now persists `users.lastSelectedRole='vendor'` through `POST /api/auth/set-role` (non-blocking) to keep subsequent login routing consistent.
+- Resolver precedence now honors `users.lastSelectedRole` first (unless explicit vendor intent is present), then falls back to platformAccess/role/orgType.
 - Auth transition screens now use a shared skeleton component (`components/loading/AuthSkeletonScreen.jsx`) for consistent UX across handoff, login gate, and role-guard loading states.
 - Header cross-app switches (`Client`, `Sales`, `Tender`) now also use the same `AuthSkeletonScreen` overlay while redirect handoff is in progress.
 - Vendor header `Vendor/Client` toggle gradients now match Client app top-right toggle styling (Client: blue/sky, Vendor: teal/green) so cross-platform switch controls look consistent in both placements.

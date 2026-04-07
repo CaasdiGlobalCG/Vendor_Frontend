@@ -13,6 +13,7 @@ import TOTPVerificationModal from "./TOTPVerificationModal";
 import { redirectToClientWithHandoff } from "../utils/handoffToClient";
 import { redirectToSalesWithHandoff } from "../utils/handoffToSales";
 import { getVendorDestination, isRejectedVendor } from "../utils/vendorAuthRouting";
+import { resolvePostLoginPlatform, persistLastSelectedPlatform } from "../utils/postLoginPlatformResolver";
 
 const AUTH_TRANSITION_KEY = 'vendorAuthTransitionInProgress';
 const AUTH_TRANSITION_STARTED_AT_KEY = 'vendorAuthTransitionStartedAt';
@@ -129,6 +130,7 @@ function Login() {
       let verifyRole = null;
       let verifyOrgType = null;
       let verifyPlatformAccess = null;
+      let resolvedPlatform = 'vendor';
 
       try {
         const verifyRes = await fetch(`${config.VENDOR_BACKEND_URL}/api/auth/verify`, {
@@ -175,57 +177,22 @@ function Login() {
             return;
           }
 
-          if (!explicitVendor && (verifyOrgType === 'client' || verifyRole === 'client')) {
+          const platformDecision = resolvePostLoginPlatform({
+            explicitVendor,
+            lastSelectedRole: verifyLastSelectedRole,
+            role: verifyRole,
+            orgType: verifyOrgType,
+            platformAccess: verifyPlatformAccess,
+          });
+          resolvedPlatform = platformDecision.platform;
+
+          if (resolvedPlatform === 'client') {
             await redirectToClientWithHandoff({ token: idToken });
             return;
           }
-
-          if (!explicitVendor && (verifyOrgType === 'sales' || verifyRole === 'sales')) {
+          if (resolvedPlatform === 'sales') {
             await redirectToSalesWithHandoff('/', { token: idToken });
             return;
-          }
-
-          // ── Platform-access-based auto-routing ──
-          // If the backend returned platformAccess, use it for intelligent routing.
-          // Single-platform users go directly to that platform.
-          // Multi-platform users use lastSelectedRole as tiebreaker.
-          if (verifyPlatformAccess && !explicitVendor) {
-            const hasVendor = verifyPlatformAccess.includes('vendor');
-            const hasClient = verifyPlatformAccess.includes('client');
-            const hasSales = verifyPlatformAccess.includes('sales');
-
-            // Single-platform: auto-route without ambiguity
-            if (!hasVendor && hasClient && !hasSales) {
-              await redirectToClientWithHandoff({ token: idToken });
-              return;
-            }
-            if (!hasVendor && !hasClient && hasSales) {
-              await redirectToSalesWithHandoff('/', { token: idToken });
-              return;
-            }
-            // Multi-platform: use lastSelectedRole as tiebreaker
-            if (hasVendor && (hasClient || hasSales)) {
-              if (verifyLastSelectedRole === 'client' && hasClient) {
-                await redirectToClientWithHandoff({ token: idToken });
-                return;
-              }
-              if (verifyLastSelectedRole === 'sales' && hasSales) {
-                await redirectToSalesWithHandoff('/', { token: idToken });
-                return;
-              }
-              // else: fall through to vendor dashboard (default)
-            }
-          }
-          // Fallback: no platformAccess data — use legacy lastSelectedRole check
-          if (!explicitVendor && verifyLastSelectedRole === "client") {
-            await redirectToClientWithHandoff({ token: idToken });
-            return;
-          }
-          // NEW: Fallback for vendor
-          if (!explicitVendor && verifyLastSelectedRole === "vendor") {
-            console.log("Routing to vendor dashboard based on last selected role.");
-            // We have hydrated vendorUser later, so just continue to vendor dashboard logic
-            // (do not return here, let the normal vendor routing proceed)
           }
         }
       } catch (verifyErr) {
@@ -309,11 +276,18 @@ function Login() {
 
       if (!hydrated?.ok || !hydrated?.user) {
         if (!explicitVendor && hydrated?.status === 404) {
-          if (verifyOrgType === 'client' || verifyLastSelectedRole === 'client' || verifyRole === 'client') {
+          const fallbackDecision = resolvePostLoginPlatform({
+            explicitVendor,
+            lastSelectedRole: verifyLastSelectedRole,
+            role: verifyRole,
+            orgType: verifyOrgType,
+            platformAccess: verifyPlatformAccess,
+          });
+          if (fallbackDecision.platform === 'client') {
             await redirectToClientWithHandoff({ token: idToken });
             return;
           }
-          if (verifyOrgType === 'sales' || verifyLastSelectedRole === 'sales' || verifyRole === 'sales') {
+          if (fallbackDecision.platform === 'sales') {
             await redirectToSalesWithHandoff('/', { token: idToken });
             return;
           }
@@ -372,6 +346,10 @@ function Login() {
         navigate(from.pathname, { replace: true });
         return;
       }
+
+      // Persist vendor as the user's active platform for subsequent logins.
+      // Non-blocking: navigation should not fail if this update fails.
+      await persistLastSelectedPlatform('vendor', idToken);
 
       // Final vendor routing based on vendors table status.
       if (verifyRoleSelected === false) {
