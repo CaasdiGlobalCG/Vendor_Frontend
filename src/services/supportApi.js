@@ -46,6 +46,22 @@ export async function listTickets() {
   return data;
 }
 
+// ── List available linked records for a support module ──────────────────────
+export async function listReferenceOptions(module, search = '', limit = 5) {
+  const params = new URLSearchParams();
+  if (module) params.set('module', module);
+  if (search) params.set('search', search);
+  if (limit) params.set('limit', String(limit));
+
+  const res = await fetch(`${BASE}/reference-options?${params.toString()}`, {
+    credentials: 'include',
+    headers: authHeaders(),
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message || 'Failed to load linked records');
+  return data;
+}
+
 // ── Get one ticket (with messages) ───────────────────────────────────────────
 export async function getTicket(ticketId) {
   const res = await fetch(`${BASE}/${ticketId}`, {
@@ -54,6 +70,17 @@ export async function getTicket(ticketId) {
   });
   const data = await res.json();
   if (!res.ok) throw new Error(data.message || 'Failed to load ticket');
+  return data;
+}
+
+// ── Get the resolved linked record for a ticket ─────────────────────────────
+export async function getTicketReference(ticketId) {
+  const res = await fetch(`${BASE}/${ticketId}/reference`, {
+    credentials: 'include',
+    headers: authHeaders(),
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message || 'Failed to load linked record');
   return data;
 }
 

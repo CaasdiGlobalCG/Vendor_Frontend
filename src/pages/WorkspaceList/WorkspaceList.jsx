@@ -297,6 +297,19 @@ const WorkspaceList = () => {
     }
   };
 
+  const openWorkspaceSupport = async (item) => {
+    try {
+      setAccessFeedback('');
+      setResolvingWorkspaceLeadId(item.leadId);
+      const workspaceId = await resolveWorkspaceForLead(item);
+      navigate(`/VendorDashboard/support?module=workspace&ref=${encodeURIComponent(workspaceId)}`);
+    } catch (err) {
+      setAccessFeedback(err?.message || 'Failed to open workspace support.');
+    } finally {
+      setResolvingWorkspaceLeadId('');
+    }
+  };
+
   const subtitle = useMemo(() => {
     return 'These workspaces are created for PM-approved collaborative projects where workspace access has been granted.';
   }, []);
@@ -544,6 +557,14 @@ const WorkspaceList = () => {
                     >
                       <RectangleGroupIcon className="w-4 h-4" />
                       Open workspace
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => openWorkspaceSupport(item)}
+                      disabled={resolvingWorkspaceLeadId === item.leadId}
+                      className="inline-flex items-center gap-2 bg-emerald-50 border border-emerald-200 text-emerald-700 text-sm font-semibold px-4 py-2.5 rounded-xl hover:bg-emerald-100 transition-all disabled:opacity-60"
+                    >
+                      Support
                     </button>
                   </div>
                 </PermissionGate>

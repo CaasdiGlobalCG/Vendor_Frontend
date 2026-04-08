@@ -4,7 +4,7 @@ import {
   ArrowLeft, Send, Loader2, AlertCircle, Star,
   Tag, Clock, User, Hash, ChevronDown, ChevronUp, X, Paperclip, FileText,
 } from 'lucide-react';
-import { getTicket, addMessage, rateTicket, reopenTicket } from '../../services/supportApi';
+import { getTicket, getTicketReference, addMessage, rateTicket, reopenTicket } from '../../services/supportApi';
 
 /* ── constants ───────────────────────────────────────────── */
 const STATUS_META = {
@@ -35,6 +35,19 @@ function fmt(ts) {
   if (diff < 3600000) return `${Math.floor(diff / 60000)}m ago`;
   if (diff < 86400000) return `${Math.floor(diff / 3600000)}h ago`;
   return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: '2-digit' });
+}
+
+function waitingOnLabel(value) {
+  switch (value) {
+    case 'support':
+      return 'Support team';
+    case 'user':
+      return 'Your reply';
+    case 'closed':
+      return 'Closed';
+    default:
+      return 'In progress';
+  }
 }
 
 /* ── CSAT ────────────────────────────────────────────────── */
@@ -113,6 +126,9 @@ export default function SupportTicketDetail({
   const [messages, setMessages] = useState([]);
   const [loading, setLoading]   = useState(true);
   const [error, setError]       = useState('');
+  const [reference, setReference] = useState(null);
+  const [referenceLoading, setReferenceLoading] = useState(false);
+  const [referenceError, setReferenceError] = useState('');
   const [reply, setReply]       = useState('');
   const [files, setFiles]       = useState([]);
   const [sending, setSending]   = useState(false);
@@ -128,6 +144,23 @@ export default function SupportTicketDetail({
       const res = await getTicket(ticketId);
       setTicket(res.ticket);
       setMessages(res.messages || []);
+      if (res.ticket?.referenceId || res.ticket?.sourceRecordId) {
+        setReferenceLoading(true);
+        setReferenceError('');
+        try {
+          const referenceResult = await getTicketReference(ticketId);
+          setReference(referenceResult.reference || null);
+        } catch (referenceErr) {
+          setReference(null);
+          setReferenceError(referenceErr.message || 'Failed to load linked record.');
+        } finally {
+          setReferenceLoading(false);
+        }
+      } else {
+        setReference(null);
+        setReferenceLoading(false);
+        setReferenceError('');
+      }
     } catch (err) {
       setError(err.message || 'Failed to load ticket.');
     } finally {
@@ -139,6 +172,8 @@ export default function SupportTicketDetail({
     if (!ticketId) return;
     setTicket(null);
     setMessages([]);
+    setReference(null);
+    setReferenceError('');
     setReply('');
     setSendErr('');
     load();
@@ -194,6 +229,8 @@ export default function SupportTicketDetail({
   const isTerminal = ticket && ['resolved', 'closed'].includes(ticket.status);
   const s  = ticket ? (STATUS_META[ticket.status] || STATUS_META.open) : null;
   const pp = ticket ? (PRIORITY_META[ticket.priority] || PRIORITY_META.medium) : null;
+  const referenceLabel = reference?.label || ticket?.referenceLabel || ticket?.sourceRecordId;
+  const waitingLabel = waitingOnLabel(ticket?.waitingOn);
 
   /* ── loading ─── */
   if (loading) {
@@ -352,7 +389,8 @@ export default function SupportTicketDetail({
         <div className="flex-shrink-0 px-4 py-2 border-b border-gray-50 bg-gray-50/60 flex items-center gap-3 flex-wrap">
           <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${pp}`}>{ticket.priority}</span>
           {ticket.teamLabel && <span className="text-[11px] text-gray-500">{ticket.teamLabel}</span>}
-          {ticket.sourceRecordId && <span className="text-[11px] font-mono text-gray-400">Ref: {ticket.sourceRecordId}</span>}
+          <span className="text-[11px] text-gray-500">Waiting on: {waitingLabel}</span>
+          {referenceLabel && <span className="text-[11px] text-gray-400">Linked: {referenceLabel}</span>}
           {ticket.createdAt && (
             <span className="text-[11px] text-gray-400">
               {new Date(ticket.createdAt).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'})}
@@ -424,8 +462,55 @@ export default function SupportTicketDetail({
             <InfoRow icon={Tag} label="Status"><span className={`text-[11px] font-bold px-2 py-0.5 rounded-full ${s.pill}`}>{s.label}</span></InfoRow>
             <InfoRow icon={Tag} label="Priority"><span className={`text-[11px] font-bold px-2 py-0.5 rounded-full ${pp}`}>{ticket.priority}</span></InfoRow>
             <InfoRow icon={User} label="Team"><span className="text-xs text-gray-700">{ticket.teamLabel || ticket.assignedTeam || '—'}</span></InfoRow>
-            {ticket.sourceRecordId && (
-              <InfoRow icon={Hash} label="Ref."><span className="font-mono text-xs text-gray-700">{ticket.sourceRecordId}</span></InfoRow>
+            <InfoRow icon={Clock} label="Waiting On"><span className="text-xs text-gray-700">{waitingLabel}</span></InfoRow>
+            {ticket.firstResponseDeadline && (
+              <InfoRow icon={Clock} label="First Response">
+                <span className="text-xs text-gray-500">{fmt(ticket.firstResponseDeadline)}</span>
+              </InfoRow>
+            )}
+            {ticket.resolutionDeadline && (
+              <InfoRow icon={Clock} label="Resolution">
+                <span className="text-xs text-gray-500">{fmt(ticket.resolutionDeadline)}</span>
+              </InfoRow>
+            )}
+            {ticket.autoCloseAt && (
+              <InfoRow icon={Clock} label="Auto Close">
+                <span className="text-xs text-gray-500">{fmt(ticket.autoCloseAt)}</span>
+              </InfoRow>
+            )}
+            {referenceLabel && (
+              <InfoRow icon={Hash} label="Linked"><span className="text-xs text-gray-700">{referenceLabel}</span></InfoRow>
+            )}
+            {(referenceLoading || referenceError || reference) && (
+              <div className="rounded-xl border border-gray-100 bg-gray-50/80 px-3 py-3">
+                <p className="text-[11px] font-semibold uppercase tracking-wide text-gray-500">Linked Record</p>
+                {referenceLoading ? (
+                  <div className="mt-2 flex items-center gap-2 text-xs text-gray-500">
+                    <Loader2 size={12} className="animate-spin" />Loading linked record...
+                  </div>
+                ) : null}
+                {!referenceLoading && referenceError ? (
+                  <p className="mt-2 text-xs text-red-600">{referenceError}</p>
+                ) : null}
+                {!referenceLoading && !referenceError && reference ? (
+                  <div className="mt-2 space-y-2">
+                    <div>
+                      <p className="text-sm font-semibold text-gray-800">{reference.title || reference.label}</p>
+                      {reference.description ? <p className="mt-1 text-xs leading-relaxed text-gray-600">{reference.description}</p> : null}
+                    </div>
+                    {Array.isArray(reference.fields) && reference.fields.length > 0 ? (
+                      <div className="space-y-1.5">
+                        {reference.fields.map((field) => (
+                          <div key={field.label} className="flex items-start justify-between gap-3 text-xs">
+                            <span className="text-gray-400">{field.label}</span>
+                            <span className={field.mono ? 'font-mono text-gray-700' : 'text-gray-700 text-right'}>{field.value}</span>
+                          </div>
+                        ))}
+                      </div>
+                    ) : null}
+                  </div>
+                ) : null}
+              </div>
             )}
             <InfoRow icon={Clock} label="Created">
               <span className="text-xs text-gray-500">

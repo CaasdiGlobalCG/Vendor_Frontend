@@ -504,6 +504,13 @@ const LeadDetailPage = () => {
                 </div>
                 <div className="flex items-center gap-3">
                     <button
+                        type="button"
+                        onClick={() => navigate(`/VendorDashboard/support?module=quotation&ref=${encodeURIComponent(leadId)}`)}
+                        className="inline-flex items-center px-4 py-2 border border-emerald-200 bg-emerald-50 text-emerald-700 text-sm font-medium rounded-md hover:bg-emerald-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 transition-colors duration-200"
+                    >
+                        Raise Support
+                    </button>
+                    <button
                         onClick={openWorkspace}
                         className="inline-flex items-center px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors duration-200"
                     >
@@ -876,6 +883,13 @@ const LeadDetailPage = () => {
 
             {/* Action Buttons (Removed/Disabled for frontend-only view) */}
              <div className="flex flex-wrap justify-end gap-3 sm:gap-4 mt-8">
+                <button
+                    type="button"
+                    onClick={() => navigate(`/VendorDashboard/support?module=quotation&ref=${encodeURIComponent(leadId)}`)}
+                    className="inline-flex items-center px-4 py-2 rounded-md text-sm font-medium border border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-100"
+                >
+                    Need help with this lead?
+                </button>
                 <p className="text-sm text-gray-500 italic">Approve/Reject actions require backend connection.</p>
                 {/*
                 <Button id="reject-button" variant="outline" disabled> Reject </Button>

@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useContext } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { 
   Search, 
   ArrowLeft,
@@ -9,7 +10,8 @@ import {
   CheckCircle,
   Calendar,
   TrendingUp,
-  Plus
+  Plus,
+  LifeBuoy
 } from 'lucide-react';
 import { VendorContext } from "../../../../../context/VendorContext.jsx";
 import NewCreditNoteComponent from './NewCreditNoteComponent';
@@ -18,6 +20,7 @@ import config from '../../../../../config/env';
 
 const CreditNotesPage = () => {
   const { currentUser } = useContext(VendorContext);
+  const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState('');
   const [showNewCreditNote, setShowNewCreditNote] = useState(false);
   const [creditNotesData, setCreditNotesData] = useState([]);
@@ -247,6 +250,11 @@ const CreditNotesPage = () => {
     return sum + (isNaN(amount) ? 0 : amount);
   }, 0);
 
+  const handleGetHelp = (creditNoteId) => {
+    if (!creditNoteId) return;
+    navigate(`/VendorDashboard/support?module=workspace_credit_note&ref=${encodeURIComponent(creditNoteId)}`);
+  };
+
   return (
     <div className="min-h-full bg-gray-50">
       {/* Preview Modal */}
@@ -458,6 +466,13 @@ const CreditNotesPage = () => {
                           </button>
                           <button className="p-2 text-gray-400 hover:text-green-600 hover:bg-green-50 rounded-lg transition-colors duration-200" title="Download">
                             <Download className="w-4 h-4" />
+                          </button>
+                          <button
+                            onClick={() => handleGetHelp(note.creditNoteId)}
+                            className="p-2 text-gray-400 hover:text-[#095b49] hover:bg-emerald-50 rounded-lg transition-colors duration-200"
+                            title="Get Help"
+                          >
+                            <LifeBuoy className="w-4 h-4" />
                           </button>
                           {(note.status || '').toLowerCase() === 'pending_vendor' && (
                             <button

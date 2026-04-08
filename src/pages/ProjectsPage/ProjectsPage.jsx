@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useContext } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { ArrowPathIcon, MagnifyingGlassIcon } from '@heroicons/react/24/outline';
 import ProjectCard from '../../components/ProjectPage/ProjectCard';
 import { VendorContext } from '../../context/VendorContext';
@@ -12,6 +12,7 @@ import config from '../../config/env';
 
 
 const ProjectsPage = () => {
+    const navigate = useNavigate();
     const [activeFilter, setActiveFilter] = useState('All');
     const [projectSearch, setProjectSearch] = useState('');
     const [projects, setProjects] = useState([]);
@@ -228,6 +229,16 @@ const ProjectsPage = () => {
         setActiveProjectAccess(null);
     };
 
+    const openProjectSupport = (project) => {
+        const projectId = resolveProjectId(project);
+        if (!projectId) {
+            setAccessFeedback('Unable to open support because the project ID is missing.');
+            return;
+        }
+
+        navigate(`/VendorDashboard/support?module=project&ref=${encodeURIComponent(projectId)}`);
+    };
+
     return (
         <div className="mx-auto w-full max-w-[1600px] space-y-6 px-3 py-6 sm:px-5 lg:px-8 xl:px-10">
             <div className="rounded-2xl border border-emerald-200/60 bg-gradient-to-r from-emerald-700 via-teal-700 to-cyan-700 px-6 py-6 shadow-sm">
@@ -330,6 +341,7 @@ const ProjectsPage = () => {
                                 project={project}
                                 canManageAccess={canManageProjectAccess}
                                 onManageAccess={openProjectAccess}
+                                onRaiseSupport={openProjectSupport}
                             />
                         ))}
                     </div>

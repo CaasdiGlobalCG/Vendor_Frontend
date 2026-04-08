@@ -267,6 +267,13 @@ export default function EditCompany() {
             Back to Profile
           </button>
           <h1 className="text-xl font-bold ml-4">Edit Company Details</h1>
+          <button
+            type="button"
+            onClick={() => navigate(`/VendorDashboard/support?module=vendor&ref=${encodeURIComponent(currentUser?.vendorId || currentUser?.id || vendorData?.vendorId || vendorData?.id || '')}`)}
+            className="ml-auto inline-flex items-center rounded-md border border-white/25 bg-white/10 px-4 py-2 text-sm font-medium text-white hover:bg-white/20 transition-colors"
+          >
+            Account Support
+          </button>
         </div>
       </section>
 

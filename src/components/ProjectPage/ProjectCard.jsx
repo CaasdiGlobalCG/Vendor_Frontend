@@ -55,7 +55,7 @@ function resolveStatusMeta(project) {
   };
 }
 
-const ProjectCard = ({ project, onManageAccess, canManageAccess = false }) => {
+const ProjectCard = ({ project, onManageAccess, canManageAccess = false, onRaiseSupport }) => {
   const navigate = useNavigate();
   const { currentUser } = useContext(VendorContext);
   const statusMeta = resolveStatusMeta(project);
@@ -269,6 +269,19 @@ const ProjectCard = ({ project, onManageAccess, canManageAccess = false }) => {
           <CalendarDaysIcon className="h-3.5 w-3.5" />
           Open Workspace
         </button>
+        {onRaiseSupport ? (
+          <button
+            type="button"
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              onRaiseSupport(project);
+            }}
+            className="inline-flex h-8 items-center gap-1.5 rounded-md border border-emerald-200 bg-emerald-50 px-3 text-xs font-semibold text-emerald-700 transition-colors hover:bg-emerald-100"
+          >
+            Support
+          </button>
+        ) : null}
       </div>
     </div>
   );

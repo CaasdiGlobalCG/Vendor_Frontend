@@ -6,8 +6,19 @@ import {
   FolderOpen, Users, CreditCard, FileText, ShieldCheck, Monitor,
 } from 'lucide-react';
 import { VendorContext } from '../../context/VendorContext';
-import { createTicket, listTickets } from '../../services/supportApi';
+import { createTicket, listTickets, listReferenceOptions } from '../../services/supportApi';
 import SupportTicketDetail from './SupportTicketDetail';
+
+const SLIDE_OVER_MIN_WIDTH = 448;
+
+function clamp(value, min, max) {
+  return Math.min(Math.max(value, min), max);
+}
+
+function getSlideOverMaxWidth() {
+  if (typeof window === 'undefined') return 720;
+  return clamp(Math.round(window.innerWidth * 0.5), SLIDE_OVER_MIN_WIDTH, 960);
+}
 
 /* ── constants ───────────────────────────────────────────── */
 const STATUS_META = {
@@ -23,13 +34,112 @@ const PRIORITY_META = {
   low:    { pill: 'bg-gray-50 text-gray-500 border border-gray-100' },
 };
 const CATEGORIES = [
+  { value: 'general_enquiry', label: 'General Enquiry' },
+  { value: 'sales_enquiry', label: 'Sales RFQ / Enquiry' },
+  { value: 'sales_quotation', label: 'Sales Quotation' },
+  { value: 'sales_purchase_order', label: 'Sales Purchase Order' },
+  { value: 'sales_shipment', label: 'Sales Shipment' },
+  { value: 'sales_warranty_claim', label: 'Sales Warranty Claim' },
+  { value: 'sales_inventory_item', label: 'Sales Inventory Item' },
+  { value: 'workspace_credit_note', label: 'Workspace Credit Note' },
   { value: 'project',   label: 'Project Issue' },
   { value: 'workspace', label: 'Workspace & Collab' },
   { value: 'payment',   label: 'Payment & Invoice' },
   { value: 'quotation', label: 'Lead & RFQ' },
   { value: 'vendor',    label: 'Account & KYC' },
   { value: 'tech',      label: 'Technical / System' },
+  { value: 'other',     label: 'Other' },
 ];
+const CATEGORY_REFERENCE_META = {
+  sales_enquiry: {
+    title: 'Linked Sales RFQ',
+    referenceType: 'sales_enquiry',
+    label: 'Linked Sales RFQ',
+    placeholder: 'Choose the sales RFQ this issue is about',
+    searchPlaceholder: 'Search sales RFQs',
+    empty: 'No sales RFQs are available for your account right now.',
+  },
+  sales_quotation: {
+    title: 'Linked Sales Quotation',
+    referenceType: 'sales_quotation',
+    label: 'Linked Sales Quotation',
+    placeholder: 'Choose the sales quotation this issue is about',
+    searchPlaceholder: 'Search sales quotations',
+    empty: 'No sales quotations are available for your account right now.',
+  },
+  sales_purchase_order: {
+    title: 'Linked Sales Purchase Order',
+    referenceType: 'sales_purchase_order',
+    label: 'Linked Sales Purchase Order',
+    placeholder: 'Choose the sales purchase order this issue is about',
+    searchPlaceholder: 'Search sales purchase orders',
+    empty: 'No sales purchase orders are available for your account right now.',
+  },
+  sales_shipment: {
+    title: 'Linked Sales Shipment',
+    referenceType: 'sales_shipment',
+    label: 'Linked Sales Shipment',
+    placeholder: 'Choose the sales shipment this issue is about',
+    searchPlaceholder: 'Search shipments by product or tracking ID',
+    empty: 'No sales shipments are available for your account right now.',
+  },
+  sales_warranty_claim: {
+    title: 'Linked Sales Warranty Claim',
+    referenceType: 'sales_warranty_claim',
+    label: 'Linked Sales Warranty Claim',
+    placeholder: 'Choose the warranty claim this issue is about',
+    searchPlaceholder: 'Search warranty claims by product, claim ID, or order ID',
+    empty: 'No sales warranty claims are available for your account right now.',
+  },
+  sales_inventory_item: {
+    title: 'Linked Sales Inventory Item',
+    referenceType: 'sales_inventory_item',
+    label: 'Linked Sales Inventory Item',
+    placeholder: 'Choose the inventory item this issue is about',
+    searchPlaceholder: 'Search inventory by product, SKU, or product ID',
+    empty: 'No sales inventory items are available for your account right now.',
+  },
+  workspace_credit_note: {
+    title: 'Linked Workspace Credit Note',
+    referenceType: 'workspace_credit_note',
+    label: 'Linked Workspace Credit Note',
+    placeholder: 'Choose the workspace credit note this issue is about',
+    searchPlaceholder: 'Search credit notes by number, client, or invoice ID',
+    empty: 'No workspace credit notes are available for your account right now.',
+  },
+  project: {
+    title: 'Linked Project',
+    referenceType: 'project',
+    label: 'Linked Project',
+    placeholder: 'Choose the project this issue is about',
+    searchPlaceholder: 'Search projects',
+    empty: 'No projects are currently available for your account.',
+  },
+  workspace: {
+    title: 'Linked Workspace',
+    referenceType: 'workspace',
+    label: 'Linked Workspace',
+    placeholder: 'Choose the workspace this issue is about',
+    searchPlaceholder: 'Search workspaces',
+    empty: 'No workspaces are currently available for your account.',
+  },
+  quotation: {
+    title: 'Linked Lead / RFQ',
+    referenceType: 'rfq',
+    label: 'Linked Lead / RFQ',
+    placeholder: 'Choose the lead or RFQ this issue is about',
+    searchPlaceholder: 'Search leads or RFQs',
+    empty: 'No lead or RFQ records are currently available for your account.',
+  },
+  vendor: {
+    title: 'Linked Account',
+    referenceType: 'vendor',
+    label: 'Linked Account',
+    placeholder: 'Choose the vendor account this issue is about',
+    searchPlaceholder: 'Search vendor account',
+    empty: 'Your vendor account could not be loaded right now.',
+  },
+};
 
 const FAQ_ITEMS = [
   {
@@ -155,24 +265,175 @@ function WelcomePanel({ onNewTicket }) {
 
 /* ── Create Ticket Slide-over ────────────────────────────── */
 function CreateTicketSlideOver({ onClose, onCreated, defaultCategory, defaultRefId, vendorUser }) {
+  const initialReferenceMeta = CATEGORY_REFERENCE_META[defaultCategory] || null;
   const [form, setForm] = useState({
     subject: '', description: '', priority: 'medium',
     category:       defaultCategory || 'project',
     sourceRecordId: defaultRefId    || '',
+    referenceType:  initialReferenceMeta?.referenceType || '',
   });
   const [files, setFiles]     = useState([]);
   const fileInputRef           = useRef(null);
   const [loading, setLoading] = useState(false);
   const [error, setError]     = useState('');
+  const [referenceSearch, setReferenceSearch] = useState('');
+  const [referenceOptions, setReferenceOptions] = useState([]);
+  const [referenceLoading, setReferenceLoading] = useState(false);
+  const [referenceError, setReferenceError] = useState('');
+  const [selectedReference, setSelectedReference] = useState(null);
+  const [panelWidth, setPanelWidth] = useState(() => SLIDE_OVER_MIN_WIDTH);
+  const dragStateRef = useRef(null);
 
   const set = (k, v) => setForm(f => ({ ...f, [k]: v }));
+  const setField = (k, v) => setForm(f => ({ ...f, [k]: v }));
 
   const removeFile = (i) => setFiles(prev => prev.filter((_, j) => j !== i));
+  const referenceMeta = CATEGORY_REFERENCE_META[form.category] || null;
+
+  useEffect(() => {
+    const handleResize = () => {
+      setPanelWidth((current) => clamp(current, SLIDE_OVER_MIN_WIDTH, getSlideOverMaxWidth()));
+    };
+
+    handleResize();
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  useEffect(() => {
+    const handlePointerMove = (event) => {
+      const dragState = dragStateRef.current;
+      if (!dragState) return;
+      const delta = dragState.startX - event.clientX;
+      setPanelWidth(clamp(dragState.startWidth + delta, SLIDE_OVER_MIN_WIDTH, getSlideOverMaxWidth()));
+    };
+
+    const handlePointerUp = () => {
+      dragStateRef.current = null;
+      document.body.style.removeProperty('user-select');
+      document.body.style.removeProperty('cursor');
+    };
+
+    window.addEventListener('pointermove', handlePointerMove);
+    window.addEventListener('pointerup', handlePointerUp);
+    return () => {
+      window.removeEventListener('pointermove', handlePointerMove);
+      window.removeEventListener('pointerup', handlePointerUp);
+      document.body.style.removeProperty('user-select');
+      document.body.style.removeProperty('cursor');
+    };
+  }, []);
+
+  const handleResizeStart = (event) => {
+    dragStateRef.current = { startX: event.clientX, startWidth: panelWidth };
+    document.body.style.setProperty('user-select', 'none');
+    document.body.style.setProperty('cursor', 'col-resize');
+  };
+
+  const handleCategoryChange = (value) => {
+    setForm((prev) => ({
+      ...prev,
+      category: value,
+      sourceRecordId: value === prev.category ? prev.sourceRecordId : '',
+      referenceType: CATEGORY_REFERENCE_META[value]?.referenceType || '',
+    }));
+    setReferenceSearch('');
+    setReferenceOptions([]);
+    setReferenceError('');
+    setSelectedReference(value === form.category ? selectedReference : null);
+  };
+
+  const handleReferenceSelect = (option) => {
+    setSelectedReference(option);
+    setField('sourceRecordId', option.value || '');
+    setField('referenceType', option.referenceType || referenceMeta?.referenceType || '');
+  };
+
+  useEffect(() => {
+    let isActive = true;
+    const nextMeta = CATEGORY_REFERENCE_META[form.category] || null;
+
+    setForm((prev) => ({
+      ...prev,
+      referenceType: nextMeta?.referenceType || '',
+      sourceRecordId: nextMeta ? prev.sourceRecordId : '',
+    }));
+
+    if (!nextMeta) {
+      setReferenceOptions([]);
+      setReferenceLoading(false);
+      setReferenceError('');
+      setSelectedReference(null);
+      return () => {
+        isActive = false;
+      };
+    }
+
+    setReferenceLoading(true);
+    setReferenceError('');
+
+    listReferenceOptions(form.category, referenceSearch, 5)
+      .then((response) => {
+        if (!isActive) return;
+        const loadedOptions = Array.isArray(response.options) ? [...response.options] : [];
+        const normalizedDefaultRef = String(defaultRefId || '').trim();
+
+        if (normalizedDefaultRef && !loadedOptions.some((option) => option.value === normalizedDefaultRef)) {
+          loadedOptions.unshift({
+            value: normalizedDefaultRef,
+            label: normalizedDefaultRef,
+            description: 'Prefilled from the page where you opened support.',
+            referenceType: nextMeta.referenceType,
+            context: null,
+          });
+        }
+
+        setReferenceOptions(loadedOptions);
+        setForm((prev) => {
+          const hasSelectedValue = prev.sourceRecordId && loadedOptions.some((option) => option.value === prev.sourceRecordId);
+          const nextValue = hasSelectedValue
+            ? prev.sourceRecordId
+            : normalizedDefaultRef || (loadedOptions.length === 1 ? loadedOptions[0].value : '');
+          return {
+            ...prev,
+            referenceType: nextMeta.referenceType,
+            sourceRecordId: nextValue,
+          };
+        });
+        setSelectedReference((current) => {
+          if (current?.value) {
+            const matchedCurrent = loadedOptions.find((option) => option.value === current.value && option.referenceType === current.referenceType);
+            if (matchedCurrent) return matchedCurrent;
+          }
+          if (normalizedDefaultRef) {
+            return loadedOptions.find((option) => option.value === normalizedDefaultRef) || current;
+          }
+          if (loadedOptions.length === 1) return loadedOptions[0];
+          return current && nextMeta.referenceType === current.referenceType ? current : null;
+        });
+      })
+      .catch((err) => {
+        if (!isActive) return;
+        setReferenceOptions([]);
+        setReferenceError(err.message || 'Failed to load linked records.');
+      })
+      .finally(() => {
+        if (isActive) setReferenceLoading(false);
+      });
+
+    return () => {
+      isActive = false;
+    };
+  }, [defaultRefId, form.category, referenceSearch]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!form.subject.trim() || !form.description.trim()) {
       setError('Subject and description are required.');
+      return;
+    }
+    if (referenceMeta && !form.sourceRecordId.trim()) {
+      setError(`Please choose a ${referenceMeta.label.toLowerCase()} before submitting.`);
       return;
     }
     setLoading(true);
@@ -184,6 +445,10 @@ function CreateTicketSlideOver({ onClose, onCreated, defaultCategory, defaultRef
         priority:       form.priority,
         sourceModule:   form.category,
         sourceRecordId: form.sourceRecordId.trim() || undefined,
+        referenceType:  selectedReference?.referenceType || form.referenceType || undefined,
+        referenceId:    form.sourceRecordId.trim() || undefined,
+        referenceLabel: selectedReference?.label || undefined,
+        referenceContext: selectedReference?.context ? JSON.stringify(selectedReference.context) : undefined,
         portalType:     'vendor',
         raisedByName:   vendorUser?.name  || '',
         raisedByEmail:  vendorUser?.email || '',
@@ -199,7 +464,18 @@ function CreateTicketSlideOver({ onClose, onCreated, defaultCategory, defaultRef
   return (
     <div className="fixed inset-0 z-50 flex">
       <div className="flex-1 bg-black/30 backdrop-blur-sm" onClick={onClose} />
-      <div className="w-full max-w-md bg-white shadow-2xl flex flex-col" style={{animation:'slideInRight .22s cubic-bezier(.4,0,.2,1)'}}>
+      <div
+        className="relative w-full bg-white shadow-2xl flex flex-col"
+        style={{ width: `${panelWidth}px`, maxWidth: '100vw', animation:'slideInRight .22s cubic-bezier(.4,0,.2,1)' }}>
+        <button
+          type="button"
+          onPointerDown={handleResizeStart}
+          className="absolute left-0 top-0 hidden h-full w-4 -translate-x-1/2 cursor-col-resize lg:flex items-center justify-center"
+          aria-label="Resize ticket form"
+          title="Drag to resize ticket form"
+        >
+          <span className="h-24 w-1 rounded-full bg-gray-200 transition hover:bg-[#095b49]/40" />
+        </button>
         <div className="flex items-center justify-between px-6 py-5 border-b border-gray-100">
           <div className="flex items-center gap-3">
             <div className="h-8 w-8 rounded-xl flex items-center justify-center" style={{background:'linear-gradient(135deg,#095b49,#043228)'}}>
@@ -222,7 +498,7 @@ function CreateTicketSlideOver({ onClose, onCreated, defaultCategory, defaultRef
             <label className="block text-xs font-semibold text-gray-500 mb-2 uppercase tracking-wide">Issue Type</label>
             <div className="grid grid-cols-2 gap-2">
               {CATEGORIES.map(c => (
-                <button key={c.value} type="button" onClick={() => set('category', c.value)}
+                <button key={c.value} type="button" onClick={() => handleCategoryChange(c.value)}
                   className={`px-3 py-2.5 rounded-xl text-xs font-semibold border transition text-left ${
                     form.category === c.value
                       ? 'bg-[#095b49] text-white border-[#095b49]'
@@ -257,12 +533,65 @@ function CreateTicketSlideOver({ onClose, onCreated, defaultCategory, defaultRef
               </select>
             </div>
             <div>
-              <label className="block text-xs font-semibold text-gray-500 mb-2 uppercase tracking-wide">
-                Ref. ID <span className="normal-case font-normal text-gray-400">(optional)</span>
-              </label>
-              <input type="text" value={form.sourceRecordId} onChange={e => set('sourceRecordId', e.target.value)}
-                placeholder="ORD-12345"
-                className="w-full border border-gray-200 rounded-xl px-3 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#095b49]/20 focus:border-[#095b49]/60 transition placeholder:text-gray-400" />
+              {referenceMeta ? (
+                <div className="space-y-3">
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-500 mb-2 uppercase tracking-wide">{referenceMeta.title}</label>
+                    <input
+                      type="text"
+                      value={referenceSearch}
+                      onChange={(e) => setReferenceSearch(e.target.value)}
+                      placeholder={referenceMeta.searchPlaceholder}
+                      className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#095b49]/20 focus:border-[#095b49]/60 transition placeholder:text-gray-400"
+                    />
+                  </div>
+                  {referenceLoading ? (
+                    <p className="text-xs text-gray-400">Loading linked records...</p>
+                  ) : null}
+                  {referenceError ? (
+                    <p className="text-xs text-red-600">{referenceError}</p>
+                  ) : null}
+                  {!referenceLoading && !referenceError && referenceOptions.length > 0 ? (
+                    <div className="space-y-2 max-h-48 overflow-y-auto pr-1">
+                      {referenceOptions.map((option) => {
+                        const isSelected = selectedReference?.value === option.value && selectedReference?.referenceType === option.referenceType;
+                        return (
+                          <button
+                            key={option.referenceType + option.value}
+                            type="button"
+                            onClick={() => handleReferenceSelect(option)}
+                            className={`w-full rounded-xl border px-3 py-2.5 text-left transition ${isSelected ? 'border-[#095b49] bg-emerald-50' : 'border-gray-200 bg-white hover:border-[#095b49]/30'}`}
+                          >
+                            <p className="text-xs font-semibold text-gray-900">{option.label || option.value}</p>
+                            {option.description ? (
+                              <p className="mt-1 text-[11px] text-gray-500 leading-relaxed">{option.description}</p>
+                            ) : null}
+                            <div className="mt-1 flex items-center gap-2 flex-wrap">
+                              <span className="text-[10px] font-mono text-gray-400">{option.value}</span>
+                              <span className="rounded-full bg-gray-100 px-1.5 py-0.5 text-[10px] text-gray-500">Recent 5</span>
+                            </div>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  ) : null}
+                  {!referenceError && !referenceLoading && referenceOptions.length === 0 ? (
+                    <p className="text-xs text-gray-500">{referenceMeta.empty}</p>
+                  ) : null}
+                  {selectedReference ? (
+                    <div className="rounded-xl border border-emerald-100 bg-emerald-50/70 px-3 py-2">
+                      <p className="text-xs font-semibold text-[#095b49]">{selectedReference.label}</p>
+                      {selectedReference.description ? (
+                        <p className="mt-1 text-[11px] leading-relaxed text-gray-600">{selectedReference.description}</p>
+                      ) : null}
+                    </div>
+                  ) : null}
+                </div>
+              ) : (
+                <div className="rounded-xl border border-dashed border-gray-200 px-3 py-3 text-xs text-gray-500">
+                  This issue type does not need a linked record.
+                </div>
+              )}
             </div>
           </div>
           {/* File attachments */}
@@ -334,6 +663,20 @@ export default function SupportPage() {
   const [showCreate, setShowCreate]     = useState(false);
   const [selectedId, setSelectedId]     = useState(null);
 
+  const clearSupportPrefill = useCallback(() => {
+    if (!urlModule && !urlRef) return;
+    const nextParams = new URLSearchParams(location.search);
+    nextParams.delete('module');
+    nextParams.delete('ref');
+    navigate(
+      {
+        pathname: location.pathname,
+        search: nextParams.toString() ? `?${nextParams.toString()}` : '',
+      },
+      { replace: true }
+    );
+  }, [location.pathname, location.search, navigate, urlModule, urlRef]);
+
   const load = async () => {
     setLoading(true);
     setError('');
@@ -348,6 +691,11 @@ export default function SupportPage() {
   };
 
   useEffect(() => { load(); }, []);
+
+  useEffect(() => {
+    if (!urlModule && !urlRef) return;
+    setShowCreate(true);
+  }, [urlModule, urlRef]);
 
   const handleTicketClick = useCallback((ticketId) => {
     // Gap 9: mark as read when user opens the ticket
@@ -534,13 +882,17 @@ export default function SupportPage() {
 
       {showCreate && (
         <CreateTicketSlideOver
-          onClose={() => setShowCreate(false)}
+          onClose={() => {
+            setShowCreate(false);
+            clearSupportPrefill();
+          }}
           defaultCategory={urlModule}
           defaultRefId={urlRef}
           vendorUser={vendorUser}
           onCreated={(ticket) => {
             setTickets(prev => [ticket, ...prev]);
             setShowCreate(false);
+            clearSupportPrefill();
             if (isLarge) setSelectedId(ticket.ticketId);
             else navigate(`/VendorDashboard/support/${ticket.ticketId}`);
           }}
