@@ -1,5 +1,4 @@
 import React, { createContext, useState, useEffect, useCallback } from "react";
-import { Auth } from 'aws-amplify';
 import config from "../config/env";
 import authFetch from "../utils/authFetch";
 import { isInviteAcceptRoute } from "../public-routes/inviteRoute";
@@ -168,41 +167,62 @@ export const VendorProvider = ({ children }) => {
 
   // Logout — clears ALL auth layers then hard-redirects to /login.
   //
-  // Order matters:
-  //   1. Auth.signOut() — evicts Amplify's Cognito token cache from localStorage.
-  //      Without this, authFetch's 401-retry silently refreshes the session
-  //      and re-authenticates the user the moment any API call fires.
-  //   2. /api/auth/logout — clears the httpOnly cookie on the server.
-  //   3. sessionStorage transition flags — prevents stale "logging in" skeleton.
-  //   4. localStorage keys — removes any app-level token copies.
-  //   5. window.location.replace('/login') — hard navigate (full page reload).
-  //      A hard redirect kills all in-flight authFetch retries, pending promises,
-  //      and React state in memory. React Router navigate() keeps the JS runtime
-  //      alive, which risks race conditions with the 401-retry loop still running.
-  const logout = () => {
-    // 1. Evict Amplify Cognito token cache so Auth.currentSession() throws
-    //    "No current user" on next call — kills the authFetch auto-refresh loop.
-    Auth.signOut().catch(() => {});
+  // WHY async + await matters here:
+  //   Auth.signOut() is async — it awaits currentAuthenticatedUser() internally
+  //   before it clears tokens. If we detach it with .catch(() => {}) and immediately
+  //   call window.location.replace, the Amplify tokens are STILL in localStorage
+  //   when the /login page loads. authFetch's 401-retry then calls Auth.currentSession(),
+  //   gets a fresh token, re-establishes the cookie, and logs the user back in.
+  //
+  //   Likewise, POST /api/auth/logout clears the httpOnly cookie. If we don't await it,
+  //   the cookie is still set on page reload and authFetch('/api/vendor/me') succeeds
+  //   on the FIRST try — no 401-retry needed, instant re-login.
+  //
+  // Order:
+  //   1. Wipe Amplify keys from localStorage synchronously — faster and more reliable
+  //      than awaiting Auth.signOut() which does async work before clearing.
+  //   2. Await POST /api/auth/logout — cookie must be gone before page reloads.
+  //   3. Clear sessionStorage transition flags and remaining localStorage keys.
+  //   4. window.location.replace('/login') — full reload, all state destroyed.
+  const logout = async () => {
+    // 1. Synchronously wipe Amplify's Cognito token cache.
+    //    Auth.signOut() awaits currentAuthenticatedUser() before clearing — that async
+    //    gap is why the old code's fire-and-forget didn't work. Clearing the keys
+    //    directly is synchronous and guaranteed to complete before step 2.
+    try {
+      const cognitoKeys = [];
+      for (let i = localStorage.length - 1; i >= 0; i--) {
+        const key = localStorage.key(i);
+        if (key && (
+          key.startsWith('CognitoIdentityServiceProvider') ||
+          key === 'amplify-signin-with-hostedUI'
+        )) {
+          cognitoKeys.push(key);
+        }
+      }
+      cognitoKeys.forEach(key => localStorage.removeItem(key));
+    } catch {}
 
-    // 2. Clear server httpOnly cookie (fire-and-forget; page reload comes after)
-    fetch(`${config.VENDOR_BACKEND_URL}/api/auth/logout`, {
-      method: 'POST',
-      credentials: 'include',
-    }).catch(() => {});
+    // 2. Clear the httpOnly cookie — AWAITED so the cookie is gone before page reloads.
+    //    Without await, the cookie survives to the next page load and authFetch succeeds
+    //    on the first attempt, bypassing the 401-retry path entirely.
+    try {
+      await fetch(`${config.VENDOR_BACKEND_URL}/api/auth/logout`, {
+        method: 'POST',
+        credentials: 'include',
+      });
+    } catch {}
 
-    // 3. Clear auth transition flags so the skeleton screen doesn't appear on /login
+    // 3. Clear session flags and any remaining app-level keys.
     sessionStorage.removeItem(AUTH_TRANSITION_KEY);
     sessionStorage.removeItem(AUTH_TRANSITION_STARTED_AT_KEY);
-
-    // 4. Clear any app-level localStorage token copies
     [
       'currentUser', 'pmUser', 'user', 'vendorUser',
       'token', 'pmToken', 'authToken', 'vendorId', 'email',
       'roleSelected',
     ].forEach(key => localStorage.removeItem(key));
 
-    // 5. Hard redirect — full page reload ensures no stale React state or
-    //    in-flight requests survive into the /login session.
+    // 4. Hard redirect — full page reload, all in-flight requests and React state gone.
     window.location.replace('/login');
   };
 
