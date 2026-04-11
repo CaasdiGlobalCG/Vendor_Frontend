@@ -779,17 +779,7 @@ export const Header = () => {
                    </svg>
                  </button>
                  <button 
-                   onClick={() => {
-                     console.log("Mobile logout button clicked");
-                     // Clear all data
-                     logout();
-                     // Clear any session storage
-                     sessionStorage.clear();
-                     // Clear any remaining localStorage items
-                     localStorage.clear();
-                     // Force a complete page reload to clear any state
-                     window.location.href = "/login";
-                   }} 
+                   onClick={() => logout()} 
                    className="p-1 text-white hover:bg-white/20 rounded-full"
                    aria-label="Logout"
                  >
@@ -855,17 +845,7 @@ export const Header = () => {
                </svg>
              </button>
              <button 
-               onClick={() => {
-                 console.log("Logout button clicked");
-                 // Clear all data
-                 logout();
-                 // Clear any session storage
-                 sessionStorage.clear();
-                 // Clear any remaining localStorage items
-                 localStorage.clear();
-                 // Force a complete page reload to clear any state
-                 window.location.href = "/login";
-               }} 
+               onClick={() => logout()} 
                className="p-1 text-white hover:bg-white/20 rounded-full"
                aria-label="Logout"
              >

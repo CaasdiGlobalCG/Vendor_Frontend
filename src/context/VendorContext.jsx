@@ -1,4 +1,5 @@
 import React, { createContext, useState, useEffect, useCallback } from "react";
+import { Auth } from 'aws-amplify';
 import config from "../config/env";
 import authFetch from "../utils/authFetch";
 import { isInviteAcceptRoute } from "../public-routes/inviteRoute";
@@ -165,41 +166,44 @@ export const VendorProvider = ({ children }) => {
     setCurrentUser(user);
   };
 
-  // Logout function to clear all user data
+  // Logout — clears ALL auth layers then hard-redirects to /login.
+  //
+  // Order matters:
+  //   1. Auth.signOut() — evicts Amplify's Cognito token cache from localStorage.
+  //      Without this, authFetch's 401-retry silently refreshes the session
+  //      and re-authenticates the user the moment any API call fires.
+  //   2. /api/auth/logout — clears the httpOnly cookie on the server.
+  //   3. sessionStorage transition flags — prevents stale "logging in" skeleton.
+  //   4. localStorage keys — removes any app-level token copies.
+  //   5. window.location.replace('/login') — hard navigate (full page reload).
+  //      A hard redirect kills all in-flight authFetch retries, pending promises,
+  //      and React state in memory. React Router navigate() keeps the JS runtime
+  //      alive, which risks race conditions with the 401-retry loop still running.
   const logout = () => {
-    console.log("VendorContext: Logging out user");
+    // 1. Evict Amplify Cognito token cache so Auth.currentSession() throws
+    //    "No current user" on next call — kills the authFetch auto-refresh loop.
+    Auth.signOut().catch(() => {});
 
-    // Best-effort: clear server-issued httpOnly auth cookie
-    try {
-      fetch(`${config.VENDOR_BACKEND_URL}/api/auth/logout`, {
-        method: 'POST',
-        credentials: 'include',
-      }).catch(() => {});
-    } catch {}
-    
-    // Reset state
-    setCurrentUser(null);
-    setVendorData(initialData);
-    
-    // Clear ALL authentication-related localStorage keys
-    const keysToRemove = [
-      'currentUser',
-      'pmUser', 
-      'user',
-      'vendorUser',
-      'token',
-      'pmToken',
-      'authToken',
-      'vendorId',
-      'email'
-    ];
-    
-    keysToRemove.forEach(key => {
-      localStorage.removeItem(key);
-      console.log(`VendorContext: Removed ${key} from localStorage`);
-    });
-    
-    console.log("VendorContext: User logged out, all data cleared");
+    // 2. Clear server httpOnly cookie (fire-and-forget; page reload comes after)
+    fetch(`${config.VENDOR_BACKEND_URL}/api/auth/logout`, {
+      method: 'POST',
+      credentials: 'include',
+    }).catch(() => {});
+
+    // 3. Clear auth transition flags so the skeleton screen doesn't appear on /login
+    sessionStorage.removeItem(AUTH_TRANSITION_KEY);
+    sessionStorage.removeItem(AUTH_TRANSITION_STARTED_AT_KEY);
+
+    // 4. Clear any app-level localStorage token copies
+    [
+      'currentUser', 'pmUser', 'user', 'vendorUser',
+      'token', 'pmToken', 'authToken', 'vendorId', 'email',
+      'roleSelected',
+    ].forEach(key => localStorage.removeItem(key));
+
+    // 5. Hard redirect — full page reload ensures no stale React state or
+    //    in-flight requests survive into the /login session.
+    window.location.replace('/login');
   };
 
   return (
