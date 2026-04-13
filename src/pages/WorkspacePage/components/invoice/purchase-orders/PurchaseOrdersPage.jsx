@@ -38,6 +38,11 @@ const PurchaseOrdersPage = ({ workspaceId, workspaceName, selectedTask, selected
   const [approvalError, setApprovalError] = useState(null);
   const previewRef = React.useRef(null);
 
+  const isOrdersOrigin =
+    highlightedQuote?.sourceType === 'orders' ||
+    highlightedQuote?.poDispatchTarget === 'procurement';
+  const dispatchLabel = isOrdersOrigin ? 'Procurement Team' : 'PM';
+
   // Sync highlighted quote when sourceQuote prop changes
   useEffect(() => {
     if (sourceQuote) {
@@ -199,7 +204,7 @@ const PurchaseOrdersPage = ({ workspaceId, workspaceName, selectedTask, selected
     }
   };
 
-  const handleSendPOToPM = async () => {
+  const handleSendPO = async () => {
     if (!highlightedQuote || !currentUser?.vendorId) return;
 
     try {
@@ -336,7 +341,14 @@ const PurchaseOrdersPage = ({ workspaceId, workspaceName, selectedTask, selected
         subtaskId: highlightedQuote.subtaskId || selectedSubtask?.id || null,
         subtaskName: highlightedQuote.subtaskName || selectedSubtask?.name || '',
         clientId: highlightedQuote.clientId || null,
-        pdfUrl: poPdfUrl
+        pdfUrl: poPdfUrl,
+        poPdfUrl: poPdfUrl,
+        finalQuotationPdfUrl:
+          highlightedQuote.finalQuotationPdfUrl || highlightedQuote.pdfUrl || null,
+        sourceType: highlightedQuote.sourceType || (isOrdersOrigin ? 'orders' : 'quotes'),
+        sourceOrderId: highlightedQuote.sourceOrderId || null,
+        poDispatchTarget: isOrdersOrigin ? 'procurement' : 'pm',
+        status: isOrdersOrigin ? 'sent to procurement team' : 'sent to pm'
       };
 
       console.log('📤 Creating purchase order from quote:', body);
@@ -356,7 +368,7 @@ const PurchaseOrdersPage = ({ workspaceId, workspaceName, selectedTask, selected
       console.log('✅ Purchase order created:', result.data);
       // Increment PO number locally for the next PO only after a successful creation
       setNextPoNumber((prev) => (prev ? prev + 1 : 2026001));
-      alert('Purchase Order sent to PM successfully!');
+      alert(`Purchase Order sent to ${dispatchLabel} successfully!`);
 
       if (onSourceConsumed) {
         onSourceConsumed();
@@ -365,7 +377,7 @@ const PurchaseOrdersPage = ({ workspaceId, workspaceName, selectedTask, selected
       fetchPurchaseOrders();
     } catch (err) {
       console.error('❌ Error creating purchase order from quote:', err);
-      alert('Failed to send PO to PM: ' + err.message);
+      alert(`Failed to send PO to ${dispatchLabel}: ${err.message}`);
     } finally {
       setSendingPo(false);
     }
@@ -636,17 +648,17 @@ const PurchaseOrdersPage = ({ workspaceId, workspaceName, selectedTask, selected
             <div className="flex items-center justify-between mb-5">
               <div>
                 <h2 className="text-xl font-bold text-gray-900 mb-1">
-                  🎯 Raise Purchase Order from Quote
+                  🎯 Raise Purchase Order from {isOrdersOrigin ? 'Final Quotation' : 'Quote'}
                 </h2>
                 <div className="flex items-center space-x-2">
                   <span className="inline-block px-3 py-1 bg-emerald-50 text-emerald-700 rounded-full text-sm font-semibold">
-                    Quote {highlightedQuote.customQuoteId ||
+                    {isOrdersOrigin ? 'Final Quotation' : 'Quote'} {highlightedQuote.customQuoteId ||
                       highlightedQuote.displayQuoteId ||
                       highlightedQuote.id}
                   </span>
                   <p className="text-sm text-gray-600">
                     Review the quote details below, then click{' '}
-                    <span className="font-semibold">Send PO to PM</span>.
+                    <span className="font-semibold">Send PO to {dispatchLabel}</span>.
                   </p>
                 </div>
               </div>
@@ -665,11 +677,11 @@ const PurchaseOrdersPage = ({ workspaceId, workspaceName, selectedTask, selected
                 </button>
                 <button
                   type="button"
-                  onClick={handleSendPOToPM}
+                  onClick={handleSendPO}
                   disabled={sendingPo}
                   className="px-4 py-2.5 text-xs font-medium bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
                 >
-                  {sendingPo ? 'Sending...' : '✓ Send PO to PM'}
+                  {sendingPo ? 'Sending...' : `✓ Send PO to ${dispatchLabel}`}
                 </button>
               </div>
             </div>
@@ -729,7 +741,7 @@ const PurchaseOrdersPage = ({ workspaceId, workspaceName, selectedTask, selected
             <h3 className="text-lg font-semibold text-gray-900 mb-2">No purchase orders found</h3>
             <p className="text-gray-500 mb-6">
               {highlightedQuote
-                ? 'Once you send the PO to PM, it will appear here.'
+                ? `Once you send the PO to ${dispatchLabel}, it will appear here.`
                 : 'Try adjusting your search or filter criteria.'}
             </p>
             {!highlightedQuote && (

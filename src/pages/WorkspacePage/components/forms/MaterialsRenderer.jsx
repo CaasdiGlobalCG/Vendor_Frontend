@@ -290,6 +290,10 @@ const MaterialsRenderer = ({ data, materialType, workspaceId, currentUser, nodeI
   const vendorContext = useContext(VendorContext);
   const user = currentUser || vendorContext?.currentUser;
   const workspace = workspaceId || data?.workspaceId;
+  const taskId = data?.taskId || null;
+  const subtaskId = data?.subtaskId || null;
+  const taskName = data?.taskName || null;
+  const subtaskName = data?.subtaskName || null;
 
   // Generate request ID in format: REQ-{timestamp}-{random}
   const generateRequestId = () => {
@@ -337,7 +341,7 @@ const MaterialsRenderer = ({ data, materialType, workspaceId, currentUser, nodeI
           createdAt: now.toISOString(),
           department: 'Workspace',
           item: request.name.trim(),
-          itemDescription: `Material request from workspace: ${workspace}. ${request.notes || ''}`.trim(),
+          itemDescription: `Material request from workspace: ${workspace}${taskName ? `, task: ${taskName}` : ''}${subtaskName ? `, subtask: ${subtaskName}` : ''}. ${request.notes || ''}`.trim(),
           priority: request.priority || 'medium',
           projectClientReference: null,
           quantity: Number(request.quantity) || 1,
@@ -347,7 +351,13 @@ const MaterialsRenderer = ({ data, materialType, workspaceId, currentUser, nodeI
           sentOn: sentOn,
           source: 'workspace', // Since it's coming from workspace
           status: 'Pending',
-          workspaceId: workspace
+          workspaceId: workspace,
+          taskId,
+          subtaskId,
+          taskName,
+          subtaskName,
+          nodeId,
+          materialType: actualMaterialType
         };
 
         console.log(`📦 ${isChangeRequestMode ? 'Updating' : 'Submitting'} procurement request:`, payload);

@@ -18,6 +18,7 @@ import SharedProfile from './pages/SharedProfile/SharedProfile'; // Import Share
 import SharePage from './pages/ShareProfile/SharePage'; // Import SharePage for sharing functionality
 import { VendorDashboard } from "./pages/VendorDashboard/VendorDashboard";
 import WorkspacePage from "./pages/WorkspacePage";
+import WorkspaceOrdersPage from "./pages/WorkspacePage/WorkspaceOrdersPage";
 import WorkspaceList from "./pages/WorkspaceList/WorkspaceList";
 import NewAuditorDashboard from "./components/NewAuditorDashboard";
 import Form1 from "./components/Form1";
@@ -397,7 +398,9 @@ function AppContent() {
       <Route path="/pmleads" element={<ProjectLeadForm />} />
       <Route path="/leads/:leadId" element={<LeadDetailPage />} />
       <Route path="/workspace" element={<WorkspacePage />} />
+      <Route path="/workspace/:workspaceId/orders" element={<RoleGuard><WorkspaceOrdersPage /></RoleGuard>} />
       <Route path="/VendorDashboard/workspace/:workspaceId" element={<WorkspacePage />} />
+      <Route path="/VendorDashboard/workspace/:workspaceId/orders" element={<RoleGuard><WorkspaceOrdersPage /></RoleGuard>} />
       <Route path="/VendorDashboard/workspace/:workspaceId/invoices" element={<WorkspacePage />} />
       <Route path="/customers/new" element={<NewCustomerPage />} />
       

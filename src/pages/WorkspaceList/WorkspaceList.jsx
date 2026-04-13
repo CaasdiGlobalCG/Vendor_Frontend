@@ -330,6 +330,26 @@ const WorkspaceList = () => {
         })
       : null;
 
+  const fmtRelativeTime = (dateValue) => {
+    if (!dateValue) return null;
+    const ts = new Date(dateValue).getTime();
+    if (!Number.isFinite(ts)) return null;
+
+    const diffMs = Date.now() - ts;
+    if (diffMs < 0) return 'just now';
+
+    const minute = 60 * 1000;
+    const hour = 60 * minute;
+    const day = 24 * hour;
+
+    if (diffMs < minute) return 'just now';
+    if (diffMs < hour) return `${Math.floor(diffMs / minute)}m ago`;
+    if (diffMs < day) return `${Math.floor(diffMs / hour)}h ago`;
+    if (diffMs < day * 7) return `${Math.floor(diffMs / day)}d ago`;
+
+    return fmtDate(dateValue);
+  };
+
   return (
     <div className="p-5 space-y-6">
       {/* ── header ── */}
@@ -388,6 +408,11 @@ const WorkspaceList = () => {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
           {workspaces.map((item, idx) => {
             const isHovered = hoveredCard === item.leadId;
+            const previewUpdatedAt =
+              thumbnails[item.leadId]?.thumbnailUpdatedAt ||
+              item.updatedAt ||
+              item.sentAt;
+            const previewUpdatedLabel = fmtRelativeTime(previewUpdatedAt);
             return (
               <div
                 key={item.leadId}
@@ -451,6 +476,14 @@ const WorkspaceList = () => {
                       )} bg-white/90 backdrop-blur-sm shadow-sm`}
                     >
                       {item.priority.charAt(0).toUpperCase() + item.priority.slice(1)}
+                    </div>
+                  )}
+
+                  {/* preview freshness badge */}
+                  {previewUpdatedLabel && (
+                    <div className="absolute left-2.5 bottom-2.5 inline-flex items-center gap-1.5 bg-black/55 text-white text-[10px] font-medium px-2 py-1 rounded-full backdrop-blur-sm">
+                      <CalendarDaysIcon className="w-3 h-3" />
+                      <span>Updated {previewUpdatedLabel}</span>
                     </div>
                   )}
 

@@ -21,6 +21,7 @@ import SubscriptionsPage from './subscription/SubscriptionsPage';
 import CreditNotesPage from './invoice/credit-notes/CreditNotesPage';
 import PurchaseRequisitionsPage from './invoice/purchase-requisitions/PurchaseRequisitionsPage';
 import PurchaseOrdersPage from './invoice/purchase-orders/PurchaseOrdersPage';
+import OrdersPage from './invoice/orders/OrdersPage';
 import ActivityFullScreen from './ActivityFullScreen';
 
 const InvoiceToolReplica = ({ onClose, workspaceId, workspaceName, selectedTask, selectedSubtask }) => {
@@ -156,6 +157,12 @@ const InvoiceToolReplica = ({ onClose, workspaceId, workspaceName, selectedTask,
     setActiveTab('purchase-orders');
   };
 
+  const handleRaisePOFromOrder = (orderSource) => {
+    if (!orderSource) return;
+    setPoSourceQuote(orderSource);
+    setActiveTab('purchase-orders');
+  };
+
   const handleConvertPOToInvoice = (purchaseOrder) => {
     if (!purchaseOrder) return;
     setInvoiceSourcePo(purchaseOrder);
@@ -173,6 +180,7 @@ const InvoiceToolReplica = ({ onClose, workspaceId, workspaceName, selectedTask,
     { id: 'items', label: 'Items', icon: Package },
     { id: 'quotes', label: 'Quotes', icon: FileText },
     { id: 'invoices', label: 'Invoices', icon: Receipt },
+    { id: 'orders', label: 'Orders', icon: ShoppingCart },
     { id: 'subscriptions', label: 'Subscriptions', icon: RotateCcw },
     { id: 'credit-notes', label: 'Credit Notes', icon: CreditCard },
     { id: 'purchase-orders', label: 'Purchase Orders', icon: Package2 }
@@ -725,6 +733,15 @@ const InvoiceToolReplica = ({ onClose, workspaceId, workspaceName, selectedTask,
             selectedSubtask={selectedSubtask}
             sourcePo={invoiceSourcePo}
             onSourceConsumed={() => setInvoiceSourcePo(null)}
+          />
+        );
+      case 'orders':
+        return (
+          <OrdersPage
+            workspaceId={workspaceId}
+            selectedTask={selectedTask}
+            selectedSubtask={selectedSubtask}
+            onRaisePOFromOrder={handleRaisePOFromOrder}
           />
         );
       case 'subscriptions':

@@ -379,17 +379,20 @@ export default function StandardPreview({
                                             <tr key={index} style={{ pageBreakInside: 'avoid' }}>
                                                 <td className="p-2 border">{index + 1}</td>
                                                 <td className="p-2 border">
-                                                    {item.selectedItem?.name && (
-                                                        <div className="font-medium">{item.selectedItem.name}</div>
-                                                    )}
-                                                    {item.description && (
-                                                        <div className="text-sm text-gray-600">{item.description}</div>
-                                                    )}
-                                                    {!item.selectedItem?.name && !item.description && (
+                                            {(item.selectedItem?.name || item.itemName || item.productName || item.item || item.name) && (
+                                              <div className="font-medium">
+                                                {item.selectedItem?.name || item.itemName || item.productName || item.item || item.name}
+                                              </div>
+                                            )}
+                                            {(item.description || item.itemDescription) && (
+                                              <div className="text-sm text-gray-600">{item.description || item.itemDescription}</div>
+                                            )}
+                                            {!(item.selectedItem?.name || item.itemName || item.productName || item.item || item.name) &&
+                                              !(item.description || item.itemDescription) && (
                                                         <div className="text-gray-400 italic text-sm">No item selected</div>
                                                     )}
                                                 </td>
-                                                <td className="p-2 border">{item.hsn}</td>
+                                          <td className="p-2 border">{item.hsn || item.hsnSac || item.hsnCode || '-'}</td>
                                                 <td className="p-2 border text-right">{formatQuantity(item.quantity)}</td>
                                                 <td className="p-2 border text-right">{formatCurrency(item.rate)}</td>
                                                 {quote.items.some(item => item.ratePerSqft) && <td className="p-2 border text-right">{item.ratePerSqft ? formatCurrency(item.ratePerSqft) : '-'}</td>}

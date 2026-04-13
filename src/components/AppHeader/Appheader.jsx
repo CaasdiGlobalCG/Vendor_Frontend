@@ -2,7 +2,7 @@
 
 import React, { useContext, useEffect, useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { Award, Share2, Settings } from 'lucide-react';
+import { Award, Share2 } from 'lucide-react';
 import ResponsiveNavigationTabs from './tabNavigation';
 import { VendorContext } from '../../context/VendorContext';
 import { Home } from 'lucide-react';
@@ -55,9 +55,6 @@ export default function AppHeader() {
         
         <button onClick={handleShare} title="Share profile">
           <Share2 className={`${isCompact ? 'h-4 w-4' : 'h-5 w-5'} text-white hover:text-gray-300 transition-all duration-300`} />
-        </button>
-        <button onClick={() => navigateTo("/settings")} aria-label="Settings">
-          <Settings className={`${isCompact ? 'h-4 w-4' : 'h-5 w-5'} text-white hover:text-gray-300 transition-all duration-300`} />
         </button>
         
         <button onClick={() => navigateTo("/VendorDashboard")} aria-label="Go to home">

@@ -125,6 +125,11 @@ export default function VendorSettings() {
     quotationAlerts: true,
     systemAlerts: true,
   });
+  const [smsPrefs, setSmsPrefs] = useState({
+    orderAlerts: false,
+    leadAlerts: false,
+    securityAlerts: true,
+  });
 
   // Security
   const [mfaEnabled, setMfaEnabled] = useState(false);
@@ -205,6 +210,9 @@ export default function VendorSettings() {
           if (data.emailPreferences) {
             setEmailPrefs(prev => ({ ...prev, ...data.emailPreferences }));
           }
+          if (data.smsPreferences) {
+            setSmsPrefs(prev => ({ ...prev, ...data.smsPreferences }));
+          }
         }
       } catch { /* defaults are fine */ }
     } catch (err) {
@@ -249,8 +257,20 @@ export default function VendorSettings() {
       });
       if (!res.ok) throw new Error("Update failed");
 
-      // Refresh vendor context
-      try { await hydrateCurrentUser(); } catch {}
+      const resData = await res.json();
+
+      // Update profileImage in vendorData context so Header reflects it immediately
+      if (resData?.data?.profileImage) {
+        setVendorData(prev => ({ ...prev, profileImage: resData.data.profileImage }));
+        setProfileImagePreview(resData.data.profileImage.url);
+      }
+
+      // Update vendorData context with saved profile fields so Header stays in sync
+      setVendorData(prev => ({
+        ...prev,
+        vendorDetails: { ...prev.vendorDetails, primaryContactName: profile.name, primaryContactEmail: profile.email, phoneNumber: profile.phone, companyName: profile.companyName },
+        companyDetails: { ...prev.companyDetails, companyName: profile.companyName, state: profile.state, country: profile.country, gstNumber: profile.gstin },
+      }));
 
       showToast("Profile updated successfully");
     } catch (err) {
@@ -309,13 +329,7 @@ export default function VendorSettings() {
       
       setPwdSuccess("Password changed successfully!");
       setPasswords({ current: "", new: "", confirm: "" });
-      showToast("Password changed successfully. Please log in again with your new password.");
-      
-      // Optionally logout and redirect to login after successful password change
-      setTimeout(() => {
-        Auth.signOut();
-        navigate("/login");
-      }, 2000);
+      showToast("Password changed successfully!");
     } catch (err) {
       console.error("Error changing password:", err);
       
@@ -343,7 +357,7 @@ export default function VendorSettings() {
       const res = await authFetch(`${config.VENDOR_BACKEND_URL}/api/vendor/preferences`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ emailPreferences: emailPrefs }),
+        body: JSON.stringify({ emailPreferences: emailPrefs, smsPreferences: smsPrefs }),
         credentials: "include",
       });
       if (!res.ok) throw new Error("Save failed");
@@ -1108,14 +1122,33 @@ export default function VendorSettings() {
               </div>
             </SectionCard>
 
-            {/* SMS (planned) */}
+            {/* SMS Notifications */}
             <SectionCard icon={Smartphone} title="SMS Notifications" description="Text message alerts for critical updates">
-              <div className="flex items-center justify-between py-3">
-                <div>
-                  <p className="text-sm font-medium text-gray-900">SMS Alerts</p>
-                  <p className="text-xs text-gray-500 mt-0.5">Receive critical order and lead alerts via SMS</p>
-                </div>
-                <span className="text-xs font-medium px-3 py-1 rounded-full bg-gray-100 text-gray-500">Coming Soon</span>
+              <div className="space-y-1">
+                <NotifRow
+                  icon={Package}
+                  color="bg-emerald-500"
+                  title="Order Alerts"
+                  desc="Receive SMS for new orders and order status changes"
+                  enabled={smsPrefs.orderAlerts}
+                  onChange={(v) => setSmsPrefs(p => ({ ...p, orderAlerts: v }))}
+                />
+                <NotifRow
+                  icon={TrendingUp}
+                  color="bg-blue-500"
+                  title="Lead Alerts"
+                  desc="Get SMS when new leads match your products or services"
+                  enabled={smsPrefs.leadAlerts}
+                  onChange={(v) => setSmsPrefs(p => ({ ...p, leadAlerts: v }))}
+                />
+                <NotifRow
+                  icon={Shield}
+                  color="bg-red-500"
+                  title="Security Alerts"
+                  desc="Receive SMS for login attempts and security events"
+                  enabled={smsPrefs.securityAlerts}
+                  onChange={(v) => setSmsPrefs(p => ({ ...p, securityAlerts: v }))}
+                />
               </div>
             </SectionCard>
 
