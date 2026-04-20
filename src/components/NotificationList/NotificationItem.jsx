@@ -11,12 +11,16 @@ export default function NotificationItem({ notification, onDelete, onMarkImporta
     sender = 'System', 
     avatar = 'https://via.placeholder.com/40/CBD5E0/4A5568?text=N', 
     icon = '', 
+    iconSymbol = 'N',
+    iconBackgroundClass = 'bg-gray-100',
+    iconTextClass = 'text-gray-700',
     badge, 
     isImportant = false, 
     isSaved = false, 
     isRead = false, 
     link, 
-    isPending = false 
+    isPending = false,
+    primaryActionLabel = null,
   } = notification || {};
   
   const [showDropdown, setShowDropdown] = useState(false);
@@ -40,13 +44,13 @@ export default function NotificationItem({ notification, onDelete, onMarkImporta
   const handleOptionClick = (action) => {
     switch(action) {
       case 'mark-important':
-        onMarkImportant(id);
+        onMarkImportant?.(id);
         break;
       case 'save':
-        onSave(id);
+        onSave?.(id);
         break;
       case 'delete':
-        onDelete(id);
+        onDelete?.(id);
         break;
       default:
         console.log(`Unknown action: ${action}`);
@@ -75,56 +79,76 @@ export default function NotificationItem({ notification, onDelete, onMarkImporta
   
   // Create the core content of the notification item
   const itemContent = (
-    <div className="flex items-start">
-      <div className="relative mr-4">
-        <div className="w-10 h-10 rounded-full overflow-hidden">
-          <img src={avatar} alt={sender} className="w-full h-full object-cover" />
+    <div className="flex items-start gap-4">
+      <div className="relative shrink-0">
+        <div className={`flex h-12 w-12 rounded-2xl items-center justify-center font-semibold text-xs ${iconBackgroundClass} ${iconTextClass}`}>
+          {iconSymbol || 'N'}
         </div>
-        {icon && (
-          <div className="absolute bottom-0 left-0 w-6 h-6 bg-cover bg-no-repeat" style={{ backgroundImage: `url(${icon})` }}></div>
-        )}
       </div>
       
       <div className="flex-1 min-w-0">
-        <div className="flex flex-col md:flex-row md:items-center">
-          <div className="flex items-center">
+        <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
+          <div className="min-w-0">
+            <div className="flex flex-wrap items-center gap-2">
             {isImportant && (
-              <span className="mr-2 text-yellow-500">
+              <span className="text-yellow-500">
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4">
                   <path fillRule="evenodd" d="M10.788 3.21c.448-1.077 1.976-1.077 2.424 0l2.082 5.007 5.404.433c1.164.093 1.636 1.545.749 2.305l-4.117 3.527 1.257 5.273c.271 1.136-.964 2.033-1.96 1.425L12 18.354 7.373 21.18c-.996.608-2.231-.29-1.96-1.425l1.257-5.273-4.117-3.527c-.887-.76-.415-2.212.749-2.305l5.404-.433 2.082-5.006z" clipRule="evenodd" />
                 </svg>
               </span>
             )}
             {isSaved && (
-              <span className="mr-2 text-blue-500">
+              <span className="text-blue-500">
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4">
                   <path fillRule="evenodd" d="M6.32 2.577a49.255 49.255 0 0111.36 0c1.497.174 2.57 1.46 2.57 2.93V21a.75.75 0 01-1.085.67L12 18.089l-7.165 3.583A.75.75 0 013.75 21V5.507c0-1.47 1.073-2.756 2.57-2.93z" clipRule="evenodd" />
                 </svg>
               </span>
             )}
-            <h3 className={`font-['Poppins'] text-base md:text-lg ${isRead ? 'font-normal text-gray-700' : 'font-semibold text-black'}`}>
+            <h3 className={`text-base md:text-lg ${isRead ? 'font-medium text-slate-700' : 'font-semibold text-slate-900'}`}>
               {title}
             </h3>
             {!isRead && (
-              <span className="ml-2 w-2 h-2 bg-blue-600 rounded-full flex-shrink-0"></span>
+              <span className="h-2 w-2 rounded-full bg-emerald-500"></span>
             )}
-          </div>
-          
-          <div className="flex mt-1 md:mt-0 md:ml-auto items-center gap-1">
             {badge && (
               <span 
-                className="inline-block px-2 py-0.5 text-xs rounded mr-2"
+                className="inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium"
                 style={{ backgroundColor: badge.color || '#fefcbf', color: badge.textColor || '#744210' }}
               >
                 {badge.text}
               </span>
             )}
-            <span className="font-['Poppins'] text-xs text-gray-500">{time}</span>
-            <div className="relative ml-2" ref={dropdownRef}>
+          </div>
+            <p className={`mt-2 text-sm leading-6 ${isRead ? 'text-slate-500' : 'text-slate-700'}`}>
+              {message}
+            </p>
+            <div className="mt-3 flex flex-wrap items-center gap-3 text-xs text-slate-500">
+              <span>{time}</span>
+              {sender && <span>{sender}</span>}
+            </div>
+          </div>
+
+          <div className="relative z-20 flex items-start gap-2 md:ml-4" ref={dropdownRef}>
+            {(isPending || primaryActionLabel) && link && (
+              <Link 
+                to={link} 
+                className="inline-flex items-center rounded-xl bg-emerald-600 px-3 py-2 text-sm font-medium text-white transition hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-1"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  if (!isRead && onMarkRead) {
+                    onMarkRead(id);
+                  }
+                }}
+              >
+                {primaryActionLabel || 'Open'}
+              </Link>
+            )}
+            <div className="relative z-30">
               <button 
-                className="p-1.5 hover:bg-gray-100 rounded-full focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-gray-400"
+                className="rounded-xl p-2 text-slate-500 transition hover:bg-slate-100 hover:text-slate-700 focus:outline-none focus:ring-2 focus:ring-slate-300 focus:ring-offset-1"
                 onClick={handleToggleDropdown}
                 title="Actions"
+                type="button"
               >
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" className="w-4 h-4 text-gray-500">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" />
@@ -132,11 +156,11 @@ export default function NotificationItem({ notification, onDelete, onMarkImporta
               </button>
               
               {showDropdown && (
-                <div className="absolute right-0 top-full z-30 mt-1 w-56 bg-white rounded-md shadow-lg border border-gray-100 focus:outline-none">
+                <div className="absolute right-0 top-full z-[100] mt-2 w-56 rounded-2xl border border-slate-200 bg-white p-1 shadow-2xl focus:outline-none">
                   <ul className="py-1">
                     <li>
                       <button 
-                        className="w-full text-left px-3 py-1.5 hover:bg-gray-100 font-['Poppins'] text-sm flex items-center text-gray-700"
+                        className="flex w-full items-center rounded-xl px-3 py-2 text-left text-sm text-slate-700 hover:bg-slate-100"
                         onClick={(e) => {e.stopPropagation(); handleOptionClick('mark-important');}}
                       >
                         {isImportant ? (
@@ -151,9 +175,9 @@ export default function NotificationItem({ notification, onDelete, onMarkImporta
                         ) : "Mark as important"}
                       </button>
                     </li>
-                    <li className="border-t border-gray-100">
+                    <li className="border-t border-slate-100">
                       <button 
-                        className="w-full text-left px-3 py-1.5 hover:bg-gray-100 font-['Poppins'] text-sm flex items-center text-gray-700"
+                        className="flex w-full items-center rounded-xl px-3 py-2 text-left text-sm text-slate-700 hover:bg-slate-100"
                         onClick={(e) => {e.stopPropagation(); handleOptionClick('save');}}
                       >
                         {isSaved ? (
@@ -168,9 +192,9 @@ export default function NotificationItem({ notification, onDelete, onMarkImporta
                         ) : "Save notification"}
                       </button>
                     </li>
-                    <li className="border-t border-gray-100">
+                    <li className="border-t border-slate-100">
                       <button 
-                        className="w-full text-left px-3 py-1.5 hover:bg-gray-100 font-['Poppins'] text-sm text-red-600 flex items-center"
+                        className="flex w-full items-center rounded-xl px-3 py-2 text-left text-sm text-red-600 hover:bg-red-50"
                         onClick={(e) => {e.stopPropagation(); handleOptionClick('delete');}}
                       >
                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4 mr-2 text-red-500">
@@ -185,28 +209,6 @@ export default function NotificationItem({ notification, onDelete, onMarkImporta
             </div>
           </div>
         </div>
-        
-        <p className={`mt-1 font-['Poppins'] text-sm ${isRead ? 'text-gray-600' : 'text-gray-900'}`}>
-          {message}
-        </p>
-        
-        {/* Action Buttons for Pending Leads */}
-        {isPending && (
-          <div className="mt-3 flex gap-2">
-            <Link 
-              to={link} 
-              className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-medium rounded focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-emerald-500"
-              onClick={(e) => {
-                e.stopPropagation();
-                if (!isRead && onMarkRead) {
-                  onMarkRead(id);
-                }
-              }}
-            >
-              Review Lead
-            </Link>
-          </div>
-        )}
       </div>
     </div>
   );
@@ -214,16 +216,10 @@ export default function NotificationItem({ notification, onDelete, onMarkImporta
   // Conditionally wrap content in Link or just render in li
   return (
     <li 
-      className={`py-4 px-3 sm:px-4 list-none ${isPending ? 'bg-red-50' : isImportant ? 'bg-yellow-50' : isRead ? '' : 'bg-blue-50/30'} ${link ? 'hover:bg-gray-50 transition-colors duration-150 cursor-pointer rounded-md' : ''}`}
+      className={`relative isolate overflow-visible list-none rounded-2xl border px-4 py-4 shadow-sm transition ${isPending ? 'border-red-200 bg-red-50/80' : isImportant ? 'border-yellow-200 bg-yellow-50' : isRead ? 'border-slate-200 bg-white' : 'border-emerald-200 bg-emerald-50/40'} ${link ? 'hover:border-slate-300 hover:shadow-md' : ''}`}
       onClick={handleNotificationClick}
     >
-      {link ? (
-        <Link to={link} className="block w-full h-full">
-          {itemContent}
-        </Link>
-      ) : (
-        itemContent
-      )}
+      {itemContent}
     </li>
   );
 }

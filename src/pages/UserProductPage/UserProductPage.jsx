@@ -1613,7 +1613,7 @@ const [editProductData, setEditProductData] = useState(null);
     <div className="min-h-screen bg-slate-50 font-sans w-full pb-24">
       <AppHeader />
       
-      <div className="mx-auto mt-4 flex w-full max-w-[1400px] flex-col gap-8 px-4 py-8 md:px-8 lg:flex-row">
+      <div className="mx-auto mt-3 flex w-full max-w-[1400px] flex-col gap-5 px-3 py-5 sm:mt-4 sm:gap-6 sm:px-4 sm:py-8 md:px-6 lg:flex-row lg:items-start lg:px-8">
           
           {/* Profile Card */}
           <UserProfileCard
@@ -1630,17 +1630,17 @@ const [editProductData, setEditProductData] = useState(null);
             bodyClassName="p-0"
           >
             <Tabs defaultValue="products" value={activeTab} onValueChange={setActiveTab} className="w-full">
-              <div className="border-b border-slate-200 px-6 py-4">
-                <TabsList className="grid h-auto w-fit grid-cols-2 rounded-2xl bg-slate-100 p-1">
+              <div className="border-b border-slate-200 px-4 py-4 sm:px-6">
+                <TabsList className="grid h-auto w-full grid-cols-2 rounded-2xl bg-slate-100 p-1 sm:w-fit">
                   <TabsTrigger
                     value="products"
-                    className="rounded-xl px-6 py-2.5 text-sm font-medium text-slate-600 transition-all data-[state=active]:bg-white data-[state=active]:text-emerald-700 data-[state=active]:shadow-sm"
+                    className="rounded-xl px-4 py-2.5 text-sm font-medium text-slate-600 transition-all data-[state=active]:bg-white data-[state=active]:text-emerald-700 data-[state=active]:shadow-sm sm:px-6"
                   >
                     Products
                   </TabsTrigger>
                   <TabsTrigger
                     value="services"
-                    className="rounded-xl px-6 py-2.5 text-sm font-medium text-slate-600 transition-all data-[state=active]:bg-white data-[state=active]:text-emerald-700 data-[state=active]:shadow-sm"
+                    className="rounded-xl px-4 py-2.5 text-sm font-medium text-slate-600 transition-all data-[state=active]:bg-white data-[state=active]:text-emerald-700 data-[state=active]:shadow-sm sm:px-6"
                   >
                     Services
                   </TabsTrigger>
@@ -1649,7 +1649,7 @@ const [editProductData, setEditProductData] = useState(null);
 
               {/* Products Tab Content */}
               <TabsContent value="products" className="p-0 m-0">
-                <div className="p-6 flex flex-col md:flex-row gap-4 border-b border-gray-100">
+                <div className="flex flex-col gap-4 border-b border-gray-100 p-4 sm:p-6 md:flex-row">
                   <div className="relative flex-1">
                     <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
                     <Input
@@ -1661,7 +1661,7 @@ const [editProductData, setEditProductData] = useState(null);
                   </div>
                   <Button
                     variant="primary"
-                    className="bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-700 hover:to-emerald-800 text-white px-6 py-2.5 rounded-md font-medium text-sm shadow-sm hover:shadow-md transition-all"
+                    className="bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-700 hover:to-emerald-800 text-white px-6 py-2.5 rounded-md font-medium text-sm shadow-sm hover:shadow-md transition-all md:w-auto"
                     onClick={async () => {
                       if (!config.SALES_URL) {
                         console.error('SALES_URL is not configured');

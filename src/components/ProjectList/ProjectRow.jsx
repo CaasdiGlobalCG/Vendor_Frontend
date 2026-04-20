@@ -95,7 +95,56 @@ import { useNavigate } from 'react-router-dom';
 import { VendorContext } from '../../context/VendorContext';
 import config from '../../config/env';
 
-export const ProjectRow = ({ project }) => {
+const statusColors = {
+  Completed: 'bg-emerald-50 text-emerald-700 border-emerald-100',
+  InProgress: 'bg-amber-50 text-amber-700 border-amber-100',
+  Pending: 'bg-rose-50 text-rose-700 border-rose-100',
+};
+
+const getProgressMeta = (status) => {
+  if (status === 'Completed') {
+    return {
+      percent: 100,
+      bgClass: 'bg-emerald-200',
+      fillClass: 'bg-emerald-500',
+    };
+  }
+
+  if (status === 'InProgress') {
+    return {
+      percent: 60,
+      bgClass: 'bg-amber-100',
+      fillClass: 'bg-amber-500',
+    };
+  }
+
+  return {
+    percent: 0,
+    bgClass: 'bg-slate-100',
+    fillClass: 'bg-slate-400',
+  };
+};
+
+const formatDateForDisplay = (date) => {
+  if (!date) return 'N/A';
+  try {
+    if (date instanceof Date && !isNaN(date.getTime())) {
+      return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+    }
+    if (typeof date === 'string') {
+      const parsed = new Date(date);
+      if (!isNaN(parsed.getTime())) {
+        return parsed.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+      }
+      return date;
+    }
+    return 'N/A';
+  } catch (e) {
+    return 'N/A';
+  }
+};
+
+export const ProjectRow = ({ project, mobileView = false }) => {
   const [isExpanded, setIsExpanded] = useState(false);
   const [workspaceStatus, setWorkspaceStatus] = useState(project.status || null);
   const [workspaceCreatedAt, setWorkspaceCreatedAt] = useState(null);
@@ -215,34 +264,95 @@ export const ProjectRow = ({ project }) => {
       alert('Failed to open workspace. Please try again.');
     }
   };
-  const statusColors = {
-    "Completed": "bg-[#58FF4C4F] text-[#00C110E6]",
-    "InProgress": "bg-[#FFBD4C4F] text-[#FFA725]",
-    "Pending": "bg-[#FF4C4C4F] text-[#F90B0BEB]"
-  };
+  const resolvedStatus = workspaceStatus || 'Pending';
+  const createdDate = workspaceCreatedAt || project.createdAt;
+  const progressMeta = getProgressMeta(resolvedStatus);
 
-  const formatDateForDisplay = (date) => {
-    // Accept Date objects or ISO/date strings and format to a human-friendly date
-    if (!date) return 'N/A';
-    try {
-      // If it's already a Date object
-      if (date instanceof Date && !isNaN(date.getTime())) {
-        return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-      }
-      // If it's a string, try to parse as ISO or common date string
-      if (typeof date === 'string') {
-        const parsed = new Date(date);
-        if (!isNaN(parsed.getTime())) {
-          return parsed.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-        }
-        // Fallback: return the original string trimmed
-        return date;
-      }
-      return 'N/A';
-    } catch (e) {
-      return 'N/A';
-    }
-  };
+  if (mobileView) {
+    return (
+      <article className="overflow-hidden rounded-[22px] border border-slate-200 bg-white shadow-sm">
+        <button
+          type="button"
+          onClick={() => setIsExpanded(!isExpanded)}
+          className="flex w-full flex-col gap-3 p-4 text-left"
+          aria-expanded={isExpanded}
+        >
+          <div className="flex items-start justify-between gap-3">
+            <div className="min-w-0">
+              <p className="text-[11px] font-medium uppercase tracking-[0.16em] text-slate-400">Project</p>
+              <h3 className="mt-1 truncate text-sm font-semibold text-slate-900">{project.name || 'Untitled project'}</h3>
+              <p className="mt-1 text-xs text-slate-500">ID: {project.id || 'N/A'}</p>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className={`inline-flex rounded-full border px-2.5 py-1 text-[11px] font-semibold ${statusColors[resolvedStatus] || 'bg-slate-100 text-slate-700 border-slate-200'}`}>
+                {resolvedStatus}
+              </span>
+              <img
+                src="https://c.animaapp.com/VmmSqCQF/img/ri-arrow-drop-down-line-4.svg"
+                alt={isExpanded ? 'Collapse' : 'Expand'}
+                className={`h-5 w-5 transition-transform duration-200 ${isExpanded ? 'rotate-180' : 'rotate-0'}`}
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3 text-xs text-slate-600">
+            <div className="rounded-2xl bg-slate-50 p-3">
+              <p className="text-[10px] uppercase tracking-[0.14em] text-slate-400">Client</p>
+              <p className="mt-1 truncate font-medium text-slate-700">{project.clientId || 'N/A'}</p>
+            </div>
+            <div className="rounded-2xl bg-slate-50 p-3">
+              <p className="text-[10px] uppercase tracking-[0.14em] text-slate-400">Created</p>
+              <p className="mt-1 font-medium text-slate-700">{formatDateForDisplay(createdDate)}</p>
+            </div>
+          </div>
+
+          <div>
+            <div className="mb-2 flex items-center justify-between text-[11px] font-medium text-slate-500">
+              <span>Progress</span>
+              <span>{progressMeta.percent}%</span>
+            </div>
+            <div className={`h-2 rounded-full ${progressMeta.bgClass} p-0.5`}>
+              <div
+                className={`${progressMeta.fillClass} h-1 rounded-full transition-[width] duration-300 ease-out`}
+                style={{ width: `${progressMeta.percent}%` }}
+                aria-valuemin={0}
+                aria-valuemax={100}
+                aria-valuenow={progressMeta.percent}
+                role="progressbar"
+              />
+            </div>
+          </div>
+        </button>
+
+        <div className={`overflow-hidden border-t border-slate-100 transition-[max-height,opacity] duration-300 ease-out ${isExpanded ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'}`}>
+          <div className="space-y-4 bg-slate-50/70 p-4">
+            <div>
+              <p className="text-[10px] uppercase tracking-[0.14em] text-slate-400">Description</p>
+              <p className="mt-2 text-sm leading-6 text-slate-600">{project.description || 'No description available.'}</p>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3 text-xs text-slate-600">
+              <div className="rounded-2xl bg-white p-3">
+                <p className="text-[10px] uppercase tracking-[0.14em] text-slate-400">Manager</p>
+                <p className="mt-1 font-medium text-slate-700">{project.manager || 'N/A'}</p>
+              </div>
+              <div className="rounded-2xl bg-white p-3">
+                <p className="text-[10px] uppercase tracking-[0.14em] text-slate-400">Updated</p>
+                <p className="mt-1 font-medium text-slate-700">{project.lastUpdate || 'N/A'}</p>
+              </div>
+            </div>
+
+            <button
+              onClick={openWorkspace}
+              className="w-full rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-600 px-4 py-3 text-sm font-semibold text-white shadow-md transition hover:from-emerald-600 hover:to-teal-700"
+            >
+              Open Workspace
+            </button>
+          </div>
+        </div>
+      </article>
+    );
+  }
 
   return (
     <>
@@ -257,35 +367,20 @@ export const ProjectRow = ({ project }) => {
         <td className="py-2 px-2 sm:px-4">{project.name}</td>
         <td className="py-2 px-2 sm:px-4 whitespace-nowrap">{project.clientId ? project.clientId : 'N/A'}</td>
         <td className="py-2 px-2 sm:px-4 whitespace-nowrap">{(workspaceCreatedAt || project.createdAt) ? formatDateForDisplay(workspaceCreatedAt || project.createdAt) : 'N/A'}</td>
-        <td className="py-2 px-2 sm:px-4 whitespace-nowrap">{workspaceStatus ? workspaceStatus : 'N/A'}</td>
+        <td className="py-2 px-2 sm:px-4 whitespace-nowrap">{resolvedStatus}</td>
         <td className="py-2 px-2 sm:px-4 whitespace-nowrap">
-          {/* Progress bar derived from normalized workspaceStatus */}
-          {(() => {
-            const status = (workspaceStatus || 'Pending');
-            let percent = 0;
-            if (status === 'Completed') percent = 100;
-            else if (status === 'InProgress') percent = 60;
-            else percent = 0;
-
-            const bgClass = percent === 100 ? 'bg-emerald-300' : 'bg-amber-200';
-            const fillClass = percent === 100 ? 'bg-emerald-500' : 'bg-amber-500';
-
-            // Reduced thickness: outer bar h-2, inner bar h-1
-            return (
-              <div className="w-full">
-                <div className={`w-full h-2 rounded-full ${bgClass} p-0.5`} title={`${status} ${percent}%`}>
-                  <div
-                    className={`${fillClass} h-1 rounded-full`}
-                    style={{ width: `${percent}%`, transition: 'width 400ms ease' }}
-                    aria-valuemin={0}
-                    aria-valuemax={100}
-                    aria-valuenow={percent}
-                    role="progressbar"
-                  />
-                </div>
-              </div>
-            );
-          })()}
+          <div className="w-full">
+            <div className={`w-full h-2 rounded-full ${progressMeta.bgClass} p-0.5`} title={`${resolvedStatus} ${progressMeta.percent}%`}>
+              <div
+                className={`${progressMeta.fillClass} h-1 rounded-full`}
+                style={{ width: `${progressMeta.percent}%`, transition: 'width 400ms ease' }}
+                aria-valuemin={0}
+                aria-valuemax={100}
+                aria-valuenow={progressMeta.percent}
+                role="progressbar"
+              />
+            </div>
+          </div>
         </td>
         <td className="py-2 px-2 sm:px-4 text-right sm:text-left">
           <img

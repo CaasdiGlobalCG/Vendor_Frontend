@@ -59,7 +59,7 @@ export const Header = () => {
   const { currentUser, vendorData, setUser, setVendorData, logout } = useContext(VendorContext);
   
   // Get notification data from context
-  const { unreadCount, notifications, refreshNotifications } = useContext(NotificationContext);
+  const { unreadCount, notifications, refreshNotifications, markAsRead } = useContext(NotificationContext);
 
   // Get RBAC platform access — determines which switch buttons to show
   const { platformAccess } = useRBAC();
@@ -209,11 +209,19 @@ export const Header = () => {
   
   // Helper function for NavLink classes
   const getNavLinkClass = ({ isActive }) => {
+    if (isOnDashboard) {
+      return `rounded-full px-3 py-2 transition-colors ${isActive ? 'bg-white/12 text-white font-semibold' : 'text-white/65 hover:bg-white/10 hover:text-white'}`;
+    }
+
     return `hover:text-emerald-200 transition-colors ${isActive ? 'opacity-100 font-semibold' : 'opacity-50'}`;
   };
   
   // Helper function for Mobile NavLink classes
   const getMobileNavLinkClass = ({ isActive }) => {
+    if (isOnDashboard) {
+      return `rounded-xl px-3 py-2 ${isActive ? 'bg-white/12 text-white font-semibold' : 'text-white/70 hover:bg-white/10'}`;
+    }
+
     return `hover:opacity-75 ${isActive ? 'opacity-100 font-semibold' : 'opacity-50'}`;
   };
   
@@ -248,47 +256,66 @@ export const Header = () => {
             <ul className="divide-y divide-gray-100">
               {[...notifications.filter(n => !n.isRead), ...notifications.filter(n => n.isRead)]
                 .slice(0, 5)
-                .map((notification) => (
-                <li key={notification.id} className={`p-4 hover:bg-gray-50 ${notification.isPending ? 'bg-red-50' : ''}`}>
-                  <Link
-                    to={notification.link}
-                    onClick={() => setShowNotificationDropdown(false)}
-                    className="block"
-                  >
+                .map((notification) => {
+                  const itemContent = (
                     <div className="flex gap-3">
                       <div className="flex-shrink-0">
-                        <div className={`w-10 h-10 ${notification.isPending ? 'bg-red-100' : 'bg-blue-100'} rounded-full flex items-center justify-center`}>
-                          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className={`w-6 h-6 ${notification.isPending ? 'text-red-600' : 'text-blue-600'}`}>
-                            {notification.isPending ? (
-                              <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
-                            ) : (
-                              <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                            )}
-                          </svg>
+                        <div className={`w-10 h-10 rounded-full flex items-center justify-center font-semibold text-[11px] ${notification.iconBackgroundClass || (notification.isPending ? 'bg-red-100' : 'bg-blue-100')} ${notification.iconTextClass || (notification.isPending ? 'text-red-700' : 'text-blue-700')}`}>
+                          {notification.iconSymbol || 'N'}
                         </div>
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className={`text-xs font-medium ${notification.isPending ? 'text-red-800' : 'text-gray-800'}`}>
-                          {notification.title}
-                        </p>
-                        <p className="text-xs text-gray-600 truncate">
+                        <div className="flex items-center gap-2">
+                          <p className={`text-xs font-medium ${notification.isPending ? 'text-red-800' : 'text-gray-800'}`}>
+                            {notification.title}
+                          </p>
+                          {notification.badge && (
+                            <span
+                              className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-medium"
+                              style={{ backgroundColor: notification.badge.color, color: notification.badge.textColor }}
+                            >
+                              {notification.badge.text}
+                            </span>
+                          )}
+                        </div>
+                        <p className="mt-1 text-xs text-gray-600 truncate">
                           {notification.message}
                         </p>
-                        <div className="mt-1 flex">
+                        <div className="mt-2 flex items-center gap-2">
                           <span className="inline-flex items-center text-xs text-gray-500">
                             {notification.time}
                           </span>
-                          {notification.isPending && (
-                            <span className="ml-2 inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-red-100 text-red-800">
-                              Action Required
+                          {notification.primaryActionLabel && notification.link && (
+                            <span className="inline-flex items-center rounded bg-emerald-50 px-2 py-0.5 text-[10px] font-medium text-emerald-700">
+                              {notification.primaryActionLabel}
                             </span>
                           )}
                         </div>
                       </div>
                     </div>
-                  </Link>
-                </li>
-              ))}
+                  );
+
+                  const handleOpen = () => {
+                    if (!notification.isRead && markAsRead) {
+                      markAsRead(notification.id);
+                    }
+                    setShowNotificationDropdown(false);
+                  };
+
+                  return (
+                    <li key={notification.id} className={`p-4 hover:bg-gray-50 ${notification.isPending ? 'bg-red-50' : ''}`}>
+                      {notification.link ? (
+                        <Link to={notification.link} onClick={handleOpen} className="block">
+                          {itemContent}
+                        </Link>
+                      ) : (
+                        <button type="button" onClick={handleOpen} className="block w-full text-left">
+                          {itemContent}
+                        </button>
+                      )}
+                    </li>
+                  );
+                })}
             </ul>
           ) : (
             <div className="py-6 text-center text-gray-500">
@@ -318,13 +345,13 @@ export const Header = () => {
       <button 
         onClick={toggleNotificationDropdown}
         aria-label="Notifications" 
-        className="relative p-1 text-white hover:bg-white/20 rounded-full"
+        className={`relative rounded-full p-1 transition-colors ${isOnDashboard ? 'text-white hover:bg-white/10' : 'text-white hover:bg-white/20'}`}
       >
         <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
         </svg>
         {unreadCount > 0 && (
-          <span className="absolute top-0 right-0 flex h-5 w-5 items-center justify-center rounded-full bg-amber-400 text-xs font-bold text-black ring-2 ring-gray-900">
+          <span className={`absolute top-0 right-0 flex h-5 w-5 items-center justify-center rounded-full bg-amber-400 text-xs font-bold text-black ${isOnDashboard ? 'ring-2 ring-[#0b2f28]' : 'ring-2 ring-gray-900'}`}>
             {unreadCount > 9 ? '9+' : unreadCount}
           </span>
         )}
@@ -625,56 +652,65 @@ export const Header = () => {
   };
 
   return (
-    // Conditional Height: Apply min-h-[150px] only on dashboard, else min-h-[80px]
-    // lg:h-[291px] remains dashboard-only, lg:h-auto for others.
-    <header className={`[background:linear-gradient(90deg,rgba(9,91,73,1)_0%,rgba(0,0,0,1)_100%)] rounded-[20px] p-4 lg:p-[18px] shadow-2xl relative flex flex-col justify-between ${isOnDashboard ? 'min-h-[150px] lg:h-[291px]' : 'min-h-[80px] lg:h-auto'}`}>
-      {/* --- Top Section --- */}
-      {/* Removed flex-wrap from here, handling mobile layout differently */}
-      <div className="relative flex justify-between items-start gap-4"> {/* Changed items-center to items-start for mobile alignment */}
+    <header className={`${isOnDashboard ? '[background:linear-gradient(90deg,rgba(9,91,73,1)_0%,rgba(0,0,0,1)_100%)] rounded-[24px] border border-white/10 p-4 shadow-[0_16px_45px_rgba(15,23,42,0.18)]' : '[background:linear-gradient(90deg,rgba(9,91,73,1)_0%,rgba(0,0,0,1)_100%)] rounded-[20px] p-4 lg:p-[18px] shadow-2xl'} relative flex flex-col justify-between ${isOnDashboard ? 'min-h-[96px] lg:min-h-[132px]' : 'min-h-[80px] lg:h-auto'}`}>
+      {/* --- Mobile / Tablet Top Section --- */}
+      <div className="flex flex-col gap-4 lg:hidden">
+        <div className="flex items-center justify-between gap-4">
+          <NavLink to="/VendorDashboard" className="text-white text-2xl font-bold font-['Montserrat'] flex-shrink-0" aria-label="Homepage">
+            CG
+          </NavLink>
+
+          <button
+            className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-white/5 text-white transition hover:bg-white/10"
+            onClick={toggleMobileMenu}
+            aria-label={isMobileMenuOpen ? "Close menu" : "Open menu"}
+            aria-expanded={isMobileMenuOpen}
+          >
+            {isMobileMenuOpen ? (
+              <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+            ) : (
+              <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16m-7 6h7" /></svg>
+            )}
+          </button>
+        </div>
+
+        <div className="relative w-full">
+          <input
+            type="text"
+            placeholder="Search here"
+            className="h-11 w-full rounded-full border border-white/15 bg-white/[0.08] py-[7px] pl-10 pr-10 text-sm text-white placeholder:text-white/50 focus:ring-1 focus:ring-white/25 cursor-pointer"
+            aria-label="Search"
+            readOnly
+            onClick={handleOpenSearch}
+          />
+          <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-white/50">
+            <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="m21 21-4.35-4.35m1.85-5.15a7 7 0 11-14 0 7 7 0 0114 0z" />
+            </svg>
+          </span>
+          <button
+            type="button"
+            onClick={handleOpenSearch}
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-white/55 hover:text-white"
+            aria-label="Open search"
+          >
+            <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="m21 21-4.35-4.35m1.85-5.15a7 7 0 11-14 0 7 7 0 0114 0z" />
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      {/* --- Desktop Top Section --- */}
+      <div className="relative hidden justify-between items-start gap-4 lg:flex"> {/* Changed items-center to items-start for mobile alignment */}
 
         {/* Logo (Stays Top-Left) */}
-        <NavLink to="/VendorDashboard" className="text-white text-2xl lg:text-[32px] font-bold font-['Montserrat'] flex-shrink-0" aria-label="Homepage">
+        <NavLink to="/VendorDashboard" className={`${isOnDashboard ? 'text-white' : 'text-white'} text-2xl lg:text-[32px] font-bold font-['Montserrat'] flex-shrink-0`} aria-label="Homepage">
           CG
         </NavLink>
 
-        {/* --- Mobile --- Search & Hamburger Container --- */}
-        {/* This container holds search and hamburger, appears only on mobile */}
-        <div className="flex-grow flex flex-col items-center gap-3 lg:hidden px-2"> {/* Added px-2 for spacing */}
-           {/* Hamburger Button (Moved to top-right of this container) */}
-           {/* Using absolute positioning relative to the overall top section div */}
-           <button
-              className="absolute top-0 right-0 text-white hover:bg-white/20 p-1 rounded z-20" // Added z-20
-              onClick={toggleMobileMenu}
-              aria-label={isMobileMenuOpen ? "Close menu" : "Open menu"}
-              aria-expanded={isMobileMenuOpen}
-            >
-            {isMobileMenuOpen ? (
-               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
-            ) : (
-               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16m-7 6h7" /></svg>
-            )}
-           </button>
-
-           {/* Search Bar (Centers below logo/button row because of flex-col and items-center on parent) */}
-           {/* Takes full width of its container, max-w-xs keeps it from getting too wide */}
-           <div className="relative w-full max-w-xs mt-8"> {/* Added margin-top to push it down slightly */}
-            <input
-              type="text"
-              placeholder="Search here"
-              className="w-full h-9 bg-white bg-opacity-10 rounded-xl py-[7px] px-2.5 text-sm text-white placeholder-white placeholder-opacity-50 border-none focus:ring-1 focus:ring-white/50"
-              aria-label="Search"
-            />
-            <img
-              src="https://c.animaapp.com/VmmSqCQF/img/tabler-search.svg"
-              alt="Search"
-              className="absolute right-2.5 top-1/2 transform -translate-y-1/2 w-4 h-4 text-white/50"
-            />
-          </div>
-        </div>
-
-
         {/* Desktop Navigation (Hidden on Mobile) */}
-        <nav className="hidden lg:flex space-x-[30px] text-white text-base font-normal font-['Poppins'] flex-shrink-0"> {/* Added flex-shrink-0 */}
+        <nav className={`hidden lg:flex flex-shrink-0 text-base font-normal font-['Poppins'] ${isOnDashboard ? 'items-center gap-1 rounded-full border border-white/10 bg-white/5 px-2 py-1 text-white backdrop-blur-sm' : 'space-x-[30px] text-white'}`}> {/* Added flex-shrink-0 */}
           <PermissionGate module="dashboard" action="view">
             <NavLink to="/VendorDashboard" className={getNavLinkClass} end>Dashboard</NavLink>
           </PermissionGate>
@@ -687,7 +723,7 @@ export const Header = () => {
           <PermissionGate module="workspace" action="view">
             <button 
               onClick={() => navigate('/VendorDashboard/workspace')}
-              className="hover:text-emerald-200 transition-colors opacity-50 hover:opacity-100"
+              className={isOnDashboard ? 'rounded-full px-3 py-2 text-white/65 transition-colors hover:bg-white/10 hover:text-white' : 'hover:text-emerald-200 transition-colors opacity-50 hover:opacity-100'}
             >
               Workspace
             </button>
@@ -698,6 +734,7 @@ export const Header = () => {
           {/* <NavLink to="/pricing" className={getNavLinkClass}>Pricing</NavLink> */}
         </nav>
 
+<<<<<<< Updated upstream
 
         {/* Mobile Menu Dropdown (Appears below header when toggled) */}
         {/* Positioned relative to the main header */}
@@ -811,35 +848,48 @@ export const Header = () => {
           </div>
         )}
 
+=======
+>>>>>>> Stashed changes
         {/* --- Desktop --- Right Controls (Hidden on Mobile) --- */}
-        <div className="hidden lg:flex items-center justify-end gap-2 sm:gap-4 flex-shrink-0"> {/* Added flex-shrink-0 */}
+        <div className="hidden lg:flex items-center justify-end gap-2 sm:gap-3 flex-shrink-0"> {/* Added flex-shrink-0 */}
           {/* Search Bar */}
           <div className="relative">
             <input
               type="text"
               placeholder="Search here"
-              className="w-[254px] h-9 bg-white bg-opacity-10 rounded-xl py-[7px] px-2.5 text-sm text-white placeholder-white placeholder-opacity-50 border-none focus:ring-1 focus:ring-white/50 cursor-pointer"
+              className={`${isOnDashboard ? 'w-[290px] h-10 rounded-full border border-white/15 bg-white/[0.08] py-[7px] pl-10 pr-10 text-sm text-white placeholder:text-white/50 shadow-sm focus:ring-1 focus:ring-white/20' : 'w-[254px] h-9 rounded-xl border border-white/10 bg-white/10 py-[7px] pl-10 pr-10 text-sm text-white placeholder:text-white/50 focus:ring-1 focus:ring-white/50'} cursor-pointer`}
               aria-label="Search"
               readOnly
               onClick={handleOpenSearch}
             />
+            <span className={`pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 ${isOnDashboard ? 'text-white/50' : 'text-white/50'}`}>
+              <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="m21 21-4.35-4.35m1.85-5.15a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
+            </span>
             <button
               type="button"
               onClick={handleOpenSearch}
-              className="absolute right-2.5 top-1/2 transform -translate-y-1/2 w-4 h-4 text-white/50"
+              className={`absolute right-3 top-1/2 transform -translate-y-1/2 ${isOnDashboard ? 'text-white/55 hover:text-white' : 'w-4 h-4 text-white/50'}`}
               aria-label="Open search"
             >
-              <img
-                src="https://c.animaapp.com/VmmSqCQF/img/tabler-search.svg"
-                alt="Search"
-                className="w-4 h-4 pointer-events-none"
-              />
+              {isOnDashboard ? (
+                <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="m21 21-4.35-4.35m1.85-5.15a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
+              ) : (
+                <img
+                  src="https://c.animaapp.com/VmmSqCQF/img/tabler-search.svg"
+                  alt="Search"
+                  className="w-4 h-4 pointer-events-none"
+                />
+              )}
             </button>
           </div>
           {/* Icons Container */}
           <div className="flex items-center space-x-1 sm:space-x-2">
              {notificationButton}
-             <button aria-label="Messages" className="p-1 text-white hover:bg-white/20 rounded-full">
+             <button aria-label="Messages" className={`p-1 rounded-full ${isOnDashboard ? 'text-white hover:bg-white/10' : 'text-white hover:bg-white/20'}`}>
                <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
                </svg>
@@ -857,7 +907,7 @@ export const Header = () => {
                  }
                }}
                aria-label="Profile" 
-               className="p-1 text-white hover:bg-white/20 rounded-full"
+               className={`p-1 rounded-full ${isOnDashboard ? 'text-white hover:bg-white/10' : 'text-white hover:bg-white/20'}`}
              > 
                {vendorData?.profileImage?.url ? (
                  <img
@@ -882,8 +932,23 @@ export const Header = () => {
                </svg>
              </button>
              <button 
+<<<<<<< Updated upstream
                onClick={() => logout()} 
                className="p-1 text-white hover:bg-white/20 rounded-full"
+=======
+               onClick={() => {
+                 console.log("Logout button clicked");
+                 // Clear all data
+                 logout();
+                 // Clear any session storage
+                 sessionStorage.clear();
+                 // Clear any remaining localStorage items
+                 localStorage.clear();
+                 // Force a complete page reload to clear any state
+                 window.location.href = "/login";
+               }} 
+               className={`p-1 rounded-full ${isOnDashboard ? 'text-white hover:bg-white/10' : 'text-white hover:bg-white/20'}`}
+>>>>>>> Stashed changes
                aria-label="Logout"
              >
                <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
@@ -943,14 +1008,100 @@ export const Header = () => {
         </div>
         </div>
 
+      {/* Mobile Menu Dropdown (Appears below header when toggled) */}
+      {/* Positioned relative to the main header */}
+      {isMobileMenuOpen && (
+        <div className={`absolute right-4 top-[72px] z-50 w-[min(18rem,calc(100%-2rem))] rounded-2xl shadow-lg lg:hidden ${isOnDashboard ? 'border border-white/10 bg-[#0b2f28]/95 backdrop-blur-sm' : 'bg-gray-900 bg-opacity-95'}`}>
+          <nav className={`flex flex-col space-y-4 p-4 text-base font-medium font-['Poppins'] ${isOnDashboard ? 'text-white' : 'text-white'}`}>
+            <PermissionGate module="dashboard" action="view">
+              <NavLink to="/VendorDashboard" className={getMobileNavLinkClass} onClick={closeMobileMenu} end>Dashboard</NavLink>
+            </PermissionGate>
+            <PermissionGate module="projects" action="view">
+              <NavLink to="/VendorDashboard/projects" className={getMobileNavLinkClass} onClick={closeMobileMenu}>Projects</NavLink>
+            </PermissionGate>
+            <PermissionGate module="leads" action="view">
+              <NavLink to="/VendorDashboard/leads" className={getMobileNavLinkClass} onClick={closeMobileMenu}>Leads</NavLink>
+            </PermissionGate>
+            <PermissionGate module="notifications" action="view">
+              <NavLink to="/VendorDashboard/notifications" className={getMobileNavLinkClass} onClick={closeMobileMenu}>Notifications</NavLink>
+            </PermissionGate>
+            <PermissionGate module="workspace" action="view">
+              <NavLink to="/VendorDashboard/workspace" className={getMobileNavLinkClass} onClick={closeMobileMenu}>
+                Workspace
+              </NavLink>
+            </PermissionGate>
+            <PermissionGate module="user_management" action="view">
+              <NavLink to="/VendorDashboard/team" className={getMobileNavLinkClass} onClick={closeMobileMenu}>Team</NavLink>
+            </PermissionGate>
+          </nav>
+
+          <div className="mb-4 mt-2 flex items-center justify-between px-4">
+            {canAccessClient && (
+              <div
+                className={`w-[76px] h-[24px] rounded-[18px] cursor-pointer relative ${isVendor ? 'bg-gradient-to-r from-[#0F766E] via-[#14B8A6] to-[#22C55E]' : 'bg-gradient-to-r from-[#1D4ED8] via-[#2563EB] to-[#38BDF8]'}`}
+                onClick={() => setIsVendor(!isVendor)}
+                role="button" aria-label="Toggle Vendor/Client mode" tabIndex={0}
+              >
+                {isVendor ? (
+                  <span className="text-white text-[8px] font-medium absolute right-[8%] top-1/2 -translate-y-1/2">Vendor</span>
+                ) : (
+                  <span className="text-white text-[8px] font-medium absolute left-[9%] top-1/2 -translate-y-1/2">Client</span>
+                )}
+                <div className={`absolute top-1/2 -translate-y-1/2 w-[24px] h-[19px] bg-white rounded-full transition-all duration-200 ease-in-out ${ isVendor ? 'left-[6%]' : 'left-[66%]' }`} />
+              </div>
+            )}
+
+            <div className="flex items-center space-x-2 sm:space-x-3">
+              {notificationButton}
+              <button aria-label="Messages" className="p-1 text-white hover:bg-white/20 rounded-full">
+                <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                </svg>
+              </button>
+              <button
+                onClick={() => {
+                  if (currentUser) {
+                    console.log("Header Mobile: User found, navigating to profile");
+                    navigate('/userproduct');
+                  } else {
+                    console.log("Header Mobile: No authenticated user found");
+                    navigate('/login');
+                  }
+                }}
+                aria-label="Profile"
+                className="p-1 text-white hover:bg-white/20 rounded-full"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                </svg>
+              </button>
+              <button
+                onClick={() => {
+                  console.log("Mobile logout button clicked");
+                  logout();
+                  sessionStorage.clear();
+                  localStorage.clear();
+                  window.location.href = "/login";
+                }}
+                className="p-1 text-white hover:bg-white/20 rounded-full"
+                aria-label="Logout"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                </svg>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* --- Bottom Section (Conditional Rendering for Dashboard) --- */}
       {/* Only render this div if isOnDashboard is true */}
       {isOnDashboard && (
-        // This section will only appear on the dashboard, contributing to its larger height
-        <div className="mt-auto pt-4 flex flex-col lg:flex-row flex-wrap justify-between items-start lg:items-end gap-4">
+        <div className="mt-4 flex flex-col gap-4 border-t border-white/10 pt-4 xl:flex-row xl:items-center xl:justify-between">
           {/* Greeting */}
-          <div className="text-white">
-            <h2 className="text-xl lg:text-[20px] font-medium font-['Montserrat']">
+          <div className="min-w-0 text-white">
+            <h2 className="text-xl font-semibold leading-tight font-['Montserrat'] sm:text-lg lg:text-2xl">
               {getGreeting()},{" "}
               {vendorData?.vendorDetails?.firstName || vendorData?.vendorDetails?.lastName || vendorData?.vendorDetails?.vendorId ||
                 vendorData?.vendorDetails?.id ||
@@ -960,11 +1111,13 @@ export const Header = () => {
             </h2>
           </div>
           {/* Bottom Right Buttons */}
-          <div className="flex flex-wrap items-center justify-start lg:justify-end gap-2 lg:gap-4">
+          <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-start xl:justify-end">
             {/* Date Section */}
-            <div className="mr-4"><DateYearFunction /></div>
+            <div className="w-fit max-w-full shrink-0 rounded-full border border-white/10 bg-white/5 px-3 py-2 text-[13px] text-white shadow-sm sm:text-sm">
+              <DateYearFunction />
+            </div>
             {/* Wrapper for B2B and Prompt buttons */}
-            <div className="flex items-center gap-2 lg:gap-4">
+            <div className="grid min-w-0 grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:items-center sm:gap-3">
               {/* Redirect loading overlay */}
               {redirectingTo && (
                 <div className="fixed inset-0 z-[9999]">
@@ -972,7 +1125,7 @@ export const Header = () => {
                 </div>
               )}
               <button
-                className="w-auto px-3 h-[36px] bg-white bg-opacity-5 hover:bg-opacity-10 rounded-[9px] flex items-center justify-center text-white text-xs lg:text-sm font-semibold font-['Montserrat']"
+                className="flex min-h-[44px] w-full max-w-full items-center justify-center whitespace-nowrap rounded-full border border-white/10 bg-white/5 px-3 text-[13px] font-semibold font-['Montserrat'] text-white shadow-sm transition hover:bg-white/10 sm:min-h-[36px] sm:w-auto sm:px-4 sm:text-sm"
                 onClick={async () => {
                   let idToken = '';
                   try {
@@ -1003,7 +1156,7 @@ export const Header = () => {
               {/* B2B button — only if user has sales platform access */}
               {canAccessSales && (
               <button
-                className="w-auto px-3 h-[36px] bg-white bg-opacity-5 hover:bg-opacity-10 rounded-[9px] flex items-center justify-center text-white text-xs lg:text-sm font-semibold font-['Montserrat']"
+                className="flex min-h-[44px] w-full max-w-full items-center justify-center whitespace-nowrap rounded-full border border-white/10 bg-white/5 px-3 text-[13px] font-semibold font-['Montserrat'] text-white shadow-sm transition hover:bg-white/10 sm:min-h-[36px] sm:w-auto sm:px-4 sm:text-sm"
                 onClick={async () => {
                   if (!config.SALES_URL) {
                     console.error('SALES_URL is not configured');
@@ -1031,7 +1184,7 @@ export const Header = () => {
               {/* Tender button — only if user has sales platform access */}
               {canAccessSales && (
               <button
-                className="w-auto px-3 h-[36px] bg-white bg-opacity-5 hover:bg-opacity-10 rounded-[9px] flex items-center justify-center text-white text-xs lg:text-sm font-semibold font-['Montserrat']"
+                className="flex min-h-[44px] w-full max-w-full items-center justify-center whitespace-nowrap rounded-full border border-white/10 bg-white/5 px-3 text-[13px] font-semibold font-['Montserrat'] text-white shadow-sm transition hover:bg-white/10 sm:min-h-[36px] sm:w-auto sm:px-4 sm:text-sm"
                 onClick={async () => {
                   if (!config.SALES_URL) {
                     console.error('SALES_URL is not configured');
@@ -1056,7 +1209,7 @@ export const Header = () => {
               </button>
               )}
               <button
-                className="w-auto px-3 h-[36px] bg-white bg-opacity-5 hover:bg-opacity-10 rounded-[9px] flex items-center justify-center text-white text-xs lg:text-sm font-semibold font-['Montserrat'] transition-all duration-200"
+                className="flex min-h-[44px] w-full max-w-full items-center justify-center whitespace-nowrap rounded-full border border-white/10 bg-white/5 px-3 text-[13px] font-semibold font-['Montserrat'] text-white shadow-sm transition hover:bg-white/10 sm:min-h-[36px] sm:w-auto sm:px-4 sm:text-sm"
                 onClick={() => setIsAiPromptOpen(true)}
               >
                 Prompt <img src="https://c.animaapp.com/VmmSqCQF/img/vector.svg" alt="Prompt" className="ml-2 w-3 h-3 lg:w-4 lg:h-4" />

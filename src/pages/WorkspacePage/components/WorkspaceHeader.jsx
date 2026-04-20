@@ -351,12 +351,12 @@ const WorkspaceHeader = ({
   }, []);
 
   return (
-    <div className="bg-white border-b border-gray-200 px-2 py-1" data-workspace-header>
-      <div className="flex items-center justify-between relative">
-        <div className="flex items-center space-x-6">
+    <div className="bg-white border-b border-gray-200 px-2 py-1.5" data-workspace-header>
+      <div className="relative flex items-center justify-between gap-2 overflow-hidden">
+        <div className="flex min-w-0 flex-1 items-center gap-2 sm:gap-3 lg:gap-4">
           <button 
             onClick={handleBackToDashboard}
-            className="flex items-center space-x-2 px-3 py-2 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+            className="flex shrink-0 items-center space-x-2 rounded-lg px-2.5 py-2 text-gray-700 transition-colors hover:bg-gray-100"
             title={`Back to ${currentUser?.role === 'pm' ? 'PM' : 'Vendor'} Dashboard`}
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -365,7 +365,7 @@ const WorkspaceHeader = ({
             {/* <span>Back to Dashboard</span> */}
           </button>
           
-          <div className="flex items-center space-x-2">
+          <div className="flex shrink-0 items-center space-x-2">
             <div className="flex items-center space-x-2 cursor-pointer">
               <div className="w-8 h-8 bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg flex items-center justify-center text-white font-medium text-sm">
                 CG
@@ -388,12 +388,12 @@ const WorkspaceHeader = ({
             )}
           </div>
           
-          <div className="flex items-center space-x-4">
+          <div className="flex min-w-0 flex-1 items-center gap-1 overflow-x-auto whitespace-nowrap pr-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:gap-1.5 lg:gap-2">
             <button 
               data-tour="elements-btn"
               disabled={!isCanvasActive || shouldDisableEditing}
               onClick={isCanvasActive && !shouldDisableEditing ? onElementsClick : undefined}
-              className={`flex items-center space-x-2 px-3 py-2 rounded-lg text-sm font-normal transition-all duration-200 ${
+              className={`flex shrink-0 items-center space-x-1.5 rounded-lg px-2 py-2 text-sm font-normal transition-all duration-200 lg:px-2.5 ${
                 isCanvasActive && !shouldDisableEditing
                   ? 'text-gray-700 hover:shadow-md cursor-pointer'
                   : 'text-gray-400 cursor-not-allowed'
@@ -401,13 +401,14 @@ const WorkspaceHeader = ({
               title={shouldDisableEditing ? 'Project is completed - editing disabled' : 'Add Elements'}
             >
               <Plus className="w-4 h-4" />
-              <span>Elements</span>
+              <span className="hidden md:inline xl:hidden">Elem</span>
+              <span className="hidden xl:inline">Elements</span>
             </button>
             <button 
               data-tour="text-btn"
               disabled={!isCanvasActive || shouldDisableEditing}
               onClick={isCanvasActive && !shouldDisableEditing ? onTextClick : undefined}
-              className={`flex items-center space-x-2 px-3 py-2 rounded-lg text-sm font-normal transition-all duration-200 ${
+              className={`flex shrink-0 items-center space-x-1.5 rounded-lg px-2 py-2 text-sm font-normal transition-all duration-200 lg:px-2.5 ${
                 isCanvasActive && !shouldDisableEditing
                   ? 'text-gray-700 hover:shadow-md cursor-pointer'
                   : 'text-gray-400 cursor-not-allowed'
@@ -415,13 +416,13 @@ const WorkspaceHeader = ({
               title={shouldDisableEditing ? 'Project is completed - editing disabled' : 'Add Text'}
             >
               <Plus className="w-4 h-4" />
-              <span>Text</span>
+              <span className="hidden md:inline">Text</span>
             </button>
             <button 
               data-tour="templates-btn"
               disabled={!isCanvasActive || shouldDisableEditing}
               onClick={isCanvasActive && !shouldDisableEditing ? onTemplatesClick : undefined}
-              className={`flex items-center space-x-2 px-3 py-2 rounded-lg text-sm font-normal transition-all duration-200 ${
+              className={`flex shrink-0 items-center space-x-1.5 rounded-lg px-2 py-2 text-sm font-normal transition-all duration-200 lg:px-2.5 ${
                 isCanvasActive && !shouldDisableEditing
                     ? 'text-gray-700 hover:shadow-md cursor-pointer'
                     : 'text-gray-400 cursor-not-allowed'
@@ -429,14 +430,15 @@ const WorkspaceHeader = ({
               title={shouldDisableEditing ? 'Project is completed - editing disabled' : 'Add Templates'}
             >
               <Plus className="w-4 h-4" />
-              <span>Templates</span>
+              <span className="hidden md:inline xl:hidden">Temps</span>
+              <span className="hidden xl:inline">Templates</span>
             </button>
 
             <button
               data-tour="workflow-builder-btn"
               disabled={!isCanvasActive || shouldDisableEditing}
               onClick={isCanvasActive && !shouldDisableEditing ? onWorkflowBuilderClick : undefined}
-              className={`flex items-center space-x-2 px-3 py-2 rounded-lg text-sm font-normal transition-all duration-200 ${
+              className={`flex shrink-0 items-center space-x-1.5 rounded-lg px-2 py-2 text-sm font-normal transition-all duration-200 lg:px-2.5 ${
                 isCanvasActive && !shouldDisableEditing
                   ? 'text-gray-700 hover:shadow-md cursor-pointer'
                   : 'text-gray-400 cursor-not-allowed'
@@ -444,22 +446,23 @@ const WorkspaceHeader = ({
               title={shouldDisableEditing ? 'Project is completed - editing disabled' : 'Open Workflow Builder'}
             >
               <Plus className="w-4 h-4" />
-              <span>Workflow Builder</span>
+              <span className="hidden md:inline xl:hidden">Workflow</span>
+              <span className="hidden xl:inline">Workflow Builder</span>
             </button>
           </div>
         </div>
 
           {/* Centered Workspace Title */}
-        <div className="absolute left-1/2 transform -translate-x-1/2">
+        <div className="pointer-events-none absolute left-1/2 hidden -translate-x-1/2 2xl:block">
           <h1 className="text-xl font-semibold text-gray-800">
             {localStorage.getItem('currentWorkspace') || 'Workspace'}
           </h1>
         </div>
 
         {/* Right side actions — compact with overflow */}
-        <div className="flex items-center space-x-1.5">
+        <div className="flex shrink-0 items-center space-x-1 md:space-x-1.5">
           <div
-            className={`hidden lg:flex items-center gap-1.5 px-2 py-1 rounded-md border text-[10px] font-medium ${syncBadge.containerClass}`}
+            className={`hidden xl:flex items-center gap-1.5 px-2 py-1 rounded-md border text-[10px] font-medium ${syncBadge.containerClass}`}
             title={syncBadge.subLabel}
             aria-live="polite"
           >
@@ -472,11 +475,11 @@ const WorkspaceHeader = ({
             <>
               <button
                 onClick={onOpenPostServices}
-                className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors flex items-center space-x-1"
+                className="flex items-center space-x-1 rounded-lg p-1.5 transition-colors hover:bg-gray-100"
                 title="Post Services"
               >
                 <MessageCircle className="w-4 h-4 text-gray-600" />
-                <span className="text-[10px] font-medium text-gray-500 hidden xl:inline">Post Service</span>
+                <span className="hidden 2xl:inline text-[10px] font-medium text-gray-500">Post Service</span>
               </button>
             </>
           )}
@@ -568,7 +571,7 @@ const WorkspaceHeader = ({
               const event = new KeyboardEvent('keydown', { key: 'k', ctrlKey: true, bubbles: true });
               window.dispatchEvent(event);
             }}
-            className="hidden md:flex items-center gap-1.5 px-2 py-1 text-xs text-gray-400 bg-gray-50 hover:bg-gray-100 border border-gray-200 rounded-lg transition-colors"
+            className="hidden xl:flex items-center gap-1.5 rounded-lg border border-gray-200 bg-gray-50 px-2 py-1 text-xs text-gray-400 transition-colors hover:bg-gray-100"
             title="Open command palette (Ctrl+K)"
           >
             <Search className="w-3 h-3" />

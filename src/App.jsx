@@ -73,6 +73,12 @@ class ErrorBoundary extends Component {
     this.setState({ error, errorInfo });
   }
 
+  componentDidUpdate(prevProps) {
+    if (this.state.hasError && prevProps.resetKey !== this.props.resetKey) {
+      this.setState({ hasError: false, error: null, errorInfo: null });
+    }
+  }
+
   render() {
     if (this.state.hasError) {
       // You can render any custom fallback UI
@@ -80,6 +86,11 @@ class ErrorBoundary extends Component {
         <div className="p-6 bg-red-100 border border-red-300 rounded-lg">
           <h2 className="text-lg font-semibold text-red-700 mb-2">Something went wrong!</h2>
           <p className="text-red-600 mb-4">The application encountered an error.</p>
+          {this.state.error?.message ? (
+            <p className="mb-4 rounded border border-red-200 bg-white/80 px-3 py-2 text-sm text-red-700">
+              {this.state.error.message}
+            </p>
+          ) : null}
           <button 
             onClick={() => this.setState({ hasError: false })}
             className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
@@ -92,6 +103,12 @@ class ErrorBoundary extends Component {
 
     return this.props.children;
   }
+}
+
+function RouteAwareErrorBoundary({ children }) {
+  const location = useLocation();
+
+  return <ErrorBoundary resetKey={`${location.pathname}${location.search}`}>{children}</ErrorBoundary>;
 }
 
 // Mock projects data for the VendorDashboard
@@ -211,11 +228,11 @@ function App() {
         <VendorProvider>
           <RBACProvider>
             <AccessDeniedGuard>
-              <ErrorBoundary>
+              <RouteAwareErrorBoundary>
                 <NotificationProvider>
                   <AppContent />
                 </NotificationProvider>
-              </ErrorBoundary>
+              </RouteAwareErrorBoundary>
             </AccessDeniedGuard>
           </RBACProvider>
         </VendorProvider>

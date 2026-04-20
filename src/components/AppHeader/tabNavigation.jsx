@@ -170,31 +170,17 @@ function ResponsiveNavigationTabs({ compact = false }) {
     { path: '/userproduct', label: 'Products' },
   ];
 
-  const activeTabIndex = Math.max(tabsConfig.findIndex(tab => tab.path === activeTab), 0);
-  const verticalInset = compact ? 2 : 3;
-  const horizontalInset = compact ? 2 : 3;
-
   return (
-    <div className={`flex justify-center transition-all duration-300 ${compact ? 'pt-8' : 'pt-6'}`}>
-      <div className={`relative grid grid-cols-3 overflow-hidden rounded-full bg-white shadow-md transition-all duration-300 ${compact ? 'ring-1 ring-white/80' : ''}`}>
-        <div
-          className="absolute rounded-full bg-gradient-to-l from-[#095B49] to-[#000000] shadow-[0_6px_18px_rgba(0,0,0,0.18)] will-change-transform"
-          style={{
-            width: `calc(33.3333% - ${horizontalInset * 2}px)`,
-            left: `calc(${activeTabIndex * 33.3333}% + ${horizontalInset}px)`,
-            opacity: 1,
-            top: `${verticalInset}px`,
-            bottom: `${verticalInset}px`,
-            transition: 'left 300ms cubic-bezier(0.34, 1.56, 0.64, 1), width 300ms cubic-bezier(0.34, 1.56, 0.64, 1), opacity 200ms ease-in-out',
-          }}
-        />
-        
+    <div className={`flex justify-start transition-all duration-300 sm:justify-center ${compact ? 'pt-1' : 'pt-2 sm:pt-4'}`}>
+      <div className={`grid w-full max-w-full grid-cols-3 items-center gap-1.5 rounded-[22px] bg-white/10 p-1.5 shadow-md transition-all duration-300 sm:flex sm:gap-2 sm:overflow-x-auto [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden ${compact ? 'ring-1 ring-white/20' : ''}`}>
         {tabsConfig.map(tab => (
           <button
             key={tab.path}
             type="button"
-            className={`relative z-10 min-w-[88px] font-medium text-center transition-all duration-300 ${compact ? 'px-4 py-2 text-[13px]' : 'px-8 py-3 text-sm'} ${
-              activeTab === tab.path ? 'text-white' : 'text-gray-700 hover:text-gray-900'
+            className={`relative z-10 whitespace-nowrap rounded-full font-medium text-center transition-all duration-300 sm:min-w-[104px] sm:flex-shrink-0 ${compact ? 'px-2 py-2 text-[12px] sm:px-4 sm:text-[13px]' : 'px-2 py-2.5 text-[13px] sm:px-4 sm:text-sm sm:px-5'} ${
+              activeTab === tab.path
+                ? 'bg-white text-[#0b2f28] shadow-[0_6px_18px_rgba(255,255,255,0.2)]'
+                : 'text-white/80 hover:bg-white/10 hover:text-white'
             }`}
             onClick={() => handleTabClick(tab.path)}
           >

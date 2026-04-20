@@ -1,15 +1,19 @@
 // ... existing code ...
 
 import React, { useContext, useEffect, useState } from 'react';
+<<<<<<< Updated upstream
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { Award, Share2 } from 'lucide-react';
+=======
+import { useNavigate } from 'react-router-dom';
+import { Award, Share2, Settings } from 'lucide-react';
+>>>>>>> Stashed changes
 import ResponsiveNavigationTabs from './tabNavigation';
 import { VendorContext } from '../../context/VendorContext';
 import { Home } from 'lucide-react';
 
 export default function AppHeader() {
   const navigate = useNavigate();
-  const location = useLocation();
   const { vendorData, currentUser } = useContext(VendorContext);
   const [isCompact, setIsCompact] = useState(false);
   const gstNumber = vendorData?.companyDetails?.gstNumber
@@ -39,15 +43,16 @@ export default function AppHeader() {
 
   return (
     <section
-      className={`sticky top-0 z-50 mx-4 mt-4 overflow-hidden bg-gradient-to-r from-[#095B49] to-[#000000] text-white shadow-lg transition-all duration-300 ease-out ${
-        isCompact ? 'rounded-b-lg px-4 py-3' : 'rounded-b-xl p-4'
+      className={`sticky top-0 z-50 mx-3 mt-3 overflow-hidden bg-gradient-to-r from-[#095B49] to-[#000000] text-white shadow-lg transition-all duration-300 ease-out sm:mx-4 sm:mt-4 ${
+        isCompact ? 'rounded-b-lg px-3 py-3 sm:px-4' : 'rounded-b-xl px-3 py-3.5 sm:px-4 sm:py-4'
       }`}
-      style={{ height: isCompact ? '116px' : '200px' }}
     >
-      <div className={`absolute left-4 text-white/80 transition-all duration-300 ${isCompact ? 'top-3 text-[11px]' : 'top-2 text-xs'}`}>
-        GSTIN:{gstNumber}
-      </div>
+      <div className={`flex flex-col gap-3 transition-all duration-300 sm:flex-row sm:items-start sm:justify-between ${isCompact ? 'mb-3' : 'mb-4'}`}>
+        <div className={`min-w-0 text-white/80 transition-all duration-300 ${isCompact ? 'text-[11px]' : 'text-xs'} break-all sm:break-normal`}>
+          GSTIN:{gstNumber}
+        </div>
 
+<<<<<<< Updated upstream
       {/* Top right icons */}
       
       <div className={`absolute right-4 flex items-center transition-all duration-300 ${isCompact ? 'top-3 gap-3' : 'top-4 gap-4'}`}>
@@ -61,6 +66,22 @@ export default function AppHeader() {
           <Home className={`${isCompact ? 'h-4 w-4' : 'h-5 w-5'} text-white hover:text-gray-300 transition-all duration-300`} />
         </button>
       
+=======
+        <div className={`flex items-center justify-end gap-2 self-stretch rounded-full bg-white/8 px-2.5 py-1.5 transition-all duration-300 sm:self-auto sm:bg-transparent sm:px-0 sm:py-0 ${isCompact ? '' : 'sm:gap-4'}`}>
+          <Award className={`${isCompact ? 'h-4 w-4' : 'h-5 w-5'} text-yellow-400 transition-all duration-300`} />
+
+          <button onClick={handleShare} title="Share profile" className="rounded-full p-1.5 transition-colors hover:bg-white/10 sm:p-0">
+            <Share2 className={`${isCompact ? 'h-4 w-4' : 'h-5 w-5'} text-white hover:text-gray-300 transition-all duration-300`} />
+          </button>
+          <button onClick={() => navigateTo("/settings")} aria-label="Settings" className="rounded-full p-1.5 transition-colors hover:bg-white/10 sm:p-0">
+            <Settings className={`${isCompact ? 'h-4 w-4' : 'h-5 w-5'} text-white hover:text-gray-300 transition-all duration-300`} />
+          </button>
+
+          <button onClick={() => navigateTo("/VendorDashboard")} aria-label="Go to home" className="rounded-full p-1.5 transition-colors hover:bg-white/10 sm:p-0">
+            <Home className={`${isCompact ? 'h-4 w-4' : 'h-5 w-5'} text-white hover:text-gray-300 transition-all duration-300`} />
+          </button>
+        </div>
+>>>>>>> Stashed changes
       </div>
 
       {/* Tabs */}

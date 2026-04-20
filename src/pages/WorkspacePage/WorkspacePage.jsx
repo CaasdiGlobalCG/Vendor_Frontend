@@ -42,6 +42,7 @@ import config from '../../config/env';
 import authFetch from '../../utils/authFetch';
 
 const WorkspacePage = () => {
+  const COMPACT_WORKSPACE_BREAKPOINT = 768;
   const navigate = useNavigate();
   const { workspaceId } = useParams();
   const location = useLocation();
@@ -192,12 +193,12 @@ const WorkspacePage = () => {
   }, [layoutKey]);
 
   // Mobile/touch detection
-  const [isMobile, setIsMobile] = useState(() => window.innerWidth < 768);
+  const [isMobile, setIsMobile] = useState(() => window.innerWidth < COMPACT_WORKSPACE_BREAKPOINT);
   useEffect(() => {
-    const onResize = () => setIsMobile(window.innerWidth < 768);
+    const onResize = () => setIsMobile(window.innerWidth < COMPACT_WORKSPACE_BREAKPOINT);
     window.addEventListener('resize', onResize);
     return () => window.removeEventListener('resize', onResize);
-  }, []);
+  }, [COMPACT_WORKSPACE_BREAKPOINT]);
 
   const [focusMode, setFocusMode] = useState(() => savedLayout.focusMode !== false); // ON by default
   const [leftPanelPinned, setLeftPanelPinned] = useState(() => !!savedLayout.leftPinned);
@@ -2027,7 +2028,7 @@ const WorkspacePage = () => {
         `}
       </style>
       
-      <div className="workspace-container h-screen w-screen bg-white overflow-hidden" style={{ margin: 0, padding: 0 }}>
+      <div className="workspace-container flex h-screen w-screen flex-col bg-white overflow-hidden" style={{ margin: 0, padding: 0 }}>
         {/* Role-based header */}
         {console.log('🔍 RoleBasedHeader rendering with detectedUserRole:', detectedUserRole)}
         <RoleBasedHeader 
@@ -2063,7 +2064,7 @@ const WorkspacePage = () => {
           selectedSubtask={selectedSubtask}
         />
         
-        <div className="flex h-[calc(100vh-160px)] relative">
+        <div className="relative flex min-h-0 flex-1">
           {/* Mobile panel toggle buttons — fixed bottom bar */}
           {isMobile && (
             <div className="fixed bottom-0 left-0 right-0 z-40 bg-white border-t border-gray-200 flex items-center justify-around px-4 py-2 safe-area-pb">

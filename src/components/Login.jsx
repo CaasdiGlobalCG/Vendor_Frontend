@@ -559,12 +559,12 @@ function Login() {
 
   return (
     <div
-      className="min-h-screen relative flex items-center justify-center p-6 bg-center bg-cover bg-no-repeat"
+      className="relative flex min-h-screen items-start justify-center overflow-y-auto bg-center bg-cover bg-no-repeat px-4 py-6 sm:px-6 sm:py-8 lg:items-center lg:px-8"
       style={{ backgroundImage: `url(${background})` }}
     >
-      <div className="w-full max-w-7xl grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
-        <div className="rounded-2xl w-full max-w-md mx-auto shadow-2xl bg-white">
-          <div className="rounded-2xl p-8 bg-white">
+      <div className="my-auto grid w-full max-w-6xl grid-cols-1 items-start gap-6 lg:grid-cols-[minmax(0,30rem)_minmax(0,1fr)] lg:items-center lg:gap-12">
+        <div className="w-full max-w-xl mx-auto rounded-2xl bg-white shadow-2xl">
+          <div className="rounded-2xl bg-white p-5 sm:p-6 md:p-8">
             {showAlert && (
               <div className="mb-4">
                 <Alert message={alertMessage} type={alertType} onClose={() => setShowAlert(false)} />
@@ -573,8 +573,8 @@ function Login() {
 
             {view === "login" && (
               <>
-                <h2 className="text-gray-900 text-2xl font-semibold mb-2">Hello User</h2>
-                <p className="text-sm text-gray-600 mb-6">Enter your email and password to log in</p>
+                <h2 className="mb-2 text-2xl font-semibold text-gray-900 sm:text-[1.75rem]">Hello User</h2>
+                <p className="mb-6 text-sm leading-6 text-gray-600">Enter your email and password to log in</p>
               </>
             )}
 
@@ -591,7 +591,7 @@ function Login() {
                   <input
                     type="email"
                     placeholder="Enter your mail id"
-                    className="w-full bg-gray-50 text-gray-900 placeholder-gray-500 border border-gray-200 rounded-md px-4 py-2 mb-4 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                    className="mb-4 w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-emerald-500"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     required
@@ -600,7 +600,7 @@ function Login() {
                     <input
                       type={showPassword ? "text" : "password"}
                       placeholder="Enter your password"
-                      className="w-full bg-gray-50 text-gray-900 placeholder-gray-500 border border-gray-200 rounded-md px-4 py-2 pr-10 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                      className="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 pr-10 text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-emerald-500"
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
                       required
@@ -624,7 +624,7 @@ function Login() {
                   </div>
                   <button
                     type="submit"
-                    className={`w-full bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg px-6 py-2 transition duration-200 ${
+                    className={`w-full rounded-xl bg-emerald-600 px-6 py-3 text-white transition duration-200 hover:bg-emerald-500 ${
                       loading ? "opacity-50 cursor-not-allowed" : ""
                     }`}
                     disabled={loading}
@@ -651,14 +651,14 @@ function Login() {
                   <input
                     type="email"
                     placeholder="Email"
-                    className="w-full bg-gray-50 text-gray-900 placeholder-gray-500 border border-gray-200 rounded-md px-4 py-2 mb-4 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                    className="mb-4 w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-emerald-500"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     required
                   />
                   <button
                     type="submit"
-                    className={`w-full bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg px-6 py-2 transition ${
+                    className={`w-full rounded-xl bg-emerald-600 px-6 py-3 text-white transition hover:bg-emerald-500 ${
                       loading ? "opacity-50 cursor-not-allowed" : ""
                     }`}
                     disabled={loading}
@@ -685,7 +685,7 @@ function Login() {
                   <input
                     type="text"
                     placeholder="Verification Code"
-                    className="w-full bg-gray-50 text-gray-900 placeholder-gray-500 border border-gray-200 rounded-md px-4 py-2 mb-4 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                    className="mb-4 w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-emerald-500"
                     value={verificationCode}
                     onChange={(e) => setVerificationCode(e.target.value)}
                     required
@@ -693,14 +693,14 @@ function Login() {
                   <input
                     type="password"
                     placeholder="New Password"
-                    className="w-full bg-gray-50 text-gray-900 placeholder-gray-500 border border-gray-200 rounded-md px-4 py-2 mb-4 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                    className="mb-4 w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-emerald-500"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     required
                   />
                   <button
                     type="submit"
-                    className={`w-full bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg px-6 py-2 transition ${
+                    className={`w-full rounded-xl bg-emerald-600 px-6 py-3 text-white transition hover:bg-emerald-500 ${
                       loading ? "opacity-50 cursor-not-allowed" : ""
                     }`}
                     disabled={loading}
@@ -721,7 +721,7 @@ function Login() {
           </div>
         </div>
 
-        <div className="hidden md:flex flex-col items-center justify-center text-center text-white p-6 relative h-96">
+        <div className="hidden lg:flex relative h-96 flex-col items-center justify-center p-6 text-center text-white xl:h-[28rem]">
           <div className="text-4xl font-extrabold mb-0">CG</div>
 
           <div className="relative w-full max-w-sm flex-1 flex flex-col items-center justify-center overflow-hidden">
@@ -753,6 +753,7 @@ function Login() {
             ))}
           </div>
         </div>
+
       </div>
 
       {showMFAVerification && (

@@ -329,21 +329,21 @@ export default function TeamPage() {
   }, [members, memberSearch, memberStatusFilter]);
 
   return (
-    <div className="mx-auto w-full max-w-[1600px] px-3 py-6 sm:px-5 lg:px-8 xl:px-10 space-y-6">
+    <div className="mx-auto w-full max-w-[1600px] space-y-5 px-3 py-5 sm:px-5 sm:py-6 lg:px-8 xl:px-10">
       {/* ── Page Header ── */}
-      <div className="rounded-2xl border border-teal-200/60 bg-gradient-to-r from-teal-700 via-teal-700 to-emerald-700 px-6 py-6 shadow-sm">
+      <div className="rounded-2xl border border-emerald-200/20 bg-gradient-to-r from-[#095B49] via-[#0A5F4B] to-[#000000] px-4 py-5 shadow-[0_16px_40px_rgba(6,95,70,0.22)] sm:px-6 sm:py-6">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
           <div>
-            <p className="text-xs uppercase tracking-[0.18em] text-teal-100/90">Administration</p>
-            <h1 className="mt-1 text-2xl font-semibold text-white font-['Poppins']">Team & Permissions</h1>
-            <p className="mt-2 text-sm text-teal-50/95">
+            <p className="text-xs uppercase tracking-[0.18em] text-emerald-100/90">Administration</p>
+            <h1 className="mt-1 text-xl font-semibold text-white font-['Poppins'] sm:text-2xl">Team & Permissions</h1>
+            <p className="mt-2 max-w-2xl text-sm leading-6 text-emerald-50/95">
               Control who can access what, assign the right roles, and keep governance clear as your SaaS team scales.
             </p>
           </div>
           <PermissionGate module="user_management" action="create">
             <button
               onClick={() => setShowInviteModal(true)}
-              className="inline-flex items-center gap-2 rounded-lg border border-white/30 bg-white/15 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-white/25"
+              className="inline-flex w-full items-center justify-center gap-2 rounded-lg border border-emerald-300/20 bg-black/30 px-4 py-2 text-sm font-medium text-emerald-50 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)] transition-colors hover:bg-black/40 sm:w-auto"
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
@@ -361,7 +361,7 @@ export default function TeamPage() {
       {isFallback && <Phase1Banner />}
 
       {/* ── Team Summary Cards ── */}
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
         <StatTile label="Total Members" value={memberStats.total} tone="teal" />
         <StatTile label="Active" value={memberStats.active} tone="green" />
         <StatTile label="Invited" value={memberStats.invited} tone="amber" />
@@ -369,14 +369,14 @@ export default function TeamPage() {
       </div>
 
       {/* ── Your Access Card ── */}
-      <div className="bg-white border border-gray-200 rounded-xl p-6 shadow-sm">
+      <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm sm:p-6">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <h2 className="text-lg font-medium text-gray-900">Your Access</h2>
           <span className="inline-flex w-fit items-center rounded-full border border-gray-200 bg-gray-50 px-2.5 py-1 text-xs font-medium text-gray-600">
             Authority Level {role?.roleLevel ?? '—'}
           </span>
         </div>
-        <div className="mt-4 grid grid-cols-1 gap-6 sm:grid-cols-3">
+        <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-3 md:gap-6">
           <InfoBlock label="Account" value={currentUser?.email || '—'} />
           <div>
             <p className="text-xs text-gray-500 uppercase tracking-wider mb-1.5">Role</p>
@@ -387,8 +387,8 @@ export default function TeamPage() {
       </div>
 
       {/* ── Tab Navigation ── */}
-      <div className="overflow-x-auto border-b border-gray-200">
-        <nav className="flex w-max min-w-full gap-5 px-1" aria-label="Team management tabs">
+      <div className="overflow-x-auto rounded-2xl border border-gray-200 bg-white p-2 shadow-sm">
+        <nav className="flex w-max min-w-full gap-2" aria-label="Team management tabs">
           {[
             { key: 'members', label: 'Members', count: members.length },
             { key: 'invitations', label: 'Invitations', count: invitations.length },
@@ -399,16 +399,16 @@ export default function TeamPage() {
             <button
               key={key}
               onClick={() => setActiveTab(key)}
-              className={`pb-3 text-sm font-medium border-b-2 whitespace-nowrap transition-colors
+              className={`inline-flex items-center rounded-xl border px-3 py-2 text-sm font-medium whitespace-nowrap transition-colors
                 ${activeTab === key
-                  ? 'border-teal-600 text-teal-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                  ? 'border-emerald-200 bg-emerald-50 text-emerald-700 shadow-sm'
+                  : 'border-transparent text-gray-500 hover:border-gray-200 hover:bg-gray-50 hover:text-gray-700'
                 }`}
             >
               {label}
               {count != null && (
-                <span className={`ml-1.5 text-xs px-1.5 py-0.5 rounded-full
-                  ${activeTab === key ? 'bg-teal-50 text-teal-600' : 'bg-gray-100 text-gray-500'}`}>
+                <span className={`ml-1.5 rounded-full px-1.5 py-0.5 text-xs
+                  ${activeTab === key ? 'bg-white text-emerald-700' : 'bg-gray-100 text-gray-500'}`}>
                   {count}
                 </span>
               )}
@@ -421,8 +421,8 @@ export default function TeamPage() {
 
       {/* Members Tab */}
       {activeTab === 'members' && (
-        <div className="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
-          <div className="px-6 py-4 border-b border-gray-200 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+        <div className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
+          <div className="border-b border-gray-200 px-4 py-4 sm:px-6 flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
             <div>
               <h2 className="text-lg font-medium text-gray-900">Team Members</h2>
               <p className="text-xs text-gray-500 mt-1">
@@ -430,14 +430,14 @@ export default function TeamPage() {
               </p>
             </div>
 
-            <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+            <div className="grid grid-cols-1 gap-2 sm:grid-cols-[minmax(0,1fr)_auto_auto] sm:items-center">
               <div className="relative">
                 <input
                   type="text"
                   value={memberSearch}
                   onChange={(e) => setMemberSearch(e.target.value)}
                   placeholder="Search by email or role"
-                  className="h-9 w-full min-w-[220px] rounded-lg border border-gray-300 bg-white pl-9 pr-3 text-sm text-gray-700 focus:border-teal-500 focus:outline-none focus:ring-2 focus:ring-teal-100"
+                  className="h-10 w-full rounded-xl border border-gray-300 bg-white pl-9 pr-3 text-sm text-gray-700 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-100 sm:min-w-[220px] sm:rounded-lg sm:h-9"
                 />
                 <svg className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="m21 21-4.35-4.35m1.85-5.65a7.5 7.5 0 1 1-15 0 7.5 7.5 0 0 1 15 0Z" />
@@ -447,7 +447,7 @@ export default function TeamPage() {
               <select
                 value={memberStatusFilter}
                 onChange={(e) => setMemberStatusFilter(e.target.value)}
-                className="h-9 rounded-lg border border-gray-300 bg-white px-3 text-sm text-gray-700 focus:border-teal-500 focus:outline-none focus:ring-2 focus:ring-teal-100"
+                className="h-10 rounded-xl border border-gray-300 bg-white px-3 text-sm text-gray-700 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-100 sm:h-9 sm:rounded-lg"
               >
                 <option value="all">All statuses</option>
                 <option value="active">Active</option>
@@ -457,7 +457,7 @@ export default function TeamPage() {
 
               <button
                 onClick={fetchMembers}
-                className="h-9 rounded-lg border border-teal-200 bg-teal-50 px-3 text-xs font-semibold uppercase tracking-wide text-teal-700 transition-colors hover:bg-teal-100"
+                className="h-10 rounded-xl border border-emerald-200 bg-emerald-50 px-3 text-xs font-semibold uppercase tracking-wide text-emerald-700 transition-colors hover:bg-emerald-100 sm:h-9 sm:rounded-lg"
               >
                 Refresh
               </button>
@@ -472,7 +472,7 @@ export default function TeamPage() {
           ) : membersError ? (
             <div className="p-8 text-center">
               <p className="text-sm text-red-600 mb-2">{membersError}</p>
-              <button onClick={fetchMembers} className="text-xs text-teal-600 hover:underline">Try again</button>
+              <button onClick={fetchMembers} className="text-xs text-emerald-700 hover:underline">Try again</button>
             </div>
         ) : members.length === 0 ? (
           <div className="p-8 text-center text-sm text-gray-500">
@@ -486,13 +486,34 @@ export default function TeamPage() {
                 setMemberSearch('');
                 setMemberStatusFilter('all');
               }}
-              className="mt-2 text-xs font-medium text-teal-600 hover:text-teal-700"
+              className="mt-2 text-xs font-medium text-emerald-700 hover:text-emerald-800"
             >
               Clear search and filters
             </button>
           </div>
         ) : (
-          <div className="overflow-x-auto">
+          <>
+          <div className="space-y-3 p-4 sm:p-6 md:hidden">
+            {filteredMembers.map((member) => (
+              <MemberCard
+                key={member.userId}
+                member={member}
+                currentUserId={userId || currentUser?.sub}
+                assignableRoles={assignableRoles}
+                changingRoleFor={changingRoleFor}
+                setChangingRoleFor={setChangingRoleFor}
+                newRoleId={newRoleId}
+                setNewRoleId={setNewRoleId}
+                onRoleChange={handleRoleChange}
+                onSuspend={(uid, email) => setSuspensionTarget({ userId: uid, email, mode: 'suspend' })}
+                onUnsuspend={(uid, email) => setSuspensionTarget({ userId: uid, email, mode: 'unsuspend' })}
+                onStartRemove={(uid, email) => setRemovingMember({ userId: uid, email })}
+                onEditRole={setEditingRoleId}
+                onEditScopes={openScopeEditor}
+              />
+            ))}
+          </div>
+          <div className="hidden overflow-x-auto md:block">
             <table className="w-full min-w-[1080px] text-sm">
               <thead className="sticky top-0 z-10 bg-gray-50 text-gray-500 text-[11px] uppercase">
                 <tr>
@@ -527,6 +548,7 @@ export default function TeamPage() {
               </tbody>
             </table>
           </div>
+          </>
         )}
       </div>
       )}
@@ -534,8 +556,8 @@ export default function TeamPage() {
       {/* Invitations Tab */}
       {activeTab === 'invitations' && (
         <PermissionGate module="user_management" action="view">
-          <div className="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
-            <div className="px-6 py-4 border-b border-gray-200">
+          <div className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
+            <div className="border-b border-gray-200 px-4 py-4 sm:px-6">
               <h2 className="text-lg font-medium text-gray-900">Pending Invitations</h2>
               <p className="text-xs text-gray-500 mt-1">
                 {invitations.length} pending
@@ -546,7 +568,17 @@ export default function TeamPage() {
             ) : invitations.length === 0 ? (
               <div className="p-6 text-center text-sm text-gray-500">No pending invitations</div>
             ) : (
-              <div className="overflow-x-auto">
+              <>
+              <div className="space-y-3 p-4 sm:p-6 md:hidden">
+                {invitations.map((inv) => (
+                  <InvitationCard
+                    key={inv.inviteId}
+                    invitation={inv}
+                    onCancel={handleCancelInvitation}
+                  />
+                ))}
+              </div>
+              <div className="hidden overflow-x-auto md:block">
                 <table className="w-full text-sm">
                   <thead className="bg-gray-50 text-gray-500 text-xs uppercase">
                     <tr>
@@ -590,6 +622,7 @@ export default function TeamPage() {
                   </tbody>
                 </table>
               </div>
+              </>
             )}
           </div>
         </PermissionGate>
@@ -597,7 +630,7 @@ export default function TeamPage() {
 
       {/* Roles Tab */}
       {activeTab === 'roles' && (
-        <div className="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden p-6">
+        <div className="overflow-hidden rounded-xl border border-gray-200 bg-white p-4 shadow-sm sm:p-6">
           <RolesTab
             roles={roles}
             meta={rolesMeta}
@@ -609,8 +642,8 @@ export default function TeamPage() {
 
       {/* My Permissions Tab */}
       {activeTab === 'matrix' && (
-        <div className="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
-          <div className="px-6 py-4 border-b border-gray-200">
+        <div className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
+          <div className="border-b border-gray-200 px-4 py-4 sm:px-6">
             <h2 className="text-lg font-medium text-gray-900">Permission Matrix</h2>
             <p className="text-xs text-gray-500 mt-1">
               Your current access levels across all modules
@@ -794,6 +827,160 @@ function MemberRow({
         )}
       </td>
     </tr>
+  );
+}
+
+function MemberCard({
+  member,
+  currentUserId,
+  assignableRoles,
+  changingRoleFor,
+  setChangingRoleFor,
+  newRoleId,
+  setNewRoleId,
+  onRoleChange,
+  onSuspend,
+  onUnsuspend,
+  onStartRemove,
+  onEditRole,
+  onEditScopes,
+}) {
+  const isSelf = member.userId === currentUserId;
+  const isInvited = member.status === 'invited';
+  const memberInitial = String(member?.email || '?').charAt(0).toUpperCase();
+
+  return (
+    <article className="rounded-2xl border border-gray-200 bg-gradient-to-br from-white via-white to-gray-50 p-4 shadow-sm">
+      <div className="flex items-start justify-between gap-3">
+        <div className="flex min-w-0 items-start gap-3">
+          <span className="inline-flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full border border-teal-200 bg-teal-50 text-sm font-semibold text-teal-700">
+            {memberInitial}
+          </span>
+          <div className="min-w-0">
+            <p className="truncate text-sm font-semibold text-gray-900">{member.email}</p>
+            <div className="mt-1 flex flex-wrap items-center gap-1.5">
+              {isSelf && <span className="rounded bg-teal-50 px-1.5 py-0.5 text-[10px] font-medium text-teal-700">You</span>}
+              {isInvited && <span className="rounded bg-amber-50 px-1.5 py-0.5 text-[10px] font-medium text-amber-700">Pending acceptance</span>}
+              <StatusBadge status={member.status} />
+            </div>
+          </div>
+        </div>
+
+        {!isSelf && !isInvited ? (
+          <MemberActionsMenu
+            member={member}
+            changingRoleFor={changingRoleFor}
+            setChangingRoleFor={setChangingRoleFor}
+            setNewRoleId={setNewRoleId}
+            onSuspend={onSuspend}
+            onUnsuspend={onUnsuspend}
+            onStartRemove={onStartRemove}
+            onEditRole={onEditRole}
+            onEditScopes={onEditScopes}
+          />
+        ) : null}
+      </div>
+
+      <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
+        <div className="rounded-xl border border-gray-100 bg-white p-3">
+          <p className="text-[11px] uppercase tracking-[0.16em] text-gray-500">Role</p>
+          <div className="mt-2">
+            {changingRoleFor === member.userId ? (
+              <div className="space-y-2">
+                <select
+                  value={newRoleId}
+                  onChange={(e) => setNewRoleId(e.target.value)}
+                  className="h-10 w-full rounded-xl border border-gray-300 px-3 text-sm text-gray-700 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-100"
+                >
+                  <option value="">Select role...</option>
+                  {assignableRoles.map((role) => (
+                    <option key={role.roleId} value={role.roleId}>{role.roleName}</option>
+                  ))}
+                </select>
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    onClick={() => onRoleChange(member.userId)}
+                    className="rounded-xl border border-teal-200 bg-teal-50 px-3 py-2 text-xs font-semibold text-teal-700 hover:bg-teal-100"
+                  >
+                    Save
+                  </button>
+                  <button
+                    onClick={() => setChangingRoleFor(null)}
+                    className="rounded-xl border border-gray-200 bg-white px-3 py-2 text-xs font-medium text-gray-500 hover:bg-gray-50"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <RoleBadge roleId={member.roleId} roleName={member.roleName} size="sm" />
+            )}
+          </div>
+        </div>
+
+        <div className="rounded-xl border border-gray-100 bg-white p-3">
+          <p className="text-[11px] uppercase tracking-[0.16em] text-gray-500">Joined</p>
+          <div className="mt-2 text-sm">
+            {isInvited ? (
+              <>
+                <span className="font-medium text-amber-600">{timeAgo(member.joinedAt || member.createdAt)}</span>
+                <span className="mt-1 block text-[11px] text-gray-400">Invited {formatDate(member.joinedAt || member.createdAt)}</span>
+              </>
+            ) : (
+              <>
+                <span className="font-medium text-gray-700">{timeAgo(member.joinedAt)}</span>
+                <span className="mt-1 block text-[11px] text-gray-400">{formatDate(member.joinedAt)}</span>
+              </>
+            )}
+          </div>
+        </div>
+      </div>
+
+      <div className="mt-3 rounded-xl border border-gray-100 bg-white p-3">
+        <p className="text-[11px] uppercase tracking-[0.16em] text-gray-500">Access scope</p>
+        <div className="mt-2">
+          <ScopeSummary
+            projectAccess={member.projectAccess}
+            workspaceAccess={member.workspaceAccess}
+          />
+        </div>
+      </div>
+    </article>
+  );
+}
+
+function InvitationCard({ invitation, onCancel }) {
+  return (
+    <article className="rounded-2xl border border-gray-200 bg-gradient-to-br from-white via-white to-gray-50 p-4 shadow-sm">
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <p className="truncate text-sm font-semibold text-gray-900">{invitation.email}</p>
+          <div className="mt-1 flex flex-wrap items-center gap-2">
+            <RoleBadge roleId={invitation.roleId} roleName={invitation.roleName} size="sm" />
+            <StatusBadge status="invited" />
+          </div>
+        </div>
+        <button
+          type="button"
+          onClick={() => onCancel(invitation.inviteId)}
+          className="rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-xs font-semibold text-red-700 hover:bg-red-100"
+        >
+          Cancel
+        </button>
+      </div>
+
+      <div className="mt-4 grid grid-cols-2 gap-3">
+        <div className="rounded-xl border border-gray-100 bg-white p-3">
+          <p className="text-[11px] uppercase tracking-[0.16em] text-gray-500">Sent</p>
+          <p className="mt-2 text-sm font-medium text-gray-700">{timeAgo(invitation.createdAt)}</p>
+          <p className="mt-1 text-[11px] text-gray-400">{formatDate(invitation.createdAt)}</p>
+        </div>
+        <div className="rounded-xl border border-gray-100 bg-white p-3">
+          <p className="text-[11px] uppercase tracking-[0.16em] text-gray-500">Expires</p>
+          <p className="mt-2 text-sm font-medium text-gray-700">{formatDate(invitation.expiresAt)}</p>
+        </div>
+      </div>
+    </article>
   );
 }
 

@@ -1,5 +1,6 @@
 import React, { useState, useCallback, useEffect, useContext, useRef, useImperativeHandle, forwardRef } from 'react';
 import { Plus, Save, Eye, X, Users, Grid, Maximize2, Minimize2, Check, Gauge } from 'lucide-react';
+import { toJpeg } from 'html-to-image';
 import { VendorContext } from '../../../context/VendorContext';
 import ReactFlow, { 
   useNodesState, 
@@ -135,12 +136,13 @@ const edgeTypes = {
   const [drawingPaths, setDrawingPaths] = useState([]);
   const previousOverflowRef = useRef('');
   const canvasOverlayRef = useRef(null);
+  const canvasContainerRef = useRef(null);
   const isPointerDrawingRef = useRef(false);
   const activePathIdRef = useRef(null);
 
   const updateOffset = useCallback(() => {
     const headerElements = Array.from(
-      document.querySelectorAll('[data-role-header], [data-workspace-header]')
+      document.querySelectorAll('[data-role-header], [data-workspace-header], [data-workspace-navigation]')
     );
 
     const visibleBottom = headerElements.reduce((maxBottom, el) => {
@@ -675,6 +677,58 @@ const edgeTypes = {
     updateZoomLevel(clampedZoom);
   }, [reactFlowInstance, updateZoomLevel]);
 
+  const captureWorkspaceSnapshot = useCallback(async () => {
+    const container = canvasContainerRef.current;
+    if (!container) return null;
+
+    const viewport = container.querySelector('.react-flow__viewport');
+    const target = viewport || container;
+    const hasVisibleNodes = Array.isArray(nodes) && nodes.length > 0;
+    const previousViewport = reactFlowInstance?.getViewport?.();
+
+    const waitForPaint = () => new Promise((resolve) => requestAnimationFrame(() => resolve()));
+
+    try {
+      if (hasVisibleNodes && reactFlowInstance?.fitView) {
+        await reactFlowInstance.fitView({
+          padding: 0.18,
+          includeHiddenNodes: true,
+          duration: 0,
+        });
+        await waitForPaint();
+        await waitForPaint();
+      }
+
+      return await toJpeg(target, {
+        quality: 0.55,
+        pixelRatio: 1,
+        backgroundColor: '#fbfcfe',
+        canvasWidth: 640,
+        canvasHeight: 360,
+        cacheBust: true,
+        filter: (node) => {
+          const className = typeof node.className === 'string' ? node.className : '';
+          if (className.includes('react-flow__controls')) return false;
+          if (className.includes('react-flow__minimap')) return false;
+          if (className.includes('react-flow__panel')) return false;
+          return true;
+        },
+      });
+    } catch (error) {
+      console.warn('Could not capture workspace snapshot', error);
+      return null;
+    } finally {
+      if (previousViewport && reactFlowInstance?.setViewport) {
+        try {
+          await reactFlowInstance.setViewport(previousViewport, { duration: 0 });
+          await waitForPaint();
+        } catch (restoreError) {
+          console.warn('Could not restore viewport after snapshot capture', restoreError);
+        }
+      }
+    }
+  }, [nodes, reactFlowInstance]);
+
   // Modal state
   const [showTableModal, setShowTableModal] = useState(false);
   const [pendingTableElement, setPendingTableElement] = useState(null);
@@ -1069,35 +1123,43 @@ const edgeTypes = {
   // Fallback HTTP auto-save: only triggers every 5s IF WebSocket is disconnected
   // Uses a short debounce so data persists even when WS is down
   useEffect(() => {
-    if (canvasWebSocket?.isConnected) {
-      // WebSocket is handling sync — show status indicator
-      setSaveStatus('saved');
-      return;
+    if (!onSaveWorkspace || !workspace?.workspaceId) {
+      return undefined;
     }
 
-    // Fallback: old HTTP save for when WS is not available
-    if (onSaveWorkspace && workspace?.workspaceId) {
-      const saveData = { nodes, edges, zoomLevel, canvasSettings: {} };
-      setSaveStatus('saving');
+    const isLiveSyncConnected = Boolean(canvasWebSocket?.isConnected);
+    const saveData = { nodes, edges, zoomLevel, canvasSettings: {} };
+    const debounceMs = isLiveSyncConnected ? 12000 : 5000;
 
-      const timeoutId = setTimeout(async () => {
-        try {
-          skipNextSyncRef.current = true;
-          await onSaveWorkspace(saveData);
+    if (!isLiveSyncConnected) {
+      setSaveStatus('saving');
+    } else {
+      setSaveStatus('saved');
+    }
+
+    const timeoutId = setTimeout(async () => {
+      try {
+        skipNextSyncRef.current = true;
+        const previewSnapshot = await captureWorkspaceSnapshot();
+        await onSaveWorkspace({ ...saveData, previewSnapshot });
+        setLastSaved(new Date());
+
+        if (!isLiveSyncConnected) {
           setSaveStatus('saved');
-          setLastSaved(new Date());
           pushToHistory();
           setTimeout(() => setSaveStatus('idle'), 1000);
-        } catch (error) {
-          console.error('❌ CanvasWorkspace: HTTP fallback save failed:', error);
+        }
+      } catch (error) {
+        console.error('❌ CanvasWorkspace: Snapshot persistence failed:', error);
+        if (!isLiveSyncConnected) {
           setSaveStatus('error');
           setTimeout(() => setSaveStatus('idle'), 3000);
         }
-      }, 5000); // 5s debounce — short enough to persist before navigation
+      }
+    }, debounceMs);
 
-      return () => clearTimeout(timeoutId);
-    }
-  }, [nodes, edges, zoomLevel, onSaveWorkspace, workspace?.workspaceId, selectedSubtask?.id, canvasWebSocket?.isConnected]);
+    return () => clearTimeout(timeoutId);
+  }, [nodes, edges, zoomLevel, onSaveWorkspace, workspace?.workspaceId, selectedSubtask?.id, canvasWebSocket?.isConnected, captureWorkspaceSnapshot, pushToHistory]);
 
   // Update nodes and edges when workspace data changes
   // useEffect(() => {
@@ -4730,38 +4792,7 @@ const edgeTypes = {
   }, [isFullscreen]);
 
   useEffect(() => {
-    const headerElements = Array.from(
-      document.querySelectorAll('[data-role-header], [data-workspace-header]')
-    );
-
-    if (isFullscreen) {
-      headerElements.forEach((el) => {
-        el.dataset.prevDisplay = el.style.display || '';
-        el.style.display = 'none';
-      });
-    } else {
-      headerElements.forEach((el) => {
-        if (el.dataset.prevDisplay !== undefined) {
-          el.style.display = el.dataset.prevDisplay;
-          delete el.dataset.prevDisplay;
-        } else {
-          el.style.display = '';
-        }
-      });
-    }
-
     updateOffset();
-
-    return () => {
-      headerElements.forEach((el) => {
-        if (el.dataset.prevDisplay !== undefined) {
-          el.style.display = el.dataset.prevDisplay;
-          delete el.dataset.prevDisplay;
-        } else {
-          el.style.display = '';
-        }
-      });
-    };
   }, [isFullscreen, updateOffset]);
 
   const containerClasses = isFullscreen
@@ -4778,20 +4809,20 @@ const edgeTypes = {
 
       
       {/* Subtask Header */}
-      <div className="px-8 pb-4">
-        <div className="flex items-center justify-between">
+      <div className="pl-20 pr-6 py-3 md:pl-20 md:pr-8 bg-white/20 supports-[backdrop-filter]:bg-white/10 backdrop-blur-xl border-b border-white/30 shadow-sm">
+        <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
           <div>
           <h2 className="text-lg font-semibold text-gray-900">
               {selectedSubtask?.name || workspace?.title || 'Workspace'}
             </h2>
-            <p className="text-gray-600 mt-2">Canvas workspace for {selectedSubtask?.name || workspace?.title || 'your project'}</p>
+            <p className="text-gray-600 mt-1">Canvas workspace for {selectedSubtask?.name || workspace?.title || 'your project'}</p>
           </div>
           
           {/* Canvas Actions */}
-          <div className="flex items-center space-x-3 relative z-20 mt-2">
+          <div className="flex flex-wrap items-center gap-2 relative z-20 md:mt-0">
             <button 
               onClick={onToggleSidebars}
-              className="p-2 border border-gray-200  hover:bg-gray-200 text-gray-700 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="p-2 bg-white/40 supports-[backdrop-filter]:bg-white/20 backdrop-blur-md border border-white/40 hover:bg-white/55 text-gray-700 rounded-lg shadow-sm transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500"
               title={sidebarCollapsed ? 'Show Sidebars' : 'Hide Sidebars'}
               aria-label={sidebarCollapsed ? 'Show sidebars' : 'Hide sidebars'}
             >
@@ -4810,7 +4841,7 @@ const edgeTypes = {
 
             <button
               onClick={() => setIsFullscreen((prev) => !prev)}
-              className="p-2 border border-gray-200 hover:bg-gray-50 text-gray-700 rounded-lg transition-colors flex items-center justify-center focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="p-2 bg-white/40 supports-[backdrop-filter]:bg-white/20 backdrop-blur-md border border-white/40 hover:bg-white/55 text-gray-700 rounded-lg shadow-sm transition-colors flex items-center justify-center focus:outline-none focus:ring-2 focus:ring-blue-500"
               title={isFullscreen ? 'Exit full screen' : 'Enter full screen'}
               aria-label={isFullscreen ? 'Exit full screen' : 'Enter full screen'}
             >
@@ -4822,7 +4853,7 @@ const edgeTypes = {
             </button>
 
             <button
-              className="p-2  border border-gray-200 hover:bg-gray-50 text-gray-700 rounded-lg transition-colors   flex items-center justify-center focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="p-2 bg-white/40 supports-[backdrop-filter]:bg-white/20 backdrop-blur-md border border-white/40 hover:bg-white/55 text-gray-700 rounded-lg shadow-sm transition-colors flex items-center justify-center focus:outline-none focus:ring-2 focus:ring-blue-500"
               title="Preview"
               aria-label="Preview"
             >
@@ -4832,7 +4863,7 @@ const edgeTypes = {
 
             <button
               onClick={() => setPerformanceMode((prev) => !prev)}
-              className={`p-2 border rounded-lg transition-colors flex items-center justify-center focus:outline-none focus:ring-2 focus:ring-blue-500 ${performanceMode ? 'border-amber-300 bg-amber-50 text-amber-700 hover:bg-amber-100' : 'border-gray-200 hover:bg-gray-50 text-gray-700'}`}
+              className={`p-2 border rounded-lg shadow-sm transition-colors flex items-center justify-center focus:outline-none focus:ring-2 focus:ring-blue-500 ${performanceMode ? 'border-amber-200 bg-amber-100/70 supports-[backdrop-filter]:bg-amber-100/50 backdrop-blur-md text-amber-700 hover:bg-amber-100/85' : 'bg-white/40 supports-[backdrop-filter]:bg-white/20 backdrop-blur-md border-white/40 hover:bg-white/55 text-gray-700'}`}
               title={performanceMode ? 'Disable performance mode' : 'Enable performance mode for large canvases'}
               aria-label={performanceMode ? 'Disable performance mode' : 'Enable performance mode'}
             >
@@ -4841,7 +4872,7 @@ const edgeTypes = {
 
             {/* Real-time sync indicator */}
             {canvasWebSocket && (
-              <div className="flex items-center gap-1 px-2 py-1 rounded-lg bg-gray-100 text-xs">
+              <div className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-white/40 supports-[backdrop-filter]:bg-white/20 backdrop-blur-md border border-white/40 shadow-sm text-xs">
                 <div className={`w-2 h-2 rounded-full ${canvasWebSocket.isConnected ? 'bg-green-500' : 'bg-red-500'}`} />
                 <span className="text-gray-600">
                   {canvasWebSocket.isConnected ? 'Live' : 'Offline'}
@@ -4866,7 +4897,8 @@ const edgeTypes = {
                   };
                   setSaveStatus('saving');
                   try {
-                    await onSaveWorkspace(saveData);
+                    const previewSnapshot = await captureWorkspaceSnapshot();
+                    await onSaveWorkspace({ ...saveData, previewSnapshot });
                     setSaveStatus('saved');
                     setLastSaved(new Date());
                     setTimeout(() => setSaveStatus('idle'), 2000);
@@ -4879,10 +4911,10 @@ const edgeTypes = {
                 }
               }}
               disabled={saveStatus === 'saving'}
-              className={`p-2 rounded-lg transition-colors flex items-center justify-center focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+              className={`p-2 rounded-lg border border-blue-400/20 shadow-sm backdrop-blur-md transition-colors flex items-center justify-center focus:outline-none focus:ring-2 focus:ring-blue-500 ${
                 saveStatus === 'saving' 
-                  ? 'bg-gray-400 cursor-not-allowed text-white' 
-                  : 'bg-blue-600 hover:bg-blue-700 text-white'
+                  ? 'bg-gray-400/85 cursor-not-allowed text-white' 
+                  : 'bg-blue-600/90 hover:bg-blue-700/95 text-white'
               }`}
               title={saveStatus === 'saving' ? 'Saving workspace' : 'Save workspace'}
               aria-label={saveStatus === 'saving' ? 'Saving workspace' : 'Save workspace'}
@@ -4901,6 +4933,7 @@ const edgeTypes = {
 
       {/* React Flow Canvas */}
       <div 
+        ref={canvasContainerRef}
         data-tour="canvas"
         className="flex-1 relative overflow-hidden" 
         style={{ 

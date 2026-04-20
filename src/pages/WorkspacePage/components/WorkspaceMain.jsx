@@ -211,6 +211,8 @@ const WorkspaceMain = ({
     }
   };
 
+  const contentOffsetClass = (selectedTask || selectedLayer) ? 'box-border h-full pt-16' : 'h-full';
+
   return (
     <div className="flex-1 bg-gray-50 relative transition-all duration-300 ease-in-out min-w-0">
       {/* Breadcrumb Navigation */}
@@ -227,7 +229,7 @@ const WorkspaceMain = ({
       {/* Focus mode toggle button — always visible */}
       <button
         onClick={onToggleSidebars}
-        className="absolute top-14 left-3 z-10 p-2 bg-white/90 backdrop-blur-sm border border-gray-200 rounded-lg shadow-sm hover:bg-gray-50 transition-colors group"
+        className="absolute top-20 left-3 z-10 p-2 bg-white/90 backdrop-blur-sm border border-gray-200 rounded-lg shadow-sm hover:bg-gray-50 transition-colors group"
         title={focusMode ? 'Show panels (Ctrl+Shift+H)' : 'Focus mode (Ctrl+Shift+H)'}
         aria-label={focusMode ? 'Exit focus mode' : 'Enter focus mode'}
       >
@@ -249,41 +251,47 @@ const WorkspaceMain = ({
           />
         ) : selectedSubtask ? (
           // Show canvas when subtask is selected
-          <CanvasWorkspace
-            ref={canvasRef}
-            selectedTask={selectedTask}
-            selectedSubtask={selectedSubtask}
-            sidebarCollapsed={sidebarCollapsed}
-            onToggleSidebars={onToggleSidebars}
-            workspace={workspace}
-            onSaveWorkspace={onSaveWorkspace}
-            onRefreshWorkspace={onRefreshWorkspace}
-            onActivityCreated={onActivityCreated}
-            userRole={userRole}
-            userPermissions={userPermissions}
-            onZoomChange={onZoomChange}
-            canvasWebSocket={canvasWebSocket}
-            workspaceCollaborators={workspaceCollaborators}
-          />
+          <div className={contentOffsetClass}>
+            <CanvasWorkspace
+              ref={canvasRef}
+              selectedTask={selectedTask}
+              selectedSubtask={selectedSubtask}
+              sidebarCollapsed={sidebarCollapsed}
+              onToggleSidebars={onToggleSidebars}
+              workspace={workspace}
+              onSaveWorkspace={onSaveWorkspace}
+              onRefreshWorkspace={onRefreshWorkspace}
+              onActivityCreated={onActivityCreated}
+              userRole={userRole}
+              userPermissions={userPermissions}
+              onZoomChange={onZoomChange}
+              canvasWebSocket={canvasWebSocket}
+              workspaceCollaborators={workspaceCollaborators}
+            />
+          </div>
         ) : (
           // Show subtasks list when task is selected but no subtask
-          <TaskSubtasksView
-            selectedTask={selectedTask}
-            workspaceId={workspace?.workspaceId}
-            onSubtaskClick={onSubtaskClick}
-            onShowAddSubtaskModal={onShowAddSubtaskModal}
-            onQuickAddSubtask={onCreateSubtask}
-            onRenameSubtask={onRenameSubtask}
-            onUpdateSubtask={onUpdateSubtask}
-            memberOptions={memberOptions}
-          />
+          <div className={contentOffsetClass}>
+            <TaskSubtasksView
+              selectedTask={selectedTask}
+              workspaceId={workspace?.workspaceId}
+              onSubtaskClick={onSubtaskClick}
+              onShowAddSubtaskModal={onShowAddSubtaskModal}
+              onQuickAddSubtask={onCreateSubtask}
+              onRenameSubtask={onRenameSubtask}
+              onUpdateSubtask={onUpdateSubtask}
+              memberOptions={memberOptions}
+            />
+          </div>
         )
       ) : selectedLayer ? (
-        <LayerContentView
-          selectedLayer={selectedLayer}
-          selectedLayerItem={selectedLayerItem}
-          onLayerItemClick={onLayerItemClick}
-        />
+        <div className={contentOffsetClass}>
+          <LayerContentView
+            selectedLayer={selectedLayer}
+            selectedLayerItem={selectedLayerItem}
+            onLayerItemClick={onLayerItemClick}
+          />
+        </div>
       ) : (
         <div className="flex items-center justify-center h-full">
           <div className="text-center">

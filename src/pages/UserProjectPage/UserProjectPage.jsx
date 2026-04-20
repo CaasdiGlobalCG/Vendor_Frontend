@@ -2306,7 +2306,7 @@ export default function UserProjectPage() {
                 <AppHeader />
 
                 {/* Main Content Area */}
-                <div className="mx-auto mt-4 flex w-full max-w-[1400px] flex-col gap-8 px-4 py-8 md:px-8 lg:flex-row">
+                <div className="mx-auto mt-3 flex w-full max-w-[1400px] flex-col gap-5 px-3 py-5 sm:mt-4 sm:gap-6 sm:px-4 sm:py-8 md:px-6 lg:flex-row lg:items-start lg:px-8">
                     {/* Profile Card */}
                     <UserProfileCard
                         profileData={profileData}
@@ -2319,9 +2319,9 @@ export default function UserProjectPage() {
                     <VendorTabPanel
                         title="Projects"
                         description="Recent works, case studies, and active collaborations."
-                        bodyClassName="p-6"
+                        bodyClassName="p-4 sm:p-6"
                         actions={(
-                                    <div className="flex gap-3 flex-wrap">
+                                    <div className="flex w-full flex-col gap-3 sm:w-auto sm:flex-row sm:flex-wrap sm:justify-end">
                                         <button
                                             onClick={() => setShowAddModal(true)}
                                             className="bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-700 hover:to-emerald-800 text-white px-6 py-2.5 rounded-md text-sm font-medium shadow-sm hover:shadow-md transition-all whitespace-nowrap"
@@ -2329,13 +2329,13 @@ export default function UserProjectPage() {
                                             + Add Project
                                         </button>
                                         {/* Sort Dropdown */}
-                                        <div className="relative">
+                                        <div className="relative w-full sm:w-auto">
                                             <label htmlFor="sortOrder" className="sr-only">Sort projects</label>
                                             <select
                                                 id="sortOrder"
                                                 value={sortOrder}
                                                 onChange={handleSortChange}
-                                                className="appearance-none bg-white border border-gray-200 px-4 py-2.5 pr-10 rounded-md text-sm font-medium text-gray-700 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent cursor-pointer hover:bg-gray-50 transition-colors"
+                                                className="w-full appearance-none bg-white border border-gray-200 px-4 py-2.5 pr-10 rounded-md text-sm font-medium text-gray-700 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent cursor-pointer hover:bg-gray-50 transition-colors sm:min-w-[170px]"
                                             >
                                                 <option value="recent">Recent First</option>
                                                 <option value="oldest">Oldest First</option>

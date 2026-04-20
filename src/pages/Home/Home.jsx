@@ -546,7 +546,7 @@ const handleCompanySave = async (e) => {
       {/* Header Banner */}
       <AppHeader />
 
-      <div className="mx-auto mt-4 flex w-full max-w-[1400px] flex-col gap-8 px-4 py-8 md:px-8 lg:flex-row">
+      <div className="mx-auto mt-3 flex w-full max-w-[1400px] flex-col gap-5 px-3 py-5 sm:mt-4 sm:gap-6 sm:px-4 sm:py-8 md:px-6 lg:flex-row lg:items-start lg:px-8">
         {/* Profile Card */}
         <UserProfileCard
           profileData={profileData}
@@ -561,8 +561,8 @@ const handleCompanySave = async (e) => {
           title="Company details"
           description="Manage the business information shown across your vendor portfolio."
           actions={(
-            <div className="flex items-center gap-2">
-              <button className="p-2">
+            <div className="flex w-full items-center justify-between gap-2 sm:w-auto sm:justify-end">
+              <button className="rounded-full p-2 transition-colors hover:bg-slate-100">
                 <Download className="w-5 h-5 text-gray-600" />
               </button>
               <button 
@@ -573,7 +573,7 @@ const handleCompanySave = async (e) => {
               </button>
             </div>
           )}
-          bodyClassName="p-6"
+          bodyClassName="p-4 sm:p-6"
         >
 
           <div className="space-y-4 text-sm">

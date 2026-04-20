@@ -1,7 +1,17 @@
 import React, { useContext, useEffect, useState, useCallback } from "react";
-import { LifeBuoy } from 'lucide-react';
+import {
+  AlertCircle,
+  ArrowRight,
+  Briefcase,
+  Building2,
+  CheckCircle2,
+  Clock3,
+  FolderKanban,
+  LifeBuoy,
+  Sparkles,
+  TrendingUp,
+} from 'lucide-react';
 import { RevenueChart } from "../../components/RevenueChart/RevenueChart";
-import { StatCard } from "../../components/StatCard/StatCard";
 import { ProjectList } from "../../components/ProjectList/ProjectList";
 import TenderCarousel from "../../components/TenderCard/TenderCarousel";
 import PasskeyRegistrationBanner from "../../components/PasskeyRegistrationBanner";
@@ -363,6 +373,89 @@ export const VendorDashboard = () => {
   const completionPercentage = totalProjects > 0 
     ? Math.round((completedProjects / totalProjects) * 100) 
     : 0;
+  const tenderCount = tenders.length > 0 ? tenders.length : mockTenders.length;
+  const vendorDisplayName = vendorName || vendorData?.vendorDetails?.primaryContactName || currentUser?.name || 'Vendor';
+  const vendorCompanyName = vendorData?.companyDetails?.companyName || 'Your company profile';
+  const statCards = [
+    {
+      title: 'Total Projects',
+      value: totalProjects,
+      subtitle: 'Approved workspaces currently tracked',
+      metric: totalProjects > 0 ? '100%' : '0%',
+      icon: FolderKanban,
+      iconClasses: 'bg-emerald-50 text-emerald-700',
+      accentClasses: 'border-emerald-100 bg-white',
+      progressClass: 'bg-emerald-500',
+      toneClass: 'text-emerald-700 bg-emerald-50 border-emerald-100',
+    },
+    {
+      title: 'Project Completed',
+      value: completedProjects,
+      subtitle: 'Projects delivered successfully',
+      metric: `${completionPercentage}%`,
+      icon: CheckCircle2,
+      iconClasses: 'bg-lime-50 text-lime-700',
+      accentClasses: 'border-lime-100 bg-white',
+      progressClass: 'bg-lime-500',
+      toneClass: 'text-lime-700 bg-lime-50 border-lime-100',
+    },
+    {
+      title: 'Project Pending',
+      value: pendingProjects,
+      subtitle: 'Projects waiting for next action',
+      metric: `${totalProjects > 0 ? Math.round((pendingProjects / totalProjects) * 100) : 0}%`,
+      icon: Clock3,
+      iconClasses: 'bg-amber-50 text-amber-700',
+      accentClasses: 'border-amber-100 bg-white',
+      progressClass: 'bg-amber-500',
+      toneClass: 'text-amber-700 bg-amber-50 border-amber-100',
+    },
+    {
+      title: 'Project Completion',
+      value: `${completionPercentage}%`,
+      subtitle: 'Overall completion across tracked delivery',
+      metric: `${completedProjects}/${totalProjects || 0}`,
+      icon: TrendingUp,
+      iconClasses: 'bg-sky-50 text-sky-700',
+      accentClasses: 'border-sky-100 bg-white',
+      progressClass: 'bg-sky-500',
+      toneClass: 'text-sky-700 bg-sky-50 border-sky-100',
+    },
+  ];
+  const quickActions = [
+    {
+      label: 'Open Projects',
+      description: 'Review all active workspaces and delivery progress.',
+      onClick: () => navigate('/VendorDashboard/projects'),
+    },
+    {
+      label: 'Review Leads',
+      description: 'Check new opportunities and approval-ready items.',
+      onClick: () => navigate('/VendorDashboard/leads'),
+    },
+    {
+      label: 'Manage Team',
+      description: 'Update permissions and member access from one place.',
+      onClick: () => navigate('/VendorDashboard/team'),
+    },
+  ];
+  const insightRows = [
+    {
+      label: 'Delivery completion',
+      value: `${completionPercentage}%`,
+      helper: completedProjects > 0 ? `${completedProjects} projects closed` : 'No completed projects yet',
+    },
+    {
+      label: 'Current workload',
+      value: `${inProgressProjects}`,
+      helper: inProgressProjects === 1 ? '1 project moving right now' : `${inProgressProjects} projects moving right now`,
+    },
+    {
+      label: 'Tender watchlist',
+      value: `${tenderCount}`,
+      helper: tenderCount === 1 ? '1 tender currently visible' : `${tenderCount} tenders currently visible`,
+    },
+  ];
     
   // Fetch real tenders for this vendor from the proxy route
   useEffect(() => {
@@ -402,8 +495,7 @@ export const VendorDashboard = () => {
   }, []);
 
   return (
-    // Add p-5 here to pad the content area of this specific page
-    <div className="p-5">
+    <div className="space-y-5 px-4 pb-10 pt-4 sm:p-5 sm:pb-24">
       {/* Passkey Registration Banner - Show if user doesn't have a passkey */}
       {!checkingPasskey && !userHasPasskey && currentUser?.email && (
         <PasskeyRegistrationBanner
@@ -415,28 +507,197 @@ export const VendorDashboard = () => {
           }}
         />
       )}
-      
-      <div className="mt-4 grid grid-cols-1 lg:grid-cols-[2fr_1fr] gap-4">
+
+      <section className="overflow-hidden rounded-[30px] border border-emerald-100 bg-[linear-gradient(135deg,#f8fffc_0%,#effbf5_45%,#f7faf9_100%)] p-5 sm:p-7 text-slate-900 shadow-[0_20px_60px_rgba(15,23,42,0.06)]">
+        <div className="grid gap-6 xl:grid-cols-[1.7fr_1fr] xl:items-stretch">
+          <div className="space-y-5">
+            <div className="inline-flex items-center gap-2 rounded-full border border-emerald-100 bg-white px-3 py-1 text-[11px] font-medium text-emerald-700 shadow-sm">
+              <Sparkles size={14} />
+              Operations overview
+            </div>
+
+            <div className="space-y-3">
+              <div className="flex flex-wrap items-center gap-3">
+                <h1 className="bg-gradient-to-r from-[#1e3a8a] via-[#0f766e] to-[#065f46] bg-clip-text text-[2rem] font-semibold tracking-tight text-transparent sm:text-[2.4rem]">Dashboard built for faster decisions</h1>
+              </div>
+              <p className="max-w-3xl text-[14px] leading-6 text-slate-600 sm:text-[15px]">
+                Welcome back, {vendorDisplayName}. Track delivery health, keep an eye on active tenders, and jump into the areas that need attention without scanning multiple pages.
+              </p>
+            </div>
+
+            <div className="flex flex-wrap gap-3">
+              <div className="inline-flex items-center gap-2 rounded-full border border-emerald-100 bg-white px-4 py-2 text-[13px] text-slate-700 shadow-sm">
+                <Building2 size={16} />
+                {vendorCompanyName}
+              </div>
+              <div className="inline-flex items-center gap-2 rounded-full border border-emerald-100 bg-white px-4 py-2 text-[13px] text-slate-700 shadow-sm">
+                <Briefcase size={16} />
+                {totalProjects} live projects
+              </div>
+              <div className="inline-flex items-center gap-2 rounded-full border border-emerald-100 bg-white px-4 py-2 text-[13px] text-slate-700 shadow-sm">
+                <TrendingUp size={16} />
+                {tenderCount} tenders in focus
+              </div>
+            </div>
+
+            <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+              {quickActions.map((action) => (
+                <button
+                  key={action.label}
+                  type="button"
+                  onClick={action.onClick}
+                  className="group rounded-[24px] border border-emerald-100 bg-white p-4 text-left shadow-sm transition duration-200 hover:border-emerald-200 hover:bg-emerald-50/40"
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <p className="text-[15px] font-semibold text-slate-900">{action.label}</p>
+                      <p className="mt-2 text-[13px] leading-5 text-slate-500">{action.description}</p>
+                    </div>
+                    <div className="rounded-full bg-emerald-50 p-2 text-emerald-700 transition group-hover:bg-emerald-100">
+                      <ArrowRight size={16} />
+                    </div>
+                  </div>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="rounded-[28px] border border-emerald-100 bg-[linear-gradient(180deg,#ffffff_0%,#f4fbf7_100%)] p-5 shadow-[0_18px_40px_rgba(15,23,42,0.05)]">
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <p className="text-sm font-medium text-emerald-700">Performance snapshot</p>
+                <p className="mt-1 text-3xl font-semibold text-slate-900">{completionPercentage}%</p>
+              </div>
+              <div className="rounded-full border border-emerald-100 bg-emerald-50 px-3 py-1 text-xs font-medium text-emerald-700">
+                Delivery health
+              </div>
+            </div>
+
+            <div className="mt-5 h-3 overflow-hidden rounded-full bg-slate-100">
+              <div
+                className="h-full rounded-full bg-gradient-to-r from-emerald-300 via-emerald-400 to-lime-300"
+                style={{ width: `${Math.max(completionPercentage, totalProjects > 0 ? 10 : 0)}%` }}
+              />
+            </div>
+
+            <div className="mt-5 grid grid-cols-1 gap-3 sm:grid-cols-2">
+              <div className="rounded-2xl border border-emerald-100 bg-white p-4">
+                <p className="text-xs uppercase tracking-[0.2em] text-slate-400">Completed</p>
+                <p className="mt-2 text-2xl font-semibold text-slate-900">{completedProjects}</p>
+              </div>
+              <div className="rounded-2xl border border-emerald-100 bg-white p-4">
+                <p className="text-xs uppercase tracking-[0.2em] text-slate-400">Pending</p>
+                <p className="mt-2 text-2xl font-semibold text-slate-900">{pendingProjects}</p>
+              </div>
+            </div>
+
+            <div className="mt-5 space-y-3">
+              {insightRows.map((item, index) => (
+                <div key={item.label} className={`rounded-2xl border px-4 py-3 ${index === 0 ? 'border-emerald-100 bg-emerald-50/60' : 'border-slate-200 bg-white'}`}>
+                  <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
+                    <p className="text-sm text-slate-700">{item.label}</p>
+                    <p className="text-base font-semibold text-slate-900">{item.value}</p>
+                  </div>
+                  <p className="mt-1 text-xs text-slate-500">{item.helper}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <div className="grid grid-cols-1 gap-5 lg:grid-cols-[2fr_1fr]">
         {/* Left Column */}
         <div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            <StatCard title="Total Projects" value={totalProjects.toString()} subtitle="" />
-            <StatCard title="Project Completed" value={completedProjects.toString()} subtitle="" />
-            <StatCard title="Project Pending" value={pendingProjects.toString()} subtitle="" />
-            <StatCard 
-              title="Project Completion" 
-              value={`${completionPercentage}%`} 
-              subtitle="" 
-            />
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+            {statCards.map((card) => {
+              const Icon = card.icon;
+              const numericValue = typeof card.value === 'number' ? card.value : Number.parseInt(card.value, 10);
+              const progressValue = Number.isFinite(numericValue)
+                ? Math.max(8, Math.min(100, totalProjects > 0 ? Math.round((numericValue / totalProjects) * 100) : completionPercentage || 0))
+                : Math.max(8, completionPercentage || 0);
+
+              return (
+                <div
+                  key={card.title}
+                  className={`overflow-hidden rounded-[24px] border p-5 shadow-[0_12px_32px_rgba(15,23,42,0.06)] transition hover:shadow-[0_16px_38px_rgba(15,23,42,0.08)] ${card.accentClasses}`}
+                >
+                  <div className="mb-4 flex items-start justify-between gap-4">
+                    <div className="min-w-0">
+                      <div className="inline-flex rounded-full border border-slate-200 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
+                        {card.title}
+                      </div>
+                      <p className="mt-4 text-4xl font-semibold tracking-tight text-slate-900">{card.value}</p>
+                    </div>
+                    <div className="flex flex-col items-end gap-3">
+                      <div className={`rounded-2xl p-3 ${card.iconClasses}`}>
+                        <Icon size={18} />
+                      </div>
+                    </div>
+                  </div>
+
+                  <p className="max-w-[16rem] text-xs leading-5 text-slate-500">{card.subtitle}</p>
+
+                  <div className="mt-5 flex items-center justify-between gap-3">
+                    <div className={`inline-flex rounded-full border px-3 py-1.5 text-[11px] font-semibold ${card.toneClass}`}>
+                      {card.metric}
+                    </div>
+                    <div className="text-right">
+                      <p className="text-[11px] font-medium uppercase tracking-[0.16em] text-slate-400">Status</p>
+                      <p className="mt-1 text-sm font-semibold text-slate-700">Healthy</p>
+                    </div>
+                  </div>
+
+                  <div className="mt-4">
+                    <div className="mb-2 flex items-center justify-between gap-3 text-[11px] font-medium text-slate-500">
+                      <span>Overview</span>
+                      <span>{progressValue}%</span>
+                    </div>
+                    <div className="h-2 overflow-hidden rounded-full bg-slate-100">
+                      <div className={`h-full rounded-full ${card.progressClass}`} style={{ width: `${progressValue}%` }} />
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
           </div>
-          <div className="mt-4">
+
+          <div className="mt-5 rounded-[30px] border border-slate-200/80 bg-white p-4 shadow-[0_20px_60px_rgba(15,23,42,0.06)] sm:p-5">
+            <div className="mb-5 flex flex-col gap-4 border-b border-slate-200 pb-5 xl:flex-row xl:items-end xl:justify-between">
+              <div>
+                <p className="text-xs font-medium text-emerald-700">Project tracker</p>
+                <h2 className="mt-1 text-xl font-semibold tracking-tight text-slate-900">Active delivery pipeline</h2>
+                <p className="mt-2 max-w-2xl text-[13px] leading-6 text-slate-500">
+                  Review your approved projects, filter by timeline or status, and jump directly into the workspace that needs your attention.
+                </p>
+              </div>
+
+              <div className="grid w-full grid-cols-2 gap-1.5 sm:grid-cols-4 xl:w-[420px]">
+                <div className="min-w-0 rounded-full bg-emerald-50 px-2 py-1 text-center text-[10px] font-medium text-emerald-700">
+                  {totalProjects} total
+                </div>
+                <div className="min-w-0 rounded-full bg-sky-50 px-2 py-1 text-center text-[10px] font-medium text-sky-700">
+                  {inProgressProjects} in progress
+                </div>
+                <div className="min-w-0 rounded-full bg-lime-50 px-2 py-1 text-center text-[10px] font-medium text-lime-700">
+                  {completedProjects} completed
+                </div>
+                <div className="min-w-0 rounded-full bg-amber-50 px-2 py-1 text-center text-[10px] font-medium text-amber-700">
+                  {pendingProjects} pending
+                </div>
+              </div>
+            </div>
+
             {isLoading ? (
-              <div className="flex justify-center items-center h-64">
-                <p className="text-gray-500">Loading projects...</p>
+              <div className="flex h-64 items-center justify-center rounded-[24px] border border-dashed border-slate-200 bg-slate-50">
+                <p className="text-sm text-slate-500">Loading projects...</p>
               </div>
             ) : error ? (
-              <div className="flex justify-center items-center h-64">
-                <p className="text-red-500">{error}</p>
+              <div className="flex h-64 items-center justify-center rounded-[24px] border border-rose-100 bg-rose-50/70 px-5 text-center">
+                <div>
+                  <AlertCircle className="mx-auto mb-3 text-rose-500" size={20} />
+                  <p className="text-sm font-medium text-rose-700">{error}</p>
+                </div>
               </div>
             ) : (
               <ProjectList 
@@ -450,22 +711,59 @@ export const VendorDashboard = () => {
         </div>
 
         {/* Right Column */}
-        <div className="space-y-4 mt-4 lg:mt-0 min-w-0">
+        <div className="min-w-0 space-y-5">
+          <div className="rounded-[30px] border border-slate-200/80 bg-white p-5 shadow-[0_20px_60px_rgba(15,23,42,0.06)]">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+              <div>
+                <p className="text-sm font-medium text-emerald-700">Daily pulse</p>
+                <h3 className="mt-1 text-xl font-semibold text-slate-900">Where to focus today</h3>
+              </div>
+              <div className="rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-600">
+                Live summary
+              </div>
+            </div>
+
+            <div className="mt-5 space-y-4">
+              <div className="rounded-[24px] bg-slate-50 p-4">
+                <div className="flex items-center justify-between gap-3">
+                  <p className="text-sm font-medium text-slate-700">Projects needing follow-up</p>
+                  <p className="text-2xl font-semibold text-slate-900">{pendingProjects + inProgressProjects}</p>
+                </div>
+                <p className="mt-2 text-xs leading-5 text-slate-500">
+                  Pending and in-progress work usually needs coordination first. Use the project table to narrow this down quickly.
+                </p>
+              </div>
+
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                <div className="rounded-2xl border border-slate-200 bg-white p-4">
+                  <p className="text-xs uppercase tracking-[0.2em] text-slate-400">Completion</p>
+                  <p className="mt-2 text-2xl font-semibold text-slate-900">{completionPercentage}%</p>
+                </div>
+                <div className="rounded-2xl border border-slate-200 bg-white p-4">
+                  <p className="text-xs uppercase tracking-[0.2em] text-slate-400">Tenders</p>
+                  <p className="mt-2 text-2xl font-semibold text-slate-900">{tenderCount}</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
           <TenderCarousel tenders={tenders.length > 0 ? tenders : mockTenders} />
           <RevenueChart data={realisticRevenueData} />
         </div>
       </div>
 
       {/* Floating Support Button */}
-      <button
-        onClick={() => navigate('/VendorDashboard/support')}
-        className="fixed bottom-6 right-6 z-30 flex items-center gap-2 px-4 py-3 text-white text-sm font-semibold rounded-2xl shadow-lg hover:shadow-xl transition-all"
-        style={{background:'linear-gradient(135deg,rgba(9,91,73,1) 0%,rgba(4,50,40,1) 100%)'}}
-        title="Open Support Centre"
-      >
-        <LifeBuoy size={18} />
-        <span className="hidden sm:inline">Support</span>
-      </button>
+      <div className="pb-4 sm:pb-0">
+        <button
+          onClick={() => navigate('/VendorDashboard/support')}
+          className="flex w-full items-center justify-center gap-2 rounded-2xl px-4 py-3 text-sm font-semibold text-white shadow-lg transition-all hover:shadow-xl sm:fixed sm:bottom-6 sm:left-auto sm:right-6 sm:z-30 sm:w-auto"
+          style={{background:'linear-gradient(135deg,rgba(9,91,73,1) 0%,rgba(4,50,40,1) 100%)'}}
+          title="Open Support Centre"
+        >
+          <LifeBuoy size={18} />
+          <span>Support</span>
+        </button>
+      </div>
     </div>
   );
 };

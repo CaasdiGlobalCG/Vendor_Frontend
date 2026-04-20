@@ -5,6 +5,223 @@ import config from '../config/env';
 // Create the notification context
 export const NotificationContext = createContext();
 
+const TYPE_META = {
+  new_lead: {
+    iconSymbol: 'L',
+    iconBackgroundClass: 'bg-amber-100',
+    iconTextClass: 'text-amber-700',
+    badge: { text: 'Lead', color: '#fef3c7', textColor: '#92400e' },
+  },
+  pm_decision: {
+    iconSymbol: 'PM',
+    iconBackgroundClass: 'bg-emerald-100',
+    iconTextClass: 'text-emerald-700',
+    badge: { text: 'PM Decision', color: '#dcfce7', textColor: '#166534' },
+  },
+  updated_lead: {
+    iconSymbol: 'UP',
+    iconBackgroundClass: 'bg-orange-100',
+    iconTextClass: 'text-orange-700',
+    badge: { text: 'Lead Update', color: '#ffedd5', textColor: '#9a3412' },
+  },
+  workspace_access: {
+    iconSymbol: 'WS',
+    iconBackgroundClass: 'bg-cyan-100',
+    iconTextClass: 'text-cyan-700',
+    badge: { text: 'Workspace', color: '#cffafe', textColor: '#155e75' },
+  },
+  comment_mention: {
+    iconSymbol: '@',
+    iconBackgroundClass: 'bg-indigo-100',
+    iconTextClass: 'text-indigo-700',
+    badge: { text: 'Mention', color: '#e0e7ff', textColor: '#3730a3' },
+  },
+  lead_status_update: {
+    iconSymbol: 'LS',
+    iconBackgroundClass: 'bg-sky-100',
+    iconTextClass: 'text-sky-700',
+    badge: { text: 'Status', color: '#e0f2fe', textColor: '#075985' },
+  },
+  call_invitation: {
+    iconSymbol: 'C',
+    iconBackgroundClass: 'bg-rose-100',
+    iconTextClass: 'text-rose-700',
+    badge: { text: 'Call', color: '#ffe4e6', textColor: '#9f1239' },
+  },
+  call_ended: {
+    iconSymbol: 'C',
+    iconBackgroundClass: 'bg-slate-100',
+    iconTextClass: 'text-slate-700',
+    badge: { text: 'Call Ended', color: '#e2e8f0', textColor: '#334155' },
+  },
+  call_declined: {
+    iconSymbol: 'C',
+    iconBackgroundClass: 'bg-red-100',
+    iconTextClass: 'text-red-700',
+    badge: { text: 'Call Declined', color: '#fee2e2', textColor: '#991b1b' },
+  },
+  call_cancelled: {
+    iconSymbol: 'C',
+    iconBackgroundClass: 'bg-red-100',
+    iconTextClass: 'text-red-700',
+    badge: { text: 'Call Cancelled', color: '#fee2e2', textColor: '#991b1b' },
+  },
+  call_participant_joined: {
+    iconSymbol: 'IN',
+    iconBackgroundClass: 'bg-green-100',
+    iconTextClass: 'text-green-700',
+    badge: { text: 'Call Update', color: '#dcfce7', textColor: '#166534' },
+  },
+  call_participant_left: {
+    iconSymbol: 'OUT',
+    iconBackgroundClass: 'bg-yellow-100',
+    iconTextClass: 'text-yellow-700',
+    badge: { text: 'Call Update', color: '#fef3c7', textColor: '#92400e' },
+  },
+  default: {
+    iconSymbol: 'N',
+    iconBackgroundClass: 'bg-gray-100',
+    iconTextClass: 'text-gray-700',
+    badge: { text: 'Notification', color: '#f3f4f6', textColor: '#374151' },
+  },
+};
+
+const formatNotificationTime = (timestamp) => {
+  if (!timestamp) return 'Recently';
+
+  const date = new Date(timestamp);
+  if (Number.isNaN(date.getTime())) return 'Recently';
+
+  const diffMs = Date.now() - date.getTime();
+  const diffMinutes = Math.floor(diffMs / 60000);
+  if (diffMinutes < 1) return 'Just now';
+  if (diffMinutes < 60) return `${diffMinutes}m ago`;
+
+  const diffHours = Math.floor(diffMinutes / 60);
+  if (diffHours < 24) return `${diffHours}h ago`;
+
+  const diffDays = Math.floor(diffHours / 24);
+  if (diffDays < 7) return `${diffDays}d ago`;
+
+  return date.toLocaleDateString();
+};
+
+const normalizeVendorRoute = (rawUrl, notification) => {
+  const url = rawUrl || '';
+
+  if (url) {
+    if (/^https?:\/\//i.test(url)) return url;
+    if (url.startsWith('/VendorDashboard')) return url;
+    if (url.startsWith('/workspace')) {
+      return `/VendorDashboard${url}`;
+    }
+    if (url.startsWith('/leads') || url.startsWith('/projects') || url.startsWith('/notifications')) {
+      return `/VendorDashboard${url}`;
+    }
+    return url;
+  }
+
+  const workspaceId = notification?.data?.workspaceId || notification?.relatedId;
+  const leadId = notification?.data?.leadId || notification?.relatedId;
+
+  switch (notification?.type) {
+    case 'call_invitation': {
+      const meetingId = notification?.data?.meetingId;
+      return workspaceId
+        ? `/VendorDashboard/workspace/${workspaceId}${meetingId ? `?call=${meetingId}` : ''}`
+        : '/VendorDashboard/workspace';
+    }
+    case 'comment_mention':
+    case 'workspace_access':
+    case 'call_ended':
+    case 'call_declined':
+    case 'call_cancelled':
+    case 'call_participant_joined':
+    case 'call_participant_left':
+      return workspaceId ? `/VendorDashboard/workspace/${workspaceId}` : '/VendorDashboard/workspace';
+    case 'new_lead':
+    case 'updated_lead':
+    case 'pm_decision':
+    case 'lead_status_update':
+      return leadId ? `/leads/${leadId}` : '/VendorDashboard/leads';
+    default:
+      return null;
+  }
+};
+
+const buildNotificationPresentation = (notification) => {
+  if (!notification) return null;
+
+  const notificationId = notification.notificationId || notification.leadId || notification.id || null;
+  if (!notificationId) return null;
+
+  const type = notification.type || 'new_lead';
+  const meta = TYPE_META[type] || TYPE_META.default;
+  const timestamp = notification.timestamp || notification.createdAt || notification.updatedAt;
+  const primaryAction = Array.isArray(notification.actions) && notification.actions.length > 0
+    ? notification.actions[0]
+    : null;
+
+  const derivedPending = (
+    type === 'new_lead'
+    || type === 'updated_lead'
+    || type === 'call_invitation'
+  );
+  const isPending = Boolean(
+    notification.isPending !== undefined && notification.isPending !== null
+      ? notification.isPending
+      : notification.actionRequired !== undefined && notification.actionRequired !== null
+        ? notification.actionRequired
+        : derivedPending
+  );
+
+  let title = notification.title;
+  let message = notification.message;
+
+  if (type === 'new_lead' && !title) {
+    const leadName = notification.name || notification.leadData?.name || notification.data?.leadTitle || 'New Lead';
+    title = isPending ? `Action Required: ${leadName}` : `New Lead: ${leadName}`;
+  }
+
+  if (type === 'new_lead' && !message) {
+    const clientId = notification.clientId || notification.data?.clientId || 'N/A';
+    message = isPending
+      ? `New lead requires your review. Client: ${clientId}.`
+      : notification.description || `New lead from client ${clientId}.`;
+  }
+
+  const sender = notification.sender
+    || notification.data?.pmName
+    || notification.data?.initiatorName
+    || notification.authorName
+    || 'System';
+
+  return {
+    ...notification,
+    id: notificationId,
+    notificationId,
+    type,
+    title: title || 'Notification',
+    message: message || 'No details available',
+    time: formatNotificationTime(timestamp),
+    sender,
+    isRead: Boolean(notification.isRead),
+    isPending,
+    isImportant: Boolean(
+      notification.isImportant !== undefined && notification.isImportant !== null
+        ? notification.isImportant
+        : notification.priority === 'high'
+    ),
+    isSaved: Boolean(notification.isSaved),
+    badge: notification.badge || meta.badge,
+    link: normalizeVendorRoute(primaryAction?.url || notification.link, notification),
+    primaryActionLabel: primaryAction?.label || (isPending ? 'Open' : null),
+    iconSymbol: notification.iconSymbol || meta.iconSymbol,
+    iconBackgroundClass: notification.iconBackgroundClass || meta.iconBackgroundClass,
+    iconTextClass: notification.iconTextClass || meta.iconTextClass,
+  };
+};
+
 
 // Provider component
 export const NotificationProvider = ({ children }) => {
@@ -140,25 +357,8 @@ export const NotificationProvider = ({ children }) => {
     if (!notification) return;
     
     console.log('NotificationContext - Adding new notification:', notification);
-    
-    // Check if this is a call invitation or other pre-formatted notification type
-    // If so, use it as-is; otherwise format it as a lead
-    let formattedNotification;
-    if (notification.type === 'call_invitation' || notification.type === 'call_ended' || notification.type === 'call_declined') {
-      // Call notifications come pre-formatted from the backend
-      console.log('NotificationContext - Using pre-formatted call notification');
-      formattedNotification = {
-        ...notification,
-        time: notification.timestamp ? new Date(notification.timestamp).toLocaleTimeString() : 'Just now',
-        isRead: false,
-        isImportant: notification.priority === 'high',
-        isSaved: false
-      };
-    } else {
-      // Format as lead notification
-      console.log('NotificationContext - Formatting as lead notification');
-      formattedNotification = formatNotification(notification);
-    }
+    const formattedNotification = formatNotification(notification);
+    if (!formattedNotification) return;
     
     // Add to state
     addNotification(formattedNotification);
@@ -233,49 +433,26 @@ export const NotificationProvider = ({ children }) => {
   // Format a lead data object into notification structure
   const formatNotification = (lead) => {
     if (!lead) {
-      console.log("NotificationContext - Invalid lead data for formatting:", lead);
+      console.log("NotificationContext - Invalid notification data for formatting:", lead);
       return null;
     }
-    
-    // Ensure we have an ID by checking all possible ID fields
-    const notificationId = lead.notificationId || lead.leadId || lead.id || null;
-    if (!notificationId) {
-      console.log("NotificationContext - Missing ID in lead data:", lead);
-      return null;
-    }
-    
-    // Check if the lead is pending for approval/rejection
-    // Various conditions that might indicate a lead needs action
-    const isPending = 
-      lead.status === 'pending' || 
-      lead.status === 'new' || 
-      lead.requiresAction === true || 
-      (lead.statusChange && lead.statusChange.newStatus === 'pending');
-    
-    const leadName = lead.name || 'New Lead';
-    const clientId = lead.clientId || 'N/A';
-    
-    return {
-      id: notificationId,
-      title: isPending ? `Action Required: ${leadName}` : `New Lead: ${leadName}`,
-      message: isPending 
-        ? `New lead requires your approval or rejection. Client: ${clientId}.`
-        : lead.description || `New lead from client: ${clientId}. ${lead.status ? `Status: ${lead.status}` : ''}`,
-      time: lead.createdAt ? new Date(lead.createdAt).toLocaleDateString() : 'Recently',
-      sender: `Client ID: ${clientId}`,
-      avatar: 'https://via.placeholder.com/40/CBD5E0/4A5568?text=N',
-      icon: 'https://codia-f2c.s3.us-west-1.amazonaws.com/image/2025-04-25/h0Lwu0EJrH.png',
-      badge: { 
-        text: isPending ? "Action Required" : "New Lead", 
-        color: isPending ? "#fed7d7" : "#fefcbf",
-        textColor: isPending ? "#822727" : "#744210"
+
+    const normalizedType = lead.type || 'new_lead';
+    const normalizedLead = {
+      ...lead,
+      type: normalizedType,
+      isRead: lead.isRead || (normalizedType === 'new_lead' && lead.status && lead.status !== 'new' && lead.status !== 'pending') || false,
+      isPending: lead.isPending || lead.requiresAction === true || lead.status === 'new' || lead.status === 'pending',
+      title: lead.title,
+      message: lead.message,
+      data: {
+        ...lead.data,
+        leadId: lead.data?.leadId || lead.relatedId || lead.leadId,
+        clientId: lead.data?.clientId || lead.clientId,
       },
-      isImportant: isPending ? true : lead.isImportant || false,
-      isSaved: lead.isSaved || false,
-      isRead: lead.isRead || (lead.status && lead.status !== 'new' && lead.status !== 'pending') || false,
-      isPending: isPending,
-      link: isPending ? `/VendorDashboard/leads/${notificationId}` : '/VendorDashboard/leads', // Link directly to the specific lead when approval is needed
     };
+
+    return buildNotificationPresentation(normalizedLead);
   };
 
   // Fetch notifications from the API
@@ -366,9 +543,19 @@ export const NotificationProvider = ({ children }) => {
         setNotifications(prev => {
           // Keep WebSocket-only notifications (call invitations, call_ended, call_declined)
           const wsOnlyNotifications = prev.filter(n => 
-            n && (n.type === 'call_invitation' || 
-            n.type === 'call_ended' || 
-            n.type === 'call_declined')
+            n && (
+              n.type === 'call_invitation' ||
+              n.type === 'call_ended' ||
+              n.type === 'call_declined' ||
+              n.type === 'call_cancelled' ||
+              n.type === 'call_participant_joined' ||
+              n.type === 'call_participant_left' ||
+              n.type === 'comment_mention' ||
+              n.type === 'workspace_access' ||
+              n.type === 'pm_decision' ||
+              n.type === 'updated_lead' ||
+              n.type === 'lead_status_update'
+            )
           );
           
           // Merge WebSocket notifications with fetched notifications, removing duplicates

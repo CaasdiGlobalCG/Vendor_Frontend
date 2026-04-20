@@ -241,7 +241,7 @@ const ProjectsPage = () => {
 
     return (
         <div className="mx-auto w-full max-w-[1600px] space-y-6 px-3 py-6 sm:px-5 lg:px-8 xl:px-10">
-            <div className="rounded-2xl border border-emerald-200/60 bg-gradient-to-r from-emerald-700 via-teal-700 to-cyan-700 px-6 py-6 shadow-sm">
+            <div className="rounded-2xl border border-emerald-200/20 bg-gradient-to-r from-[#095B49] via-[#0A5F4B] to-[#000000] px-6 py-6 shadow-[0_16px_40px_rgba(6,95,70,0.22)]">
                 <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
                     <div>
                         <p className="text-xs uppercase tracking-[0.18em] text-emerald-100/90">Delivery Overview</p>
@@ -250,25 +250,25 @@ const ProjectsPage = () => {
                             Review active engagements, workspace readiness, and ownership details in one place.
                         </p>
                         <div className="mt-4 flex flex-wrap gap-2">
-                            <span className="inline-flex items-center rounded-full border border-white/35 bg-white/15 px-2.5 py-1 text-xs font-medium text-white">
+                            <span className="inline-flex items-center rounded-full border border-emerald-300/20 bg-black/20 px-2.5 py-1 text-xs font-medium text-emerald-50 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]">
                                 {projects.length} total
                             </span>
-                            <span className="inline-flex items-center rounded-full border border-white/35 bg-white/15 px-2.5 py-1 text-xs font-medium text-white">
+                            <span className="inline-flex items-center rounded-full border border-emerald-300/20 bg-black/20 px-2.5 py-1 text-xs font-medium text-emerald-50 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]">
                                 {displayedProjects.length} visible
                             </span>
-                            <span className="inline-flex items-center rounded-full border border-white/35 bg-white/15 px-2.5 py-1 text-xs font-medium text-white">
+                            <span className="inline-flex items-center rounded-full border border-emerald-300/20 bg-black/20 px-2.5 py-1 text-xs font-medium text-emerald-50 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]">
                                 {filterCounts.Pending || 0} pending
                             </span>
                         </div>
                     </div>
 
                     <div className="flex flex-wrap items-center gap-2">
-                        <span className="rounded-lg border border-white/30 bg-white/10 px-3 py-2 text-xs font-medium text-white/90">
+                        <span className="rounded-lg border border-emerald-300/20 bg-black/25 px-3 py-2 text-xs font-medium text-emerald-50 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]">
                             Updated {formatDate(new Date())}
                         </span>
                         <Link
                             to="/VendorDashboard/leads"
-                            className="inline-flex items-center gap-1.5 rounded-lg border border-white/35 bg-white/15 px-3 py-2 text-sm font-medium text-white transition-colors hover:bg-white/25"
+                            className="inline-flex items-center gap-1.5 rounded-lg border border-emerald-300/20 bg-black/30 px-3 py-2 text-sm font-medium text-emerald-50 transition-colors hover:bg-black/40 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]"
                         >
                             Leads
                             <ArrowPathIcon className="h-4 w-4" />

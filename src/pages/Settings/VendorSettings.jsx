@@ -59,7 +59,7 @@ const PasswordField = ({ label, value, onChange, placeholder }) => {
 /* ─── Section Header ─────────────────────────────────── */
 const SectionCard = ({ icon: Icon, title, description, children }) => (
   <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-    <div className="px-6 py-5 border-b border-gray-100">
+    <div className="border-b border-gray-100 px-4 py-4 sm:px-6 sm:py-5">
       <div className="flex items-center gap-3">
         <div className="w-10 h-10 rounded-lg bg-emerald-50 flex items-center justify-center">
           <Icon className="w-5 h-5 text-emerald-600" />
@@ -70,13 +70,13 @@ const SectionCard = ({ icon: Icon, title, description, children }) => (
         </div>
       </div>
     </div>
-    <div className="px-6 py-5">{children}</div>
+    <div className="px-4 py-4 sm:px-6 sm:py-5">{children}</div>
   </div>
 );
 
 /* ─── Notification Row ───────────────────────────────── */
 const NotifRow = ({ icon: Icon, color, title, desc, enabled, onChange, disabled }) => (
-  <div className="flex items-center justify-between py-3 border-b border-gray-50 last:border-0">
+  <div className="flex flex-col gap-3 py-3 border-b border-gray-50 last:border-0 sm:flex-row sm:items-center sm:justify-between">
     <div className="flex items-start gap-3">
       <div className={`w-8 h-8 rounded-lg ${color} flex items-center justify-center mt-0.5`}>
         <Icon className="w-4 h-4 text-white" />
@@ -86,7 +86,9 @@ const NotifRow = ({ icon: Icon, color, title, desc, enabled, onChange, disabled 
         <p className="text-xs text-gray-500 mt-0.5">{desc}</p>
       </div>
     </div>
-    <Toggle enabled={enabled} onChange={onChange} disabled={disabled} />
+    <div className="self-end sm:self-auto">
+      <Toggle enabled={enabled} onChange={onChange} disabled={disabled} />
+    </div>
   </div>
 );
 
@@ -620,7 +622,7 @@ export default function VendorSettings() {
           <div className="space-y-6">
             <SectionCard icon={User} title="Personal Information" description="Manage your personal and company details">
               {/* Avatar */}
-              <div className="flex items-center gap-5 mb-8">
+              <div className="mb-6 flex flex-col items-start gap-4 sm:mb-8 sm:flex-row sm:items-center sm:gap-5">
                 <div className="relative">
                   <div className="w-20 h-20 rounded-full bg-gradient-to-br from-emerald-600 to-emerald-800 flex items-center justify-center overflow-hidden">
                     {profileImagePreview ? (
@@ -643,7 +645,7 @@ export default function VendorSettings() {
               </div>
 
               {/* Form grid */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+              <div className="grid grid-cols-1 gap-4 sm:gap-5 md:grid-cols-2">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Full Name</label>
                   <div className="relative">
@@ -721,11 +723,11 @@ export default function VendorSettings() {
                 </div>
               </div>
 
-              <div className="flex justify-end mt-6">
+              <div className="mt-6 flex justify-stretch sm:justify-end">
                 <button
                   onClick={handleSaveProfile}
                   disabled={saving}
-                  className="px-6 py-2.5 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors text-sm font-medium disabled:opacity-50 flex items-center gap-2"
+                  className="flex w-full items-center justify-center gap-2 rounded-lg bg-emerald-600 px-6 py-2.5 text-sm font-medium text-white transition-colors hover:bg-emerald-700 disabled:opacity-50 sm:w-auto"
                 >
                   {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
                   Save Changes
@@ -741,7 +743,7 @@ export default function VendorSettings() {
           <div className="space-y-6">
             {/* Change Password */}
             <SectionCard icon={Lock} title="Change Password" description="Update your password regularly for better security">
-              <div className="space-y-4 max-w-md">
+              <div className="max-w-xl space-y-4">
                 <PasswordField
                   label="Current Password"
                   value={passwords.current}
@@ -763,7 +765,7 @@ export default function VendorSettings() {
                 {/* Password requirements */}
                 <div className="bg-gray-50 rounded-lg p-3">
                   <p className="text-xs font-medium text-gray-600 mb-2">Password requirements:</p>
-                  <div className="grid grid-cols-2 gap-1">
+                  <div className="grid grid-cols-1 gap-1 sm:grid-cols-2">
                     {[
                       { test: passwords.new.length >= 8, text: "At least 8 characters" },
                       { test: /[A-Z]/.test(passwords.new), text: "One uppercase letter" },
@@ -813,7 +815,7 @@ export default function VendorSettings() {
               {!showMfaSetup ? (
                 <div className="space-y-4">
                   {/* Status Row */}
-                  <div className="flex items-center justify-between py-4 border-b border-gray-100">
+                  <div className="flex flex-col gap-3 py-4 border-b border-gray-100 sm:flex-row sm:items-center sm:justify-between">
                     <div className="flex items-start gap-3">
                       <div className={`w-10 h-10 rounded-lg ${mfaEnabled ? "bg-emerald-50" : "bg-blue-50"} flex items-center justify-center`}>
                         <Shield className={`w-5 h-5 ${mfaEnabled ? "text-emerald-600" : "text-blue-600"}`} />
@@ -829,7 +831,7 @@ export default function VendorSettings() {
                         </p>
                       </div>
                     </div>
-                    <span className={`text-xs font-medium px-3 py-1 rounded-full ${
+                    <span className={`self-start rounded-full px-3 py-1 text-xs font-medium sm:self-auto ${
                       mfaEnabled 
                         ? "bg-emerald-100 text-emerald-700" 
                         : "bg-gray-100 text-gray-600"
@@ -839,7 +841,7 @@ export default function VendorSettings() {
                   </div>
 
                   {/* Setup Button or Disable Button */}
-                  <div className="flex gap-3 pt-3">
+                  <div className="flex flex-col gap-3 pt-3 sm:flex-row">
                     {mfaEnabled ? (
                       <button
                         onClick={handleDisableMFA}
@@ -875,8 +877,8 @@ export default function VendorSettings() {
                       {/* QR Code Display */}
                       {qrCodeUrl && (
                         <div className="flex flex-col items-center gap-4">
-                          <div className="bg-white p-4 rounded-lg border border-gray-200">
-                            <img src={qrCodeUrl} alt="TOTP QR Code" className="w-48 h-48" />
+                          <div className="bg-white p-3 sm:p-4 rounded-lg border border-gray-200">
+                            <img src={qrCodeUrl} alt="TOTP QR Code" className="w-40 h-40 sm:w-48 sm:h-48" />
                           </div>
                           <div className="text-center">
                             <p className="text-xs text-gray-600 mb-2">Can't scan? Enter this code manually:</p>
@@ -944,7 +946,7 @@ export default function VendorSettings() {
                       </div>
 
                       {/* Action Buttons */}
-                      <div className="flex gap-3 justify-end pt-4 border-t border-gray-100">
+                      <div className="flex flex-col gap-3 justify-end pt-4 border-t border-gray-100 sm:flex-row">
                         <button
                           onClick={() => {
                             setShowMfaSetup(false);
@@ -991,7 +993,7 @@ export default function VendorSettings() {
                           Backup Codes
                         </label>
                         <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
-                          <div className="grid grid-cols-2 gap-2">
+                          <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
                             {backupCodes.map((code, index) => (
                               <div key={index} className="font-mono text-sm bg-white p-2 rounded border border-gray-200 text-center">
                                 {code}
@@ -1003,7 +1005,7 @@ export default function VendorSettings() {
                       </div>
 
                       {/* Done Button */}
-                      <div className="flex gap-3 justify-end pt-4 border-t border-gray-100">
+                      <div className="flex flex-col gap-3 justify-end pt-4 border-t border-gray-100 sm:flex-row">
                         <button
                           onClick={() => {
                             setShowMfaSetup(false);
@@ -1233,7 +1235,7 @@ export default function VendorSettings() {
     <div className="min-h-screen bg-gray-50">
       {/* Toast */}
       {toast && (
-        <div className={`fixed top-6 right-6 z-50 flex items-center gap-2 px-5 py-3 rounded-xl shadow-lg text-sm font-medium transition-all duration-300 ${
+        <div className={`fixed left-3 right-3 top-4 z-50 flex items-center gap-2 rounded-xl px-4 py-3 shadow-lg text-sm font-medium transition-all duration-300 sm:left-auto sm:right-6 sm:top-6 sm:px-5 ${
           toast.type === "error"
             ? "bg-red-600 text-white"
             : "bg-emerald-600 text-white"
@@ -1244,7 +1246,7 @@ export default function VendorSettings() {
       )}
 
       {/* Header */}
-      <div className="bg-gradient-to-r from-[#095B49] to-[#000000] py-8 px-6">
+      <div className="bg-gradient-to-r from-[#095B49] to-[#000000] px-4 py-6 sm:px-6 sm:py-8">
         <div className="max-w-6xl mx-auto">
           <div className="flex items-center gap-3 mb-3">
             <button
@@ -1253,18 +1255,18 @@ export default function VendorSettings() {
             >
               <ChevronLeft className="w-5 h-5 text-white" />
             </button>
-            <h1 className="text-2xl font-bold text-white">Settings</h1>
+            <h1 className="text-xl font-bold text-white sm:text-2xl">Settings</h1>
           </div>
-          <p className="text-emerald-200 text-sm ml-11">Manage your account, security, and preferences</p>
+          <p className="ml-11 text-sm text-emerald-200">Manage your account, security, and preferences</p>
         </div>
       </div>
 
       {/* Content */}
-      <div className="max-w-6xl mx-auto px-6 -mt-4">
-        <div className="flex gap-6">
+      <div className="max-w-6xl mx-auto -mt-3 px-3 sm:-mt-4 sm:px-6">
+        <div className="flex flex-col gap-4 sm:gap-6 lg:flex-row">
           {/* Sidebar */}
-          <div className="w-64 flex-shrink-0">
-            <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden sticky top-6">
+          <div className="w-full flex-shrink-0 lg:w-64">
+            <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden lg:sticky lg:top-6">
               {/* Profile summary */}
               <div className="px-5 py-4 border-b border-gray-100">
                 <div className="flex items-center gap-3">
@@ -1285,7 +1287,7 @@ export default function VendorSettings() {
               </div>
 
               {/* Nav items */}
-              <nav className="p-2">
+              <nav className="grid grid-cols-1 gap-1 p-2 sm:grid-cols-2 lg:grid-cols-1">
                 {navItems.map(({ id, label, icon: Icon }) => (
                   <button
                     key={id}
@@ -1317,7 +1319,7 @@ export default function VendorSettings() {
           </div>
 
           {/* Main content */}
-          <div className="flex-1 min-w-0 pb-12">
+          <div className="flex-1 min-w-0 pb-10 sm:pb-12">
             {renderContent()}
           </div>
         </div>

@@ -75,37 +75,37 @@ export const ProjectList = ({ projects }) => {
 
 
   return (
-    <div className="bg-white p-3 sm:p-6 rounded-[20px] shadow-2xl">
+    <div className="rounded-[20px] bg-white p-3 shadow-2xl sm:p-5">
       {/* Filter UI Section */}
-      <div className="flex flex-wrap justify-between items-center gap-y-3 mb-4">
+      <div className="mb-4 flex flex-col gap-3 border-b border-slate-100 pb-4 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
          {/* Title and Subtitle */}
         <div className="flex-grow">
-          <h2 className="text-base font-semibold">Projects</h2>
-          <p className="text-[13px] opacity-50">Recent project list</p>
+          <h2 className="text-sm font-semibold">Projects</h2>
+          <p className="text-xs opacity-50">Recent project list</p>
         </div>
          {/* Filters */}
-        <div className="flex flex-wrap items-center gap-2 sm:gap-4 justify-start sm:justify-end"> {/* Adjusted alignment */}
+        <div className="grid grid-cols-1 gap-2 sm:flex sm:flex-wrap sm:items-center sm:justify-end sm:gap-4"> {/* Adjusted alignment */}
            {/* Date Range Pickers */}
-           <div className="flex items-center gap-2">
-             <label htmlFor="startDate" className="text-xs text-gray-600">From:</label>
+           <div className="flex items-center justify-between gap-2 rounded-xl bg-slate-50 px-3 py-2 sm:justify-start sm:bg-transparent sm:px-0 sm:py-0">
+             <label htmlFor="startDate" className="text-[11px] text-gray-600">From:</label>
              <input
                type="date"
                id="startDate"
                // Apply consistent styling and accent color
-               className="h-[31px] bg-[#D9D9D9] bg-opacity-50 rounded px-2 py-1 text-xs border-none focus:ring-1 focus:ring-emerald-500 accent-emerald-500"
+               className="h-[31px] rounded bg-[#D9D9D9] bg-opacity-50 px-2 py-1 text-[11px] border-none accent-emerald-500 focus:ring-1 focus:ring-emerald-500"
                value={filter.startDate}
                onChange={(e) => setFilter({ ...filter, startDate: e.target.value })}
                // Add placeholder styling if needed (though type="date" might override)
                placeholder="Start Date"
              />
            </div>
-           <div className="flex items-center gap-2">
-              <label htmlFor="endDate" className="text-xs text-gray-600">To:</label>
+           <div className="flex items-center justify-between gap-2 rounded-xl bg-slate-50 px-3 py-2 sm:justify-start sm:bg-transparent sm:px-0 sm:py-0">
+              <label htmlFor="endDate" className="text-[11px] text-gray-600">To:</label>
               <input
                type="date"
                id="endDate"
                // Apply consistent styling and accent color
-               className="h-[31px] bg-[#D9D9D9] bg-opacity-50 rounded px-2 py-1 text-xs border-none focus:ring-1 focus:ring-emerald-500 accent-emerald-500"
+               className="h-[31px] rounded bg-[#D9D9D9] bg-opacity-50 px-2 py-1 text-[11px] border-none accent-emerald-500 focus:ring-1 focus:ring-emerald-500"
                value={filter.endDate}
                onChange={(e) => setFilter({ ...filter, endDate: e.target.value })}
                min={filter.startDate}
@@ -114,9 +114,9 @@ export const ProjectList = ({ projects }) => {
            </div>
 
           {/* Status Filter (Custom Dropdown based on reference) */}
-          <div className="relative w-[99px] xs:w-auto"> {/* Adjusted width */}
+          <div className="relative w-full sm:w-[99px] xs:w-auto"> {/* Adjusted width */}
             <button
-              className="w-full h-[31px] bg-[#D9D9D9] bg-opacity-50 rounded px-2 py-1 text-xs flex justify-between items-center focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-1 hover:bg-opacity-70"
+              className="flex h-[40px] w-full items-center justify-between rounded-xl bg-slate-50 px-3 py-2 text-[11px] hover:bg-slate-100 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-1 sm:h-[31px] sm:rounded sm:bg-[#D9D9D9] sm:bg-opacity-50 sm:px-2 sm:py-1 sm:hover:bg-opacity-70"
               onClick={() => setDropdownOpen((open) => !open)}
               type="button"
               aria-haspopup="listbox"
@@ -152,7 +152,7 @@ export const ProjectList = ({ projects }) => {
                   key={option.value}
                   // More padding, consistent text size, better hover/selected states
                   className={clsx(
-                    "px-3 py-2 text-xs cursor-pointer transition-colors",
+                    "px-3 py-2 text-[11px] cursor-pointer transition-colors",
                     "hover:bg-[#3e423d4f] text-gray-800", // Hover state
                     filter.status === option.value
                       ? "bg-[#3bf3bb4f] font-medium" // Selected state
@@ -173,12 +173,24 @@ export const ProjectList = ({ projects }) => {
 
         </div>
       </div>
+      <div className="space-y-3 md:hidden">
+        {filteredProjects.length > 0 ? (
+          filteredProjects.map((project) => (
+            <ProjectRow key={project.id} project={project} mobileView />
+          ))
+        ) : (
+          <div className="rounded-[22px] border border-dashed border-slate-200 bg-slate-50 px-4 py-8 text-center text-sm text-slate-500">
+            No projects found matching the selected filters.
+          </div>
+        )}
+      </div>
+
       {/* Table Section */}
-      <div className="overflow-x-auto">
+      <div className="hidden overflow-x-auto md:block">
         <table className="min-w-full border-collapse">
           {/* Table Head */}
           <thead>
-            <tr className="bg-[#D9D9D9] bg-opacity-40 text-[11px] sm:text-[13px] font-normal text-black text-opacity-50">
+            <tr className="bg-[#D9D9D9] bg-opacity-40 text-[10px] sm:text-[11px] font-normal text-black text-opacity-50">
               <th className="py-2 px-2 sm:px-4 text-left whitespace-nowrap">Project Id</th>
               <th className="py-2 px-2 sm:px-4 text-left">Project name</th>
               <th className="py-2 px-2 sm:px-4 text-left whitespace-nowrap">Client Id</th>
@@ -196,7 +208,7 @@ export const ProjectList = ({ projects }) => {
               ))
             ) : (
               <tr>
-                <td colSpan="7" className="text-center py-4 text-gray-500">
+                <td colSpan="7" className="text-center py-4 text-sm text-gray-500">
                   No projects found matching the selected filters.
                 </td>
               </tr>

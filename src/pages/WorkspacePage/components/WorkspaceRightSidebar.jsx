@@ -625,9 +625,9 @@ const WorkspaceRightSidebar = ({
   return (
     <div
       className={`
-        ${sidebarCollapsed ? 'w-0 overflow-hidden' : 'w-96'}
+        ${sidebarCollapsed ? 'w-0 overflow-hidden' : 'w-[min(20rem,32vw)] 2xl:w-96'}
         ${isOverlay ? 'absolute right-0 top-0 bottom-0 z-20 shadow-2xl' : ''}
-        bg-white border-l border-gray-100 flex flex-col flex-shrink-0
+        bg-white border-l border-gray-100 flex flex-col flex-shrink-0 overflow-hidden
         transition-all duration-300 ease-in-out
       `}
       onMouseEnter={onMouseEnter}
@@ -650,12 +650,12 @@ const WorkspaceRightSidebar = ({
       )}
 
       {/* Main Content Area */}
-      <div className="flex-1 flex flex-col overflow-hidden p-4 gap-4 min-h-0">
+      <div className="flex-1 flex flex-col overflow-hidden p-3 gap-3 min-h-0 lg:p-4 lg:gap-4">
         {/* Accordion: Recent Activity */}
         <div className={`bg-white rounded-xl border border-gray-200 shadow-sm flex flex-col transition-all duration-300 ${activityExpanded ? 'flex-1 min-h-0' : ''}`}>
           <button
             onClick={handleToggleActivity}
-            className="w-full flex items-center justify-between px-5 py-4 text-left focus:outline-none"
+            className="w-full flex items-center justify-between px-4 py-3 text-left focus:outline-none lg:px-5 lg:py-4"
           >
             <div className="flex items-center space-x-2">
               <h4 className="text-sm font-medium text-gray-900">Recent Activity</h4>
@@ -667,8 +667,8 @@ const WorkspaceRightSidebar = ({
           </button>
           <div className={`${activityExpanded ? 'flex-1 flex flex-col opacity-100 min-h-0' : 'max-h-0 opacity-0 pointer-events-none'} transition-all duration-300 ease-in-out overflow-hidden`}
                style={{transitionProperty: 'max-height, opacity'}}>
-            <div className="px-5 pb-5 border-t border-gray-100 flex-1 flex flex-col min-h-0">
-              <div className="flex items-center justify-between mb-4">
+            <div className="px-4 pb-4 border-t border-gray-100 flex-1 flex flex-col min-h-0 lg:px-5 lg:pb-5">
+              <div className="flex items-center justify-between mb-3 pt-3 lg:mb-4 lg:pt-4">
                 <div className="text-xs text-gray-500">Latest updates from the workspace</div>
                 <div className="flex items-center space-x-2">
                   <button
@@ -699,14 +699,14 @@ const WorkspaceRightSidebar = ({
                   <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
                 </div>
               ) : realTimeActivities.length > 0 ? (
-                <div className="space-y-4 flex-1 overflow-y-auto pr-1 min-h-0 text-xs">
+                <div className="space-y-3 flex-1 overflow-y-auto pr-1 min-h-0 text-xs lg:space-y-4">
                   {realTimeActivities.map((activity) => {
                     const IconComponent = getActivityIcon(activity);
                     const colorClass = getActivityColor(activity);
 
                     return (
-                      <div key={activity.activityId} className="flex items-start space-x-4">
-                        <div className="flex items-center justify-center w-8 h-8 bg-gray-100 rounded-full flex-shrink-0">
+                      <div key={activity.activityId} className="flex items-start space-x-3">
+                        <div className="flex items-center justify-center w-7 h-7 bg-gray-100 rounded-full flex-shrink-0 lg:w-8 lg:h-8">
                           <IconComponent className={`w-4 h-4 ${colorClass}`} />
                         </div>
                         <div className="flex-1 min-w-0">
@@ -724,7 +724,7 @@ const WorkspaceRightSidebar = ({
                   })}
                 </div>
               ) : (
-                <div className="text-center py-8">
+                <div className="text-center py-7 lg:py-8">
                   <FileText className="w-8 h-8 text-gray-400 mx-auto mb-2" />
                   <p className="text-sm text-gray-500">No recent activity</p>
                 </div>
@@ -732,7 +732,7 @@ const WorkspaceRightSidebar = ({
 
               <button
                 onClick={() => setShowFullScreen(true)}
-                className="w-full mt-4 pt-4 border-t border-gray-100 text-sm text-blue-600 hover:text-blue-700 font-medium transition-colors"
+                className="w-full mt-3 pt-3 border-t border-gray-100 text-sm text-blue-600 hover:text-blue-700 font-medium transition-colors lg:mt-4 lg:pt-4"
               >
                 View all activity
               </button>
@@ -744,7 +744,7 @@ const WorkspaceRightSidebar = ({
         <div className={`bg-white rounded-xl border border-gray-200 shadow-sm flex flex-col transition-all duration-300 ${messagesExpanded ? 'flex-1 min-h-0' : ''}`}>
           <button
             onClick={handleToggleMessages}
-            className="w-full flex items-center justify-between px-5 py-4 text-left focus:outline-none"
+            className="w-full flex items-center justify-between px-4 py-3 text-left focus:outline-none lg:px-5 lg:py-4"
           >
             <div className="flex items-center space-x-2">
               <div>
@@ -1012,7 +1012,7 @@ const WorkspaceRightSidebar = ({
         <div className={`bg-white rounded-xl border border-gray-200 shadow-sm flex flex-col transition-all duration-300 ${elementsOverviewExpanded ? 'flex-1 min-h-0' : ''}`}>
           <button
             onClick={handleToggleElementsOverview}
-            className="w-full flex items-center justify-between px-5 py-4 text-left focus:outline-none hover:bg-gray-50 transition-colors"
+            className="w-full flex items-center justify-between px-4 py-3 text-left focus:outline-none hover:bg-gray-50 transition-colors lg:px-5 lg:py-4"
           >
             <div className="flex items-center space-x-2">
               <h4 className="text-sm font-semibold text-gray-900">Elements Overview</h4>
@@ -1023,7 +1023,7 @@ const WorkspaceRightSidebar = ({
           
           {/* Sort Options */}
           {elementsOverviewExpanded && (
-            <div className="px-5 py-2 border-t border-gray-100 flex items-center gap-2">
+            <div className="px-4 py-2 border-t border-gray-100 flex items-center gap-2 lg:px-5">
               <span className="text-xs text-gray-600 font-medium">Sort by:</span>
               <select
                 value={elementsSortBy}
@@ -1227,7 +1227,7 @@ const WorkspaceRightSidebar = ({
         <div className={`bg-white rounded-xl border border-gray-200 shadow-sm flex flex-col transition-all duration-300 ${deletionHistoryExpanded ? 'flex-1 min-h-0' : ''}`}>
           <button
             onClick={handleToggleDeletionHistory}
-            className="w-full flex items-center justify-between px-5 py-4 text-left focus:outline-none hover:bg-gray-50 transition-colors"
+            className="w-full flex items-center justify-between px-4 py-3 text-left focus:outline-none hover:bg-gray-50 transition-colors lg:px-5 lg:py-4"
           >
             <div className="flex items-center space-x-2">
               <h4 className="text-sm font-semibold text-gray-900">Deletion History</h4>

@@ -212,7 +212,7 @@ function UserProfileCard({
 
   if (loading) {
     return (
-      <section className="w-full lg:w-1/3 min-w-[300px] max-w-[350px] bg-white rounded-lg shadow-md p-4 lg:sticky lg:top-8">
+      <section className="w-full rounded-[24px] bg-white p-4 shadow-md sm:p-5 lg:sticky lg:top-24 lg:w-1/3 lg:max-w-[380px] lg:rounded-[28px]">
         <div className="flex flex-col items-center justify-center h-64 w-full">
           <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-emerald-700"></div>
           <p className="mt-4 text-gray-600">Loading profile...</p>
@@ -223,7 +223,7 @@ function UserProfileCard({
 
   if (error) {
     return (
-      <section className="w-full lg:w-1/3 min-w-[300px] max-w-[350px] bg-white rounded-lg shadow-md p-4 lg:sticky lg:top-8">
+      <section className="w-full rounded-[24px] bg-white p-4 shadow-md sm:p-5 lg:sticky lg:top-24 lg:w-1/3 lg:max-w-[380px] lg:rounded-[28px]">
         <div className="flex flex-col items-center justify-center h-64 w-full">
           <div className="text-red-500 mb-2">
             <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -249,7 +249,7 @@ function UserProfileCard({
 
   if (!profileData) {
     return (
-      <section className="w-full lg:w-1/3 min-w-0 max-w-[380px] rounded-[28px] border border-slate-200 bg-white p-6 shadow-[0_20px_50px_rgba(15,23,42,0.08)] lg:sticky lg:top-24">
+      <section className="w-full min-w-0 rounded-[24px] border border-slate-200 bg-white p-5 shadow-[0_20px_50px_rgba(15,23,42,0.08)] sm:p-6 lg:sticky lg:top-24 lg:w-1/3 lg:max-w-[380px] lg:rounded-[28px]">
         <div className="flex flex-col items-center justify-center h-64 w-full">
           <p className="text-center text-gray-600 mb-4">No profile data available.</p>
           {!vendorId && !userEmail && (
@@ -275,9 +275,9 @@ function UserProfileCard({
   }
 
   return (
-    <section className="w-full lg:w-1/3 min-w-0 max-w-[380px] rounded-[28px] border border-slate-200 bg-white p-6 shadow-[0_20px_50px_rgba(15,23,42,0.08)] lg:sticky lg:top-24">
+    <section className="w-full min-w-0 rounded-[24px] border border-slate-200 bg-white p-5 shadow-[0_20px_50px_rgba(15,23,42,0.08)] sm:p-6 lg:sticky lg:top-24 lg:w-1/3 lg:max-w-[380px] lg:rounded-[28px]">
       <div className="flex flex-col items-center w-full">
-        <div className="relative -mt-20 mb-3 h-28 w-28 cursor-pointer rounded-full ring-4 ring-white shadow-lg transition-transform duration-200 hover:-translate-y-1 lg:h-32 lg:w-32 group" onClick={onEditProfileClick}>
+        <div className="relative -mt-16 mb-3 h-24 w-24 cursor-pointer rounded-full ring-4 ring-white shadow-lg transition-transform duration-200 hover:-translate-y-1 sm:-mt-20 sm:h-28 sm:w-28 lg:h-32 lg:w-32 group" onClick={onEditProfileClick}>
           <img
             src={profileData.image}
             alt={profileData.name}
@@ -298,30 +298,30 @@ function UserProfileCard({
         <div className="mt-5 w-full space-y-3 text-left">
           <div className="flex items-start gap-3 rounded-2xl border border-slate-100 bg-slate-50/80 p-3">
             <div className="w-5 flex-shrink-0 text-gray-700 pt-1"><BuildingIcon className="h-5 w-5" /></div>
-            <div><p className="text-sm text-gray-500 leading-tight">Company name</p><p className="font-medium text-base">{profileData.companyName}</p></div>
+            <div className="min-w-0"><p className="text-sm text-gray-500 leading-tight">Company name</p><p className="break-words font-medium text-base">{profileData.companyName}</p></div>
           </div>
           <div className="flex items-start gap-3 rounded-2xl border border-slate-100 bg-slate-50/80 p-3">
             <div className="w-5 flex-shrink-0 text-gray-700 pt-1"><Phone className="h-5 w-5" /></div>
-            <div><p className="text-sm text-gray-500 leading-tight">Phone</p><p className="font-medium text-base">{profileData.phone}</p></div>
+            <div className="min-w-0"><p className="text-sm text-gray-500 leading-tight">Phone</p><p className="break-words font-medium text-base">{profileData.phone}</p></div>
           </div>
           <div className="flex items-start gap-3 rounded-2xl border border-slate-100 bg-slate-50/80 p-3">
             <div className="w-5 flex-shrink-0 text-gray-700 pt-1"><MapPin className="h-5 w-5" /></div>
-            <div><p className="text-sm text-gray-500 leading-tight">Location</p><p className="font-medium text-base">{profileData.location}</p></div>
+            <div className="min-w-0"><p className="text-sm text-gray-500 leading-tight">Location</p><p className="break-words font-medium text-base">{profileData.location}</p></div>
           </div>
           <div className="flex items-start gap-3 rounded-2xl border border-slate-100 bg-slate-50/80 p-3">
             <div className="w-5 flex-shrink-0 text-gray-700 pt-1"><Mail className="h-5 w-5" /></div>
-            <div><p className="text-sm text-gray-500 leading-tight">Email</p><p className="font-medium text-base">{profileData.email}</p></div>
+            <div className="min-w-0"><p className="text-sm text-gray-500 leading-tight">Email</p><p className="break-all font-medium text-base">{profileData.email}</p></div>
           </div>
           {profileData.gstNumber && profileData.gstNumber !== 'Not provided' && (
             <div className="flex items-start gap-3 rounded-2xl border border-slate-100 bg-slate-50/80 p-3">
               <div className="w-5 flex-shrink-0 text-gray-700 pt-1"><BuildingIcon className="h-5 w-5" /></div>
-              <div><p className="text-sm text-gray-500 leading-tight">GST Number</p><p className="font-medium text-base">{profileData.gstNumber}</p></div>
+              <div className="min-w-0"><p className="text-sm text-gray-500 leading-tight">GST Number</p><p className="break-all font-medium text-base">{profileData.gstNumber}</p></div>
             </div>
           )}
           {profileData.panNumber && profileData.panNumber !== 'Not provided' && (
             <div className="flex items-start gap-3 rounded-2xl border border-slate-100 bg-slate-50/80 p-3">
               <div className="w-5 flex-shrink-0 text-gray-700 pt-1"><BuildingIcon className="h-5 w-5" /></div>
-              <div><p className="text-sm text-gray-500 leading-tight">PAN Number</p><p className="font-medium text-base">{profileData.panNumber}</p></div>
+              <div className="min-w-0"><p className="text-sm text-gray-500 leading-tight">PAN Number</p><p className="break-all font-medium text-base">{profileData.panNumber}</p></div>
             </div>
           )}
         </div>

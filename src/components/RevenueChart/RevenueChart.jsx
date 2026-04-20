@@ -1,4 +1,5 @@
-import React, { useState, useMemo } from "react";
+import React, { useEffect, useState, useMemo } from "react";
+import { BarChart3, CircleDollarSign, TrendingUp } from "lucide-react";
 // Import necessary chart types and elements from react-chartjs-2 and chart.js
 import { Bar, Line, Pie } from "react-chartjs-2";
 import {
@@ -35,11 +36,12 @@ ChartJS.register(
 
 // --- Color Palette ---
 const CHART_COLORS = [
-  "#1976D2", "#F88FEB", "#000000", 
-  '#4BC0C0', // Teal
-  '#FF9F40', // Orange
-  '#9966FF',
- 
+  "#0f766e",
+  "#10b981",
+  "#84cc16",
+  "#f59e0b",
+  "#0f172a",
+  "#94a3b8",
 ];
 
 // Helper to format currency
@@ -165,6 +167,22 @@ const aggregateDataForChart = (revenues, dates, maxSegments = 6) => {
 export const RevenueChart = ({ data: fullData }) => {
   const [chartType, setChartType] = useState("bar"); // 'bar', 'line', 'pie'
   const [timeframe, setTimeframe] = useState("1y"); // Default to '1 Year'
+  const [isMobileViewport, setIsMobileViewport] = useState(() => {
+    if (typeof window === 'undefined') return false;
+    return window.innerWidth < 640;
+  });
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return undefined;
+
+    const handleResize = () => {
+      setIsMobileViewport(window.innerWidth < 640);
+    };
+
+    handleResize();
+    window.addEventListener('resize', handleResize, { passive: true });
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   // 1. Get original filtered data based on timeframe
   const { filteredRevenueData, filteredDateObjects } = useMemo(
@@ -211,8 +229,17 @@ export const RevenueChart = ({ data: fullData }) => {
    const commonOptions = useMemo(() => ({ // Wrap options in useMemo as well
      responsive: true,
      maintainAspectRatio: false,
+     events: isMobileViewport ? [] : undefined,
      plugins: {
-        legend: { display: chartType === 'pie', position: 'top', labels: { padding: 15 } },
+        legend: {
+          display: chartType === 'pie',
+          position: 'top',
+          labels: {
+            padding: isMobileViewport ? 10 : 15,
+            boxWidth: isMobileViewport ? 10 : 14,
+            font: { size: isMobileViewport ? 10 : 12 },
+          },
+        },
         tooltip: {
            enabled: true, backgroundColor: 'rgba(0, 0, 0, 0.8)', titleFont: { size: 14 },
            bodyFont: { size: 12 }, padding: 10, cornerRadius: 4, intersect: false, mode: 'index',
@@ -232,25 +259,50 @@ export const RevenueChart = ({ data: fullData }) => {
         },
      },
      interaction: { mode: 'index', intersect: false },
-   }), [chartType]); // Dependency on chartType for legend display
+  }), [chartType, isMobileViewport]); // Dependency on chartType for legend display
 
    const chartOptionsConfigs = useMemo(() => ({
      bar: {
         ...commonOptions,
         scales: {
-           x: { type: 'category', grid: { display: false }, ticks: { color: '#6b7280', maxRotation: 0, autoSkip: true, autoSkipPadding: 5 } },
+           x: {
+             type: 'category',
+             grid: { display: false },
+             ticks: {
+               color: '#6b7280',
+               maxRotation: 0,
+               autoSkip: true,
+               autoSkipPadding: isMobileViewport ? 10 : 5,
+               font: { size: isMobileViewport ? 10 : 12 },
+             },
+           },
            y: { display: false, grid: { color: '#e5e7eb' }, ticks: { color: '#6b7280' }, beginAtZero: true },
         },
      },
      line: {
         ...commonOptions,
         scales: {
-           x: { type: 'time', time: { unit: timeframe === '5y' || timeframe === 'all' ? 'year' : 'month', tooltipFormat: 'MMM dd, yyyy', displayFormats: { month: 'MMM yyyy', year: 'yyyy' } }, grid: { display: false }, ticks: { color: '#6b7280', maxRotation: 0, autoSkip: true, autoSkipPadding: 20 } },
+           x: {
+             type: 'time',
+             time: {
+               unit: timeframe === '5y' || timeframe === 'all' ? 'year' : 'month',
+               tooltipFormat: 'MMM dd, yyyy',
+               displayFormats: { month: 'MMM yyyy', year: 'yyyy' },
+             },
+             grid: { display: false },
+             ticks: {
+               color: '#6b7280',
+               maxRotation: 0,
+               autoSkip: true,
+               autoSkipPadding: isMobileViewport ? 10 : 20,
+               font: { size: isMobileViewport ? 10 : 12 },
+             },
+           },
            y: { display: false, grid: { color: '#e5e7eb' }, ticks: { color: '#6b7280' }, beginAtZero: true },
         },
      },
      pie: { ...commonOptions },
-   }), [commonOptions, timeframe]); // Depends on commonOptions and timeframe (for line scale unit)
+   }), [commonOptions, timeframe, isMobileViewport]); // Depends on commonOptions and timeframe (for line scale unit)
 
 
   // Function to render the selected chart
@@ -274,30 +326,112 @@ export const RevenueChart = ({ data: fullData }) => {
     }
   };
 
-  const selectBaseClasses = "appearance-none bg-gray-50 border border-gray-300 text-gray-700 text-xs sm:text-sm rounded-lg focus:ring-emerald-500 focus:border-emerald-500 block p-1.5 sm:p-2 pr-8 cursor-pointer";
+  const selectBaseClasses = "appearance-none rounded-full border border-slate-200 bg-white px-4 py-2 pr-9 text-xs font-medium text-slate-700 shadow-sm transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100 sm:text-sm";
+  const timeframeOptions = [
+    { value: '3m', label: '3M' },
+    { value: '6m', label: '6M' },
+    { value: '1y', label: '1Y' },
+    { value: '5y', label: '5Y' },
+    { value: 'all', label: 'All' },
+  ];
+  const chartTypeOptions = [
+    { value: 'bar', label: 'Bar' },
+    { value: 'line', label: 'Line' },
+    { value: 'pie', label: 'Pie' },
+  ];
 
   return (
-    <div className="bg-white p-4 sm:p-6 rounded-[20px] shadow-lg"> {/* Adjusted padding and shadow */}
-      {/* Header Section */}<div className="text-red-500 text-xs">Note: It's Just for example purpose</div>
-      <div className="flex flex-col sm:flex-row flex-wrap justify-between items-start sm:items-center gap-4 mb-4"> {/* Changed to items-start */}
-        {/* Left Side: Title & Total Revenue */}
-        <div className="flex flex-col">
-          <h2 className="text-base sm:text-lg font-semibold text-gray-800 mb-1">Revenue</h2>
-          <p className="text-xs sm:text-sm font-medium text-gray-500">
-            Total ({timeframe}):{" "} {/* Indicate timeframe in total */}
-            <span className="text-base sm:text-lg font-semibold text-gray-900">{formatCurrency(totalRevenue)}</span>
-          </p>
+    <div className="rounded-[30px] border border-slate-200/80 bg-white p-4 shadow-[0_20px_60px_rgba(15,23,42,0.06)] sm:p-5">
+      <div className="mb-5 rounded-[26px] border border-emerald-100 bg-[linear-gradient(135deg,#f8fffc_0%,#effbf5_50%,#ffffff_100%)] p-4 sm:p-5">
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+          <div className="max-w-xl">
+            <p className="text-xs font-medium text-emerald-700">Revenue trend</p>
+            <h2 className="mt-1 text-xl font-semibold tracking-tight text-slate-900">Financial overview</h2>
+            <p className="mt-2 text-[13px] leading-5 text-slate-500">
+              Review the selected revenue window, compare overall performance, and switch chart styles without leaving the dashboard.
+            </p>
+          </div>
+
+          <div className="inline-flex w-fit items-center gap-2 rounded-full border border-emerald-100 bg-white px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.16em] text-emerald-700 shadow-sm">
+            <CircleDollarSign size={14} />
+            Revenue snapshot
+          </div>
         </div>
 
-        {/* Right Side: Selectors */}
-        <div className="flex flex-wrap items-center gap-2 sm:gap-3 w-full sm:w-auto">
-           {/* Timeframe Selector */}
-           <div className="relative flex-grow sm:flex-grow-0">
+        <div className="mt-4 grid grid-cols-2 gap-3 xl:grid-cols-3">
+          <div className="min-w-0 rounded-[22px] border border-slate-200 bg-white p-4 shadow-sm">
+            <div className="flex items-center gap-2 text-slate-500">
+              <CircleDollarSign size={15} />
+              <p className="text-[11px] font-semibold uppercase tracking-[0.18em]">Selected total</p>
+            </div>
+            <p className="mt-3 overflow-hidden text-ellipsis whitespace-nowrap text-[1.1rem] font-semibold tracking-[-0.03em] text-slate-900 sm:text-[1.5rem]">{formatCurrency(totalRevenue)}</p>
+          </div>
+
+          <div className="min-w-0 rounded-[22px] border border-slate-200 bg-white p-4 shadow-sm">
+            <div className="flex items-center gap-2 text-slate-500">
+              <TrendingUp size={15} />
+              <p className="text-[11px] font-semibold uppercase tracking-[0.18em]">Range</p>
+            </div>
+            <p className="mt-3 overflow-hidden text-ellipsis whitespace-nowrap text-[1.1rem] font-semibold uppercase tracking-[-0.03em] text-slate-900 sm:text-[1.5rem]">{timeframe}</p>
+          </div>
+
+          <div className="min-w-0 rounded-[22px] border border-slate-200 bg-white p-4 shadow-sm col-span-2 xl:col-span-1">
+            <div className="flex items-center gap-2 text-slate-500">
+              <BarChart3 size={15} />
+              <p className="text-[11px] font-semibold uppercase tracking-[0.18em]">Chart</p>
+            </div>
+            <p className="mt-3 overflow-hidden text-ellipsis whitespace-nowrap text-[1.1rem] font-semibold capitalize tracking-[-0.03em] text-slate-900 sm:text-[1.5rem]">{chartType}</p>
+          </div>
+        </div>
+      </div>
+
+      <div className="mb-4 rounded-[24px] border border-slate-200 bg-slate-50 p-4">
+        <div className="mb-3 flex flex-col gap-1">
+          <p className="text-[13px] font-medium text-slate-700">Visualization controls</p>
+          <p className="text-xs text-slate-500">Choose the time window and chart type for this panel.</p>
+        </div>
+
+        <div className="space-y-3 sm:hidden">
+          <div>
+            <p className="mb-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400">Timeframe</p>
+            <div className="grid grid-cols-3 gap-2">
+              {timeframeOptions.map((option) => (
+                <button
+                  key={option.value}
+                  type="button"
+                  onClick={() => setTimeframe(option.value)}
+                  className={`rounded-2xl px-3 py-2 text-xs font-semibold transition ${timeframe === option.value ? 'bg-emerald-600 text-white shadow-sm' : 'bg-white text-slate-600 border border-slate-200 hover:border-emerald-200 hover:text-emerald-700'}`}
+                >
+                  {option.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div>
+            <p className="mb-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400">Chart type</p>
+            <div className="grid grid-cols-3 gap-2">
+              {chartTypeOptions.map((option) => (
+                <button
+                  key={option.value}
+                  type="button"
+                  onClick={() => setChartType(option.value)}
+                  className={`rounded-2xl px-3 py-2 text-xs font-semibold transition ${chartType === option.value ? 'bg-slate-900 text-white shadow-sm' : 'bg-white text-slate-600 border border-slate-200 hover:border-slate-300 hover:text-slate-900'}`}
+                >
+                  {option.label}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        <div className="hidden grid-cols-1 gap-2 sm:grid sm:grid-cols-2">
+           <div className="relative min-w-0">
              <select
                value={timeframe}
                onChange={(e) => setTimeframe(e.target.value)}
                aria-label="Select time frame"
-               className={`${selectBaseClasses} w-full min-w-[100px] sm:min-w-[120px]`} // Adjusted width
+               className={`${selectBaseClasses} w-full`}
              >
                <option value="3m">3 Months</option>
                <option value="6m">6 Months</option>
@@ -305,36 +439,31 @@ export const RevenueChart = ({ data: fullData }) => {
                <option value="5y">5 Years</option>
                <option value="all">Overall</option>
              </select>
-             <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
+             <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-slate-500">
                <svg className="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/></svg>
              </div>
            </div>
-           {/* Chart Type Selector */}
-           <div className="relative flex-grow sm:flex-grow-0">
+           <div className="relative min-w-0">
              <select
                value={chartType}
                onChange={(e) => setChartType(e.target.value)}
                aria-label="Select chart type"
-               className={`${selectBaseClasses} w-full min-w-[100px] sm:min-w-[120px]`} // Adjusted width
+               className={`${selectBaseClasses} w-full`}
              >
                <option value="bar">Bar Chart</option>
                <option value="line">Line Chart</option>
                <option value="pie">Pie Chart</option>
              </select>
-             <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
+             <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-slate-500">
                <svg className="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/></svg>
              </div>
            </div>
         </div>
       </div>
 
-      {/* Chart container - Responsive Height */}
-      <div className="h-[200px] sm:h-[250px] md:h-[300px] w-full"> {/* Increased height slightly */}
+      <div className="h-[240px] w-full touch-pan-y rounded-[24px] border border-slate-200 bg-white p-3 sm:h-[260px] md:h-[300px] xl:h-[320px] sm:p-4">
         {renderChart()}
       </div>
-
-       {/* Labels below chart (Now removed, handled by TimeScale axis) */}
-       {/* You might add custom legends or summaries here if needed */}
 
     </div>
   );
