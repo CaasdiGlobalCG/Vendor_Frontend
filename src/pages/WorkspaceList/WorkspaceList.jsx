@@ -450,32 +450,11 @@ const WorkspaceList = () => {
         })
       : null;
 
-<<<<<<< Updated upstream
-  const fmtRelativeTime = (dateValue) => {
-    if (!dateValue) return null;
-    const ts = new Date(dateValue).getTime();
-    if (!Number.isFinite(ts)) return null;
-
-    const diffMs = Date.now() - ts;
-    if (diffMs < 0) return 'just now';
-
-    const minute = 60 * 1000;
-    const hour = 60 * minute;
-    const day = 24 * hour;
-
-    if (diffMs < minute) return 'just now';
-    if (diffMs < hour) return `${Math.floor(diffMs / minute)}m ago`;
-    if (diffMs < day) return `${Math.floor(diffMs / hour)}h ago`;
-    if (diffMs < day * 7) return `${Math.floor(diffMs / day)}d ago`;
-
-    return fmtDate(dateValue);
-=======
   /* ───── priority badge helper ───── */
   const priorityClasses = (p) => {
     if (p === 'high') return 'bg-red-50 text-red-700 border-red-100';
     if (p === 'medium') return 'bg-amber-50 text-amber-700 border-amber-100';
     return 'bg-emerald-50 text-emerald-700 border-emerald-100';
->>>>>>> Stashed changes
   };
 
   return (
@@ -533,14 +512,6 @@ const WorkspaceList = () => {
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
           {workspaces.map((item, idx) => {
-<<<<<<< Updated upstream
-            const isHovered = hoveredCard === item.leadId;
-            const previewUpdatedAt =
-              thumbnails[item.leadId]?.thumbnailUpdatedAt ||
-              item.updatedAt ||
-              item.sentAt;
-            const previewUpdatedLabel = fmtRelativeTime(previewUpdatedAt);
-=======
             const preview = workspacePreviews[item.leadId];
             const title = item.leadTitle || 'Workspace';
             const subtitleText = item.projectName || item.specialization || 'Collaborative workspace';
@@ -551,8 +522,6 @@ const WorkspaceList = () => {
                 ? `Edited ${fmtDate(item.sentAt)}`
                 : 'Recently updated';
             const avatarLabel = initialsFor(item.pmName || title);
-
->>>>>>> Stashed changes
             return (
               <div
                 key={item.leadId}
@@ -580,31 +549,11 @@ const WorkspaceList = () => {
                     </div>
                   )}
 
-<<<<<<< Updated upstream
-                  {/* preview freshness badge */}
-                  {previewUpdatedLabel && (
-                    <div className="absolute left-2.5 bottom-2.5 inline-flex items-center gap-1.5 bg-black/55 text-white text-[10px] font-medium px-2 py-1 rounded-full backdrop-blur-sm">
-                      <CalendarDaysIcon className="w-3 h-3" />
-                      <span>Updated {previewUpdatedLabel}</span>
-                    </div>
-                  )}
-
-                  {/* hover overlay with open button */}
-                  <div
-                    className={`absolute inset-0 bg-black/40 backdrop-blur-[2px] flex items-center justify-center transition-opacity duration-300 ${
-                      isHovered ? 'opacity-100' : 'opacity-0'
-                    }`}
-                  >
-                    <span className="inline-flex items-center gap-2 bg-white text-gray-900 text-sm font-semibold px-5 py-2.5 rounded-xl shadow-lg">
-                      <ArrowTopRightOnSquareIcon className="w-4 h-4" />
-                      Open Workspace
-=======
                   <div className="absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-black/12 to-transparent" />
 
                   <div className="absolute left-3 top-3 flex items-center gap-2">
                     <span className="inline-flex items-center rounded-full border border-white/80 bg-white/92 px-2.5 py-1 text-[10px] font-medium text-gray-700 shadow-sm">
                       Workspace
->>>>>>> Stashed changes
                     </span>
                     {priorityLabel && (
                       <span
@@ -673,28 +622,7 @@ const WorkspaceList = () => {
                       >
                         Open
                       </button>
-<<<<<<< Updated upstream
-                    ) : null}
-
-                    <button
-                      type="button"
-                      onClick={() => openWorkspace(item)}
-                      className="inline-flex items-center gap-2 bg-gradient-to-r from-emerald-500 to-teal-600 text-white text-sm font-semibold px-5 py-2.5 rounded-xl shadow-md hover:from-emerald-600 hover:to-teal-700 hover:shadow-lg transition-all"
-                    >
-                      <RectangleGroupIcon className="w-4 h-4" />
-                      Open workspace
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => openWorkspaceSupport(item)}
-                      disabled={resolvingWorkspaceLeadId === item.leadId}
-                      className="inline-flex items-center gap-2 bg-emerald-50 border border-emerald-200 text-emerald-700 text-sm font-semibold px-4 py-2.5 rounded-xl hover:bg-emerald-100 transition-all disabled:opacity-60"
-                    >
-                      Support
-                    </button>
-=======
                     </div>
->>>>>>> Stashed changes
                   </div>
                 </div>
               </div>

@@ -1,13 +1,8 @@
 // ... existing code ...
 
 import React, { useContext, useEffect, useState } from 'react';
-<<<<<<< Updated upstream
-import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { Award, Share2 } from 'lucide-react';
-=======
 import { useNavigate } from 'react-router-dom';
 import { Award, Share2, Settings } from 'lucide-react';
->>>>>>> Stashed changes
 import ResponsiveNavigationTabs from './tabNavigation';
 import { VendorContext } from '../../context/VendorContext';
 import { Home } from 'lucide-react';
@@ -52,21 +47,6 @@ export default function AppHeader() {
           GSTIN:{gstNumber}
         </div>
 
-<<<<<<< Updated upstream
-      {/* Top right icons */}
-      
-      <div className={`absolute right-4 flex items-center transition-all duration-300 ${isCompact ? 'top-3 gap-3' : 'top-4 gap-4'}`}>
-        <Award className={`${isCompact ? 'h-4 w-4' : 'h-5 w-5'} text-yellow-400 transition-all duration-300`} />
-        
-        <button onClick={handleShare} title="Share profile">
-          <Share2 className={`${isCompact ? 'h-4 w-4' : 'h-5 w-5'} text-white hover:text-gray-300 transition-all duration-300`} />
-        </button>
-        
-        <button onClick={() => navigateTo("/VendorDashboard")} aria-label="Go to home">
-          <Home className={`${isCompact ? 'h-4 w-4' : 'h-5 w-5'} text-white hover:text-gray-300 transition-all duration-300`} />
-        </button>
-      
-=======
         <div className={`flex items-center justify-end gap-2 self-stretch rounded-full bg-white/8 px-2.5 py-1.5 transition-all duration-300 sm:self-auto sm:bg-transparent sm:px-0 sm:py-0 ${isCompact ? '' : 'sm:gap-4'}`}>
           <Award className={`${isCompact ? 'h-4 w-4' : 'h-5 w-5'} text-yellow-400 transition-all duration-300`} />
 
@@ -81,7 +61,6 @@ export default function AppHeader() {
             <Home className={`${isCompact ? 'h-4 w-4' : 'h-5 w-5'} text-white hover:text-gray-300 transition-all duration-300`} />
           </button>
         </div>
->>>>>>> Stashed changes
       </div>
 
       {/* Tabs */}

@@ -733,123 +733,6 @@ export const Header = () => {
           </PermissionGate>
           {/* <NavLink to="/pricing" className={getNavLinkClass}>Pricing</NavLink> */}
         </nav>
-
-<<<<<<< Updated upstream
-
-        {/* Mobile Menu Dropdown (Appears below header when toggled) */}
-        {/* Positioned relative to the main header */}
-        {isMobileMenuOpen && (
-          // Adjusted top to account for potentially shorter header, using mt-2 relative to header top section
-          <div className="absolute top-[calc(100%+8px)] left-0 right-0 mx-4 bg-gray-900 bg-opacity-95 rounded-lg shadow-lg lg:hidden z-50"> {/* Increased z-index */}
-             {/* Navigation Links */}
-            <nav className="flex flex-col space-y-4 p-4 text-white text-base font-medium font-['Poppins']">
-              <PermissionGate module="dashboard" action="view">
-                <NavLink to="/VendorDashboard" className={getMobileNavLinkClass} onClick={closeMobileMenu} end>Dashboard</NavLink>
-              </PermissionGate>
-              <PermissionGate module="projects" action="view">
-                <NavLink to="VendorDashboard/projects" className={getMobileNavLinkClass} onClick={closeMobileMenu}>Projects</NavLink>
-              </PermissionGate>
-              <PermissionGate module="leads" action="view">
-                <NavLink to="VendorDashboard/leads" className={getMobileNavLinkClass} onClick={closeMobileMenu}>Leads</NavLink>
-              </PermissionGate>
-              <PermissionGate module="notifications" action="view">
-                <NavLink to="VendorDashboard/notifications" className={getMobileNavLinkClass} onClick={closeMobileMenu}>Notifications</NavLink>
-              </PermissionGate>
-              <PermissionGate module="workspace" action="view">
-                <NavLink 
-                  to="VendorDashboard/workspace" 
-                  className={getMobileNavLinkClass} 
-                  onClick={closeMobileMenu}
-                >
-                  Workspace
-                </NavLink>
-              </PermissionGate>
-              <PermissionGate module="user_management" action="view">
-                <NavLink to="VendorDashboard/team" className={getMobileNavLinkClass} onClick={closeMobileMenu}>Team</NavLink>
-              </PermissionGate>
-              {/* If you had Pricing */}
-              {/* <NavLink to="/pricing" className={getMobileNavLinkClass} onClick={closeMobileMenu}>Pricing</NavLink> */}
-            </nav>
-
-            {/* Mobile Controls Section (Vendor/Client Toggle, Icons) */}
-            <div className="mt-2 mb-4 px-4 flex items-center justify-between">
-              {/* Mobile Toggle — only shown if user has client platform access */}
-              {canAccessClient && (
-              <div
-                className={`w-[76px] h-[24px] rounded-[18px] cursor-pointer relative ${isVendor ? 'bg-gradient-to-r from-[#0F766E] via-[#14B8A6] to-[#22C55E]' : 'bg-gradient-to-r from-[#1D4ED8] via-[#2563EB] to-[#38BDF8]'}`}
-            onClick={() => setIsVendor(!isVendor)}
-                role="button" aria-label="Toggle Vendor/Client mode" tabIndex={0}
-          >
-            {isVendor ? (
-                  <span className="text-white text-[8px] font-medium absolute right-[8%] top-1/2 -translate-y-1/2">Vendor</span>
-                ) : (
-                  <span className="text-white text-[8px] font-medium absolute left-[9%] top-1/2 -translate-y-1/2">Client</span>
-                )}
-                <div
-                  className={`absolute top-1/2 -translate-y-1/2 w-[24px] h-[19px] bg-white rounded-full transition-all duration-200 ease-in-out ${ isVendor ? 'left-[6%]' : 'left-[66%]' }`} />
-              </div>
-              )}
-
-              {/* Icons */}
-              <div className="flex items-center space-x-2 sm:space-x-3">
-                {notificationButton}
-                 <button aria-label="Messages" className="p-1 text-white hover:bg-white/20 rounded-full">
-                   <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-                   </svg>
-                 </button>
-                 <button 
-                   onClick={() => {
-                     // Do not rely on localStorage-stored identity
-                     if (currentUser) {
-                       console.log("Header Mobile: User found, navigating to profile");
-                       navigate('/userproduct');
-                     } else {
-                       console.log("Header Mobile: No authenticated user found");
-                       navigate('/login');
-                     }
-                   }}
-                   aria-label="Profile" 
-                   className="p-1 text-white hover:bg-white/20 rounded-full"
-                 > 
-                   {vendorData?.profileImage?.url ? (
-                     <img
-                       src={vendorData.profileImage.url}
-                       alt="Profile"
-                       className="w-6 h-6 rounded-full object-cover ring-2 ring-white/30"
-                     />
-                   ) : (
-                     <div className="w-6 h-6 rounded-full bg-gradient-to-br from-emerald-500 to-emerald-700 flex items-center justify-center text-white text-[10px] font-bold ring-2 ring-white/30">
-                       {(currentUser?.name || currentUser?.email || 'V').charAt(0).toUpperCase()}
-                     </div>
-                   )}
-                 </button>
-                 <button 
-                   onClick={() => navigate('/settings')}
-                   className="p-1 text-white hover:bg-white/20 rounded-full"
-                   aria-label="Settings"
-                 >
-                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                   </svg>
-                 </button>
-                 <button 
-                   onClick={() => logout()} 
-                   className="p-1 text-white hover:bg-white/20 rounded-full"
-                   aria-label="Logout"
-                 >
-                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-                   </svg>
-                 </button>
-              </div>
-            </div>
-          </div>
-        )}
-
-=======
->>>>>>> Stashed changes
         {/* --- Desktop --- Right Controls (Hidden on Mobile) --- */}
         <div className="hidden lg:flex items-center justify-end gap-2 sm:gap-3 flex-shrink-0"> {/* Added flex-shrink-0 */}
           {/* Search Bar */}
@@ -932,10 +815,6 @@ export const Header = () => {
                </svg>
              </button>
              <button 
-<<<<<<< Updated upstream
-               onClick={() => logout()} 
-               className="p-1 text-white hover:bg-white/20 rounded-full"
-=======
                onClick={() => {
                  console.log("Logout button clicked");
                  // Clear all data
@@ -948,7 +827,6 @@ export const Header = () => {
                  window.location.href = "/login";
                }} 
                className={`p-1 rounded-full ${isOnDashboard ? 'text-white hover:bg-white/10' : 'text-white hover:bg-white/20'}`}
->>>>>>> Stashed changes
                aria-label="Logout"
              >
                <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
