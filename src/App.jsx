@@ -4,6 +4,7 @@ import HomePage from "./pages/HomePage";
 import { VendorProvider, VendorContext } from "./context/VendorContext";
 import { UserProvider, UserContext } from "./context/UserContext";
 import { NotificationProvider } from "./context/NotificationContext";
+import { CandidateAuthProvider } from "./contexts/CandidateAuthContext";
 import { RBACProvider } from "./rbac";
 import { AccessDeniedGuard } from "./rbac/components/AccessDeniedScreen";
 import TeamPage from "./rbac/pages/TeamPage";
@@ -54,6 +55,13 @@ import SupportTicketDetail from "./pages/support/SupportTicketDetail";
 import { getVendorDestination } from "./utils/vendorAuthRouting";
 import AuthSkeletonScreen from "./components/loading/AuthSkeletonScreen";
 import { isInviteAcceptRoute } from "./public-routes/inviteRoute";
+import CareersPage from "./pages/CareersPage/CareersPage";
+import JobApplicationPage from "./pages/CareersPage/JobApplicationPage";
+import CandidateLogin from "./pages/CandidateAuth/CandidateLogin";
+import CandidateSignup from "./pages/CandidateAuth/CandidateSignup";
+import EmailVerification from "./pages/CandidateAuth/EmailVerification";
+import ProtectedRoute from "./components/ProtectedRoute";
+import CandidateDashboard from "./pages/CandidateDashboard/CandidateDashboard";
 
 // Error Boundary Component
 class ErrorBoundary extends Component {
@@ -230,7 +238,9 @@ function App() {
             <AccessDeniedGuard>
               <RouteAwareErrorBoundary>
                 <NotificationProvider>
-                  <AppContent />
+                  <CandidateAuthProvider>
+                    <AppContent />
+                  </CandidateAuthProvider>
                 </NotificationProvider>
               </RouteAwareErrorBoundary>
             </AccessDeniedGuard>
@@ -375,6 +385,33 @@ function AppContent() {
       <Route path="/signup" element={<SignUp />} />
       <Route path="/login" element={<LoginRouteGate><Login /></LoginRouteGate>} />
       <Route path="/unauthorized" element={<UnauthorizedPage />} />
+      
+      {/* Public Careers Routes */}
+      <Route path="/careers" element={<CareersPage />} />
+      
+      {/* Candidate Authentication Routes */}
+      <Route path="/careers/login" element={<CandidateLogin />} />
+      <Route path="/careers/signup" element={<CandidateSignup />} />
+      <Route path="/careers/verify-email" element={<EmailVerification />} />
+      
+      {/* Protected Candidate Routes - Requires Candidate Authentication */}
+      <Route 
+        path="/careers/dashboard" 
+        element={
+          <ProtectedRoute>
+            <CandidateDashboard />
+          </ProtectedRoute>
+        } 
+      />
+      <Route 
+        path="/careers/apply/:jobPostingId" 
+        element={
+          <ProtectedRoute>
+            <JobApplicationPage />
+          </ProtectedRoute>
+        } 
+      />
+      
       {/* Protect vendor onboarding routes behind RoleGuard */}
       <Route path="/Form1" element={<RoleGuard><Form1 /></RoleGuard>} />
       <Route path="/Form2" element={<Form2 />} />

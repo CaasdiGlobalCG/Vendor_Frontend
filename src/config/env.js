@@ -2,6 +2,8 @@ const PROD_FRONTEND_BASE_URL = 'https://www.caasdiglobal.in';
 const DEV_FRONTEND_BASE_URL = 'http://localhost:5173';
 const DEFAULT_B2B_MARKETPLACE_BASE_URL = 'https://www.graviyx.com';
 const DEV_B2B_MARKETPLACE_BASE_URL = 'http://localhost:5176';
+const DEV_EMPLOYEE_BACKEND_URL = 'http://localhost:4000';
+const PROD_EMPLOYEE_BACKEND_URL = 'https://employee-api.caasdiglobal.in'; // Update with actual production URL
 
 const resolveEnvValue = (value) => {
   if (typeof value !== 'string') {
@@ -27,10 +29,14 @@ const resolvedSalesUrl = resolveEnvValue(import.meta.env.VITE_SALES_URL) || '';
 const resolvedB2BMarketplaceBaseUrl =
   resolveEnvValue(import.meta.env.VITE_B2B_MARKETPLACE_URL) ||
   (isDevMode ? DEV_B2B_MARKETPLACE_BASE_URL : DEFAULT_B2B_MARKETPLACE_BASE_URL);
+const resolvedEmployeeBackendUrl =
+  resolveEnvValue(import.meta.env.VITE_EMPLOYEE_BACKEND_URL) ||
+  (isDevMode ? DEV_EMPLOYEE_BACKEND_URL : PROD_EMPLOYEE_BACKEND_URL);
 
 export const CLIENT_URL = resolvedClientUrl;
 export const SALES_URL = resolvedSalesUrl;
 export const B2B_MARKETPLACE_URL = `${resolvedB2BMarketplaceBaseUrl.replace(/\/+$/, '')}/home`;
+export const EMPLOYEE_BACKEND_URL = resolvedEmployeeBackendUrl;
 
 
 const config = {
@@ -40,6 +46,7 @@ const config = {
   SALES_URL,
   CLIENT_URL,
   B2B_MARKETPLACE_URL,
+  EMPLOYEE_BACKEND_URL,
 };
 
 export default config;

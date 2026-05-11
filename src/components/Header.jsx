@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import { useCandidateAuth } from '../contexts/CandidateAuthContext';
 import '../styles/Header.css';
 
 const Header = () => {
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
+  const { isAuthenticated } = useCandidateAuth();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -48,7 +50,12 @@ const Header = () => {
             <li><a href="#industries-section">Industries</a></li>
             {/* <li><a href="#scroller">Expertise</a></li> */}
             <li><a href="https://www.linkedin.com/company/caasdi-global/posts/?feedView=all" target='_blank'>Blogs</a></li>
-            <li><Link to="/signup">Login</Link></li>
+            <li><Link to="/careers">Careers</Link></li>
+            {isAuthenticated ? (
+              <li><Link to="/careers/dashboard">Dashboard</Link></li>
+            ) : (
+              <li><Link to="/signup">Login</Link></li>
+            )}
           </ul>
         </nav>
       </div>
