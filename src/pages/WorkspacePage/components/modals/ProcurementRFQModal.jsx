@@ -1,5 +1,17 @@
-import React, { useMemo, useState } from 'react';
-import { X, ChevronLeft, ChevronRight, Send, CheckCircle2, AlertCircle, ClipboardList } from 'lucide-react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
+import {
+  X,
+  ChevronLeft,
+  ChevronRight,
+  Send,
+  CheckCircle2,
+  AlertCircle,
+  ClipboardList,
+  Sparkles,
+  MessageCircle,
+  Bot,
+  Loader2,
+} from 'lucide-react';
 
 const TOTAL_STEPS = 6;
 
@@ -50,6 +62,17 @@ const STEP_LABELS = [
   'Review & Send'
 ];
 
+const formatChatTime = (ts) => {
+  if (!ts) return '';
+  const d = new Date(ts);
+  return d.toLocaleString('en-IN', {
+    day: '2-digit',
+    month: 'short',
+    hour: '2-digit',
+    minute: '2-digit',
+  });
+};
+
 const ProcurementRFQModal = ({
   isOpen,
   onClose,
@@ -63,6 +86,24 @@ const ProcurementRFQModal = ({
   const [errors, setErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitResult, setSubmitResult] = useState({ success: false, message: '' });
+  const [showProductAi, setShowProductAi] = useState(false);
+  const [aiQuestion, setAiQuestion] = useState('');
+  const [aiAnswer, setAiAnswer] = useState('');
+  const [aiConversationId, setAiConversationId] = useState(null);
+  const [aiLoading, setAiLoading] = useState(false);
+  const [aiError, setAiError] = useState('');
+  const [aiWarning, setAiWarning] = useState('');
+  const [aiConversation, setAiConversation] = useState([]);
+
+  const [showProcurementChat, setShowProcurementChat] = useState(false);
+  const [queryConversationId, setQueryConversationId] = useState(null);
+  const [queryConversation, setQueryConversation] = useState(null);
+  const [queryMessages, setQueryMessages] = useState([]);
+  const [queryLoading, setQueryLoading] = useState(false);
+  const [querySending, setQuerySending] = useState(false);
+  const [queryText, setQueryText] = useState('');
+  const [queryError, setQueryError] = useState('');
+  const queryScrollRef = useRef(null);
 
   const workspaceName = workspace?.name || workspace?.title || 'Workspace';
 
@@ -76,7 +117,17 @@ const ProcurementRFQModal = ({
     [currentUser]
   );
 
-  if (!isOpen) return null;
+  const getAuthToken = () => localStorage.getItem('authToken') || '';
+
+  const buildAuthHeaders = (withJson = true) => {
+    const token = getAuthToken();
+    const headers = {
+      ...(withJson ? { 'Content-Type': 'application/json' } : {}),
+      'x-user-info': JSON.stringify(userInfoHeader),
+    };
+    if (token) headers.Authorization = `Bearer ${token}`;
+    return headers;
+  };
 
   const updateSection = (section, key, value) => {
     setFormData((prev) => ({
@@ -170,6 +221,256 @@ const ProcurementRFQModal = ({
 
     return JSON.stringify(payload);
   };
+
+  const askProductAi = async () => {
+    const question = aiQuestion.trim();
+    if (!question) return;
+
+    setAiLoading(true);
+    setAiError('');
+    setAiWarning('');
+
+    try {
+      const nextConversation = [
+        ...aiConversation,
+        { role: 'user', content: question },
+      ].slice(-10);
+
+      const response = await fetch('/api/ai/product-assistant', {
+        method: 'POST',
+        credentials: 'include',
+        headers: buildAuthHeaders(true),
+        body: JSON.stringify({
+          question,
+          context: {
+            basicInfo: {
+              title: formData.productDetails.title,
+              category: formData.productDetails.category,
+              productName: formData.productDetails.productName,
+              quantity: formData.quantityPricing.quantity,
+              quantityUnit: formData.quantityPricing.quantityUnit,
+              deliveryLocation: formData.tradeLogistics.deliveryLocation,
+              requiredBy: formData.tradeLogistics.requiredByDate,
+            },
+            specifications: {
+              technicalSpecifications: formData.productDetails.technicalSpecifications,
+              brandPreference: formData.productDetails.brandPreference,
+              packagingRequirements: formData.tradeLogistics.packagingRequirements,
+            },
+            requirements: {
+              description: formData.productDetails.productDescription,
+              paymentTerms: formData.supplierRequirements.paymentTerms,
+              warrantyRequirement: formData.supplierRequirements.warrantyRequirement,
+            },
+          },
+          conversation: nextConversation,
+        }),
+      });
+
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        throw new Error(data?.message || 'Failed to get Product AI response.');
+      }
+
+      const payload = data?.data || {};
+      const details = [];
+
+      if (Array.isArray(payload.suggestedProducts) && payload.suggestedProducts.length) {
+        const top = payload.suggestedProducts.slice(0, 3);
+        details.push(
+          'Suggested products:\n' +
+            top
+              .map((item) => `- ${item?.name || 'Option'}${item?.bestFor ? `: ${item.bestFor}` : ''}`)
+              .join('\n')
+        );
+      }
+
+      if (Array.isArray(payload.recommendedSpecs) && payload.recommendedSpecs.length) {
+        const top = payload.recommendedSpecs.slice(0, 4);
+        details.push(
+          'Recommended specs:\n' +
+            top
+              .map((item) => `- ${item?.name || 'Spec'}: ${item?.value || '-'}`)
+              .join('\n')
+        );
+      }
+
+      if (Array.isArray(payload.buyingChecklist) && payload.buyingChecklist.length) {
+        details.push(
+          'Buying checklist:\n' +
+            payload.buyingChecklist
+              .slice(0, 4)
+              .map((item) => `- ${item}`)
+              .join('\n')
+        );
+      }
+
+      const composed = [payload.assistantReply || 'No suggestions generated.', ...details]
+        .filter(Boolean)
+        .join('\n\n');
+
+      setAiConversationId(`product-assistant-${Date.now()}`);
+      setAiConversation([
+        ...nextConversation,
+        { role: 'assistant', content: payload.assistantReply || 'No suggestions generated.' },
+      ]);
+      setAiAnswer(composed);
+
+      if (data?.warning || payload?.warning) {
+        setAiWarning(data.warning || payload.warning);
+      }
+    } catch (error) {
+      const message = error.message || 'Failed to get Product AI response.';
+      if (message.includes('encountered an error while processing your request')) {
+        setAiError('Product AI is temporarily unavailable. Please ask with more specific use-case details or use Talk to Procurement now.');
+      } else {
+        setAiError(message);
+      }
+    } finally {
+      setAiLoading(false);
+    }
+  };
+
+  const loadWorkspaceQueryConversation = async (conversationIdToLoad, options = {}) => {
+    if (!conversationIdToLoad) return;
+    const { showSpinner = false } = options;
+
+    if (showSpinner) setQueryLoading(true);
+    setQueryError('');
+
+    try {
+      const response = await fetch(`/api/workspace/procurement-queries/conversations/${conversationIdToLoad}`, {
+        method: 'GET',
+        credentials: 'include',
+        headers: buildAuthHeaders(false),
+      });
+
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        throw new Error(data?.message || 'Failed to load procurement conversation.');
+      }
+
+      setQueryConversation(data?.conversation || null);
+      setQueryMessages(Array.isArray(data?.messages) ? data.messages : []);
+    } catch (error) {
+      setQueryError(error.message || 'Failed to load procurement conversation.');
+    } finally {
+      if (showSpinner) setQueryLoading(false);
+    }
+  };
+
+  const openProcurementChat = async () => {
+    setShowProcurementChat(true);
+    setQueryError('');
+
+    if (queryConversationId) {
+      await loadWorkspaceQueryConversation(queryConversationId, { showSpinner: true });
+      return;
+    }
+
+    setQueryLoading(true);
+    try {
+      const fallbackTitle = formData.productDetails.title?.trim()
+        ? `Workspace Query • ${formData.productDetails.title.trim()}`
+        : `Workspace Query • ${workspaceName}`;
+
+      const initialMessage = [
+        'Need procurement guidance for this workspace RFQ draft.',
+        `Product: ${formData.productDetails.productName || '-'}`,
+        `Category: ${formData.productDetails.category || '-'}`,
+        `Quantity: ${formData.quantityPricing.quantity || '-'} ${formData.quantityPricing.quantityUnit || ''}`.trim(),
+        `Delivery: ${formData.tradeLogistics.deliveryLocation || '-'}`,
+      ].join('\n');
+
+      const response = await fetch('/api/workspace/procurement-queries/conversations/open', {
+        method: 'POST',
+        credentials: 'include',
+        headers: buildAuthHeaders(true),
+        body: JSON.stringify({
+          workspaceId,
+          workspaceName,
+          source: 'workspace-query',
+          queryTitle: fallbackTitle,
+          initialMessage,
+          context: {
+            workspaceId,
+            workspaceName,
+            module: 'workspace-procurement-rfq-form',
+            rfqDraft: {
+              title: formData.productDetails.title,
+              category: formData.productDetails.category,
+              productName: formData.productDetails.productName,
+              quantity: formData.quantityPricing.quantity,
+              quantityUnit: formData.quantityPricing.quantityUnit,
+              requiredByDate: formData.tradeLogistics.requiredByDate,
+            },
+          },
+        }),
+      });
+
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        throw new Error(data?.message || 'Failed to start procurement chat.');
+      }
+
+      const conversation = data?.conversation || null;
+      const conversationId = conversation?.conversationId || null;
+      setQueryConversation(conversation);
+      setQueryConversationId(conversationId);
+
+      if (conversationId) {
+        await loadWorkspaceQueryConversation(conversationId);
+      }
+    } catch (error) {
+      setQueryError(error.message || 'Failed to start procurement chat.');
+    } finally {
+      setQueryLoading(false);
+    }
+  };
+
+  const sendWorkspaceQueryMessage = async () => {
+    const text = queryText.trim();
+    if (!text || !queryConversationId) return;
+
+    setQuerySending(true);
+    setQueryError('');
+
+    try {
+      const response = await fetch(`/api/workspace/procurement-queries/conversations/${queryConversationId}/messages`, {
+        method: 'POST',
+        credentials: 'include',
+        headers: buildAuthHeaders(true),
+        body: JSON.stringify({ message: text }),
+      });
+
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        throw new Error(data?.message || 'Failed to send message.');
+      }
+
+      setQueryMessages((prev) => [...prev, data.message]);
+      setQueryText('');
+    } catch (error) {
+      setQueryError(error.message || 'Failed to send message.');
+    } finally {
+      setQuerySending(false);
+    }
+  };
+
+  useEffect(() => {
+    if (!showProcurementChat || !queryConversationId) return;
+
+    const id = setInterval(() => {
+      loadWorkspaceQueryConversation(queryConversationId);
+    }, 12000);
+
+    return () => clearInterval(id);
+  }, [showProcurementChat, queryConversationId]);
+
+  useEffect(() => {
+    if (!showProcurementChat || !queryScrollRef.current) return;
+    queryScrollRef.current.scrollTop = queryScrollRef.current.scrollHeight;
+  }, [showProcurementChat, queryMessages.length, queryLoading]);
 
   const sendActivity = async (requestId) => {
     try {
@@ -287,8 +588,26 @@ const ProcurementRFQModal = ({
     setSubmitResult({ success: false, message: '' });
     setIsSubmitting(false);
     setFormData(INITIAL_FORM);
+    setShowProductAi(false);
+    setAiQuestion('');
+    setAiAnswer('');
+    setAiConversationId(null);
+    setAiLoading(false);
+    setAiError('');
+    setAiWarning('');
+    setAiConversation([]);
+    setShowProcurementChat(false);
+    setQueryConversationId(null);
+    setQueryConversation(null);
+    setQueryMessages([]);
+    setQueryLoading(false);
+    setQuerySending(false);
+    setQueryText('');
+    setQueryError('');
     onClose();
   };
+
+  if (!isOpen) return null;
 
   const inputClass = 'w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100';
   const errorClass = 'mt-1 text-xs text-red-600';
@@ -316,6 +635,65 @@ const ProcurementRFQModal = ({
 
         <div className="flex-1 overflow-y-auto px-6 py-5">
           {step === 1 && (
+            <div className="space-y-4">
+              <div className="rounded-xl border border-blue-100 bg-blue-50 p-4">
+                <div className="flex flex-col gap-3 sm:flex-row">
+                  <button
+                    type="button"
+                    onClick={() => setShowProductAi((prev) => !prev)}
+                    className="inline-flex items-center justify-center gap-2 rounded-lg bg-emerald-600 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-700"
+                  >
+                    <Sparkles className="h-4 w-4" />
+                    Product AI
+                  </button>
+                  <button
+                    type="button"
+                    onClick={openProcurementChat}
+                    className="inline-flex items-center justify-center gap-2 rounded-lg border border-blue-300 bg-white px-4 py-2 text-sm font-semibold text-blue-700 hover:bg-blue-100"
+                  >
+                    <MessageCircle className="h-4 w-4" />
+                    Talk to Procurement
+                  </button>
+                </div>
+                <p className="mt-2 text-xs text-blue-700">
+                  Use Product AI for spec suggestions, or open procurement chat for direct clarifications.
+                </p>
+              </div>
+
+              {showProductAi && (
+                <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-4">
+                  <label className="text-sm font-semibold text-emerald-900">Ask Product AI</label>
+                  <textarea
+                    rows={3}
+                    className={`${inputClass} mt-2`}
+                    value={aiQuestion}
+                    onChange={(e) => {
+                      setAiQuestion(e.target.value);
+                      if (aiError) setAiError('');
+                    }}
+                    placeholder="Ex: Suggest technical specs and quality checks for this RFQ draft."
+                  />
+                  <div className="mt-3 flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={askProductAi}
+                      disabled={aiLoading || !aiQuestion.trim()}
+                      className="inline-flex items-center gap-2 rounded-lg bg-emerald-600 px-3 py-2 text-xs font-semibold text-white hover:bg-emerald-700 disabled:opacity-60"
+                    >
+                      {aiLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Bot className="h-4 w-4" />}
+                      {aiLoading ? 'Thinking...' : 'Ask AI'}
+                    </button>
+                    {aiError ? <span className="text-xs text-red-600">{aiError}</span> : null}
+                  </div>
+                  {aiWarning ? <p className="mt-2 text-xs text-amber-700">{aiWarning}</p> : null}
+                  {aiAnswer ? (
+                    <div className="mt-3 rounded-lg border border-emerald-200 bg-white p-3 text-sm text-gray-800 whitespace-pre-wrap">
+                      {aiAnswer}
+                    </div>
+                  ) : null}
+                </div>
+              )}
+
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
               <div className="md:col-span-2">
                 <label className="text-sm font-medium text-gray-700">RFQ Title *</label>
@@ -381,6 +759,7 @@ const ProcurementRFQModal = ({
                   placeholder="Optional"
                 />
               </div>
+            </div>
             </div>
           )}
 
@@ -700,6 +1079,100 @@ const ProcurementRFQModal = ({
           )}
         </div>
       </div>
+
+      {showProcurementChat && (
+        <aside className="fixed right-0 top-0 z-[70] h-full w-full max-w-md bg-white border-l border-gray-200 shadow-2xl flex flex-col">
+          <div className="px-4 py-3 border-b border-gray-100 bg-gradient-to-r from-blue-700 to-indigo-700">
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <p className="text-sm font-semibold text-white">Workspace Procurement Chat</p>
+                <p className="text-xs text-blue-100 truncate mt-0.5">
+                  {queryConversation?.queryTitle || 'Procurement clarification thread'}
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowProcurementChat(false)}
+                className="h-8 w-8 rounded-lg bg-white/20 text-white hover:bg-white/30 transition flex items-center justify-center"
+                title="Close chat"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+          </div>
+
+          <div ref={queryScrollRef} className="flex-1 overflow-y-auto p-3 space-y-3 bg-gradient-to-b from-blue-50/40 via-slate-50/70 to-white">
+            {queryLoading ? (
+              <div className="h-full flex items-center justify-center text-gray-500 gap-2">
+                <Loader2 className="h-4 w-4 animate-spin" /> Loading conversation...
+              </div>
+            ) : queryMessages.length === 0 ? (
+              <div className="h-full flex flex-col items-center justify-center text-gray-500 gap-2">
+                <MessageCircle className="h-5 w-5" />
+                <p className="text-sm">Start your procurement clarification here.</p>
+              </div>
+            ) : (
+              queryMessages
+                .slice()
+                .sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt))
+                .map((msg) => {
+                  const mine = msg.senderType === 'client';
+                  const isAi = msg.senderType === 'ai';
+                  return (
+                    <div key={msg.messageId} className={`flex ${mine ? 'justify-end' : 'justify-start'}`}>
+                      <div
+                        className={`max-w-[88%] rounded-2xl px-3 py-2 text-sm shadow-sm border ${
+                          mine
+                            ? 'bg-blue-600 text-white border-blue-600 rounded-br-sm'
+                            : isAi
+                              ? 'bg-emerald-50 border-emerald-200 text-emerald-900 rounded-bl-sm'
+                              : 'bg-white border-gray-200 text-gray-800 rounded-bl-sm'
+                        }`}
+                      >
+                        <p className={`text-[10px] font-semibold uppercase tracking-wide mb-1 ${mine ? 'text-blue-100' : isAi ? 'text-emerald-700' : 'text-indigo-700'}`}>
+                          {mine ? 'You' : isAi ? 'AI Context' : 'Procurement'}
+                        </p>
+                        <p className="whitespace-pre-wrap break-words">{msg.message}</p>
+                        <p className={`text-[10px] mt-1 ${mine ? 'text-blue-100' : 'text-gray-400'}`}>
+                          {formatChatTime(msg.createdAt)}
+                        </p>
+                      </div>
+                    </div>
+                  );
+                })
+            )}
+          </div>
+
+          <div className="border-t border-gray-200 p-3 space-y-2 bg-white">
+            {queryError ? <p className="text-xs text-red-600">{queryError}</p> : null}
+            <div className="flex items-end gap-2">
+              <textarea
+                rows={2}
+                value={queryText}
+                onChange={(e) => setQueryText(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    sendWorkspaceQueryMessage();
+                  }
+                }}
+                placeholder="Type your message to procurement..."
+                className="flex-1 resize-none rounded-xl border border-gray-200 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-200"
+              />
+              <button
+                type="button"
+                onClick={sendWorkspaceQueryMessage}
+                disabled={querySending || !queryText.trim() || !queryConversationId}
+                className="h-11 w-11 rounded-xl bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50 flex items-center justify-center"
+                title="Send message"
+              >
+                {querySending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+              </button>
+            </div>
+            <p className="text-[11px] text-gray-500">Press Enter to send, Shift+Enter for new line.</p>
+          </div>
+        </aside>
+      )}
     </div>
   );
 };
