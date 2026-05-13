@@ -15,6 +15,9 @@ import AuthSkeletonScreen from '../../components/loading/AuthSkeletonScreen';
 /**
  * AccessDeniedGuard — wraps app content and blocks rendering if accessDenied is set.
  * Place this as the first child inside <RBACProvider>.
+ *
+ * Pre-auth routes (/signup, /verification) are excluded from RBACProvider entirely
+ * via App.jsx's PreAuthContent branch, so no path-bypass is needed here.
  */
 export function AccessDeniedGuard({ children }) {
   const { accessDenied, isLoading } = useRBAC();

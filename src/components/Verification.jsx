@@ -1,14 +1,16 @@
-import React from "react";
+import React, { useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import "../styles/Verification.css";
 import config from "../config/env";
 import { redirectToClientWithHandoff } from '../utils/handoffToClient';
+import { Auth } from "aws-amplify";
 
 function Verification() {
   const navigate = useNavigate();
   const location = useLocation();
   const email = location.state?.email || new URLSearchParams(location.search).get("email");
   const role = (location.state?.role || new URLSearchParams(location.search).get("role") || "").toLowerCase();
+  const [resendStatus, setResendStatus] = useState(null); // 'sending' | 'sent' | 'error'
 
   const handleContinue = () => {
     // If they already chose role=client, send to client app; otherwise guide to role selection
@@ -29,6 +31,18 @@ function Verification() {
       navigate('/role-selection', { state: { email }, replace: true });
     } else {
       navigate('/role-selection', { replace: true });
+    }
+  };
+
+  const handleResendEmail = async () => {
+    if (!email) return;
+    setResendStatus('sending');
+    try {
+      await Auth.resendSignUp(email);
+      setResendStatus('sent');
+    } catch (err) {
+      console.error('Verification: resend failed:', err);
+      setResendStatus('error');
     }
   };
 
@@ -57,6 +71,20 @@ function Verification() {
           >
             I've verified my email — Continue
           </button>
+          {email && (
+            <button
+              type="button"
+              className="verification-secondary-action"
+              onClick={handleResendEmail}
+              disabled={resendStatus === 'sending' || resendStatus === 'sent'}
+              style={{ marginTop: '0.75rem', opacity: resendStatus === 'sent' ? 0.7 : 1 }}
+            >
+              {resendStatus === 'sending' && 'Sending…'}
+              {resendStatus === 'sent' && 'Email resent — check your inbox'}
+              {resendStatus === 'error' && 'Resend failed — try again'}
+              {!resendStatus && 'Resend verification email'}
+            </button>
+          )}
         </div>
       </div>
     </div>

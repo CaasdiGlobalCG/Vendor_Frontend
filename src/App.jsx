@@ -1,5 +1,6 @@
 import { Routes, Route, useNavigate, useLocation } from "react-router-dom";
 import { useEffect, useContext, useState, useMemo, useRef } from "react";
+import { Auth } from "aws-amplify";
 import HomePage from "./pages/HomePage";
 import { VendorProvider, VendorContext } from "./context/VendorContext";
 import { UserProvider, UserContext } from "./context/UserContext";
@@ -215,6 +216,25 @@ const Layout = () => {
   );
 };
 
+// Routes that must render without RBACProvider — user is not yet authenticated
+// (new signups have a pendingVerification context user that would trigger /api/rbac/me
+//  → 401 → "Access Verification Failed" screen).
+const PRE_AUTH_PATHS = ['/signup', '/verification'];
+
+function isPreAuthPath(pathname) {
+  return PRE_AUTH_PATHS.some((p) => pathname === p || pathname.startsWith(p + '/'));
+}
+
+/** Renders only the pre-auth routes (no RBAC providers needed). */
+function PreAuthContent() {
+  return (
+    <Routes>
+      <Route path="/signup" element={<SignUp />} />
+      <Route path="/verification" element={<Verification />} />
+    </Routes>
+  );
+}
+
 function App() {
   const location = useLocation();
   const isPublicInviteRoute = useMemo(
@@ -228,6 +248,21 @@ function App() {
       <ErrorBoundary>
         <PublicInviteRoutes />
       </ErrorBoundary>
+    );
+  }
+
+  // Pre-auth routes: /signup and /verification must NOT go through RBACProvider.
+  // After Auth.signUp(), VendorContext gets a pendingVerification user which would
+  // trigger /api/rbac/me → 401 → "Access Verification Failed" for new users.
+  if (isPreAuthPath(location.pathname)) {
+    return (
+      <UserProvider>
+        <VendorProvider>
+          <ErrorBoundary>
+            <PreAuthContent />
+          </ErrorBoundary>
+        </VendorProvider>
+      </UserProvider>
     );
   }
 
@@ -379,10 +414,8 @@ function AppContent() {
   return (
     <Routes>
       <Route path="/" element={<HomePage />} />
-      <Route path="/role-selection" element={<RoleSelection />} />
-      <Route path="/verification" element={<Verification />} />
+      <Route path="/role-selection" element={<AuthVerifiedGuard><RoleSelection /></AuthVerifiedGuard>} />
       <Route path="/home" element={<HomePage />} />
-      <Route path="/signup" element={<SignUp />} />
       <Route path="/login" element={<LoginRouteGate><Login /></LoginRouteGate>} />
       <Route path="/unauthorized" element={<UnauthorizedPage />} />
       
@@ -489,6 +522,36 @@ function LoginRouteGate({ children }) {
   }
 
   if (currentUser) return null;
+
+  return children;
+}
+
+/**
+ * AuthVerifiedGuard — ensures only Cognito-verified, authenticated users can
+ * access the wrapped route. On auth failure, redirects to /login.
+ * Used for /role-selection so unverified new users cannot reach it directly.
+ */
+function AuthVerifiedGuard({ children }) {
+  const navigate = useNavigate();
+  const { isHydratingUser } = useContext(VendorContext);
+  const [checking, setChecking] = useState(true);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        await Auth.currentAuthenticatedUser();
+        if (!cancelled) setChecking(false);
+      } catch {
+        if (!cancelled) navigate('/login', { replace: true });
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [navigate]);
+
+  if (checking || isHydratingUser) {
+    return <AuthSkeletonScreen message="Verifying your session..." />;
+  }
 
   return children;
 }

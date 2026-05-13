@@ -213,7 +213,9 @@ export const RBACProvider = ({ children }) => {
     }
   }, [currentUser?.vendorId]);
 
-  // Fetch RBAC once VendorContext has finished hydrating and we have a user
+  // Fetch RBAC once VendorContext has finished hydrating and we have a user.
+  // Pre-auth routes (/signup, /verification) render outside RBACProvider entirely
+  // via App.jsx's PreAuthContent branch — no path checks needed here.
   useEffect(() => {
     if (isHydratingUser) return;
 
@@ -234,6 +236,15 @@ export const RBACProvider = ({ children }) => {
         error: null,
         accessDenied: null,
       });
+      return;
+    }
+
+    // SignUp.jsx sets currentUser with pendingVerification:true immediately after
+    // Auth.signUp() — before the user clicks the email link. No Cognito session
+    // exists yet, so /api/rbac/me would return hasRBAC:false and falsely trigger
+    // the "No Organization Access" screen. Skip RBAC entirely for these users.
+    if (currentUser.pendingVerification) {
+      setRbacState(prev => ({ ...prev, isLoading: false, accessDenied: null }));
       return;
     }
 

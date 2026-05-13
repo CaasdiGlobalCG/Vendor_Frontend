@@ -60,8 +60,10 @@ function RoleSelection() {
           }
         }
       } catch (error) {
-        // If not authenticated, allow role selection page to render
-        console.log("RoleSelection verifyAuth: proceed without redirect");
+        // Not authenticated or email not yet verified — send to login.
+        // AuthVerifiedGuard in App.jsx already blocks this route for unauthenticated
+        // users, but this catch handles edge cases (session expired, etc.).
+        navigate('/login', { replace: true });
       }
     };
     verifyAuth();
@@ -95,21 +97,29 @@ function RoleSelection() {
       });
 
       const data = await response.json();
+      console.log('[RoleSelection] set-role response:', { ok: response.ok, status: response.status, data });
       if (response.ok) {
         // Persist roleSelected locally so guards unlock navigation
         localStorage.setItem('roleSelected', 'true');
         if (role === 'vendor') {
           // Establish cookie session + hydrate context before moving into onboarding.
           try {
-            await fetch(`${config.VENDOR_BACKEND_URL}/api/auth/session`, {
+            const sessionRes = await fetch(`${config.VENDOR_BACKEND_URL}/api/auth/session`, {
               method: 'POST',
               credentials: 'include',
               headers: { Authorization: `Bearer ${idToken}` },
             });
-          } catch {}
+            console.log('[RoleSelection] session established:', sessionRes.ok, sessionRes.status);
+          } catch (sessErr) {
+            console.error('[RoleSelection] session establishment failed:', sessErr);
+          }
           try {
-            await hydrateCurrentUser?.();
-          } catch {}
+            const hydrated = await hydrateCurrentUser?.();
+            console.log('[RoleSelection] hydrateCurrentUser result:', hydrated);
+          } catch (hydErr) {
+            console.error('[RoleSelection] hydrate failed:', hydErr);
+          }
+          console.log('[RoleSelection] navigating to /Form1');
           navigate('/Form1', { replace: true });
         } else {
           const clientBase = config.CLIENT_URL;

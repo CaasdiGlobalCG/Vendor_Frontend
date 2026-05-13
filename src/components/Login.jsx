@@ -172,7 +172,16 @@ function Login() {
           // Team members always skip role-selection (their users record
           // should have roleSelected=true, but guard against stale data).
           verifyIsTeamMember = verifyData?.isTeamMember === true;
+          console.log('[Login] verify result:', {
+            roleSelected: verifyRoleSelected,
+            lastSelectedRole: verifyLastSelectedRole,
+            isTeamMember: verifyIsTeamMember,
+            role: verifyRole,
+            orgType: verifyOrgType,
+            rawResponse: verifyData,
+          });
           if (!verifyRoleSelected && !verifyIsTeamMember) {
+            console.log('[Login] → redirecting to /role-selection because roleSelected=false');
             navigate("/role-selection", { replace: true });
             return;
           }
