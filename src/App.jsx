@@ -523,9 +523,17 @@ export default App;
 
 function LoginRouteGate({ children }) {
   const navigate = useNavigate();
+  const location = useLocation();
   const { currentUser, isHydratingUser } = useContext(VendorContext);
 
+  // Only auto-redirect when the user was sent to /login FROM a protected route
+  // (i.e., router set location.state.from). Direct navigation to /login should
+  // always show the login form — redirecting in that case is disruptive when
+  // the user intentionally wants to log in with a different account.
+  const cameFromProtectedRoute = Boolean(location.state?.from);
+
   useEffect(() => {
+    if (!cameFromProtectedRoute) return;
     if (isHydratingUser) return;
     if (!currentUser) return;
 
@@ -535,14 +543,22 @@ function LoginRouteGate({ children }) {
       isTeamMember: currentUser?.isTeamMember === true,
     });
     navigate(destination, { replace: true });
-  }, [navigate, currentUser, isHydratingUser]);
+  }, [navigate, currentUser, isHydratingUser, cameFromProtectedRoute]);
 
   const transitionActive = isAuthTransitionActive();
-  if (transitionActive || isHydratingUser) {
+  // Show skeleton only during an active auth transition (post-login cookie exchange),
+  // not during plain hydration — that's what was causing the flash + unwanted redirect.
+  if (transitionActive) {
     return <AuthSkeletonScreen message="Preparing your sign-in session..." />;
   }
 
-  if (currentUser) return null;
+  // If hydrating AND user came from a protected route, wait before showing the form.
+  if (isHydratingUser && cameFromProtectedRoute) {
+    return <AuthSkeletonScreen message="Preparing your sign-in session..." />;
+  }
+
+  // Auto-redirect only on protected-route bounces, not direct /login visits.
+  if (currentUser && cameFromProtectedRoute) return null;
 
   return children;
 }
