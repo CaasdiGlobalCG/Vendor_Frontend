@@ -266,22 +266,40 @@ function App() {
     );
   }
 
+  // All other routes use a shared provider tree. RBACProvider is NOT here — it is
+  // applied selectively per-route inside AppContent via ProtectedRBACLayout, so that
+  // public pages (/, /home, /login, /careers, /shared-profile) never trigger
+  // /api/rbac/me or show the "Checking your access permissions..." skeleton.
   return (
-      <UserProvider>
-        <VendorProvider>
-          <RBACProvider>
-            <AccessDeniedGuard>
-              <RouteAwareErrorBoundary>
-                <NotificationProvider>
-                  <CandidateAuthProvider>
-                    <AppContent />
-                  </CandidateAuthProvider>
-                </NotificationProvider>
-              </RouteAwareErrorBoundary>
-            </AccessDeniedGuard>
-          </RBACProvider>
-        </VendorProvider>
-      </UserProvider>
+    <UserProvider>
+      <VendorProvider>
+        <RouteAwareErrorBoundary>
+          <NotificationProvider>
+            <CandidateAuthProvider>
+              <AppContent />
+            </CandidateAuthProvider>
+          </NotificationProvider>
+        </RouteAwareErrorBoundary>
+      </VendorProvider>
+    </UserProvider>
+  );
+}
+
+/**
+ * ProtectedRBACLayout — React Router layout route that wraps protected vendor pages
+ * with RBACProvider + AccessDeniedGuard. Only routes that require org membership
+ * (dashboard, workspace, PM, settings, team, etc.) are nested inside this.
+ *
+ * Public routes (/, /home, /login, /careers, /shared-profile) sit OUTSIDE this
+ * wrapper so they never trigger /api/rbac/me or show the access-checking skeleton.
+ */
+function ProtectedRBACLayout() {
+  return (
+    <RBACProvider>
+      <AccessDeniedGuard>
+        <Outlet />
+      </AccessDeniedGuard>
+    </RBACProvider>
   );
 }
 
@@ -413,86 +431,89 @@ function AppContent() {
 
   return (
     <Routes>
+      {/* ── PUBLIC ROUTES — no RBAC, no access-checking skeleton ── */}
       <Route path="/" element={<HomePage />} />
-      <Route path="/role-selection" element={<AuthVerifiedGuard><RoleSelection /></AuthVerifiedGuard>} />
       <Route path="/home" element={<HomePage />} />
       <Route path="/login" element={<LoginRouteGate><Login /></LoginRouteGate>} />
       <Route path="/unauthorized" element={<UnauthorizedPage />} />
-      
+      <Route path="/terms-and-conditions" element={<TermsAndConditions />} />
+      <Route path="/auth/google/callback" element={<GoogleOAuthCallback />} />
+      <Route path="/shared-profile/:vendorId" element={<SharedProfile />} />
+
+      {/* Role selection: needs Cognito session check only, not RBAC */}
+      <Route path="/role-selection" element={<AuthVerifiedGuard><RoleSelection /></AuthVerifiedGuard>} />
+
       {/* Public Careers Routes */}
       <Route path="/careers" element={<CareersPage />} />
-      
-      {/* Candidate Authentication Routes */}
       <Route path="/careers/login" element={<CandidateLogin />} />
       <Route path="/careers/signup" element={<CandidateSignup />} />
       <Route path="/careers/verify-email" element={<EmailVerification />} />
-      
-      {/* Protected Candidate Routes - Requires Candidate Authentication */}
-      <Route 
-        path="/careers/dashboard" 
+
+      {/* Protected Candidate Routes — candidate auth only, not vendor RBAC */}
+      <Route
+        path="/careers/dashboard"
         element={
           <ProtectedRoute>
             <CandidateDashboard />
           </ProtectedRoute>
-        } 
+        }
       />
-      <Route 
-        path="/careers/apply/:jobPostingId" 
+      <Route
+        path="/careers/apply/:jobPostingId"
         element={
           <ProtectedRoute>
             <JobApplicationPage />
           </ProtectedRoute>
-        } 
+        }
       />
-      
-      {/* Protect vendor onboarding routes behind RoleGuard */}
-      <Route path="/Form1" element={<RoleGuard><Form1 /></RoleGuard>} />
-      <Route path="/Form2" element={<Form2 />} />
-      <Route path="/Form3" element={<Form3 />} />
-      <Route path="/Form4" element={<Form4 />} />
-      <Route path="/Form5" element={<Form5 />} />
-      <Route path="/Form6" element={<Form6 />} />
-      <Route path="/terms-and-conditions" element={<TermsAndConditions />} />
-      <Route path="/Auditorapprove" element={<Auditor />} />
-      <Route path="/NewAuditor" element={<NewAuditorDashboard />} />
-      <Route path="/auth/google/callback" element={<GoogleOAuthCallback />} />
-      {/* Nested route for VendorDashboard */}
-      <Route path="/VendorDashboard" element={<RoleGuard><VendorGuard><Layout /></VendorGuard></RoleGuard>}>
-        <Route index element={<VendorDashboard mockProjects={mockProjects} />} />
-        <Route path="projects" element={<ModuleGuard module="projects"><ProjectsPage mockProjects={mockProjects} /></ModuleGuard>} />
-        <Route path="leads" element={<ModuleGuard module="leads"><LeadsPage /></ModuleGuard>} />
-        <Route path="leads/newleads" element={<ModuleGuard module="leads"><NewLeadsPage /></ModuleGuard>} />
-        <Route path="leads/sent" element={<ModuleGuard module="leads"><SentLeadsPage /></ModuleGuard>} />
-        <Route path="workspace" element={<ModuleGuard module="workspace"><WorkspaceList /></ModuleGuard>} />
-        <Route path="notifications" element={<NotificationsPage />} />
-        <Route path="team" element={<ModuleGuard module="user_management"><TeamPage /></ModuleGuard>} />
-        <Route path="support" element={<SupportPage />} />
-        <Route path="support/:ticketId" element={<SupportTicketDetail />} />
 
+      {/* ── PROTECTED ROUTES — wrapped in RBACProvider + AccessDeniedGuard ── */}
+      {/* All routes that require org membership or use ModuleGuard/useRBAC go here. */}
+      <Route element={<ProtectedRBACLayout />}>
+        {/* Vendor onboarding forms (RoleGuard protected) */}
+        <Route path="/Form1" element={<RoleGuard><Form1 /></RoleGuard>} />
+        <Route path="/Form2" element={<Form2 />} />
+        <Route path="/Form3" element={<Form3 />} />
+        <Route path="/Form4" element={<Form4 />} />
+        <Route path="/Form5" element={<Form5 />} />
+        <Route path="/Form6" element={<Form6 />} />
+        <Route path="/Auditorapprove" element={<Auditor />} />
+        <Route path="/NewAuditor" element={<NewAuditorDashboard />} />
+
+        {/* Main vendor dashboard (uses ModuleGuard for sub-routes) */}
+        <Route path="/VendorDashboard" element={<RoleGuard><VendorGuard><Layout /></VendorGuard></RoleGuard>}>
+          <Route index element={<VendorDashboard mockProjects={mockProjects} />} />
+          <Route path="projects" element={<ModuleGuard module="projects"><ProjectsPage mockProjects={mockProjects} /></ModuleGuard>} />
+          <Route path="leads" element={<ModuleGuard module="leads"><LeadsPage /></ModuleGuard>} />
+          <Route path="leads/newleads" element={<ModuleGuard module="leads"><NewLeadsPage /></ModuleGuard>} />
+          <Route path="leads/sent" element={<ModuleGuard module="leads"><SentLeadsPage /></ModuleGuard>} />
+          <Route path="workspace" element={<ModuleGuard module="workspace"><WorkspaceList /></ModuleGuard>} />
+          <Route path="notifications" element={<NotificationsPage />} />
+          <Route path="team" element={<ModuleGuard module="user_management"><TeamPage /></ModuleGuard>} />
+          <Route path="support" element={<SupportPage />} />
+          <Route path="support/:ticketId" element={<SupportTicketDetail />} />
+        </Route>
+
+        {/* Settings */}
+        <Route path="/settings" element={<RoleGuard><VendorSettings /></RoleGuard>} />
+        {/* PM PO Management Route */}
+        <Route path="/pm/po-management" element={<RoleGuard><PMPOManagementPage /></RoleGuard>} />
+        {/* Vendor PO Response Route */}
+        <Route path="/workspace/po-responses" element={<RoleGuard><VendorPOResponsePage /></RoleGuard>} />
+        <Route path="/share" element={<RoleGuard><SharePage /></RoleGuard>} />
+        <Route path="/vendor-home" element={<Home />} />
+        <Route path="/userproject" element={<UserProjectPage />} />
+        <Route path="/userproduct" element={<UserPortfolio />} />
+        <Route path="/pmleads" element={<ProjectLeadForm />} />
+        <Route path="/leads/:leadId" element={<LeadDetailPage />} />
+        <Route path="/workspace" element={<WorkspacePage />} />
+        <Route path="/workspace/:workspaceId/orders" element={<RoleGuard><WorkspaceOrdersPage /></RoleGuard>} />
+        <Route path="/VendorDashboard/workspace/:workspaceId" element={<WorkspacePage />} />
+        <Route path="/VendorDashboard/workspace/:workspaceId/orders" element={<RoleGuard><WorkspaceOrdersPage /></RoleGuard>} />
+        <Route path="/VendorDashboard/workspace/:workspaceId/invoices" element={<WorkspacePage />} />
+        <Route path="/customers/new" element={<NewCustomerPage />} />
       </Route>
-      {/* Settings */}
-      <Route path="/settings" element={<RoleGuard><VendorSettings /></RoleGuard>} />
-      {/* PM PO Management Route */}
-      <Route path="/pm/po-management" element={<RoleGuard><PMPOManagementPage /></RoleGuard>} />
-      {/* Vendor PO Response Route */}
-      <Route path="/workspace/po-responses" element={<RoleGuard><VendorPOResponsePage /></RoleGuard>} />
-      {/* Removed EditCompany route as it's now handled with a modal */}
-      <Route path="/shared-profile/:vendorId" element={<SharedProfile />} />
-      <Route path="/share" element={<RoleGuard><SharePage /></RoleGuard>} />
-      <Route path="/vendor-home" element={<Home />} />
-      <Route path="/userproject" element={<UserProjectPage />} />
-      <Route path="/userproduct" element={<UserPortfolio />} />
-      <Route path="/pmleads" element={<ProjectLeadForm />} />
-      <Route path="/leads/:leadId" element={<LeadDetailPage />} />
-      <Route path="/workspace" element={<WorkspacePage />} />
-      <Route path="/workspace/:workspaceId/orders" element={<RoleGuard><WorkspaceOrdersPage /></RoleGuard>} />
-      <Route path="/VendorDashboard/workspace/:workspaceId" element={<WorkspacePage />} />
-      <Route path="/VendorDashboard/workspace/:workspaceId/orders" element={<RoleGuard><WorkspaceOrdersPage /></RoleGuard>} />
-      <Route path="/VendorDashboard/workspace/:workspaceId/invoices" element={<WorkspacePage />} />
-      <Route path="/customers/new" element={<NewCustomerPage />} />
-      
 
-      
       {/* Add other routes as needed */}
     </Routes>
   );
