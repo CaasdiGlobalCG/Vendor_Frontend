@@ -50,9 +50,8 @@ function RoleSelection() {
             } catch {}
             navigate("/Form1", { replace: true });
           } else if (selectedRole === "client") {
-            const clientBase = config.CLIENT_URL;
             try {
-              await redirectToClientWithHandoff();
+              await redirectToClientWithHandoff({ token: idToken });
             } catch (e) {
               console.error('RoleSelection: handoff redirect failed:', e);
               alert('Unable to switch to client right now. Please try again.');
@@ -122,9 +121,8 @@ function RoleSelection() {
           console.log('[RoleSelection] navigating to /Form1');
           navigate('/Form1', { replace: true });
         } else {
-          const clientBase = config.CLIENT_URL;
           try {
-            await redirectToClientWithHandoff();
+            await redirectToClientWithHandoff({ token: idToken });
           } catch (e) {
             console.error('RoleSelection: handoff redirect failed:', e);
             alert('Unable to switch to client right now. Please try again.');
