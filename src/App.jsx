@@ -63,6 +63,7 @@ import CandidateSignup from "./pages/CandidateAuth/CandidateSignup";
 import EmailVerification from "./pages/CandidateAuth/EmailVerification";
 import ProtectedRoute from "./components/ProtectedRoute";
 import CandidateDashboard from "./pages/CandidateDashboard/CandidateDashboard";
+import RevenueDetailPage from "./pages/RevenueDetailPage/RevenueDetailPage";
 
 // Error Boundary Component
 class ErrorBoundary extends Component {
@@ -492,6 +493,7 @@ function AppContent() {
           <Route path="team" element={<ModuleGuard module="user_management"><TeamPage /></ModuleGuard>} />
           <Route path="support" element={<SupportPage />} />
           <Route path="support/:ticketId" element={<SupportTicketDetail />} />
+          <Route path="finance-detail" element={<RevenueDetailPage />} />
         </Route>
 
         {/* Settings */}

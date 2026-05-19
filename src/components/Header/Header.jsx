@@ -731,6 +731,7 @@ export const Header = () => {
           <PermissionGate module="user_management" action="view">
             <NavLink to="/VendorDashboard/team" className={getNavLinkClass}>Team</NavLink>
           </PermissionGate>
+          <NavLink to="/VendorDashboard/finance-detail" className={getNavLinkClass}>Revenue</NavLink>
           {/* <NavLink to="/pricing" className={getNavLinkClass}>Pricing</NavLink> */}
         </nav>
         {/* --- Desktop --- Right Controls (Hidden on Mobile) --- */}
@@ -911,6 +912,7 @@ export const Header = () => {
             <PermissionGate module="user_management" action="view">
               <NavLink to="/VendorDashboard/team" className={getMobileNavLinkClass} onClick={closeMobileMenu}>Team</NavLink>
             </PermissionGate>
+            <NavLink to="/VendorDashboard/finance-detail" className={getMobileNavLinkClass} onClick={closeMobileMenu}>Revenue</NavLink>
           </nav>
 
           <div className="mb-4 mt-2 flex items-center justify-between px-4">

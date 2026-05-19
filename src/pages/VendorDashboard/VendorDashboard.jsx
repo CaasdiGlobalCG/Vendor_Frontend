@@ -111,6 +111,9 @@ export const VendorDashboard = () => {
   const [userHasPasskey, setUserHasPasskey] = useState(false);
   const [checkingPasskey, setCheckingPasskey] = useState(true);
   const [tenders, setTenders] = useState([]);
+  const [financeData, setFinanceData] = useState([]);
+  const [loadingFinance, setLoadingFinance] = useState(true);
+  const [financeSummary, setFinanceSummary] = useState({ totalRevenue: 0, totalExpenses: 0, netProfit: 0 });
   
   // State to track API call status
   const [vendorInfoFetched, setVendorInfoFetched] = useState(false);
@@ -373,7 +376,7 @@ export const VendorDashboard = () => {
   const completionPercentage = totalProjects > 0 
     ? Math.round((completedProjects / totalProjects) * 100) 
     : 0;
-  const tenderCount = tenders.length > 0 ? tenders.length : mockTenders.length;
+  const tenderCount = tenders.length;
   const vendorDisplayName = vendorName || vendorData?.vendorDetails?.primaryContactName || currentUser?.name || 'Vendor';
   const vendorCompanyName = vendorData?.companyDetails?.companyName || 'Your company profile';
   const statCards = [
@@ -487,6 +490,54 @@ export const VendorDashboard = () => {
 
     fetchTenders();
   }, [vendorData?.vendorId, currentUser?.vendorId, currentUser?.id]);
+
+  // Fetch finance data from API
+  useEffect(() => {
+    const fetchFinanceData = async () => {
+      try {
+        setLoadingFinance(true);
+        const token = localStorage.getItem('authToken');
+        const headers = {
+          'Content-Type': 'application/json',
+        };
+        if (token) {
+          headers['Authorization'] = `Bearer ${token}`;
+        }
+
+        const response = await fetch(`${config.VENDOR_BACKEND_URL}/api/finance/overview`, {
+          credentials: 'include',
+          headers,
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          if (data.success && data.data?.monthlyData) {
+            // Transform monthlyData into the format expected by RevenueChart
+            const chartData = data.data.monthlyData.map((month) => ({
+              date: month.month + ', 2024', // Convert 'MMM YYYY' to date format
+              revenue: month.totalRevenue || 0,
+            }));
+            setFinanceData(chartData);
+
+            // Set finance summary from API
+            if (data.data?.summary) {
+              setFinanceSummary({
+                totalRevenue: data.data.summary.totalRevenue || 0,
+                totalExpenses: data.data.summary.totalExpenses || 0,
+                netProfit: data.data.summary.netProfit || 0,
+              });
+            }
+          }
+        }
+      } catch (error) {
+        console.error('Error fetching finance data:', error);
+      } finally {
+        setLoadingFinance(false);
+      }
+    };
+
+    fetchFinanceData();
+  }, []);
 
   // Log vendor data for debugging - only once on mount
   useEffect(() => {
@@ -747,8 +798,21 @@ export const VendorDashboard = () => {
             </div>
           </div>
 
-          <TenderCarousel tenders={tenders.length > 0 ? tenders : mockTenders} />
-          <RevenueChart data={realisticRevenueData} />
+          <TenderCarousel tenders={tenders} />
+          {loadingFinance ? (
+            <div className="rounded-[30px] border border-slate-200/80 bg-white p-5 shadow-[0_20px_60px_rgba(15,23,42,0.06)]">
+              <div className="flex h-[300px] items-center justify-center">
+                <p className="text-sm text-slate-500">Loading finance data...</p>
+              </div>
+            </div>
+          ) : (
+            <RevenueChart 
+              data={financeData.length > 0 ? financeData : realisticRevenueData}
+              totalRevenue={financeSummary.totalRevenue}
+              totalExpenses={financeSummary.totalExpenses}
+              netProfit={financeSummary.netProfit}
+            />
+          )}
         </div>
       </div>
 
