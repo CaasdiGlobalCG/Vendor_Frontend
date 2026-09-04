@@ -11,7 +11,59 @@ const AUTH_TRANSITION_STARTED_AT_KEY = 'vendorAuthTransitionStartedAt';
 const initialData = {
   vendorDetails: {},
   companyDetails: {},
-  serviceProductDetails: {},
+  serviceProductDetails: {
+    vendorType: "",
+    productDescription: "",
+    paymentTerms: "",
+    paymentMode: "",
+    serviceProviderDetails: {
+      credentialDeck: null,
+      officeAddress: "",
+      officePhotos: null,
+      teamSize: "",
+      orgChart: null,
+      keyPersonnelCVs: null,
+      professionalLicences: [],
+      techStackDeclaration: "",
+      dataSecurityPolicy: "",
+      dataSecurityPolicyDoc: null,
+      subcontractorDisclosure: "",
+    },
+    manufacturerDetails: {
+      manufacturerSubType: "",
+      factoryAddress: "",
+      factoryPhotos: null,
+      productionCapacity: "",
+      rawMaterialStorage: "",
+      wipStorage: "",
+      finishedGoodsWarehouse: "",
+      workforceHeadcount: "",
+      utilityInfrastructure: "",
+      machineryDetails: [
+        {
+          machineName: "",
+          serialNumber: "",
+          modelNumber: "",
+          manufacturerName: "",
+          contact: "",
+          purchaseDate: "",
+          warrantyStart: "",
+          warrantyEnd: "",
+          maintenanceDetails: "",
+        },
+      ],
+      iso9001Certificate: null,
+      productCertifications: [],
+      testReports: null,
+      inHouseQCLab: "",
+      msdsDocument: null,
+      rejectionReturnRate: "",
+      logisticsInfrastructure: "",
+      moqLeadTime: "",
+      packagingStandards: "",
+      batchTrackingSystem: "",
+    },
+  },
   bankDetails: {},
   complianceCertifications: {},
   additionalDetails: {},
@@ -121,6 +173,12 @@ export const VendorProvider = ({ children }) => {
         isTeamMember,
       };
 
+      // Restore any in-progress form draft saved in a previous session
+      const savedDraft = localStorage.getItem(`vendorFormDraft_${email}`);
+      if (savedDraft) {
+        try { setVendorData(JSON.parse(savedDraft)); } catch {}
+      }
+
       setCurrentUser(hydratedUser);
       return { ok: true, user: hydratedUser };
     } catch (error) {
@@ -140,6 +198,14 @@ export const VendorProvider = ({ children }) => {
   useEffect(() => {
     console.log("VendorContext - Current user updated:", currentUser);
   }, [currentUser]);
+
+  // Persist entire form draft to localStorage whenever vendorData changes and a user is known
+  useEffect(() => {
+    if (!currentUser?.email) return;
+    try {
+      localStorage.setItem(`vendorFormDraft_${currentUser.email}`, JSON.stringify(vendorData));
+    } catch {}
+  }, [vendorData, currentUser?.email]);
 
   // Hydrate on first mount
   useEffect(() => {
@@ -213,9 +279,12 @@ export const VendorProvider = ({ children }) => {
       });
     } catch {}
 
-    // 3. Clear session flags and any remaining app-level keys.
+    // 3. Clear session flags, form draft, and any remaining app-level keys.
     sessionStorage.removeItem(AUTH_TRANSITION_KEY);
     sessionStorage.removeItem(AUTH_TRANSITION_STARTED_AT_KEY);
+    if (currentUser?.email) {
+      localStorage.removeItem(`vendorFormDraft_${currentUser.email}`);
+    }
     [
       'currentUser', 'pmUser', 'user', 'vendorUser',
       'token', 'pmToken', 'authToken', 'vendorId', 'email',

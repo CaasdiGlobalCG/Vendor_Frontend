@@ -8,7 +8,7 @@ import config from '../config/env';
 export default function Form6() {
   const navigate = useNavigate();
   const vendorContext = useContext(VendorContext);
-  const { vendorData, setVendorData } = vendorContext;
+  const { vendorData, setVendorData, currentUser } = vendorContext;
 
   const [formData, setFormData] = useState({
     clientReferences: vendorData.additionalDetails.clientReferences || '',
@@ -20,12 +20,26 @@ export default function Form6() {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
-    const savedData = localStorage.getItem("form6Data");
+    if (!currentUser?.email) return;
+    const savedData = localStorage.getItem(`form6Data_${currentUser.email}`);
     if (savedData) {
-      const parsedData = JSON.parse(savedData);
-      setFormData(parsedData);
+      try {
+        const parsedData = JSON.parse(savedData);
+        setFormData(parsedData);
+      } catch {}
     }
-  }, []);
+  }, [currentUser]);
+
+  // Auto-save on every change
+  useEffect(() => {
+    if (currentUser?.email) {
+      const { additionalDocument, ...saveable } = formData;
+      localStorage.setItem(`form6Data_${currentUser.email}`, JSON.stringify({
+        ...saveable,
+        additionalDocument: additionalDocument?.name ? { name: additionalDocument.name } : null,
+      }));
+    }
+  }, [formData, currentUser]);
 
   const handleInputChange = (e) => {
     const { name, value, files, type, checked } = e.target;
@@ -56,6 +70,17 @@ export default function Form6() {
     setIsSubmitting(true);
     setVendorData(prev => ({ ...prev, additionalDetails: formData }));
 
+    const stripFileObjects = (obj) => {
+      if (!obj || typeof obj !== 'object') return obj;
+      if (Array.isArray(obj)) return obj.map(stripFileObjects);
+      const result = {};
+      for (const [key, val] of Object.entries(obj)) {
+        if (key === 'file') continue;
+        result[key] = stripFileObjects(val);
+      }
+      return result;
+    };
+
     const userEmail = vendorData.vendorDetails?.primaryContactEmail || (vendorContext.currentUser?.email);
 
     if (!userEmail) {
@@ -67,28 +92,15 @@ export default function Form6() {
     const formDataToSend = new FormData();
     formDataToSend.append('email', userEmail);
 
-    const complianceCertificationsForJson = { ...vendorData.complianceCertifications };
-    if (complianceCertificationsForJson.uploadDocument) {
-      complianceCertificationsForJson.uploadDocument = {
-        url: complianceCertificationsForJson.uploadDocument.url,
-        originalName: complianceCertificationsForJson.uploadDocument.originalName,
-        contentType: complianceCertificationsForJson.uploadDocument.contentType
-      };
-    }
-    if (complianceCertificationsForJson.isoCertificate) {
-      complianceCertificationsForJson.isoCertificate = {
-        url: complianceCertificationsForJson.isoCertificate.url,
-        originalName: complianceCertificationsForJson.isoCertificate.originalName,
-        contentType: complianceCertificationsForJson.isoCertificate.contentType
-      };
-    }
+    const complianceCertificationsForJson = stripFileObjects(vendorData.complianceCertifications);
 
     formDataToSend.append('vendorDetails', JSON.stringify({ ...vendorData.vendorDetails, primaryContactEmail: userEmail }));
     formDataToSend.append('companyDetails', JSON.stringify(vendorData.companyDetails));
-    formDataToSend.append('serviceProductDetails', JSON.stringify(vendorData.serviceProductDetails));
+    formDataToSend.append('serviceProductDetails', JSON.stringify(stripFileObjects(vendorData.serviceProductDetails)));
     formDataToSend.append('bankDetails', JSON.stringify(vendorData.bankDetails));
     formDataToSend.append('complianceCertifications', JSON.stringify(complianceCertificationsForJson));
-    formDataToSend.append('additionalDetails', JSON.stringify(formData));
+    const additionalDetailsForJson = { ...formData, additionalDocument: formData.additionalDocument?.name ? { name: formData.additionalDocument.name } : (formData.additionalDocument?.url ? { url: formData.additionalDocument.url, name: formData.additionalDocument.name } : null) };
+    formDataToSend.append('additionalDetails', JSON.stringify(additionalDetailsForJson));
 
     if (formData.additionalDocument) {
       formDataToSend.append('additionalDocument', formData.additionalDocument);

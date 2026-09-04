@@ -10,7 +10,7 @@ const CandidateAuthContext = createContext(null);
 
 // Cognito configuration - these should come from environment variables
 const poolData = {
-  UserPoolId: import.meta.env.VITE_CANDIDATE_COGNITO_USER_POOL_ID || 'us-east-1_XXXXXXXXX',
+  UserPoolId: import.meta.env.VITE_CANDIDATE_COGNITO_USER_POOL_ID || 'ap-south-1_XXXXXXXXX',
   ClientId: import.meta.env.VITE_CANDIDATE_COGNITO_CLIENT_ID || 'XXXXXXXXXXXXXXXXXXXXXXXXXX',
 };
 

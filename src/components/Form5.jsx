@@ -13,12 +13,24 @@ export default function Form5() {
   const { currentUser } = useContext(UserContext) || {};
   const [userEmail, setUserEmail] = useState(null);
 
+  const vendorType = vendorData.serviceProductDetails?.vendorType || "";
+  const isMFG = vendorType === "manufacturer" || vendorType === "both";
+  const isSP = vendorType === "service_provider" || vendorType === "both";
+
   const [formData, setFormData] = useState({
     hasCertifications: vendorData.complianceCertifications.hasCertifications || false,
     uploadDocument: vendorData.complianceCertifications.uploadDocument || null,
     isoCertificate: vendorData.complianceCertifications.isoCertificate || null,
     certificateUpload: vendorData.complianceCertifications.certificateUpload || null,
     healthSafetyStandards: vendorData.complianceCertifications.healthSafetyStandards || "",
+    factoryLicence: vendorData.complianceCertifications.factoryLicence || null,
+    pcbConsent: vendorData.complianceCertifications.pcbConsent || null,
+    esicEpfCompliance: vendorData.complianceCertifications.esicEpfCompliance || null,
+    fireSafetyNoc: vendorData.complianceCertifications.fireSafetyNoc || null,
+    statutoryCompliance: vendorData.complianceCertifications.statutoryCompliance || null,
+    professionalIndemnity: vendorData.complianceCertifications.professionalIndemnity || null,
+    cyberLiabilityInsurance: vendorData.complianceCertifications.cyberLiabilityInsurance || null,
+    dataProtectionCompliance: vendorData.complianceCertifications.dataProtectionCompliance || null,
   });
 
   const [showSaveIndicator, setShowSaveIndicator] = useState(false);
@@ -67,7 +79,7 @@ export default function Form5() {
 
     fetchUserEmail();
     if (currentUser) {
-      const savedData = sessionStorage.getItem(`form5Data_${currentUser.id}`);
+      const savedData = localStorage.getItem(`form5Data_${currentUser.id}`);
       if (savedData) {
         const parsedData = JSON.parse(savedData);
         setFormData(parsedData);
@@ -77,7 +89,14 @@ export default function Form5() {
         }));
       }
     }
-  }, [vendorContextUser]);
+  }, [vendorContextUser, currentUser]);
+
+  // Auto-save on every change
+  useEffect(() => {
+    if (currentUser) {
+      localStorage.setItem(`form5Data_${currentUser.id}`, JSON.stringify(formData));
+    }
+  }, [formData, currentUser]);
 
   const handleInputChange = async (e) => {
     const { name, value, files } = e.target;
@@ -156,7 +175,7 @@ export default function Form5() {
 
   const handleNext = () => {
     if (currentUser) {
-      sessionStorage.setItem(`form5Data_${currentUser.id}`, JSON.stringify(formData));
+      localStorage.setItem(`form5Data_${currentUser.id}`, JSON.stringify(formData));
     }
     setVendorData(prev => ({
       ...prev,
@@ -181,6 +200,14 @@ export default function Form5() {
           file: formData.certificateUpload.file
         } : null,
         healthSafetyStandards: formData.healthSafetyStandards,
+        factoryLicence: formData.factoryLicence ? { url: formData.factoryLicence.url, originalName: formData.factoryLicence.name, contentType: formData.factoryLicence.file?.type, file: formData.factoryLicence.file } : null,
+        pcbConsent: formData.pcbConsent ? { url: formData.pcbConsent.url, originalName: formData.pcbConsent.name, contentType: formData.pcbConsent.file?.type, file: formData.pcbConsent.file } : null,
+        esicEpfCompliance: formData.esicEpfCompliance ? { url: formData.esicEpfCompliance.url, originalName: formData.esicEpfCompliance.name, contentType: formData.esicEpfCompliance.file?.type, file: formData.esicEpfCompliance.file } : null,
+        fireSafetyNoc: formData.fireSafetyNoc ? { url: formData.fireSafetyNoc.url, originalName: formData.fireSafetyNoc.name, contentType: formData.fireSafetyNoc.file?.type, file: formData.fireSafetyNoc.file } : null,
+        statutoryCompliance: formData.statutoryCompliance ? { url: formData.statutoryCompliance.url, originalName: formData.statutoryCompliance.name, contentType: formData.statutoryCompliance.file?.type, file: formData.statutoryCompliance.file } : null,
+        professionalIndemnity: formData.professionalIndemnity ? { url: formData.professionalIndemnity.url, originalName: formData.professionalIndemnity.name, contentType: formData.professionalIndemnity.file?.type, file: formData.professionalIndemnity.file } : null,
+        cyberLiabilityInsurance: formData.cyberLiabilityInsurance ? { url: formData.cyberLiabilityInsurance.url, originalName: formData.cyberLiabilityInsurance.name, contentType: formData.cyberLiabilityInsurance.file?.type, file: formData.cyberLiabilityInsurance.file } : null,
+        dataProtectionCompliance: formData.dataProtectionCompliance ? { url: formData.dataProtectionCompliance.url, originalName: formData.dataProtectionCompliance.name, contentType: formData.dataProtectionCompliance.file?.type, file: formData.dataProtectionCompliance.file } : null,
       }
     }));
     navigate("/Form6");
@@ -326,6 +353,72 @@ export default function Form5() {
                   </div>
                 </div>
               </div>
+
+              {/* Manufacturer-Specific Compliance Documents */}
+              {isMFG && (
+                <div className="space-y-6 border-t border-gray-100 pt-6">
+                  <div>
+                    <h3 className="text-sm font-semibold text-gray-900 mb-1">Factory & Regulatory Compliance</h3>
+                    <p className="text-xs text-gray-500">Required for manufacturing / production facilities</p>
+                  </div>
+
+                  {[{ name: "factoryLicence", label: "Factory Licence", hint: "Factory Act registration / licence (PDF)" }, { name: "pcbConsent", label: "PCB Consent to Operate", hint: "Pollution Control Board consent for factory with emissions (PDF)" }, { name: "esicEpfCompliance", label: "ESIC & EPF Compliance", hint: "Employee social security and provident fund registration (PDF)" }, { name: "fireSafetyNoc", label: "Fire & Safety NOC", hint: "Fire NOC from local authority (PDF)" }, { name: "statutoryCompliance", label: "Statutory Compliance Certificate", hint: "Factory Act / Shops & Establishment Act compliance (PDF)" }].map((field) => (
+                    <div key={field.name} className="flex flex-col md:flex-row items-start gap-6">
+                      <div className="w-full md:w-1/3">
+                        <label className="text-sm font-semibold text-gray-900 block mb-1">{field.label}</label>
+                        <p className="text-xs text-gray-500">{field.hint}</p>
+                      </div>
+                      <div className="w-full md:w-2/3">
+                        <div onClick={() => !formData[field.name] && document.getElementById(field.name).click()} className="cursor-pointer border border-gray-300 rounded px-3 py-2 text-sm hover:border-emerald-500 transition-colors">
+                          <input type="file" name={field.name} id={field.name} accept=".pdf,.jpg,.png" onChange={handleInputChange} style={{ display: "none" }} />
+                          {formData[field.name] ? (
+                            <div>
+                              <div className="text-sm">{formData[field.name].name}</div>
+                              <div className="text-xs text-green-600">{formData[field.name].uploading ? "Uploading..." : "Uploaded"}</div>
+                              <button type="button" onClick={(e) => { e.stopPropagation(); handleDeleteFile(field.name); }} className="text-red-500 text-sm mt-1">Delete</button>
+                            </div>
+                          ) : (
+                            <div className="text-sm text-gray-500">Click to upload {field.label.toLowerCase()}</div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* Service Provider-Specific Compliance Documents */}
+              {isSP && (
+                <div className="space-y-6 border-t border-gray-100 pt-6">
+                  <div>
+                    <h3 className="text-sm font-semibold text-gray-900 mb-1">Professional & Liability Compliance</h3>
+                    <p className="text-xs text-gray-500">Required for service-based vendors</p>
+                  </div>
+
+                  {[{ name: "professionalIndemnity", label: "Professional Indemnity Insurance", hint: "PI insurance policy document (PDF)" }, { name: "cyberLiabilityInsurance", label: "Cyber Liability Insurance", hint: "Required for IT / data services vendors (PDF)" }, { name: "dataProtectionCompliance", label: "Data Protection Compliance", hint: "GDPR / IT Act / PDPB compliance certificate or policy (PDF)" }].map((field) => (
+                    <div key={field.name} className="flex flex-col md:flex-row items-start gap-6">
+                      <div className="w-full md:w-1/3">
+                        <label className="text-sm font-semibold text-gray-900 block mb-1">{field.label}</label>
+                        <p className="text-xs text-gray-500">{field.hint}</p>
+                      </div>
+                      <div className="w-full md:w-2/3">
+                        <div onClick={() => !formData[field.name] && document.getElementById(field.name).click()} className="cursor-pointer border border-gray-300 rounded px-3 py-2 text-sm hover:border-emerald-500 transition-colors">
+                          <input type="file" name={field.name} id={field.name} accept=".pdf,.jpg,.png" onChange={handleInputChange} style={{ display: "none" }} />
+                          {formData[field.name] ? (
+                            <div>
+                              <div className="text-sm">{formData[field.name].name}</div>
+                              <div className="text-xs text-green-600">{formData[field.name].uploading ? "Uploading..." : "Uploaded"}</div>
+                              <button type="button" onClick={(e) => { e.stopPropagation(); handleDeleteFile(field.name); }} className="text-red-500 text-sm mt-1">Delete</button>
+                            </div>
+                          ) : (
+                            <div className="text-sm text-gray-500">Click to upload {field.label.toLowerCase()}</div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
 
               {/* Health and Safety Standards - Always visible */}
               <div className="flex flex-col md:flex-row items-start gap-6">

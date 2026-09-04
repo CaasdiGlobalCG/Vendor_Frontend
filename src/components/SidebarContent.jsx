@@ -6,7 +6,7 @@ const SidebarContent = () => {
   
   return (
     <div
-      className="hidden lg:flex lg:w-96 flex-shrink-0 min-h-screen relative overflow-hidden"
+      className="hidden lg:flex lg:w-96 flex-shrink-0 h-screen sticky top-0 self-start overflow-hidden"
     >
       {/* Background image layer */}
       <img

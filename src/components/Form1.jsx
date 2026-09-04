@@ -60,6 +60,13 @@ function Form1() {
     }
   }, [currentUser]);
 
+  // Auto-save form data on every change so it persists across sessions
+  useEffect(() => {
+    if (currentUser) {
+      localStorage.setItem(`user-${currentUser.id}-form1Data`, JSON.stringify(formData));
+    }
+  }, [formData, currentUser]);
+
   // Load states on component mount
   useEffect(() => {
     const loadedStates = getStates();
@@ -126,6 +133,9 @@ function Form1() {
 
   const handleNext = () => {
     setIsSubmitting(true);
+    if (currentUser) {
+      localStorage.setItem(`user-${currentUser.id}-form1Data`, JSON.stringify(formData));
+    }
     setVendorData((prev) => ({
       ...prev,
       vendorDetails: {

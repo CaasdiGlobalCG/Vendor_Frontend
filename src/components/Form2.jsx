@@ -75,7 +75,25 @@ export default function Form2() {
     };
 
     fetchUserEmail();
-  }, [vendorContextUser]);
+
+    if (currentUser) {
+      const saved = localStorage.getItem(`form2Data_${currentUser.id}`);
+      if (saved) {
+        try {
+          const parsed = JSON.parse(saved);
+          setFormData(parsed);
+          setVendorData(prev => ({ ...prev, companyDetails: parsed }));
+        } catch {}
+      }
+    }
+  }, [vendorContextUser, currentUser]);
+
+  // Auto-save on every change
+  useEffect(() => {
+    if (currentUser) {
+      localStorage.setItem(`form2Data_${currentUser.id}`, JSON.stringify(formData));
+    }
+  }, [formData, currentUser]);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -230,7 +248,7 @@ export default function Form2() {
 
   const handleNext = () => {
     if (currentUser) {
-      sessionStorage.setItem(`form2Data_${currentUser.id}`, JSON.stringify(formData));
+      localStorage.setItem(`form2Data_${currentUser.id}`, JSON.stringify(formData));
     }
     setVendorData(prev => ({
       ...prev,

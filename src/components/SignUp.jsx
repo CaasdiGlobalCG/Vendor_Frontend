@@ -237,7 +237,7 @@ function SignUp() {
   };
 
   const handleGoogleSignIn = () => {
-    // // const url = "https://us-east-1r522gnfpq.auth.us-east-1.amazoncognito.com/login?response_type=code&client_id=4k2rtnhvl9v22eakb5p6l8uj6k&redirect_uri=http://localhost:3000/callback";
+    // // const url = "https://ap-south-1r522gnfpq.auth.ap-south-1.amazoncognito.com/login?response_type=code&client_id=4k2rtnhvl9v22eakb5p6l8uj6k&redirect_uri=http://localhost:3000/callback";
     // // console.log("Redirecting to:", url);
     // // window.location.href = url;
     window.open(`${config.VENDOR_BACKEND_URL}/api/auth/google`, "_self");

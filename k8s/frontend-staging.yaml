@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
         - name: vendor-frontend-staging
-          image: 286757679229.dkr.ecr.us-east-1.amazonaws.com/vendor-frontend:latest
+          image: 286757679229.dkr.ecr.ap-south-1.amazonaws.com/vendor-frontend:latest
           ports:
             - containerPort: 80
           resources:

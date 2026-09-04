@@ -440,7 +440,6 @@ function AppContent() {
       <Route path="/terms-and-conditions" element={<TermsAndConditions />} />
       <Route path="/auth/google/callback" element={<GoogleOAuthCallback />} />
       <Route path="/shared-profile/:vendorId" element={<SharedProfile />} />
-
       {/* Role selection: needs Cognito session check only, not RBAC */}
       <Route path="/role-selection" element={<AuthVerifiedGuard><RoleSelection /></AuthVerifiedGuard>} />
 

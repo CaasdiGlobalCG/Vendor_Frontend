@@ -39,7 +39,7 @@ export default function Form4() {
 
   useEffect(() => {
     if (currentUser) {
-      const savedData = sessionStorage.getItem(`form4Data_${currentUser.id}`);
+      const savedData = localStorage.getItem(`form4Data_${currentUser.id}`);
       if (savedData) {
         const parsedData = JSON.parse(savedData);
         setFormData(parsedData);
@@ -50,6 +50,13 @@ export default function Form4() {
       }
     }
   }, [currentUser, setVendorData]);
+
+  // Auto-save on every change
+  useEffect(() => {
+    if (currentUser) {
+      localStorage.setItem(`form4Data_${currentUser.id}`, JSON.stringify(formData));
+    }
+  }, [formData, currentUser]);
 
   const handleFileChange = async (e) => {
     const { name, files } = e.target;
@@ -307,7 +314,7 @@ export default function Form4() {
 
   const handleNext = () => {
     if (currentUser) {
-      sessionStorage.setItem(`form4Data_${currentUser.id}`, JSON.stringify(formData));
+      localStorage.setItem(`form4Data_${currentUser.id}`, JSON.stringify(formData));
     }
     setVendorData(prev => ({
       ...prev,
