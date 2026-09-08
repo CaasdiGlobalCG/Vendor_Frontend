@@ -377,6 +377,100 @@ const createSerializableElement = (element) => {
     };
   }
 
+  // For Credit Note
+  if (element.type === 'credit-note' || element.nodeType === 'creditNote') {
+    cleanElement.nodeType = 'creditNote';
+    cleanElement.data = {
+      creditNoteNumber: element.data?.creditNoteNumber || '',
+      customerName: element.data?.customerName || '',
+      originalInvoice: element.data?.originalInvoice || '',
+      creditAmount: element.data?.creditAmount || '',
+      reason: element.data?.reason || '',
+      notes: element.data?.notes || '',
+      status: element.data?.status || 'draft',
+      ...(element.data || {})
+    };
+  }
+
+  // For Invoice
+  if (element.type === 'invoice' || element.nodeType === 'invoice') {
+    cleanElement.nodeType = 'invoice';
+    cleanElement.data = {
+      invoiceNumber: element.data?.invoiceNumber || '',
+      customerName: element.data?.customerName || '',
+      invoiceDate: element.data?.invoiceDate || '',
+      dueDate: element.data?.dueDate || '',
+      subtotal: element.data?.subtotal || '',
+      tax: element.data?.tax || '',
+      total: element.data?.total || '',
+      status: element.data?.status || 'draft',
+      items: element.data?.items || [],
+      ...(element.data || {})
+    };
+  }
+
+  // For Quotation
+  if (element.type === 'quotation' || element.nodeType === 'quotation') {
+    cleanElement.nodeType = 'quotation';
+    cleanElement.data = {
+      quotationNumber: element.data?.quotationNumber || '',
+      customerName: element.data?.customerName || '',
+      validUntil: element.data?.validUntil || '',
+      subtotal: element.data?.subtotal || '',
+      tax: element.data?.tax || '',
+      total: element.data?.total || '',
+      status: element.data?.status || 'draft',
+      items: element.data?.items || [],
+      ...(element.data || {})
+    };
+  }
+
+  // For Purchase Order
+  if (element.type === 'purchase-order' || element.nodeType === 'purchaseOrder') {
+    cleanElement.nodeType = 'purchaseOrder';
+    cleanElement.data = {
+      poNumber: element.data?.poNumber || '',
+      vendorName: element.data?.vendorName || '',
+      orderDate: element.data?.orderDate || '',
+      expectedDelivery: element.data?.expectedDelivery || '',
+      subtotal: element.data?.subtotal || '',
+      tax: element.data?.tax || '',
+      total: element.data?.total || '',
+      status: element.data?.status || 'draft',
+      items: element.data?.items || [],
+      ...(element.data || {})
+    };
+  }
+
+  // For Info Card
+  if (element.type === 'info-card' || element.nodeType === 'infoCard') {
+    cleanElement.nodeType = 'infoCard';
+    cleanElement.data = {
+      title: element.data?.title || 'Info Card',
+      content: element.data?.content || '',
+      cardType: element.data?.cardType || 'info',
+      priority: element.data?.priority || 'medium',
+      status: element.data?.status || 'active',
+      dueDate: element.data?.dueDate || '',
+      ...(element.data || {})
+    };
+  }
+
+  // For Form Card
+  if (element.type === 'form-card' || element.nodeType === 'formCard') {
+    cleanElement.nodeType = 'formCard';
+    cleanElement.data = {
+      title: element.data?.title || 'Form Card',
+      fields: element.data?.fields || [
+        { id: 'field1', label: 'Field 1', type: 'text', required: false },
+        { id: 'field2', label: 'Field 2', type: 'text', required: false }
+      ],
+      submitButton: element.data?.submitButton || 'Submit',
+      status: element.data?.status || 'draft',
+      ...(element.data || {})
+    };
+  }
+
   return cleanElement;
 };
 

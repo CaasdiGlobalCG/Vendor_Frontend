@@ -89,6 +89,12 @@ import SmartNoteNode from './nodes/SmartNoteNode';
 import CalendarNode from './nodes/CalendarNode';
 import ApprovalBoardNode from './nodes/ApprovalBoardNode';
 import AIHelperNode from './nodes/AIHelperNode';
+import CreditNoteNode from './nodes/CreditNoteNode';
+import InvoiceNode from './nodes/InvoiceNode';
+import QuotationNode from './nodes/QuotationNode';
+import PurchaseOrderNode from './nodes/PurchaseOrderNode';
+import InfoCardNode from './nodes/InfoCardNode';
+import FormCardNode from './nodes/FormCardNode';
 
 // Node types
 const nodeTypes = {
@@ -100,6 +106,12 @@ const nodeTypes = {
   calendarNode: CalendarNode,
   approvalBoard: ApprovalBoardNode,
   aiHelper: AIHelperNode,
+  creditNote: CreditNoteNode,
+  invoice: InvoiceNode,
+  quotation: QuotationNode,
+  purchaseOrder: PurchaseOrderNode,
+  infoCard: InfoCardNode,
+  formCard: FormCardNode,
 };
 
 // Edge types
@@ -1295,8 +1307,14 @@ const edgeTypes = {
     const isCalendarEvent = element.type === 'calendar-event' || element.nodeType === 'calendarNode';
     const isApprovalBoard = element.type === 'approval-board' || element.nodeType === 'approvalBoard';
     const isAIHelper = element.type === 'ai-helper' || element.nodeType === 'aiHelper';
+    const isCreditNote = element.type === 'credit-note' || element.nodeType === 'creditNote';
+    const isInvoice = element.type === 'invoice' || element.nodeType === 'invoice';
+    const isQuotation = element.type === 'quotation' || element.nodeType === 'quotation';
+    const isPurchaseOrder = element.type === 'purchase-order' || element.nodeType === 'purchaseOrder';
+    const isInfoCard = element.type === 'info-card' || element.nodeType === 'infoCard';
+    const isFormCard = element.type === 'form-card' || element.nodeType === 'formCard';
     
-    console.log('🔍 Element type checks:', { isLayout, isText, isTurnkey, isSmartNote, isCalendarEvent, isApprovalBoard, isAIHelper });
+    console.log('🔍 Element type checks:', { isLayout, isText, isTurnkey, isSmartNote, isCalendarEvent, isApprovalBoard, isAIHelper, isCreditNote, isInvoice, isQuotation, isPurchaseOrder, isInfoCard, isFormCard });
     
     let nodeType = 'elementNode';
     if (isLayout) nodeType = 'layoutNode';
@@ -1306,6 +1324,12 @@ const edgeTypes = {
     if (isCalendarEvent) nodeType = 'calendarNode';
     if (isApprovalBoard) nodeType = 'approvalBoard';
     if (isAIHelper) nodeType = 'aiHelper';
+    if (isCreditNote) nodeType = 'creditNote';
+    if (isInvoice) nodeType = 'invoice';
+    if (isQuotation) nodeType = 'quotation';
+    if (isPurchaseOrder) nodeType = 'purchaseOrder';
+    if (isInfoCard) nodeType = 'infoCard';
+    if (isFormCard) nodeType = 'formCard';
     
     const nodeId = `${element.type}_${Date.now()}`;
     const taskCardData = isTaskCard
@@ -5029,16 +5053,16 @@ const edgeTypes = {
           connectionLineStyle={{ strokeWidth: 2, stroke: '#6b7280' }}
           onlyRenderVisibleElements={performanceMode}
           deleteKey={null}
-          className={`bg-white transition-all duration-200 ${
-            isDraggingOver ? 'bg-blue-50 ring-4 ring-blue-300' : ''
+          className={`bg-transparent transition-all duration-200 ${
+            isDraggingOver ? 'bg-blue-50/60 ring-4 ring-blue-300' : ''
           }`}
         >
           {/* Grid Background — subtle Figma-style dots */}
           {!performanceMode && (
             <Background 
-              color="#d1d5db" 
-              gap={20} 
-              size={1}
+              color="#cbd5e1" 
+              gap={22} 
+              size={1.2}
               variant="dots"
             />
           )}

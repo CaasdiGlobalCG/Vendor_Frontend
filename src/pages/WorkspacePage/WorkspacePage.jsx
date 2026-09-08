@@ -11,8 +11,15 @@ import {
   ElementsPanel,
   LayoutsPanel,
   TextPanel,
-  TemplatesPanel
+  TemplatesPanel,
+  WorkspaceTopBar,
+  WorkspaceDock,
+  WorkspaceContextPanel,
+  WorkspaceStatusBar,
+  WorkspaceTutorialModal
 } from './components';
+import './components/WorkspaceShell.css';
+import ShareProgressModal from '../../components/ShareProgressModal';
 import { Sparkles, FileText, Calendar, CheckCircle, StickyNote, ClipboardCheck, PanelLeft, PanelRight, Maximize2, ZoomIn, Eye, Layout, HelpCircle, Keyboard } from 'lucide-react';
 import ManageBOQModal from './components/ManageBOQModal';
 import CommandPalette from './components/CommandPalette';
@@ -273,6 +280,56 @@ const WorkspacePage = () => {
   const [showClientReviewProgressModal, setShowClientReviewProgressModal] = useState(false);
   const [showProjectCompleteModal, setShowProjectCompleteModal] = useState(false);
   const [showCostCalculatorsModal, setShowCostCalculatorsModal] = useState(false);
+  
+  // Redesign shell states
+  const [dockActiveTab, setDockActiveTab] = useState('elements');
+  const [isContextPanelOpen, setIsContextPanelOpen] = useState(true);
+  const [canvasTheme, setCanvasTheme] = useState('slate');
+  const [showShareModal, setShowShareModal] = useState(false);
+  const [showTutorial, setShowTutorial] = useState(false);
+
+  const handleSelectDockTab = useCallback((tabId) => {
+    setDockActiveTab(prev => {
+      if (prev === tabId) {
+        setIsContextPanelOpen(open => !open);
+        return prev;
+      }
+      setIsContextPanelOpen(true);
+      return tabId;
+    });
+  }, []);
+
+  const handleBackToDashboard = useCallback(() => {
+    if (isPM) {
+      navigate('/PMDashboard');
+    } else if (isCAS) {
+      navigate('/CASDashboard');
+    } else {
+      navigate('/VendorDashboard');
+    }
+  }, [isPM, isCAS, navigate]);
+
+  const isWorkspaceCompleted = workspace?.status === 'completed';
+  const isCurrentTaskUnlocked = useMemo(() => {
+    if (!isWorkspaceCompleted || !selectedTask || !selectedSubtask) return false;
+    const unlocked = workspace?.unlockedTasks || [];
+    return unlocked.some(
+      ut => ut.taskId === selectedTask.id && ut.subtaskId === selectedSubtask.id
+    );
+  }, [isWorkspaceCompleted, selectedTask, selectedSubtask, workspace?.unlockedTasks]);
+  const shouldDisableEditing = isWorkspaceCompleted && detectedUserRole === 'vendor' && !isCurrentTaskUnlocked;
+
+  // Listen to external dock tab triggers (e.g. from canvas empty state link)
+  useEffect(() => {
+    const handler = (e) => {
+      if (e.detail) {
+        setDockActiveTab(e.detail);
+        setIsContextPanelOpen(true);
+      }
+    };
+    window.addEventListener('openDockTab', handler);
+    return () => window.removeEventListener('openDockTab', handler);
+  }, []);
   
   // Video call states
   const [showStartCallModal, setShowStartCallModal] = useState(false);
@@ -1363,10 +1420,17 @@ const WorkspacePage = () => {
   // Update tasks when workspace loads
   useEffect(() => {
     if (workspace?.tasks) {
-      // Loading tasks from workspace (log removed for performance)
       setTasks(workspace.tasks);
+      // Auto-select initial task and subtask if none currently selected
+      if (!selectedTask && workspace.tasks.length > 0) {
+        const firstTask = workspace.tasks[0];
+        setSelectedTask(firstTask);
+        if (firstTask.subtasks && firstTask.subtasks.length > 0) {
+          setSelectedSubtask(firstTask.subtasks[0]);
+        }
+      }
     }
-  }, [workspace]);
+  }, [workspace, selectedTask]);
 
   // Handle incoming call notifications - just log, don't mark as processed
   // Notifications are marked as processed only when user accepts or declines
@@ -2028,43 +2092,41 @@ const WorkspacePage = () => {
         `}
       </style>
       
-      <div className="workspace-container flex h-screen w-screen flex-col bg-white overflow-hidden" style={{ margin: 0, padding: 0 }}>
-        {/* Role-based header */}
-        {console.log('🔍 RoleBasedHeader rendering with detectedUserRole:', detectedUserRole)}
-        <RoleBasedHeader 
-          userRole={detectedUserRole}
-          currentUser={currentUser}
+      <div className="ws-shell">
+        {/* Unified sleek white top bar */}
+        <WorkspaceTopBar
           workspace={workspace}
+          userRole={detectedUserRole}
+          isPM={isPM}
+          isCAS={isCAS}
+          isClient={!!detectedClientId}
+          currentUser={currentUser}
+          syncStatus={syncStatus}
+          lastSavedAt={lastSavedAt}
+          workspaceCollaborators={workspaceCollaborators}
+          onBackToDashboard={handleBackToDashboard}
+          onRefresh={refetchWorkspace}
+          onOpenTutorial={() => setShowTutorial(true)}
+          onToggleActivityDrawer={() => setRightPanelPinned(p => !p)}
+          isActivityDrawerOpen={rightPanelPinned}
+          unreadCount={unreadCount}
+          onStartCall={handleStartCallClick}
           onManagePermissions={handleManagePermissions}
           onInviteVendors={handleInviteVendors}
           onInviteCAS={handleInviteCAS}
-          onStartCall={handleStartCallClick}
-        />
-        
-        <WorkspaceHeader 
-          isCanvasActive={!!selectedSubtask} 
-          syncStatus={syncStatus}
-          lastSavedAt={lastSavedAt}
-          onElementsClick={handleElementsClick}
-          onLayoutsClick={handleLayoutsClick}
-          onTextClick={handleTextClick}
-          onTemplatesClick={handleTemplatesClick}
-          onWorkflowBuilderClick={handleWorkflowBuilderClick}
-          showPostServicesActions
+          onShareProgress={() => setShowShareModal(true)}
           onOpenPostServices={() => setShowPostServicesModal(true)}
           onOpenUpdateProgress={() => setShowUpdateProgressModal(true)}
           onOpenReviewProgress={() => setShowReviewProgressModal(true)}
           onOpenClientReviewProgress={() => setShowClientReviewProgressModal(true)}
           onOpenProjectComplete={() => setShowProjectCompleteModal(true)}
-          userRole={userRole}
-          isPM={isPM}
-          isClient={!!detectedClientId}
-          workspace={workspace}
-          selectedTask={selectedTask}
-          selectedSubtask={selectedSubtask}
+          onOpenDeletionHistory={() => setRightPanelPinned(true)}
+          isWorkspaceCompleted={workspace?.status === 'completed'}
+          shouldDisableEditing={shouldDisableEditing}
         />
-        
-        <div className="relative flex min-h-0 flex-1">
+
+        {/* Shell Body: Dock + Context Panel + Canvas + Right Sidebar Drawer */}
+        <div className="ws-body">
           {/* Mobile panel toggle buttons — fixed bottom bar */}
           {isMobile && (
             <div className="fixed bottom-0 left-0 right-0 z-40 bg-white border-t border-gray-200 flex items-center justify-around px-4 py-2 safe-area-pb">
@@ -2093,87 +2155,88 @@ const WorkspacePage = () => {
             />
           )}
 
-          {/* Left edge hover handle — visible tab that reveals left panel in focus mode (desktop only) */}
-          {!isMobile && focusMode && !leftPanelPinned && !leftPanelVisible && (
-            <div
-              className="absolute left-0 top-0 bottom-0 w-3 z-30 cursor-pointer group"
-              onMouseEnter={() => setLeftPanelHover(true)}
-              title="Hover to show Tasks panel"
-            >
-              {/* Visible handle indicator */}
-              <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1.5 h-12 bg-gray-300 group-hover:bg-blue-400 rounded-r-full transition-colors" />
-            </div>
+          {/* Left Dock */}
+          {!isMobile && (
+            <WorkspaceDock
+              activeTab={dockActiveTab}
+              onSelectTab={handleSelectDockTab}
+              isPanelOpen={isContextPanelOpen}
+            />
           )}
 
-          <WorkspaceSidebar
-            sidebarCollapsed={!leftPanelVisible}
-            activeTab={activeTab}
-            setActiveTab={setActiveTab}
-            selectedTask={selectedTask}
-            tasks={tasks}
-            selectedSubtask={selectedSubtask}
-            onTaskClick={handleTaskClick}
-            onSubtaskClick={handleSubtaskClick}
-            onShowAddTaskModal={() => setShowAddTaskModal(true)}
-            onQuickAddTask={addTask}
-            onRenameTask={renameTask}
-            onUpdateTask={updateTaskDetails}
-            memberOptions={taskMemberOptions}
-            workspace={workspace}
-            userRole={detectedUserRole}
-            onLeaveWorkspace={handleLeaveWorkspace}
-            focusMode={focusMode}
-            isPinned={leftPanelPinned}
-            onTogglePin={toggleLeftPin}
-            onMouseEnter={() => setLeftPanelHover(true)}
-            onMouseLeave={() => setLeftPanelHover(false)}
-          />
-
-          <WorkspaceMain
-            selectedTask={selectedTask}
-            selectedSubtask={selectedSubtask}
-            selectedLayer={selectedLayer}
-            selectedLayerItem={selectedLayerItem}
-            sidebarCollapsed={sidebarCollapsed}
-            zoomLevel={zoomLevel}
-            showElementsPanel={showElementsPanel}
-            onBackToHome={handleBackToHome}
-            onBackToTask={handleBackToTask}
-            onBackToLayer={handleBackToLayer}
-            onSubtaskClick={handleSubtaskClick}
-            onShowAddSubtaskModal={() => setShowAddSubtaskModal(true)}
-            onLayerItemClick={handleLayerItemClick}
-            onToggleSidebars={toggleSidebars}
-            onRenameSubtask={renameSubtask}
-            onUpdateSubtask={updateSubtaskDetails}
-            memberOptions={taskMemberOptions}
-            workspace={workspace}
-            onSaveWorkspace={saveWorkspace}
-            onRefreshWorkspace={refetchWorkspace}
-            tasks={tasks}
-            onZoomChange={handleZoomChange}
-            onCreateTask={addTask}
-            onCreateSubtask={addSubtask}
-            onActivityCreated={triggerActivityRefresh}
-            userRole={detectedUserRole}
-            userPermissions={userPermissions}
-            canvasWebSocket={canvasWebSocket}
-            workspaceCollaborators={workspaceCollaborators}
-            focusMode={focusMode}
-          />
-
-          {/* Right edge hover handle — visible tab (desktop only) */}
-          {!isMobile && focusMode && !rightPanelPinned && !rightPanelVisible && (
-            <div
-              className="absolute right-0 top-0 bottom-0 w-3 z-30 cursor-pointer group"
-              onMouseEnter={() => setRightPanelHover(true)}
-              title="Hover to show Activity panel"
-            >
-              {/* Visible handle indicator */}
-              <div className="absolute right-0 top-1/2 -translate-y-1/2 w-1.5 h-12 bg-gray-300 group-hover:bg-blue-400 rounded-l-full transition-colors" />
-            </div>
+          {/* Context Panel */}
+          {(!isMobile ? isContextPanelOpen : mobileLeftOpen) && (
+            <WorkspaceContextPanel
+              isOpen={!isMobile ? isContextPanelOpen : mobileLeftOpen}
+              activeTab={dockActiveTab}
+              elementOptions={elementOptions}
+              onClose={() => {
+                if (isMobile) setMobileLeftOpen(false);
+                else setIsContextPanelOpen(false);
+              }}
+              tasks={tasks}
+              selectedTask={selectedTask}
+              selectedSubtask={selectedSubtask}
+              onTaskClick={handleTaskClick}
+              onSubtaskClick={handleSubtaskClick}
+              onShowAddTaskModal={() => setShowAddTaskModal(true)}
+              onQuickAddTask={addTask}
+              onRenameTask={renameTask}
+              onUpdateTask={updateTaskDetails}
+              memberOptions={taskMemberOptions}
+              workspace={workspace}
+              userRole={detectedUserRole}
+              onLeaveWorkspace={handleLeaveWorkspace}
+              canvasElements={canvasNodes}
+              onZoomToElement={(elementId) => {
+                const event = new CustomEvent('zoomToElement', { detail: { elementId } });
+                document.dispatchEvent(event);
+              }}
+              onWorkflowBuilderClick={handleWorkflowBuilderClick}
+              onTemplateSelect={handleTemplatesClick}
+              selectedTextElement={selectedTextElement}
+              onUpdateTextElement={handleUpdateTextElement}
+            />
           )}
 
+          {/* Main Canvas Area with Theme */}
+          <div className={`ws-canvas-area theme-${canvasTheme}`} data-workspace-canvas>
+            <WorkspaceMain
+              selectedTask={selectedTask}
+              selectedSubtask={selectedSubtask}
+              selectedLayer={selectedLayer}
+              selectedLayerItem={selectedLayerItem}
+              sidebarCollapsed={!isContextPanelOpen}
+              zoomLevel={zoomLevel}
+              showElementsPanel={showElementsPanel}
+              onBackToHome={handleBackToHome}
+              onBackToTask={handleBackToTask}
+              onBackToLayer={handleBackToLayer}
+              onSubtaskClick={handleSubtaskClick}
+              onShowAddSubtaskModal={() => setShowAddSubtaskModal(true)}
+              onLayerItemClick={handleLayerItemClick}
+              onToggleSidebars={toggleSidebars}
+              onRenameSubtask={renameSubtask}
+              onUpdateSubtask={updateSubtaskDetails}
+              memberOptions={taskMemberOptions}
+              workspace={workspace}
+              onSaveWorkspace={saveWorkspace}
+              onRefreshWorkspace={refetchWorkspace}
+              tasks={tasks}
+              onZoomChange={handleZoomChange}
+              onCreateTask={addTask}
+              onCreateSubtask={addSubtask}
+              onActivityCreated={triggerActivityRefresh}
+              userRole={detectedUserRole}
+              userPermissions={userPermissions}
+              canvasWebSocket={canvasWebSocket}
+              workspaceCollaborators={workspaceCollaborators}
+              focusMode={focusMode}
+              canvasTheme={canvasTheme}
+            />
+          </div>
+
+          {/* Right Sidebar (Comments, Activities, Messages) */}
           <WorkspaceRightSidebar
             sidebarCollapsed={!rightPanelVisible}
             selectedSubtask={selectedSubtask}
@@ -2191,10 +2254,7 @@ const WorkspacePage = () => {
             onMarkAllAsRead={markAllAsRead}
             canvasElements={canvasNodes}
             onZoomToElement={(elementId) => {
-              // Emit event to CanvasWorkspace to zoom and focus on the element
-              const event = new CustomEvent('zoomToElement', {
-                detail: { elementId }
-              });
+              const event = new CustomEvent('zoomToElement', { detail: { elementId } });
               document.dispatchEvent(event);
             }}
             focusMode={focusMode}
@@ -2204,7 +2264,35 @@ const WorkspacePage = () => {
             onMouseLeave={() => setRightPanelHover(false)}
           />
         </div>
+
+        {/* Bottom Status Bar */}
+        <WorkspaceStatusBar
+          elementCount={canvasNodes?.length || 0}
+          syncStatus={syncStatus}
+          lastSavedAt={lastSavedAt}
+          zoomLevel={zoomLevel}
+          onZoomIn={() => window.canvasWorkspaceRef?.current?.zoomIn?.()}
+          onZoomOut={() => window.canvasWorkspaceRef?.current?.zoomOut?.()}
+          onFitView={() => window.canvasWorkspaceRef?.current?.fitView?.()}
+          canvasTheme={canvasTheme}
+          onSelectCanvasTheme={setCanvasTheme}
+          onLeaveWorkspace={handleLeaveWorkspace}
+        />
       </div>
+
+      {/* Share Progress Modal */}
+      <ShareProgressModal
+        isOpen={showShareModal}
+        onClose={() => setShowShareModal(false)}
+        workspace={workspace}
+        userRole={detectedUserRole}
+      />
+
+      {/* Interactive Tutorial Modal */}
+      <WorkspaceTutorialModal
+        isOpen={showTutorial}
+        onClose={() => setShowTutorial(false)}
+      />
 
       {/* Add Task Modal */}
       <AddTaskModal 
