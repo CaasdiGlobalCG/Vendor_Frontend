@@ -312,6 +312,7 @@ function AppContent() {
   const location = useLocation();
   const [isExchangingHandoff, setIsExchangingHandoff] = useState(false);
   const [isInboundSwitchLoading, setIsInboundSwitchLoading] = useState(false);
+  const handoffExchangeRef = useRef(null);
 
   const inboundSwitchMarker = useMemo(() => {
     const params = new URLSearchParams(location.search);
@@ -343,7 +344,10 @@ function AppContent() {
 
   // Sales/Client -> Vendor fallback return path should always show a transition skeleton first.
   useEffect(() => {
-    if (!inboundSwitchMarker) return;
+    const params = new URLSearchParams(location.search);
+    // A handoff URL has its own exchange flow below. Running this fallback
+    // flow as well can remove transition parameters and start a second exchange.
+    if (!inboundSwitchMarker || params.has('handoff')) return;
 
     let isCancelled = false;
     setIsInboundSwitchLoading(true);
@@ -386,6 +390,9 @@ function AppContent() {
       return;
     }
 
+    if (handoffExchangeRef.current === handoff) return;
+    handoffExchangeRef.current = handoff;
+
     let isCancelled = false;
     setIsExchangingHandoff(true);
 
@@ -398,6 +405,11 @@ function AppContent() {
         const d = await r.json().catch(() => null);
         if (!r.ok || !d?.success) {
           console.error('Vendor App: handoff vendor-exchange failed', { status: r.status, body: d });
+          params.delete('handoff');
+          params.delete('transition');
+          params.delete('fromClient');
+          navigate({ search: params.toString() }, { replace: true });
+          navigate('/login?role=vendor&fromClient=true&transition=1', { replace: true });
           return;
         }
 
@@ -407,13 +419,15 @@ function AppContent() {
         } catch {}
 
         sessionStorage.setItem(guardKey, 'true');
+        if (d.email) sessionStorage.setItem('vendorHandoffEmail', d.email);
 
         // Remove handoff param from URL
         params.delete('handoff');
         navigate({ search: params.toString() }, { replace: true });
 
-        // Route into the vendor dashboard; VendorGuard will redirect if onboarding is incomplete.
-        navigate('/VendorDashboard', { replace: true });
+        // Users without a vendor record must start onboarding instead of being
+        // sent through the vendor login loop.
+        navigate(d?.vendorRegistered ? '/VendorDashboard' : '/Form1', { replace: true });
       } catch (e) {
         console.error('Vendor App: handoff vendor-exchange error', e);
       } finally {
@@ -467,17 +481,19 @@ function AppContent() {
         }
       />
 
+      {/* Vendor onboarding is authenticated by the Cognito session, but a new
+          vendor has no /api/vendor/me record until these forms are submitted. */}
+      <Route path="/Form1" element={<Form1 />} />
+      <Route path="/Form2" element={<Form2 />} />
+      <Route path="/Form3" element={<Form3 />} />
+      <Route path="/Form4" element={<Form4 />} />
+      <Route path="/Form5" element={<Form5 />} />
+      <Route path="/Form6" element={<Form6 />} />
+      <Route path="/Auditorapprove" element={<Auditor />} />
+
       {/* ── PROTECTED ROUTES — wrapped in RBACProvider + AccessDeniedGuard ── */}
       {/* All routes that require org membership or use ModuleGuard/useRBAC go here. */}
       <Route element={<ProtectedRBACLayout />}>
-        {/* Vendor onboarding forms (RoleGuard protected) */}
-        <Route path="/Form1" element={<RoleGuard><Form1 /></RoleGuard>} />
-        <Route path="/Form2" element={<Form2 />} />
-        <Route path="/Form3" element={<Form3 />} />
-        <Route path="/Form4" element={<Form4 />} />
-        <Route path="/Form5" element={<Form5 />} />
-        <Route path="/Form6" element={<Form6 />} />
-        <Route path="/Auditorapprove" element={<Auditor />} />
         <Route path="/NewAuditor" element={<NewAuditorDashboard />} />
 
         {/* Main vendor dashboard (uses ModuleGuard for sub-routes) */}

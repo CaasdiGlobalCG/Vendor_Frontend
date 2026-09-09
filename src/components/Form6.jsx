@@ -1,5 +1,6 @@
 import React, { useContext, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { Auth } from 'aws-amplify';
 import { VendorContext } from '../context/VendorContext';
 import StepIndicator from './StepIndicator';
 import SidebarContent from './SidebarContent';
@@ -81,7 +82,20 @@ export default function Form6() {
       return result;
     };
 
-    const userEmail = vendorData.vendorDetails?.primaryContactEmail || (vendorContext.currentUser?.email);
+    const handoffEmail = sessionStorage.getItem('vendorHandoffEmail');
+    let userEmail = vendorData.vendorDetails?.primaryContactEmail
+      || vendorContext.currentUser?.email
+      || handoffEmail;
+
+    if (!userEmail) {
+      try {
+        const cognitoUser = await Auth.currentAuthenticatedUser();
+        userEmail = cognitoUser?.attributes?.email || cognitoUser?.username || '';
+        if (userEmail) sessionStorage.setItem('vendorHandoffEmail', userEmail);
+      } catch (error) {
+        console.warn('Form6: unable to resolve the authenticated user email', error);
+      }
+    }
 
     if (!userEmail) {
       alert('User email not found. Please ensure you are logged in and have filled out the vendor details form.');
@@ -115,6 +129,7 @@ export default function Form6() {
       const result = await response.json();
 
       if (response.ok) {
+        sessionStorage.removeItem('vendorHandoffEmail');
         setVendorData({
           vendorDetails: {},
           companyDetails: {},
