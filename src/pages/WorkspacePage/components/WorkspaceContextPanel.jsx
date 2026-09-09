@@ -1,0 +1,897 @@
+import React, { useState, useMemo } from 'react';
+import { 
+  X, 
+  Search, 
+  Square, 
+  Table, 
+  Image as ImageIcon, 
+  Minus, 
+  MousePointer, 
+  BarChart3, 
+  FileText, 
+  Type, 
+  AlignLeft, 
+  Grid3X3, 
+  Columns, 
+  Rows, 
+  Plus, 
+  GitBranch, 
+  Settings, 
+  Trash2,
+  FolderOpen,
+  ArrowLeft,
+  ChevronRight,
+  Sparkles,
+  Calendar,
+  ClipboardCheck,
+  Package,
+  Calculator,
+  Grid,
+  List,
+  Upload,
+  CheckCircle2,
+  CheckSquare,
+  HelpCircle,
+  FileCheck,
+  Clock,
+  AlertCircle,
+  FileSpreadsheet
+} from 'lucide-react';
+import TaskTab from './TaskTab';
+import LayersTab from './LayersTab';
+import AssetsTab from './AssetsTab';
+
+const WorkspaceContextPanel = ({
+  isOpen,
+  activeTab,
+  onClose,
+  elementOptions = {},
+  // Task props
+  tasks,
+  selectedTask,
+  selectedSubtask,
+  onTaskClick,
+  onSubtaskClick,
+  onShowAddTaskModal,
+  onQuickAddTask,
+  onRenameTask,
+  onUpdateTask,
+  memberOptions,
+  workspace,
+  userRole,
+  onLeaveWorkspace,
+  // Canvas elements for Layers
+  canvasElements = [],
+  onZoomToElement,
+  onDeleteElement,
+  // Workflow props
+  onWorkflowBuilderClick,
+  // Templates props
+  onTemplateSelect,
+  // Text element props
+  selectedTextElement,
+  onUpdateTextElement,
+}) => {
+  const [elementsSearch, setElementsSearch] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState(null);
+
+  if (!isOpen) return null;
+
+  // Helper to trigger drag for canvas
+  const handleDragStart = (e, elementData) => {
+    const cleanElement = {
+      ...elementData,
+      id: elementData.id || `${elementData.type || 'element'}-${Date.now()}-${Math.random().toString(36).substr(2, 4)}`,
+      name: elementData.name || elementData.label || 'Element',
+      type: elementData.type || 'card',
+      preview: elementData.preview || elementData.name || elementData.label || 'Element block'
+    };
+    const jsonStr = JSON.stringify(cleanElement);
+    e.dataTransfer.setData('application/json', jsonStr);
+    e.dataTransfer.setData('text/plain', cleanElement.name);
+    e.dataTransfer.effectAllowed = 'copy';
+
+    const dragImage = new Image();
+    dragImage.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="60" height="60"%3E%3Crect fill="%232563eb" width="60" height="60" rx="8"/%3E%3Ctext x="30" y="30" font-size="24" fill="white" text-anchor="middle" dominant-baseline="middle"%3E+%3C/text%3E%3C/svg%3E';
+    try {
+      e.dataTransfer.setDragImage(dragImage, 30, 30);
+    } catch (err) {
+      // Ignore if setDragImage fails
+    }
+  };
+
+  // Helper to trigger double click or button click add
+  const handleDoubleClick = (elementData) => {
+    const cleanElement = {
+      ...elementData,
+      id: elementData.id || `${elementData.type || 'element'}-${Date.now()}-${Math.random().toString(36).substr(2, 4)}`,
+      name: elementData.name || elementData.label || 'Element',
+      type: elementData.type || 'card',
+      preview: elementData.preview || elementData.name || elementData.label || 'Element block'
+    };
+    const event = new CustomEvent('elementDoubleClick', { detail: cleanElement });
+    document.dispatchEvent(event);
+  };
+
+  // Quick Layout Chips - Make card more functional
+  const layoutChips = [
+    { type: 'info-card', label: 'Info Card', icon: Square, nodeType: 'infoCard', preview: 'Display key information with title and content' },
+    { type: 'table', label: 'Table', icon: Table },
+    { type: 'image-block', label: 'Image', icon: ImageIcon },
+    { type: 'divider', label: 'Divider', icon: Minus },
+  ];
+
+  // Quick Input Chips
+  const inputChips = [
+    { type: 'button', label: 'Button', icon: MousePointer },
+    { type: 'chart', label: 'Chart', icon: BarChart3 },
+    { type: 'textarea', label: 'TextArea', icon: FileText },
+    { type: 'input', label: 'Input', icon: AlignLeft },
+  ];
+
+  // Element Categories
+  const categories = [
+    { 
+      id: 'invoices-quotes', 
+      name: 'Invoices & Quotes', 
+      desc: 'Quotations, invoices, and purchase orders', 
+      icon: FileText,
+      color: 'bg-pink-50 text-pink-700 border-pink-200' 
+    },
+    { 
+      id: 'forms', 
+      name: 'Forms & Inputs', 
+      desc: 'Inputs, textareas, buttons, dropdowns', 
+      icon: Grid,
+      color: 'bg-yellow-50 text-yellow-700 border-yellow-200' 
+    },
+    { 
+      id: 'tables', 
+      name: 'Tables & Grids', 
+      desc: 'Data tables, pivot tables, calendars', 
+      icon: Table,
+      color: 'bg-emerald-50 text-emerald-700 border-emerald-200' 
+    },
+    { 
+      id: 'charts', 
+      name: 'Analytics & Charts', 
+      desc: 'Bar, line, pie, area, and scatter charts', 
+      icon: BarChart3,
+      color: 'bg-blue-50 text-blue-700 border-blue-200' 
+    },
+    { 
+      id: 'flowcharts', 
+      name: 'Flowcharts & Logic', 
+      desc: 'Process flow, decision trees, stage gates', 
+      icon: GitBranch,
+      color: 'bg-indigo-50 text-indigo-700 border-indigo-200' 
+    },
+    { 
+      id: 'task-card', 
+      name: 'Task Cards', 
+      desc: 'Action items, milestone cards, status', 
+      icon: ClipboardCheck,
+      color: 'bg-teal-50 text-teal-700 border-teal-200' 
+    },
+    { 
+      id: 'materials', 
+      name: 'Materials & BOQ', 
+      desc: 'Bill of Quantities, specs, materials', 
+      icon: Package,
+      color: 'bg-orange-50 text-orange-700 border-orange-200' 
+    },
+    { 
+      id: 'cost-calculators', 
+      name: 'Cost Calculators', 
+      desc: 'Flooring, painting, concrete, electrical', 
+      icon: Calculator,
+      color: 'bg-purple-50 text-purple-700 border-purple-200' 
+    },
+    { 
+      id: 'smart', 
+      name: 'Smart Elements', 
+      desc: 'AI notes, calendar events, approval boards', 
+      icon: Sparkles,
+      color: 'bg-violet-50 text-violet-700 border-violet-200' 
+    },
+  ];
+
+  // Comprehensive Category Elements Map
+  const categoryElementsMap = useMemo(() => {
+    // Invoices and Quotes list (dynamic from props or comprehensive fallbacks)
+    const rawInvQuotes = elementOptions['invoices-quotes'];
+    const invQuotesList = Array.isArray(rawInvQuotes) && rawInvQuotes.length > 0
+      ? rawInvQuotes
+      : [
+          { id: 'new-quotation', name: 'Quotation Document', type: 'quotation', nodeType: 'quotation', preview: 'Line items, unit rates, taxes, and terms' },
+          { id: 'new-invoice', name: 'Tax Invoice', type: 'invoice', nodeType: 'invoice', preview: 'Billable invoice with payment status and milestone details' },
+          { id: 'credit-note', name: 'Credit Note', type: 'credit-note', nodeType: 'creditNote', preview: 'Adjustment for returns, discounts or invoice revisions' },
+          { id: 'purchase-order', name: 'Purchase Order (PO)', type: 'purchase-order', nodeType: 'purchaseOrder', preview: 'Formal procurement order issued to supplier' },
+        ];
+
+    // Forms list
+    const formsList = elementOptions.forms || [
+      { id: 'textarea', name: 'Text Area', type: 'textarea', preview: 'Multi-line text box for descriptions and notes' },
+      { id: 'textbox', name: 'Text Input', type: 'input', preview: 'Single-line text entry field' },
+      { id: 'form-card', name: 'Form Card', type: 'form-card', nodeType: 'formCard', preview: 'Structured form with multiple input fields' },
+      { id: 'button', name: 'Action Button', type: 'button', preview: 'Clickable call-to-action button' },
+      { id: 'dropdown', name: 'Select Dropdown', type: 'select', preview: 'Select a single option from a dropdown list' },
+      { id: 'radio', name: 'Radio Choice', type: 'radio', preview: 'Single-choice radio button options' },
+      { id: 'checkbox', name: 'Checkbox Group', type: 'checkbox', preview: 'Multiple selection checkboxes' },
+    ];
+
+    // Tables list
+    const tablesList = elementOptions.tables || [
+      { id: 'basic-table', name: 'Basic Data Table', type: 'table', tableType: 'basic', preview: 'Simple structured rows and columns' },
+      { id: 'data-table', name: 'Advanced Data Table', type: 'table', tableType: 'data', preview: 'Sortable, filterable project data grid' },
+      { id: 'pivot-table', name: 'Pivot Summary Table', type: 'table', tableType: 'pivot', preview: 'Multi-dimensional data aggregation' },
+      { id: 'calendar', name: 'Schedule Calendar', type: 'calendar', preview: 'Milestone, delivery, and inspection date picker' },
+    ];
+
+    // Charts list
+    const chartsList = elementOptions.charts || [
+      { id: 'bar-chart', name: 'Vertical Bar Chart', type: 'chart', chartType: 'bar', preview: 'Compare metric values across categories' },
+      { id: 'line-chart', name: 'Progress Line Chart', type: 'chart', chartType: 'line', preview: 'Track progress and expenditure trends over time' },
+      { id: 'pie-chart', name: 'Cost Breakdown Pie Chart', type: 'chart', chartType: 'pie', preview: 'Proportional budget and stage distribution' },
+      { id: 'area-chart', name: 'Filled Area Chart', type: 'chart', chartType: 'area', preview: 'Cumulative timeline progress visualization' },
+      { id: 'scatter-plot', name: 'Scatter Plot', type: 'chart', chartType: 'scatter', preview: 'Quality and cost correlation analysis' },
+    ];
+
+    // Flowcharts list
+    const flowchartsList = [
+      { id: 'flow-process', name: 'Process Flow Block', type: 'flowchart', preview: 'Sequential stage-by-stage workflow block' },
+      { id: 'flow-decision', name: 'Decision Branch', type: 'flowchart', preview: 'Conditional Yes / No approval fork' },
+      { id: 'flow-stage', name: 'Milestone Gate', type: 'flowchart', preview: 'Gatekeeper inspection and validation checkpoint' },
+    ];
+
+    // Task Card list
+    const taskCardsList = [
+      { id: 'task-card-item', name: 'Task Card', type: 'task-card', preview: 'Deliverable task with assignee, priority and due date' },
+      { id: 'task-card-prog', name: 'Progress Card', type: 'task-card-progress', preview: 'Milestone card with percentage completion tracker' },
+    ];
+
+    // Materials list
+    const materialsList = [
+      { id: 'boq-table', name: 'BOQ Pricing Table', type: 'table', preview: 'Itemized material quantity and rate schedule' },
+      { id: 'material-spec', name: 'Material Spec Card', type: 'card', preview: 'Grade, manufacturer, and technical specs' },
+      { id: 'spec-sheet', name: 'Vendor Catalog Block', type: 'document-block', preview: 'Datasheet attachment with compliance tags' },
+    ];
+
+    // Cost Calculators list
+    const calculatorsList = [
+      { id: 'calc-flooring', name: 'Flooring Cost Calculator', type: 'calculator', calcType: 'flooring', preview: 'Compute tile, marble or wood area and wastage' },
+      { id: 'calc-paint', name: 'Painting Estimator', type: 'calculator', calcType: 'paint', preview: 'Calculate wall square footage and primer/paint coats' },
+      { id: 'calc-concrete', name: 'Concrete Volume Estimator', type: 'calculator', calcType: 'concrete', preview: 'Estimate cement, sand, and aggregate requirements' },
+      { id: 'calc-electrical', name: 'Electrical Wiring Estimator', type: 'calculator', calcType: 'electrical', preview: 'Conduit length and load point calculator' },
+    ];
+
+    // Smart elements list
+    const rawSmart = elementOptions.smart?.elements || [
+      { id: 'smart-note', name: 'Smart AI Note', type: 'smart-note', nodeType: 'smartNote', preview: 'AI-assisted sticky note with auto-suggestions' },
+      { id: 'calendar-event', name: 'Calendar Milestone', type: 'calendar-event', nodeType: 'calendarNode', preview: 'Schedule site meetings and inspection checkpoints' },
+      { id: 'approval-board', name: 'Approval Sign-off Board', type: 'approval-board', nodeType: 'approvalBoard', preview: 'Multi-party approval verification card' },
+      { id: 'ai-helper', name: 'AI Workflow Assistant', type: 'ai-helper', nodeType: 'aiHelper', preview: 'Generate workflows, checklists, and scope with AI' },
+    ];
+
+    return {
+      'invoices-quotes': invQuotesList,
+      'forms': formsList,
+      'tables': tablesList,
+      'charts': chartsList,
+      'flowcharts': flowchartsList,
+      'task-card': taskCardsList,
+      'materials': materialsList,
+      'cost-calculators': calculatorsList,
+      'smart': rawSmart,
+    };
+  }, [elementOptions]);
+
+  // Search across all categories
+  const searchResults = useMemo(() => {
+    if (!elementsSearch.trim()) return null;
+    const q = elementsSearch.toLowerCase();
+    const results = [];
+    Object.entries(categoryElementsMap).forEach(([catId, items]) => {
+      const catMeta = categories.find(c => c.id === catId);
+      items.forEach(item => {
+        if (
+          item.name?.toLowerCase().includes(q) ||
+          item.preview?.toLowerCase().includes(q) ||
+          catMeta?.name.toLowerCase().includes(q)
+        ) {
+          results.push({ ...item, categoryName: catMeta?.name, categoryId: catId });
+        }
+      });
+    });
+    return results;
+  }, [elementsSearch, categoryElementsMap, categories]);
+
+  // Current category elements when drilled down
+  const currentCategoryMeta = categories.find(c => c.id === selectedCategory);
+  const currentCategoryElements = selectedCategory ? (Array.isArray(categoryElementsMap[selectedCategory]) ? categoryElementsMap[selectedCategory] : []) : [];
+
+  // Template Options
+  const templates = [
+    { 
+      id: 'quotation', 
+      name: 'Quotation', 
+      sub: 'Line items · totals · terms', 
+      initials: 'Q', 
+      bg: 'linear-gradient(135deg, #2563eb, #1d4ed8)' 
+    },
+    { 
+      id: 'purchase-order', 
+      name: 'Purchase Order', 
+      sub: 'Vendor · items · delivery', 
+      initials: 'PO', 
+      bg: 'linear-gradient(135deg, #ea580c, #c2410c)' 
+    },
+    { 
+      id: 'rfq-response', 
+      name: 'RFQ Response', 
+      sub: 'Pricing grid · notes', 
+      initials: 'RFQ', 
+      bg: 'linear-gradient(135deg, #059669, #047857)' 
+    },
+    { 
+      id: 'boq-turnkey', 
+      name: 'BOQ & Execution', 
+      sub: 'Cost breakdown · scope', 
+      initials: 'BOQ', 
+      bg: 'linear-gradient(135deg, #7c3aed, #6d28d9)' 
+    },
+  ];
+
+  // Layout Patterns
+  const layoutPatterns = [
+    { type: 'rows', name: 'Row Stack', desc: 'Vertical sequential blocks', icon: Rows },
+    { type: 'columns', name: 'Columns (Split)', desc: 'Side-by-side comparison', icon: Columns },
+    { type: 'grid', name: '2 × 2 Grid', desc: 'Balanced card layout', icon: Grid3X3 },
+    { type: 'frame', name: 'Container Frame', desc: 'Group bounded area', icon: Square },
+  ];
+
+  return (
+    <aside className="ws-panel" data-workspace-panel>
+      {/* 1. ELEMENTS TAB */}
+      {activeTab === 'elements' && (
+        <>
+          {/* Header */}
+          <div className="ws-panel-head">
+            {selectedCategory ? (
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => setSelectedCategory(null)}
+                  className="p-1 -ml-1 text-gray-400 hover:text-gray-700 hover:bg-gray-100 rounded-md transition-colors"
+                  title="Back to all categories"
+                >
+                  <ArrowLeft className="w-4 h-4" />
+                </button>
+                <div>
+                  <h3 className="ws-panel-title">{currentCategoryMeta?.name || 'Category'}</h3>
+                  <p className="ws-panel-desc">{currentCategoryElements.length} elements available</p>
+                </div>
+              </div>
+            ) : (
+              <div>
+                <h3 className="ws-panel-title">Elements</h3>
+                <p className="ws-panel-desc">Drag any block onto the canvas or click to place.</p>
+              </div>
+            )}
+            <button onClick={onClose} className="ws-icon-btn" title="Close panel">
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+
+          <div className="ws-panel-body">
+            {/* Search Input */}
+            <div className="relative mb-3">
+              <Search className="w-3.5 h-3.5 text-gray-400 absolute left-2.5 top-1/2 -translate-y-1/2" />
+              <input
+                type="text"
+                value={elementsSearch}
+                onChange={(e) => setElementsSearch(e.target.value)}
+                placeholder="Search blocks across categories..."
+                className="w-full pl-8 pr-7 py-1.5 text-xs bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500 focus:bg-white transition-colors"
+              />
+              {elementsSearch && (
+                <button
+                  onClick={() => setElementsSearch('')}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                >
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              )}
+            </div>
+
+            {/* A. If Global Search is active */}
+            {searchResults ? (
+              <div className="space-y-2">
+                <div className="text-[11px] text-gray-500 font-medium mb-1">
+                  Found {searchResults.length} element{searchResults.length === 1 ? '' : 's'}:
+                </div>
+                {searchResults.length === 0 ? (
+                  <div className="text-center py-8 text-xs text-gray-400">
+                    No elements found matching "{elementsSearch}"
+                  </div>
+                ) : (
+                  searchResults.map((item) => (
+                    <div
+                      key={item.id}
+                      draggable
+                      onDragStart={(e) => handleDragStart(e, item)}
+                      onClick={() => handleDoubleClick(item)}
+                      className="p-3 bg-white border border-gray-200 hover:border-blue-400 hover:shadow-md hover:bg-blue-50/40 rounded-xl cursor-grab active:cursor-grabbing transition-all group relative"
+                      title="Drag to canvas or click to add"
+                    >
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-1.5 mb-1">
+                            <span className="text-xs font-semibold text-gray-900 group-hover:text-blue-600 truncate">
+                              {item.name}
+                            </span>
+                            <span className="text-[10px] px-1.5 py-0.5 rounded bg-gray-100 text-gray-500 font-medium">
+                              {item.categoryName}
+                            </span>
+                          </div>
+                          <p className="text-[11px] text-gray-500 line-clamp-2 leading-relaxed m-0">
+                            {item.preview}
+                          </p>
+                        </div>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDoubleClick(item);
+                          }}
+                          className="opacity-0 group-hover:opacity-100 px-2 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded text-[10px] font-semibold transition-opacity flex-shrink-0"
+                          title="Place on canvas"
+                        >
+                          + Add
+                        </button>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            ) : selectedCategory ? (
+              /* B. If Drilled into a Specific Category */
+              <div className="space-y-2.5">
+                <div className="flex items-center justify-between pb-1 border-b border-gray-100 mb-2">
+                  <span className="text-[11px] font-semibold text-gray-700 uppercase tracking-wide">
+                    Elements in {currentCategoryMeta?.name}
+                  </span>
+                  <span className="text-[10px] text-gray-400">Drag to canvas</span>
+                </div>
+
+                {currentCategoryElements.map((item) => (
+                  <div
+                    key={item.id}
+                    draggable
+                    onDragStart={(e) => handleDragStart(e, item)}
+                    onClick={() => handleDoubleClick(item)}
+                    className="p-3 bg-white border border-gray-200 hover:border-blue-400 hover:shadow-md hover:bg-blue-50/40 rounded-xl cursor-grab active:cursor-grabbing transition-all group relative"
+                    title="Drag to canvas or click to add"
+                  >
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="flex-1 min-w-0">
+                        <h4 className="text-xs font-semibold text-gray-900 group-hover:text-blue-600 mb-1 truncate">
+                          {item.name}
+                        </h4>
+                        <p className="text-[11px] text-gray-500 line-clamp-2 leading-relaxed m-0">
+                          {item.preview}
+                        </p>
+                      </div>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleDoubleClick(item);
+                        }}
+                        className="opacity-0 group-hover:opacity-100 px-2 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded text-[10px] font-semibold transition-opacity flex-shrink-0"
+                        title="Place on canvas"
+                      >
+                        + Add
+                      </button>
+                    </div>
+                  </div>
+                ))}
+
+                <button
+                  onClick={() => setSelectedCategory(null)}
+                  className="w-full mt-3 py-2 text-xs text-gray-500 hover:text-gray-800 bg-gray-50 hover:bg-gray-100 border border-gray-200 rounded-lg font-medium transition-colors flex items-center justify-center gap-1.5"
+                >
+                  <ArrowLeft className="w-3.5 h-3.5" />
+                  <span>View All Categories</span>
+                </button>
+              </div>
+            ) : (
+              /* C. Default Overview View with Quick Chips + Categories */
+              <>
+                {/* Layout Quick Chips */}
+                <div className="ws-section-label">Layout</div>
+                <div className="ws-chip-grid">
+                  {layoutChips.map((chip) => {
+                    const Icon = chip.icon;
+                    const elementData = {
+                      type: chip.type,
+                      name: chip.label,
+                      label: chip.label,
+                      id: `${chip.type}-${Date.now()}`
+                    };
+                    return (
+                      <div
+                        key={chip.type}
+                        className="ws-chip"
+                        draggable
+                        onDragStart={(e) => handleDragStart(e, elementData)}
+                        onClick={() => handleDoubleClick(elementData)}
+                        title="Drag to canvas or click to place"
+                      >
+                        <Icon />
+                        <span>{chip.label}</span>
+                      </div>
+                    );
+                  })}
+                </div>
+
+                {/* Input Quick Chips */}
+                <div className="ws-section-label">Inputs</div>
+                <div className="ws-chip-grid">
+                  {inputChips.map((chip) => {
+                    const Icon = chip.icon;
+                    const elementData = {
+                      type: chip.type,
+                      name: chip.label,
+                      label: chip.label,
+                      id: `${chip.type}-${Date.now()}`
+                    };
+                    return (
+                      <div
+                        key={chip.type}
+                        className="ws-chip"
+                        draggable
+                        onDragStart={(e) => handleDragStart(e, elementData)}
+                        onClick={() => handleDoubleClick(elementData)}
+                        title="Drag to canvas or click to place"
+                      >
+                        <Icon />
+                        <span>{chip.label}</span>
+                      </div>
+                    );
+                  })}
+                </div>
+
+                {/* Element Categories */}
+                <div className="ws-section-label">Categories</div>
+                <div className="space-y-1.5">
+                  {categories.map((cat) => {
+                    const CatIcon = cat.icon;
+                    const count = (categoryElementsMap[cat.id] || []).length;
+                    return (
+                      <div
+                        key={cat.id}
+                        onClick={() => setSelectedCategory(cat.id)}
+                        className="flex items-center justify-between p-2.5 bg-white hover:bg-blue-50/60 border border-gray-200 hover:border-blue-300 rounded-lg cursor-pointer transition-all text-xs group"
+                        title={`Click to open ${cat.name} elements`}
+                      >
+                        <div className="flex items-center gap-2.5 min-w-0">
+                          <div className={`p-1.5 rounded-md border flex-shrink-0 ${cat.color}`}>
+                            <CatIcon className="w-3.5 h-3.5" />
+                          </div>
+                          <span className="font-medium text-gray-800 group-hover:text-blue-600 truncate">
+                            {cat.name}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-1.5 flex-shrink-0 text-gray-400 group-hover:text-blue-600">
+                          <span className="text-[10.5px]">
+                            {count} items
+                          </span>
+                          <ChevronRight className="w-3.5 h-3.5" />
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+
+                <div className="ws-hint-box">
+                  Click any category to browse all available elements and drag them directly onto your canvas.
+                </div>
+              </>
+            )}
+          </div>
+        </>
+      )}
+
+      {/* 2. TEXT TAB */}
+      {activeTab === 'text' && (
+        <>
+          <div className="ws-panel-head">
+            <div>
+              <h3 className="ws-panel-title">Text</h3>
+              <p className="ws-panel-desc">Drag a text block onto the canvas.</p>
+            </div>
+            <button onClick={onClose} className="ws-icon-btn" title="Close panel">
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+
+          <div className="ws-panel-body">
+            <div className="space-y-2 mb-4">
+              {[
+                { type: 'text-heading', label: 'Heading', style: 'font-semibold text-base text-gray-900' },
+                { type: 'text-subheading', label: 'Subheading', style: 'font-medium text-sm text-gray-700' },
+                { type: 'text-body', label: 'Body Text', style: 'font-normal text-xs text-gray-600' },
+                { type: 'text-note', label: 'Sticky Note / Callout', style: 'font-normal text-xs text-amber-800 italic' }
+              ].map((item) => {
+                const elementData = {
+                  type: 'text',
+                  name: item.label,
+                  label: item.label,
+                  textType: item.type,
+                  content: item.label
+                };
+                return (
+                  <div
+                    key={item.type}
+                    draggable
+                    onDragStart={(e) => handleDragStart(e, elementData)}
+                    onClick={() => handleDoubleClick(elementData)}
+                    className="p-3 bg-white border border-gray-200 hover:border-blue-300 hover:bg-blue-50/50 rounded-lg cursor-grab active:cursor-grabbing transition-all flex items-center justify-between group"
+                  >
+                    <span className={item.style}>{item.label}</span>
+                    <Type className="w-3.5 h-3.5 text-gray-400 group-hover:text-blue-600" />
+                  </div>
+                );
+              })}
+            </div>
+
+            <div className="ws-hint-box">
+              Select any placed text on canvas to customize font, alignment, and styling.
+            </div>
+          </div>
+        </>
+      )}
+
+      {/* 3. TEMPLATES TAB */}
+      {activeTab === 'templates' && (
+        <>
+          <div className="ws-panel-head">
+            <div>
+              <h3 className="ws-panel-title">Templates</h3>
+              <p className="ws-panel-desc">Drag a starting layout or template onto the canvas.</p>
+            </div>
+            <button onClick={onClose} className="ws-icon-btn" title="Close panel">
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+
+          <div className="ws-panel-body">
+            <div className="ws-tpl-grid">
+              {templates.map((tpl) => {
+                const elementData = {
+                  type: 'template',
+                  templateId: tpl.id,
+                  name: tpl.name,
+                  label: tpl.name
+                };
+                return (
+                  <div
+                    key={tpl.id}
+                    className="ws-tpl-card"
+                    draggable
+                    onDragStart={(e) => handleDragStart(e, elementData)}
+                    onClick={() => {
+                      if (onTemplateSelect) onTemplateSelect(tpl.id);
+                      handleDoubleClick(elementData);
+                    }}
+                    title="Drag to canvas or click to apply"
+                  >
+                    <div className="ws-tpl-thumb" style={{ background: tpl.bg }}>
+                      {tpl.initials}
+                    </div>
+                    <div className="ws-tpl-meta">
+                      <p className="ws-tpl-name">{tpl.name}</p>
+                      <p className="ws-tpl-sub">{tpl.sub}</p>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </>
+      )}
+
+      {/* 4. WORKFLOW BUILDER TAB */}
+      {activeTab === 'workflow' && (
+        <>
+          <div className="ws-panel-head">
+            <div>
+              <h3 className="ws-panel-title">Workflow Builder</h3>
+              <p className="ws-panel-desc">Chain and configure approval steps.</p>
+            </div>
+            <button onClick={onClose} className="ws-icon-btn" title="Close panel">
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+
+          <div className="ws-panel-body">
+            <button
+              onClick={onWorkflowBuilderClick}
+              className="w-full flex items-center justify-center gap-2 p-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-semibold shadow-sm transition-all mb-4"
+            >
+              <GitBranch className="w-4 h-4" />
+              <span>Launch Workflow Builder</span>
+            </button>
+
+            <div className="ws-section-label">Workflow Steps</div>
+            <div className="space-y-2">
+              <div className="p-2.5 bg-gray-50 border border-gray-200 rounded-lg text-xs text-gray-600 flex items-center gap-2">
+                <span className="w-5 h-5 rounded-full bg-blue-100 text-blue-700 font-bold flex items-center justify-center text-[10px]">1</span>
+                <span>Vendor Submission</span>
+              </div>
+              <div className="p-2.5 bg-gray-50 border border-gray-200 rounded-lg text-xs text-gray-600 flex items-center gap-2">
+                <span className="w-5 h-5 rounded-full bg-amber-100 text-amber-700 font-bold flex items-center justify-center text-[10px]">2</span>
+                <span>PM Technical Review</span>
+              </div>
+              <div className="p-2.5 bg-gray-50 border border-gray-200 rounded-lg text-xs text-gray-600 flex items-center gap-2">
+                <span className="w-5 h-5 rounded-full bg-emerald-100 text-emerald-700 font-bold flex items-center justify-center text-[10px]">3</span>
+                <span>Client Final Approval</span>
+              </div>
+            </div>
+          </div>
+        </>
+      )}
+
+      {/* 5. LAYOUTS TAB */}
+      {activeTab === 'layouts' && (
+        <>
+          <div className="ws-panel-head">
+            <div>
+              <h3 className="ws-panel-title">Layouts</h3>
+              <p className="ws-panel-desc">Pre-configured structural wireframes.</p>
+            </div>
+            <button onClick={onClose} className="ws-icon-btn" title="Close panel">
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+
+          <div className="ws-panel-body">
+            <div className="space-y-2.5">
+              {layoutPatterns.map((pat) => {
+                const Icon = pat.icon;
+                const layoutData = { type: pat.type, name: pat.name, label: pat.name };
+                return (
+                  <div
+                    key={pat.type}
+                    draggable
+                    onDragStart={(e) => handleDragStart(e, layoutData)}
+                    onClick={() => handleDoubleClick(layoutData)}
+                    className="p-3 bg-white border border-gray-200 hover:border-blue-300 hover:bg-blue-50/50 rounded-lg cursor-grab active:cursor-grabbing transition-all flex items-start gap-3"
+                  >
+                    <div className="p-2 bg-gray-50 rounded-md text-gray-600">
+                      <Icon className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <p className="text-xs font-semibold text-gray-800 m-0">{pat.name}</p>
+                      <p className="text-[11px] text-gray-500 m-0 mt-0.5">{pat.desc}</p>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </>
+      )}
+
+      {/* 6. TASKS TAB */}
+      {activeTab === 'tasks' && (
+        <div className="flex flex-col h-full overflow-hidden">
+          <div className="ws-panel-head">
+            <div>
+              <h3 className="ws-panel-title">Tasks</h3>
+              <p className="ws-panel-desc">Manage project scope and subtasks.</p>
+            </div>
+            <button onClick={onClose} className="ws-icon-btn" title="Close panel">
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+          <div className="flex-1 overflow-y-auto">
+            <TaskTab
+              tasks={tasks}
+              selectedTask={selectedTask}
+              selectedSubtask={selectedSubtask}
+              onTaskClick={onTaskClick}
+              onSubtaskClick={onSubtaskClick}
+              onShowAddTaskModal={onShowAddTaskModal}
+              onQuickAddTask={onQuickAddTask}
+              onRenameTask={onRenameTask}
+              onUpdateTask={onUpdateTask}
+              memberOptions={memberOptions}
+              workspace={workspace}
+              userRole={userRole}
+              onLeaveWorkspace={onLeaveWorkspace}
+            />
+          </div>
+        </div>
+      )}
+
+      {/* 7. LAYERS TAB */}
+      {activeTab === 'layers' && (
+        <div className="flex flex-col h-full overflow-hidden">
+          <div className="ws-panel-head">
+            <div>
+              <h3 className="ws-panel-title">Layers</h3>
+              <p className="ws-panel-desc">All elements placed on the canvas.</p>
+            </div>
+            <button onClick={onClose} className="ws-icon-btn" title="Close panel">
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+          <div className="flex-1 overflow-y-auto p-3">
+            {canvasElements && canvasElements.length > 0 ? (
+              <div className="space-y-1.5">
+                {canvasElements.map((el) => (
+                  <div
+                    key={el.id}
+                    onClick={() => onZoomToElement && onZoomToElement(el.id)}
+                    className="flex items-center justify-between p-2 bg-white border border-gray-200 hover:border-blue-300 rounded-lg text-xs cursor-pointer hover:bg-blue-50/40 transition-colors group"
+                  >
+                    <div className="flex items-center gap-2 truncate">
+                      <Square className="w-3.5 h-3.5 text-gray-400" />
+                      <span className="font-medium text-gray-700 truncate">
+                        {el.data?.title || el.data?.name || el.data?.label || el.type || 'Element'}
+                      </span>
+                    </div>
+                    {onDeleteElement && (
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onDeleteElement(el.id);
+                        }}
+                        className="opacity-0 group-hover:opacity-100 p-1 hover:bg-red-50 text-gray-400 hover:text-red-500 rounded transition-opacity"
+                        title="Delete element"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    )}
+                  </div>
+                ))}
+              </div>
+            ) : selectedTask ? (
+              <LayersTab
+                selectedTask={selectedTask}
+                selectedSubtask={selectedSubtask}
+                onSubtaskClick={onSubtaskClick}
+              />
+            ) : (
+              <div className="text-center py-12 text-xs text-gray-400">
+                Nothing on the canvas yet.<br />Drag a block from Elements to begin.
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* 8. ASSETS TAB */}
+      {activeTab === 'assets' && (
+        <div className="flex flex-col h-full overflow-hidden">
+          <div className="ws-panel-head">
+            <div>
+              <h3 className="ws-panel-title">Assets</h3>
+              <p className="ws-panel-desc">Shared files, drawings, and documents.</p>
+            </div>
+            <button onClick={onClose} className="ws-icon-btn" title="Close panel">
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+          <div className="flex-1 overflow-y-auto">
+            <AssetsTab
+              selectedSubtask={selectedSubtask}
+              workspaceId={workspace?.workspaceId}
+            />
+          </div>
+        </div>
+      )}
+    </aside>
+  );
+};
+
+export default WorkspaceContextPanel;

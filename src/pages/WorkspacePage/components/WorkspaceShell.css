@@ -1,0 +1,660 @@
+/* =========================================================
+   Workspace Shell Styles
+   - Pure White Bars (Top bar, Dock, Context Panel, Status Bar)
+   - Modern Cool Slate Canvas (with alternative presets)
+   - Premium SaaS Typography & Micro-interactions
+   ========================================================= */
+
+:root {
+  /* Bars: Pure crisp white theme */
+  --ws-bar-bg: #ffffff;
+  --ws-bar-bg-subtle: #f9fafb;
+  --ws-bar-bg-hover: #f3f4f6;
+  --ws-bar-bg-active: #e5e7eb;
+  --ws-bar-border: #e5e7eb;
+  --ws-bar-border-subtle: #f1f5f9;
+  
+  /* Text colors on white bars */
+  --ws-text-main: #111827;
+  --ws-text-body: #374151;
+  --ws-text-muted: #6b7280;
+  --ws-text-faint: #9ca3af;
+  
+  /* Accent colors */
+  --ws-accent: #2563eb;
+  --ws-accent-hover: #1d4ed8;
+  --ws-accent-soft: #eff6ff;
+  --ws-accent-border: #bfdbfe;
+  
+  /* Canvas theme colors */
+  --ws-canvas-slate: #f8fafc;
+  --ws-canvas-slate-grid: #cbd5e1;
+  --ws-canvas-white: #ffffff;
+  --ws-canvas-white-grid: #e2e8f0;
+  --ws-canvas-blueprint: #f0f4f8;
+  --ws-canvas-blueprint-grid: #94a3b8;
+  
+  --ws-radius-s: 6px;
+  --ws-radius-m: 10px;
+  --ws-radius-l: 14px;
+}
+
+/* Shell Layout */
+.ws-shell {
+  display: grid;
+  grid-template-rows: 56px 1fr 34px;
+  height: 100vh;
+  width: 100vw;
+  overflow: hidden;
+  background: var(--ws-bar-bg);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  color: var(--ws-text-body);
+}
+
+/* Topbar */
+.ws-topbar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 0 16px;
+  background: var(--ws-bar-bg);
+  border-bottom: 1px solid var(--ws-bar-border);
+  z-index: 30;
+  height: 56px;
+  flex-shrink: 0;
+}
+
+.ws-back-btn {
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--ws-radius-s);
+  color: var(--ws-text-muted);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  border: 1px solid transparent;
+  background: none;
+}
+.ws-back-btn:hover {
+  background: var(--ws-bar-bg-hover);
+  color: var(--ws-text-main);
+  border-color: var(--ws-bar-border);
+}
+
+.ws-mark {
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  background: #1e293b;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 13px;
+  color: #ffffff;
+  flex-shrink: 0;
+  letter-spacing: 0.5px;
+}
+
+.ws-crumb {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.2;
+  margin-right: 4px;
+  min-width: 0;
+}
+.ws-crumb-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--ws-text-main);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 340px;
+}
+.ws-crumb-sub {
+  font-size: 11px;
+  color: var(--ws-text-faint);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 1px;
+}
+
+.ws-role-pill {
+  border: 1px solid #d1d5db;
+  padding: 1px 7px;
+  border-radius: 20px;
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: capitalize;
+}
+
+.ws-search-box {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--ws-bar-bg-subtle);
+  border: 1px solid var(--ws-bar-border);
+  border-radius: var(--ws-radius-s);
+  padding: 6px 12px;
+  color: var(--ws-text-muted);
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  min-width: 170px;
+}
+.ws-search-box:hover {
+  background: #ffffff;
+  border-color: #cbd5e1;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+}
+.ws-search-box kbd {
+  margin-left: auto;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 10px;
+  color: var(--ws-text-faint);
+  background: #ffffff;
+  border: 1px solid var(--ws-bar-border);
+  border-radius: 4px;
+  padding: 1px 5px;
+}
+
+.ws-live-pill {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(16, 185, 129, 0.08);
+  border: 1px solid rgba(16, 185, 129, 0.25);
+  color: #059669;
+  padding: 4px 10px 4px 8px;
+  border-radius: 20px;
+  font-size: 11.5px;
+  font-weight: 600;
+}
+.ws-live-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #10b981;
+  box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.6);
+  animation: wsPulse 2s infinite;
+}
+@keyframes wsPulse {
+  0% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.5); }
+  70% { box-shadow: 0 0 0 6px rgba(16, 185, 129, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+}
+
+.ws-avatars {
+  display: flex;
+  align-items: center;
+}
+.ws-avatar {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 2px solid #ffffff;
+  margin-left: -8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 600;
+  color: #ffffff;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.08);
+}
+.ws-avatar:first-child {
+  margin-left: 0;
+}
+
+.ws-icon-btn {
+  width: 34px;
+  height: 34px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--ws-radius-s);
+  border: 1px solid transparent;
+  background: none;
+  color: var(--ws-text-muted);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  position: relative;
+}
+.ws-icon-btn:hover {
+  background: var(--ws-bar-bg-hover);
+  color: var(--ws-text-main);
+  border-color: var(--ws-bar-border);
+}
+.ws-icon-btn.active {
+  background: var(--ws-accent-soft);
+  color: var(--ws-accent);
+  border-color: var(--ws-accent-border);
+}
+
+.ws-btn-primary {
+  background: #111827;
+  color: #ffffff;
+  border: none;
+  padding: 7px 14px;
+  border-radius: var(--ws-radius-s);
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.15s ease;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+}
+.ws-btn-primary:hover {
+  background: #1f2937;
+  transform: translateY(-0.5px);
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+/* Body (Dock + Context Panel + Canvas) */
+.ws-body {
+  display: flex;
+  min-height: 0;
+  height: 100%;
+  width: 100%;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Tool Dock */
+.ws-dock {
+  width: 62px;
+  background: var(--ws-bar-bg);
+  border-right: 1px solid var(--ws-bar-border);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 12px 0;
+  gap: 4px;
+  flex-shrink: 0;
+  z-index: 20;
+}
+
+.ws-dock-item {
+  width: 48px;
+  height: 48px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  border-radius: var(--ws-radius-m);
+  color: var(--ws-text-muted);
+  cursor: pointer;
+  border: none;
+  background: none;
+  transition: all 0.12s ease;
+  position: relative;
+}
+.ws-dock-item svg {
+  width: 18px;
+  height: 18px;
+}
+.ws-dock-item .ws-dock-lbl {
+  font-size: 9.5px;
+  font-weight: 500;
+  letter-spacing: 0.1px;
+}
+.ws-dock-item:hover {
+  color: var(--ws-text-main);
+  background: var(--ws-bar-bg-hover);
+}
+.ws-dock-item.active {
+  color: var(--ws-accent);
+  background: var(--ws-accent-soft);
+  font-weight: 600;
+}
+.ws-dock-item.active::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 10px;
+  bottom: 10px;
+  width: 3px;
+  background: var(--ws-accent);
+  border-radius: 0 3px 3px 0;
+}
+
+.ws-dock-divider {
+  width: 32px;
+  height: 1px;
+  background: var(--ws-bar-border);
+  margin: 6px 0;
+}
+
+/* Context Panel */
+.ws-panel {
+  width: 290px;
+  background: var(--ws-bar-bg);
+  border-right: 1px solid var(--ws-bar-border);
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  flex-shrink: 0;
+  z-index: 15;
+  transition: width 0.2s ease, transform 0.2s ease;
+}
+
+.ws-panel-head {
+  padding: 14px 16px 10px;
+  border-bottom: 1px solid var(--ws-bar-border-subtle);
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+}
+.ws-panel-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--ws-text-main);
+  margin: 0 0 2px;
+}
+.ws-panel-desc {
+  font-size: 11.5px;
+  color: var(--ws-text-muted);
+  line-height: 1.4;
+  margin: 0;
+}
+
+.ws-panel-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 12px 14px 20px;
+}
+.ws-panel-body::-webkit-scrollbar {
+  width: 6px;
+}
+.ws-panel-body::-webkit-scrollbar-thumb {
+  background: #e2e8f0;
+  border-radius: 3px;
+}
+
+.ws-section-label {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  color: var(--ws-text-faint);
+  margin: 12px 0 8px;
+  font-weight: 700;
+}
+.ws-section-label:first-child {
+  margin-top: 0;
+}
+
+/* Element Chips */
+.ws-chip-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+.ws-chip {
+  background: #ffffff;
+  border: 1px solid var(--ws-bar-border);
+  border-radius: var(--ws-radius-m);
+  padding: 10px 8px 8px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  cursor: grab;
+  color: var(--ws-text-body);
+  font-size: 11.5px;
+  font-weight: 500;
+  transition: all 0.15s ease;
+  text-align: center;
+  user-select: none;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.02);
+}
+.ws-chip:hover {
+  border-color: var(--ws-accent-border);
+  background: var(--ws-accent-soft);
+  color: var(--ws-accent);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(37, 99, 235, 0.08);
+}
+.ws-chip:active {
+  cursor: grabbing;
+  transform: scale(0.98);
+}
+.ws-chip svg {
+  width: 18px;
+  height: 18px;
+  color: var(--ws-text-muted);
+  transition: color 0.15s ease;
+}
+.ws-chip:hover svg {
+  color: var(--ws-accent);
+}
+
+.ws-hint-box {
+  background: var(--ws-bar-bg-subtle);
+  border: 1px dashed var(--ws-bar-border);
+  border-radius: var(--ws-radius-m);
+  padding: 9px 12px;
+  font-size: 11px;
+  color: var(--ws-text-muted);
+  line-height: 1.45;
+  margin-top: 8px;
+}
+
+/* Template Cards */
+.ws-tpl-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.ws-tpl-card {
+  border: 1px solid var(--ws-bar-border);
+  border-radius: var(--ws-radius-m);
+  overflow: hidden;
+  cursor: grab;
+  background: #ffffff;
+  transition: all 0.15s ease;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.02);
+}
+.ws-tpl-card:hover {
+  border-color: var(--ws-accent-border);
+  box-shadow: 0 3px 8px rgba(37, 99, 235, 0.1);
+  transform: translateY(-1px);
+}
+.ws-tpl-thumb {
+  height: 52px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #ffffff;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+}
+.ws-tpl-meta {
+  padding: 8px 10px 9px;
+}
+.ws-tpl-name {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ws-text-main);
+  margin: 0 0 2px;
+}
+.ws-tpl-sub {
+  font-size: 10.5px;
+  color: var(--ws-text-muted);
+  margin: 0;
+}
+
+/* Canvas Area */
+.ws-canvas-area {
+  flex: 1;
+  position: relative;
+  min-width: 0;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  background-color: var(--ws-canvas-slate);
+  background-image: radial-gradient(var(--ws-canvas-slate-grid) 1.2px, transparent 1.2px);
+  background-size: 22px 22px;
+  transition: background-color 0.25s ease;
+}
+
+/* Canvas Themes */
+.ws-canvas-area.theme-slate {
+  background-color: var(--ws-canvas-slate);
+  background-image: radial-gradient(var(--ws-canvas-slate-grid) 1.2px, transparent 1.2px);
+}
+.ws-canvas-area.theme-white {
+  background-color: var(--ws-canvas-white);
+  background-image: radial-gradient(var(--ws-canvas-white-grid) 1.2px, transparent 1.2px);
+}
+.ws-canvas-area.theme-blueprint {
+  background-color: var(--ws-canvas-blueprint);
+  background-image: radial-gradient(var(--ws-canvas-blueprint-grid) 1px, transparent 1px);
+}
+
+/* Empty Drop Frame */
+.ws-canvas-empty {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 380px;
+  max-width: 90%;
+  text-align: center;
+  z-index: 5;
+}
+.ws-drop-frame {
+  border: 1.5px dashed #cbd5e1;
+  border-radius: var(--ws-radius-l);
+  padding: 40px 28px 32px;
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(8px);
+  box-shadow: 0 4px 20px -6px rgba(0, 0, 0, 0.06);
+  transition: all 0.2s ease;
+}
+.ws-drop-frame.drag-over {
+  border-color: var(--ws-accent);
+  background: rgba(239, 246, 255, 0.95);
+  transform: scale(1.02);
+  box-shadow: 0 8px 30px rgba(37, 99, 235, 0.15);
+}
+.ws-drop-icon {
+  width: 44px;
+  height: 44px;
+  margin: 0 auto 16px;
+  color: #94a3b8;
+}
+.ws-drop-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--ws-text-main);
+  margin: 0 0 8px;
+}
+.ws-drop-sub {
+  font-size: 12.5px;
+  line-height: 1.55;
+  color: var(--ws-text-muted);
+  margin: 0 0 20px;
+}
+.ws-drop-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: #111827;
+  color: #ffffff;
+  border: none;
+  padding: 9px 18px;
+  border-radius: var(--ws-radius-s);
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.08);
+  transition: all 0.15s ease;
+}
+.ws-drop-cta:hover {
+  background: #1f2937;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(0,0,0,0.12);
+}
+.ws-drop-or {
+  margin-top: 14px;
+  font-size: 12px;
+  color: var(--ws-text-muted);
+}
+.ws-drop-or a {
+  color: var(--ws-accent);
+  text-decoration: none;
+  font-weight: 600;
+  cursor: pointer;
+}
+.ws-drop-or a:hover {
+  text-decoration: underline;
+}
+
+/* Status Bar */
+.ws-statusbar {
+  height: 34px;
+  background: var(--ws-bar-bg);
+  border-top: 1px solid var(--ws-bar-border);
+  display: flex;
+  align-items: center;
+  padding: 0 16px;
+  font-size: 11.5px;
+  color: var(--ws-text-muted);
+  gap: 14px;
+  z-index: 25;
+  flex-shrink: 0;
+}
+.ws-zoom-ctrl {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  margin-left: auto;
+}
+.ws-zoom-btn {
+  width: 22px;
+  height: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid transparent;
+  background: none;
+  color: var(--ws-text-muted);
+  cursor: pointer;
+  border-radius: 4px;
+  font-size: 13px;
+  transition: all 0.1s ease;
+}
+.ws-zoom-btn:hover {
+  background: var(--ws-bar-bg-hover);
+  color: var(--ws-text-main);
+  border-color: var(--ws-bar-border);
+}
+.ws-zoom-val {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 11px;
+  width: 40px;
+  text-align: center;
+  color: var(--ws-text-main);
+  font-weight: 500;
+}
+
+.ws-leave-link {
+  color: #dc2626;
+  cursor: pointer;
+  font-weight: 500;
+  transition: color 0.15s ease;
+  margin-left: 12px;
+}
+.ws-leave-link:hover {
+  text-decoration: underline;
+  color: #b91c1c;
+}

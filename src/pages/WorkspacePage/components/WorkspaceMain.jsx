@@ -214,7 +214,7 @@ const WorkspaceMain = ({
   const contentOffsetClass = (selectedTask || selectedLayer) ? 'box-border h-full pt-16' : 'h-full';
 
   return (
-    <div className="flex-1 bg-gray-50 relative transition-all duration-300 ease-in-out min-w-0">
+    <div className="flex-1 bg-transparent h-full relative transition-all duration-300 ease-in-out min-w-0">
       {/* Breadcrumb Navigation */}
       <BreadcrumbNavigation
         selectedTask={selectedTask}
@@ -293,15 +293,35 @@ const WorkspaceMain = ({
           />
         </div>
       ) : (
-        <div className="flex items-center justify-center h-full">
-          <div className="text-center">
-          <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-2">
-          <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-              </svg>
+        <div className="ws-canvas-empty">
+          <div className="ws-drop-frame">
+            <svg className="ws-drop-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6">
+              <path d="M12 3v12m0 0l-4-4m4 4l4-4" />
+              <path d="M4 17v2a2 2 0 002 2h12a2 2 0 002-2v-2" />
+            </svg>
+            <h3 className="ws-drop-title">Nothing here yet</h3>
+            <p className="ws-drop-sub">Drag a block from the left, or drop in a template to start this document.</p>
+            <button 
+              className="ws-drop-cta"
+              onClick={() => {
+                if (tasks && tasks.length > 0) {
+                  onTaskClick?.(tasks[0]);
+                  if (tasks[0].subtasks && tasks[0].subtasks.length > 0) {
+                    onSubtaskClick?.(tasks[0].subtasks[0]);
+                  } else {
+                    onCreateSubtask?.({ title: 'Workspace Canvas' });
+                  }
+                } else {
+                  onCreateTask?.({ name: 'Project Scope' });
+                }
+              }}
+            >
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M12 5v14M5 12h14"/></svg>
+              <span>Place a card</span>
+            </button>
+            <div className="ws-drop-or">
+              or <a onClick={() => window.dispatchEvent(new CustomEvent('openDockTab', { detail: 'templates' }))}>browse templates →</a>
             </div>
-            <h3 className="text-sm font-semibold text-gray-600 mb-1">Select a Task or Layer</h3>
-            <p className="text-xs text-gray-500">Click on any task or layer from the left sidebar to view its workspace</p>
           </div>
         </div>
       )}

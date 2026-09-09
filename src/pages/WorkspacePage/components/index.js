@@ -17,3 +17,8 @@ export { default as LayoutsPanel } from './LayoutsPanel';
 export { default as TextPanel } from './TextPanel';
 export { default as TemplatesPanel } from './TemplatesPanel';
 export { default as PostServicesModal } from './modals/PostServicesModal';
+export { default as WorkspaceTopBar } from './WorkspaceTopBar';
+export { default as WorkspaceDock } from './WorkspaceDock';
+export { default as WorkspaceContextPanel } from './WorkspaceContextPanel';
+export { default as WorkspaceStatusBar } from './WorkspaceStatusBar';
+export { default as WorkspaceTutorialModal } from './WorkspaceTutorialModal';

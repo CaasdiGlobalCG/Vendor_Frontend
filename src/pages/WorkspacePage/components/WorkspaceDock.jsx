@@ -1,0 +1,79 @@
+import React from 'react';
+import { 
+  Grid, 
+  Type, 
+  LayoutTemplate, 
+  GitBranch, 
+  LayoutGrid, 
+  CheckSquare, 
+  Layers, 
+  Paperclip 
+} from 'lucide-react';
+
+const WorkspaceDock = ({
+  activeTab,
+  onSelectTab,
+  isPanelOpen = true,
+  disabled = false
+}) => {
+  const topDockItems = [
+    { id: 'elements', label: 'Elements', icon: Grid, title: 'Elements library' },
+    { id: 'text', label: 'Text', icon: Type, title: 'Typography & text blocks' },
+    { id: 'templates', label: 'Templates', icon: LayoutTemplate, title: 'Workflow & document templates' },
+    { id: 'workflow', label: 'Flow', icon: GitBranch, title: 'Workflow builder' },
+    { id: 'layouts', label: 'Layouts', icon: LayoutGrid, title: 'Multi-element layouts' },
+  ];
+
+  const bottomDockItems = [
+    { id: 'tasks', label: 'Tasks', icon: CheckSquare, title: 'Project tasks & subtasks' },
+    { id: 'layers', label: 'Layers', icon: Layers, title: 'Canvas elements & layers' },
+    { id: 'assets', label: 'Assets', icon: Paperclip, title: 'Files & attachments' },
+  ];
+
+  const handleClick = (itemId) => {
+    if (disabled) return;
+    onSelectTab(itemId);
+  };
+
+  return (
+    <aside className="ws-dock" data-workspace-dock>
+      {topDockItems.map((item) => {
+        const IconComponent = item.icon;
+        const isActive = activeTab === item.id && isPanelOpen;
+        return (
+          <button
+            key={item.id}
+            onClick={() => handleClick(item.id)}
+            className={`ws-dock-item ${isActive ? 'active' : ''}`}
+            title={item.title}
+            data-tour={`${item.id}-btn`}
+          >
+            <IconComponent />
+            <span className="ws-dock-lbl">{item.label}</span>
+          </button>
+        );
+      })}
+
+      <div className="ws-dock-divider" />
+
+      {bottomDockItems.map((item) => {
+        const IconComponent = item.icon;
+        const isActive = activeTab === item.id && isPanelOpen;
+        return (
+          <button
+            key={item.id}
+            onClick={() => handleClick(item.id)}
+            className={`ws-dock-item ${isActive ? 'active' : ''}`}
+            title={item.title}
+            data-tour={`${item.id}-btn`}
+          >
+            <IconComponent />
+            <span className="ws-dock-lbl">{item.label}</span>
+          </button>
+        );
+      })}
+    </aside>
+  );
+};
+
+export default WorkspaceDock;
