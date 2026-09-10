@@ -1,14 +1,11 @@
 import React, { useState, useContext } from "react";
 import { useNavigate } from "react-router-dom";
 
-import { Amplify, Auth } from "aws-amplify";
-import awsExports from "../aws-exports";
+import { Auth } from "aws-amplify";
 import { VendorContext } from "../context/VendorContext";
 import Alert from "./ui/Alert";
 import config from '../config/env';
 import "../styles/SignUp.css";
-
-Amplify.configure(awsExports);
 
 /**
  * SignUp

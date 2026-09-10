@@ -220,7 +220,7 @@ const Layout = () => {
 // Routes that must render without RBACProvider — user is not yet authenticated
 // (new signups have a pendingVerification context user that would trigger /api/rbac/me
 //  → 401 → "Access Verification Failed" screen).
-const PRE_AUTH_PATHS = ['/signup', '/verification'];
+const PRE_AUTH_PATHS = ['/signup', '/verification', '/verify-email'];
 
 function isPreAuthPath(pathname) {
   return PRE_AUTH_PATHS.some((p) => pathname === p || pathname.startsWith(p + '/'));
@@ -232,6 +232,7 @@ function PreAuthContent() {
     <Routes>
       <Route path="/signup" element={<SignUp />} />
       <Route path="/verification" element={<Verification />} />
+      <Route path="/verify-email" element={<Verification />} />
     </Routes>
   );
 }

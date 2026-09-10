@@ -71,6 +71,59 @@
   .verification-button:focus-visible {
     background-color: #0a5a41;
   }
+
+  .verification-button:disabled,
+  .verification-secondary-action:disabled {
+    cursor: not-allowed;
+    opacity: 0.55;
+  }
+
+  .verification-code-label {
+    display: block;
+    margin-bottom: 8px;
+    color: #111827;
+    font-size: 14px;
+    font-weight: 600;
+    text-align: left;
+  }
+
+  .verification-code-input {
+    width: 100%;
+    box-sizing: border-box;
+    margin-bottom: 12px;
+    padding: 14px 16px;
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+    color: #111827;
+    font-size: 24px;
+    letter-spacing: 0.2em;
+    text-align: center;
+  }
+
+  .verification-code-input:focus {
+    outline: 2px solid #0c6b4f;
+    outline-offset: 1px;
+  }
+
+  .verification-success,
+  .verification-error {
+    margin: 0 0 16px;
+    padding: 12px 14px;
+    border-radius: 8px;
+    font-size: 14px;
+    line-height: 1.5;
+  }
+
+  .verification-success {
+    background: #dcfce7;
+    color: #166534;
+  }
+
+  .verification-error {
+    background: #fee2e2;
+    color: #991b1b;
+    text-align: left;
+  }
   
   .verification-secondary-action {
     width: 100%;
