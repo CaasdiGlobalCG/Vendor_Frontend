@@ -341,6 +341,8 @@ const WorkspacePage = () => {
   const [activeCall, setActiveCall] = useState(null);
   const [invoices, setInvoices] = useState([]);
   const [quotes, setQuotes] = useState([]);
+  const [creditNotes, setCreditNotes] = useState([]);
+  const [purchaseOrders, setPurchaseOrders] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
@@ -509,6 +511,28 @@ const WorkspacePage = () => {
         console.log('📊 Quotes data:', quotesData);
         setQuotes(quotesData.data || []);
         
+        // Fetch credit notes
+        const creditNotesRes = await fetch(`/api/workspace/credit-notes?vendorId=${currentUser.vendorId}`, {
+          headers: headers
+        });
+        
+        if (creditNotesRes.ok) {
+          const creditNotesData = await creditNotesRes.json();
+          console.log('📊 Credit notes data:', creditNotesData);
+          setCreditNotes(creditNotesData.data || []);
+        }
+        
+        // Fetch purchase orders
+        const purchaseOrdersRes = await fetch(`/api/workspace/purchase-orders?vendorId=${currentUser.vendorId}`, {
+          headers: headers
+        });
+        
+        if (purchaseOrdersRes.ok) {
+          const purchaseOrdersData = await purchaseOrdersRes.json();
+          console.log('📊 Purchase orders data:', purchaseOrdersData);
+          setPurchaseOrders(purchaseOrdersData.data || []);
+        }
+        
       } catch (err) {
         console.error('❌ Error fetching data:', err);
         setError(err.message);
@@ -535,16 +559,18 @@ const WorkspacePage = () => {
   };
 
   // Transform API data to match the expected format for elementOptions
-  const transformToElementOptions = useCallback((invoices, quotes) => {
+  const transformToElementOptions = useCallback((invoices, quotes, creditNotes, purchaseOrders) => {
     const invoiceItems = (invoices || []).map(invoice => ({
       id: invoice.id || `invoice-${invoice.invoiceId}`,
       name: invoice.displayInvoiceId ? `Tax Invoice #${invoice.displayInvoiceId}` : `Tax Invoice ${invoice.id}`,
       type: 'invoice',
+      nodeType: 'invoice',
       preview: 'Tax Invoice',
       date: invoice.date || 'N/A',
       amount: invoice.totalAmount || '₹0.00',
       status: invoice.status || 'Pending',
       statusColor: getStatusColor(invoice.status),
+      categoryId: 'invoices',
       ...invoice
     }));
 
@@ -552,22 +578,52 @@ const WorkspacePage = () => {
       id: quote.id || `quote-${quote.quotationId}`,
       name: quote.displayQuoteId ? `Quotation #${quote.displayQuoteId}` : `Quotation ${quote.id}`,
       type: 'quotation',
+      nodeType: 'quotation',
       preview: 'Project Quotation',
       date: quote.date || 'N/A',
       amount: quote.totalAmount || '₹0.00',
       status: quote.status || 'Draft',
       statusColor: getStatusColor(quote.status),
+      categoryId: 'quotations',
       ...quote
     }));
 
-    return [...invoiceItems, ...quoteItems].sort((a, b) => 
+    const creditNoteItems = (creditNotes || []).map(creditNote => ({
+      id: creditNote.id || `credit-note-${creditNote.creditNoteId}`,
+      name: creditNote.displayCreditNoteId ? `Credit Note #${creditNote.displayCreditNoteId}` : `Credit Note ${creditNote.id}`,
+      type: 'credit-note',
+      nodeType: 'creditNote',
+      preview: 'Credit Note',
+      date: creditNote.date || 'N/A',
+      amount: creditNote.creditAmount || '₹0.00',
+      status: creditNote.status || 'Draft',
+      statusColor: getStatusColor(creditNote.status),
+      categoryId: 'credit-notes',
+      ...creditNote
+    }));
+
+    const purchaseOrderItems = (purchaseOrders || []).map(purchaseOrder => ({
+      id: purchaseOrder.id || `po-${purchaseOrder.poId}`,
+      name: purchaseOrder.displayPoId ? `Purchase Order #${purchaseOrder.displayPoId}` : `Purchase Order ${purchaseOrder.id}`,
+      type: 'purchase-order',
+      nodeType: 'purchaseOrder',
+      preview: 'Purchase Order',
+      date: purchaseOrder.orderDate || 'N/A',
+      amount: purchaseOrder.totalAmount || '₹0.00',
+      status: purchaseOrder.status || 'Draft',
+      statusColor: getStatusColor(purchaseOrder.status),
+      categoryId: 'purchase-orders',
+      ...purchaseOrder
+    }));
+
+    return [...invoiceItems, ...quoteItems, ...creditNoteItems, ...purchaseOrderItems].sort((a, b) => 
       new Date(b.date) - new Date(a.date)
     );
   }, []);
 
   // Define element options with real data
   const elementOptions = useMemo(() => ({
-    'invoices-quotes': transformToElementOptions(invoices, quotes),
+    'invoices-quotes': transformToElementOptions(invoices, quotes, creditNotes, purchaseOrders),
     smart: {
       name: 'Smart Elements',
       icon: <Sparkles className="w-5 h-5" />,
@@ -849,7 +905,7 @@ const WorkspacePage = () => {
         { id: 'grid', name: 'Grid', type: 'grid', preview: 'Layout grid system' }
       ]
     }
-  }), [invoices, quotes, transformToElementOptions]);
+  }), [invoices, quotes, creditNotes, purchaseOrders, transformToElementOptions]);
   
   // RBAC state
   const [userPermissions, setUserPermissions] = useState({
@@ -1738,6 +1794,19 @@ const WorkspacePage = () => {
     setShowInvoiceTool(false);
   };
 
+  const handleDocumentClick = (document) => {
+    console.log('📄 Document clicked:', document);
+    
+    // Open invoice tool and navigate to appropriate section based on document type
+    setShowInvoiceTool(true);
+    setShowElementsPanel(false);
+    setSelectedCategory(null);
+    
+    // The InvoiceToolReplica will handle the routing based on document type
+    // For now, we'll set the document to be highlighted when the tool opens
+    // This can be enhanced in the future to auto-navigate to the specific document
+  };
+
   const handleTemplateSelect = (templateId) => {
     if (templateId === 'quotations-invoices') {
       // Navigate to invoices route instead of showing overlay
@@ -2335,6 +2404,7 @@ const WorkspacePage = () => {
             setShowElementsPanel(false);
             setShowElementsSidebar(true);
           }}
+          onDocumentClick={handleDocumentClick}
         />
       )}
 

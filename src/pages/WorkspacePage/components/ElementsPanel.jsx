@@ -244,7 +244,7 @@ const UploadsSection = () => {
 };
 
 // Invoice/Quote Card Component
-const InvoiceQuoteCard = ({ item }) => {
+const InvoiceQuoteCard = ({ item, onDocumentClick }) => {
   const handleDragStart = (event) => {
     console.log('🚀 INVOICE/QUOTE DRAG START EVENT FIRED!', event);
     
@@ -263,6 +263,15 @@ const InvoiceQuoteCard = ({ item }) => {
     event.dataTransfer.setDragImage(dragImage, 30, 30);
     
     console.log('📄 Invoice/Quote drag started:', item.name);
+  };
+
+  const handleClick = (event) => {
+    event.preventDefault();
+    event.stopPropagation();
+    console.log('📄 Document clicked:', item);
+    if (onDocumentClick) {
+      onDocumentClick(item);
+    }
   };
 
   const getStatusIcon = (status) => {
@@ -292,19 +301,46 @@ const InvoiceQuoteCard = ({ item }) => {
     }
   };
 
+  const getDocumentTypeColor = (type) => {
+    switch (type) {
+      case 'invoice':
+        return 'bg-gradient-to-br from-blue-500 to-blue-700';
+      case 'quotation':
+        return 'bg-gradient-to-br from-purple-500 to-purple-700';
+      case 'credit-note':
+        return 'bg-gradient-to-br from-orange-500 to-orange-700';
+      case 'purchase-order':
+        return 'bg-gradient-to-br from-green-500 to-green-700';
+      default:
+        return 'bg-gradient-to-br from-gray-500 to-gray-700';
+    }
+  };
+
+  const getDocumentTypeAbbreviation = (type) => {
+    switch (type) {
+      case 'invoice':
+        return 'INV';
+      case 'quotation':
+        return 'QTE';
+      case 'credit-note':
+        return 'CRN';
+      case 'purchase-order':
+        return 'PO';
+      default:
+        return 'DOC';
+    }
+  };
+
   return (
     <div 
       draggable
       onDragStart={handleDragStart}
-      className="group -mx-2 relative cursor-move hover:shadow-lg transition-all duration-200 overflow-hidden"
-      title="Drag to canvas or double-click to add"
+      onClick={handleClick}
+      className="group -mx-2 relative cursor-pointer hover:shadow-lg transition-all duration-200 overflow-hidden"
+      title="Click to view details or drag to canvas"
     >
       {/* Card Background with Gradient */}
-      <div className={`w-full h-40 rounded-lg flex flex-col p-4 text-white relative overflow-hidden ${
-        item.type === 'invoice' 
-          ? 'bg-gradient-to-br from-blue-500 to-blue-700' 
-          : 'bg-gradient-to-br from-purple-500 to-purple-700'
-      }`}>
+      <div className={`w-full h-40 rounded-lg flex flex-col p-4 text-white relative overflow-hidden ${getDocumentTypeColor(item.type)}`}>
         {/* Background Pattern */}
         <div className="absolute inset-0 opacity-10">
           <div className="absolute top-0 left-0 w-32 h-32 bg-white rounded-full -translate-x-8 -translate-y-8"></div>
@@ -315,9 +351,9 @@ const InvoiceQuoteCard = ({ item }) => {
         <div className="relative z-10 flex-1 flex flex-col">
           {/* Header */}
           <div className="flex items-center justify-between mb-2">
-            <span className="text-xs font-semibold opacity-90">{item.type === 'invoice' ? 'INV' : 'QTE'}</span>
-            <div className={`p-1.5 rounded ${item.type === 'invoice' ? 'bg-blue-400/20' : 'bg-purple-400/20'}`}>
-              {item.type === 'invoice' ? <FileDigit className="w-3 h-3" /> : <FileText className="w-3 h-3" />}
+            <span className="text-xs font-semibold opacity-90">{getDocumentTypeAbbreviation(item.type)}</span>
+            <div className="p-1.5 rounded bg-white/20">
+              <FileText className="w-3 h-3" />
             </div>
           </div>
 
@@ -674,14 +710,29 @@ const ElementsPanel = ({
   selectedCategory, 
   elementOptions = {},
   onClose,
-  onBackToCategories
+  onBackToCategories,
+  onDocumentClick
 }) => {
   // Initialize state for the modal
   const [showManageBOQ, setShowManageBOQ] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [documentTypeFilter, setDocumentTypeFilter] = useState('all'); // 'all', 'quotations', 'invoices', 'credit-notes', 'purchase-orders'
   
   // Debug logs
   console.log('📊 ElementsPanel props:', { selectedCategory, elementOptions });
+
+  // Handle document click
+  const handleDocumentClick = (document) => {
+    console.log('📄 Document click handler:', document);
+    if (onDocumentClick) {
+      onDocumentClick(document);
+    }
+  };
+
+  // Handle document type filter change
+  const handleDocumentTypeFilter = (type) => {
+    setDocumentTypeFilter(type);
+  };
   
   // Element categories with their specific elements
   const categories = {
@@ -1224,6 +1275,7 @@ const ElementsPanel = ({
           <UploadsSection />
         ) : selectedCategory === 'invoices-quotes' ? (
           <div className="space-y-3">
+            {/* Document Type Filter */}
             <div className="flex items-center justify-between mb-2">
               <h4 className="text-xs font-medium text-gray-700">Recent Documents</h4>
               <button className="text-xs text-blue-600 hover:text-blue-800 flex items-center">
@@ -1231,11 +1283,68 @@ const ElementsPanel = ({
                 New Document
               </button>
             </div>
+            
+            {/* Filter Chips */}
+            <div className="flex flex-wrap gap-1.5 mb-3">
+              <button
+                onClick={() => handleDocumentTypeFilter('all')}
+                className={`px-2 py-1 text-xs rounded-full font-medium transition-colors ${
+                  documentTypeFilter === 'all' 
+                    ? 'bg-blue-600 text-white' 
+                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                }`}
+              >
+                All
+              </button>
+              <button
+                onClick={() => handleDocumentTypeFilter('quotations')}
+                className={`px-2 py-1 text-xs rounded-full font-medium transition-colors ${
+                  documentTypeFilter === 'quotations' 
+                    ? 'bg-purple-600 text-white' 
+                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                }`}
+              >
+                Quotes
+              </button>
+              <button
+                onClick={() => handleDocumentTypeFilter('invoices')}
+                className={`px-2 py-1 text-xs rounded-full font-medium transition-colors ${
+                  documentTypeFilter === 'invoices' 
+                    ? 'bg-blue-600 text-white' 
+                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                }`}
+              >
+                Invoices
+              </button>
+              <button
+                onClick={() => handleDocumentTypeFilter('credit-notes')}
+                className={`px-2 py-1 text-xs rounded-full font-medium transition-colors ${
+                  documentTypeFilter === 'credit-notes' 
+                    ? 'bg-orange-600 text-white' 
+                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                }`}
+              >
+                Credit Notes
+              </button>
+              <button
+                onClick={() => handleDocumentTypeFilter('purchase-orders')}
+                className={`px-2 py-1 text-xs rounded-full font-medium transition-colors ${
+                  documentTypeFilter === 'purchase-orders' 
+                    ? 'bg-green-600 text-white' 
+                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                }`}
+              >
+                POs
+              </button>
+            </div>
+            
             <div className="grid grid-cols-1 gap-2">
               {filteredElements.length > 0 ? (
-                filteredElements.map((item) => (
-                  <InvoiceQuoteCard key={item.id} item={item} />
-                ))
+                filteredElements
+                  .filter(item => documentTypeFilter === 'all' || item.categoryId === documentTypeFilter)
+                  .map((item) => (
+                    <InvoiceQuoteCard key={item.id} item={item} onDocumentClick={handleDocumentClick} />
+                  ))
               ) : (
                 <div className="text-center py-4 text-gray-400">
                   <p className="text-xs">No documents found</p>

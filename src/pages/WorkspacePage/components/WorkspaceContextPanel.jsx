@@ -203,10 +203,10 @@ const WorkspaceContextPanel = ({
     const invQuotesList = Array.isArray(rawInvQuotes) && rawInvQuotes.length > 0
       ? rawInvQuotes
       : [
-          { id: 'new-quotation', name: 'Quotation Document', type: 'quotation', nodeType: 'quotation', preview: 'Line items, unit rates, taxes, and terms' },
-          { id: 'new-invoice', name: 'Tax Invoice', type: 'invoice', nodeType: 'invoice', preview: 'Billable invoice with payment status and milestone details' },
-          { id: 'credit-note', name: 'Credit Note', type: 'credit-note', nodeType: 'creditNote', preview: 'Adjustment for returns, discounts or invoice revisions' },
-          { id: 'purchase-order', name: 'Purchase Order (PO)', type: 'purchase-order', nodeType: 'purchaseOrder', preview: 'Formal procurement order issued to supplier' },
+          { id: 'new-quotation', name: 'Quotation Document', type: 'quotation', nodeType: 'quotation', preview: 'Line items, unit rates, taxes, and terms', categoryId: 'quotations' },
+          { id: 'new-invoice', name: 'Tax Invoice', type: 'invoice', nodeType: 'invoice', preview: 'Billable invoice with payment status and milestone details', categoryId: 'invoices' },
+          { id: 'credit-note', name: 'Credit Note', type: 'credit-note', nodeType: 'creditNote', preview: 'Adjustment for returns, discounts or invoice revisions', categoryId: 'credit-notes' },
+          { id: 'purchase-order', name: 'Purchase Order (PO)', type: 'purchase-order', nodeType: 'purchaseOrder', preview: 'Formal procurement order issued to supplier', categoryId: 'purchase-orders' },
         ];
 
     // Forms list
