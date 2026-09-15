@@ -157,7 +157,7 @@ const useWebSocketNotifications = (userId, userType = 'vendor') => {
 
   const markNotificationAsRead = async (notificationId) => {
     try {
-      const response = await fetch(`${config.VENDOR_BACKEND_URL}/api/notifications/${notificationId}/${userId}/read`, {
+      const response = await fetch(`${config.VENDOR_BACKEND_URL}/api/notifications/${notificationId}/read`, {
         method: 'PUT',
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`

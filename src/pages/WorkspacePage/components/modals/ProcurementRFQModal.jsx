@@ -1,4 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { Auth } from 'aws-amplify';
+import authFetch from '../../../../utils/authFetch';
 import {
   X,
   ChevronLeft,
@@ -117,10 +119,24 @@ const ProcurementRFQModal = ({
     [currentUser]
   );
 
-  const getAuthToken = () => localStorage.getItem('authToken') || '';
+  const getAuthToken = async () => {
+    try {
+      const session = await Auth.currentSession();
+      const token = session?.getIdToken?.()?.getJwtToken?.();
+      if (token) return token;
+    } catch {
+      // No active Amplify session — fall through to stored tokens
+    }
+    return (
+      sessionStorage.getItem('authToken') ||
+      localStorage.getItem('authToken') ||
+      localStorage.getItem('token') ||
+      ''
+    );
+  };
 
-  const buildAuthHeaders = (withJson = true) => {
-    const token = getAuthToken();
+  const buildAuthHeaders = async (withJson = true) => {
+    const token = await getAuthToken();
     const headers = {
       ...(withJson ? { 'Content-Type': 'application/json' } : {}),
       'x-user-info': JSON.stringify(userInfoHeader),
@@ -236,10 +252,9 @@ const ProcurementRFQModal = ({
         { role: 'user', content: question },
       ].slice(-10);
 
-      const response = await fetch('/api/ai/product-assistant', {
+      const response = await authFetch('/api/ai/product-assistant', {
         method: 'POST',
-        credentials: 'include',
-        headers: buildAuthHeaders(true),
+        headers: await buildAuthHeaders(true),
         body: JSON.stringify({
           question,
           context: {
@@ -339,10 +354,9 @@ const ProcurementRFQModal = ({
     setQueryError('');
 
     try {
-      const response = await fetch(`/api/workspace/procurement-queries/conversations/${conversationIdToLoad}`, {
+      const response = await authFetch(`/api/workspace/procurement-queries/conversations/${conversationIdToLoad}`, {
         method: 'GET',
-        credentials: 'include',
-        headers: buildAuthHeaders(false),
+        headers: await buildAuthHeaders(false),
       });
 
       const data = await response.json().catch(() => ({}));
@@ -382,10 +396,9 @@ const ProcurementRFQModal = ({
         `Delivery: ${formData.tradeLogistics.deliveryLocation || '-'}`,
       ].join('\n');
 
-      const response = await fetch('/api/workspace/procurement-queries/conversations/open', {
+      const response = await authFetch('/api/workspace/procurement-queries/conversations/open', {
         method: 'POST',
-        credentials: 'include',
-        headers: buildAuthHeaders(true),
+        headers: await buildAuthHeaders(true),
         body: JSON.stringify({
           workspaceId,
           workspaceName,
@@ -436,10 +449,9 @@ const ProcurementRFQModal = ({
     setQueryError('');
 
     try {
-      const response = await fetch(`/api/workspace/procurement-queries/conversations/${queryConversationId}/messages`, {
+      const response = await authFetch(`/api/workspace/procurement-queries/conversations/${queryConversationId}/messages`, {
         method: 'POST',
-        credentials: 'include',
-        headers: buildAuthHeaders(true),
+        headers: await buildAuthHeaders(true),
         body: JSON.stringify({ message: text }),
       });
 
@@ -474,11 +486,9 @@ const ProcurementRFQModal = ({
 
   const sendActivity = async (requestId) => {
     try {
-      await fetch('/api/activities', {
+      await authFetch('/api/activities', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
+        headers: await buildAuthHeaders(true),
         body: JSON.stringify({
           workspaceId,
           userId: userInfoHeader.vendorId || 'unknown-user',
@@ -540,12 +550,9 @@ const ProcurementRFQModal = ({
         workspaceId
       };
 
-      const response = await fetch('/api/procurement-requests', {
+      const response = await authFetch('/api/procurement-requests', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-user-info': JSON.stringify(userInfoHeader)
-        },
+        headers: await buildAuthHeaders(true),
         body: JSON.stringify(payload)
       });
 

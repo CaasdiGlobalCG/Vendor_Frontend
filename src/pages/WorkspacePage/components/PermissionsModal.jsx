@@ -115,8 +115,12 @@ const PermissionsModal = ({ isOpen, onClose, workspace, onUpdatePermissions }) =
     try {
       setSaving(true);
       
-      // Transform permissions back to the format expected by the backend
+      // Transform permissions back to the format expected by the backend.
+      // Preserve keys this modal doesn't manage (e.g. canAccessMessages,
+      // canAccessVideoCall, canAddNotes, canApproveElements) so saving here
+      // doesn't wipe them.
       const updatedPermissions = {
+        ...(workspace.accessControl?.permissions || {}),
         canEdit: [],
         canComment: [],
         canViewFiles: [],

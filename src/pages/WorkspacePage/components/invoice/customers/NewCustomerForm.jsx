@@ -3,6 +3,7 @@ import { ArrowLeft, X, Upload, Plus, Trash2 } from 'lucide-react';
 import { Country, State } from 'country-state-city';
 import { VendorContext } from "../../../../../context/VendorContext.jsx";
 import config from "../../../../../config/env";
+import invoiceFetch from '../utils/invoiceFetch';
 
 const NewCustomerForm = ({ onClose, onCustomerCreated, editMode = false, customerData = null }) => {
   const { currentUser } = useContext(VendorContext);
@@ -302,7 +303,7 @@ const NewCustomerForm = ({ onClose, onCustomerCreated, editMode = false, custome
         customerData: customerDataPayload
       };
 
-      const response = await fetch(url, {
+      const response = await invoiceFetch(url, {
         method: method,
         headers: headers,
         body: JSON.stringify(requestBody),

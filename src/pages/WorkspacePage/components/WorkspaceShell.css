@@ -256,6 +256,26 @@
   box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
 
+.ws-btn-secondary {
+  background: var(--ws-bar-bg);
+  color: var(--ws-text-body);
+  border: 1px solid var(--ws-bar-border);
+  padding: 7px 14px;
+  border-radius: var(--ws-radius-s);
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.15s ease;
+}
+.ws-btn-secondary:hover {
+  background: var(--ws-accent-soft);
+  color: var(--ws-accent);
+  border-color: var(--ws-accent-border);
+}
+
 /* Body (Dock + Context Panel + Canvas) */
 .ws-body {
   display: flex;
@@ -308,6 +328,13 @@
 .ws-dock-item:hover {
   color: var(--ws-text-main);
   background: var(--ws-bar-bg-hover);
+}
+.ws-dock-agent {
+  color: #7c3aed;
+}
+.ws-dock-agent:hover {
+  background: #f5f3ff;
+  color: #6d28d9;
 }
 .ws-dock-item.active {
   color: var(--ws-accent);

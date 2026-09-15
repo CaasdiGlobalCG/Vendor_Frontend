@@ -5,6 +5,7 @@ import { AuthProvider } from '../../../../../context/AuthContext';
 import { convertMeasurementToFeet, needsConversion } from "../../../../../utils/unitConverter";
 import { calculateRatePerSqft, calculateTotalRate, checkRateConsistency, determineCalculationTarget, formatCurrency } from "../../../../../utils/rateCalculator";
 import config from '../../../../../config/env';
+import invoiceFetch from '../utils/invoiceFetch';
 
 const CustomerSearchModal = ({ open, onClose, onSelect }) => {
   const { currentUser } = useContext(VendorContext);
@@ -27,7 +28,7 @@ const CustomerSearchModal = ({ open, onClose, onSelect }) => {
         })
       };
       
-      fetch(`/api/workspace/customers?vendorId=${currentUser?.vendorId}`, { headers })
+      invoiceFetch(`/api/workspace/customers?vendorId=${currentUser?.vendorId}`, { headers })
         .then((res) => res.json())
         .then((data) => {
           if (data.success) {
@@ -123,7 +124,7 @@ const CustomerDropdown = ({ value, onChange }) => {
       };
 
       console.log('Fetching customers from:', `/api/workspace/customers?vendorId=${vendorId}`);
-      const response = await fetch(`/api/workspace/customers?vendorId=${vendorId}`, {
+      const response = await invoiceFetch(`/api/workspace/customers?vendorId=${vendorId}`, {
         headers: headers
       });
       
@@ -496,7 +497,7 @@ const ItemSelectionModal = ({ open, onClose, onSelect }) => {
         })
       };
       
-      fetch(`/api/workspace/items?vendorId=${currentUser?.vendorId}`, { headers })
+      invoiceFetch(`/api/workspace/items?vendorId=${currentUser?.vendorId}`, { headers })
         .then((res) => res.json())
         .then((data) => {
           setItems(data.data || data.items || []);
@@ -823,7 +824,7 @@ const NewCreditNoteComponentInner = ({ onBack, onCreditNoteCreated, projectId, i
         console.log(`Fetching workspace quotations for vendor ID: ${currentUser.vendorId}${customerId ? ` and filtering by customer ID: ${customerId}` : ''}`);
         
         try {
-            const response = await fetch(`/api/workspace/quotations?vendorId=${currentUser.vendorId}`, {
+            const response = await invoiceFetch(`/api/workspace/quotations?vendorId=${currentUser.vendorId}`, {
                 headers: {
                     'Content-Type': 'application/json',
                     'x-user-info': JSON.stringify({
@@ -922,7 +923,7 @@ const NewCreditNoteComponentInner = ({ onBack, onCreditNoteCreated, projectId, i
 
     useEffect(() => {
         if (projectId) {
-            fetch(`/api/projects/${projectId}`)
+            invoiceFetch(`/api/projects/${projectId}`)
                 .then(res => res.json())
                 .then(data => setProjectName(data.projectName || ''))
                 .catch(() => setProjectName(''));
@@ -996,7 +997,7 @@ const NewCreditNoteComponentInner = ({ onBack, onCreditNoteCreated, projectId, i
             };
 
             console.log('Fetching customer details from:', `/api/workspace/customers/${customerId}?vendorId=${vendorId}`);
-            const response = await fetch(`/api/workspace/customers/${customerId}?vendorId=${vendorId}`, {
+            const response = await invoiceFetch(`/api/workspace/customers/${customerId}?vendorId=${vendorId}`, {
                 headers: headers
             });
 
@@ -1735,7 +1736,7 @@ const NewCreditNoteComponentInner = ({ onBack, onCreditNoteCreated, projectId, i
             const url = isEdit ? `/api/workspace/credit-notes/${creditNoteId}` : `/api/workspace/credit-notes`;
             const method = isEdit ? 'PUT' : 'POST';
             
-            const res = await fetch(url, {
+            const res = await invoiceFetch(url, {
                 method: method,
                 headers: headers,
                 body: JSON.stringify(creditNoteData),

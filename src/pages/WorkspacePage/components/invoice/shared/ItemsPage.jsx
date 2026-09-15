@@ -5,6 +5,7 @@ import AddItemModal from "../../../../../components/AddItemModal";
 import ItemViewModal from "../../../../../components/ItemViewModal";
 import ItemEditModal from '../../../../../components/ItemEditModal';
 import config from '../../../../../config/env';
+import invoiceFetch from '../utils/invoiceFetch';
 
 const ItemsPage = () => {
   const { currentUser } = useContext(VendorContext);
@@ -42,7 +43,7 @@ const ItemsPage = () => {
           })
         };
         
-        const response = await fetch(`/api/workspace/items?vendorId=${vendorId}`, {
+        const response = await invoiceFetch(`/api/workspace/items?vendorId=${vendorId}`, {
           headers: headers
         });
         
@@ -157,7 +158,7 @@ const ItemsPage = () => {
         })
       };
 
-      const response = await fetch(`/api/workspace/items/${item.id}`, {
+      const response = await invoiceFetch(`/api/workspace/items/${item.id}`, {
         method: 'DELETE',
         headers: headers
       });

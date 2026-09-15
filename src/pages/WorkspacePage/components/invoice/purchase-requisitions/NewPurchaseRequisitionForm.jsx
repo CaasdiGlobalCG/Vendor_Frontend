@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { VendorContext } from '../../../../../context/VendorContext.jsx';
 import config from '../../../../../config/env';
 import { 
+//
   Plus, 
   X, 
   Calendar as CalendarIcon, 
@@ -12,6 +13,7 @@ import {
   ArrowLeft,
   IndianRupee
 } from 'lucide-react';
+import invoiceFetch from '../utils/invoiceFetch';
 
 const NewPurchaseRequisitionForm = ({ onBack, workspaceId }) => {
   const { currentUser } = useContext(VendorContext);
@@ -209,7 +211,7 @@ const NewPurchaseRequisitionForm = ({ onBack, workspaceId }) => {
       };
 
       console.log('Submitting purchase requisition with payload:', payload);
-      const response = await fetch(`/api/workspace/purchase-requisitions`, {
+      const response = await invoiceFetch(`/api/workspace/purchase-requisitions`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

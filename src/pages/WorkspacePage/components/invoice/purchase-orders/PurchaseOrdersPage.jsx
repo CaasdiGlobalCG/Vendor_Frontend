@@ -20,6 +20,7 @@ import {
 import { VendorContext } from '../../../../../context/VendorContext.jsx';
 import config from "../../../../../config/env";
 import StandardPreview from '../shared/StandardPreview.jsx';
+import invoiceFetch from '../utils/invoiceFetch';
 
 const PurchaseOrdersPage = ({ workspaceId, workspaceName, selectedTask, selectedSubtask, sourceQuote, onSourceConsumed, onConvertToInvoice }) => {
   const { currentUser } = useContext(VendorContext);
@@ -73,7 +74,7 @@ const PurchaseOrdersPage = ({ workspaceId, workspaceName, selectedTask, selected
         })
       };
 
-      const response = await fetch(`/api/workspace/purchase-orders?vendorId=${vendorId}`, {
+      const response = await invoiceFetch(`/api/workspace/purchase-orders?vendorId=${vendorId}`, {
         headers: headers
       });
 
@@ -266,7 +267,7 @@ const PurchaseOrdersPage = ({ workspaceId, workspaceName, selectedTask, selected
 
         // Get presigned URL for upload
         console.log('🔐 Getting presigned URL from S3...');
-        const presignResponse = await fetch(
+        const presignResponse = await invoiceFetch(
           `/api/s3/generate-upload-url?filename=po-${nextPoNumber}-${Date.now()}.pdf&contentType=application/pdf`
         );
 
@@ -278,7 +279,7 @@ const PurchaseOrdersPage = ({ workspaceId, workspaceName, selectedTask, selected
         console.log('✅ Got presigned URL, uploading to S3...');
 
         // Upload PDF to S3 using presigned URL
-        const uploadResponse = await fetch(presignedUrl, {
+        const uploadResponse = await invoiceFetch(presignedUrl, {
           method: 'PUT',
           headers: {
             'Content-Type': 'application/pdf'
@@ -353,7 +354,7 @@ const PurchaseOrdersPage = ({ workspaceId, workspaceName, selectedTask, selected
 
       console.log('📤 Creating purchase order from quote:', body);
 
-      const response = await fetch('/api/workspace/purchase-orders', {
+      const response = await invoiceFetch('/api/workspace/purchase-orders', {
         method: 'POST',
         headers,
         body: JSON.stringify(body)
@@ -409,7 +410,7 @@ const PurchaseOrdersPage = ({ workspaceId, workspaceName, selectedTask, selected
       console.log('🔄 Approving PO:', order.id);
 
       // Call backend endpoint to approve PO
-      const response = await fetch(`/api/workspace/purchase-orders/${order.id}/vendor-approve`, {
+      const response = await invoiceFetch(`/api/workspace/purchase-orders/${order.id}/vendor-approve`, {
         method: 'POST',
         headers: headers,
         body: JSON.stringify({

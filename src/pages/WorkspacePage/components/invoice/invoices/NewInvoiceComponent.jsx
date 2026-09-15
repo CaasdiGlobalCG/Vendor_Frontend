@@ -9,6 +9,7 @@ import authFetch from '../../../../../utils/authFetch';
 import html2pdf from 'html2pdf.js';
 import { createRoot } from 'react-dom/client';
 import StandardPreview from '../shared/StandardPreview.jsx';
+import invoiceFetch from '../utils/invoiceFetch';
 
 // Fixed Caasdi Global customer used for all invoices
 const CAASDI_GLOBAL_CUSTOMER = {
@@ -67,7 +68,7 @@ const CustomerSearchModal = ({ open, onClose, onSelect }) => {
         })
       };
       
-      fetch(`/api/workspace/customers?vendorId=${currentUser?.vendorId}`, { headers })
+      invoiceFetch(`/api/workspace/customers?vendorId=${currentUser?.vendorId}`, { headers })
         .then((res) => res.json())
         .then((data) => {
           if (data.success) {
@@ -163,7 +164,7 @@ const CustomerDropdown = ({ value, onChange }) => {
       };
 
       console.log('Fetching customers from:', `/api/workspace/customers?vendorId=${vendorId}`);
-      const response = await fetch(`/api/workspace/customers?vendorId=${vendorId}`, {
+      const response = await invoiceFetch(`/api/workspace/customers?vendorId=${vendorId}`, {
         headers: headers
       });
       
@@ -562,7 +563,7 @@ const ItemSelectionModal = ({ open, onClose, onSelect }) => {
         })
       };
       
-      fetch(`/api/workspace/items?vendorId=${currentUser?.vendorId}`, { headers })
+      invoiceFetch(`/api/workspace/items?vendorId=${currentUser?.vendorId}`, { headers })
         .then((res) => res.json())
         .then((data) => {
           setItems(data.data || data.items || []);
@@ -756,7 +757,7 @@ const NewInvoiceComponentInner = ({ onBack, projectId, initialData, duplicateMod
 
     useEffect(() => {
         if (projectId) {
-            fetch(`/api/projects/${projectId}`)
+            invoiceFetch(`/api/projects/${projectId}`)
                 .then(res => res.json())
                 .then(data => setProjectName(data.projectName || ''))
                 .catch(() => setProjectName(''));
@@ -1016,7 +1017,7 @@ const NewInvoiceComponentInner = ({ onBack, projectId, initialData, duplicateMod
             };
 
             console.log('Fetching customer details from:', `/api/workspace/customers/${customerId}?vendorId=${vendorId}`);
-            const response = await fetch(`/api/workspace/customers/${customerId}?vendorId=${vendorId}`, {
+            const response = await invoiceFetch(`/api/workspace/customers/${customerId}?vendorId=${vendorId}`, {
                 headers: headers
             });
 
@@ -1965,7 +1966,7 @@ const NewInvoiceComponentInner = ({ onBack, projectId, initialData, duplicateMod
                 isCaasdiGlobal: selectedCustomer?.isCaasdiGlobal
             });
             
-            const res = await fetch(url, {
+            const res = await invoiceFetch(url, {
                 method: method,
                 headers: headers,
                 body: jsonPayload,

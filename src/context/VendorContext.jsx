@@ -80,6 +80,15 @@ export const VendorProvider = ({ children }) => {
     return isInviteAcceptRoute(window.location);
   }, []);
 
+  // True when the current URL is an external PM/CAS workspace access link.
+  // In that mode the WorkspacePage owns identity (via the handoff exchange)
+  // and hydration must not overwrite/clear it with vendor state.
+  const isExternalAccessLink = useCallback(() => {
+    if (typeof window === 'undefined') return false;
+    const role = new URLSearchParams(window.location.search).get('userRole');
+    return role === 'pm' || role === 'cas';
+  }, []);
+
   const hydrateCurrentUser = useCallback(async () => {
     try {
       setIsHydratingUser(true);
@@ -157,7 +166,7 @@ export const VendorProvider = ({ children }) => {
 
       // If neither token nor session resolves a user, clear state.
       if (!email && !vendorId) {
-        setCurrentUser(null);
+        if (!isExternalAccessLink()) setCurrentUser(null);
         return { ok: false, status: meAttempt?.status || 401 };
       }
 
@@ -179,11 +188,15 @@ export const VendorProvider = ({ children }) => {
         try { setVendorData(JSON.parse(savedDraft)); } catch {}
       }
 
-      setCurrentUser(hydratedUser);
+      // On external access links the workspace page sets the PM/CAS identity;
+      // don't clobber it with the ambient vendor identity.
+      if (!isExternalAccessLink()) {
+        setCurrentUser(hydratedUser);
+      }
       return { ok: true, user: hydratedUser };
     } catch (error) {
       console.error('VendorContext - Failed to hydrate current user:', error);
-      setCurrentUser(null);
+      if (!isExternalAccessLink()) setCurrentUser(null);
       return { ok: false, error };
     } finally {
       setIsHydratingUser(false);
@@ -192,7 +205,7 @@ export const VendorProvider = ({ children }) => {
         sessionStorage.removeItem(AUTH_TRANSITION_STARTED_AT_KEY);
       } catch {}
     }
-  }, []);
+  }, [isExternalAccessLink]);
 
   // Debug effect to log when currentUser changes
   useEffect(() => {

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useContext, useMemo, useCallback } from 'react';
+import React, { useState, useEffect, useContext, useMemo, useCallback, useRef } from 'react';
 import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import { 
   AddTaskModal, 
@@ -11,7 +11,6 @@ import {
   ElementsPanel,
   LayoutsPanel,
   TextPanel,
-  TemplatesPanel,
   WorkspaceTopBar,
   WorkspaceDock,
   WorkspaceContextPanel,
@@ -23,6 +22,7 @@ import ShareProgressModal from '../../components/ShareProgressModal';
 import { Sparkles, FileText, Calendar, CheckCircle, StickyNote, ClipboardCheck, PanelLeft, PanelRight, Maximize2, ZoomIn, Eye, Layout, HelpCircle, Keyboard } from 'lucide-react';
 import ManageBOQModal from './components/ManageBOQModal';
 import CommandPalette from './components/CommandPalette';
+import AICanvasBuilderModal from './components/modals/AICanvasBuilderModal';
 import KeyboardShortcutsOverlay from './components/KeyboardShortcutsOverlay';
 import { ToastProvider } from './components/ToastProvider';
 import { UploadProvider } from './components/forms/UploadManager';
@@ -63,6 +63,8 @@ const WorkspacePage = () => {
   const urlUserId = urlParams.get('userId');
   const urlUserName = urlParams.get('userName');
   const urlUserEmail = urlParams.get('userEmail');
+  // 'extHandoff' (not 'handoff') — App.jsx owns ?handoff= for client→vendor switches
+  const urlHandoff = urlParams.get('extHandoff');
   
   // Check sessionStorage for PM user data (from PM dashboard)
   const storedPmUser = sessionStorage.getItem('pmUser');
@@ -151,6 +153,115 @@ const WorkspacePage = () => {
       setUser(casUser);
     }
   }, [pmUserFromStorage, pmUserFromUrl, casUser, currentUser?.role, setUser]);
+
+  // ── External handoff exchange (PM / CAS opening from the Employee app) ──
+  // The Employee backend issues a one-time code appended as ?extHandoff=<code>.
+  // Exchange it for a vendor-signed session (vg_auth cookie + Bearer token)
+  // BEFORE any workspace data is fetched — the API requires authentication.
+  const [externalAuthStatus, setExternalAuthStatus] = useState(
+    urlHandoff ? 'pending' : 'idle'
+  );
+  const [externalAuthError, setExternalAuthError] = useState(null);
+
+  useEffect(() => {
+    if (!urlHandoff || externalAuthStatus !== 'pending') return;
+
+    // The code is single-use, but AccessDeniedGuard unmounts/remounts this page
+    // while RBAC state settles — so the exchange result is stashed in
+    // sessionStorage keyed by the code. A remount during/after the exchange
+    // adopts the stored result instead of firing a second (doomed) request.
+    const markerKey = `externalExchanged:${urlHandoff}`;
+
+    const stripParam = () => {
+      const params = new URLSearchParams(location.search);
+      params.delete('extHandoff');
+      const nextSearch = params.toString();
+      navigate(`${location.pathname}${nextSearch ? `?${nextSearch}` : ''}`, { replace: true });
+    };
+
+    const applyResult = (data) => {
+      // Bearer token covers authenticateUser routes (/api/workspace/*);
+      // the vg_auth cookie covers authenticateCognitoJwt routes.
+      if (data.authToken) localStorage.setItem('authToken', data.authToken);
+      sessionStorage.setItem('externalAuthSession', '1');
+
+      const u = data.user || {};
+      const role = u.role === 'cas' ? 'cas' : 'pm';
+      setUser({
+        id: u.userId,
+        userId: u.userId,
+        pmId: role === 'pm' ? u.userId : undefined,
+        name: u.name || (role === 'pm' ? 'Project Manager' : 'CAS User'),
+        email: u.email || '',
+        role,
+        external: true,
+        accessedFrom: role === 'pm' ? 'pm-dashboard' : 'trunky-dashboard',
+        timestamp: Date.now()
+      });
+
+      stripParam();
+      setExternalAuthStatus('done');
+    };
+
+    const adoptStoredResult = () => {
+      const stored = sessionStorage.getItem(markerKey);
+      if (stored && stored !== 'pending') {
+        try { applyResult(JSON.parse(stored)); } catch {}
+        return true;
+      }
+      return false;
+    };
+
+    (async () => {
+      try {
+        if (adoptStoredResult()) return;
+
+        if (sessionStorage.getItem(markerKey) === 'pending') {
+          // A sibling mount already claimed this code — wait for its result.
+          for (let i = 0; i < 60; i++) {
+            await new Promise((r) => setTimeout(r, 250));
+            if (adoptStoredResult()) return;
+            if (sessionStorage.getItem(markerKey) !== 'pending') break;
+          }
+          // Sibling's fetch died mid-flight; its vg_auth cookie may still have
+          // landed. Proceed optimistically — a real failure surfaces as a 401
+          // from the workspace load below.
+          stripParam();
+          setExternalAuthStatus('done');
+          return;
+        }
+
+        // Claim the code synchronously so a remount can't double-exchange.
+        sessionStorage.setItem(markerKey, 'pending');
+
+        try {
+          const res = await fetch(
+            `/api/auth/handoff/external-exchange?code=${encodeURIComponent(urlHandoff)}`,
+            { credentials: 'include' }
+          );
+          if (!res.ok) {
+            const body = await res.json().catch(() => ({}));
+            throw new Error(body?.error || `Exchange failed: ${res.status}`);
+          }
+          const data = await res.json();
+          sessionStorage.setItem(markerKey, JSON.stringify({
+            authToken: data.authToken,
+            user: data.user,
+          }));
+          applyResult(data);
+        } catch (err) {
+          // If the sibling mount completed meanwhile, adopt its result.
+          if (adoptStoredResult()) return;
+          sessionStorage.removeItem(markerKey);
+          throw err;
+        }
+      } catch (err) {
+        console.error('[WorkspacePage] External handoff exchange failed:', err?.message || err);
+        setExternalAuthStatus('failed');
+        setExternalAuthError(err?.message || 'Access link is invalid or expired');
+      }
+    })();
+  }, [urlHandoff, externalAuthStatus, setUser, navigate, location.search, location.pathname]);
 
   // WebSocket notifications hook
   const userId = currentUser?.id || currentUser?.userId || currentUser?.pmId || currentUser?.vendorId;
@@ -266,7 +377,6 @@ const WorkspacePage = () => {
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [showLayoutsPanel, setShowLayoutsPanel] = useState(false);
   const [showTextPanel, setShowTextPanel] = useState(false);
-  const [showTemplatesPanel, setShowTemplatesPanel] = useState(false);
   const [showInvoiceTool, setShowInvoiceTool] = useState(false);
   const [selectedTextElement, setSelectedTextElement] = useState(null);
   const [showManageBOQModal, setShowManageBOQModal] = useState(false);
@@ -922,6 +1032,14 @@ const WorkspacePage = () => {
 
   // Load workspace data
   useEffect(() => {
+    // Wait for the external handoff exchange to finish before fetching.
+    if (externalAuthStatus === 'pending') return;
+    if (externalAuthStatus === 'failed') {
+      setWorkspaceError(externalAuthError || 'Access link is invalid or expired. Please reopen the workspace from your dashboard.');
+      setWorkspaceLoading(false);
+      return;
+    }
+
     const loadWorkspace = async () => {
       if (!workspaceId) {
         setWorkspaceError('No workspace ID provided');
@@ -1038,8 +1156,8 @@ const WorkspacePage = () => {
             canUpdateTaskStatus: permissions.canUpdateTaskStatus?.includes(userId) || finalRole === 'vendor' || finalRole === 'cas',
             canAddNotes: permissions.canAddNotes?.includes(userId) || finalRole === 'client',
             canApproveElements: permissions.canApproveElements?.includes(userId) || finalRole === 'client',
-            canAccessMessages: permissions.canAccessMessages?.includes(userId) || finalRole === 'client',
-            canAccessVideoCall: permissions.canAccessVideoCall?.includes(userId) || finalRole === 'client'
+            canAccessMessages: true, // Messaging is always accessible to all collaborators
+            canAccessVideoCall: true // Video calls are always accessible to all collaborators
           });
         } else {
           // Default permissions for non-RBAC workspaces
@@ -1053,8 +1171,8 @@ const WorkspacePage = () => {
             canUpdateTaskStatus: finalRole === 'vendor' || finalRole === 'cas',
             canAddNotes: finalRole === 'client',
             canApproveElements: finalRole === 'client',
-            canAccessMessages: finalRole === 'client',
-            canAccessVideoCall: finalRole === 'client'
+            canAccessMessages: true, // Messaging is always accessible to all collaborators
+            canAccessVideoCall: true // Video calls are always accessible to all collaborators
           });
         }
         
@@ -1068,7 +1186,7 @@ const WorkspacePage = () => {
     };
 
     loadWorkspace();
-  }, [workspaceId, currentUser, buildAuthHeaders]);
+  }, [workspaceId, currentUser, buildAuthHeaders, externalAuthStatus, externalAuthError]);
 
   // Listen for approval completion events and refresh workspace
   useEffect(() => {
@@ -1359,6 +1477,7 @@ const WorkspacePage = () => {
 
   // ── Command Palette & Shortcuts Overlay state ──────────────────
   const [showCommandPalette, setShowCommandPalette] = useState(false);
+  const [showAIBuilder, setShowAIBuilder] = useState(false);
   const [showShortcutsOverlay, setShowShortcutsOverlay] = useState(false);
 
   // Build command palette commands list
@@ -1375,10 +1494,22 @@ const WorkspacePage = () => {
     { id: 'templates', label: 'Open Templates Panel', category: 'Panels', icon: <Sparkles className="w-4 h-4" />, keywords: ['templates', 'flowchart', 'preset'], action: () => handleTemplatesClick() },
     { id: 'post-services', label: 'Post Service', category: 'Actions', icon: <FileText className="w-4 h-4" />, keywords: ['post', 'service', 'publish'], action: () => setShowPostServicesModal(true) },
     { id: 'shortcuts', label: 'Show Keyboard Shortcuts', category: 'Help', icon: <Keyboard className="w-4 h-4" />, shortcut: '?', keywords: ['keyboard', 'shortcuts', 'help', 'keys'], action: () => setShowShortcutsOverlay(true) },
+    { id: 'ai-canvas-builder', label: 'AI Canvas Builder', category: 'Canvas', icon: <Sparkles className="w-4 h-4" />, keywords: ['ai', 'generate', 'flow', 'build', 'canvas', 'agent', 'auto'], action: () => setShowAIBuilder(true) },
     { id: 'ai-helper', label: 'Add AI Helper Block', category: 'Canvas', icon: <Sparkles className="w-4 h-4" />, keywords: ['ai', 'helper', 'summarize', 'suggest', 'generate', 'flow', 'assistant'], action: () => {
       document.dispatchEvent(new CustomEvent('addElementToCanvas', { detail: { type: 'ai-helper', name: 'AI Helper', nodeType: 'aiHelper', data: { label: 'AI Helper' } } }));
     }},
-  ], [focusMode, leftPanelPinned, rightPanelPinned, selectedTask]);
+    // Canvas elements — "Go to" commands zoom to the node on the canvas
+    ...(canvasNodes || [])
+      .filter(n => n?.id && n?.data?.name)
+      .map(n => ({
+        id: `goto-${n.id}`,
+        label: `Go to ${n.data.name}`,
+        category: 'Canvas Elements',
+        icon: <ZoomIn className="w-4 h-4" />,
+        keywords: ['element', 'node', 'find', 'zoom', 'goto', String(n.data.name).toLowerCase()],
+        action: () => document.dispatchEvent(new CustomEvent('zoomToElement', { detail: { elementId: n.id } }))
+      })),
+  ], [focusMode, leftPanelPinned, rightPanelPinned, selectedTask, canvasNodes]);
 
   // Add keyboard shortcuts and ensure full-page display
   React.useEffect(() => {
@@ -1473,12 +1604,18 @@ const WorkspacePage = () => {
     return Array.from(uniqueById.values());
   }, [workspaceCollaborators]);
   
+  // Only auto-select the first task once per workspace — after that, the user
+  // may intentionally navigate Home and we must not re-select for them
+  const hasAutoSelectedTaskRef = useRef(false);
+  useEffect(() => { hasAutoSelectedTaskRef.current = false; }, [workspace?.workspaceId]);
+
   // Update tasks when workspace loads
   useEffect(() => {
     if (workspace?.tasks) {
       setTasks(workspace.tasks);
       // Auto-select initial task and subtask if none currently selected
-      if (!selectedTask && workspace.tasks.length > 0) {
+      if (!hasAutoSelectedTaskRef.current && !selectedTask && workspace.tasks.length > 0) {
+        hasAutoSelectedTaskRef.current = true;
         const firstTask = workspace.tasks[0];
         setSelectedTask(firstTask);
         if (firstTask.subtasks && firstTask.subtasks.length > 0) {
@@ -1740,7 +1877,6 @@ const WorkspacePage = () => {
   const handleElementsClick = () => {
     setShowElementsSidebar(true);
     setShowLayoutsPanel(false); // Close layouts if open
-    setShowTemplatesPanel(false);
     setShowInvoiceTool(false);
   };
 
@@ -1750,7 +1886,6 @@ const WorkspacePage = () => {
     setShowElementsPanel(false);
     setSelectedCategory(null);
     setShowTextPanel(false);
-    setShowTemplatesPanel(false);
     setShowInvoiceTool(false);
   };
 
@@ -1760,7 +1895,6 @@ const WorkspacePage = () => {
     setShowElementsSidebar(false);
     setShowElementsPanel(false);
     setSelectedCategory(null);
-    setShowTemplatesPanel(false);
     setShowInvoiceTool(false);
   };
 
@@ -1774,7 +1908,8 @@ const WorkspacePage = () => {
   };
 
   const handleTemplatesClick = () => {
-    setShowTemplatesPanel(true);
+    setDockActiveTab('templates');
+    setIsContextPanelOpen(true);
     setShowTextPanel(false);
     setShowLayoutsPanel(false);
     setShowElementsSidebar(false);
@@ -1785,7 +1920,6 @@ const WorkspacePage = () => {
 
   const handleWorkflowBuilderClick = () => {
     setShowWorkflowBuilderModal(true);
-    setShowTemplatesPanel(false);
     setShowTextPanel(false);
     setShowLayoutsPanel(false);
     setShowElementsSidebar(false);
@@ -1811,7 +1945,7 @@ const WorkspacePage = () => {
     if (templateId === 'quotations-invoices') {
       // Navigate to invoices route instead of showing overlay
       navigate(`/VendorDashboard/workspace/${workspaceId}/invoices`);
-      setShowTemplatesPanel(false);
+      setIsContextPanelOpen(false);
       // Close other panels
       setShowTextPanel(false);
       setShowLayoutsPanel(false);
@@ -1821,7 +1955,7 @@ const WorkspacePage = () => {
     } else if (templateId === 'boq') {
       // Open Manage BOQ modal
       setShowManageBOQModal(true);
-      setShowTemplatesPanel(false);
+      setIsContextPanelOpen(false);
       // Close other panels
       setShowTextPanel(false);
       setShowLayoutsPanel(false);
@@ -1830,7 +1964,7 @@ const WorkspacePage = () => {
       setSelectedCategory(null);
     } else if (templateId === 'procurement-rfq') {
       setShowProcurementRFQModal(true);
-      setShowTemplatesPanel(false);
+      setIsContextPanelOpen(false);
       setShowTextPanel(false);
       setShowLayoutsPanel(false);
       setShowElementsSidebar(false);
@@ -1838,7 +1972,7 @@ const WorkspacePage = () => {
       setSelectedCategory(null);
     } else if (templateId === 'cost-calculators') {
       setShowCostCalculatorsModal(true);
-      setShowTemplatesPanel(false);
+      setIsContextPanelOpen(false);
       setShowTextPanel(false);
       setShowLayoutsPanel(false);
       setShowElementsSidebar(false);
@@ -1847,7 +1981,7 @@ const WorkspacePage = () => {
     } else if (templateId === 'execution-work-order' || templateId === 'execution-rfi' || templateId === 'execution-inspection' || templateId === 'execution-daily-site-log') {
       setExecutionTemplateType(templateId);
       setShowExecutionRequestModal(true);
-      setShowTemplatesPanel(false);
+      setIsContextPanelOpen(false);
       setShowTextPanel(false);
       setShowLayoutsPanel(false);
       setShowElementsSidebar(false);
@@ -1868,9 +2002,8 @@ const WorkspacePage = () => {
     // Close other panels
     setShowLayoutsPanel(false);
     setShowTextPanel(false);
-    setShowTemplatesPanel(false);
     setShowInvoiceTool(false);
-    
+
     console.log('📊 Panel state after selection:', {
       showElementsPanel: true,
       selectedCategory: categoryId,
@@ -2179,12 +2312,16 @@ const WorkspacePage = () => {
           onToggleActivityDrawer={() => setRightPanelPinned(p => !p)}
           isActivityDrawerOpen={rightPanelPinned}
           unreadCount={unreadCount}
+          notifications={notifications}
+          onMarkNotificationAsRead={markNotificationAsRead}
+          onMarkAllNotificationsAsRead={markAllAsRead}
           onStartCall={handleStartCallClick}
           onManagePermissions={handleManagePermissions}
           onInviteVendors={handleInviteVendors}
           onInviteCAS={handleInviteCAS}
           onShareProgress={() => setShowShareModal(true)}
           onOpenPostServices={() => setShowPostServicesModal(true)}
+          onOpenAIBuilder={() => setShowAIBuilder(true)}
           onOpenUpdateProgress={() => setShowUpdateProgressModal(true)}
           onOpenReviewProgress={() => setShowReviewProgressModal(true)}
           onOpenClientReviewProgress={() => setShowClientReviewProgressModal(true)}
@@ -2262,9 +2399,10 @@ const WorkspacePage = () => {
                 document.dispatchEvent(event);
               }}
               onWorkflowBuilderClick={handleWorkflowBuilderClick}
-              onTemplateSelect={handleTemplatesClick}
+              onTemplateSelect={handleTemplateSelect}
               selectedTextElement={selectedTextElement}
               onUpdateTextElement={handleUpdateTextElement}
+              onLaunchAgent={() => setShowAIBuilder(true)}
             />
           )}
 
@@ -2279,6 +2417,7 @@ const WorkspacePage = () => {
               zoomLevel={zoomLevel}
               showElementsPanel={showElementsPanel}
               onBackToHome={handleBackToHome}
+              onTaskClick={handleTaskClick}
               onBackToTask={handleBackToTask}
               onBackToLayer={handleBackToLayer}
               onSubtaskClick={handleSubtaskClick}
@@ -2420,13 +2559,6 @@ const WorkspacePage = () => {
         onClose={() => setShowTextPanel(false)}
         selectedTextElement={selectedTextElement}
         onUpdateTextElement={handleUpdateTextElement}
-      />
-
-      {/* Templates Panel */}
-      <TemplatesPanel
-        isOpen={showTemplatesPanel}
-        onClose={() => setShowTemplatesPanel(false)}
-        onTemplateSelect={handleTemplateSelect}
       />
 
       {/* Manage BOQ Modal (template shortcut) */}
@@ -2663,6 +2795,11 @@ const WorkspacePage = () => {
         isOpen={showCommandPalette}
         onClose={() => setShowCommandPalette(false)}
         commands={paletteCommands}
+      />
+      <AICanvasBuilderModal
+        isOpen={showAIBuilder}
+        onClose={() => setShowAIBuilder(false)}
+        canvasElements={canvasNodes}
       />
 
       {/* Keyboard Shortcuts Overlay */}

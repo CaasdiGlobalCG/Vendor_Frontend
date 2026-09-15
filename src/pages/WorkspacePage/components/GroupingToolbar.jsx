@@ -1,10 +1,16 @@
 import React from 'react';
-import { Grid, Users, Combine, X } from 'lucide-react';
+import {
+  Grid, Users, Combine, X,
+  AlignStartVertical, AlignCenterVertical, AlignEndVertical,
+  AlignStartHorizontal, AlignCenterHorizontal, AlignEndHorizontal,
+  AlignHorizontalDistributeCenter, AlignVerticalDistributeCenter
+} from 'lucide-react';
 
 const GroupingToolbar = ({ 
   isVisible, 
   selectedCount, 
   onGroupIntoGrid, 
+  onAlign,
   onClose,
   position = { x: 50, y: 50 }
 }) => {
@@ -68,6 +74,34 @@ const GroupingToolbar = ({
             </div>
           </div>
         </button>
+
+        {/* Align & distribute */}
+        {onAlign && (
+          <div className="pt-1">
+            <div className="text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1.5">Align</div>
+            <div className="grid grid-cols-4 gap-1">
+              {[
+                { mode: 'left', icon: AlignStartVertical, title: 'Align left' },
+                { mode: 'centerH', icon: AlignCenterVertical, title: 'Align center horizontally' },
+                { mode: 'right', icon: AlignEndVertical, title: 'Align right' },
+                { mode: 'distributeH', icon: AlignHorizontalDistributeCenter, title: 'Distribute horizontally' },
+                { mode: 'top', icon: AlignStartHorizontal, title: 'Align top' },
+                { mode: 'centerV', icon: AlignCenterHorizontal, title: 'Align center vertically' },
+                { mode: 'bottom', icon: AlignEndHorizontal, title: 'Align bottom' },
+                { mode: 'distributeV', icon: AlignVerticalDistributeCenter, title: 'Distribute vertically' },
+              ].map(({ mode, icon: Icon, title }) => (
+                <button
+                  key={mode}
+                  onClick={() => onAlign(mode)}
+                  title={title}
+                  className="flex items-center justify-center p-2 rounded-lg border border-gray-200 text-gray-500 hover:bg-blue-50 hover:text-blue-600 hover:border-blue-300 transition-colors"
+                >
+                  <Icon className="w-4 h-4" />
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* Future grouping options can be added here */}
         <button

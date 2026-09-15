@@ -23,6 +23,12 @@ let refreshPromise = null;
  * @returns {Promise<boolean>} true if refresh succeeded, false otherwise
  */
 async function refreshSession() {
+  // External PM/CAS sessions are not Cognito-backed — there is nothing to
+  // refresh via Amplify. Let the 401 propagate instead of a doomed refresh.
+  try {
+    if (sessionStorage.getItem('externalAuthSession') === '1') return false;
+  } catch {}
+
   // Dedup: if a refresh is already running, piggyback on it
   if (refreshPromise) return refreshPromise;
 

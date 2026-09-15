@@ -890,11 +890,6 @@ const LeadDetailPage = () => {
                 >
                     Need help with this lead?
                 </button>
-                <p className="text-sm text-gray-500 italic">Approve/Reject actions require backend connection.</p>
-                {/*
-                <Button id="reject-button" variant="outline" disabled> Reject </Button>
-                <Button disabled> Approve </Button>
-                */}
             </div>
 
         </div>

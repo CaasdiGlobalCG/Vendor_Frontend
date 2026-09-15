@@ -9,6 +9,7 @@ import authFetch from '../../../../../utils/authFetch';
 import html2pdf from 'html2pdf.js';
 import StandardPreview from '../shared/StandardPreview.jsx';
 import { createRoot } from 'react-dom/client';
+import invoiceFetch from '../utils/invoiceFetch';
 
 // Fixed Caasdi Global customer used for all quotations
 const CAASDI_GLOBAL_CUSTOMER = {
@@ -67,7 +68,7 @@ const CustomerSearchModal = ({ open, onClose, onSelect }) => {
         })
       };
       
-      fetch(`/api/workspace/customers?vendorId=${currentUser?.vendorId}`, { headers })
+      invoiceFetch(`/api/workspace/customers?vendorId=${currentUser?.vendorId}`, { headers })
         .then((res) => res.json())
         .then((data) => {
           if (data.success) {
@@ -396,7 +397,7 @@ const ItemSelectionModal = ({ open, onClose, onSelect }) => {
         })
       };
       
-      fetch(`/api/workspace/items?vendorId=${currentUser?.vendorId}`, { headers })
+      invoiceFetch(`/api/workspace/items?vendorId=${currentUser?.vendorId}`, { headers })
         .then((res) => res.json())
         .then((data) => {
           setItems(data.data || data.items || []);
@@ -726,7 +727,7 @@ const NewQuoteComponentInner = ({
 
     useEffect(() => {
         if (projectId) {
-            fetch(`/api/projects/${projectId}`)
+            invoiceFetch(`/api/projects/${projectId}`)
                 .then(res => res.json())
                 .then(data => setProjectName(data.projectName || ''))
                 .catch(() => setProjectName(''));
@@ -805,7 +806,7 @@ const NewQuoteComponentInner = ({
             };
 
             console.log('Fetching customer details from:', `/api/workspace/customers/${customerId}?vendorId=${vendorId}`);
-            const response = await fetch(`/api/workspace/customers/${customerId}?vendorId=${vendorId}`, {
+            const response = await invoiceFetch(`/api/workspace/customers/${customerId}?vendorId=${vendorId}`, {
                 headers: headers
             });
 
@@ -1724,7 +1725,7 @@ const NewQuoteComponentInner = ({
                 firstChars: jsonPayload.substring(0, 200)
             });
             
-            const res = await fetch(url, {
+            const res = await invoiceFetch(url, {
                 method: method,
                 headers: headers,
                 body: jsonPayload,

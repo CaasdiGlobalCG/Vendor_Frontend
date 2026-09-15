@@ -4,6 +4,7 @@ import { VendorContext } from "../../../../../context/VendorContext.jsx";
 import NewQuoteComponent from './NewQuoteComponent';
 import QuotesPreviewPanel from './QuotesPreviewPanel';
 import config from '../../../../../config/env';
+import invoiceFetch from '../utils/invoiceFetch';
 
 const QuotesPage = ({ workspaceId, workspaceName, selectedTask, selectedSubtask, onRaisePOFromQuote }) => {
   const { currentUser } = useContext(VendorContext);
@@ -63,7 +64,7 @@ const QuotesPage = ({ workspaceId, workspaceName, selectedTask, selectedSubtask,
       if (selectedTask?.id) params.append('taskId', selectedTask.id);
       if (selectedSubtask?.id) params.append('subtaskId', selectedSubtask.id);
 
-      const response = await fetch(`/api/workspace/quotations?${params.toString()}`, {
+      const response = await invoiceFetch(`/api/workspace/quotations?${params.toString()}`, {
         headers: headers
       });
 
@@ -78,7 +79,7 @@ const QuotesPage = ({ workspaceId, workspaceName, selectedTask, selectedSubtask,
         console.log(`✅ Successfully loaded ${result.data?.length || 0} quotes`);
 
         // Fetch stats
-        const statsResponse = await fetch(`/api/workspace/quotations/stats?vendorId=${vendorId}`, {
+        const statsResponse = await invoiceFetch(`/api/workspace/quotations/stats?vendorId=${vendorId}`, {
           headers: headers
         });
         if (statsResponse.ok) {
@@ -244,7 +245,7 @@ const QuotesPage = ({ workspaceId, workspaceName, selectedTask, selectedSubtask,
         })
       };
 
-      const response = await fetch(`/api/workspace/quotations/${quotationId}/send-to-pm`, {
+      const response = await invoiceFetch(`/api/workspace/quotations/${quotationId}/send-to-pm`, {
         method: 'PUT',
         headers: headers,
         body: JSON.stringify({ vendorId })

@@ -35,7 +35,11 @@ import {
   FileCheck,
   Clock,
   AlertCircle,
-  FileSpreadsheet
+  FileSpreadsheet,
+  CreditCard,
+  ClipboardList,
+  ShieldCheck,
+  CloudSun
 } from 'lucide-react';
 import TaskTab from './TaskTab';
 import LayersTab from './LayersTab';
@@ -71,6 +75,8 @@ const WorkspaceContextPanel = ({
   // Text element props
   selectedTextElement,
   onUpdateTextElement,
+  // Agent props
+  onLaunchAgent,
 }) => {
   const [elementsSearch, setElementsSearch] = useState('');
   const [selectedCategory, setSelectedCategory] = useState(null);
@@ -198,19 +204,23 @@ const WorkspaceContextPanel = ({
 
   // Comprehensive Category Elements Map
   const categoryElementsMap = useMemo(() => {
+    // elementOptions values can be either arrays or { name, elements: [] } objects
+    const pickList = (opt, fallback) => {
+      if (Array.isArray(opt) && opt.length > 0) return opt;
+      if (opt && Array.isArray(opt.elements) && opt.elements.length > 0) return opt.elements;
+      return fallback;
+    };
+
     // Invoices and Quotes list (dynamic from props or comprehensive fallbacks)
-    const rawInvQuotes = elementOptions['invoices-quotes'];
-    const invQuotesList = Array.isArray(rawInvQuotes) && rawInvQuotes.length > 0
-      ? rawInvQuotes
-      : [
+    const invQuotesList = pickList(elementOptions['invoices-quotes'], [
           { id: 'new-quotation', name: 'Quotation Document', type: 'quotation', nodeType: 'quotation', preview: 'Line items, unit rates, taxes, and terms', categoryId: 'quotations' },
           { id: 'new-invoice', name: 'Tax Invoice', type: 'invoice', nodeType: 'invoice', preview: 'Billable invoice with payment status and milestone details', categoryId: 'invoices' },
           { id: 'credit-note', name: 'Credit Note', type: 'credit-note', nodeType: 'creditNote', preview: 'Adjustment for returns, discounts or invoice revisions', categoryId: 'credit-notes' },
           { id: 'purchase-order', name: 'Purchase Order (PO)', type: 'purchase-order', nodeType: 'purchaseOrder', preview: 'Formal procurement order issued to supplier', categoryId: 'purchase-orders' },
-        ];
+        ]);
 
     // Forms list
-    const formsList = elementOptions.forms || [
+    const formsList = pickList(elementOptions.forms, [
       { id: 'textarea', name: 'Text Area', type: 'textarea', preview: 'Multi-line text box for descriptions and notes' },
       { id: 'textbox', name: 'Text Input', type: 'input', preview: 'Single-line text entry field' },
       { id: 'form-card', name: 'Form Card', type: 'form-card', nodeType: 'formCard', preview: 'Structured form with multiple input fields' },
@@ -218,24 +228,24 @@ const WorkspaceContextPanel = ({
       { id: 'dropdown', name: 'Select Dropdown', type: 'select', preview: 'Select a single option from a dropdown list' },
       { id: 'radio', name: 'Radio Choice', type: 'radio', preview: 'Single-choice radio button options' },
       { id: 'checkbox', name: 'Checkbox Group', type: 'checkbox', preview: 'Multiple selection checkboxes' },
-    ];
+    ]);
 
     // Tables list
-    const tablesList = elementOptions.tables || [
+    const tablesList = pickList(elementOptions.tables, [
       { id: 'basic-table', name: 'Basic Data Table', type: 'table', tableType: 'basic', preview: 'Simple structured rows and columns' },
       { id: 'data-table', name: 'Advanced Data Table', type: 'table', tableType: 'data', preview: 'Sortable, filterable project data grid' },
       { id: 'pivot-table', name: 'Pivot Summary Table', type: 'table', tableType: 'pivot', preview: 'Multi-dimensional data aggregation' },
       { id: 'calendar', name: 'Schedule Calendar', type: 'calendar', preview: 'Milestone, delivery, and inspection date picker' },
-    ];
+    ]);
 
     // Charts list
-    const chartsList = elementOptions.charts || [
+    const chartsList = pickList(elementOptions.charts, [
       { id: 'bar-chart', name: 'Vertical Bar Chart', type: 'chart', chartType: 'bar', preview: 'Compare metric values across categories' },
       { id: 'line-chart', name: 'Progress Line Chart', type: 'chart', chartType: 'line', preview: 'Track progress and expenditure trends over time' },
       { id: 'pie-chart', name: 'Cost Breakdown Pie Chart', type: 'chart', chartType: 'pie', preview: 'Proportional budget and stage distribution' },
       { id: 'area-chart', name: 'Filled Area Chart', type: 'chart', chartType: 'area', preview: 'Cumulative timeline progress visualization' },
       { id: 'scatter-plot', name: 'Scatter Plot', type: 'chart', chartType: 'scatter', preview: 'Quality and cost correlation analysis' },
-    ];
+    ]);
 
     // Flowcharts list
     const flowchartsList = [
@@ -266,12 +276,12 @@ const WorkspaceContextPanel = ({
     ];
 
     // Smart elements list
-    const rawSmart = elementOptions.smart?.elements || [
+    const rawSmart = pickList(elementOptions.smart, [
       { id: 'smart-note', name: 'Smart AI Note', type: 'smart-note', nodeType: 'smartNote', preview: 'AI-assisted sticky note with auto-suggestions' },
       { id: 'calendar-event', name: 'Calendar Milestone', type: 'calendar-event', nodeType: 'calendarNode', preview: 'Schedule site meetings and inspection checkpoints' },
       { id: 'approval-board', name: 'Approval Sign-off Board', type: 'approval-board', nodeType: 'approvalBoard', preview: 'Multi-party approval verification card' },
       { id: 'ai-helper', name: 'AI Workflow Assistant', type: 'ai-helper', nodeType: 'aiHelper', preview: 'Generate workflows, checklists, and scope with AI' },
-    ];
+    ]);
 
     return {
       'invoices-quotes': invQuotesList,
@@ -311,34 +321,81 @@ const WorkspaceContextPanel = ({
   const currentCategoryElements = selectedCategory ? (Array.isArray(categoryElementsMap[selectedCategory]) ? categoryElementsMap[selectedCategory] : []) : [];
 
   // Template Options
-  const templates = [
-    { 
-      id: 'quotation', 
-      name: 'Quotation', 
-      sub: 'Line items · totals · terms', 
-      initials: 'Q', 
-      bg: 'linear-gradient(135deg, #2563eb, #1d4ed8)' 
+  const templateOptions = [
+    {
+      id: 'quotations-invoices',
+      name: 'Manage Quotations/Invoices',
+      icon: FileText,
+      description: 'Create and manage quotations and invoices for your projects',
+      color: 'bg-blue-100 text-blue-600'
     },
-    { 
-      id: 'purchase-order', 
-      name: 'Purchase Order', 
-      sub: 'Vendor · items · delivery', 
-      initials: 'PO', 
-      bg: 'linear-gradient(135deg, #ea580c, #c2410c)' 
+    {
+      id: 'payments',
+      name: 'Manage Payments',
+      icon: CreditCard,
+      description: 'Track and manage payment transactions and history',
+      color: 'bg-green-100 text-green-600'
     },
-    { 
-      id: 'rfq-response', 
-      name: 'RFQ Response', 
-      sub: 'Pricing grid · notes', 
-      initials: 'RFQ', 
-      bg: 'linear-gradient(135deg, #059669, #047857)' 
+    {
+      id: 'boq',
+      name: 'Manage BOQ',
+      icon: Calculator,
+      description: 'Bill of Quantities management and cost estimation',
+      color: 'bg-purple-100 text-purple-600'
     },
-    { 
-      id: 'boq-turnkey', 
-      name: 'BOQ & Execution', 
-      sub: 'Cost breakdown · scope', 
-      initials: 'BOQ', 
-      bg: 'linear-gradient(135deg, #7c3aed, #6d28d9)' 
+    {
+      id: 'cost-calculators',
+      name: 'Cost Calculators',
+      icon: Calculator,
+      description: 'Open construction cost calculators and add results to canvas',
+      color: 'bg-blue-100 text-blue-600'
+    },
+    {
+      id: 'procurement-rfq',
+      name: 'Procurement RFQ Form',
+      icon: ClipboardList,
+      description: 'Create a detailed RFQ and send it directly to procurement',
+      color: 'bg-orange-100 text-orange-600'
+    },
+    {
+      id: 'execution-work-order',
+      name: 'Site Work Order',
+      icon: ClipboardCheck,
+      description: 'Issue executable work scope with assignee, location, and due date',
+      color: 'bg-indigo-100 text-indigo-600'
+    },
+    {
+      id: 'execution-rfi',
+      name: 'RFI / Clarification',
+      icon: HelpCircle,
+      description: 'Raise technical queries linked to drawings and execution blockers',
+      color: 'bg-cyan-100 text-cyan-700'
+    },
+    {
+      id: 'execution-inspection',
+      name: 'Inspection Request',
+      icon: ShieldCheck,
+      description: 'Create QA/QC checkpoints for execution stages and approvals',
+      color: 'bg-teal-100 text-teal-700'
+    },
+    {
+      id: 'execution-daily-site-log',
+      name: 'Daily Site Log',
+      icon: CloudSun,
+      description: 'Capture daily work done, labor, equipment, blockers, and weather',
+      color: 'bg-amber-100 text-amber-700'
+    }
+  ];
+
+  // Available AI agents — extend this list as new agents are added
+  const agents = [
+    {
+      id: 'atlas',
+      name: 'Atlas',
+      role: 'Canvas Builder',
+      desc: 'Describe a workflow in plain language — Atlas lays out connected elements (quotations, approvals, invoices…) on the canvas for you to review.',
+      icon: Sparkles,
+      color: 'violet',
     },
   ];
 
@@ -656,7 +713,7 @@ const WorkspaceContextPanel = ({
           <div className="ws-panel-head">
             <div>
               <h3 className="ws-panel-title">Templates</h3>
-              <p className="ws-panel-desc">Drag a starting layout or template onto the canvas.</p>
+              <p className="ws-panel-desc">Choose a template to get started.</p>
             </div>
             <button onClick={onClose} className="ws-icon-btn" title="Close panel">
               <X className="w-4 h-4" />
@@ -664,36 +721,31 @@ const WorkspaceContextPanel = ({
           </div>
 
           <div className="ws-panel-body">
-            <div className="ws-tpl-grid">
-              {templates.map((tpl) => {
-                const elementData = {
-                  type: 'template',
-                  templateId: tpl.id,
-                  name: tpl.name,
-                  label: tpl.name
-                };
+            <div className="space-y-2">
+              {templateOptions.map((tpl) => {
+                const TplIcon = tpl.icon;
                 return (
-                  <div
+                  <button
                     key={tpl.id}
-                    className="ws-tpl-card"
-                    draggable
-                    onDragStart={(e) => handleDragStart(e, elementData)}
-                    onClick={() => {
-                      if (onTemplateSelect) onTemplateSelect(tpl.id);
-                      handleDoubleClick(elementData);
-                    }}
-                    title="Drag to canvas or click to apply"
+                    onClick={() => onTemplateSelect && onTemplateSelect(tpl.id)}
+                    className="w-full p-3 bg-white border border-gray-200 hover:border-blue-300 hover:bg-blue-50/50 rounded-lg transition-all flex items-start gap-3 text-left group"
+                    title={tpl.name}
                   >
-                    <div className="ws-tpl-thumb" style={{ background: tpl.bg }}>
-                      {tpl.initials}
+                    <div className={`p-2 rounded-md flex-shrink-0 ${tpl.color}`}>
+                      <TplIcon className="w-4 h-4" />
                     </div>
-                    <div className="ws-tpl-meta">
-                      <p className="ws-tpl-name">{tpl.name}</p>
-                      <p className="ws-tpl-sub">{tpl.sub}</p>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs font-semibold text-gray-800 m-0 group-hover:text-blue-600">{tpl.name}</p>
+                      <p className="text-[11px] text-gray-500 m-0 mt-0.5 leading-relaxed">{tpl.description}</p>
                     </div>
-                  </div>
+                    <ChevronRight className="w-3.5 h-3.5 text-gray-300 group-hover:text-blue-500 flex-shrink-0 mt-1" />
+                  </button>
                 );
               })}
+            </div>
+
+            <div className="ws-hint-box">
+              More templates coming soon.
             </div>
           </div>
         </>
@@ -887,6 +939,47 @@ const WorkspaceContextPanel = ({
               selectedSubtask={selectedSubtask}
               workspaceId={workspace?.workspaceId}
             />
+          </div>
+        </div>
+      )}
+
+      {/* 9. AGENTS TAB */}
+      {activeTab === 'agent' && (
+        <div className="flex flex-col h-full overflow-hidden">
+          <div className="ws-panel-head">
+            <div>
+              <h3 className="ws-panel-title">Agents</h3>
+              <p className="ws-panel-desc">AI assistants for this workspace.</p>
+            </div>
+            <button onClick={onClose} className="ws-icon-btn" title="Close panel">
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+          <div className="flex-1 overflow-y-auto p-3 space-y-2">
+            {agents.map((agent) => {
+              const AgentIcon = agent.icon;
+              return (
+                <button
+                  key={agent.id}
+                  onClick={() => onLaunchAgent?.(agent.id)}
+                  className="w-full text-left group border border-gray-200 rounded-xl p-3 hover:border-violet-300 hover:bg-violet-50/50 transition-colors"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 bg-violet-100 rounded-lg group-hover:bg-violet-200 transition-colors">
+                      <AgentIcon className="w-4 h-4 text-violet-600" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="text-sm font-semibold text-gray-900">{agent.name}</div>
+                      <div className="text-[11px] text-violet-600 font-medium">{agent.role}</div>
+                    </div>
+                    <ChevronRight className="w-4 h-4 text-gray-300 group-hover:text-violet-500 transition-colors" />
+                  </div>
+                  <p className="text-xs text-gray-500 leading-relaxed mt-2 hidden group-hover:block">
+                    {agent.desc}
+                  </p>
+                </button>
+              );
+            })}
           </div>
         </div>
       )}

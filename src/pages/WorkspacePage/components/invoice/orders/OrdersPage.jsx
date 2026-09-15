@@ -14,6 +14,7 @@ import {
   ExternalLink
 } from 'lucide-react';
 import { VendorContext } from '../../../../../context/VendorContext.jsx';
+import invoiceFetch from '../utils/invoiceFetch';
 
 const STAGE_CONFIG = {
   procurement_request: { label: 'Procurement Request', color: 'bg-gray-100 text-gray-700', icon: FileText },
@@ -62,7 +63,7 @@ const OrdersPage = ({ workspaceId, selectedTask, selectedSubtask, onRaisePOFromO
         })
       };
 
-      const response = await fetch(`/api/procurement-requests/crm-orders?${params.toString()}`, { headers });
+      const response = await invoiceFetch(`/api/procurement-requests/crm-orders?${params.toString()}`, { headers });
 
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
 
