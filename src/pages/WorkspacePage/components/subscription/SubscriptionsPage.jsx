@@ -4,6 +4,7 @@ import { VendorContext } from '../../../../context/VendorContext';
 import NewSubscriptionComponent from './NewSubscriptionComponent';
 import SubscriptionsPreviewPanel from './SubscriptionsPreviewPanel';
 import config from '../../../../config/env';
+import invoiceFetch from '../invoice/utils/invoiceFetch';
 
 const SubscriptionsPage = () => {
   const { currentUser } = useContext(VendorContext);
@@ -52,7 +53,7 @@ const SubscriptionsPage = () => {
           })
         };
         
-        const response = await fetch(`/api/workspace/subscriptions?vendorId=${vendorId}`, {
+        const response = await invoiceFetch(`/api/workspace/subscriptions?vendorId=${vendorId}`, {
           headers: headers
         });
         
@@ -67,7 +68,7 @@ const SubscriptionsPage = () => {
           console.log(`✅ Successfully loaded ${result.data?.length || 0} subscriptions`);
           
           // Fetch stats
-          const statsResponse = await fetch(`/api/workspace/subscriptions/stats?vendorId=${vendorId}`, {
+          const statsResponse = await invoiceFetch(`/api/workspace/subscriptions/stats?vendorId=${vendorId}`, {
             headers: headers
           });
           if (statsResponse.ok) {

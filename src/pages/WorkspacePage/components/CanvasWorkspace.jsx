@@ -1512,6 +1512,7 @@ const edgeTypes = {
         // Store icon ID for icon elements
         ...(element.type === 'icon' && { id: element.id }),
         // Store cost calculator data
+        ...(element.type === 'cost-calculator' && { id: element.id }),
         ...(element.type === 'cost-calculator' && element.data && { ...element.data }),
         // Store cost calculator summary data
         ...(element.type === 'cost-calculator-summary' && element.data && { data: element.data }),

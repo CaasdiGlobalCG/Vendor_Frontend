@@ -3,6 +3,7 @@ import { X, Search, Package, Wrench, Save } from 'lucide-react';
 import { VendorContext } from '../context/VendorContext';
 import HSNSACModal from './HSNSACModal';
 import config from "../config/env";
+import invoiceFetch from '../pages/WorkspacePage/components/invoice/utils/invoiceFetch';
 
 const ItemEditModal = ({ isOpen, onClose, item, onItemUpdated }) => {
   const { currentUser } = useContext(VendorContext);
@@ -116,7 +117,7 @@ const ItemEditModal = ({ isOpen, onClose, item, onItemUpdated }) => {
 
       console.log('📤 Updating item:', requestBody);
 
-      const response = await fetch(`${config.VENDOR_BACKEND_URL}/api/workspace/items/${item.id}`, {
+      const response = await invoiceFetch(`${config.VENDOR_BACKEND_URL}/api/workspace/items/${item.id}`, {
         method: 'PUT',
         headers: headers,
         body: JSON.stringify(requestBody)

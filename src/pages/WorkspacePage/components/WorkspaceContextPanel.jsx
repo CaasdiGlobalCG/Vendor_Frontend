@@ -267,12 +267,19 @@ const WorkspaceContextPanel = ({
       { id: 'spec-sheet', name: 'Vendor Catalog Block', type: 'document-block', preview: 'Datasheet attachment with compliance tags' },
     ];
 
-    // Cost Calculators list
+    // Cost Calculators list — type 'cost-calculator' is dispatched in ElementNode by name/id
     const calculatorsList = [
-      { id: 'calc-flooring', name: 'Flooring Cost Calculator', type: 'calculator', calcType: 'flooring', preview: 'Compute tile, marble or wood area and wastage' },
-      { id: 'calc-paint', name: 'Painting Estimator', type: 'calculator', calcType: 'paint', preview: 'Calculate wall square footage and primer/paint coats' },
-      { id: 'calc-concrete', name: 'Concrete Volume Estimator', type: 'calculator', calcType: 'concrete', preview: 'Estimate cement, sand, and aggregate requirements' },
-      { id: 'calc-electrical', name: 'Electrical Wiring Estimator', type: 'calculator', calcType: 'electrical', preview: 'Conduit length and load point calculator' },
+      { id: 'calc-bricks', name: 'Bricks Calculator', type: 'cost-calculator', preview: 'Estimate bricks, cement bags & sand for a brick wall' },
+      { id: 'calc-concrete', name: 'Concrete Calculator', type: 'cost-calculator', preview: 'Estimate cement, sand, and aggregate requirements' },
+      { id: 'calc-blocks', name: 'Concrete Blocks Calculator', type: 'cost-calculator', preview: 'AAC/concrete block count with mortar estimate' },
+      { id: 'calc-flooring', name: 'Flooring Calculator', type: 'cost-calculator', preview: 'Tile count, boxes, cement & sand for flooring' },
+      { id: 'calc-vinyl', name: 'Vinyl Flooring Calculator', type: 'cost-calculator', preview: 'Vinyl planks/sheets required for a floor area' },
+      { id: 'calc-soil', name: 'Soil Excavation Calculator', type: 'cost-calculator', preview: 'Excavation volume and soil disposal estimate' },
+      { id: 'calc-steel', name: 'Steel Estimation Calculator', type: 'cost-calculator', preview: 'Rebar weight and steel quantity for RCC work' },
+      { id: 'calc-paint', name: 'Painting Estimator', type: 'cost-calculator', preview: 'Calculate wall square footage and primer/paint coats' },
+      { id: 'calc-electrical', name: 'Electrical Wiring Estimator', type: 'cost-calculator', preview: 'Conduit length and load point calculator' },
+      { id: 'boq-generator', name: 'BOQ Generator', type: 'boq-generator', preview: 'Generate professional Bill of Quantities with cost breakdown' },
+      { id: 'calc-freight', name: 'Freight Cost Calculator', type: 'logistics-freight-cost', preview: 'Calculate freight costs with fuel surcharge and tolls' },
     ];
 
     // Smart elements list

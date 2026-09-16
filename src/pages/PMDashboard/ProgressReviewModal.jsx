@@ -2,6 +2,7 @@ import React, { useEffect, useState, useContext } from 'react';
 import { X, FileText } from 'lucide-react';
 import { VendorContext } from '../../context/VendorContext';
 import config from '../../config/env';
+import invoiceFetch from '../WorkspacePage/components/invoice/utils/invoiceFetch';
 
 const ProgressReviewModal = ({ isOpen, onClose, workspaceId }) => {
   const { currentUser } = useContext(VendorContext);
@@ -29,7 +30,7 @@ const ProgressReviewModal = ({ isOpen, onClose, workspaceId }) => {
           });
         }
 
-        const res = await fetch(`${config.VENDOR_BACKEND_URL || ''}/api/workspaces/${encodeURIComponent(workspaceId)}`, {
+        const res = await invoiceFetch(`${config.VENDOR_BACKEND_URL || ''}/api/workspaces/${encodeURIComponent(workspaceId)}`, {
           headers
         });
 

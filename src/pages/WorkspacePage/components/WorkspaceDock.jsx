@@ -83,7 +83,7 @@ const WorkspaceDock = ({
         data-tour="agent-btn"
       >
         <Sparkles />
-        <span className="ws-dock-lbl">Agent</span>
+        <span className="ws-dock-lbl">Agents</span>
       </button>
     </aside>
   );

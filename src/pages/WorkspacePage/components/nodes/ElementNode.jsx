@@ -27,6 +27,8 @@ import FlooringCalculator from '../forms/FlooringCalculator';
 import SoilExcavationCalculator from '../forms/SoilExcavationCalculator';
 import SteelEstimationCalculator from '../forms/SteelEstimationCalculator';
 import VinylFlooringCalculator from '../forms/VinylFlooringCalculator';
+import PaintingEstimator from '../forms/PaintingEstimator';
+import ElectricalWiringEstimator from '../forms/ElectricalWiringEstimator';
 import BOQGenerator from '../forms/BOQGenerator';
 import CostCalculatorSummary from '../forms/CostCalculatorSummary';
 import ShipmentCard from '../forms/ShipmentCard';
@@ -1849,6 +1851,7 @@ const ElementNode = ({ id, data, isConnectable, selected }) => {
       case 'boq-generator':
         return <BOQGenerator />;
 
+      case 'calculator': // legacy panel type — route through the same dispatch below
       case 'cost-calculator':
         // Render different calculators based on element name or id
         const lowerName = (data.name || '').toLowerCase();
@@ -1858,14 +1861,20 @@ const ElementNode = ({ id, data, isConnectable, selected }) => {
           return <VinylFlooringCalculator data={data} nodeId={id} workspaceId={workspaceId} setNodes={setNodes} />;
         } else if (lowerName.includes('steel') || lowerId.includes('steel')) {
           return <SteelEstimationCalculator data={data} nodeId={id} workspaceId={workspaceId} setNodes={setNodes} />;
-        } else if (data.name === 'Bricks Calculator' || data.id === 'bricks-calculator') {
+        } else if (lowerName.includes('paint') || lowerId.includes('paint')) {
+          return <PaintingEstimator data={data} nodeId={id} workspaceId={workspaceId} setNodes={setNodes} />;
+        } else if (lowerName.includes('electrical') || lowerName.includes('wiring') || lowerId.includes('electrical') || lowerId.includes('wiring')) {
+          return <ElectricalWiringEstimator data={data} nodeId={id} workspaceId={workspaceId} setNodes={setNodes} />;
+        } else if (lowerName.includes('brick') || lowerId.includes('brick')) {
           return <BricksCalculator data={data} nodeId={id} workspaceId={workspaceId} setNodes={setNodes} />;
-        } else if (data.name === 'Concrete Calculator' || data.id === 'concrete-calculator') {
+        } else if (lowerName.includes('block') || lowerId.includes('block')) {
+          return <ConcreteBlocksCalculator data={data} nodeId={id} workspaceId={workspaceId} setNodes={setNodes} />;
+        } else if (lowerName.includes('concrete') || lowerName.includes('cement') || lowerId.includes('concrete') || lowerId.includes('cement')) {
           return <ConcreteCalculator data={data} nodeId={id} workspaceId={workspaceId} setNodes={setNodes} />;
-        } else if (data.name === 'Flooring Calculator' || data.id === 'flooring-calculator') {
-          return <FlooringCalculator data={data} nodeId={id} workspaceId={workspaceId} setNodes={setNodes} />;
-        } else if (data.name === 'Soil Excavation Calculator' || data.id === 'soil-excavation-calculator') {
+        } else if (lowerName.includes('soil') || lowerName.includes('excavat') || lowerId.includes('soil') || lowerId.includes('excavat')) {
           return <SoilExcavationCalculator data={data} nodeId={id} workspaceId={workspaceId} setNodes={setNodes} />;
+        } else if (lowerName.includes('flooring') || lowerName.includes('floor') || lowerId.includes('flooring') || lowerId.includes('floor')) {
+          return <FlooringCalculator data={data} nodeId={id} workspaceId={workspaceId} setNodes={setNodes} />;
         }
         // Default to Concrete Blocks Calculator
         return <ConcreteBlocksCalculator data={data} nodeId={id} workspaceId={workspaceId} setNodes={setNodes} />;

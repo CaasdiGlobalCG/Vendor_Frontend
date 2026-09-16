@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { X, Download, Send, Edit2, ArrowLeft, Pause, Play, History } from 'lucide-react';
 import config from '../../../../config/env';
+import invoiceFetch from '../invoice/utils/invoiceFetch';
 
 const SubscriptionsPreviewPanel = ({ subscriptions, selectedSubscriptionId, onSelectSubscription, onClose }) => {
   const [selectedId, setSelectedId] = useState(selectedSubscriptionId);
@@ -23,7 +24,7 @@ const SubscriptionsPreviewPanel = ({ subscriptions, selectedSubscriptionId, onSe
 
     try {
       setLoadingHistory(true);
-      const response = await fetch(
+      const response = await invoiceFetch(
         `/api/workspace/subscriptions/${selectedSubscription.id}/history`,
         {
           headers: {
@@ -51,7 +52,7 @@ const SubscriptionsPreviewPanel = ({ subscriptions, selectedSubscriptionId, onSe
     if (!selectedSubscription) return;
 
     try {
-      const response = await fetch(
+      const response = await invoiceFetch(
         `/api/workspace/subscriptions/${selectedSubscription.id}/pause`,
         {
           method: 'PUT',
@@ -78,7 +79,7 @@ const SubscriptionsPreviewPanel = ({ subscriptions, selectedSubscriptionId, onSe
     if (!selectedSubscription) return;
 
     try {
-      const response = await fetch(
+      const response = await invoiceFetch(
         `/api/workspace/subscriptions/${selectedSubscription.id}/resume`,
         {
           method: 'PUT',
@@ -105,7 +106,7 @@ const SubscriptionsPreviewPanel = ({ subscriptions, selectedSubscriptionId, onSe
     if (!selectedSubscription) return;
 
     try {
-      const response = await fetch(
+      const response = await invoiceFetch(
         `/api/workspace/subscriptions/${selectedSubscription.id}/generate-invoice`,
         {
           method: 'POST',
