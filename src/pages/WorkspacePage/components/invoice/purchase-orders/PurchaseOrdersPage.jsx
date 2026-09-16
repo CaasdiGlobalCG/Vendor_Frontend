@@ -74,7 +74,10 @@ const PurchaseOrdersPage = ({ workspaceId, workspaceName, selectedTask, selected
         })
       };
 
-      const response = await invoiceFetch(`/api/workspace/purchase-orders?vendorId=${vendorId}`, {
+      const poQuery = workspaceId
+        ? `/api/workspace/purchase-orders?vendorId=${vendorId}&workspaceId=${workspaceId}`
+        : `/api/workspace/purchase-orders?vendorId=${vendorId}`;
+      const response = await invoiceFetch(poQuery, {
         headers: headers
       });
 
@@ -836,7 +839,7 @@ const PurchaseOrdersPage = ({ workspaceId, workspaceName, selectedTask, selected
                           >
                             <Eye className="w-4 h-4" />
                           </button>
-                          {order.status && (order.status.toLowerCase().includes('pending_review') || order.status.toLowerCase().includes('pending review')) && (
+                          {order.status && (order.status.toLowerCase().includes('pending_review') || order.status.toLowerCase().includes('pending review') || order.status.toLowerCase().includes('requested po') || order.status.toLowerCase().includes('sent_to_vendor_for_confirmation')) && (
                             <button
                               className="text-xs px-3 py-1.5 bg-emerald-50 text-emerald-700 rounded-lg hover:bg-emerald-100 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
                               onClick={() => handleApproveAndSendPO(order)}
@@ -846,7 +849,7 @@ const PurchaseOrdersPage = ({ workspaceId, workspaceName, selectedTask, selected
                               {approvingPoId === order.id ? 'Approving...' : '✓ Approve'}
                             </button>
                           )}
-                          {order.status && order.status.toLowerCase().includes('requested for invoice') && onConvertToInvoice && (
+                          {order.status && (order.status.toLowerCase().includes('requested for invoice') || order.status.toLowerCase().includes('vendor_approved')) && onConvertToInvoice && (
                             <button
                               className="text-xs px-3 py-1.5 bg-emerald-50 text-emerald-700 rounded-lg hover:bg-emerald-100 transition-colors duration-200"
                               onClick={() => onConvertToInvoice(order)}

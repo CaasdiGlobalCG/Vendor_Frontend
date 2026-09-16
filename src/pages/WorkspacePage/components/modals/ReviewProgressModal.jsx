@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useContext } from 'react';
 import { X, CheckCircle, XCircle, Clock } from 'lucide-react';
+import { Auth } from 'aws-amplify';
 import { VendorContext } from '../../../../context/VendorContext';
 
 const ReviewProgressModal = ({ isOpen, onClose, workspace, userRole, taskId, subtaskId }) => {
@@ -44,6 +45,22 @@ const ReviewProgressModal = ({ isOpen, onClose, workspace, userRole, taskId, sub
     }
     
     return null;
+  };
+
+  // Resolve a Bearer token for authenticateUser routes. External PM/CAS
+  // handoff sessions use the vendor-signed token stored by the exchange;
+  // Cognito users (vendor + client share the same pool) use the id token.
+  // The vg_auth cookie is also accepted server-side as a fallback.
+  const getAuthToken = async () => {
+    if (sessionStorage.getItem('externalAuthSession') === '1') {
+      return localStorage.getItem('authToken') || sessionStorage.getItem('authToken') || '';
+    }
+    try {
+      const session = await Auth.currentSession();
+      const idToken = session.getIdToken().getJwtToken();
+      if (idToken) return idToken;
+    } catch {}
+    return localStorage.getItem('authToken') || sessionStorage.getItem('authToken') || '';
   };
 
   useEffect(() => {
@@ -96,19 +113,20 @@ const ReviewProgressModal = ({ isOpen, onClose, workspace, userRole, taskId, sub
       setApproving(true);
       setError(null);
 
-      const token = localStorage.getItem('authToken');
+      const token = await getAuthToken();
       const userInfo = getUserInfo();
-      
+
       // Determine endpoint and data based on role
       const endpoint = userRole === 'client' ? '/api/workspace/client-approve-progress' : '/api/workspace/approve-progress';
       const approvalStatus = userRole === 'client' ? 'client_approved' : 'pm_approved';
       const reviewStatus = userRole === 'client' ? 'client_approved' : 'client_approval_pending';
-      
+
       const response = await fetch(endpoint, {
         method: 'POST',
+        credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
+          ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
           'x-user-info': JSON.stringify(userInfo)
         },
         body: JSON.stringify({
@@ -130,6 +148,14 @@ const ReviewProgressModal = ({ isOpen, onClose, workspace, userRole, taskId, sub
       const result = await response.json();
 
       if (result.success) {
+        const updatedSubmission = {
+          ...selectedProgress,
+          approvalStatus,
+          reviewStatus,
+          pmApprovedAt: new Date().toISOString()
+        };
+        setSelectedProgress(updatedSubmission);
+        setProgressSubmissions(prev => prev.map(p => (p.id === updatedSubmission.id ? updatedSubmission : p)));
         setSuccessMessage('Progress approved successfully! Waiting for client approval.');
         setTimeout(() => {
           onClose();
@@ -147,7 +173,7 @@ const ReviewProgressModal = ({ isOpen, onClose, workspace, userRole, taskId, sub
   };
 
   const handleReject = async () => {
-    if (!progressData || !workspace?.workspaceId) {
+    if (!selectedProgress || !workspace?.workspaceId) {
       setError('Missing workspace information');
       return;
     }
@@ -161,19 +187,20 @@ const ReviewProgressModal = ({ isOpen, onClose, workspace, userRole, taskId, sub
       setRejecting(true);
       setError(null);
 
-      const token = localStorage.getItem('authToken');
+      const token = await getAuthToken();
       const userInfo = getUserInfo();
-      
+
       // Determine endpoint and data based on role
       const endpoint = userRole === 'client' ? '/api/workspace/client-reject-progress' : '/api/workspace/reject-progress';
       const approvalStatus = userRole === 'client' ? 'client_rejected' : 'pm_rejected';
       const reviewStatus = userRole === 'client' ? 'client_rejected' : 'rejected';
-      
+
       const response = await fetch(endpoint, {
         method: 'POST',
+        credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
+          ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
           'x-user-info': JSON.stringify(userInfo)
         },
         body: JSON.stringify({
@@ -196,6 +223,15 @@ const ReviewProgressModal = ({ isOpen, onClose, workspace, userRole, taskId, sub
       const result = await response.json();
 
       if (result.success) {
+        const updatedSubmission = {
+          ...selectedProgress,
+          approvalStatus,
+          reviewStatus,
+          rejectionReason,
+          pmRejectedAt: new Date().toISOString()
+        };
+        setSelectedProgress(updatedSubmission);
+        setProgressSubmissions(prev => prev.map(p => (p.id === updatedSubmission.id ? updatedSubmission : p)));
         setSuccessMessage('Progress rejected. Vendor has been notified.');
         setTimeout(() => {
           onClose();
@@ -211,6 +247,34 @@ const ReviewProgressModal = ({ isOpen, onClose, workspace, userRole, taskId, sub
       setRejecting(false);
     }
   };
+
+  // Whether the current viewer can still act on the selected submission.
+  // PM acts while it's pending PM review; the client acts only once it has
+  // moved on to client_approval_pending.
+  const reviewStatus = selectedProgress?.reviewStatus || 'pending';
+  const approvalStatus = selectedProgress?.approvalStatus || '';
+  const canReview = Boolean(selectedProgress) && (userRole === 'client'
+    ? reviewStatus === 'client_approval_pending'
+    : reviewStatus === 'pending');
+
+  const reviewStateMessage = (() => {
+    if (!selectedProgress || canReview) return null;
+    if (userRole === 'client') {
+      if (reviewStatus === 'client_approved') return 'You approved this progress submission.';
+      if (reviewStatus === 'client_rejected') return 'You rejected this progress submission.';
+      if (reviewStatus === 'rejected' || approvalStatus === 'pm_rejected') return 'This submission was rejected by the PM.';
+      return 'Awaiting PM review before client approval.';
+    }
+    if (approvalStatus === 'pm_approved' || reviewStatus === 'client_approval_pending') {
+      return 'Approved — waiting for client approval.';
+    }
+    if (approvalStatus === 'pm_rejected' || reviewStatus === 'rejected') {
+      return 'You rejected this progress submission.';
+    }
+    if (reviewStatus === 'client_approved') return 'Approved by the client.';
+    if (reviewStatus === 'client_rejected') return 'Rejected by the client.';
+    return 'This submission is no longer awaiting your review.';
+  })();
 
   if (!isOpen) return null;
 
@@ -375,7 +439,7 @@ const ReviewProgressModal = ({ isOpen, onClose, workspace, userRole, taskId, sub
                   </div>
 
                   {/* Rejection Form */}
-                  {showRejectForm && (
+                  {showRejectForm && canReview && (
                     <div className="p-4 bg-red-50 rounded-lg border border-red-200">
                       <label className="block text-sm font-medium text-gray-700 mb-2">Rejection Reason</label>
                       <textarea
@@ -388,8 +452,9 @@ const ReviewProgressModal = ({ isOpen, onClose, workspace, userRole, taskId, sub
                     </div>
                   )}
 
-                  {/* Action Buttons */}
-                  {!showRejectForm ? (
+                  {/* Action Buttons — hidden once this viewer has already acted */}
+                  {canReview ? (
+                  !showRejectForm ? (
                     <div className="flex items-center space-x-3 pt-4 border-t border-gray-200">
                       <button
                         onClick={handleApprove}
@@ -425,7 +490,15 @@ const ReviewProgressModal = ({ isOpen, onClose, workspace, userRole, taskId, sub
                         Cancel
                       </button>
                     </div>
-                  )}
+                  )
+                  ) : reviewStateMessage ? (
+                    <div className="pt-4 border-t border-gray-200">
+                      <div className="p-4 bg-gray-50 border border-gray-200 rounded-lg flex items-center space-x-3">
+                        <Clock className="w-5 h-5 text-gray-500" />
+                        <span className="text-sm text-gray-700">{reviewStateMessage}</span>
+                      </div>
+                    </div>
+                  ) : null}
                 </>
               )}
             </div>

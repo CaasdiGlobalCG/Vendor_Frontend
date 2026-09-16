@@ -151,7 +151,7 @@ const WorkspaceTopBar = ({
       <button
         onClick={onBackToDashboard}
         className="ws-back-btn"
-        title={`Back to ${currentUser?.role === 'pm' ? 'PM' : 'Vendor'} Dashboard`}
+        title={`Back to ${userRole === 'pm' ? 'PM' : userRole === 'cas' ? 'CAS' : userRole === 'client' ? 'Client' : 'Vendor'} Dashboard`}
       >
         <ChevronLeft className="w-5 h-5 text-gray-700" />
       </button>

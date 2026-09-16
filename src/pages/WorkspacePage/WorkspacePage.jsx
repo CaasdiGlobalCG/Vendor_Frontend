@@ -65,6 +65,8 @@ const WorkspacePage = () => {
   const urlUserEmail = urlParams.get('userEmail');
   // 'extHandoff' (not 'handoff') — App.jsx owns ?handoff= for client→vendor switches
   const urlHandoff = urlParams.get('extHandoff');
+  // Set by the client app when it deep-links into this hosted workspace
+  const urlReturnUrl = urlParams.get('returnUrl');
   
   // Check sessionStorage for PM user data (from PM dashboard)
   const storedPmUser = sessionStorage.getItem('pmUser');
@@ -302,6 +304,8 @@ const WorkspacePage = () => {
   // User role state (detected dynamically including client detection)
   const [detectedUserRole, setDetectedUserRole] = useState(userRole);
   const [detectedClientId, setDetectedClientId] = useState(null);
+  // True when this session is a client — via URL role or collaborator detection
+  const isClientUser = detectedUserRole === 'client' || urlUserRole === 'client' || Boolean(detectedClientId);
   
   // ── Focus-mode layout state (canvas-first UX) ──────────────────────
   // Persist per-workspace so each workspace remembers its layout
@@ -409,7 +413,36 @@ const WorkspacePage = () => {
     });
   }, []);
 
+  // Where an externally-linked session should land when leaving the workspace —
+  // the app that linked here via ?returnUrl=, or the configured client URL as
+  // fallback for client sessions that arrive without one.
+  const externalReturnUrl = useMemo(() => {
+    const isExternalSession =
+      isPM || isCAS || isClientUser ||
+      urlUserRole === 'pm' || urlUserRole === 'cas';
+    if (!isExternalSession) return null;
+    try {
+      if (urlReturnUrl) {
+        const parsed = new URL(urlReturnUrl);
+        if (parsed.protocol === 'http:' || parsed.protocol === 'https:') {
+          return parsed.toString();
+        }
+      }
+    } catch {
+      // fall through to the client fallback below
+    }
+    if (isClientUser) {
+      const base = (config.CLIENT_URL || '').replace(/\/+$/, '');
+      return base ? `${base}/projects` : null;
+    }
+    return null;
+  }, [urlReturnUrl, isPM, isCAS, isClientUser, urlUserRole]);
+
   const handleBackToDashboard = useCallback(() => {
+    if (externalReturnUrl) {
+      window.location.href = externalReturnUrl;
+      return;
+    }
     if (isPM) {
       navigate('/PMDashboard');
     } else if (isCAS) {
@@ -417,7 +450,7 @@ const WorkspacePage = () => {
     } else {
       navigate('/VendorDashboard');
     }
-  }, [isPM, isCAS, navigate]);
+  }, [externalReturnUrl, isPM, isCAS, navigate]);
 
   const isWorkspaceCompleted = workspace?.status === 'completed';
   const isCurrentTaskUnlocked = useMemo(() => {
@@ -1871,8 +1904,8 @@ const WorkspacePage = () => {
     setSelectedLayerItem(null);
   };
   const handleLeaveWorkspace = useCallback(() => {
-    navigate('/VendorDashboard');
-  }, [navigate]);
+    handleBackToDashboard();
+  }, [handleBackToDashboard]);
 
   const handleElementsClick = () => {
     setShowElementsSidebar(true);
@@ -2301,7 +2334,7 @@ const WorkspacePage = () => {
           userRole={detectedUserRole}
           isPM={isPM}
           isCAS={isCAS}
-          isClient={!!detectedClientId}
+          isClient={isClientUser}
           currentUser={currentUser}
           syncStatus={syncStatus}
           lastSavedAt={lastSavedAt}
@@ -2656,7 +2689,11 @@ const WorkspacePage = () => {
       {/* Review Progress Modal */}
       <ReviewProgressModal
         isOpen={showReviewProgressModal}
-        onClose={() => setShowReviewProgressModal(false)}
+        onClose={() => {
+          setShowReviewProgressModal(false);
+          // Refresh so a reopened modal sees the updated review status
+          setTimeout(() => refetchWorkspace(), 500);
+        }}
         workspace={workspace}
         userRole={userRole}
       />
@@ -2664,7 +2701,10 @@ const WorkspacePage = () => {
       {/* Client Review Progress Modal */}
       <ReviewProgressModal
         isOpen={showClientReviewProgressModal}
-        onClose={() => setShowClientReviewProgressModal(false)}
+        onClose={() => {
+          setShowClientReviewProgressModal(false);
+          setTimeout(() => refetchWorkspace(), 500);
+        }}
         workspace={workspace}
         userRole="client"
       />
@@ -2676,7 +2716,7 @@ const WorkspacePage = () => {
         workspace={workspace}
         userRole={userRole}
         isPM={isPM}
-        isClient={!!detectedClientId}
+        isClient={isClientUser}
       />
 
       {/* Invoice Tool Full Screen */}

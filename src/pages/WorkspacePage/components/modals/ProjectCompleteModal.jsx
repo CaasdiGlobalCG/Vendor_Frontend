@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useContext } from 'react';
 import { X, CheckCircle, XCircle, Clock, FileDown } from 'lucide-react';
+import { Auth } from 'aws-amplify';
 import { VendorContext } from '../../../../context/VendorContext';
 
 const ProjectCompleteModal = ({ isOpen, onClose, workspace, userRole, isPM, isClient }) => {
@@ -42,6 +43,22 @@ const ProjectCompleteModal = ({ isOpen, onClose, workspace, userRole, isPM, isCl
     return null;
   };
 
+  // Resolve a Bearer token for authenticateUser routes. External PM/CAS
+  // handoff sessions use the vendor-signed token stored by the exchange;
+  // Cognito users (vendor + client share the same pool) use the id token.
+  // The vg_auth cookie is also accepted server-side as a fallback.
+  const getAuthToken = async () => {
+    if (sessionStorage.getItem('externalAuthSession') === '1') {
+      return localStorage.getItem('authToken') || sessionStorage.getItem('authToken') || '';
+    }
+    try {
+      const session = await Auth.currentSession();
+      const idToken = session.getIdToken().getJwtToken();
+      if (idToken) return idToken;
+    } catch {}
+    return localStorage.getItem('authToken') || sessionStorage.getItem('authToken') || '';
+  };
+
   useEffect(() => {
     if (isOpen && workspace) {
       loadProjectStatus();
@@ -77,18 +94,19 @@ const ProjectCompleteModal = ({ isOpen, onClose, workspace, userRole, isPM, isCl
       setApproving(true);
       setError(null);
 
-      const token = localStorage.getItem('authToken');
+      const token = await getAuthToken();
       const userInfo = getUserInfo();
-      
+
       // Determine endpoint and data based on role
       const endpoint = isPM ? '/api/workspace/approve-project-complete' : '/api/workspace/client-approve-project-complete';
       const reviewStatus = isPM ? 'client_approval_pending' : 'complete';
-      
+
       const response = await fetch(endpoint, {
         method: 'POST',
+        credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
+          ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
           'x-user-info': JSON.stringify(userInfo)
         },
         body: JSON.stringify({
@@ -139,17 +157,18 @@ const ProjectCompleteModal = ({ isOpen, onClose, workspace, userRole, isPM, isCl
       setRejecting(true);
       setError(null);
 
-      const token = localStorage.getItem('authToken');
+      const token = await getAuthToken();
       const userInfo = getUserInfo();
-      
+
       const endpoint = isPM ? '/api/workspace/reject-project-complete' : '/api/workspace/client-reject-project-complete';
       const reviewStatus = isPM ? 'rejected' : 'client_rejected';
-      
+
       const response = await fetch(endpoint, {
         method: 'POST',
+        credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
+          ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
           'x-user-info': JSON.stringify(userInfo)
         },
         body: JSON.stringify({
