@@ -1,4 +1,4 @@
-import React, { createContext, useState, useEffect, useCallback } from "react";
+import React, { createContext, useState, useEffect, useCallback, useRef } from "react";
 import config from "../config/env";
 import authFetch from "../utils/authFetch";
 import { isInviteAcceptRoute } from "../public-routes/inviteRoute";
@@ -74,6 +74,11 @@ export const VendorProvider = ({ children }) => {
   const [currentUser, setCurrentUser] = useState(null);
   const [isHydratingUser, setIsHydratingUser] = useState(true);
   const [vendorData, setVendorData] = useState(initialData);
+  // Cross-tab: set true when another tab's login changed the session user
+  const [sessionChanged, setSessionChanged] = useState(false);
+
+  // Track the last known email to detect cross-tab session changes
+  const lastEmailRef = useRef('');
 
   const isPublicInviteRoute = useCallback(() => {
     if (typeof window === 'undefined') return false;
@@ -217,6 +222,41 @@ export const VendorProvider = ({ children }) => {
     hydrateCurrentUser();
   }, [hydrateCurrentUser, isPublicInviteRoute]);
 
+  // Keep lastEmailRef in sync with current user email
+  useEffect(() => {
+    lastEmailRef.current = currentUser?.email || '';
+  }, [currentUser?.email]);
+
+  // Cross-tab session detection: when this tab regains focus, re-check /api/vendor/me.
+  // If the email changed (another tab logged in as a different user), flag it
+  // so the SessionChangeBanner can warn the user to reload.
+  useEffect(() => {
+    if (typeof document === 'undefined') return undefined;
+
+    const handleVisibilityChange = async () => {
+      if (document.visibilityState !== 'visible') return;
+      // Skip if we don't have a known email yet (initial load still running)
+      if (!lastEmailRef.current) return;
+
+      try {
+        const res = await authFetch(`${config.VENDOR_BACKEND_URL}/api/vendor/me`, {
+          credentials: 'include',
+        });
+        if (!res.ok) return;
+        const me = await res.json();
+        const freshEmail = me?.data?.email || me?.data?.vendorDetails?.primaryContactEmail || null;
+        if (freshEmail && freshEmail !== lastEmailRef.current) {
+          setSessionChanged(true);
+        }
+      } catch {
+        // Network error — don't bother user with banner on transient failures
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
+  }, []);
+
   // Set current user and reset vendor data if needed
   const setUser = (user) => {
     console.log("VendorContext: Setting new user:", user);
@@ -303,7 +343,9 @@ export const VendorProvider = ({ children }) => {
       isHydratingUser,
       hydrateCurrentUser,
       setUser,
-      logout
+      logout,
+      sessionChanged,
+      dismissSessionChange: () => setSessionChanged(false),
     }}>
       {children}
     </VendorContext.Provider>

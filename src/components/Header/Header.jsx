@@ -7,6 +7,7 @@ import DateYearFunction from "./DateYearFunction";
 import { VendorContext } from "../../context/VendorContext";
 import { NotificationContext } from "../../context/NotificationContext";
 import { PermissionGate } from "../../rbac";
+import { LockedNavItem } from "../../rbac/components/LockedNavItem";
 import { useRBAC } from '../../rbac/context/RBACContext';
 import config from '../../config/env';
 import { redirectToClientWithHandoff } from '../../utils/handoffToClient';
@@ -711,16 +712,16 @@ export const Header = () => {
 
         {/* Desktop Navigation (Hidden on Mobile) */}
         <nav className={`hidden lg:flex flex-shrink-0 text-base font-normal font-['Poppins'] ${isOnDashboard ? 'items-center gap-1 rounded-full border border-white/10 bg-white/5 px-2 py-1 text-white backdrop-blur-sm' : 'space-x-[30px] text-white'}`}> {/* Added flex-shrink-0 */}
-          <PermissionGate module="dashboard" action="view">
+          <PermissionGate module="dashboard" action="view" lockedFallback={<LockedNavItem label="Dashboard" className="rounded-full px-3 py-2 text-white/65" />}>
             <NavLink to="/VendorDashboard" className={getNavLinkClass} end>Dashboard</NavLink>
           </PermissionGate>
-          <PermissionGate module="projects" action="view">
+          <PermissionGate module="projects" action="view" lockedFallback={<LockedNavItem label="Projects" className="rounded-full px-3 py-2 text-white/65" />}>
             <NavLink to="/VendorDashboard/projects" className={getNavLinkClass}>Projects</NavLink>
           </PermissionGate>
-          <PermissionGate module="leads" action="view">
+          <PermissionGate module="leads" action="view" lockedFallback={<LockedNavItem label="Leads" className="rounded-full px-3 py-2 text-white/65" />}>
             <NavLink to="/VendorDashboard/leads" className={getNavLinkClass}>Leads</NavLink>
           </PermissionGate>
-          <PermissionGate module="workspace" action="view">
+          <PermissionGate module="workspace" action="view" lockedFallback={<LockedNavItem label="Workspace" className="rounded-full px-3 py-2 text-white/65" />}>
             <button 
               onClick={() => navigate('/VendorDashboard/workspace')}
               className={isOnDashboard ? 'rounded-full px-3 py-2 text-white/65 transition-colors hover:bg-white/10 hover:text-white' : 'hover:text-emerald-200 transition-colors opacity-50 hover:opacity-100'}
@@ -728,7 +729,7 @@ export const Header = () => {
               Workspace
             </button>
           </PermissionGate>
-          <PermissionGate module="user_management" action="view">
+          <PermissionGate module="user_management" action="view" lockedFallback={<LockedNavItem label="Team" className="rounded-full px-3 py-2 text-white/65" />}>
             <NavLink to="/VendorDashboard/team" className={getNavLinkClass}>Team</NavLink>
           </PermissionGate>
           <NavLink to="/VendorDashboard/finance-detail" className={getNavLinkClass}>Revenue</NavLink>

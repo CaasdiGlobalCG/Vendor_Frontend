@@ -20,6 +20,9 @@ export { RoleBadge } from './components/RoleBadge';
 export { PermissionMatrix } from './components/PermissionMatrix';
 export { MemberList } from './components/MemberList';
 export { InviteMemberModal } from './components/InviteMemberModal';
+export { PermissionDenied } from './components/PermissionDenied';
+export { LockedNavItem } from './components/LockedNavItem';
+export { LockedButton } from './components/LockedButton';
 
 // ── API Service ──
 export * as rbacApi from './api/rbacApi';

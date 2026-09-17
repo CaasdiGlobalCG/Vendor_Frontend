@@ -12,6 +12,7 @@ import TeamPage from "./rbac/pages/TeamPage";
 import PublicInviteRoutes from "./public-routes/PublicInviteRoutes";
 import { ModuleGuard } from "./rbac/components/ModuleGuard";
 import UnauthorizedPage from "./pages/UnauthorizedPage";
+import { SessionChangeBanner } from "./components/SessionChangeBanner";
 import SignUp from "./components/SignUp";
 import Home from "./pages/Home/Home";
 import UserProjectPage from './pages/UserProjectPage/UserProjectPage'; // Assuming UserProjectPage is here
@@ -206,6 +207,7 @@ const Layout = () => {
 
   return (
     <div className="bg-white min-h-screen ">{/* Or your default page background */}
+        <SessionChangeBanner />
         <div className="pt-5 px-5 pb-0">
             <Header />
         </div>

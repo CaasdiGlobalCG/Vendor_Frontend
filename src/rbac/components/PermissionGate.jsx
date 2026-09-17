@@ -53,6 +53,7 @@ export function PermissionGate({
   allOf,
   superAdminOnly = false,
   fallback = null,
+  lockedFallback = null,
   children,
 }) {
   const { can, canAny, canAll, isSuperAdmin, isLoading, hasRBAC } = usePermission();
@@ -65,26 +66,24 @@ export function PermissionGate({
 
   // Super admin only gate
   if (superAdminOnly) {
-    return isSuperAdmin ? children : fallback;
+    return isSuperAdmin ? children : (lockedFallback ?? fallback);
   }
 
-  // Multiple permissions — any match
+  // Determine if permission is granted for all check types
+  let granted = false;
   if (anyOf) {
-    return canAny(anyOf) ? children : fallback;
+    granted = canAny(anyOf);
+  } else if (allOf) {
+    granted = canAll(allOf);
+  } else if (module && action) {
+    granted = can(module, action);
+  } else {
+    // No permission props specified — always render (developer convenience)
+    return children;
   }
 
-  // Multiple permissions — all required
-  if (allOf) {
-    return canAll(allOf) ? children : fallback;
-  }
-
-  // Single module:action check
-  if (module && action) {
-    return can(module, action) ? children : fallback;
-  }
-
-  // No permission props specified — always render (developer convenience)
-  return children;
+  // Permission denied — prefer lockedFallback (disabled/locked UI) over fallback (hidden)
+  return granted ? children : (lockedFallback ?? fallback);
 }
 
 /**
