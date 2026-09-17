@@ -1,9 +1,11 @@
 import React, { useState, useContext, useEffect, useRef } from 'react';
 import { useParams } from 'react-router-dom';
-import { getWorkspaceById, updateWorkspace } from '../../utils/workspaceApi';
+import { getWorkspaceById, updateWorkspace, notifyWorkspaceEvent } from '../../utils/workspaceApi';
 import { persistIsImportant, persistDeadline, persistTextContent, persistNodeDataPatch, getTimeLeft as calculateTimeLeft, formatTimeLeft } from '../../utils/nodePersistence';
-import { Handle, Position, useReactFlow } from 'reactflow';
-import { Download, Eye, ExternalLink, X, ArrowRight, Check, X as XIcon, Menu, Star, Heart, Info, HelpCircle, Lock, Send, MoreVertical, Copy, Edit2, Trash2, FileText, MessageCircle } from 'lucide-react';
+import { Handle, Position, useReactFlow, NodeResizer } from 'reactflow';
+import * as XLSX from 'xlsx';
+import { Download, Eye, ExternalLink, X, ArrowRight, Check, X as XIcon, Menu, Star, Heart, Info, HelpCircle, Lock, Send, MoreVertical, Copy, Edit2, Trash2, FileText, MessageCircle, FileSpreadsheet } from 'lucide-react';
+import { useToastOptional } from '../ToastProvider';
 import CommentThread from '../comments/CommentThread';
 import { VendorContext } from '../../../../context/VendorContext';
 import FormTemplate from '../forms/FormTemplate';
@@ -15,6 +17,7 @@ import MaterialsRenderer from '../forms/MaterialsRenderer';
 import UploadsRenderer from '../forms/UploadsRenderer';
 import FileRenderer from '../forms/FileRenderer';
 import TaskCardRenderer from '../forms/TaskCardRenderer';
+import MaterialSpecCard from '../forms/MaterialSpecCard';
 import ImageBlockRenderer from '../forms/ImageBlockRenderer';
 import DocumentBlockRenderer from '../forms/DocumentBlockRenderer';
 import ConcreteBlocksCalculator from '../forms/ConcreteBlocksCalculator';
@@ -24,6 +27,8 @@ import FlooringCalculator from '../forms/FlooringCalculator';
 import SoilExcavationCalculator from '../forms/SoilExcavationCalculator';
 import SteelEstimationCalculator from '../forms/SteelEstimationCalculator';
 import VinylFlooringCalculator from '../forms/VinylFlooringCalculator';
+import PaintingEstimator from '../forms/PaintingEstimator';
+import ElectricalWiringEstimator from '../forms/ElectricalWiringEstimator';
 import BOQGenerator from '../forms/BOQGenerator';
 import CostCalculatorSummary from '../forms/CostCalculatorSummary';
 import ShipmentCard from '../forms/ShipmentCard';
@@ -50,6 +55,10 @@ const ElementNode = ({ id, data, isConnectable, selected }) => {
   // Menu dropdown state
   const [showMenuDropdown, setShowMenuDropdown] = useState(false);
   const menuDropdownRef = useRef(null);
+
+  // Toast for export feedback + hover state for resize handles
+  const toast = useToastOptional();
+  const [isNodeHovered, setIsNodeHovered] = useState(false);
 
   // Comment thread state
   const [showComments, setShowComments] = useState(false);
@@ -165,8 +174,15 @@ const ElementNode = ({ id, data, isConnectable, selected }) => {
       console.error('Failed to delete comment:', err);
     }
   };
-  const [radioValue, setRadioValue] = useState('');
-  
+  const [radioValue, setRadioValue] = useState(data?.radioValue || '');
+
+  // Shared form-field state: label + option editor (declared before autosave effects)
+  const [fieldLabel, setFieldLabel] = useState(data?.fieldLabel || '');
+  const [isEditingField, setIsEditingField] = useState(false);
+  const [radioOptions, setRadioOptions] = useState(data?.radioOptions || ['Option 1', 'Option 2']);
+  const [checkboxOptions, setCheckboxOptions] = useState(data?.checkboxOptions || ['Option 1', 'Option 2', 'Option 3']);
+  const [checkedItems, setCheckedItems] = useState(data?.checkedItems || {});
+
   // Auto-save refs for debouncing
   const textareaTimeoutRef = useRef(null);
   const inputTimeoutRef = useRef(null);
@@ -199,33 +215,34 @@ const ElementNode = ({ id, data, isConnectable, selected }) => {
     };
   }, [textareaValue, workspaceId, data.type, id, setNodes]);
   
-  // Auto-save textbox content with debounce
+  // Auto-save textbox/input content + label with debounce
   useEffect(() => {
-    if (!workspaceId || data.type !== 'textbox') return;
-    
-    // Clear previous timeout
+    if (!workspaceId || (data.type !== 'textbox' && data.type !== 'input')) return;
+
     if (inputTimeoutRef.current) {
       clearTimeout(inputTimeoutRef.current);
     }
-    
-    // Set new timeout to save after 2 seconds of inactivity
+
     inputTimeoutRef.current = setTimeout(async () => {
-      if (inputValue && inputValue.length > 0) {
-        try {
-          console.log('💾 Auto-saving textbox content');
-          await persistTextContent(id, inputValue, 'inputValue', setNodes, workspaceId);
-        } catch (error) {
-          console.error('❌ Error auto-saving textbox:', error);
-        }
+      try {
+        console.log('💾 Auto-saving input field content');
+        await persistNodeDataPatch(
+          id,
+          { inputValue, fieldLabel, lastModifiedAt: new Date().toISOString() },
+          null,
+          workspaceId
+        );
+      } catch (error) {
+        console.error('❌ Error auto-saving input field:', error);
       }
-    }, 2000);
-    
+    }, 1500);
+
     return () => {
       if (inputTimeoutRef.current) {
         clearTimeout(inputTimeoutRef.current);
       }
     };
-  }, [inputValue, workspaceId, data.type, id, setNodes]);
+  }, [inputValue, fieldLabel, workspaceId, data.type, id]);
   
   // Dynamic options for interactive elements - load from persisted data
   const [selectOptions, setSelectOptions] = useState(data?.selectOptions || []);
@@ -255,6 +272,7 @@ const ElementNode = ({ id, data, isConnectable, selected }) => {
                     ...node.data,
                     selectOptions: selectOptions,
                     selectedValue: selectValue,
+                    fieldLabel: fieldLabel,
                     lastModifiedAt: new Date().toISOString()
                   }
                 }
@@ -268,6 +286,7 @@ const ElementNode = ({ id, data, isConnectable, selected }) => {
           {
             selectOptions: selectOptions,
             selectedValue: selectValue,
+            fieldLabel: fieldLabel,
             lastModifiedAt: new Date().toISOString()
           },
           null,
@@ -284,17 +303,44 @@ const ElementNode = ({ id, data, isConnectable, selected }) => {
         clearTimeout(selectTimeoutRef.current);
       }
     };
-  }, [selectOptions, selectValue, workspaceId, data.type, id, setNodes]);
-  
+  }, [selectOptions, selectValue, fieldLabel, workspaceId, data.type, id, setNodes]);
+
+  // Auto-save radio options, selection and label with debounce
+  useEffect(() => {
+    if (!workspaceId || data.type !== 'radio') return;
+    const t = setTimeout(() => {
+      persistNodeDataPatch(
+        id,
+        { radioOptions, radioValue, fieldLabel, lastModifiedAt: new Date().toISOString() },
+        null,
+        workspaceId
+      ).catch((err) => console.error('❌ Error auto-saving radio:', err));
+    }, 1000);
+    return () => clearTimeout(t);
+  }, [radioOptions, radioValue, fieldLabel, workspaceId, data.type, id]);
+
+  // Auto-save checkbox options, checked state and label with debounce
+  useEffect(() => {
+    if (!workspaceId || data.type !== 'checkbox') return;
+    const t = setTimeout(() => {
+      persistNodeDataPatch(
+        id,
+        { checkboxOptions, checkedItems, fieldLabel, lastModifiedAt: new Date().toISOString() },
+        null,
+        workspaceId
+      ).catch((err) => console.error('❌ Error auto-saving checkbox:', err));
+    }, 1000);
+    return () => clearTimeout(t);
+  }, [checkboxOptions, checkedItems, fieldLabel, workspaceId, data.type, id]);
+
   // Wrapper to set select value and trigger save
   const setSelectValue = (value) => {
     setSelectValueState(value);
   };
   
-  const [radioOptions, setRadioOptions] = useState(['Option 1', 'Option 2']);
-  const [checkboxOptions, setCheckboxOptions] = useState(['Option 1', 'Option 2', 'Option 3']);
-  const [checkedItems, setCheckedItems] = useState({});
-  const [buttonText, setButtonText] = useState('Click Me');
+  const [buttonText, setButtonText] = useState(data?.buttonText || 'Click Me');
+  const [buttonAction, setButtonAction] = useState(data?.buttonAction || 'custom');
+  const [buttonAssignee, setButtonAssignee] = useState(data?.buttonAssignee || null);
   const [isEditingButton, setIsEditingButton] = useState(false);
   
   // Table state
@@ -526,6 +572,19 @@ const ElementNode = ({ id, data, isConnectable, selected }) => {
       // Force re-render to ensure UI updates
       setForceUpdate(prev => prev + 1);
 
+      // Notify PMs that this element needs their approval
+      notifyWorkspaceEvent({
+        workspaceId,
+        roles: ['pm'],
+        excludeUserId: currentUser?.vendorId || currentUser?.userId || currentUser?.pmId || currentUser?.id,
+        type: 'approval_request',
+        title: 'Approval requested',
+        message: `${currentUser?.name || currentUser?.email || 'A vendor'} sent "${data.name || data.type || 'an element'}" for approval`,
+        data: { nodeId: id, elementName: data.name, elementType: data.type },
+        priority: 'high',
+        actionRequired: true,
+      });
+
       console.log('✅ Element sent for approval successfully');
     } catch (error) {
       console.error('❌ Error sending element for approval:', error);
@@ -659,6 +718,19 @@ const ElementNode = ({ id, data, isConnectable, selected }) => {
           }
         }));
         
+        // Notify other collaborators about the approval decision
+        notifyWorkspaceEvent({
+          workspaceId,
+          roles: ['pm', 'vendor', 'client'],
+          excludeUserId: currentUser?.vendorId || currentUser?.userId || currentUser?.pmId || currentUser?.id,
+          type: 'approval_result',
+          title: `Element ${approvalAction === 'approve' ? 'approved' : 'rejected'}`,
+          message: `${currentUser?.name || currentUser?.email || 'A collaborator'} ${approvalAction}d "${data.name || data.type || 'an element'}"${newApprovalStatus === 'pm_approved' ? ' — awaiting client approval' : ''}`,
+          data: { nodeId: id, elementName: data.name, elementType: data.type, status: newApprovalStatus },
+          priority: approvalAction === 'approve' ? 'medium' : 'high',
+          actionRequired: newApprovalStatus === 'pm_approved',
+        });
+
         console.log(`✅ Element ${approvalAction}d successfully by ${currentUserRole}. Status: ${newApprovalStatus}`);
     } catch (error) {
       console.error('❌ Error updating approval status:', error);
@@ -898,6 +970,19 @@ const ElementNode = ({ id, data, isConnectable, selected }) => {
       // Notify parent that deletion was requested
       const event = new CustomEvent('element-deletion-requested', { detail: { nodeId: id } });
       window.dispatchEvent(event);
+
+      // Notify PMs that a deletion request needs their review
+      notifyWorkspaceEvent({
+        workspaceId,
+        roles: ['pm'],
+        excludeUserId: currentUser?.vendorId || currentUser?.userId || currentUser?.pmId || currentUser?.id,
+        type: 'deletion_request',
+        title: 'Deletion requested',
+        message: `${currentUser?.name || currentUser?.email || 'A vendor'} requested deletion of "${data.name || data.type || 'an element'}"`,
+        data: { nodeId: id, elementName: data.name, elementType: data.type },
+        priority: 'high',
+        actionRequired: true,
+      });
     } catch (error) {
       console.error('❌ Error submitting deletion request:', error);
       alert('Failed to submit deletion request');
@@ -934,6 +1019,17 @@ const ElementNode = ({ id, data, isConnectable, selected }) => {
       // Emit event for parent component
       const event = new CustomEvent('element-deleted', { detail: { nodeId: id } });
       window.dispatchEvent(event);
+
+      // Notify collaborators that the deletion was approved
+      notifyWorkspaceEvent({
+        workspaceId,
+        roles: ['pm', 'vendor', 'client'],
+        excludeUserId: currentUser?.vendorId || currentUser?.userId || currentUser?.pmId || currentUser?.id,
+        type: 'deletion_approved',
+        title: 'Deletion approved',
+        message: `${currentUser?.name || currentUser?.email || 'A PM'} approved deletion of "${data.name || data.type || 'an element'}"`,
+        data: { nodeId: id, elementName: data.name, elementType: data.type },
+      });
     } catch (error) {
       console.error('❌ Error approving deletion:', error);
       alert('Failed to approve deletion');
@@ -982,16 +1078,42 @@ const ElementNode = ({ id, data, isConnectable, selected }) => {
       );
 
       console.log('✅ Deletion request rejected successfully');
-      
+
       // Notify parent
       const event = new CustomEvent('element-deletion-rejected', { detail: { nodeId: id } });
       window.dispatchEvent(event);
+
+      // Notify collaborators that the deletion request was rejected
+      notifyWorkspaceEvent({
+        workspaceId,
+        roles: ['pm', 'vendor', 'client'],
+        excludeUserId: currentUser?.vendorId || currentUser?.userId || currentUser?.pmId || currentUser?.id,
+        type: 'deletion_rejected',
+        title: 'Deletion rejected',
+        message: `${currentUser?.name || currentUser?.email || 'A PM'} rejected the deletion request for "${data.name || data.type || 'an element'}"`,
+        data: { nodeId: id, elementName: data.name, elementType: data.type },
+      });
     } catch (error) {
       console.error('❌ Error rejecting deletion:', error);
       alert('Failed to reject deletion request');
     }
   };
-  
+
+  // Open the Request Deletion modal when deletion is triggered externally
+  // (e.g. Delete/Backspace key or canvas context menu) so vendors always go
+  // through the PM approval flow instead of deleting directly.
+  useEffect(() => {
+    const handleExternalDeletionRequest = (event) => {
+      if (event.detail?.nodeId !== id) return;
+      if (getCurrentUserRole() !== 'vendor') return;
+      if (data.deletionRequested) return;
+      setShowDeletionModal(true);
+    };
+
+    window.addEventListener('request-element-deletion', handleExternalDeletionRequest);
+    return () => window.removeEventListener('request-element-deletion', handleExternalDeletionRequest);
+  }, [id, data.deletionRequested, currentUser]);
+
   // Handle preview click
   const handlePreviewClick = (e) => {
     e.stopPropagation();
@@ -1161,6 +1283,74 @@ const ElementNode = ({ id, data, isConnectable, selected }) => {
     };
   };
 
+  // Build an array-of-arrays export payload [headers, ...rows] for the table element
+  const getTableExportAOA = () => {
+    const { columns, data: rows } = getPreviewTableData();
+    const headers = Array.isArray(columns) ? columns : [];
+    const colKeys = headers.map(col => (typeof col === 'string' ? col : (col.key || col.id || col.label || '')));
+    const colLabels = headers.map(col => (typeof col === 'string' ? col : (col.label || col.key || col.id || '')));
+    const body = (rows || []).map(row =>
+      colKeys.map(key => {
+        const val = row?.[key];
+        if (val === null || val === undefined) return '';
+        return typeof val === 'object' ? JSON.stringify(val) : val;
+      })
+    );
+    return [colLabels, ...body];
+  };
+
+  const handleDownloadExcel = (e) => {
+    e?.stopPropagation?.();
+    try {
+      const worksheet = XLSX.utils.aoa_to_sheet(getTableExportAOA());
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, 'Table');
+      const filename = `${(data.name || 'table').replace(/[^a-z0-9]+/gi, '_')}.xlsx`;
+      XLSX.writeFile(workbook, filename);
+      toast?.success?.('Excel file downloaded');
+    } catch (err) {
+      console.error('❌ Excel export failed:', err);
+      toast?.error?.('Failed to export Excel');
+    }
+  };
+
+  // Google Sheets has no unauthenticated "import via URL" endpoint, so we copy the
+  // table as TSV to the clipboard and open a new sheet — paste drops it into cells.
+  const handleExportGoogleSheets = async (e) => {
+    e?.stopPropagation?.();
+    const tsv = getTableExportAOA()
+      .map(row => row.map(cell => String(cell).replace(/\t/g, ' ').replace(/\r?\n/g, ' ')).join('\t'))
+      .join('\n');
+
+    let copied = false;
+    try {
+      await navigator.clipboard.writeText(tsv);
+      copied = true;
+    } catch (err) {
+      // Fallback: hidden textarea + execCommand for older browsers / denied permission
+      try {
+        const ta = document.createElement('textarea');
+        ta.value = tsv;
+        ta.style.position = 'fixed';
+        ta.style.opacity = '0';
+        document.body.appendChild(ta);
+        ta.select();
+        copied = document.execCommand('copy');
+        document.body.removeChild(ta);
+      } catch (fallbackErr) {
+        console.error('❌ Clipboard copy failed:', err, fallbackErr);
+      }
+    }
+
+    window.open('https://sheets.new', '_blank', 'noopener,noreferrer');
+
+    if (copied) {
+      toast?.info?.('Table copied to clipboard — in the Google Sheet, click a cell and press Cmd+V (Mac) or Ctrl+V to paste it', 6000);
+    } else {
+      toast?.error?.('Could not copy the table automatically — use the Excel download icon instead', 6000);
+    }
+  };
+
   // Create table helpers
   const tableHelpers = createTableHelpers(
     tableData,
@@ -1177,31 +1367,77 @@ const ElementNode = ({ id, data, isConnectable, selected }) => {
     setExpandedRows
   );
 
-  const addSelectOption = () => {
-    const newOption = prompt('Enter new option:');
-    if (newOption && newOption.trim()) {
-      setSelectOptions([...selectOptions, newOption.trim()]);
+  // Editable field label shown above form controls — persisted as data.fieldLabel
+  const renderFieldLabel = (fallback) => {
+    if (isElementLocked()) {
+      const text = fieldLabel || fallback;
+      return text ? <div className="text-xs font-semibold text-gray-500 mb-1">{text}</div> : null;
     }
+    return (
+      <input
+        type="text"
+        value={fieldLabel}
+        placeholder={fallback}
+        onChange={(e) => setFieldLabel(e.target.value)}
+        onKeyDown={(e) => e.stopPropagation()}
+        onClick={(e) => e.stopPropagation()}
+        className="text-xs font-semibold text-gray-600 mb-1 w-full bg-transparent outline-none border-b border-transparent focus:border-blue-300 placeholder-gray-400 pb-0.5"
+      />
+    );
   };
 
-  const addRadioOption = () => {
-    const newOption = prompt('Enter new option:');
-    if (newOption && newOption.trim()) {
-      setRadioOptions([...radioOptions, newOption.trim()]);
-    }
-  };
+  // Inline options editor — rename each option, remove, add; replaces prompt() flow
+  const renderOptionsEditor = (options, setOptions) => (
+    <div className="space-y-1.5" onClick={(e) => e.stopPropagation()}>
+      {options.map((opt, i) => (
+        <div key={i} className="flex items-center gap-1.5">
+          <input
+            type="text"
+            value={opt}
+            onChange={(e) => setOptions(options.map((o, j) => (j === i ? e.target.value : o)))}
+            onKeyDown={(e) => e.stopPropagation()}
+            className="flex-1 px-2 py-1 text-xs border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
+          />
+          <button
+            onClick={() => setOptions(options.filter((_, j) => j !== i))}
+            className="p-1 text-gray-400 hover:text-red-500 transition-colors"
+            title="Remove option"
+          >
+            <X className="w-3.5 h-3.5" />
+          </button>
+        </div>
+      ))}
+      <div className="flex gap-1.5 pt-1">
+        <button
+          onClick={() => setOptions([...options, `Option ${options.length + 1}`])}
+          className="flex-1 text-[11px] font-medium text-blue-600 hover:bg-blue-50 border border-dashed border-blue-300 rounded py-1.5 transition-colors"
+        >
+          + Add option
+        </button>
+        <button
+          onClick={() => setIsEditingField(false)}
+          className="px-3 text-[11px] font-medium text-white bg-blue-600 hover:bg-blue-700 rounded py-1.5 transition-colors"
+        >
+          Done
+        </button>
+      </div>
+    </div>
+  );
 
-  const addCheckboxOption = () => {
-    const newOption = prompt('Enter new option:');
-    if (newOption && newOption.trim()) {
-      setCheckboxOptions([...checkboxOptions, newOption.trim()]);
-    }
-  };
-
-  const removeOption = (options, setOptions, index) => {
-    const newOptions = options.filter((_, i) => i !== index);
-    setOptions(newOptions);
-  };
+  // Small "Edit options" link shown below a control when editable
+  const renderEditOptionsLink = () =>
+    !isElementLocked() && (
+      <button
+        onClick={(e) => {
+          e.stopPropagation();
+          setIsEditingField(true);
+        }}
+        className="mt-1.5 text-[11px] font-medium text-blue-600 hover:text-blue-700 flex items-center gap-1 transition-colors"
+      >
+        <Edit2 className="w-3 h-3" />
+        Edit options
+      </button>
+    );
 
   const renderTableElement = () => {
     return (
@@ -1307,19 +1543,22 @@ const ElementNode = ({ id, data, isConnectable, selected }) => {
       case 'textbox':
       case 'input':
         return (
-          <input
-            type="text"
-            value={inputValue}
-            onChange={(e) => !isLocked && setInputValue(e.target.value)}
-            className={`w-full p-3 border-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-base ${
-              isLocked ? 'border-gray-200 bg-gray-50 text-gray-500 cursor-not-allowed' : 'border-gray-300'
-            }`}
-            placeholder={isLocked ? "Element is locked" : "Type your text here..."}
-            onClick={(e) => e.stopPropagation()}
-            onKeyDown={(e) => e.stopPropagation()}
-            onFocus={(e) => e.stopPropagation()}
-            readOnly={isLocked}
-          />
+          <div>
+            {renderFieldLabel('Field label')}
+            <input
+              type="text"
+              value={inputValue}
+              onChange={(e) => !isLocked && setInputValue(e.target.value)}
+              className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm bg-white ${
+                isLocked ? 'border-gray-200 bg-gray-50 text-gray-500 cursor-not-allowed' : 'border-gray-300'
+              }`}
+              placeholder={isLocked ? "Element is locked" : "Enter value..."}
+              onClick={(e) => e.stopPropagation()}
+              onKeyDown={(e) => e.stopPropagation()}
+              onFocus={(e) => e.stopPropagation()}
+              readOnly={isLocked}
+            />
+          </div>
         );
       
       case 'button':
@@ -1378,194 +1617,114 @@ const ElementNode = ({ id, data, isConnectable, selected }) => {
       case 'select':
       case 'dropdown':
         return (
-          <div className="space-y-2">
-            <select
-              value={selectValue}
-              onChange={(e) => !isLocked && setSelectValue(e.target.value)}
-              className={`w-full p-3 border-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-base bg-white ${
-                isLocked ? 'border-gray-200 bg-gray-50 text-gray-500 cursor-not-allowed' : 'border-gray-300'
-              }`}
-              onClick={(e) => e.stopPropagation()}
-              onKeyDown={(e) => e.stopPropagation()}
-              onFocus={(e) => e.stopPropagation()}
-              disabled={isLocked}
-            >
-              <option value="">{isLocked ? "Element is locked" : "Select an option"}</option>
-              {selectOptions.map((option, index) => (
-                <option key={index} value={option.toLowerCase().replace(/\s+/g, '-')}>
-                  {option}
-                </option>
-              ))}
-            </select>
-            <div className="flex space-x-3 mt-3">
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  if (!isLocked) {
-                    addSelectOption();
-                  }
-                }}
-                className={`flex-1 px-4 py-2 text-sm font-medium rounded-lg transition-all duration-200 shadow-md hover:shadow-lg flex items-center justify-center space-x-2 ${
-                  isLocked 
-                    ? 'bg-gray-400 text-gray-600 cursor-not-allowed' 
-                    : 'bg-gradient-to-r from-emerald-500 to-green-600 text-white hover:from-emerald-600 hover:to-green-700'
-                }`}
-                disabled={isLocked}
-              >
-                <span className="text-lg">+</span>
-                <span>Add Option</span>
-              </button>
-              {selectOptions.length > 1 && (
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    if (!isLocked) {
-                      removeOption(selectOptions, setSelectOptions, selectOptions.length - 1);
-                    }
-                  }}
-                  className={`px-4 py-2 text-sm font-medium rounded-lg transition-all duration-200 shadow-md hover:shadow-lg flex items-center justify-center space-x-2 ${
-                    isLocked 
-                      ? 'bg-gray-400 text-gray-600 cursor-not-allowed' 
-                      : 'bg-gradient-to-r from-red-500 to-rose-600 text-white hover:from-red-600 hover:to-rose-700'
+          <div>
+            {renderFieldLabel('Dropdown')}
+            {isEditingField && !isLocked ? (
+              renderOptionsEditor(selectOptions, setSelectOptions)
+            ) : (
+              <>
+                <select
+                  value={selectValue}
+                  onChange={(e) => !isLocked && setSelectValue(e.target.value)}
+                  className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm bg-white ${
+                    isLocked ? 'border-gray-200 bg-gray-50 text-gray-500 cursor-not-allowed' : 'border-gray-300'
                   }`}
+                  onClick={(e) => e.stopPropagation()}
+                  onKeyDown={(e) => e.stopPropagation()}
+                  onFocus={(e) => e.stopPropagation()}
                   disabled={isLocked}
                 >
-                  <span className="text-lg">×</span>
-                  <span>Remove</span>
-                </button>
-              )}
-            </div>
+                  <option value="">{isLocked ? "Element is locked" : "Select an option"}</option>
+                  {selectOptions.map((option, index) => (
+                    <option key={index} value={option}>
+                      {option}
+                    </option>
+                  ))}
+                </select>
+                {renderEditOptionsLink()}
+              </>
+            )}
           </div>
         );
       
       case 'checkbox':
         return (
-          <div className="space-y-2">
-            <div className="space-y-2">
-              {checkboxOptions.map((option, index) => (
-                <label key={index} className={`flex items-center space-x-2 ${isLocked ? 'cursor-not-allowed' : 'cursor-pointer'}`}>
-                  <input
-                    type="checkbox"
-                    checked={checkedItems[option] || false}
-                    onChange={(e) => !isLocked && setCheckedItems({
-                      ...checkedItems,
-                      [option]: e.target.checked
-                    })}
-                    className={`w-5 h-5 border-2 rounded focus:ring-blue-500 ${
-                      isLocked ? 'border-gray-300 bg-gray-100 text-gray-400 cursor-not-allowed' : 'text-blue-600 border-gray-300'
-                    }`}
-                    onClick={(e) => e.stopPropagation()}
-                    onKeyDown={(e) => e.stopPropagation()}
-                    onFocus={(e) => e.stopPropagation()}
-                    disabled={isLocked}
-                  />
-                  <span className={`text-base ${isLocked ? 'text-gray-500' : 'text-gray-700'}`}>{option}</span>
-                </label>
-              ))}
-            </div>
-            <div className="flex space-x-3 mt-3">
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  if (!isLocked) {
-                    addCheckboxOption();
-                  }
-                }}
-                className={`flex-1 px-4 py-2 text-sm font-medium rounded-lg transition-all duration-200 shadow-md hover:shadow-lg flex items-center justify-center space-x-2 ${
-                  isLocked 
-                    ? 'bg-gray-400 text-gray-600 cursor-not-allowed' 
-                    : 'bg-gradient-to-r from-emerald-500 to-green-600 text-white hover:from-emerald-600 hover:to-green-700'
-                }`}
-                disabled={isLocked}
-              >
-                <span className="text-lg">+</span>
-                <span>Add Option</span>
-              </button>
-              {checkboxOptions.length > 1 && (
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    if (!isLocked) {
-                      removeOption(checkboxOptions, setCheckboxOptions, checkboxOptions.length - 1);
-                    }
-                  }}
-                  className={`px-4 py-2 text-sm font-medium rounded-lg transition-all duration-200 shadow-md hover:shadow-lg flex items-center justify-center space-x-2 ${
-                    isLocked 
-                      ? 'bg-gray-400 text-gray-600 cursor-not-allowed' 
-                      : 'bg-gradient-to-r from-red-500 to-rose-600 text-white hover:from-red-600 hover:to-rose-700'
-                  }`}
-                  disabled={isLocked}
-                >
-                  <span className="text-lg">×</span>
-                  <span>Remove</span>
-                </button>
-              )}
-            </div>
+          <div>
+            {renderFieldLabel('Select all that apply')}
+            {isEditingField && !isLocked ? (
+              renderOptionsEditor(checkboxOptions, setCheckboxOptions)
+            ) : (
+              <>
+                <div className="space-y-1.5">
+                  {checkboxOptions.map((option, index) => (
+                    <label
+                      key={index}
+                      className={`flex items-center gap-2.5 px-2.5 py-1.5 rounded-lg border transition-colors ${
+                        checkedItems[option]
+                          ? 'border-blue-300 bg-blue-50'
+                          : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
+                      } ${isLocked ? 'cursor-not-allowed opacity-70' : 'cursor-pointer'}`}
+                    >
+                      <input
+                        type="checkbox"
+                        checked={checkedItems[option] || false}
+                        onChange={(e) => !isLocked && setCheckedItems({
+                          ...checkedItems,
+                          [option]: e.target.checked
+                        })}
+                        className="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                        onClick={(e) => e.stopPropagation()}
+                        onKeyDown={(e) => e.stopPropagation()}
+                        onFocus={(e) => e.stopPropagation()}
+                        disabled={isLocked}
+                      />
+                      <span className={`text-sm ${isLocked ? 'text-gray-500' : 'text-gray-700'}`}>{option}</span>
+                    </label>
+                  ))}
+                </div>
+                {renderEditOptionsLink()}
+              </>
+            )}
           </div>
         );
       
       case 'radio':
         return (
-          <div className="space-y-2">
-            <div className="space-y-2">
-              {radioOptions.map((option, index) => (
-                <label key={index} className={`flex items-center space-x-2 ${isLocked ? 'cursor-not-allowed' : 'cursor-pointer'}`}>
-                  <input
-                    type="radio"
-                    name={`radio-${data.id || Math.random()}`}
-                    value={option}
-                    checked={radioValue === option}
-                    onChange={(e) => !isLocked && setRadioValue(e.target.value)}
-                    className={`w-5 h-5 border-2 focus:ring-blue-500 ${
-                      isLocked ? 'border-gray-300 bg-gray-100 text-gray-400 cursor-not-allowed' : 'text-blue-600 border-gray-300'
-                    }`}
-                    onClick={(e) => e.stopPropagation()}
-                    onKeyDown={(e) => e.stopPropagation()}
-                    onFocus={(e) => e.stopPropagation()}
-                    disabled={isLocked}
-                  />
-                  <span className={`text-base ${isLocked ? 'text-gray-500' : 'text-gray-700'}`}>{option}</span>
-                </label>
-              ))}
-            </div>
-            <div className="flex space-x-3 mt-3">
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  if (!isLocked) {
-                    addRadioOption();
-                  }
-                }}
-                className={`flex-1 px-4 py-2 text-sm font-medium rounded-lg transition-all duration-200 shadow-md hover:shadow-lg flex items-center justify-center space-x-2 ${
-                  isLocked 
-                    ? 'bg-gray-400 text-gray-600 cursor-not-allowed' 
-                    : 'bg-gradient-to-r from-emerald-500 to-green-600 text-white hover:from-emerald-600 hover:to-green-700'
-                }`}
-                disabled={isLocked}
-              >
-                <span className="text-lg">+</span>
-                <span>Add Option</span>
-              </button>
-              {radioOptions.length > 1 && (
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    if (!isLocked) {
-                      removeOption(radioOptions, setRadioOptions, radioOptions.length - 1);
-                    }
-                  }}
-                  className={`px-4 py-2 text-sm font-medium rounded-lg transition-all duration-200 shadow-md hover:shadow-lg flex items-center justify-center space-x-2 ${
-                    isLocked 
-                      ? 'bg-gray-400 text-gray-600 cursor-not-allowed' 
-                      : 'bg-gradient-to-r from-red-500 to-rose-600 text-white hover:from-red-600 hover:to-rose-700'
-                  }`}
-                  disabled={isLocked}
-                >
-                  <span className="text-lg">×</span>
-                  <span>Remove</span>
-                </button>
-              )}
-            </div>
+          <div>
+            {renderFieldLabel('Select one')}
+            {isEditingField && !isLocked ? (
+              renderOptionsEditor(radioOptions, setRadioOptions)
+            ) : (
+              <>
+                <div className="space-y-1.5">
+                  {radioOptions.map((option, index) => (
+                    <label
+                      key={index}
+                      className={`flex items-center gap-2.5 px-2.5 py-1.5 rounded-lg border transition-colors ${
+                        radioValue === option
+                          ? 'border-blue-300 bg-blue-50'
+                          : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
+                      } ${isLocked ? 'cursor-not-allowed opacity-70' : 'cursor-pointer'}`}
+                    >
+                      <input
+                        type="radio"
+                        name={`radio-${id}`}
+                        value={option}
+                        checked={radioValue === option}
+                        onChange={(e) => !isLocked && setRadioValue(e.target.value)}
+                        className="w-4 h-4 border-gray-300 text-blue-600 focus:ring-blue-500"
+                        onClick={(e) => e.stopPropagation()}
+                        onKeyDown={(e) => e.stopPropagation()}
+                        onFocus={(e) => e.stopPropagation()}
+                        disabled={isLocked}
+                      />
+                      <span className={`text-sm ${isLocked ? 'text-gray-500' : 'text-gray-700'}`}>{option}</span>
+                    </label>
+                  ))}
+                </div>
+                {renderEditOptionsLink()}
+              </>
+            )}
           </div>
         );
       
@@ -1682,6 +1841,9 @@ const ElementNode = ({ id, data, isConnectable, selected }) => {
         );
       }
 
+      case 'card':
+        return <MaterialSpecCard data={data} nodeId={id} workspaceId={workspaceId} setNodes={setNodes} />;
+
       case 'task-card':
       case 'task-card-progress':
         return <TaskCardRenderer data={data} />;
@@ -1689,6 +1851,7 @@ const ElementNode = ({ id, data, isConnectable, selected }) => {
       case 'boq-generator':
         return <BOQGenerator />;
 
+      case 'calculator': // legacy panel type — route through the same dispatch below
       case 'cost-calculator':
         // Render different calculators based on element name or id
         const lowerName = (data.name || '').toLowerCase();
@@ -1698,14 +1861,20 @@ const ElementNode = ({ id, data, isConnectable, selected }) => {
           return <VinylFlooringCalculator data={data} nodeId={id} workspaceId={workspaceId} setNodes={setNodes} />;
         } else if (lowerName.includes('steel') || lowerId.includes('steel')) {
           return <SteelEstimationCalculator data={data} nodeId={id} workspaceId={workspaceId} setNodes={setNodes} />;
-        } else if (data.name === 'Bricks Calculator' || data.id === 'bricks-calculator') {
+        } else if (lowerName.includes('paint') || lowerId.includes('paint')) {
+          return <PaintingEstimator data={data} nodeId={id} workspaceId={workspaceId} setNodes={setNodes} />;
+        } else if (lowerName.includes('electrical') || lowerName.includes('wiring') || lowerId.includes('electrical') || lowerId.includes('wiring')) {
+          return <ElectricalWiringEstimator data={data} nodeId={id} workspaceId={workspaceId} setNodes={setNodes} />;
+        } else if (lowerName.includes('brick') || lowerId.includes('brick')) {
           return <BricksCalculator data={data} nodeId={id} workspaceId={workspaceId} setNodes={setNodes} />;
-        } else if (data.name === 'Concrete Calculator' || data.id === 'concrete-calculator') {
+        } else if (lowerName.includes('block') || lowerId.includes('block')) {
+          return <ConcreteBlocksCalculator data={data} nodeId={id} workspaceId={workspaceId} setNodes={setNodes} />;
+        } else if (lowerName.includes('concrete') || lowerName.includes('cement') || lowerId.includes('concrete') || lowerId.includes('cement')) {
           return <ConcreteCalculator data={data} nodeId={id} workspaceId={workspaceId} setNodes={setNodes} />;
-        } else if (data.name === 'Flooring Calculator' || data.id === 'flooring-calculator') {
-          return <FlooringCalculator data={data} nodeId={id} workspaceId={workspaceId} setNodes={setNodes} />;
-        } else if (data.name === 'Soil Excavation Calculator' || data.id === 'soil-excavation-calculator') {
+        } else if (lowerName.includes('soil') || lowerName.includes('excavat') || lowerId.includes('soil') || lowerId.includes('excavat')) {
           return <SoilExcavationCalculator data={data} nodeId={id} workspaceId={workspaceId} setNodes={setNodes} />;
+        } else if (lowerName.includes('flooring') || lowerName.includes('floor') || lowerId.includes('flooring') || lowerId.includes('floor')) {
+          return <FlooringCalculator data={data} nodeId={id} workspaceId={workspaceId} setNodes={setNodes} />;
         }
         // Default to Concrete Blocks Calculator
         return <ConcreteBlocksCalculator data={data} nodeId={id} workspaceId={workspaceId} setNodes={setNodes} />;
@@ -1942,6 +2111,317 @@ const ElementNode = ({ id, data, isConnectable, selected }) => {
   }
 
   // ============================================================
+  // Special rendering for button type - just show the button
+  // itself without the card wrapper (header/footer chrome)
+  // ============================================================
+  if (data.type === 'button') {
+    const isLocked = isElementLocked();
+
+    const BUTTON_ACTION_OPTIONS = [
+      { id: 'custom', label: 'Custom', tone: 'neutral', done: 'Clicked' },
+      { id: 'approve', label: 'Approve', tone: 'positive', done: 'Approved' },
+      { id: 'submit', label: 'Submit', tone: 'positive', done: 'Submitted' },
+      { id: 'reject', label: 'Reject', tone: 'negative', done: 'Rejected' },
+      { id: 'cancel', label: 'Cancel', tone: 'negative', done: 'Cancelled' },
+    ];
+
+    const buttonResult = data.buttonResult || null;
+    const isDone = !!buttonResult;
+    const doneLabel = isDone
+      ? (BUTTON_ACTION_OPTIONS.find(o => o.id === (buttonResult.action || buttonAction))?.done || 'Done')
+      : null;
+    const doneTone = isDone
+      ? (BUTTON_ACTION_OPTIONS.find(o => o.id === (buttonResult.action || buttonAction))?.tone || 'neutral')
+      : null;
+
+    // Workspace collaborators available for assignment
+    const collaborators = (data.workspaceCollaborators || []).filter(
+      (c, i, arr) => arr.findIndex(x => (x.vendorId || x.userId || x.email) === (c.vendorId || c.userId || c.email)) === i
+    );
+
+    // Only the assigned user can trigger the button (when an assignee is set).
+    // Identity can come from VendorContext OR URL params (PM/client/CAS arrive via links).
+    const urlUserParams = new URLSearchParams(window.location.search);
+    const myIds = [
+      currentUser?.vendorId,
+      currentUser?.userId,
+      currentUser?.pmId,
+      currentUser?.id,
+      urlUserParams.get('pmId'),
+      urlUserParams.get('userId'),
+      urlUserParams.get('clientId')
+    ].filter(Boolean);
+    const myEmail = currentUser?.email ||
+      (urlUserParams.get('userEmail') ? decodeURIComponent(urlUserParams.get('userEmail')) : null);
+    const assignedTo = buttonAssignee || data.buttonAssignee;
+    const isAssignee = !assignedTo ||
+      myIds.some(id => id === assignedTo.vendorId || id === assignedTo.userId || id === assignedTo.id) ||
+      (assignedTo.email && myEmail && assignedTo.email === myEmail);
+
+    const buttonTone = BUTTON_ACTION_OPTIONS.find(o => o.id === buttonAction)?.tone || 'neutral';
+    const buttonColorClasses = isDone
+      ? doneTone === 'positive'
+        ? 'bg-emerald-600 text-white cursor-default'
+        : doneTone === 'negative'
+          ? 'bg-red-600 text-white cursor-default'
+          : 'bg-gray-500 text-white cursor-default'
+      : isLocked
+        ? 'bg-gray-400 text-gray-600 cursor-not-allowed'
+        : !isAssignee
+          ? (buttonTone === 'positive'
+              ? 'bg-emerald-600 text-white opacity-60 cursor-not-allowed'
+              : buttonTone === 'negative'
+                ? 'bg-red-600 text-white opacity-60 cursor-not-allowed'
+                : 'bg-blue-600 text-white opacity-60 cursor-not-allowed')
+          : buttonTone === 'positive'
+            ? 'bg-emerald-600 text-white hover:bg-emerald-700 hover:shadow-lg'
+            : buttonTone === 'negative'
+              ? 'bg-red-600 text-white hover:bg-red-700 hover:shadow-lg'
+              : 'bg-blue-600 text-white hover:bg-blue-700 hover:shadow-lg';
+
+    const persistButtonPatch = async (updates) => {
+      try {
+        setNodes((nodes) =>
+          nodes.map((node) =>
+            node.id === id
+              ? { ...node, data: { ...node.data, ...updates } }
+              : node
+          )
+        );
+        await persistNodeDataPatch(id, updates, null, workspaceId);
+      } catch (err) {
+        console.error('Failed to save button config:', err);
+      }
+    };
+
+    const persistButtonChanges = async () => {
+      await persistButtonPatch({
+        buttonText,
+        buttonAction,
+        buttonAssignee,
+        lastModifiedAt: new Date().toISOString()
+      });
+    };
+
+    const handleButtonEditDone = async () => {
+      setIsEditingButton(false);
+      await persistButtonChanges();
+    };
+
+    const handleButtonTrigger = async (e) => {
+      e.stopPropagation();
+      if (isLocked || isDone || !isAssignee) return;
+
+      const result = {
+        status: BUTTON_ACTION_OPTIONS.find(o => o.id === buttonAction)?.done?.toLowerCase() || 'clicked',
+        action: buttonAction,
+        label: buttonText,
+        by: currentUser?.name ||
+            (urlUserParams.get('userName') ? decodeURIComponent(urlUserParams.get('userName')) : null) ||
+            myEmail || 'Unknown User',
+        byRole: getCurrentUserRole(),
+        at: new Date().toISOString()
+      };
+
+      await persistButtonPatch({ buttonResult: result, lastModifiedAt: result.at });
+    };
+
+    const handleButtonReset = async () => {
+      await persistButtonPatch({ buttonResult: null, lastModifiedAt: new Date().toISOString() });
+      setIsEditingButton(false);
+    };
+
+    return (
+      <div className={`relative group ${selected ? 'z-10' : ''}`}>
+        {/* Connection Handles - uniform gray, bidirectional */}
+        <Handle type="source" position={Position.Top} id="top-out" style={{ left: '48%' }}
+          className="w-2.5 h-2.5 !bg-gray-400 !border-2 !border-white opacity-0 group-hover:opacity-100 transition-opacity" isConnectable={isConnectable} />
+        <Handle type="target" position={Position.Top} id="top-in" style={{ left: '52%' }}
+          className="w-2.5 h-2.5 !bg-gray-400 !border-2 !border-white opacity-0 group-hover:opacity-100 transition-opacity" isConnectable={isConnectable} />
+        <Handle type="source" position={Position.Right} id="right-out" style={{ top: '48%' }}
+          className="w-2.5 h-2.5 !bg-gray-400 !border-2 !border-white opacity-0 group-hover:opacity-100 transition-opacity" isConnectable={isConnectable} />
+        <Handle type="target" position={Position.Right} id="right-in" style={{ top: '52%' }}
+          className="w-2.5 h-2.5 !bg-gray-400 !border-2 !border-white opacity-0 group-hover:opacity-100 transition-opacity" isConnectable={isConnectable} />
+        <Handle type="source" position={Position.Bottom} id="bottom-out" style={{ left: '48%' }}
+          className="w-2.5 h-2.5 !bg-gray-400 !border-2 !border-white opacity-0 group-hover:opacity-100 transition-opacity" isConnectable={isConnectable} />
+        <Handle type="target" position={Position.Bottom} id="bottom-in" style={{ left: '52%' }}
+          className="w-2.5 h-2.5 !bg-gray-400 !border-2 !border-white opacity-0 group-hover:opacity-100 transition-opacity" isConnectable={isConnectable} />
+        <Handle type="source" position={Position.Left} id="left-out" style={{ top: '48%' }}
+          className="w-2.5 h-2.5 !bg-gray-400 !border-2 !border-white opacity-0 group-hover:opacity-100 transition-opacity" isConnectable={isConnectable} />
+        <Handle type="target" position={Position.Left} id="left-in" style={{ top: '52%' }}
+          className="w-2.5 h-2.5 !bg-gray-400 !border-2 !border-white opacity-0 group-hover:opacity-100 transition-opacity" isConnectable={isConnectable} />
+
+        {/* The button itself */}
+        <button
+          onClick={handleButtonTrigger}
+          onDoubleClick={(e) => {
+            e.stopPropagation();
+            if (!isLocked) {
+              setIsEditingButton(true);
+            }
+          }}
+          disabled={isLocked || isDone}
+          title={
+            isDone
+              ? `${doneLabel} by ${buttonResult.by}`
+              : !isAssignee && assignedTo
+                ? `Only ${assignedTo.name || 'the assigned user'} can trigger this`
+                : buttonText
+          }
+          className={`px-6 py-2.5 rounded-md text-sm font-semibold shadow-md transition-all focus:outline-none focus:ring-2 focus:ring-blue-500 ${buttonColorClasses} ${selected ? 'ring-2 ring-blue-300 ring-offset-2' : ''} ${isImportant ? 'ring-4 ring-yellow-300' : ''}`}
+        >
+          {isDone ? `${doneTone === 'negative' ? '✗' : '✓'} ${doneLabel}` : buttonText}
+        </button>
+
+        {/* Status caption under the button */}
+        {isDone ? (
+          <div className="absolute top-full left-1/2 -translate-x-1/2 mt-1.5 whitespace-nowrap text-[10px] font-medium text-gray-500">
+            {doneLabel} by {buttonResult.by}
+            {buttonResult.byRole ? ` (${buttonResult.byRole.toUpperCase()})` : ''}
+            {' · '}{new Date(buttonResult.at).toLocaleString()}
+          </div>
+        ) : assignedTo ? (
+          <div className="absolute top-full left-1/2 -translate-x-1/2 mt-1.5 whitespace-nowrap text-[10px] font-medium text-gray-400">
+            {isAssignee
+              ? `Assigned to you — click to ${buttonAction === 'custom' ? 'confirm' : buttonAction}`
+              : `Waiting for ${assignedTo.name || 'assignee'} to ${buttonAction === 'custom' ? 'act' : buttonAction}`}
+          </div>
+        ) : null}
+
+        {/* Edit pencil - beside the button */}
+        {!isLocked && (
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              setIsEditingButton((v) => !v);
+            }}
+            className="absolute -right-9 top-1/2 -translate-y-1/2 z-30 w-6 h-6 bg-white text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-full flex items-center justify-center shadow-md border border-gray-200 transition-colors"
+            title="Edit button"
+          >
+            <Edit2 className="w-3 h-3" />
+          </button>
+        )}
+
+        {/* Edit popover - label + action + assignee */}
+        {isEditingButton && !isLocked && (
+          <div
+            className="absolute top-full left-1/2 -translate-x-1/2 mt-7 z-40 w-60 bg-white border border-gray-200 rounded-lg shadow-xl p-3 space-y-2"
+            onClick={(e) => e.stopPropagation()}
+            onDoubleClick={(e) => e.stopPropagation()}
+          >
+            <div>
+              <label className="block text-[10px] font-semibold uppercase tracking-wide text-gray-400 mb-1">Label</label>
+              <input
+                type="text"
+                value={buttonText}
+                onChange={(e) => setButtonText(e.target.value)}
+                onKeyDown={(e) => {
+                  e.stopPropagation();
+                  if (e.key === 'Enter') handleButtonEditDone();
+                }}
+                className="w-full px-2 py-1.5 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                placeholder="Button text"
+                autoFocus
+              />
+            </div>
+            <div>
+              <label className="block text-[10px] font-semibold uppercase tracking-wide text-gray-400 mb-1">Action</label>
+              <div className="flex flex-wrap gap-1">
+                {BUTTON_ACTION_OPTIONS.map((option) => (
+                  <button
+                    key={option.id}
+                    onClick={() => setButtonAction(option.id)}
+                    className={`px-2 py-1 rounded text-[11px] font-medium border transition-colors ${
+                      buttonAction === option.id
+                        ? option.tone === 'positive'
+                          ? 'bg-emerald-600 text-white border-emerald-600'
+                          : option.tone === 'negative'
+                            ? 'bg-red-600 text-white border-red-600'
+                            : 'bg-blue-600 text-white border-blue-600'
+                        : 'bg-white text-gray-600 border-gray-300 hover:bg-gray-50'
+                    }`}
+                  >
+                    {option.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+            <div>
+              <label className="block text-[10px] font-semibold uppercase tracking-wide text-gray-400 mb-1">Who can act</label>
+              <select
+                value={buttonAssignee ? (buttonAssignee.vendorId || buttonAssignee.userId || buttonAssignee.email || '') : ''}
+                onChange={(e) => {
+                  const key = e.target.value;
+                  const collab = collaborators.find(c => (c.vendorId || c.userId || c.email) === key);
+                  setButtonAssignee(collab ? {
+                    vendorId: collab.vendorId || collab.userId || null,
+                    userId: collab.userId || null,
+                    name: collab.name || collab.email || 'Unknown',
+                    email: collab.email || null,
+                    role: collab.role || collab.userType || null
+                  } : null);
+                }}
+                className="w-full px-2 py-1.5 border border-gray-300 rounded-md text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="">Anyone</option>
+                {collaborators.map((collab) => {
+                  const key = collab.vendorId || collab.userId || collab.email;
+                  const roleLabel = collab.role || collab.userType || (collab.isClient ? 'client' : null);
+                  return (
+                    <option key={key} value={key}>
+                      {collab.name || collab.email || 'Unknown'}{roleLabel ? ` (${roleLabel.toUpperCase()})` : ''}
+                    </option>
+                  );
+                })}
+              </select>
+            </div>
+            {isDone && (
+              <div className="flex items-center justify-between px-2 py-1.5 bg-gray-50 border border-gray-200 rounded-md">
+                <span className="text-[11px] text-gray-600">
+                  {doneLabel} by {buttonResult.by}
+                </span>
+                <button
+                  onClick={handleButtonReset}
+                  className="text-[11px] font-medium text-red-600 hover:text-red-700"
+                >
+                  Reset
+                </button>
+              </div>
+            )}
+            <button
+              onClick={handleButtonEditDone}
+              className="w-full px-2 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded-md transition-colors"
+            >
+              Done
+            </button>
+          </div>
+        )}
+
+        {/* Sequence Number Badge */}
+        {data.sequenceNumber && (
+          <div className="absolute -top-3 -left-3 z-20 w-6 h-6 bg-gradient-to-br from-green-500 to-emerald-600 text-white rounded-full flex items-center justify-center text-[10px] font-bold shadow-md border-2 border-white">
+            {data.sequenceNumber}
+          </div>
+        )}
+
+        {/* Lock Indicator */}
+        {data.locked && (
+          <div className="absolute -top-3 -right-3 z-20 w-5 h-5 bg-orange-500 text-white rounded-full flex items-center justify-center shadow-md border-2 border-white" title="Element is locked">
+            <Lock className="w-3 h-3" />
+          </div>
+        )}
+
+        {/* Selection indicator */}
+        {selected && !data.locked && (
+          <div className="absolute -top-2 -right-2 w-5 h-5 bg-blue-500 text-white rounded-full flex items-center justify-center text-[10px] font-bold">
+            E
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  // ============================================================
   // Figma-style Comment Pin for textarea type
   // Collapsed = avatar pin only | Hover/Click = expand comment box
   // ============================================================
@@ -2144,31 +2624,36 @@ const ElementNode = ({ id, data, isConnectable, selected }) => {
   // Determine wrapper classes based on element type
   const getWrapperClasses = () => {
     const baseClasses = `${isImportant ? 'bg-yellow-50' : 'bg-white'} border-2 rounded-xl shadow-xl relative group transition-all`;
-    const recentlyUpdatedClass = isRecentlyUpdated() ? 'ring-2 ring-amber-300 ring-offset-1' : '';
+    const isOverdue = deadline && calculateTimeLeft(deadline)?.isExpired;
+    const recentlyUpdatedClass = isOverdue
+      ? 'ring-2 ring-red-400 ring-offset-1'
+      : isRecentlyUpdated() ? 'ring-2 ring-amber-300 ring-offset-1' : '';
     const compactTypes = ['divider', 'spacer', 'container', 'grid'];
     
     // BOQ Generator has special flexible sizing
     if (data.type === 'boq-generator') {
-      return `${baseClasses} ${recentlyUpdatedClass} p-4 min-w-[600px] max-w-[95vw]`;
+      return `${baseClasses} ${recentlyUpdatedClass} p-4 w-full h-full min-w-[600px] max-w-[95vw] flex flex-col`;
     }
-    
+
+    // All elements fill the resized node dimensions (NodeResizer sets style w/h).
+    // max-w caps are removed so nodes can grow when manually resized.
     if (compactTypes.includes(data.type)) {
       if (data.type === 'divider') {
-        return `${baseClasses} ${recentlyUpdatedClass} p-2 min-w-[200px] max-w-[400px]`;
+        return `${baseClasses} ${recentlyUpdatedClass} p-2 w-full h-full min-w-[200px] flex flex-col`;
       } else if (data.type === 'spacer') {
-        return `${baseClasses} ${recentlyUpdatedClass} p-2 min-w-[150px] max-w-[300px]`;
+        return `${baseClasses} ${recentlyUpdatedClass} p-2 w-full h-full min-w-[150px] flex flex-col`;
       } else if (data.type === 'container') {
-        return `${baseClasses} ${recentlyUpdatedClass} p-4 min-w-[200px] max-w-[400px]`;
+        return `${baseClasses} ${recentlyUpdatedClass} p-4 w-full h-full min-w-[200px] flex flex-col`;
       } else if (data.type === 'grid') {
-        return `${baseClasses} ${recentlyUpdatedClass} p-3 min-w-[250px] max-w-[400px]`;
+        return `${baseClasses} ${recentlyUpdatedClass} p-3 w-full h-full min-w-[250px] flex flex-col`;
       }
     }
-    
-    return `${baseClasses} ${recentlyUpdatedClass} p-6 ${
-      data.type === 'form-template' 
-        ? 'min-w-[450px] max-w-[550px]' 
-        : 'min-w-[320px] max-w-[400px]'
-    }`;
+
+    if (data.type === 'form-template') {
+      return `${baseClasses} ${recentlyUpdatedClass} p-6 w-full h-full min-w-[450px] flex flex-col`;
+    }
+
+    return `${baseClasses} ${recentlyUpdatedClass} p-6 w-full h-full min-w-[320px] flex flex-col`;
   };
 
   // Timer calculation
@@ -2229,7 +2714,20 @@ const ElementNode = ({ id, data, isConnectable, selected }) => {
   };
 
   return (
-    <div className={`${getWrapperClasses()} ${getBorderStyle()}`}>
+    <div
+      className={`${getWrapperClasses()} ${getBorderStyle()}`}
+      onMouseEnter={() => setIsNodeHovered(true)}
+      onMouseLeave={() => setIsNodeHovered(false)}
+    >
+      {/* Manual resize affordance for all card-type elements */}
+      <NodeResizer
+        isVisible={selected || isNodeHovered}
+        minWidth={240}
+        minHeight={140}
+        lineClassName="!border-blue-400"
+        handleClassName="!w-3 !h-3 !bg-blue-500 !border-2 !border-white !rounded-md"
+      />
+
       {/* Connection Handles - All uniform gray, bidirectional */}
       <Handle
         type="source"
@@ -2485,13 +2983,29 @@ const ElementNode = ({ id, data, isConnectable, selected }) => {
             </button>
             
             {isTableElement() && (
-              <button
-                onClick={handlePreviewClick}
-                className="p-1 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-full transition-all duration-200 group/preview"
-                title="Preview full table"
-              >
-                <Eye className="w-4 h-4" />
-              </button>
+              <>
+                <button
+                  onClick={handlePreviewClick}
+                  className="p-1 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-full transition-all duration-200 group/preview"
+                  title="Preview full table"
+                >
+                  <Eye className="w-4 h-4" />
+                </button>
+                <button
+                  onClick={handleExportGoogleSheets}
+                  className="p-1 text-gray-500 hover:text-green-600 hover:bg-green-50 rounded-full transition-all duration-200"
+                  title="Export to Google Sheets"
+                >
+                  <FileSpreadsheet className="w-4 h-4" />
+                </button>
+                <button
+                  onClick={handleDownloadExcel}
+                  className="p-1 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-full transition-all duration-200"
+                  title="Download Excel (.xlsx)"
+                >
+                  <Download className="w-4 h-4" />
+                </button>
+              </>
             )}
             {/* Mark as Important button */}
             <button
@@ -2545,14 +3059,19 @@ const ElementNode = ({ id, data, isConnectable, selected }) => {
             </div>
           )}
           {/* Timer Display */}
-          {deadline && (
-            <div className="mt-2 text-xs text-blue-700 font-semibold">⏰ Time left: {getTimeLeft()}</div>
-          )}
+          {deadline && (() => {
+            const overdue = calculateTimeLeft(deadline)?.isExpired;
+            return (
+              <div className={`mt-2 text-xs font-semibold ${overdue ? 'text-red-600' : 'text-blue-700'}`}>
+                {overdue ? '⚠ Overdue — deadline reached' : `⏰ Time left: ${getTimeLeft()}`}
+              </div>
+            );
+          })()}
         </div>
       )}
       
       {/* Interactive Element */}
-      <div className={['divider', 'spacer', 'container', 'grid'].includes(data.type) ? '' : 'mb-2'}>
+      <div className="flex-1 min-h-0 overflow-auto">
         {renderInteractiveElement()}
       </div>
       

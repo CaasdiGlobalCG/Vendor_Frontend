@@ -3,6 +3,7 @@ import { X, Search, Package, Wrench, ChevronDown } from 'lucide-react';
 import { VendorContext } from '../context/VendorContext';
 import HSNSACModal from './HSNSACModal';
 import config from "../config/env";
+import invoiceFetch from '../pages/WorkspacePage/components/invoice/utils/invoiceFetch';
 
 const AddItemModal = ({ isOpen, onClose, onItemAdded }) => {
   const { currentUser } = useContext(VendorContext);
@@ -101,7 +102,7 @@ const AddItemModal = ({ isOpen, onClose, onItemAdded }) => {
 
       console.log('📤 Sending item data:', requestBody);
 
-      const response = await fetch(`${API_BASE_URL}/api/workspace/items`, {
+      const response = await invoiceFetch(`${API_BASE_URL}/api/workspace/items`, {
         method: 'POST',
         headers: headers,
         body: JSON.stringify(requestBody)

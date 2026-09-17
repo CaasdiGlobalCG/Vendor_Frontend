@@ -19,8 +19,8 @@ export const usePermissions = (workspace, userRole) => {
         canCreateTasks: false,
         canAssignTasks: false,
         canUpdateTaskStatus: false,
-        canAccessMessages: false,
-        canAccessVideoCall: false,
+        canAccessMessages: true, // Messaging is always accessible
+        canAccessVideoCall: true, // Video calls are always accessible
         canApproveElements: false
       };
     }
@@ -68,8 +68,8 @@ export const usePermissions = (workspace, userRole) => {
         canCreateTasks: false,
         canAssignTasks: false,
         canUpdateTaskStatus: false,
-        canAccessMessages: false,
-        canAccessVideoCall: false,
+        canAccessMessages: true, // Messaging is always accessible
+        canAccessVideoCall: true, // Video calls are always accessible
         canApproveElements: false
       };
     }
@@ -93,8 +93,8 @@ export const usePermissions = (workspace, userRole) => {
       canCreateTasks: checkPermission(workspacePermissions.canCreateTasks),
       canAssignTasks: checkPermission(workspacePermissions.canAssignTasks),
       canUpdateTaskStatus: checkPermission(workspacePermissions.canUpdateTaskStatus),
-      canAccessMessages: checkPermission(workspacePermissions.canAccessMessages),
-      canAccessVideoCall: checkPermission(workspacePermissions.canAccessVideoCall),
+      canAccessMessages: true, // Messaging is always accessible to all collaborators
+      canAccessVideoCall: true, // Video calls are always accessible to all collaborators
       canApproveElements: checkPermission(workspacePermissions.canApproveElements)
     };
   }, [workspace, currentUser, userRole]);

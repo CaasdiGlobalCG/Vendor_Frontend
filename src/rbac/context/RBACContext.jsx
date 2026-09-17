@@ -63,23 +63,32 @@ export const RBACProvider = ({ children }) => {
     try {
       setRbacState(prev => ({ ...prev, isLoading: true, error: null, accessDenied: null }));
 
-      // Legacy PM mode can navigate to workspace without a Cognito token.
-      // In that mode, avoid calling /api/rbac/me (it always returns 401)
-      // and provide a permissive local RBAC shape for UI rendering.
-      const hasVendorAuthToken = Boolean(localStorage.getItem('authToken'));
-      if (currentUser?.role === 'pm' && !hasVendorAuthToken) {
+      // External PM/CAS users (Employee app handoff) are not vendor-org
+      // members — /api/rbac/me would always fail for them. Provide a local
+      // RBAC shape for UI rendering; the server enforces real authorization
+      // via the external session scope.
+      const isExternalRole =
+        currentUser?.external === true ||
+        currentUser?.role === 'pm' ||
+        currentUser?.role === 'cas';
+      if (isExternalRole) {
+        const isCas = currentUser?.role === 'cas';
         setRbacState({
           role: {
-            roleId: 'legacy_pm',
-            roleName: 'Project Manager',
-            roleLevel: 0,
-            isSuperAdmin: true,
+            roleId: isCas ? 'external_cas' : 'external_pm',
+            roleName: isCas ? 'CAS Member' : 'Project Manager',
+            roleLevel: isCas ? 2 : 1,
+            isSuperAdmin: false,
           },
-          userId: currentUser?.pmId || currentUser?.id || null,
-          permissions: ['*:*'],
-          permissionMap: { workspace: ['view', 'create', 'edit', 'delete'] },
-          accessibleModules: ['workspace', 'projects', 'quotations', 'invoices'],
-          allModules: ['workspace', 'projects', 'quotations', 'invoices'],
+          userId: currentUser?.pmId || currentUser?.userId || currentUser?.id || null,
+          permissions: isCas
+            ? ['workspace:view', 'workspace:edit']
+            : ['workspace:manage'],
+          permissionMap: isCas
+            ? { workspace: ['view', 'edit'] }
+            : { workspace: ['view', 'create', 'edit', 'delete'] },
+          accessibleModules: ['workspace'],
+          allModules: ['workspace'],
           roleLevels: {},
           platformAccess: ['vendor'],
           accessScopes: {

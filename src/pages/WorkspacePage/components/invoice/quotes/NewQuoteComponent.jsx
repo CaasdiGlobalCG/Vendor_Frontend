@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useContext, useRef } from 'react';
-import { Search, Info, Trash2, Plus, Upload, X, ChevronDown, Edit, Loader2, Edit2, PlusCircle, Save, Settings, Check } from 'lucide-react';
+import { Search, Info, Trash2, Plus, Upload, X, ChevronDown, Edit, Loader2, Edit2, PlusCircle, Save, Settings, Check, Eye } from 'lucide-react';
 import { VendorContext } from '../../../../../context/VendorContext';
 import { AuthProvider } from '../../../../../context/AuthContext';
 import { convertMeasurementToFeet, needsConversion } from '../../../../../utils/unitConverter';
@@ -9,6 +9,7 @@ import authFetch from '../../../../../utils/authFetch';
 import html2pdf from 'html2pdf.js';
 import StandardPreview from '../shared/StandardPreview.jsx';
 import { createRoot } from 'react-dom/client';
+import invoiceFetch from '../utils/invoiceFetch';
 
 // Fixed Caasdi Global customer used for all quotations
 const CAASDI_GLOBAL_CUSTOMER = {
@@ -67,7 +68,7 @@ const CustomerSearchModal = ({ open, onClose, onSelect }) => {
         })
       };
       
-      fetch(`/api/workspace/customers?vendorId=${currentUser?.vendorId}`, { headers })
+      invoiceFetch(`/api/workspace/customers?vendorId=${currentUser?.vendorId}`, { headers })
         .then((res) => res.json())
         .then((data) => {
           if (data.success) {
@@ -396,7 +397,7 @@ const ItemSelectionModal = ({ open, onClose, onSelect }) => {
         })
       };
       
-      fetch(`/api/workspace/items?vendorId=${currentUser?.vendorId}`, { headers })
+      invoiceFetch(`/api/workspace/items?vendorId=${currentUser?.vendorId}`, { headers })
         .then((res) => res.json())
         .then((data) => {
           setItems(data.data || data.items || []);
@@ -711,6 +712,10 @@ const NewQuoteComponentInner = ({
     const [showItemModal, setShowItemModal] = useState(false);
     const [selectedItemIndex, setSelectedItemIndex] = useState(null);
 
+    // PDF preview modal state
+    const [showPreview, setShowPreview] = useState(false);
+    const [previewQuote, setPreviewQuote] = useState(null);
+
     // Date state
     const [quoteDate, setQuoteDate] = useState(new Date().toISOString().split('T')[0]);
     const [expiryDate, setExpiryDate] = useState(() => {
@@ -726,7 +731,7 @@ const NewQuoteComponentInner = ({
 
     useEffect(() => {
         if (projectId) {
-            fetch(`/api/projects/${projectId}`)
+            invoiceFetch(`/api/projects/${projectId}`)
                 .then(res => res.json())
                 .then(data => setProjectName(data.projectName || ''))
                 .catch(() => setProjectName(''));
@@ -805,7 +810,7 @@ const NewQuoteComponentInner = ({
             };
 
             console.log('Fetching customer details from:', `/api/workspace/customers/${customerId}?vendorId=${vendorId}`);
-            const response = await fetch(`/api/workspace/customers/${customerId}?vendorId=${vendorId}`, {
+            const response = await invoiceFetch(`/api/workspace/customers/${customerId}?vendorId=${vendorId}`, {
                 headers: headers
             });
 
@@ -1486,14 +1491,8 @@ const NewQuoteComponentInner = ({
             throw error;
         }
     };
-            // Save quote
-            const handleSaveQuote = async () => {
-                setMessage(null);
-                if (!selectedCustomer) {
-                    setMessage({ type: 'error', text: 'Please select a customer.' });
-                    return;
-                }
-                
+    // Build the quotation payload shared by Save as Draft and the PDF preview
+    const buildQuotationData = () => {
         // Create a clean customer object for the quote
         const quoteCustomer = {
             ...selectedCustomer,
@@ -1519,30 +1518,6 @@ const NewQuoteComponentInner = ({
         if (editableCustomerDetails.shippingAddress) {
             quoteCustomer.shippingAddress = editableCustomerDetails.shippingAddress;
         }
-        if (!items.length || !items.some(item => item.selectedItem && item.selectedItem.name)) {
-            setMessage({ type: 'error', text: 'Please add at least one item.' });
-            return;
-        }
-        setSaving(true);
-        setIsLoading(true);
-
-        // Format customer details for StandardPreview compatibility
-        // IMPORTANT: Billing address is always Caasdi Global
-        const formattedCustomerDetails = {
-            ...selectedCustomer,
-            gstin: selectedCustomer.gstin || '',
-            address: {
-                billing: CAASDI_GLOBAL_CUSTOMER.address.billing,
-                shipping: selectedCustomer.address?.shipping || {
-                    street1: editableCustomerDetails.shippingAddress?.split('\n')[0] || '',
-                    street2: editableCustomerDetails.shippingAddress?.split('\n')[1] || '',
-                    city: '',
-                    state: '',
-                    pinCode: '',
-                    country: 'India'
-                }
-            }
-        };
 
         const quotationData = {
             // Core identification
@@ -1650,7 +1625,39 @@ const NewQuoteComponentInner = ({
             }
         };
 
-        // Debug: Log the formatted quotation data
+        return quotationData;
+    };
+
+    // Open the PDF preview modal with the current form data
+    const handleOpenPreview = () => {
+        setMessage(null);
+        const quotationData = buildQuotationData();
+        // Adapt into the shape StandardPreview expects (same mapping as generateQuotePDF)
+        setPreviewQuote({
+            ...quotationData,
+            subTotal: quotationData.subtotal ?? 0,
+            totalCgst: quotationData.cgst ?? 0,
+            totalSgst: quotationData.sgst ?? 0,
+            totalIgst: quotationData.igst ?? 0,
+        });
+        setShowPreview(true);
+    };
+
+    // Save quote
+    const handleSaveQuote = async () => {
+        setMessage(null);
+        if (!selectedCustomer) {
+            setMessage({ type: 'error', text: 'Please select a customer.' });
+            return;
+        }
+        if (!items.length || !items.some(item => item.selectedItem && item.selectedItem.name)) {
+            setMessage({ type: 'error', text: 'Please add at least one item.' });
+            return;
+        }
+        setSaving(true);
+        setIsLoading(true);
+
+        const quotationData = buildQuotationData();
         console.log('Saving quotation data in StandardPreview format:', quotationData);
 
         try {
@@ -1724,7 +1731,7 @@ const NewQuoteComponentInner = ({
                 firstChars: jsonPayload.substring(0, 200)
             });
             
-            const res = await fetch(url, {
+            const res = await invoiceFetch(url, {
                 method: method,
                 headers: headers,
                 body: jsonPayload,
@@ -2288,6 +2295,12 @@ const NewQuoteComponentInner = ({
                 <footer className="mt-8 flex justify-between items-center">
                     <div className="mt-8 flex justify-end space-x-4">
                         <button
+                            onClick={handleOpenPreview}
+                            className="flex items-center gap-2 font-semibold py-2 px-6 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50 transition"
+                        >
+                            <Eye size={16} /> Preview
+                        </button>
+                        <button
                             onClick={handleSaveQuote}
                             className="text-white font-semibold py-2 px-6 rounded-lg shadow-sm transition"
                             style={{ background: 'linear-gradient(120deg, #0d6b5c 0%, #000 100%)' }}
@@ -2319,6 +2332,53 @@ const NewQuoteComponentInner = ({
                 onClose={() => setShowItemModal(false)}
                 onSelect={handleItemSelect}
             />
+
+            {/* Quote PDF Preview Modal */}
+            {showPreview && (
+                <div className="fixed inset-0 z-50 flex flex-col bg-black bg-opacity-50 animate-fadeIn">
+                    <div className="flex items-center justify-between px-6 py-3 bg-white shadow-md">
+                        <div>
+                            <h2 className="text-lg font-bold text-gray-800">Quotation Preview</h2>
+                            <p className="text-xs text-gray-500">This is how the quotation PDF will look.</p>
+                        </div>
+                        <div className="flex items-center gap-3">
+                            <button
+                                onClick={() => setShowPreview(false)}
+                                className="font-semibold py-2 px-5 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50 transition"
+                            >
+                                Back to Edit
+                            </button>
+                            <button
+                                onClick={() => { setShowPreview(false); handleSaveQuote(); }}
+                                className="flex items-center gap-2 text-white font-semibold py-2 px-6 rounded-lg shadow-sm transition"
+                                style={{ background: 'linear-gradient(120deg, #0d6b5c 0%, #000 100%)' }}
+                                disabled={saving}
+                            >
+                                <Save size={16} /> Save as Draft
+                            </button>
+                            <button onClick={() => setShowPreview(false)} className="p-2 text-gray-500 hover:bg-gray-200 rounded-full">
+                                <X size={20} />
+                            </button>
+                        </div>
+                    </div>
+                    <div className="flex-1 overflow-y-auto bg-gray-200 px-4">
+                        <StandardPreview
+                            quote={previewQuote}
+                            company={{
+                                logo: null,
+                                name: currentUser?.companyName || currentUser?.name || 'Your Company',
+                                address: currentUser?.address || '',
+                                gstin: currentUser?.gstin || '',
+                                email: currentUser?.email || '',
+                                country: 'India'
+                            }}
+                            terms={previewQuote?.termsAndConditions}
+                            notes={previewQuote?.notes || customerNotes}
+                            docType="quote"
+                        />
+                    </div>
+                </div>
+            )}
         </div>
     );
 };

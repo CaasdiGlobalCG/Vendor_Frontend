@@ -20,6 +20,7 @@ import {
 import { VendorContext } from '../../../../../context/VendorContext.jsx';
 import config from "../../../../../config/env";
 import StandardPreview from '../shared/StandardPreview.jsx';
+import invoiceFetch from '../utils/invoiceFetch';
 
 const PurchaseOrdersPage = ({ workspaceId, workspaceName, selectedTask, selectedSubtask, sourceQuote, onSourceConsumed, onConvertToInvoice }) => {
   const { currentUser } = useContext(VendorContext);
@@ -73,7 +74,10 @@ const PurchaseOrdersPage = ({ workspaceId, workspaceName, selectedTask, selected
         })
       };
 
-      const response = await fetch(`/api/workspace/purchase-orders?vendorId=${vendorId}`, {
+      const poQuery = workspaceId
+        ? `/api/workspace/purchase-orders?vendorId=${vendorId}&workspaceId=${workspaceId}`
+        : `/api/workspace/purchase-orders?vendorId=${vendorId}`;
+      const response = await invoiceFetch(poQuery, {
         headers: headers
       });
 
@@ -266,7 +270,7 @@ const PurchaseOrdersPage = ({ workspaceId, workspaceName, selectedTask, selected
 
         // Get presigned URL for upload
         console.log('🔐 Getting presigned URL from S3...');
-        const presignResponse = await fetch(
+        const presignResponse = await invoiceFetch(
           `/api/s3/generate-upload-url?filename=po-${nextPoNumber}-${Date.now()}.pdf&contentType=application/pdf`
         );
 
@@ -278,7 +282,7 @@ const PurchaseOrdersPage = ({ workspaceId, workspaceName, selectedTask, selected
         console.log('✅ Got presigned URL, uploading to S3...');
 
         // Upload PDF to S3 using presigned URL
-        const uploadResponse = await fetch(presignedUrl, {
+        const uploadResponse = await invoiceFetch(presignedUrl, {
           method: 'PUT',
           headers: {
             'Content-Type': 'application/pdf'
@@ -353,7 +357,7 @@ const PurchaseOrdersPage = ({ workspaceId, workspaceName, selectedTask, selected
 
       console.log('📤 Creating purchase order from quote:', body);
 
-      const response = await fetch('/api/workspace/purchase-orders', {
+      const response = await invoiceFetch('/api/workspace/purchase-orders', {
         method: 'POST',
         headers,
         body: JSON.stringify(body)
@@ -409,7 +413,7 @@ const PurchaseOrdersPage = ({ workspaceId, workspaceName, selectedTask, selected
       console.log('🔄 Approving PO:', order.id);
 
       // Call backend endpoint to approve PO
-      const response = await fetch(`/api/workspace/purchase-orders/${order.id}/vendor-approve`, {
+      const response = await invoiceFetch(`/api/workspace/purchase-orders/${order.id}/vendor-approve`, {
         method: 'POST',
         headers: headers,
         body: JSON.stringify({
@@ -835,7 +839,7 @@ const PurchaseOrdersPage = ({ workspaceId, workspaceName, selectedTask, selected
                           >
                             <Eye className="w-4 h-4" />
                           </button>
-                          {order.status && (order.status.toLowerCase().includes('pending_review') || order.status.toLowerCase().includes('pending review')) && (
+                          {order.status && (order.status.toLowerCase().includes('pending_review') || order.status.toLowerCase().includes('pending review') || order.status.toLowerCase().includes('requested po') || order.status.toLowerCase().includes('sent_to_vendor_for_confirmation')) && (
                             <button
                               className="text-xs px-3 py-1.5 bg-emerald-50 text-emerald-700 rounded-lg hover:bg-emerald-100 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
                               onClick={() => handleApproveAndSendPO(order)}
@@ -845,7 +849,7 @@ const PurchaseOrdersPage = ({ workspaceId, workspaceName, selectedTask, selected
                               {approvingPoId === order.id ? 'Approving...' : '✓ Approve'}
                             </button>
                           )}
-                          {order.status && order.status.toLowerCase().includes('requested for invoice') && onConvertToInvoice && (
+                          {order.status && (order.status.toLowerCase().includes('requested for invoice') || order.status.toLowerCase().includes('vendor_approved')) && onConvertToInvoice && (
                             <button
                               className="text-xs px-3 py-1.5 bg-emerald-50 text-emerald-700 rounded-lg hover:bg-emerald-100 transition-colors duration-200"
                               onClick={() => onConvertToInvoice(order)}

@@ -17,6 +17,7 @@ import { VendorContext } from "../../../../../context/VendorContext.jsx";
 import NewCreditNoteComponent from './NewCreditNoteComponent';
 import CreditNotesPreviewPanel from './CreditNotesPreviewPanel';
 import config from '../../../../../config/env';
+import invoiceFetch from '../utils/invoiceFetch';
 
 const CreditNotesPage = () => {
   const { currentUser } = useContext(VendorContext);
@@ -72,7 +73,7 @@ const CreditNotesPage = () => {
           })
         };
         
-        const response = await fetch(`/api/workspace/credit-notes?vendorId=${vendorId}`, {
+        const response = await invoiceFetch(`/api/workspace/credit-notes?vendorId=${vendorId}`, {
           headers: headers
         });
         
@@ -87,7 +88,7 @@ const CreditNotesPage = () => {
           console.log(`✅ Successfully loaded ${result.data?.length || 0} credit notes`);
           
           // Fetch stats - vendorId is automatically included in the auth token
-          const statsResponse = await fetch(`/api/workspace/credit-notes/stats`, {
+          const statsResponse = await invoiceFetch(`/api/workspace/credit-notes/stats`, {
             headers: headers
           });
           if (statsResponse.ok) {
@@ -129,7 +130,7 @@ const CreditNotesPage = () => {
             })
           };
           
-          const response = await fetch(`/api/workspace/credit-notes?vendorId=${vendorId}`, {
+          const response = await invoiceFetch(`/api/workspace/credit-notes?vendorId=${vendorId}`, {
             headers: headers
           });
           
@@ -488,7 +489,7 @@ const CreditNotesPage = () => {
                                       name: currentUser?.name,
                                     }),
                                   };
-                                  const response = await fetch(
+                                  const response = await invoiceFetch(
                                     `/api/workspace/credit-notes/${note.creditNoteId}/status`,
                                     {
                                       method: 'PATCH',

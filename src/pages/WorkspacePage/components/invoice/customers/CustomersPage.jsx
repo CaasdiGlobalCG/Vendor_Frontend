@@ -5,6 +5,7 @@ import NewCustomerForm from './NewCustomerForm';
 import CustomerDetailPage from './CustomerDetailPage';
 import { VendorContext } from '../../../../../context/VendorContext';
 import config from '../../../../../config/env';
+import invoiceFetch from '../utils/invoiceFetch';
 
 const CustomersPage = () => {
   const { currentUser } = useContext(VendorContext);
@@ -48,7 +49,7 @@ const CustomersPage = () => {
         })
       };
 
-      const response = await fetch(`/api/workspace/customers?vendorId=${vendorId}`, {
+      const response = await invoiceFetch(`/api/workspace/customers?vendorId=${vendorId}`, {
         headers: headers
       });
       const data = await response.json();
@@ -107,7 +108,7 @@ const CustomersPage = () => {
         })
       };
 
-      const response = await fetch(`/api/workspace/customers/search?query=${encodeURIComponent(query)}&vendorId=${vendorId}`, {
+      const response = await invoiceFetch(`/api/workspace/customers/search?query=${encodeURIComponent(query)}&vendorId=${vendorId}`, {
         headers: headers
       });
       const data = await response.json();
@@ -148,7 +149,7 @@ const CustomersPage = () => {
 
   const handleEditCustomer = async (customerId) => {
     try {
-      const response = await fetch(`/api/customers/${customerId}`);
+      const response = await invoiceFetch(`/api/customers/${customerId}`);
       if (response.ok) {
         const data = await response.json();
         setSelectedCustomer(data.customer);
@@ -171,7 +172,7 @@ const CustomersPage = () => {
     
     setActionLoading(true);
     try {
-      const response = await fetch(`/api/customers/${selectedCustomer.id}`, {
+      const response = await invoiceFetch(`/api/customers/${selectedCustomer.id}`, {
         method: 'DELETE',
       });
       

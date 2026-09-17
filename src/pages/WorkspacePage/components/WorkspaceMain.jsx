@@ -1,5 +1,5 @@
 import React, { useRef, useState, useEffect, useCallback } from 'react';
-import { Hand, Maximize2, Minimize2, Users, Wifi, WifiOff, Paperclip, Pencil, X, Trash2, Undo2 } from 'lucide-react';
+import { Hand, Maximize2, Minimize2, Users, Wifi, WifiOff, Paperclip, Pencil, X, Trash2, Undo2, CheckSquare, FileText, ChevronRight } from 'lucide-react';
 import BreadcrumbNavigation from './BreadcrumbNavigation';
 import CanvasWorkspace from './CanvasWorkspace';
 import TaskSubtasksView from './TaskSubtasksView';
@@ -20,6 +20,7 @@ const WorkspaceMain = ({
   onBackToHome,
   onBackToTask,
   onBackToLayer,
+  onTaskClick,
   onSubtaskClick,
   onShowAddSubtaskModal,
   onRenameSubtask,
@@ -291,6 +292,55 @@ const WorkspaceMain = ({
             selectedLayerItem={selectedLayerItem}
             onLayerItemClick={onLayerItemClick}
           />
+        </div>
+      ) : tasks && tasks.length > 0 ? (
+        // Home view — hierarchical tree of tasks and their subtask canvases
+        <div className="h-full overflow-y-auto bg-gray-50/40 px-6 py-10">
+          <div className="max-w-2xl mx-auto">
+            <h2 className="text-base font-semibold text-gray-900 mb-1">Workspace</h2>
+            <p className="text-xs text-gray-500 mb-5">
+              {tasks.length} task{tasks.length !== 1 ? 's' : ''} · pick one to open its canvas
+            </p>
+            <div className="space-y-3">
+              {tasks.map((task) => (
+                <div key={task.id || task.name} className="bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm">
+                  <button
+                    onClick={() => onTaskClick?.(task)}
+                    className="w-full flex items-center gap-3 px-4 py-3 hover:bg-gray-50 transition-colors text-left"
+                  >
+                    <div className="p-1.5 bg-blue-50 rounded-lg">
+                      <CheckSquare className="w-4 h-4 text-blue-600" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="text-sm font-semibold text-gray-900 truncate">{task.name || 'Untitled task'}</div>
+                      <div className="text-[11px] text-gray-400">
+                        {task.subtasks?.length || 0} subtask{(task.subtasks?.length || 0) !== 1 ? 's' : ''}
+                      </div>
+                    </div>
+                    <ChevronRight className="w-4 h-4 text-gray-300" />
+                  </button>
+                  {task.subtasks?.length > 0 && (
+                    <div className="border-t border-gray-100">
+                      {task.subtasks.map((st, i) => (
+                        <button
+                          key={st.id || i}
+                          onClick={() => { onTaskClick?.(task); onSubtaskClick?.(st); }}
+                          className="w-full flex items-center gap-3 pl-11 pr-4 py-2.5 hover:bg-blue-50/50 transition-colors text-left group"
+                        >
+                          <FileText className="w-3.5 h-3.5 text-gray-400 group-hover:text-blue-500" />
+                          <span className="flex-1 text-[13px] text-gray-700 truncate">{st.name || st.title || 'Untitled'}</span>
+                          {st.canvasData?.nodes?.length > 0 && (
+                            <span className="text-[10px] text-gray-400">{st.canvasData.nodes.length} elements</span>
+                          )}
+                          <ChevronRight className="w-3.5 h-3.5 text-gray-300 group-hover:text-blue-500" />
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
       ) : (
         <div className="ws-canvas-empty">

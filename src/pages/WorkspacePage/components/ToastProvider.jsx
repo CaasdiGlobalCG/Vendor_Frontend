@@ -9,6 +9,9 @@ export const useToast = () => {
   return ctx;
 };
 
+// Returns null instead of throwing when no provider is present
+export const useToastOptional = () => useContext(ToastContext);
+
 let toastIdCounter = 0;
 
 const ICONS = {

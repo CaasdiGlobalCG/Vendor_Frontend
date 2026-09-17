@@ -15,7 +15,6 @@ export { default as ElementsSidebar } from './ElementsSidebar';
 export { default as ElementsPanel } from './ElementsPanel';
 export { default as LayoutsPanel } from './LayoutsPanel';
 export { default as TextPanel } from './TextPanel';
-export { default as TemplatesPanel } from './TemplatesPanel';
 export { default as PostServicesModal } from './modals/PostServicesModal';
 export { default as WorkspaceTopBar } from './WorkspaceTopBar';
 export { default as WorkspaceDock } from './WorkspaceDock';

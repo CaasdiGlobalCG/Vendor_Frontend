@@ -3,6 +3,7 @@ import { Download, Send, Settings, Edit2, X, Upload } from 'lucide-react';
 import html2pdf from 'html2pdf.js';
 import StandardPreview from '../shared/StandardPreview.jsx';
 import { VendorContext } from '../../../../../context/VendorContext';
+import invoiceFetch from '../utils/invoiceFetch';
 
 export default function QuotesPreviewPanel({ quotes, selectedQuoteId, onSelectQuote, onClose }) {
   const { currentUser: vendorUser } = useContext(VendorContext);
@@ -64,7 +65,7 @@ export default function QuotesPreviewPanel({ quotes, selectedQuoteId, onSelectQu
         })
       };
 
-      const response = await fetch(`/api/workspace/invoices/${invoiceId}/send-to-pm`, {
+      const response = await invoiceFetch(`/api/workspace/invoices/${invoiceId}/send-to-pm`, {
         method: 'PUT',
         headers: headers,
         body: JSON.stringify({ vendorId })

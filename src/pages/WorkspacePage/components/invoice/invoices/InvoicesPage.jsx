@@ -5,6 +5,7 @@ import { VendorContext } from "../../../../../context/VendorContext.jsx";
 import NewInvoiceComponent from './NewInvoiceComponent';
 import InvoicesPreviewPanel from './InvoicesPreviewPanel';
 import config from '../../../../../config/env';
+import invoiceFetch from '../utils/invoiceFetch';
 
 const InvoicesPage = (props) => {
   const { currentUser } = useContext(VendorContext);
@@ -122,7 +123,7 @@ const InvoicesPage = (props) => {
       if (props?.selectedTask?.id) params.append('taskId', props.selectedTask.id);
       if (props?.selectedSubtask?.id) params.append('subtaskId', props.selectedSubtask.id);
 
-      const response = await fetch(`/api/workspace/invoices?${params.toString()}`, {
+      const response = await invoiceFetch(`/api/workspace/invoices?${params.toString()}`, {
         headers: headers
       });
 
@@ -137,7 +138,7 @@ const InvoicesPage = (props) => {
         console.log(`✅ Successfully loaded ${result.data?.length || 0} invoices`);
 
         // Fetch stats
-        const statsResponse = await fetch(`/api/workspace/invoices/stats?vendorId=${vendorId}`, {
+        const statsResponse = await invoiceFetch(`/api/workspace/invoices/stats?vendorId=${vendorId}`, {
           headers: headers
         });
         if (statsResponse.ok) {
@@ -783,7 +784,7 @@ const sendInvoiceToPm = async (invoiceId, vendorId, headers) => {
     status: 'sent to pm for review',
     vendorId
   };
-  const res = await fetch(url, {
+  const res = await invoiceFetch(url, {
     method: 'PUT',
     headers,
     body: JSON.stringify(body)

@@ -4,6 +4,7 @@ import { VendorContext } from "../../../../../context/VendorContext.jsx";
 import NewQuoteComponent from './NewQuoteComponent';
 import QuotesPreviewPanel from './QuotesPreviewPanel';
 import config from '../../../../../config/env';
+import invoiceFetch from '../utils/invoiceFetch';
 
 const QuotesPage = ({ workspaceId, workspaceName, selectedTask, selectedSubtask, onRaisePOFromQuote }) => {
   const { currentUser } = useContext(VendorContext);
@@ -63,7 +64,7 @@ const QuotesPage = ({ workspaceId, workspaceName, selectedTask, selectedSubtask,
       if (selectedTask?.id) params.append('taskId', selectedTask.id);
       if (selectedSubtask?.id) params.append('subtaskId', selectedSubtask.id);
 
-      const response = await fetch(`/api/workspace/quotations?${params.toString()}`, {
+      const response = await invoiceFetch(`/api/workspace/quotations?${params.toString()}`, {
         headers: headers
       });
 
@@ -78,7 +79,7 @@ const QuotesPage = ({ workspaceId, workspaceName, selectedTask, selectedSubtask,
         console.log(`✅ Successfully loaded ${result.data?.length || 0} quotes`);
 
         // Fetch stats
-        const statsResponse = await fetch(`/api/workspace/quotations/stats?vendorId=${vendorId}`, {
+        const statsResponse = await invoiceFetch(`/api/workspace/quotations/stats?vendorId=${vendorId}`, {
           headers: headers
         });
         if (statsResponse.ok) {
@@ -244,7 +245,7 @@ const QuotesPage = ({ workspaceId, workspaceName, selectedTask, selectedSubtask,
         })
       };
 
-      const response = await fetch(`/api/workspace/quotations/${quotationId}/send-to-pm`, {
+      const response = await invoiceFetch(`/api/workspace/quotations/${quotationId}/send-to-pm`, {
         method: 'PUT',
         headers: headers,
         body: JSON.stringify({ vendorId })
@@ -264,6 +265,55 @@ const QuotesPage = ({ workspaceId, workspaceName, selectedTask, selectedSubtask,
     } catch (error) {
       console.error('❌ Error sending quote to PM:', error);
       alert('Failed to send quote to PM: ' + error.message);
+    }
+  };
+
+  const handleDownloadQuote = (quote) => {
+    if (quote.pdfUrl) {
+      window.open(quote.pdfUrl, '_blank', 'noopener,noreferrer');
+    } else {
+      // No stored PDF - open the preview panel where the quote can be viewed/downloaded
+      setPreviewQuoteId(quote.id || quote.quotationId);
+      setShowPreviewModal(true);
+    }
+  };
+
+  const handleDeleteQuote = async (quote) => {
+    const quotationId = quote.quotationId || quote.id;
+    const label = quote.customQuoteId || quote.quoteNumber || quote.displayQuoteId || quotationId;
+
+    if (!window.confirm(`Delete quotation ${label}? This action cannot be undone.`)) {
+      return;
+    }
+
+    try {
+      const headers = {
+        'Content-Type': 'application/json',
+        'x-user-info': JSON.stringify({
+          vendorId: currentUser.vendorId,
+          email: currentUser?.email,
+          role: 'vendor',
+          name: currentUser?.name
+        })
+      };
+
+      const response = await invoiceFetch(`/api/workspace/quotations/${quotationId}`, {
+        method: 'DELETE',
+        headers: headers,
+        body: JSON.stringify({ vendorId: currentUser.vendorId })
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        console.log('✅ Quote deleted successfully');
+        fetchQuotes();
+      } else {
+        throw new Error(result.message || 'Failed to delete quote');
+      }
+    } catch (error) {
+      console.error('❌ Error deleting quote:', error);
+      alert('Failed to delete quote: ' + error.message);
     }
   };
 
@@ -416,6 +466,7 @@ const QuotesPage = ({ workspaceId, workspaceName, selectedTask, selectedSubtask,
               {filteredQuotes.map((quote, index) => {
                 const statusConfig = getStatusConfig(quote.status);
                 const isPoRequested = !!(quote.status && quote.status.toLowerCase().includes('requested po'));
+                const isLastRow = index === filteredQuotes.length - 1;
                 return (
                   <tr key={quote.id} className="hover:bg-gradient-to-r hover:from-slate-50/40 hover:to-gray-50/40 transition-all duration-300 group">
                     <td className="py-5 px-6">
@@ -468,10 +519,11 @@ const QuotesPage = ({ workspaceId, workspaceName, selectedTask, selectedSubtask,
                         {quote.status.toLowerCase() === 'draft' && (
                           <button
                             onClick={() => handleSendToPM(quote)}
-                            className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all duration-200 hover:scale-105"
+                            className="flex items-center space-x-1.5 px-3 py-1.5 text-xs font-semibold text-blue-700 bg-blue-50 border border-blue-200 rounded-lg hover:bg-blue-100 transition-all duration-200"
                             title="Send to PM"
                           >
-                            <Send className="w-4 h-4" />
+                            <Send className="w-3.5 h-3.5" />
+                            <span>Send to PM</span>
                           </button>
                         )}
                         {/* Raise PO button - only show when PM has requested a PO */}
@@ -484,21 +536,31 @@ const QuotesPage = ({ workspaceId, workspaceName, selectedTask, selectedSubtask,
                             <Package2 className="w-4 h-4" />
                           </button>
                         )}
-                        <button className="p-2 text-gray-400 hover:text-green-600 hover:bg-green-50 rounded-xl transition-all duration-200 hover:scale-105" title="Download">
+                        <button
+                          onClick={() => handleDownloadQuote(quote)}
+                          className="p-2 text-gray-400 hover:text-green-600 hover:bg-green-50 rounded-xl transition-all duration-200 hover:scale-105"
+                          title="Download"
+                        >
                           <Download className="w-4 h-4" />
                         </button>
                         <div className="relative group/menu">
                           <button className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-50 rounded-xl transition-all duration-200">
                             <MoreHorizontal className="w-4 h-4" />
                           </button>
-                          <div className="absolute right-0 top-10 w-36 bg-white/95 backdrop-blur-sm border border-gray-200/50 rounded-xl shadow-lg opacity-0 invisible group-hover/menu:opacity-100 group-hover/menu:visible transition-all duration-200 z-10">
-                            <button className="w-full text-left px-4 py-3 text-sm text-gray-700 hover:bg-slate-50 rounded-t-xl transition-colors">
+                          <div className={`absolute right-0 ${isLastRow ? 'bottom-10' : 'top-10'} w-36 bg-white/95 backdrop-blur-sm border border-gray-200/50 rounded-xl shadow-lg opacity-0 invisible group-hover/menu:opacity-100 group-hover/menu:visible transition-all duration-200 z-20`}>
+                            <button className={`w-full text-left px-4 py-3 text-sm text-gray-700 hover:bg-slate-50 rounded-t-xl transition-colors ${quote.status.toLowerCase() !== 'draft' ? 'rounded-b-xl' : ''}`}>
                               Duplicate
                             </button>
-                            <button className="w-full text-left px-4 py-3 text-sm text-red-600 hover:bg-red-50 rounded-b-xl flex items-center space-x-2 transition-colors">
-                              <Trash2 className="w-4 h-4" />
-                              <span>Delete</span>
-                            </button>
+                            {/* Delete is only available for drafts - locked once sent to PM */}
+                            {quote.status.toLowerCase() === 'draft' && (
+                              <button
+                                onClick={() => handleDeleteQuote(quote)}
+                                className="w-full text-left px-4 py-3 text-sm text-red-600 hover:bg-red-50 rounded-b-xl flex items-center space-x-2 transition-colors"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                                <span>Delete</span>
+                              </button>
+                            )}
                           </div>
                         </div>
                       </div>

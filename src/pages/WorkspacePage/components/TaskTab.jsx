@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Plus, MoreHorizontal, FolderOpen, FileText, CheckSquare, Clock, AlertCircle, X, ChevronDown, Edit2, Loader2, Check, Search } from 'lucide-react';
+import { Plus, MoreHorizontal, FolderOpen, FileText, CheckSquare, Clock, AlertCircle, X, ChevronDown, Edit2, Loader2, Check, Search, CheckCircle2 } from 'lucide-react';
 import PermissionGuard, { PermissionButton } from './PermissionGuard';
 import { useToast } from './ToastProvider';
 
@@ -215,6 +215,25 @@ const TaskTab = ({
     });
   };
 
+  const progressSubmissions = workspace?.progress_submissions || [];
+
+  const isSubtaskApproved = (taskId, subtask) =>
+    subtask?.status === 'completed' ||
+    progressSubmissions.some(
+      s => s.taskId === taskId && s.subtaskId === subtask?.id && s.reviewStatus === 'client_approved'
+    );
+
+  const isTaskApproved = (task) => {
+    if (!task) return false;
+    if (task.status === 'completed') return true;
+    const taskLevelApproved = progressSubmissions.some(
+      s => s.taskId === task.id && !s.subtaskId && s.reviewStatus === 'client_approved'
+    );
+    if (taskLevelApproved) return true;
+    const subtasks = Array.isArray(task.subtasks) ? task.subtasks : [];
+    return subtasks.length > 0 && subtasks.every(st => isSubtaskApproved(task.id, st));
+  };
+
   const toggleSubmissionExpand = (id) => {
     setExpandedSubmissions(prev => ({
       ...prev,
@@ -389,6 +408,15 @@ const TaskTab = ({
                   </div>
                   
                   <div className="flex items-center gap-1 whitespace-nowrap">
+                    {isSubtaskApproved(selectedTask?.id, selectedSubtask) && (
+                      <span
+                        className="inline-flex items-center gap-1 px-1.5 py-0.5 text-[10px] font-medium rounded-full bg-green-100 text-green-800 whitespace-nowrap"
+                        title="Approved by PM and client"
+                      >
+                        <CheckCircle2 className="h-3 w-3" />
+                        Approved
+                      </span>
+                    )}
                     {/* Status Badge */}
                     <span className={`px-1.5 py-0.5 text-[10px] font-medium rounded-full whitespace-nowrap ${
                       selectedSubtask.status === 'completed' 
@@ -436,7 +464,15 @@ const TaskTab = ({
                           className="w-full rounded-md border border-transparent bg-slate-50 px-2 py-1 text-left text-[11px] font-medium text-slate-700 hover:border-blue-200 hover:bg-blue-50"
                           title={`Open ${subtask.name}`}
                         >
-                          {subtask.name}
+                          <span className="flex items-center gap-1.5">
+                            {isSubtaskApproved(selectedTask.id, subtask) && (
+                              <CheckCircle2
+                                className="h-3.5 w-3.5 shrink-0 text-green-600"
+                                title="Approved by PM and client"
+                              />
+                            )}
+                            <span className="truncate">{subtask.name}</span>
+                          </span>
                         </button>
                       ))}
                   </div>
@@ -503,9 +539,13 @@ const TaskTab = ({
                           <span className="inline-flex items-center whitespace-nowrap rounded-full bg-slate-100 px-2 py-0.5 font-medium leading-none text-slate-600">
                             {task.assignedUsers} member{task.assignedUsers !== 1 ? 's' : ''}
                           </span>
-                          {workspace?.project_status?.reviewStatus === 'client_approved' && (
-                            <span className="font-medium text-green-600">
-                              ✓ Progress reviewed and approved
+                          {isTaskApproved(task) && (
+                            <span
+                              className="inline-flex items-center gap-1 whitespace-nowrap rounded-full bg-green-100 px-2 py-0.5 font-medium leading-none text-green-700"
+                              title="Approved by PM and client"
+                            >
+                              <CheckCircle2 className="h-3 w-3" />
+                              Approved
                             </span>
                           )}
                         </div>
@@ -598,9 +638,19 @@ const TaskTab = ({
                       title={`Open ${subtask.name}`}
                     >
                       <div className="flex items-center justify-between gap-2">
-                        <span className="truncate font-medium">{subtask.name}</span>
-                        <span className="shrink-0 text-[10px] text-slate-500">
-                          {subtask.status === 'in-progress' ? 'In progress' : subtask.status === 'completed' ? 'Done' : 'Pending'}
+                        <span className="flex min-w-0 items-center gap-1.5">
+                          {isSubtaskApproved(task.id, subtask) && (
+                            <CheckCircle2
+                              className="h-3.5 w-3.5 shrink-0 text-green-600"
+                              title="Approved by PM and client"
+                            />
+                          )}
+                          <span className="truncate font-medium">{subtask.name}</span>
+                        </span>
+                        <span className={`shrink-0 text-[10px] ${isSubtaskApproved(task.id, subtask) ? 'font-medium text-green-700' : 'text-slate-500'}`}>
+                          {isSubtaskApproved(task.id, subtask)
+                            ? 'Approved'
+                            : subtask.status === 'in-progress' ? 'In progress' : subtask.status === 'completed' ? 'Done' : 'Pending'}
                         </span>
                       </div>
                     </button>

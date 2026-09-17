@@ -14,6 +14,7 @@ import { VendorContext } from "../../../../../context/VendorContext.jsx";
 import config from '../../../../../config/env';
 import { useNavigate, useParams } from 'react-router-dom';
 import NewPurchaseRequisitionForm from './NewPurchaseRequisitionForm';
+import invoiceFetch from '../utils/invoiceFetch';
 
 const PurchaseRequisitionsPage = () => {
   const { currentUser } = useContext(VendorContext);
@@ -80,7 +81,7 @@ const PurchaseRequisitionsPage = () => {
       console.log('📋 Fetching purchase requisitions from backend...');
 
       const vendorId = currentUser.vendorId;
-      const response = await fetch(`/api/workspace/purchase-requisitions?vendorId=${vendorId}`, {
+      const response = await invoiceFetch(`/api/workspace/purchase-requisitions?vendorId=${vendorId}`, {
         headers: {
           'Content-Type': 'application/json',
           'x-user-info': JSON.stringify({

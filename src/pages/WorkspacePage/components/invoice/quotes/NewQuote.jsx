@@ -11,6 +11,7 @@ import html2pdf from 'html2pdf.js';
 import { useAuth } from '../../../context/AuthContext.jsx';
 import { convertMeasurementToFeet, needsConversion } from '../../../utils/unitConverter';
 import { calculateRatePerSqft, calculateTotalRate, checkRateConsistency, determineCalculationTarget, formatCurrency } from '../../../utils/rateCalculator';
+import invoiceFetch from '../utils/invoiceFetch';
 
 const CustomerSearchModal = ({ open, onClose, onSelect }) => {
   const [search, setSearch] = useState('');
@@ -21,7 +22,7 @@ const CustomerSearchModal = ({ open, onClose, onSelect }) => {
   React.useEffect(() => {
     if (open && !fetched) {
       setLoading(true);
-      fetch('/api/customers')
+      invoiceFetch('/api/customers')
         .then((res) => res.json())
         .then((data) => {
           setCustomers(data);
@@ -80,7 +81,7 @@ const CustomerDropdown = ({ value, onChange }) => {
   const fetchCustomers = async () => {
     setLoading(true);
     try {
-      const res = await fetch('/api/customers', {
+      const res = await invoiceFetch('/api/customers', {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -314,7 +315,7 @@ const NewQuote = ({ onBack, projectId, initialData, duplicateMode = false }) => 
 
     useEffect(() => {
         if (projectId) {
-            fetch(`/api/projects/${projectId}`)
+            invoiceFetch(`/api/projects/${projectId}`)
                 .then(res => res.json())
                 .then(data => setProjectName(data.projectName || ''))
                 .catch(() => setProjectName(''));
@@ -346,7 +347,7 @@ const NewQuote = ({ onBack, projectId, initialData, duplicateMode = false }) => 
         if (selectedCustomer && selectedCustomer.customerId) {
             setAddressLoading(true);
             const customerId = selectedCustomer.customerId;
-            fetch(`/api/customers/${customerId}`)
+            invoiceFetch(`/api/customers/${customerId}`)
                 .then(res => {
                     if (!res.ok) {
                         console.error('Failed to fetch customer details:', res.status, res.statusText);
@@ -617,7 +618,7 @@ const NewQuote = ({ onBack, projectId, initialData, duplicateMode = false }) => 
                 [type]: addressForm[type],
             };
             
-            const res = await fetch(`/api/customers/${selectedCustomer.customerId}/address`, {
+            const res = await invoiceFetch(`/api/customers/${selectedCustomer.customerId}/address`, {
                 method: 'PATCH',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(updatedAddress),
@@ -625,7 +626,7 @@ const NewQuote = ({ onBack, projectId, initialData, duplicateMode = false }) => 
             if (res.ok) {
                 setAddressMessage({ type: 'success', text: 'Address saved!' });
                 // Refresh customer details
-                const fresh = await fetch(`/api/customers/${selectedCustomer.customerId}`).then(r => r.json());
+                const fresh = await invoiceFetch(`/api/customers/${selectedCustomer.customerId}`).then(r => r.json());
                 setCustomerDetails(fresh);
                 // Update selectedCustomer with fresh data so quotation uses updated address
                 setSelectedCustomer(fresh);
@@ -647,7 +648,7 @@ const NewQuote = ({ onBack, projectId, initialData, duplicateMode = false }) => 
         }
         setGstinSaving(true);
         try {
-            const res = await fetch(`/api/customers/${selectedCustomer.customerId}`, {
+            const res = await invoiceFetch(`/api/customers/${selectedCustomer.customerId}`, {
                 method: 'PATCH',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ gstin: gstinForm }),
@@ -656,7 +657,7 @@ const NewQuote = ({ onBack, projectId, initialData, duplicateMode = false }) => 
                 setGstinMessage({ type: 'success', text: 'GSTIN updated successfully!' });
                 setAddressEditMode(null);
                 // Refresh customer details and update selectedCustomer
-                const fresh = await fetch(`/api/customers/${selectedCustomer.customerId}`).then(r => r.json());
+                const fresh = await invoiceFetch(`/api/customers/${selectedCustomer.customerId}`).then(r => r.json());
                 setCustomerDetails(fresh);
                 setSelectedCustomer(fresh);
             } else {
@@ -679,7 +680,7 @@ const NewQuote = ({ onBack, projectId, initialData, duplicateMode = false }) => 
     const handleQuoteNumberConfigSave = async (newConfig) => {
         try {
             console.log('Saving new config:', newConfig);
-            const response = await fetch('/api/quotations/config/quote-number', {
+            const response = await invoiceFetch('/api/quotations/config/quote-number', {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(newConfig),
@@ -712,7 +713,7 @@ const NewQuote = ({ onBack, projectId, initialData, duplicateMode = false }) => 
     useEffect(() => {
         const loadQuoteNumberConfig = async () => {
             try {
-                const response = await fetch('/api/quotations/config/quote-number');
+                const response = await invoiceFetch('/api/quotations/config/quote-number');
                 if (response.ok) {
                     const config = await response.json();
                     setQuoteNumberConfig(config);
@@ -733,7 +734,7 @@ const NewQuote = ({ onBack, projectId, initialData, duplicateMode = false }) => 
     const incrementQuoteNumber = async () => {
         if (quoteNumberConfig.autoGenerate) {
             try {
-                const response = await fetch('/api/quotations/generate-next-number', {
+                const response = await invoiceFetch('/api/quotations/generate-next-number', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                 });
@@ -915,7 +916,7 @@ const NewQuote = ({ onBack, projectId, initialData, duplicateMode = false }) => 
 
             // Upload to S3
             const filename = `quote-${quotationData.quotationId}.pdf`;
-            const presignRes = await fetch(`/api/s3/presign?filename=${filename}&filetype=application/pdf`);
+            const presignRes = await invoiceFetch(`/api/s3/presign?filename=${filename}&filetype=application/pdf`);
             
             if (!presignRes.ok) {
                 throw new Error('Failed to get pre-signed URL');
@@ -924,7 +925,7 @@ const NewQuote = ({ onBack, projectId, initialData, duplicateMode = false }) => 
             const { uploadUrl, fileUrl } = await presignRes.json();
 
             // Upload PDF to S3
-            await fetch(uploadUrl, {
+            await invoiceFetch(uploadUrl, {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/pdf',
@@ -933,7 +934,7 @@ const NewQuote = ({ onBack, projectId, initialData, duplicateMode = false }) => 
             });
 
             // Update quote with PDF URL
-            await fetch(`/api/quotations/${quotationData.quotationId}/pdfUrl`, {
+            await invoiceFetch(`/api/quotations/${quotationData.quotationId}/pdfUrl`, {
                 method: 'PATCH',
                 headers: {
                     'Content-Type': 'application/json',
@@ -1031,7 +1032,7 @@ const NewQuote = ({ onBack, projectId, initialData, duplicateMode = false }) => 
             
             console.log('Sending quotation data:', { url, method, quotationData, initialData });
             
-            const res = await fetch(url, {
+            const res = await invoiceFetch(url, {
                 method: method,
                 headers: {
                     'Content-Type': 'application/json',
@@ -1117,7 +1118,7 @@ const NewQuote = ({ onBack, projectId, initialData, duplicateMode = false }) => 
             console.log('Sending quotation data (save and send):', { url, method, quotationData, initialData });
             
             // 1. Create or update the quotation
-            const res = await fetch(url, {
+            const res = await invoiceFetch(url, {
                 method: method,
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(quotationData),
@@ -1128,7 +1129,7 @@ const NewQuote = ({ onBack, projectId, initialData, duplicateMode = false }) => 
                 const quotationId = saved.quotationId;
                 
                 // 2. Update status to 'Sent to PM for review'
-                const patchRes = await fetch(`/api/quotations/${quotationId}/status`, {
+                const patchRes = await invoiceFetch(`/api/quotations/${quotationId}/status`, {
                     method: 'PATCH',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ status: 'Sent to PM for review' }),

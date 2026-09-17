@@ -2,6 +2,7 @@ import React, { useState, useContext } from 'react';
 import { X, Upload, FileText, CheckSquare } from 'lucide-react';
 import { VendorContext } from '../../../../context/VendorContext';
 import config from '../../../../config/env';
+import invoiceFetch from '../invoice/utils/invoiceFetch';
 
 const UpdateProgressModal = ({ isOpen, onClose, workspaceId, projectId, taskId, subtaskId, tasks = [], onUpdate, workspace = {} }) => {
     // Dropdown state for task and subtask
@@ -184,7 +185,7 @@ const UpdateProgressModal = ({ isOpen, onClose, workspaceId, projectId, taskId, 
         submitData.append('proofOfCompletion', formData.proofOfCompletion);
       }
 
-      const response = await fetch(`${config.VENDOR_BACKEND_URL}/api/workspace/update-progress`, {
+      const response = await invoiceFetch(`${config.VENDOR_BACKEND_URL}/api/workspace/update-progress`, {
         method: 'POST',
         headers: {
           'x-user-info': JSON.stringify({
@@ -259,7 +260,7 @@ const UpdateProgressModal = ({ isOpen, onClose, workspaceId, projectId, taskId, 
         submitData.append('completionFiles', completionFormData.completionFiles);
       }
 
-      const response = await fetch(`${config.VENDOR_BACKEND_URL}/api/workspace/project-completion`, {
+      const response = await invoiceFetch(`${config.VENDOR_BACKEND_URL}/api/workspace/project-completion`, {
         method: 'POST',
         headers: {
           'x-user-info': JSON.stringify({

@@ -2,6 +2,7 @@ import React, { useState, useEffect, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { VendorContext } from "../../../../../context/VendorContext";
 import {
+// //
   ArrowLeftIcon,
   CheckCircleIcon,
   XCircleIcon,
@@ -9,6 +10,7 @@ import {
   DocumentArrowUpIcon,
   ClockIcon
 } from '@heroicons/react/24/outline';
+import invoiceFetch from '../utils/invoiceFetch';
 
 const VendorPOResponsePage = () => {
   const { currentUser } = useContext(VendorContext);
@@ -33,7 +35,7 @@ const VendorPOResponsePage = () => {
   const fetchVendorPOs = async () => {
     try {
       setLoading(true);
-      const response = await fetch(
+      const response = await invoiceFetch(
         `/api/workspace/purchase-orders?vendorId=${currentUser.vendorId}`,
         {
           headers: {
@@ -62,7 +64,7 @@ const VendorPOResponsePage = () => {
 
     try {
       setSubmitting(true);
-      const responseData = await fetch(
+      const responseData = await invoiceFetch(
         `/api/workspace/purchase-orders/${selectedPO.purchaseOrderId}/vendor-response`,
         {
           method: 'PATCH',

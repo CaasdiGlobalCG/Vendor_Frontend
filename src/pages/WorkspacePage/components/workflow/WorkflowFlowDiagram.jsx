@@ -1,6 +1,7 @@
 import React, { useMemo } from 'react';
 import ReactFlow, { Background, Controls, MiniMap } from 'reactflow';
 import 'reactflow/dist/style.css';
+import { describeAction, describeTrigger } from './workflowCatalog';
 
 const actionColorByType = {
   'create-task': '#E8F7EE',
@@ -35,7 +36,7 @@ const cardStyle = (bg, border = '#D1D5DB') => ({
 
 const compact = (value) => {
   try {
-    const text = typeof value === 'string' ? value : JSON.stringify(value);
+    const text = typeof value === 'string' ? value : String(value);
     return text.length > 100 ? `${text.slice(0, 100)}...` : text;
   } catch {
     return String(value);
@@ -62,9 +63,8 @@ const buildGraph = (triggers = [], logicOperator = 'AND', actions = []) => {
       data: {
         label: (
           <div>
-            <div style={{ fontWeight: 700, marginBottom: 4 }}>Trigger</div>
-            <div style={{ textTransform: 'capitalize' }}>{trigger.type || 'unknown'}</div>
-            <div style={{ marginTop: 4, color: '#4B5563' }}>{compact(trigger.rule)}</div>
+            <div style={{ fontWeight: 700, marginBottom: 4 }}>WHEN</div>
+            <div>{compact(describeTrigger(trigger))}</div>
           </div>
         )
       },
@@ -79,8 +79,8 @@ const buildGraph = (triggers = [], logicOperator = 'AND', actions = []) => {
     data: {
       label: (
         <div style={{ textAlign: 'center' }}>
-          <div style={{ fontWeight: 700, letterSpacing: 0.2 }}>Logic</div>
-          <div style={{ marginTop: 4 }}>{logicOperator || 'AND'}</div>
+          <div style={{ fontWeight: 700, letterSpacing: 0.2 }}>Check</div>
+          <div style={{ marginTop: 4 }}>{logicOperator === 'OR' ? 'any match' : 'all match'}</div>
         </div>
       )
     },
@@ -131,10 +131,9 @@ const buildGraph = (triggers = [], logicOperator = 'AND', actions = []) => {
           data: {
             label: (
               <div>
-                <div style={{ fontWeight: 700, marginBottom: 4 }}>Action #{actionIndex + i + 1}</div>
-                <div style={{ textTransform: 'capitalize' }}>{item.type}</div>
-                <div style={{ marginTop: 4, color: '#4B5563' }}>{compact(item.params)}</div>
-                <div style={{ marginTop: 4, color: '#3730A3', fontWeight: 600 }}>Fan-out: {groupKey}</div>
+                <div style={{ fontWeight: 700, marginBottom: 4 }}>DO #{actionIndex + i + 1}</div>
+                <div>{compact(describeAction(item))}</div>
+                <div style={{ marginTop: 4, color: '#3730A3', fontWeight: 600 }}>Runs in parallel: {groupKey}</div>
               </div>
             )
           },
@@ -158,7 +157,7 @@ const buildGraph = (triggers = [], logicOperator = 'AND', actions = []) => {
       nodes.push({
         id: joinId,
         position: { x: x + 260, y: centerY - 30 },
-        data: { label: <div style={{ fontWeight: 700, textAlign: 'center' }}>Join {groupKey}</div> },
+        data: { label: <div style={{ fontWeight: 700, textAlign: 'center' }}>Group {groupKey} done</div> },
         style: {
           ...cardStyle('#EEF2FF', '#818CF8'),
           width: 130,
@@ -189,9 +188,8 @@ const buildGraph = (triggers = [], logicOperator = 'AND', actions = []) => {
       data: {
         label: (
           <div>
-            <div style={{ fontWeight: 700, marginBottom: 4 }}>Action #{actionIndex + 1}</div>
-            <div style={{ textTransform: 'capitalize' }}>{action.type}</div>
-            <div style={{ marginTop: 4, color: '#4B5563' }}>{compact(action.params)}</div>
+            <div style={{ fontWeight: 700, marginBottom: 4 }}>DO #{actionIndex + 1}</div>
+            <div>{compact(describeAction(action))}</div>
           </div>
         )
       },
@@ -217,7 +215,7 @@ const buildGraph = (triggers = [], logicOperator = 'AND', actions = []) => {
   nodes.push({
     id: endId,
     position: { x: x + 20, y: centerY - 30 },
-    data: { label: <div style={{ fontWeight: 700, textAlign: 'center' }}>End</div> },
+    data: { label: <div style={{ fontWeight: 700, textAlign: 'center' }}>Done</div> },
     style: {
       ...cardStyle('#ECFDF5', '#34D399'),
       width: 100,

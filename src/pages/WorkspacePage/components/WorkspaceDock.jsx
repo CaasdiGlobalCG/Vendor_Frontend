@@ -7,7 +7,8 @@ import {
   LayoutGrid, 
   CheckSquare, 
   Layers, 
-  Paperclip 
+  Paperclip,
+  Sparkles
 } from 'lucide-react';
 
 const WorkspaceDock = ({
@@ -72,6 +73,18 @@ const WorkspaceDock = ({
           </button>
         );
       })}
+
+      {/* Agents — AI assistants (Atlas, …) */}
+      <div className="ws-dock-divider" />
+      <button
+        onClick={() => handleClick('agent')}
+        className={`ws-dock-item ws-dock-agent ${activeTab === 'agent' && isPanelOpen ? 'active' : ''}`}
+        title="AI agents"
+        data-tour="agent-btn"
+      >
+        <Sparkles />
+        <span className="ws-dock-lbl">Agents</span>
+      </button>
     </aside>
   );
 };

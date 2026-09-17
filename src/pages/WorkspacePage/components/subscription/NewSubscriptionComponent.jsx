@@ -2,6 +2,7 @@ import React, { useState, useContext, useEffect } from 'react';
 import { X, Settings } from 'lucide-react';
 import { VendorContext } from '../../../../context/VendorContext';
 import config from '../../../../config/env';
+import invoiceFetch from '../invoice/utils/invoiceFetch';
 
 const NewSubscriptionComponent = ({ onBack, initialData, onSubscriptionCreated }) => {
   const { currentUser } = useContext(VendorContext);
@@ -38,7 +39,7 @@ const NewSubscriptionComponent = ({ onBack, initialData, onSubscriptionCreated }
           })
         };
 
-        const response = await fetch(`/api/workspace/customers?vendorId=${currentUser.vendorId}`, {
+        const response = await invoiceFetch(`/api/workspace/customers?vendorId=${currentUser.vendorId}`, {
           headers
         });
 
@@ -102,7 +103,7 @@ const NewSubscriptionComponent = ({ onBack, initialData, onSubscriptionCreated }
         })
       };
 
-      const response = await fetch(`/api/workspace/subscriptions`, {
+      const response = await invoiceFetch(`/api/workspace/subscriptions`, {
         method: 'POST',
         headers,
         body: JSON.stringify(subscriptionData)

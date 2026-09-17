@@ -1028,7 +1028,17 @@ const ElementsPanel = ({
       name: 'Cost Calculators',
       icon: <Calculator className="w-5 h-5" />,
       elements: [
-        { id: 'boq-generator', name: 'BOQ Generator', type: 'boq-generator', preview: 'Generate professional Bill of Quantities with cost breakdown', elementIcon: <FileDigit className="w-6 h-6 text-purple-600" /> }
+        { id: 'boq-generator', name: 'BOQ Generator', type: 'boq-generator', preview: 'Generate professional Bill of Quantities with cost breakdown', elementIcon: <FileDigit className="w-6 h-6 text-purple-600" /> },
+        { id: 'calc-bricks', name: 'Bricks Calculator', type: 'cost-calculator', preview: 'Estimate bricks, cement bags & sand for a brick wall' },
+        { id: 'calc-concrete', name: 'Concrete Calculator', type: 'cost-calculator', preview: 'Estimate cement, sand, and aggregate requirements' },
+        { id: 'calc-blocks', name: 'Concrete Blocks Calculator', type: 'cost-calculator', preview: 'AAC/concrete block count with mortar estimate' },
+        { id: 'calc-flooring', name: 'Flooring Calculator', type: 'cost-calculator', preview: 'Tile count, boxes, cement & sand for flooring' },
+        { id: 'calc-vinyl', name: 'Vinyl Flooring Calculator', type: 'cost-calculator', preview: 'Vinyl planks/sheets required for a floor area' },
+        { id: 'calc-soil', name: 'Soil Excavation Calculator', type: 'cost-calculator', preview: 'Excavation volume and soil disposal estimate' },
+        { id: 'calc-steel', name: 'Steel Estimation Calculator', type: 'cost-calculator', preview: 'Rebar weight and steel quantity for RCC work' },
+        { id: 'calc-paint', name: 'Painting Estimator', type: 'cost-calculator', preview: 'Calculate wall square footage and primer/paint coats' },
+        { id: 'calc-electrical', name: 'Electrical Wiring Estimator', type: 'cost-calculator', preview: 'Conduit length and load point calculator' },
+        { id: 'calc-freight', name: 'Freight Cost Calculator', type: 'logistics-freight-cost', preview: 'Calculate freight costs with fuel surcharge and tolls' }
       ]
     },
     logistics: {

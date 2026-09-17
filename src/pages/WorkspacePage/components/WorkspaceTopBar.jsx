@@ -1,20 +1,23 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { 
-  ChevronLeft, 
-  ChevronDown, 
-  Search, 
-  Video, 
-  MessageSquare, 
-  HelpCircle, 
-  MoreHorizontal, 
-  Zap, 
-  CheckCircle, 
-  Link2, 
+import {
+  ChevronLeft,
+  ChevronDown,
+  Search,
+  Video,
+  MessageSquare,
+  HelpCircle,
+  MoreHorizontal,
+  Zap,
+  CheckCircle,
+  Link2,
   RotateCw,
   Shield,
   UserPlus,
   Share2,
-  Trash2
+  Trash2,
+  Sparkles,
+  Bell,
+  Send
 } from 'lucide-react';
 import config from '../../../config/env';
 import { Auth } from 'aws-amplify';
@@ -35,12 +38,16 @@ const WorkspaceTopBar = ({
   onToggleActivityDrawer,
   isActivityDrawerOpen = false,
   unreadCount = 0,
+  notifications = [],
+  onMarkNotificationAsRead,
+  onMarkAllNotificationsAsRead,
   onStartCall,
   onManagePermissions,
   onInviteVendors,
   onInviteCAS,
   onShareProgress,
   onOpenPostServices,
+  onOpenAIBuilder,
   onOpenUpdateProgress,
   onOpenReviewProgress,
   onOpenClientReviewProgress,
@@ -51,12 +58,17 @@ const WorkspaceTopBar = ({
 }) => {
   const [showOverflow, setShowOverflow] = useState(false);
   const overflowRef = useRef(null);
+  const [showNotifications, setShowNotifications] = useState(false);
+  const notificationsRef = useRef(null);
 
   // Close overflow on click outside
   useEffect(() => {
     const handleOutsideClick = (e) => {
       if (overflowRef.current && !overflowRef.current.contains(e.target)) {
         setShowOverflow(false);
+      }
+      if (notificationsRef.current && !notificationsRef.current.contains(e.target)) {
+        setShowNotifications(false);
       }
     };
     document.addEventListener('mousedown', handleOutsideClick);
@@ -74,6 +86,41 @@ const WorkspaceTopBar = ({
   const handleSearchClick = () => {
     const event = new KeyboardEvent('keydown', { key: 'k', ctrlKey: true, bubbles: true });
     window.dispatchEvent(event);
+  };
+
+  const getNotificationIcon = (type) => {
+    switch (type) {
+      case 'workspace_message':
+      case 'comment_mention':
+        return MessageSquare;
+      case 'approval_request':
+        return Send;
+      case 'approval_result':
+        return CheckCircle;
+      case 'deletion_request':
+      case 'deletion_approved':
+      case 'deletion_rejected':
+        return Trash2;
+      case 'call_invitation':
+        return Video;
+      default:
+        return Bell;
+    }
+  };
+
+  const formatNotificationTime = (n) => {
+    const raw = n?.time || n?.createdAt || n?.timestamp;
+    if (!raw) return '';
+    const d = new Date(raw);
+    if (Number.isNaN(d.getTime())) return String(raw);
+    const diffMs = Date.now() - d.getTime();
+    const mins = Math.floor(diffMs / 60000);
+    if (mins < 1) return 'Just now';
+    if (mins < 60) return `${mins}m ago`;
+    const hours = Math.floor(mins / 60);
+    if (hours < 24) return `${hours}h ago`;
+    const days = Math.floor(hours / 24);
+    return days < 7 ? `${days}d ago` : d.toLocaleDateString();
   };
 
   const handleB2BClick = async () => {
@@ -104,7 +151,7 @@ const WorkspaceTopBar = ({
       <button
         onClick={onBackToDashboard}
         className="ws-back-btn"
-        title={`Back to ${currentUser?.role === 'pm' ? 'PM' : 'Vendor'} Dashboard`}
+        title={`Back to ${userRole === 'pm' ? 'PM' : userRole === 'cas' ? 'CAS' : userRole === 'client' ? 'Client' : 'Vendor'} Dashboard`}
       >
         <ChevronLeft className="w-5 h-5 text-gray-700" />
       </button>
@@ -201,6 +248,72 @@ const WorkspaceTopBar = ({
           <Video className="w-4 h-4 text-gray-600 hover:text-blue-600" />
         </button>
       )}
+
+      {/* Notifications bell — visible to all roles */}
+      <div ref={notificationsRef} className="relative">
+        <button
+          onClick={() => setShowNotifications(prev => !prev)}
+          className={`ws-icon-btn ${showNotifications ? 'active' : ''}`}
+          title="Notifications"
+        >
+          <Bell className="w-4 h-4" />
+          {unreadCount > 0 && (
+            <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white rounded-full text-[9px] font-bold flex items-center justify-center">
+              {unreadCount > 9 ? '9+' : unreadCount}
+            </span>
+          )}
+        </button>
+
+        {showNotifications && (
+          <div className="absolute right-0 top-full mt-2 w-80 bg-white border border-gray-200 rounded-xl shadow-xl z-50 overflow-hidden">
+            <div className="flex items-center justify-between px-3.5 py-2.5 border-b border-gray-100">
+              <span className="text-xs font-semibold text-gray-900">Notifications</span>
+              {unreadCount > 0 && onMarkAllNotificationsAsRead && (
+                <button
+                  onClick={onMarkAllNotificationsAsRead}
+                  className="text-[11px] text-blue-600 hover:text-blue-800 transition-colors"
+                >
+                  Mark all read
+                </button>
+              )}
+            </div>
+            <div className="max-h-80 overflow-y-auto divide-y divide-gray-100">
+              {notifications.length === 0 ? (
+                <div className="py-8 text-center">
+                  <Bell className="w-6 h-6 text-gray-300 mx-auto mb-2" />
+                  <p className="text-xs text-gray-400">No notifications yet</p>
+                </div>
+              ) : (
+                notifications.slice(0, 15).map((n) => {
+                  const Icon = getNotificationIcon(n.type);
+                  const nid = n.notificationId || n.id;
+                  return (
+                    <button
+                      key={nid || Math.random()}
+                      onClick={() => nid && onMarkNotificationAsRead?.(nid)}
+                      className={`w-full flex items-start gap-2.5 px-3.5 py-2.5 text-left hover:bg-gray-50 transition-colors ${!n.isRead ? 'bg-blue-50/40' : ''}`}
+                    >
+                      <span className={`mt-0.5 flex-shrink-0 w-6 h-6 rounded-full flex items-center justify-center ${n.actionRequired ? 'bg-amber-100 text-amber-600' : 'bg-gray-100 text-gray-500'}`}>
+                        <Icon className="w-3.5 h-3.5" />
+                      </span>
+                      <span className="flex-1 min-w-0">
+                        <span className="block text-xs font-medium text-gray-900 truncate">{n.title || 'Notification'}</span>
+                        {n.message && (
+                          <span className="block text-[11px] text-gray-500 line-clamp-2">{n.message}</span>
+                        )}
+                        <span className="block text-[10px] text-gray-400 mt-0.5">{formatNotificationTime(n)}</span>
+                      </span>
+                      {!n.isRead && (
+                        <span className="w-1.5 h-1.5 rounded-full bg-blue-500 mt-1.5 flex-shrink-0" />
+                      )}
+                    </button>
+                  );
+                })
+              )}
+            </div>
+          </div>
+        )}
+      </div>
 
       {/* Comments / Activity drawer toggle */}
       <button
@@ -319,6 +432,30 @@ const WorkspaceTopBar = ({
           </div>
         )}
       </div>
+
+      {/* AI Canvas Builder */}
+      {onOpenAIBuilder && (
+        <button
+          onClick={onOpenAIBuilder}
+          className="ws-btn-secondary"
+          title="AI Canvas Builder — describe it, AI builds it"
+        >
+          <Sparkles className="w-3.5 h-3.5 text-violet-600" />
+          <span>AI Builder</span>
+        </button>
+      )}
+
+      {/* Post Services - separate button */}
+      {onOpenPostServices && (
+        <button
+          onClick={onOpenPostServices}
+          className="ws-btn-secondary"
+          title="Post services"
+        >
+          <MessageSquare className="w-3.5 h-3.5 text-blue-500" />
+          <span>Post Services</span>
+        </button>
+      )}
 
       {/* Primary Action Button based on Role */}
       {isPM ? (

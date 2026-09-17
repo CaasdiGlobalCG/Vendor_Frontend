@@ -23,6 +23,7 @@ import {
 } from 'lucide-react';
 import { VendorContext } from "../../../../../context/VendorContext";
 import config from '../../../../../config/env';
+import invoiceFetch from '../utils/invoiceFetch';
 
 const CustomerDetailPage = ({ customerId, onClose, onCustomerUpdated }) => {
   const { currentUser } = useContext(VendorContext);
@@ -69,7 +70,7 @@ const CustomerDetailPage = ({ customerId, onClose, onCustomerUpdated }) => {
         })
       };
 
-      const response = await fetch(`/api/workspace/customers/${customerId}?vendorId=${vendorId}`, {
+      const response = await invoiceFetch(`/api/workspace/customers/${customerId}?vendorId=${vendorId}`, {
         headers: headers
       });
 
@@ -106,12 +107,12 @@ const CustomerDetailPage = ({ customerId, onClose, onCustomerUpdated }) => {
       };
 
       // Fetch quotations for this customer
-      const quotationsResponse = await fetch(`/api/workspace/quotations?vendorId=${vendorId}`, {
+      const quotationsResponse = await invoiceFetch(`/api/workspace/quotations?vendorId=${vendorId}`, {
         headers: headers
       });
 
       // Fetch invoices for this customer
-      const invoicesResponse = await fetch(`/api/workspace/invoices?vendorId=${vendorId}`, {
+      const invoicesResponse = await invoiceFetch(`/api/workspace/invoices?vendorId=${vendorId}`, {
         headers: headers
       });
 
@@ -213,7 +214,7 @@ const CustomerDetailPage = ({ customerId, onClose, onCustomerUpdated }) => {
         updates.address = editData.address;
       }
 
-      const response = await fetch(`/api/workspace/customers/${customerId}`, {
+      const response = await invoiceFetch(`/api/workspace/customers/${customerId}`, {
         method: 'PUT',
         headers: headers,
         body: JSON.stringify({
@@ -397,7 +398,7 @@ const CustomerDetailPage = ({ customerId, onClose, onCustomerUpdated }) => {
         })
       };
 
-      const response = await fetch(`/api/workspace/customers/${customerId}`, {
+      const response = await invoiceFetch(`/api/workspace/customers/${customerId}`, {
         method: 'PUT',
         headers: headers,
         body: JSON.stringify({

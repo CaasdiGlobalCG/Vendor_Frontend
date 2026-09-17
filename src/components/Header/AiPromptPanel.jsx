@@ -10,7 +10,7 @@ import { VendorContext } from "../../context/VendorContext";
  *
  * A slide-in side panel for AI-powered chat/prompt interaction.
  * Connects to the backend /api/ai/* endpoints for real LLM responses
- * via Ollama with DynamoDB-backed conversation memory.
+ * via Groq with DynamoDB-backed conversation memory.
  */
 
 // ── Helper: get auth token ──
@@ -958,7 +958,7 @@ const AiPromptPanel = ({ isOpen, onClose }) => {
   const [conversationTitle, setConversationTitle] = useState(null);
   const [conversations, setConversations] = useState([]);
   const [showConversationList, setShowConversationList] = useState(false);
-  const [ollamaHealthy, setOllamaHealthy] = useState(null);
+  const [aiHealthy, setAiHealthy] = useState(null);
   const [error, setError] = useState(null);
   const [toolsUsed, setToolsUsed] = useState([]);
   const [feedbackMap, setFeedbackMap] = useState({}); // { messageId: 'positive'|'negative' }
@@ -1237,7 +1237,7 @@ const AiPromptPanel = ({ isOpen, onClose }) => {
     document.body.style.userSelect = 'none';
   }, [isFloating, panelPos]);
 
-  // ── Check Ollama health on mount ──
+  // ── Check AI service health on mount ──
   useEffect(() => {
     if (isOpen) {
       checkHealth();
@@ -1249,9 +1249,9 @@ const AiPromptPanel = ({ isOpen, onClose }) => {
     try {
       const res = await apiFetch("/api/ai/health");
       const data = await res.json();
-      setOllamaHealthy(data.success && data.data?.healthy && data.data?.hasRequiredModel);
+      setAiHealthy(data.success && data.data?.healthy && data.data?.hasRequiredModel);
     } catch {
-      setOllamaHealthy(false);
+      setAiHealthy(false);
     }
   };
 
@@ -1558,7 +1558,7 @@ const AiPromptPanel = ({ isOpen, onClose }) => {
         console.log("[AI] Stream aborted by user");
       } else {
         console.error("Chat error:", err);
-        setError("Failed to get AI response. Make sure Ollama is running.");
+        setError("Failed to get AI response. Please try again.");
         setMessages((prev) =>
           prev.filter((m) => m.type !== "ai" || m.text !== "")
         );
@@ -2088,7 +2088,7 @@ const AiPromptPanel = ({ isOpen, onClose }) => {
                       Personal
                     </span>
                   )}
-                  {ollamaHealthy === false && (
+                  {aiHealthy === false && (
                     <span className="text-red-300 text-[10px]">(offline)</span>
                   )}
                 </div>
@@ -2656,11 +2656,11 @@ const AiPromptPanel = ({ isOpen, onClose }) => {
                   initial={{ y: 40, opacity: 0 }} animate={{ y: 0, opacity: 1 }}
                   transition={{ delay: 0.3, type: "spring", damping: 25 }}
                 >
-                  {/* Ollama offline warning */}
-                  {ollamaHealthy === false && (
+                  {/* AI service offline warning */}
+                  {aiHealthy === false && (
                     <div className="px-4 py-2 bg-amber-50 border-b border-amber-100 flex items-center gap-2">
                       <AlertCircle size={14} className="text-amber-500" />
-                      <span className="text-[11px] text-amber-700">AI model is offline. Make sure Ollama is running.</span>
+                      <span className="text-[11px] text-amber-700">AI assistant is unavailable. Please try again later.</span>
                       <button onClick={checkHealth} className="ml-auto text-[11px] text-teal-600 font-medium hover:underline">Retry</button>
                     </div>
                   )}

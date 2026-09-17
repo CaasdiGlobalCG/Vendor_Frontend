@@ -1,15 +1,16 @@
 import React, { useState, useCallback, useEffect, useContext, useRef, useImperativeHandle, forwardRef } from 'react';
-import { Plus, Save, Eye, X, Users, Grid, Maximize2, Minimize2, Check, Gauge } from 'lucide-react';
+import { Plus, Save, Eye, X, Users, Grid, Maximize2, Minimize2, Check, Gauge, Download, FileText, AlignHorizontalDistributeCenter, Sparkles } from 'lucide-react';
 import { toJpeg } from 'html-to-image';
 import { VendorContext } from '../../../context/VendorContext';
-import ReactFlow, { 
-  useNodesState, 
-  useEdgesState, 
-  addEdge, 
+import ReactFlow, {
+  useNodesState,
+  useEdgesState,
+  addEdge,
   Background,
   Controls,
   MiniMap,
-  Panel
+  Panel,
+  MarkerType
 } from 'reactflow';
 import 'reactflow/dist/style.css';
 
@@ -27,6 +28,8 @@ import LayoutConfigModal from './modals/LayoutConfigModal';
 import GroupingModal from './modals/GroupingModal';
 import GroupingToolbar from './GroupingToolbar';
 import ContextMenu from './ContextMenu';
+import HelperLines from './HelperLines';
+import { exportCanvasAsPng, exportCanvasAsPdf } from '../utils/canvasExport';
 import TaskCardConfigModal from './modals/TaskCardConfigModal';
 import ProcurementRFQDetailsModal from './modals/ProcurementRFQDetailsModal';
 import ExecutionRequestDetailsModal from './modals/ExecutionRequestDetailsModal';
@@ -35,6 +38,7 @@ import { getWorkspaceById } from '../utils/workspaceApi';
 import { registerCanvasEmitter, unregisterCanvasEmitter } from '../utils/nodePersistence';
 import config from '../../../config/env';
 import RemoteCursor from './RemoteCursor';
+import { useToast } from './ToastProvider';
 import {
   nodeChangesToOps,
   edgeChangesToOps,
@@ -265,6 +269,69 @@ const edgeTypes = {
     (isCurrentTaskUnlocked || (!isWorkspaceCompleted && userPermissions?.canEdit));
   
   // Canvas permissions check complete
+
+  // Heads-up toast for view-only users (throttled so repeated attempts don't stack)
+  const toast = useToast();
+  const lastViewOnlyToastAtRef = useRef(0);
+  const notifyViewOnly = useCallback((action) => {
+    console.log(`🔒 Canvas is view-only - ignoring ${action}`);
+    const now = Date.now();
+    if (now - lastViewOnlyToastAtRef.current < 3000) return;
+    lastViewOnlyToastAtRef.current = now;
+    toast.info('Canvas is view-only — you don\'t have permission to make changes', 2500);
+  }, [toast]);
+
+  // Resolve the effective user role — URL param wins so shared PM/client links
+  // work, mirroring ElementNode.getCurrentUserRole.
+  const getCurrentUserRole = useCallback(() => {
+    const urlUserRole = new URLSearchParams(window.location.search).get('userRole');
+    if (urlUserRole && ['vendor', 'pm', 'client'].includes(urlUserRole)) {
+      return urlUserRole;
+    }
+    return userRole || currentUser?.role || 'vendor';
+  }, [userRole, currentUser?.role]);
+
+  // Element nodes can only be removed with PM approval. For non-PM users this
+  // opens the element's "Request Deletion" modal (vendors) or keeps the node,
+  // and returns only the nodes that may still be deleted directly.
+  const filterDirectlyDeletableNodes = useCallback((nodesToDelete) => {
+    const role = getCurrentUserRole();
+    if (role === 'pm') return nodesToDelete;
+
+    const deletable = [];
+    let requestedCount = 0;
+    let pendingCount = 0;
+    let blockedCount = 0;
+
+    nodesToDelete.forEach((node) => {
+      if (node.type !== 'elementNode') {
+        deletable.push(node);
+        return;
+      }
+      if (node.data?.deletionRequested) {
+        pendingCount += 1;
+        return;
+      }
+      if (role === 'vendor') {
+        requestedCount += 1;
+        window.dispatchEvent(new CustomEvent('request-element-deletion', {
+          detail: { nodeId: node.id }
+        }));
+      } else {
+        blockedCount += 1;
+      }
+    });
+
+    if (requestedCount > 0) {
+      toast.info('Deleting an element requires PM approval — please submit the request form', 2500);
+    } else if (pendingCount > 0) {
+      toast.info('Deletion already requested — awaiting PM approval', 2500);
+    } else if (blockedCount > 0) {
+      toast.info('Only a PM can delete elements', 2500);
+    }
+
+    return deletable;
+  }, [getCurrentUserRole, toast]);
 
   // Activity tracking function
   const trackActivity = async (action, actionType, targetType, elementData = {}) => {
@@ -524,6 +591,7 @@ const edgeTypes = {
   // Keyboard shortcuts for Undo/Redo
   useEffect(() => {
     const handleKeyDown = (event) => {
+      if (!canEdit) return;
       // Check if user is typing in an input/textarea
       const isInputElement = event.target.tagName === 'INPUT' ||
                             event.target.tagName === 'TEXTAREA' ||
@@ -548,7 +616,7 @@ const edgeTypes = {
 
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [handleUndo, handleRedo]);
+  }, [handleUndo, handleRedo, canEdit, notifyViewOnly]);
   
   // ── Refs for WebSocket-aware setNodes/setEdges wrappers ──
   // Using refs so the wrappers stay referentially stable (no re-renders)
@@ -659,10 +727,27 @@ const edgeTypes = {
 
   // Function to clear all elements from canvas
   const clearCanvas = () => {
+    if (nodes.length || edges.length) pushToHistory();
+    isUpdatingNodesLocallyRef.current = true;
+    // Emit delete ops so collaborators + persisted state clear too
+    nodes.forEach(n => emitOpRef.current?.({
+      type: 'NODE_DELETE', nodeId: n.id,
+      taskId: taskIdRef.current, subtaskId: subtaskIdRef.current
+    }));
+    edges.forEach(e => emitOpRef.current?.({
+      type: 'EDGE_DELETE', edgeId: e.id,
+      taskId: taskIdRef.current, subtaskId: subtaskIdRef.current
+    }));
     setNodes([]);
     setEdges([]);
+    // Wipe cached subtask canvas data so the sync effect can't restore cleared nodes
+    if (selectedSubtask?.canvasData) {
+      selectedSubtask.canvasData.nodes = [];
+      selectedSubtask.canvasData.edges = [];
+    }
     elementSequenceRef.current = 0; // Reset sequence when canvas is cleared
     lastAddedNodeIdRef.current = null; // Reset last added element reference
+    setTimeout(() => { isUpdatingNodesLocallyRef.current = false; }, 0);
     console.log('🧹 Canvas cleared - all elements removed');
   };
   const [reactFlowInstance, setReactFlowInstance] = useState(null);
@@ -829,13 +914,33 @@ const edgeTypes = {
   }, [performanceMode]);
 
   const renderedEdges = React.useMemo(() => {
-    if (!performanceMode) return edges;
-    return edges.map((edge) => ({
+    // Ensure every edge renders with an arrowhead matching its stroke color
+    const withMarkers = edges.map((edge) => ({
+      ...edge,
+      markerEnd: edge.markerEnd || {
+        type: MarkerType.ArrowClosed,
+        width: 18,
+        height: 18,
+        color: edge.data?.edgeColor || edge.style?.stroke || '#6b7280'
+      }
+    }));
+    if (!performanceMode) return withMarkers;
+    return withMarkers.map((edge) => ({
       ...edge,
       animated: false,
       className: edge.className === 'auto-connected-edge' ? '' : edge.className,
     }));
   }, [edges, performanceMode]);
+
+  // Elements (elementNode) can only be removed with PM approval, so they are
+  // marked non-deletable for other roles — React Flow then skips them during
+  // keyboard deletes (deleteKeyCode) instead of emitting remove changes.
+  const renderedNodes = React.useMemo(() => {
+    if (getCurrentUserRole() === 'pm') return nodes;
+    return nodes.map((node) =>
+      node.type === 'elementNode' ? { ...node, deletable: false } : node
+    );
+  }, [nodes, getCurrentUserRole]);
 
   // Wrapped cleanup function using the helper
   const cleanupOrphanedNodes = useCallback((nodesToClean) => {
@@ -1331,7 +1436,7 @@ const edgeTypes = {
     if (isInfoCard) nodeType = 'infoCard';
     if (isFormCard) nodeType = 'formCard';
     
-    const nodeId = `${element.type}_${Date.now()}`;
+    const nodeId = `${element.type}_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`;
     const taskCardData = isTaskCard
       ? (customData?.taskCardData || element.taskCardData || null)
       : null;
@@ -1407,6 +1512,7 @@ const edgeTypes = {
         // Store icon ID for icon elements
         ...(element.type === 'icon' && { id: element.id }),
         // Store cost calculator data
+        ...(element.type === 'cost-calculator' && { id: element.id }),
         ...(element.type === 'cost-calculator' && element.data && { ...element.data }),
         // Store cost calculator summary data
         ...(element.type === 'cost-calculator-summary' && element.data && { data: element.data }),
@@ -1956,6 +2062,7 @@ const edgeTypes = {
       return {
         ...edge,
         animated,
+        markerEnd: { type: MarkerType.ArrowClosed, width: 18, height: 18, color: edgeColorInput },
         style: {
           ...(edge.style || {}),
           stroke: edgeColorInput,
@@ -2715,20 +2822,25 @@ const edgeTypes = {
 
   const handleContextMenuDelete = useCallback(() => {
     if (contextMenu.selectedNodes.length > 0) {
-      const nodeIdsToDelete = contextMenu.selectedNodes.map(n => n.id);
-      
+      // Non-PM users cannot hard-delete elements — route them through the
+      // Request Deletion (PM approval) flow instead.
+      const deletableNodes = filterDirectlyDeletableNodes(contextMenu.selectedNodes);
+      if (deletableNodes.length === 0) return;
+
+      const nodeIdsToDelete = deletableNodes.map(n => n.id);
+
       // Record deletion history for each deleted node
-      contextMenu.selectedNodes.forEach((nodeToDelete) => {
+      deletableNodes.forEach((nodeToDelete) => {
         recordDeletionHistory(nodeToDelete.id, nodeToDelete.data, {
           deletedVia: 'context-menu',
           canvasAction: true,
           position: nodeToDelete.position
         });
       });
-      
+
       // Check for flowchart groups and delete them
       const flowchartGroups = new Set();
-      contextMenu.selectedNodes.forEach(node => {
+      deletableNodes.forEach(node => {
         if (node.data?.flowchartGroup) {
           flowchartGroups.add(node.data.flowchartGroup);
         }
@@ -2749,7 +2861,7 @@ const edgeTypes = {
       
       console.log('🗑️ Deleted elements:', nodeIdsToDelete.length);
     }
-  }, [contextMenu.selectedNodes, setNodes, setEdges, deleteFlowchartGroup, recordDeletionHistory]);
+  }, [contextMenu.selectedNodes, setNodes, setEdges, deleteFlowchartGroup, recordDeletionHistory, filterDirectlyDeletableNodes]);
 
   const handleContextMenuEdit = useCallback(() => {
     if (contextMenu.selectedNodes.length === 1) {
@@ -3071,9 +3183,192 @@ const edgeTypes = {
     openEdgeLabelModal(edge.id, edge.data?.label || '');
   }, [openEdgeLabelModal]);
 
+  // ---- Smart alignment guides while dragging ----
+  const [helperLines, setHelperLines] = useState({ horizontal: null, vertical: null });
+
+  // AI generation review bar — { nodeIds, edgeIds } pending accept/reject
+  const [aiReview, setAiReview] = useState(null);
+  const aiGenTimersRef = useRef([]);
+
+  const getNodeSize = useCallback((n) => ({
+    w: n.width ?? n.measured?.width ?? n.style?.width ?? 200,
+    h: n.height ?? n.measured?.height ?? n.style?.height ?? 150
+  }), []);
+
+  const handleNodeDrag = useCallback((event, node) => {
+    const { w, h } = getNodeSize(node);
+    const zoom = reactFlowInstance?.getZoom?.() || 1;
+    const threshold = 6 / zoom;
+
+    const d = {
+      xs: [node.position.x, node.position.x + w / 2, node.position.x + w],
+      ys: [node.position.y, node.position.y + h / 2, node.position.y + h]
+    };
+
+    let vertical = null;
+    let horizontal = null;
+
+    for (const other of nodes) {
+      if (other.id === node.id) continue;
+      const os = getNodeSize(other);
+      const o = {
+        xs: [other.position.x, other.position.x + os.w / 2, other.position.x + os.w],
+        ys: [other.position.y, other.position.y + os.h / 2, other.position.y + os.h]
+      };
+
+      for (const dx of d.xs) {
+        for (const ox of o.xs) {
+          if (Math.abs(dx - ox) < threshold) vertical = ox;
+        }
+      }
+      for (const dy of d.ys) {
+        for (const oy of o.ys) {
+          if (Math.abs(dy - oy) < threshold) horizontal = oy;
+        }
+      }
+      if (vertical != null && horizontal != null) break;
+    }
+
+    setHelperLines(prev =>
+      prev.vertical === vertical && prev.horizontal === horizontal ? prev : { vertical, horizontal }
+    );
+  }, [nodes, reactFlowInstance, getNodeSize]);
+
+  const handleNodeDragStop = useCallback(() => {
+    setHelperLines({ horizontal: null, vertical: null });
+  }, []);
+
+  // ---- Align / distribute selected elements ----
+  const alignSelectedNodes = useCallback((mode) => {
+    if (!canEdit) {
+      notifyViewOnly('align elements');
+      return;
+    }
+    const sel = nodes.filter(n => n.selected);
+    if (sel.length < 2) return;
+
+    pushToHistory();
+
+    const sizes = {};
+    sel.forEach(n => { sizes[n.id] = getNodeSize(n); });
+    const minX = Math.min(...sel.map(n => n.position.x));
+    const maxX = Math.max(...sel.map(n => n.position.x + sizes[n.id].w));
+    const minY = Math.min(...sel.map(n => n.position.y));
+    const maxY = Math.max(...sel.map(n => n.position.y + sizes[n.id].h));
+    const midX = (minX + maxX) / 2;
+    const midY = (minY + maxY) / 2;
+
+    const newPositions = {};
+    if (mode === 'distributeH' || mode === 'distributeV') {
+      const axis = mode === 'distributeH' ? 'x' : 'y';
+      const sizeKey = mode === 'distributeH' ? 'w' : 'h';
+      const sorted = [...sel].sort((a, b) => a.position[axis] - b.position[axis]);
+      if (sorted.length > 2) {
+        const first = sorted[0];
+        const last = sorted[sorted.length - 1];
+        const start = first.position[axis] + sizes[first.id][sizeKey] / 2;
+        const end = last.position[axis] + sizes[last.id][sizeKey] / 2;
+        const step = (end - start) / (sorted.length - 1);
+        sorted.forEach((n, i) => {
+          newPositions[n.id] = mode === 'distributeH'
+            ? { x: start + step * i - sizes[n.id].w / 2, y: n.position.y }
+            : { x: n.position.x, y: start + step * i - sizes[n.id].h / 2 };
+        });
+      }
+    } else {
+      sel.forEach(n => {
+        const { w, h } = sizes[n.id];
+        const pos = { ...n.position };
+        if (mode === 'left') pos.x = minX;
+        else if (mode === 'centerH') pos.x = midX - w / 2;
+        else if (mode === 'right') pos.x = maxX - w;
+        else if (mode === 'top') pos.y = minY;
+        else if (mode === 'centerV') pos.y = midY - h / 2;
+        else if (mode === 'bottom') pos.y = maxY - h;
+        newPositions[n.id] = pos;
+      });
+    }
+
+    if (Object.keys(newPositions).length === 0) return;
+    setNodes(nds => nds.map(n => newPositions[n.id] ? { ...n, position: newPositions[n.id] } : n));
+    Object.entries(newPositions).forEach(([nodeId, position]) => {
+      emitOp(createNodeMoveOp(nodeId, position, selectedTask?.id, selectedSubtask?.id));
+    });
+  }, [nodes, setNodes, canEdit, notifyViewOnly, pushToHistory, getNodeSize, emitOp, selectedTask?.id, selectedSubtask?.id]);
+
+  // ---- Tidy canvas: arrange all elements in a neat grid ----
+  const handleTidyCanvas = useCallback(() => {
+    if (!canEdit) {
+      notifyViewOnly('rearrange canvas');
+      return;
+    }
+    if (nodes.length < 2) return;
+
+    pushToHistory();
+
+    const gap = 60;
+    const sizes = {};
+    nodes.forEach(n => { sizes[n.id] = getNodeSize(n); });
+    const maxW = Math.max(...nodes.map(n => sizes[n.id].w));
+    const maxH = Math.max(...nodes.map(n => sizes[n.id].h));
+    const startX = Math.min(...nodes.map(n => n.position.x));
+    const startY = Math.min(...nodes.map(n => n.position.y));
+    const sorted = [...nodes].sort((a, b) => a.position.y - b.position.y || a.position.x - b.position.x);
+    const cols = Math.max(1, Math.ceil(Math.sqrt(sorted.length)));
+
+    const newPositions = {};
+    sorted.forEach((n, i) => {
+      newPositions[n.id] = {
+        x: startX + (i % cols) * (maxW + gap),
+        y: startY + Math.floor(i / cols) * (maxH + gap)
+      };
+    });
+
+    setNodes(nds => nds.map(n => newPositions[n.id] ? { ...n, position: newPositions[n.id] } : n));
+    Object.entries(newPositions).forEach(([nodeId, position]) => {
+      emitOp(createNodeMoveOp(nodeId, position, selectedTask?.id, selectedSubtask?.id));
+    });
+    toast?.success?.('Canvas arranged into a grid');
+  }, [nodes, setNodes, canEdit, notifyViewOnly, pushToHistory, getNodeSize, emitOp, selectedTask?.id, selectedSubtask?.id, toast]);
+
+  // ---- Export canvas as PNG image or PDF ----
+  const handleExportCanvas = useCallback(async (format) => {
+    const container = canvasContainerRef.current;
+    if (!container) return;
+    const target = container.querySelector('.react-flow__viewport') || container;
+
+    const waitForPaint = () => new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
+    const previousViewport = reactFlowInstance?.getViewport?.();
+
+    try {
+      toast?.info?.(format === 'pdf' ? 'Generating PDF…' : 'Exporting canvas…');
+      if (nodes.length > 0 && reactFlowInstance?.fitView) {
+        await reactFlowInstance.fitView({ padding: 0.12, includeHiddenNodes: true, duration: 0 });
+        await waitForPaint();
+      }
+      if (format === 'pdf') {
+        await exportCanvasAsPdf(target);
+        toast?.success?.('Canvas exported as PDF');
+      } else {
+        await exportCanvasAsPng(target);
+        toast?.success?.('Canvas exported as PNG');
+      }
+    } catch (err) {
+      console.error('❌ Canvas export failed:', err);
+      toast?.error?.('Failed to export canvas');
+    } finally {
+      if (previousViewport && reactFlowInstance?.setViewport) {
+        try {
+          await reactFlowInstance.setViewport(previousViewport, { duration: 0 });
+        } catch (e) { /* viewport restore is best-effort */ }
+      }
+    }
+  }, [reactFlowInstance, nodes.length, toast]);
+
   // Handle key press for deletion and duplication
   useEffect(() => {
     const handleKeyPress = (event) => {
+      if (!canEdit) return;
       // Prevent shortcuts when typing in input fields, textareas, or contenteditable elements
       const isInputElement = event.target.tagName === 'INPUT' || 
                             event.target.tagName === 'TEXTAREA' || 
@@ -3113,7 +3408,7 @@ const edgeTypes = {
 
     document.addEventListener('keydown', handleKeyPress);
     return () => document.removeEventListener('keydown', handleKeyPress);
-  }, [nodes, edges]);
+  }, [nodes, edges, canEdit, notifyViewOnly]);
 
   // Manual zoom functions
   const handleZoomIn = () => {
@@ -3427,6 +3722,10 @@ const edgeTypes = {
   // Handle custom text element drops from TextPanel
   useEffect(() => {
     const handleTextElementDrop = (event) => {
+      if (!canEdit) {
+        notifyViewOnly('text element add');
+        return;
+      }
       const textData = event.detail;
       console.log('📝 Text element drop event received:', textData);
       
@@ -3458,7 +3757,7 @@ const edgeTypes = {
     return () => {
       document.removeEventListener('textElementDrop', handleTextElementDrop);
     };
-  }, [setNodes]);
+  }, [setNodes, canEdit, notifyViewOnly]);
 
   // Handle direct table add events from BOQ modal (single and batch)
   useEffect(() => {
@@ -3520,12 +3819,20 @@ const edgeTypes = {
     };
 
     const handleAddTableToCanvas = async (event) => {
+      if (!canEdit) {
+        notifyViewOnly('table add');
+        return;
+      }
       const table = event.detail;
       if (!table) return;
       await addOneTable(table, 0);
     };
 
     const handleAddTablesToCanvas = async (event) => {
+      if (!canEdit) {
+        notifyViewOnly('tables add');
+        return;
+      }
       const tables = event.detail?.tables || [];
       for (let i = 0; i < tables.length; i++) {
         await addOneTable(tables[i], i);
@@ -3538,11 +3845,15 @@ const edgeTypes = {
       document.removeEventListener('addTableToCanvas', handleAddTableToCanvas);
       document.removeEventListener('addTablesToCanvas', handleAddTablesToCanvas);
     };
-  }, [setNodes, trackActivity]);
+  }, [setNodes, trackActivity, canEdit, notifyViewOnly]);
 
   // Handle ungrouping elements
   useEffect(() => {
     const handleUngroupElements = (event) => {
+      if (!canEdit) {
+        notifyViewOnly('ungroup');
+        return;
+      }
       const { groupedNodeId, originalNodes } = event.detail;
       console.log('📥 Ungroup event received:', { groupedNodeId, originalNodes });
       
@@ -3588,11 +3899,15 @@ const edgeTypes = {
     return () => {
       document.removeEventListener('ungroupElements', handleUngroupElements);
     };
-  }, [nodes, setNodes]);
+  }, [nodes, setNodes, canEdit, notifyViewOnly]);
 
   // Handle turnkey workflow editing
   useEffect(() => {
     const handleEditTurnkeyWorkflow = (event) => {
+      if (!canEdit) {
+        notifyViewOnly('turnkey workflow edit');
+        return;
+      }
       const { nodeId, data } = event.detail;
       
       // Set the current node data as initial data for the modal
@@ -3609,11 +3924,15 @@ const edgeTypes = {
     return () => {
       document.removeEventListener('editTurnkeyWorkflow', handleEditTurnkeyWorkflow);
     };
-  }, []);
+  }, [canEdit, notifyViewOnly]);
 
   // Handle element double-click from ElementsPanel
   useEffect(() => {
     const handleElementDoubleClick = (event) => {
+      if (!canEdit) {
+        notifyViewOnly('element add');
+        return;
+      }
       const element = event.detail;
       console.log('🖱️ Element double-click event received:', element);
       console.log('🔍 Element category:', element?.category);
@@ -3745,10 +4064,14 @@ const edgeTypes = {
     return () => {
       document.removeEventListener('elementDoubleClick', handleElementDoubleClick);
     };
-  },  [getAutoPlacementPosition, setNodes]);
+  },  [getAutoPlacementPosition, setNodes, canEdit, notifyViewOnly]);
 
   useEffect(() => {
     const handleAddProcurementRFQNode = async (event) => {
+      if (!canEdit) {
+        notifyViewOnly('procurement RFQ node add');
+        return;
+      }
       await addProcurementRFQNodeToCanvas(event.detail);
     };
 
@@ -3756,10 +4079,14 @@ const edgeTypes = {
     return () => {
       document.removeEventListener('addProcurementRFQNode', handleAddProcurementRFQNode);
     };
-  }, [addProcurementRFQNodeToCanvas]);
+  }, [addProcurementRFQNodeToCanvas, canEdit, notifyViewOnly]);
 
   useEffect(() => {
     const handleAddExecutionRequestNode = async (event) => {
+      if (!canEdit) {
+        notifyViewOnly('execution request node add');
+        return;
+      }
       await addExecutionRequestNodeToCanvas(event.detail);
     };
 
@@ -3767,7 +4094,7 @@ const edgeTypes = {
     return () => {
       document.removeEventListener('addExecutionRequestNode', handleAddExecutionRequestNode);
     };
-  }, [addExecutionRequestNodeToCanvas]);
+  }, [addExecutionRequestNodeToCanvas, canEdit, notifyViewOnly]);
 
   useEffect(() => {
     const handleOpenRequestDetails = (event) => {
@@ -3797,6 +4124,10 @@ const edgeTypes = {
   // Handle element addition from Cost Calculators Modal
   useEffect(() => {
     const handleElementFromCalculator = (event) => {
+      if (!canEdit) {
+        notifyViewOnly('calculator element add');
+        return;
+      }
       const element = event.detail;
       console.log('📊 Adding calculator element to canvas:', element);
       
@@ -3830,7 +4161,7 @@ const edgeTypes = {
     return () => {
       document.removeEventListener('elementFromCalculator', handleElementFromCalculator);
     };
-  }, []);
+  }, [canEdit, notifyViewOnly]);
 
   // Handle zoom to element from Elements Overview
   useEffect(() => {
@@ -3890,6 +4221,10 @@ const edgeTypes = {
   // Handle update element name
   useEffect(() => {
     const handleUpdateElementName = (event) => {
+      if (!canEdit) {
+        notifyViewOnly('element rename');
+        return;
+      }
       const { elementId, newName, lastUpdatedAt, lastUpdatedBy } = event.detail;
       console.log('✏️ Updating element name:', { elementId, newName, lastUpdatedAt });
       
@@ -3916,16 +4251,26 @@ const edgeTypes = {
     return () => {
       document.removeEventListener('updateElementName', handleUpdateElementName);
     };
-  }, [setNodes]);
+  }, [setNodes, canEdit, notifyViewOnly]);
 
   // Handle delete element
   useEffect(() => {
     const handleDeleteElement = (event) => {
+      if (!canEdit) {
+        notifyViewOnly('element delete');
+        return;
+      }
       const { elementId } = event.detail;
       console.log('🗑️ Deleting element:', elementId);
-      
+
       // Find the node before deleting it
       const nodeToDelete = nodes.find(node => node.id === elementId);
+      if (!nodeToDelete) return;
+
+      // Non-PM users cannot hard-delete elements — route them through the
+      // Request Deletion (PM approval) flow instead.
+      if (filterDirectlyDeletableNodes([nodeToDelete]).length === 0) return;
+
       const nodeData = nodeToDelete?.data || {};
       
       // Find all edges connected to this node
@@ -3968,13 +4313,17 @@ const edgeTypes = {
     return () => {
       document.removeEventListener('deleteElement', handleDeleteElement);
     };
-  }, [setNodes, setEdges, trackActivity, recordDeletionHistory, nodes, edges]);
+  }, [setNodes, setEdges, trackActivity, recordDeletionHistory, nodes, edges, canEdit, notifyViewOnly, filterDirectlyDeletableNodes]);
 
 
 
   // Handle lock/unlock element
   useEffect(() => {
     const handleToggleLockElement = (event) => {
+      if (!canEdit) {
+        notifyViewOnly('lock toggle');
+        return;
+      }
       const { elementId } = event.detail;
       console.log('🔒 Toggling lock for element:', elementId);
       
@@ -4003,7 +4352,7 @@ const edgeTypes = {
     return () => {
       document.removeEventListener('toggleLockElement', handleToggleLockElement);
     };
-  }, [setNodes]);
+  }, [setNodes, canEdit, notifyViewOnly]);
 
   // Handle edge deletion
   const onEdgesDelete = useCallback((edgesToDelete) => {
@@ -4014,9 +4363,14 @@ const edgeTypes = {
   // Handle node deletion
   const onNodesDelete = useCallback((nodesToDelete) => {
     console.log('🗑️ Deleting nodes:', nodesToDelete);
-    
+
+    // Non-PM users cannot hard-delete elements — route them through the
+    // Request Deletion (PM approval) flow instead.
+    const deletableNodes = filterDirectlyDeletableNodes(nodesToDelete);
+    if (deletableNodes.length === 0) return;
+
     // Record deletion history for each deleted node before removing it
-    nodesToDelete.forEach((nodeToDelete) => {
+    deletableNodes.forEach((nodeToDelete) => {
       const fullNode = nodes.find(n => n.id === nodeToDelete.id);
       if (fullNode) {
         recordDeletionHistory(nodeToDelete.id, fullNode.data, {
@@ -4026,10 +4380,10 @@ const edgeTypes = {
         });
       }
     });
-    
+
     setNodes((nds) => {
       // Filter out deleted nodes
-      let remainingNodes = nds.filter((node) => !nodesToDelete.find((n) => n.id === node.id));
+      let remainingNodes = nds.filter((node) => !deletableNodes.find((n) => n.id === node.id));
       
       // Get all nodes with sequence numbers and sort by sequence number
       const nodesWithSequence = remainingNodes
@@ -4064,7 +4418,7 @@ const edgeTypes = {
       
       return remainingNodes;
     });
-  }, [setNodes, recordDeletionHistory, nodes]);
+  }, [setNodes, recordDeletionHistory, nodes, filterDirectlyDeletableNodes]);
 
   // Connection validation
   const isValidConnection = useCallback((connection) => {
@@ -4095,6 +4449,10 @@ const edgeTypes = {
   // Handle text mode activation
   useEffect(() => {
     const handleActivateTextMode = (event) => {
+      if (!canEdit) {
+        notifyViewOnly('text mode activation');
+        return;
+      }
       const { active, ...config } = event.detail;
       setIsTextModeActive(active);
       setTextModeConfig(config);
@@ -4103,7 +4461,7 @@ const edgeTypes = {
 
     document.addEventListener('activateTextMode', handleActivateTextMode);
     return () => document.removeEventListener('activateTextMode', handleActivateTextMode);
-  }, []);
+  }, [canEdit, notifyViewOnly]);
 
   // Listen for text element selection from TextPanel
   useEffect(() => {
@@ -4120,6 +4478,10 @@ const edgeTypes = {
   // Listen for text element updates from TextPanel
   useEffect(() => {
     const handleUpdateTextElement = (event) => {
+      if (!canEdit) {
+        notifyViewOnly('text element update');
+        return;
+      }
       const updatedElement = event.detail;
       console.log('✏️ Updating text element:', updatedElement);
       
@@ -4139,7 +4501,7 @@ const edgeTypes = {
 
     document.addEventListener('updateTextElement', handleUpdateTextElement);
     return () => document.removeEventListener('updateTextElement', handleUpdateTextElement);
-  }, [setNodes]);
+  }, [setNodes, canEdit, notifyViewOnly]);
 
   // AI Helper: respond to context requests from AIHelperNode
   useEffect(() => {
@@ -4152,9 +4514,164 @@ const edgeTypes = {
     return () => document.removeEventListener('aiContextRequest', handleAIContextRequest);
   }, [nodes, edges]);
 
+  // AI Canvas Builder: iteratively reveal a generated { nodes, edges } spec,
+  // then show an accept/reject bar — reject removes everything it added.
+  useEffect(() => {
+    const handleAIGenerateFlow = (event) => {
+      if (!canEdit) {
+        notifyViewOnly('AI canvas generation');
+        return;
+      }
+      const spec = event?.detail?.spec;
+      if (!spec || !Array.isArray(spec.nodes) || spec.nodes.length === 0) return;
+
+      // Clear any in-flight generation
+      aiGenTimersRef.current.forEach(clearTimeout);
+      aiGenTimersRef.current = [];
+      setAiReview(null);
+      pushToHistory();
+
+      // Layered auto-layout: BFS depth from nodes with no incoming edges
+      const incoming = new Set((spec.edges || []).map(e => e.target));
+      const depth = {};
+      spec.nodes.forEach(n => { depth[n.key] = incoming.has(n.key) ? Infinity : 0; });
+      for (let pass = 0; pass < spec.nodes.length; pass += 1) {
+        (spec.edges || []).forEach(e => {
+          if (depth[e.source] !== Infinity && depth[e.target] === Infinity) {
+            depth[e.target] = depth[e.source] + 1;
+          } else if (depth[e.source] !== Infinity && depth[e.target] !== Infinity) {
+            depth[e.target] = Math.min(depth[e.target], depth[e.source] + 1);
+          }
+        });
+      }
+      spec.nodes.forEach(n => { if (depth[n.key] === Infinity) depth[n.key] = 0; });
+
+      // Start placement to the right of existing content
+      const startX = nodes.length ? Math.max(...nodes.map(n => n.position.x)) + 420 : 200;
+      const startY = nodes.length ? Math.min(...nodes.map(n => n.position.y)) : 200;
+
+      // Estimated sizes per type so tall/wide elements don't overlap
+      const AI_NODE_SIZE = {
+        'form-template': { w: 440, h: 660 },
+        'task-card': { w: 420, h: 640 },
+        'approval-board': { w: 480, h: 400 },
+        'turnkey-workflow': { w: 440, h: 500 },
+        table: { w: 400, h: 340 },
+        chart: { w: 400, h: 320 },
+        list: { w: 360, h: 340 },
+        'smart-note': { w: 340, h: 320 },
+        materials: { w: 400, h: 340 },
+        'boq-generator': { w: 400, h: 360 },
+        'form-card': { w: 380, h: 340 },
+        'calendar-event': { w: 340, h: 300 },
+      };
+      const sizeOf = (t) => AI_NODE_SIZE[t] || { w: 340, h: 240 };
+
+      // Column X: cumulative per-depth width (widest node in the column + gap)
+      const depthMaxW = {};
+      spec.nodes.forEach(sn => {
+        depthMaxW[depth[sn.key]] = Math.max(depthMaxW[depth[sn.key]] || 0, sizeOf(sn.type).w);
+      });
+      const depthX = {};
+      {
+        let cx = startX;
+        Object.keys(depthMaxW).map(Number).sort((a, b) => a - b).forEach(d => {
+          depthX[d] = cx;
+          cx += depthMaxW[d] + 120;
+        });
+      }
+
+      // Row Y: cumulative stacking per depth column using estimated heights
+      const depthYCursor = {};
+      const keyToNodeId = {};
+      const newNodes = spec.nodes.map((sn) => {
+        const d = depth[sn.key];
+        const y = startY + (depthYCursor[d] || 0);
+        depthYCursor[d] = (depthYCursor[d] || 0) + sizeOf(sn.type).h + 80;
+        const position = { x: depthX[d], y };
+        const element = { type: sn.type, name: sn.name, data: sn.data || {} };
+        const newNode = createElementNode(element, position, sn.data || null);
+        // Spec data (selectOptions, note…) + recent-update ring as the reveal cue
+        newNode.data = { ...newNode.data, ...(sn.data || {}), lastModifiedAt: new Date().toISOString() };
+        keyToNodeId[sn.key] = newNode.id;
+        return newNode;
+      });
+
+      const newEdges = (spec.edges || [])
+        .filter(e => keyToNodeId[e.source] && keyToNodeId[e.target])
+        .map((e, i) => ({
+          id: `edge_ai_${Date.now()}_${i}_${Math.random().toString(36).slice(2, 7)}`,
+          source: keyToNodeId[e.source],
+          target: keyToNodeId[e.target],
+          // No sourceHandle/targetHandle — node types use different handle ids
+          // (some have none), and RF drops edges that reference missing handles
+          type: 'custom',
+          animated: true,
+          style: { strokeWidth: 2, stroke: '#6b7280' },
+          markerEnd: { type: MarkerType.ArrowClosed, width: 18, height: 18, color: '#6b7280' },
+          data: { label: e.label || '' }
+        }));
+
+      // Staggered reveal: nodes every ~2s, then edges every ~800ms
+      const NODE_REVEAL_MS = 2000;
+      const EDGE_REVEAL_MS = 800;
+      const queue = [
+        ...newNodes.map(n => () => setNodes(nds => [...nds, n])),
+        ...newEdges.map(e => () => setEdges(eds => [...eds, e])),
+      ];
+      let step = 0;
+      const runNext = () => {
+        if (step < queue.length) {
+          queue[step]();
+          step += 1;
+          aiGenTimersRef.current.push(setTimeout(runNext, step <= newNodes.length ? NODE_REVEAL_MS : EDGE_REVEAL_MS));
+        } else {
+          setAiReview({
+            nodeIds: newNodes.map(n => n.id),
+            edgeIds: newEdges.map(e => e.id),
+          });
+          document.dispatchEvent(new CustomEvent('canvasFitView'));
+        }
+      };
+      runNext();
+    };
+
+    document.addEventListener('aiGenerateFlow', handleAIGenerateFlow);
+    return () => document.removeEventListener('aiGenerateFlow', handleAIGenerateFlow);
+  }, [nodes, setNodes, setEdges, createElementNode, pushToHistory, canEdit, notifyViewOnly, toast]);
+
+  // AI review bar — keep or discard the generated elements
+  const handleAIReviewReject = useCallback(() => {
+    if (!aiReview) return;
+    isUpdatingNodesLocallyRef.current = true;
+    aiReview.nodeIds.forEach(nodeId => emitOpRef.current?.({
+      type: 'NODE_DELETE', nodeId, taskId: taskIdRef.current, subtaskId: subtaskIdRef.current
+    }));
+    aiReview.edgeIds.forEach(edgeId => emitOpRef.current?.({
+      type: 'EDGE_DELETE', edgeId, taskId: taskIdRef.current, subtaskId: subtaskIdRef.current
+    }));
+    setNodesRaw(nds => nds.filter(n => !aiReview.nodeIds.includes(n.id)));
+    setEdgesRaw(eds => eds.filter(e => !aiReview.edgeIds.includes(e.id)));
+    // Remove generated items from cached subtask canvas data so the sync effect
+    // can't restore them (same repopulation path as Clear All)
+    if (selectedSubtask?.canvasData) {
+      selectedSubtask.canvasData.nodes = (selectedSubtask.canvasData.nodes || [])
+        .filter(n => !aiReview.nodeIds.includes(n.id));
+      selectedSubtask.canvasData.edges = (selectedSubtask.canvasData.edges || [])
+        .filter(e => !aiReview.edgeIds.includes(e.id));
+    }
+    setTimeout(() => { isUpdatingNodesLocallyRef.current = false; }, 0);
+    setAiReview(null);
+    toast?.info?.('AI generation discarded');
+  }, [aiReview, setNodesRaw, setEdgesRaw, selectedSubtask, toast]);
+
   // AI Helper: add generated nodes to the canvas
   useEffect(() => {
     const handleAIGenerateNodes = (event) => {
+      if (!canEdit) {
+        notifyViewOnly('AI node generation');
+        return;
+      }
       const { nodes: generatedNodes, sourceNodeId } = event.detail;
       if (!generatedNodes?.length) return;
 
@@ -4177,11 +4694,15 @@ const edgeTypes = {
     };
     document.addEventListener('aiGenerateNodes', handleAIGenerateNodes);
     return () => document.removeEventListener('aiGenerateNodes', handleAIGenerateNodes);
-  }, [nodes, setNodes, createElementNode]);
+  }, [nodes, setNodes, createElementNode, canEdit, notifyViewOnly]);
 
   // Add element to canvas from command palette or external triggers
   useEffect(() => {
     const handleAddElement = (event) => {
+      if (!canEdit) {
+        notifyViewOnly('element add');
+        return;
+      }
       const element = event.detail;
       if (!element) return;
       const center = reactFlowInstance?.getViewport();
@@ -4195,11 +4716,12 @@ const edgeTypes = {
     };
     document.addEventListener('addElementToCanvas', handleAddElement);
     return () => document.removeEventListener('addElementToCanvas', handleAddElement);
-  }, [reactFlowInstance, setNodes, createElementNode]);
+  }, [reactFlowInstance, setNodes, createElementNode, canEdit, notifyViewOnly]);
 
   // Keyboard shortcuts
   useEffect(() => {
     const handleKeyPress = (event) => {
+      if (!canEdit) return;
       // Prevent shortcuts when typing in input fields, textareas, or contenteditable elements
       const isInputElement = event.target.tagName === 'INPUT' || 
                             event.target.tagName === 'TEXTAREA' || 
@@ -4213,16 +4735,13 @@ const edgeTypes = {
         return;
       }
       
-      // Delete selected nodes/edges with Delete key
-      if (event.key === 'Delete') {
+      // Delete/Backspace: React Flow removes deletable selection itself
+      // (deleteKeyCode). Element nodes carry deletable:false for non-PM users,
+      // so this only routes them through the PM approval request flow.
+      if (event.key === 'Delete' || event.key === 'Backspace') {
         const selectedNodes = nodes.filter(node => node.selected);
-        const selectedEdges = edges.filter(edge => edge.selected);
-        
         if (selectedNodes.length > 0) {
-          onNodesDelete(selectedNodes);
-        }
-        if (selectedEdges.length > 0) {
-          onEdgesDelete(selectedEdges);
+          filterDirectlyDeletableNodes(selectedNodes);
         }
       }
       
@@ -4235,7 +4754,7 @@ const edgeTypes = {
 
     document.addEventListener('keydown', handleKeyPress);
     return () => document.removeEventListener('keydown', handleKeyPress);
-  }, [nodes, edges, onNodesDelete, onEdgesDelete, setEdges]);
+  }, [nodes, edges, onNodesDelete, onEdgesDelete, setEdges, canEdit, notifyViewOnly, filterDirectlyDeletableNodes]);
 
   // Handle connections between nodes
   const onConnect = useCallback((params) => {
@@ -4247,6 +4766,7 @@ const edgeTypes = {
       type: 'custom',
       animated: true,
       style: { strokeWidth: 2, stroke: '#6b7280' },
+      markerEnd: { type: MarkerType.ArrowClosed, width: 18, height: 18, color: '#6b7280' },
       data: { label: '' }
     };
     
@@ -5005,7 +5525,7 @@ const edgeTypes = {
 
         <ReactFlow
           style={{ width: '100%', height: '100%' }}
-          nodes={nodes}
+          nodes={renderedNodes}
           edges={renderedEdges}
           onNodesChange={canEdit ? (changes) => {
             onNodesChange(changes);
@@ -5028,6 +5548,10 @@ const edgeTypes = {
           onNodeClick={onNodeClick}
           onEdgeClick={canEdit ? handleEdgeClick : undefined}
           onNodeContextMenu={canEdit ? onNodeContextMenu : undefined}
+          onNodeDrag={canEdit ? handleNodeDrag : undefined}
+          onNodeDragStop={canEdit ? handleNodeDragStop : undefined}
+          snapToGrid
+          snapGrid={[22, 22]}
           onPaneClick={onPaneClick}
           onSelectionChange={canEdit ? handleSelectionChange : undefined}
           isValidConnection={canEdit ? isValidConnection : () => false}
@@ -5052,7 +5576,7 @@ const edgeTypes = {
           connectionLineType="smoothstep"
           connectionLineStyle={{ strokeWidth: 2, stroke: '#6b7280' }}
           onlyRenderVisibleElements={performanceMode}
-          deleteKey={null}
+          deleteKeyCode={['Backspace', 'Delete']}
           className={`bg-transparent transition-all duration-200 ${
             isDraggingOver ? 'bg-blue-50/60 ring-4 ring-blue-300' : ''
           }`}
@@ -5066,7 +5590,40 @@ const edgeTypes = {
               variant="dots"
             />
           )}
-          
+
+          {/* Smart alignment guides while dragging */}
+          <HelperLines horizontal={helperLines.horizontal} vertical={helperLines.vertical} />
+
+          {/* AI generation review bar — keep or discard */}
+          {aiReview && (
+            <Panel position="top-center" className="mt-4">
+              <div className="flex items-center gap-3 bg-white shadow-2xl border border-violet-200 rounded-xl px-4 py-2.5">
+                <div className="flex items-center gap-2">
+                  <Sparkles className="w-4 h-4 text-violet-600" />
+                  <span className="text-sm font-medium text-gray-800">
+                    AI generated {aiReview.nodeIds.length} element{aiReview.nodeIds.length !== 1 ? 's' : ''}
+                    {aiReview.edgeIds.length > 0 && `, ${aiReview.edgeIds.length} connection${aiReview.edgeIds.length !== 1 ? 's' : ''}`}
+                  </span>
+                </div>
+                <button
+                  onClick={handleAIReviewReject}
+                  className="px-3 py-1.5 text-xs font-medium text-red-600 bg-red-50 hover:bg-red-100 border border-red-200 rounded-lg transition-colors"
+                >
+                  Reject
+                </button>
+                <button
+                  onClick={() => {
+                    setAiReview(null);
+                    toast?.success?.('AI generation applied');
+                  }}
+                  className="px-3 py-1.5 text-xs font-medium text-white bg-violet-600 hover:bg-violet-700 rounded-lg transition-colors"
+                >
+                  Keep it
+                </button>
+              </div>
+            </Panel>
+          )}
+
           {/* Controls (zoom, fit view, etc.) */}
           <Controls 
             position="bottom-right"
@@ -5150,6 +5707,35 @@ const edgeTypes = {
                   </div>
                 )}
                 
+                {/* Canvas tools: tidy + export */}
+                {canEdit && nodes.length >= 2 && (
+                  <button
+                    onClick={handleTidyCanvas}
+                    className="p-1.5 rounded-lg transition-colors border bg-blue-50 text-blue-700 hover:bg-blue-100 border-blue-200"
+                    title="Tidy canvas — arrange elements in a grid"
+                  >
+                    <AlignHorizontalDistributeCenter className="w-3.5 h-3.5" />
+                  </button>
+                )}
+                {nodes.length > 0 && (
+                  <div className="flex items-center gap-1 border-l border-gray-200 pl-3">
+                    <button
+                      onClick={() => handleExportCanvas('png')}
+                      className="p-1.5 rounded-lg transition-colors border bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border-emerald-200"
+                      title="Export canvas as PNG"
+                    >
+                      <Download className="w-3.5 h-3.5" />
+                    </button>
+                    <button
+                      onClick={() => handleExportCanvas('pdf')}
+                      className="p-1.5 rounded-lg transition-colors border bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border-emerald-200"
+                      title="Export canvas as PDF"
+                    >
+                      <FileText className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                )}
+
                 {/* Connection Tools */}
                 {nodes.length > 1 && (
                   <div className="flex items-center gap-2 border-l border-gray-200 pl-3">
@@ -5431,6 +6017,7 @@ const edgeTypes = {
         isVisible={showGroupingToolbar}
         selectedCount={manuallySelectedNodes.length}
         onGroupIntoGrid={handleGroupIntoGrid}
+        onAlign={alignSelectedNodes}
         onClose={() => {
           console.log('🔄 Closing grouping toolbar');
           setShowGroupingToolbar(false);
@@ -5632,10 +6219,27 @@ const edgeTypes = {
               </button>
               <button
                 onClick={() => {
+                  if (nodes.length || edges.length) pushToHistory();
+                  isUpdatingNodesLocallyRef.current = true;
+                  // Emit delete ops so collaborators + persisted state clear too
+                  nodes.forEach(n => emitOpRef.current?.({
+                    type: 'NODE_DELETE', nodeId: n.id,
+                    taskId: taskIdRef.current, subtaskId: subtaskIdRef.current
+                  }));
+                  edges.forEach(e => emitOpRef.current?.({
+                    type: 'EDGE_DELETE', edgeId: e.id,
+                    taskId: taskIdRef.current, subtaskId: subtaskIdRef.current
+                  }));
                   setNodes([]);
                   setEdges([]);
+                  // Wipe cached subtask canvas data so the sync effect can't restore cleared nodes
+                  if (selectedSubtask?.canvasData) {
+                    selectedSubtask.canvasData.nodes = [];
+                    selectedSubtask.canvasData.edges = [];
+                  }
                   elementSequenceRef.current = 0;
                   lastAddedNodeIdRef.current = null;
+                  setTimeout(() => { isUpdatingNodesLocallyRef.current = false; }, 0);
                   console.log('🧹 Canvas cleared - all elements and connections removed');
                   setShowClearConfirmation(false);
                 }}

@@ -1,6 +1,7 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import rollupNodePolyFill from 'rollup-plugin-node-polyfills';
+import { fileURLToPath } from 'node:url';
 
 export default defineConfig({
   plugins: [react()],
@@ -9,6 +10,10 @@ export default defineConfig({
       // Required for aws-amplify
       buffer: 'buffer',
       process: 'process/browser',
+      // html2canvas can't parse modern color functions (oklch/lab) that
+      // Chrome returns in computed styles — html2canvas-pro can. The shim
+      // keeps the CJS callable export shape html2pdf.js expects.
+      html2canvas: fileURLToPath(new URL('./src/html2canvas-shim.cjs', import.meta.url)),
     },
   },
   define: {

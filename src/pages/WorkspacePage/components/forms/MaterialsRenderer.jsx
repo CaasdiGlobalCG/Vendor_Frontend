@@ -3,6 +3,7 @@ import { Plus, Minus, Send, Package, AlertCircle, CheckCircle, Clock, Upload, Fi
 import { VendorContext } from '../../../../context/VendorContext';
 import config from '../../../../config/env';
 import { persistNodeDataPatch } from '../../utils/nodePersistence';
+import invoiceFetch from '../invoice/utils/invoiceFetch';
 import * as XLSX from 'xlsx';
 
 const MaterialsRenderer = ({ data, materialType, workspaceId, currentUser, nodeId }) => {
@@ -367,7 +368,7 @@ const MaterialsRenderer = ({ data, materialType, workspaceId, currentUser, nodeI
         const method = isUpdate ? 'PUT' : 'POST';
         const endpoint = isUpdate ? `/api/procurement-requests/${requestId}` : `/api/procurement-requests`;
 
-        const response = await fetch(endpoint, {
+        const response = await invoiceFetch(endpoint, {
           method: method,
           headers: {
             'Content-Type': 'application/json',
