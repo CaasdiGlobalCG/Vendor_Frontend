@@ -1,5 +1,6 @@
 import React from "react";
 import backgroundImage from "../assets/Rectangle 155.jpg";
+import operonLogo from "../assets/operon-symbol-white.png";
 
 const SidebarContent = () => {
   console.log('Background image path:', backgroundImage);
@@ -17,14 +18,16 @@ const SidebarContent = () => {
 
       {/* Foreground content */}
       <div className="relative z-10 flex flex-col justify-start px-8 pt-12">
-        <div className="text-white text-4xl font-normal mb-8 font-montserrat">
-          CG
-        </div>
+        <img
+          src={operonLogo}
+          alt="Operon"
+          className="h-10 w-auto mb-8 object-contain"
+        />
         <div className="max-w-md">
           <h1 className="text-2xl font-[100] text-white mb-1">Welcome To</h1>
           <div className="mb-2">
             <span className="text-4xl font-bold bg-gradient-to-r from-white to-[#24CA97] bg-clip-text text-transparent whitespace-nowrap">
-              Caasdi Global
+              Operon Softwares
             </span>
           </div>
 

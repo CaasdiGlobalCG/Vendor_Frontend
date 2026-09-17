@@ -2,6 +2,7 @@ import React, { createContext, useState, useEffect, useCallback, useRef } from "
 import config from "../config/env";
 import authFetch from "../utils/authFetch";
 import { isInviteAcceptRoute } from "../public-routes/inviteRoute";
+import { hasStartedVendorForm } from "../utils/vendorAuthRouting";
 
 export const VendorContext = createContext();
 const AUTH_TRANSITION_KEY = 'vendorAuthTransitionInProgress';
@@ -188,10 +189,18 @@ export const VendorProvider = ({ children }) => {
       };
 
       // Restore any in-progress form draft saved in a previous session
+      let savedDraftData = null;
       const savedDraft = localStorage.getItem(`vendorFormDraft_${email}`);
       if (savedDraft) {
-        try { setVendorData(JSON.parse(savedDraft)); } catch {}
+        try {
+          savedDraftData = JSON.parse(savedDraft);
+          setVendorData(savedDraftData);
+        } catch {}
       }
+
+      const hasStartedForm =
+        hasStartedVendorForm(meAttempt?.me?.data) || hasStartedVendorForm(savedDraftData);
+      hydratedUser.hasStartedForm = hasStartedForm;
 
       // On external access links the workspace page sets the PM/CAS identity;
       // don't clobber it with the ambient vendor identity.

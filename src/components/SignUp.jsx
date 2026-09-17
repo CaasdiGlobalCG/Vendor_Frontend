@@ -1,11 +1,36 @@
-import React, { useState, useContext } from "react";
+import React, { useState, useContext, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 
 import { Auth } from "aws-amplify";
 import { VendorContext } from "../context/VendorContext";
 import Alert from "./ui/Alert";
 import config from '../config/env';
+import operonLogo from "../assets/Platform-white-crop.png";
 import "../styles/SignUp.css";
+
+// Same right-panel carousel as the login page
+const carouselItems = [
+  {
+    title: "Stay in Control",
+    description: "Track progress, monitor performance, and ensure quality with our smart dashboards.",
+  },
+  {
+    title: "Real-time Insights",
+    description: "Get instant visibility into your projects with live updates and detailed analytics.",
+  },
+  {
+    title: "Seamless Collaboration",
+    description: "Work together with your team effortlessly with integrated communication tools.",
+  },
+  {
+    title: "Powerful Analytics",
+    description: "Leverage data-driven insights to make better business decisions faster.",
+  },
+  {
+    title: "Complete Integration",
+    description: "Connect all your tools and workflows in one unified platform.",
+  },
+];
 
 /**
  * SignUp
@@ -30,8 +55,16 @@ function SignUp() {
   const [showAlert, setShowAlert] = useState(false);
   const [alertType, setAlertType] = useState("error");
   const [loading, setLoading] = useState(false); // New loading state
+  const [currentCarouselIndex, setCurrentCarouselIndex] = useState(0);
   const navigate = useNavigate();
   const { setUser: setContextUser } = useContext(VendorContext);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentCarouselIndex((prevIndex) => (prevIndex + 1) % carouselItems.length);
+    }, 4000);
+    return () => clearInterval(interval);
+  }, []);
 
   // Basic email format validation
   const validateEmail = (email) => {
@@ -596,13 +629,32 @@ function SignUp() {
         </div>
 
         <div className="signup-info">
-          <span className="signup-brand">CG</span>
-          <h2 className="signup-info-title">Stay in Control</h2>
-          <p className="signup-info-text">
-            Track progress, monitor performance, and ensure quality with our smart dashboards.
-          </p>
-          <div className="signup-progress" aria-hidden="true">
-            <span />
+          <img className="signup-brand" src={operonLogo} alt="Operon" />
+
+          <div className="relative w-full h-36 overflow-hidden">
+            {carouselItems.map((item, index) => (
+              <div
+                key={index}
+                className={`absolute inset-0 flex flex-col items-center justify-center transition-all duration-700 ease-in-out ${
+                  index === currentCarouselIndex ? "opacity-100 scale-100" : "opacity-0 scale-95"
+                }`}
+              >
+                <h3 className="signup-info-title mb-2">{item.title}</h3>
+                <p className="signup-info-text">{item.description}</p>
+              </div>
+            ))}
+          </div>
+
+          <div className="flex gap-2">
+            {carouselItems.map((_, index) => (
+              <button
+                key={index}
+                type="button"
+                onClick={() => setCurrentCarouselIndex(index)}
+                className={`signup-dot-nav ${index === currentCarouselIndex ? "signup-dot-nav-active" : ""}`}
+                aria-label={`Go to slide ${index + 1}`}
+              />
+            ))}
           </div>
         </div>
       </div>

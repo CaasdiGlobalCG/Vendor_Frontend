@@ -46,15 +46,13 @@
     align-items: flex-start;
     justify-content: flex-start;
     position: absolute;
-    height: 96px;
+    height: 56px;
+    width: auto;
+    object-fit: contain;
     top: 10px;
     left: 769px;
-    color: #105a4a;
-    font-family: Poppins, var(--default-font-family);
-    font-size: 32px;
-    font-weight: 700;
-    line-height: 96px;
-    text-align: left;
+    /* Tint the white symbol to the original dark green (#105a4a) */
+    filter: brightness(0) saturate(100%) invert(24%) sepia(31%) saturate(1859%) hue-rotate(134deg) brightness(95%) contrast(92%);
     white-space: nowrap;
   }
   .role-whats-new {

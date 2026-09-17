@@ -38,7 +38,13 @@ export async function redirectToClientWithHandoff(options = {}) {
     sessionStorage.removeItem('bootRouted');
   } catch {}
 
+  const targetUrl = new URL(`${clientBase}/`);
+  targetUrl.searchParams.set('handoff', code);
+  // Marks an explicit role-selection pick so the client app sends the user to
+  // onboarding instead of bouncing them back to /role-selection.
+  if (options?.fromRoleSelection) targetUrl.searchParams.set('rolePick', '1');
+
   // Use assign() so the current vendor route is kept in browser history.
   // This makes the browser Back button return to the exact last vendor route.
-  window.location.assign(`${clientBase}/?handoff=${encodeURIComponent(code)}`);
+  window.location.assign(targetUrl.toString());
 }

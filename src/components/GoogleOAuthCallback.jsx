@@ -3,6 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { VendorContext } from '../context/VendorContext';
 import config from '../config/env';
 import { redirectToClientWithHandoff } from '../utils/handoffToClient';
+import { hasStartedVendorForm } from '../utils/vendorAuthRouting';
 
 /**
  * GoogleOAuthCallback
@@ -81,8 +82,10 @@ export default function GoogleOAuthCallback() {
           navigate('/Form1', { replace: true });
         } else if (String(status).toLowerCase() === 'pending' && hasFilledForm) {
           navigate('/Auditorapprove', { replace: true });
-        } else {
+        } else if (hasStartedVendorForm(v)) {
           navigate('/Form1', { replace: true });
+        } else {
+          navigate('/role-selection', { replace: true });
         }
       } catch (err) {
         console.error('GoogleOAuthCallback error:', err);

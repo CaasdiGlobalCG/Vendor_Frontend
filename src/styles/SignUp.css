@@ -6,7 +6,9 @@
   align-items: flex-start;
   justify-content: center;
   padding: clamp(24px, 5vh, 48px) clamp(16px, 6vw, 48px);
-  background: radial-gradient(circle at 50% 120%, #0a8a54 0%, #085c3c 35%, #021c12 65%, #000000 100%);
+  /* Same background as the login page for visual consistency */
+  background: url('../assets/loginbackground.png') center / cover no-repeat,
+    radial-gradient(circle at 50% 120%, #0a8a54 0%, #085c3c 35%, #021c12 65%, #000000 100%);
   font-family: "Montserrat", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
     Ubuntu, "Helvetica Neue", Helvetica, Arial, sans-serif;
   color: #e8f1ec;
@@ -24,10 +26,10 @@
 
 .signup-content {
   display: grid;
-  grid-template-columns: minmax(0, 500px) minmax(0, 280px);
-  gap: 96px;
+  grid-template-columns: minmax(0, 500px) minmax(0, 1fr);
+  gap: 48px;
   align-items: center;
-  width: min(960px, 100%);
+  width: min(1152px, 100%);
   margin: auto 0;
 }
 
@@ -308,16 +310,16 @@
   flex-direction: column;
   gap: 10px;
   color: rgba(232, 241, 236, 0.85);
-  justify-self: end;
+  justify-self: center;
   align-items: center;
   text-align: center;
 }
 
 .signup-brand {
-  font-size: 34px;
-  font-weight: 600;
-  letter-spacing: 0.12em;
-  color: #efe9e9;
+  height: 56px;
+  width: auto;
+  object-fit: contain;
+  margin-bottom: 16px;
 }
 
 .signup-info-title {
@@ -333,6 +335,26 @@
   line-height: 1.7;
   color: rgba(232, 241, 236, 0.65);
   max-width: 320px;
+}
+
+.signup-dot-nav {
+  height: 8px;
+  width: 8px;
+  border-radius: 999px;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  background: rgba(255, 255, 255, 0.4);
+  transition: all 0.3s ease;
+}
+
+.signup-dot-nav:hover {
+  background: rgba(255, 255, 255, 0.7);
+}
+
+.signup-dot-nav-active {
+  width: 32px;
+  background: #10b981;
 }
 
 .signup-progress {

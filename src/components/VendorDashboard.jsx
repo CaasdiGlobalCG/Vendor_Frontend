@@ -3,6 +3,7 @@ import { UserContext } from '../context/UserContext';
 import { VendorContext } from '../context/VendorContext';
 import { useLocation, useNavigate } from 'react-router-dom';
 import config from '../config/env';
+import { hasStartedVendorForm } from '../utils/vendorAuthRouting';
 
 export default function VendorDashboard() {
   const userContext = useContext(UserContext);
@@ -46,13 +47,13 @@ export default function VendorDashboard() {
 
         // Once the vendor has submitted, they should be in pending review.
         // Don't bounce them back to Form1 on refresh.
-        if (status === 'pending') {
+        if (status === 'pending' && hasFilledForm === true) {
           navigate('/Auditorapprove', { state: { role, email }, replace: true });
           return;
         }
 
         if (typeof hasFilledForm === 'boolean' && hasFilledForm === false) {
-          navigate('/Form1', { state: { role, email }, replace: true });
+          navigate(hasStartedVendorForm(vendor) ? '/Form1' : '/role-selection', { state: { role, email }, replace: true });
           return;
         }
         if (status && status !== 'approved') {

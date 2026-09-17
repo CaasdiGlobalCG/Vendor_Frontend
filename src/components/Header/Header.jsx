@@ -15,6 +15,7 @@ import { redirectToSalesWithHandoff } from '../../utils/handoffToSales';
 import GlobalSearchOverlay from "./GlobalSearchOverlay";
 import AiPromptPanel from "./AiPromptPanel";
 import AuthSkeletonScreen from "../loading/AuthSkeletonScreen";
+import operonLogo from "../../assets/operon-symbol-white.png";
 /**
  * Header
  *
@@ -657,8 +658,8 @@ export const Header = () => {
       {/* --- Mobile / Tablet Top Section --- */}
       <div className="flex flex-col gap-4 lg:hidden">
         <div className="flex items-center justify-between gap-4">
-          <NavLink to="/VendorDashboard" className="text-white text-2xl font-bold font-['Montserrat'] flex-shrink-0" aria-label="Homepage">
-            CG
+          <NavLink to="/VendorDashboard" className="flex-shrink-0" aria-label="Homepage">
+            <img src={operonLogo} alt="Operon" className="h-8 w-auto" />
           </NavLink>
 
           <button
@@ -706,8 +707,8 @@ export const Header = () => {
       <div className="relative hidden justify-between items-start gap-4 lg:flex"> {/* Changed items-center to items-start for mobile alignment */}
 
         {/* Logo (Stays Top-Left) */}
-        <NavLink to="/VendorDashboard" className={`${isOnDashboard ? 'text-white' : 'text-white'} text-2xl lg:text-[32px] font-bold font-['Montserrat'] flex-shrink-0`} aria-label="Homepage">
-          CG
+        <NavLink to="/VendorDashboard" className="flex-shrink-0" aria-label="Homepage">
+          <img src={operonLogo} alt="Operon" className="h-9 w-auto" />
         </NavLink>
 
         {/* Desktop Navigation (Hidden on Mobile) */}

@@ -5,6 +5,8 @@ import { Auth } from "aws-amplify";
 import config from '../../config/env';
 import { redirectToClientWithHandoff } from '../../utils/handoffToClient';
 import { VendorContext } from '../../context/VendorContext';
+import { getVendorDestination } from '../../utils/vendorAuthRouting';
+import operonLogo from '../../assets/operon-symbol-white.png';
 
 function RoleSelection() {
   const [role, setRole] = useState("");
@@ -32,8 +34,18 @@ function RoleSelection() {
         if (!response.ok) return; // Stay on this page if unauth
         const data = await response.json();
         // Email is derived from the verified token; do not persist identity in localStorage.
-        // Only navigate away if role was already selected previously
-        if (data?.roleSelected === true) {
+        // Only navigate away if role was already selected previously.
+        // suppressAutoRedirect=1 means the client app bounced this user back
+        // here — show the picker instead of handing off again (avoids a loop).
+        // vendorSwitchIntent means the user just clicked "Switch to Vendor" on
+        // the client app — don't hand them back to client either.
+        const suppressAutoRedirect = queryParams.get('suppressAutoRedirect') === '1';
+        let vendorSwitchIntent = false;
+        try {
+          vendorSwitchIntent = sessionStorage.getItem('vendorSwitchIntent') === '1';
+          if (vendorSwitchIntent) sessionStorage.removeItem('vendorSwitchIntent');
+        } catch {}
+        if (data?.roleSelected === true && !suppressAutoRedirect && !vendorSwitchIntent) {
           localStorage.setItem('roleSelected', 'true');
           const selectedRole = (data?.lastSelectedRole || data?.role || '').toLowerCase();
           if (selectedRole === "vendor") {
@@ -45,11 +57,27 @@ function RoleSelection() {
                 headers: { Authorization: `Bearer ${idToken}` },
               });
             } catch {}
+            let hydrated = null;
             try {
-              await hydrateCurrentUser?.();
+              hydrated = await hydrateCurrentUser?.();
             } catch {}
-            navigate("/Form1", { replace: true });
+            // Stay on role selection when the vendor hasn't started the KYC
+            // forms — they may want to switch to client instead of resuming.
+            const destination = hydrated?.user
+              ? getVendorDestination({
+                  status: hydrated.user.status,
+                  hasFilledForm: hydrated.user.hasFilledForm,
+                  isTeamMember: hydrated.user.isTeamMember === true,
+                  hasStartedForm: hydrated.user.hasStartedForm === true,
+                })
+              : null;
+            if (destination && destination !== '/role-selection') {
+              navigate(destination, { replace: true });
+            }
           } else if (selectedRole === "client") {
+            // Auto-handoff for a previously selected client role — NOT an
+            // explicit pick, so no fromRoleSelection flag. The client app
+            // still bounces to role-selection when onboarding wasn't started.
             try {
               await redirectToClientWithHandoff({ token: idToken });
             } catch (e) {
@@ -122,7 +150,7 @@ function RoleSelection() {
           navigate('/Form1', { replace: true });
         } else {
           try {
-            await redirectToClientWithHandoff({ token: idToken });
+            await redirectToClientWithHandoff({ token: idToken, fromRoleSelection: true });
           } catch (e) {
             console.error('RoleSelection: handoff redirect failed:', e);
             alert('Unable to switch to client right now. Please try again.');
@@ -154,7 +182,7 @@ function RoleSelection() {
         {/* Left: Brand / Value prop */}
         <div className="backdrop-blur bg-white/10 border border-white/20 rounded-2xl shadow-2xl p-8">
           <div className="flex items-center justify-between mb-6">
-            <span className="text-white text-xl font-semibold tracking-wide">CG</span>
+            <img src={operonLogo} alt="Operon" className="h-10 w-auto" />
             <span className="text-emerald-300 text-xs">what’s new?</span>
           </div>
           <h2 className="text-white text-2xl md:text-3xl font-semibold mb-3">Vendor and project management</h2>

@@ -417,20 +417,34 @@ function AppContent() {
         }
 
         // Refresh VendorContext from cookie-authenticated /api/vendor/me
+        let hydrated = null;
         try {
-          await hydrateCurrentUser();
+          hydrated = await hydrateCurrentUser();
         } catch {}
 
         sessionStorage.setItem(guardKey, 'true');
         if (d.email) sessionStorage.setItem('vendorHandoffEmail', d.email);
+        // Marker consumed by RoleSelection: an explicit client→vendor switch
+        // means vendor intent — suppress the lastSelectedRole=client handoff.
+        sessionStorage.setItem('vendorSwitchIntent', '1');
 
         // Remove handoff param from URL
         params.delete('handoff');
         navigate({ search: params.toString() }, { replace: true });
 
-        // Users without a vendor record must start onboarding instead of being
-        // sent through the vendor login loop.
-        navigate(d?.vendorRegistered ? '/VendorDashboard' : '/Form1', { replace: true });
+        // Route by actual vendor state: approved → dashboard, submitted →
+        // auditor-wait, anything else → KYC form. An explicit "Switch to
+        // Vendor" click means Form1, not role-selection.
+        const u = hydrated?.user;
+        const dest = u
+          ? getVendorDestination({
+              status: u.status,
+              hasFilledForm: u.hasFilledForm,
+              isTeamMember: u.isTeamMember === true,
+              hasStartedForm: u.hasStartedForm === true,
+            })
+          : (d?.vendorRegistered ? '/VendorDashboard' : '/Form1');
+        navigate(dest === '/role-selection' ? '/Form1' : dest, { replace: true });
       } catch (e) {
         console.error('Vendor App: handoff vendor-exchange error', e);
       } finally {
@@ -561,6 +575,7 @@ function LoginRouteGate({ children }) {
       status: currentUser?.status,
       hasFilledForm: currentUser?.hasFilledForm,
       isTeamMember: currentUser?.isTeamMember === true,
+      hasStartedForm: currentUser?.hasStartedForm === true,
     });
     navigate(destination, { replace: true });
   }, [navigate, currentUser, isHydratingUser, cameFromProtectedRoute]);
@@ -590,7 +605,6 @@ function LoginRouteGate({ children }) {
  */
 function AuthVerifiedGuard({ children }) {
   const navigate = useNavigate();
-  const { isHydratingUser } = useContext(VendorContext);
   const [checking, setChecking] = useState(true);
 
   useEffect(() => {
@@ -606,7 +620,11 @@ function AuthVerifiedGuard({ children }) {
     return () => { cancelled = true; };
   }, [navigate]);
 
-  if (checking || isHydratingUser) {
+  // Gate only on the Cognito check — NOT isHydratingUser. Rendering the
+  // skeleton while hydrating unmounts the wrapped page; RoleSelection's own
+  // effect calls hydrateCurrentUser(), which would toggle isHydratingUser and
+  // remount the page in an endless skeleton loop when it needs to stay here.
+  if (checking) {
     return <AuthSkeletonScreen message="Verifying your session..." />;
   }
 
@@ -733,6 +751,7 @@ function VendorGuard({ children }) {
       status: currentUser?.status,
       hasFilledForm: hasFilledFormRaw,
       isTeamMember: currentUser?.isTeamMember === true,
+      hasStartedForm: currentUser?.hasStartedForm === true,
     });
 
     if (destination !== '/VendorDashboard') {

@@ -6,6 +6,7 @@ import { VendorContext } from "../context/VendorContext";
 import { UserContext } from "../context/UserContext";
 import Alert from "./ui/Alert";
 import background from "../assets/loginbackground.png";
+import operonLogo from "../assets/Platform-white-crop.png";
 import { Eye, EyeOff } from "lucide-react";
 import config from "../config/env";
 import PasskeyMFAVerification from "./PasskeyMFAVerification";
@@ -98,7 +99,7 @@ function Login() {
   const togglePasswordVisibility = () => setShowPassword((v) => !v);
   const handleSignUpRedirect = () => navigate("/signup");
 
-  const routeVendor = ({ status, hasFilledForm, isTeamMember }) => {
+  const routeVendor = ({ status, hasFilledForm, isTeamMember, hasStartedForm }) => {
     if (isRejectedVendor(status)) {
       setAlertMessage("Your vendor application has been rejected. Please contact support.");
       setAlertType("error");
@@ -106,7 +107,7 @@ function Login() {
     }
 
     navigate(
-      getVendorDestination({ status, hasFilledForm, isTeamMember }),
+      getVendorDestination({ status, hasFilledForm, isTeamMember, hasStartedForm }),
       { replace: true }
     );
   };
@@ -366,7 +367,7 @@ function Login() {
         return;
       }
 
-      routeVendor({ status: vendorUser.status, hasFilledForm: vendorUser.hasFilledForm, isTeamMember: vendorUser.isTeamMember === true || verifyIsTeamMember });
+      routeVendor({ status: vendorUser.status, hasFilledForm: vendorUser.hasFilledForm, isTeamMember: vendorUser.isTeamMember === true || verifyIsTeamMember, hasStartedForm: vendorUser.hasStartedForm === true });
     } catch (error) {
       console.error("Error logging in:", error);
 
@@ -420,6 +421,7 @@ function Login() {
           status: hydrated.user.status,
           hasFilledForm: hydrated.user.hasFilledForm,
           isTeamMember: hydrated.user.isTeamMember === true,
+          hasStartedForm: hydrated.user.hasStartedForm === true,
         });
       } else {
         navigate("/Form1", { replace: true });
@@ -490,6 +492,7 @@ function Login() {
           status: hydrated.user.status,
           hasFilledForm: hydrated.user.hasFilledForm,
           isTeamMember: hydrated.user.isTeamMember === true,
+          hasStartedForm: hydrated.user.hasStartedForm === true,
         });
       } else {
         console.error('[Login] Failed to hydrate user after TOTP success');
@@ -730,26 +733,24 @@ function Login() {
           </div>
         </div>
 
-        <div className="hidden lg:flex relative h-96 flex-col items-center justify-center p-6 text-center text-white xl:h-[28rem]">
-          <div className="text-4xl font-extrabold mb-0">CG</div>
+        <div className="hidden lg:flex relative flex-col items-center justify-center p-6 text-center text-white">
+          <img src={operonLogo} alt="Operon" className="h-14 w-auto mb-6" />
 
-          <div className="relative w-full max-w-sm flex-1 flex flex-col items-center justify-center overflow-hidden">
-            <div className="absolute inset-0 flex flex-col items-center justify-center">
-              {carouselItems.map((item, index) => (
-                <div
-                  key={index}
-                  className={`absolute inset-0 flex flex-col items-center justify-center transition-all duration-700 ease-in-out ${
-                    index === currentCarouselIndex ? "opacity-100 scale-100" : "opacity-0 scale-95"
-                  }`}
-                >
-                  <h3 className="text-2xl font-semibold mb-3">{item.title}</h3>
-                  <p className="text-gray-300/85 max-w-sm text-sm leading-relaxed">{item.description}</p>
-                </div>
-              ))}
-            </div>
+          <div className="relative w-full max-w-sm h-36 overflow-hidden">
+            {carouselItems.map((item, index) => (
+              <div
+                key={index}
+                className={`absolute inset-0 flex flex-col items-center justify-center transition-all duration-700 ease-in-out ${
+                  index === currentCarouselIndex ? "opacity-100 scale-100" : "opacity-0 scale-95"
+                }`}
+              >
+                <h3 className="text-2xl font-semibold mb-3">{item.title}</h3>
+                <p className="text-gray-300/85 max-w-sm text-sm leading-relaxed">{item.description}</p>
+              </div>
+            ))}
           </div>
 
-          <div className="absolute bottom-6 flex gap-2 z-20">
+          <div className="mt-6 flex gap-2">
             {carouselItems.map((_, index) => (
               <button
                 key={index}

@@ -3,6 +3,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import "../Styles/RoleSelection.css"; // Assuming this is your CSS file
 import { Auth } from "aws-amplify";
 import config from '../config/env';
+import operonLogo from "../assets/operon-symbol-white.png";
 function RoleSelection() {
   const [role, setRole] = useState("");
   const navigate = useNavigate();
@@ -110,7 +111,7 @@ function RoleSelection() {
 
       {/* Right Section (Form Content) */}
       <div className="role-right-section">
-        <span className="role-cg">CG</span>
+        <img className="role-cg" src={operonLogo} alt="Operon" />
         <div className="entire-selection">
           <span className="role-vendor-client">Are you a vendor or client?</span>
           <span className="role-specify-role">
