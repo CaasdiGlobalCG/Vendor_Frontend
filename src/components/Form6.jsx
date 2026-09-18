@@ -4,12 +4,19 @@ import { Auth } from 'aws-amplify';
 import { VendorContext } from '../context/VendorContext';
 import StepIndicator from './StepIndicator';
 import SidebarContent from './SidebarContent';
+import ResubmitBanner from './ResubmitBanner';
 import config from '../config/env';
+import { resolveUserEmail } from '../utils/resolveUserIdentity';
+import { isResubmitMode, isSectionEditable } from '../utils/resubmitPermissions';
 
 export default function Form6() {
   const navigate = useNavigate();
   const vendorContext = useContext(VendorContext);
   const { vendorData, setVendorData, currentUser } = vendorContext;
+  // Resubmit gating: Form6 renders the 'additional' KYC section. When the auditor
+  // requested resubmission and didn't grant this section, the fields are read-only.
+  const isResubmit = isResubmitMode(currentUser);
+  const sectionReadOnly = isResubmit && !isSectionEditable(currentUser, 'additional');
 
   const [formData, setFormData] = useState({
     clientReferences: vendorData.additionalDetails.clientReferences || '',
@@ -87,6 +94,19 @@ export default function Form6() {
       || vendorContext.currentUser?.email
       || handoffEmail;
 
+    // Cookie-auth fallback — handoff logins have no Cognito/localStorage token,
+    // but the session cookie still authenticates the API
+    // (/api/vendor/me → vendorHandoffEmail → /api/auth/verify).
+    if (!userEmail) {
+      try {
+        userEmail = await resolveUserEmail();
+      } catch (error) {
+        console.warn('Form6: resolveUserEmail fallback failed', error);
+      }
+    }
+
+    // Legacy Cognito session last — it may belong to a different account if the
+    // user arrived via client→vendor handoff without a fresh Cognito login.
     if (!userEmail) {
       try {
         const cognitoUser = await Auth.currentAuthenticatedUser();
@@ -124,6 +144,7 @@ export default function Form6() {
       const response = await fetch(`${config.VENDOR_BACKEND_URL}/api/vendor/submit`, {
         method: 'POST',
         body: formDataToSend,
+        credentials: 'include',
       });
 
       const result = await response.json();
@@ -165,7 +186,11 @@ export default function Form6() {
             Additional Details
           </h1>
 
+          <ResubmitBanner sectionKey="additional" />
+
           <form onSubmit={handleSubmit} className="max-w-none space-y-8">
+            <div className={sectionReadOnly ? 'pointer-events-none select-none opacity-60' : undefined}>
+            <fieldset disabled={sectionReadOnly} className="contents space-y-8">
             {/* Form Fields */}
             <div className="space-y-6">
               {/* Client References */}
@@ -261,6 +286,8 @@ export default function Form6() {
                 </div>
               </div>
             </div>
+            </fieldset>
+            </div>
 
             {/* Navigation Buttons */}
             <div className="flex justify-end space-x-4 pt-6">
@@ -281,7 +308,7 @@ export default function Form6() {
                     : 'text-white bg-gradient-to-r from-[#0F5848] to-[#21BE9C] hover:from-[#0F5848]/90 hover:to-[#21BE9C]/90'
                 }`}
               >
-                {isSubmitting ? 'Submitting...' : 'Submit'}
+                {isSubmitting ? 'Submitting...' : (isResubmit ? 'Resubmit' : 'Submit')}
               </button>
             </div>
           </form>

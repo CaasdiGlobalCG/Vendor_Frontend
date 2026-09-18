@@ -2,6 +2,7 @@ import React, { useState, useRef } from 'react';
 import { Download, Send, Settings, Edit2, X, Upload } from 'lucide-react';
 import html2pdf from 'html2pdf.js';
 import StandardPreview from '../shared/StandardPreview.jsx';
+import operonLogo from '../../../../../assets/operon-symbol-black.png';
 
 export default function QuotesPreviewPanel({ quotes, selectedQuoteId, onSelectQuote, onClose }) {
   const [selectedId, setSelectedId] = useState(selectedQuoteId || (quotes[0]?.id || quotes[0]?.quotationId));
@@ -54,7 +55,7 @@ export default function QuotesPreviewPanel({ quotes, selectedQuoteId, onSelectQu
 
   const handleEditCompanyClick = () => {
     setEditedCompany({
-      logo: 'https://dummyimage.com/80x80/0d6b5c/ffffff.png&text=CG',
+      logo: operonLogo,
       name: 'Caasdi Ventures LLP',
       address: '262, 80 FEET ROAD, SRINIVASANAGAR, Banashankari Stage 1, Bengaluru, Karnataka, 560050',
       gstin: '29AATFC6608I2ZB',
@@ -195,7 +196,7 @@ export default function QuotesPreviewPanel({ quotes, selectedQuoteId, onSelectQu
               <StandardPreview
                 quote={selectedQuote}
                 company={selectedQuote._customCompanyDetails || {
-                  logo: 'https://dummyimage.com/80x80/0d6b5c/ffffff.png&text=CG',
+                  logo: operonLogo,
                   name: 'Caasdi Ventures LLP',
                   address: '262, 80 FEET ROAD, SRINIVASANAGAR, Banashankari Stage 1, Bengaluru, Karnataka, 560050',
                   gstin: '29AATFC6608I2ZB',

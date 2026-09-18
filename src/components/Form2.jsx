@@ -4,11 +4,14 @@ import { VendorContext } from "../context/VendorContext";
 import { UserContext } from "../context/UserContext";
 import { useNavigate } from "react-router-dom";
 import { uploadFileToS3, deleteFileFromS3 } from "../utils/fileUpload";
+import { resolveUserEmail } from "../utils/resolveUserIdentity";
 import { validateGSTIN } from "../utils/gstinValidation";
 import { validatePAN } from "../utils/panValidation";
 import StepIndicator from "./StepIndicator";
 import SidebarContent from "./SidebarContent";
 import SearchableSelect from "./SearchableSelect";
+import ResubmitBanner from "./ResubmitBanner";
+import { isResubmitMode, isSectionEditable } from "../utils/resubmitPermissions";
 import { BUSINESS_TYPES, FLAT_BUSINESS_TYPES, INDUSTRY_TYPES, FLAT_INDUSTRY_TYPES } from "../constants/businessIndustryTypes";
 
 export default function Form2() {
@@ -16,8 +19,14 @@ export default function Form2() {
   const { vendorData, setVendorData, currentUser: vendorContextUser } = useContext(VendorContext);
   const { currentUser } = useContext(UserContext) || {};
   const currentYear = new Date().getFullYear();
+  // Resubmit gating: Form2 renders the 'company' KYC section. When the auditor
+  // requested resubmission and didn't grant this section, the fields are read-only.
+  const sectionReadOnly = isResubmitMode(vendorContextUser) && !isSectionEditable(vendorContextUser, 'company');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [userEmail, setUserEmail] = useState(null);
+  // Drafts are keyed by email — hydrated/handoff users have no stable `id`,
+  // so id-keyed drafts would collide across accounts.
+  const draftEmail = vendorContextUser?.email || userEmail || currentUser?.email;
 
   const [formData, setFormData] = useState({
     businessType: vendorData.companyDetails.businessType || "",
@@ -44,30 +53,11 @@ export default function Form2() {
           return;
         }
 
-        // Fallback: Fetch from API
-        const token = localStorage.getItem('authToken');
-        if (!token) {
-          console.log('[FORM2_NO_TOKEN] No auth token found');
-          return;
-        }
-
-        const response = await fetch(`${window.location.origin}/api/vendor/me`, {
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
-          },
-          credentials: 'include'
-        });
-
-        if (response.ok) {
-          const data = await response.json();
-          const fetchedEmail = data?.data?.email || data?.data?.vendorDetails?.primaryContactEmail;
-          if (fetchedEmail) {
-            console.log('[FORM2_USER_FROM_API]', fetchedEmail);
-            setUserEmail(fetchedEmail);
-          }
-        } else {
-          console.log('[FORM2_API_FETCH_FAILED]', response.status);
+        // Fallback: cookie-authenticated API (/api/vendor/me → /api/auth/verify)
+        const fetchedEmail = await resolveUserEmail();
+        if (fetchedEmail) {
+          console.log('[FORM2_USER_FROM_API]', fetchedEmail);
+          setUserEmail(fetchedEmail);
         }
       } catch (error) {
         console.error('[FORM2_FETCH_USER_ERROR]', error);
@@ -76,24 +66,29 @@ export default function Form2() {
 
     fetchUserEmail();
 
-    if (currentUser) {
-      const saved = localStorage.getItem(`form2Data_${currentUser.id}`);
+    if (draftEmail) {
+      const saved = localStorage.getItem(`form2Data_${draftEmail}`);
       if (saved) {
         try {
           const parsed = JSON.parse(saved);
-          setFormData(parsed);
-          setVendorData(prev => ({ ...prev, companyDetails: parsed }));
+          if (parsed?._owner === draftEmail && parsed?.data) {
+            setFormData(parsed.data);
+            setVendorData(prev => ({ ...prev, companyDetails: parsed.data }));
+          } else {
+            // Legacy/foreign draft — could carry another account's data; discard.
+            localStorage.removeItem(`form2Data_${draftEmail}`);
+          }
         } catch {}
       }
     }
-  }, [vendorContextUser, currentUser]);
+  }, [vendorContextUser, currentUser, draftEmail]);
 
   // Auto-save on every change
   useEffect(() => {
-    if (currentUser) {
-      localStorage.setItem(`form2Data_${currentUser.id}`, JSON.stringify(formData));
+    if (draftEmail) {
+      localStorage.setItem(`form2Data_${draftEmail}`, JSON.stringify({ _owner: draftEmail, data: formData }));
     }
-  }, [formData, currentUser]);
+  }, [formData, draftEmail]);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -247,8 +242,8 @@ export default function Form2() {
   };
 
   const handleNext = () => {
-    if (currentUser) {
-      localStorage.setItem(`form2Data_${currentUser.id}`, JSON.stringify(formData));
+    if (draftEmail) {
+      localStorage.setItem(`form2Data_${draftEmail}`, JSON.stringify({ _owner: draftEmail, data: formData }));
     }
     setVendorData(prev => ({
       ...prev,
@@ -340,7 +335,11 @@ export default function Form2() {
             Business Details
           </h1>
 
+          <ResubmitBanner sectionKey="company" />
+
           <form onSubmit={handleSubmit} className="max-w-none space-y-8">
+            <div className={sectionReadOnly ? 'pointer-events-none select-none opacity-60' : undefined}>
+            <fieldset disabled={sectionReadOnly} className="contents space-y-8">
             {/* Business Information Section */}
             <div className="space-y-6">
               <div className="flex flex-col md:flex-row items-start gap-6">
@@ -489,6 +488,8 @@ export default function Form2() {
                   }
                 </div>
               </div>
+            </div>
+            </fieldset>
             </div>
 
             {/* Navigation Buttons */}

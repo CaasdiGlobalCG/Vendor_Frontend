@@ -11,6 +11,7 @@ import 'react-date-range/dist/styles.css';
 import 'react-date-range/dist/theme/default.css';
 import { format, subDays, addDays } from 'date-fns';
 import { VendorContext } from '../../../context/VendorContext';
+import operonLogo from '../../../assets/operon-symbol-black.png';
 import { useNotifications } from '../../../hooks/useNotifications';
 import config from '../../../config/env';
 import CustomersPage from './invoice/customers/CustomersPage';
@@ -787,8 +788,8 @@ const InvoiceToolReplica = ({ onClose, workspaceId, workspaceName, selectedTask,
         {/* Header */}
         <div className="p-6 border-b border-teal-700">
           <div className="flex items-center">
-            <div className="w-8 h-8 bg-teal-600 rounded-lg flex items-center justify-center mr-3">
-              <span className="text-white font-bold text-sm">CG</span>
+            <div className="w-8 h-8 bg-white rounded-lg flex items-center justify-center mr-3 p-1">
+              <img src={operonLogo} alt="Operon" className="w-full h-full object-contain" />
             </div>
             <span className="text-lg font-semibold">Invoice</span>
           </div>

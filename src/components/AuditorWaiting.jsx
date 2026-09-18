@@ -343,6 +343,49 @@ function ApprovedPanel() {
   );
 }
 
+function ResubmitRequestedPanel({ permissions, remarks, onEditSubmission }) {
+  const SECTION_LABELS = {
+    vendor: "Vendor Details",
+    company: "Business Details",
+    service: "Product & Service",
+    bank: "Bank Details",
+    compliance: "Compliance & Certifications",
+    additional: "Additional Details",
+  };
+  const granted = Object.keys(permissions || {}).filter((k) => permissions[k]?.granted);
+
+  return (
+    <div className="text-center mt-12 max-w-xl mx-auto">
+      <div className="text-5xl mb-4">📝</div>
+      <h2 className="text-2xl font-semibold text-amber-600">Changes Requested</h2>
+      <p className="text-gray-500 mt-3 text-sm leading-relaxed">
+        The auditor reviewed your KYC submission and requested changes to the sections below.
+        Update them and resubmit — all other sections remain read-only.
+      </p>
+      {granted.length > 0 && (
+        <div className="mt-4 flex flex-wrap justify-center gap-2">
+          {granted.map((key) => (
+            <span key={key} className="text-xs px-3 py-1 rounded-full bg-amber-100 text-amber-700 font-medium">
+              {SECTION_LABELS[key] || key}
+            </span>
+          ))}
+        </div>
+      )}
+      {remarks && (
+        <div className="mt-4 bg-amber-50 rounded-lg p-4 text-sm text-amber-800 text-left">
+          <strong>Auditor note:</strong> {remarks}
+        </div>
+      )}
+      <button
+        onClick={onEditSubmission}
+        className="mt-6 px-8 py-3 rounded-lg bg-[#0F5848] text-white text-sm font-medium hover:bg-[#0F5848]/90 transition"
+      >
+        Update submission
+      </button>
+    </div>
+  );
+}
+
 function RejectedPanel({ reason }) {
   return (
     <div className="text-center mt-12 max-w-xl mx-auto">
@@ -438,6 +481,15 @@ export default function AuditorWaiting() {
       case "pending":
       case "in_review":
         return <OnlineKYCPendingPanel />;
+
+      case "resubmit_requested":
+        return (
+          <ResubmitRequestedPanel
+            permissions={currentUser?.resubmitPermissions}
+            remarks={currentUser?.resubmitRemarks}
+            onEditSubmission={() => navigate("/Form1")}
+          />
+        );
 
       case "physical_kyc_scheduled":
         return (

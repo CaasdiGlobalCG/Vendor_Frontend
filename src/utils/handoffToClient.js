@@ -40,9 +40,10 @@ export async function redirectToClientWithHandoff(options = {}) {
 
   const targetUrl = new URL(`${clientBase}/`);
   targetUrl.searchParams.set('handoff', code);
-  // Marks an explicit role-selection pick so the client app sends the user to
-  // onboarding instead of bouncing them back to /role-selection.
-  if (options?.fromRoleSelection) targetUrl.searchParams.set('rolePick', '1');
+  // Every call to this function is an explicit "switch to client" action —
+  // mark the pick so the client app sends the user to client onboarding when
+  // they haven't completed it, instead of bouncing back to /role-selection.
+  targetUrl.searchParams.set('rolePick', '1');
 
   // Use assign() so the current vendor route is kept in browser history.
   // This makes the browser Back button return to the exact last vendor route.

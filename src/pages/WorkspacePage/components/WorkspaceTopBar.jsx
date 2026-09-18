@@ -21,6 +21,7 @@ import {
 } from 'lucide-react';
 import config from '../../../config/env';
 import { Auth } from 'aws-amplify';
+import operonLogo from '../../../assets/operon-symbol-black.png';
 
 const WorkspaceTopBar = ({
   workspace,
@@ -157,8 +158,8 @@ const WorkspaceTopBar = ({
       </button>
 
       {/* Brand Mark */}
-      <div className="ws-mark" title="Caasdi Global">
-        CG
+      <div className="ws-mark ws-mark-img" title="Operon Softwares">
+        <img src={operonLogo} alt="Operon" />
       </div>
 
       {/* Title & Role crumb */}

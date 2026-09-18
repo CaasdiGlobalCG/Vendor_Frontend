@@ -416,14 +416,16 @@ function AppContent() {
           return;
         }
 
+        // Stash the registered email first — hydrateCurrentUser() uses it to
+        // keep the session alive when /api/vendor/me 404s (no vendor record yet).
+        if (d.email) sessionStorage.setItem('vendorHandoffEmail', d.email);
+        sessionStorage.setItem(guardKey, 'true');
+
         // Refresh VendorContext from cookie-authenticated /api/vendor/me
         let hydrated = null;
         try {
           hydrated = await hydrateCurrentUser();
         } catch {}
-
-        sessionStorage.setItem(guardKey, 'true');
-        if (d.email) sessionStorage.setItem('vendorHandoffEmail', d.email);
         // Marker consumed by RoleSelection: an explicit client→vendor switch
         // means vendor intent — suppress the lastSelectedRole=client handoff.
         sessionStorage.setItem('vendorSwitchIntent', '1');

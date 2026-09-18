@@ -21,6 +21,7 @@ import { VendorContext } from '../../../../../context/VendorContext.jsx';
 import config from "../../../../../config/env";
 import StandardPreview from '../shared/StandardPreview.jsx';
 import invoiceFetch from '../utils/invoiceFetch';
+import operonLogo from '../../../../../assets/operon-symbol-black.png';
 
 const PurchaseOrdersPage = ({ workspaceId, workspaceName, selectedTask, selectedSubtask, sourceQuote, onSourceConsumed, onConvertToInvoice }) => {
   const { currentUser } = useContext(VendorContext);
@@ -701,7 +702,7 @@ const PurchaseOrdersPage = ({ workspaceId, workspaceName, selectedTask, selected
                   highlightedQuote.id
                 }
                 company={{
-                  logo: 'https://dummyimage.com/80x80/0d6b5c/ffffff.png&text=CG',
+                  logo: operonLogo,
                   name: currentUser?.vendorName || currentUser?.name || 'Vendor',
                   address: currentUser?.vendorAddress || '',
                   gstin: currentUser?.gstin || '',

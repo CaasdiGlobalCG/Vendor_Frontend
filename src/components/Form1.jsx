@@ -3,8 +3,11 @@ import { useNavigate } from "react-router-dom";
 import { VendorContext } from "../context/VendorContext";
 import { UserContext } from "../context/UserContext";
 import { getStates, getCitiesByState } from "../utils/statesAndCities";
+import { resolveUserIdentity } from "../utils/resolveUserIdentity";
+import { isResubmitMode, isSectionEditable } from "../utils/resubmitPermissions";
 import StepIndicator from "./StepIndicator";
 import SidebarContent from "./SidebarContent";
+import ResubmitBanner from "./ResubmitBanner";
 
 function Form1() {
   const navigate = useNavigate();
@@ -12,8 +15,14 @@ function Form1() {
   const { vendorData, setVendorData, currentUser: vendorContextUser } = vendorContext;
   const { currentUser: userContextUser } = useContext(UserContext) || {};
   
-  // Use either context's user
-  const currentUser = vendorContextUser || userContextUser;
+  // Only the vendor-context (cookie session) user is trusted for identity —
+  // the UserContext Cognito session may belong to a different, stale account
+  // when arriving via client→vendor handoff.
+  const currentUser = vendorContextUser;
+
+  // Resubmit gating: Form1 renders the 'vendor' KYC section. When the auditor
+  // requested resubmission and didn't grant this section, the fields are read-only.
+  const sectionReadOnly = isResubmitMode(currentUser) && !isSectionEditable(currentUser, 'vendor');
 
   const PHONE_RULES = {
     "+91": { maxLength: 10, label: "India (+91)" },
@@ -48,24 +57,78 @@ function Form1() {
   const [showPhoneWarning, setShowPhoneWarning] = useState(false);
   const [states, setStates] = useState([]);
   const [cities, setCities] = useState([]);
+  // Resolved user identity (context first, /api/vendor/me cookie-auth fallback —
+  // handoff logins have no localStorage authToken).
+  const [userProfile, setUserProfile] = useState(null);
 
-  // Load saved data from localStorage when component mounts
+  // Resolve email/name for prefill: context first, then cookie-authenticated API.
   useEffect(() => {
-    if (currentUser) {
-      const userKey = `user-${currentUser.id}-form1Data`;
-      const savedData = localStorage.getItem(userKey);
-      if (savedData) {
-        setFormData(JSON.parse(savedData));
+    const resolveUser = async () => {
+      const ctx = vendorContextUser;
+      if (ctx?.email || ctx?.name) {
+        setUserProfile({ email: ctx.email || '', name: ctx.name || '' });
+        return;
       }
+      // Cookie-authenticated API (/api/vendor/me → /api/auth/verify)
+      const identity = await resolveUserIdentity();
+      if (identity.email || identity.name) setUserProfile(identity);
+    };
+    resolveUser();
+  }, [vendorContextUser]);
+
+  // Prefill name/email; the session email always wins — a draft carrying a
+  // different account's email is foreign and the whole form resets.
+  useEffect(() => {
+    if (!userProfile) return;
+    const [first, ...rest] = (userProfile.name || '').split(' ');
+    setFormData((prev) => {
+      if (userProfile.email && prev.organizationMailId && prev.organizationMailId !== userProfile.email) {
+        setVendorData((v) => ({ ...v, vendorDetails: {} }));
+        return {
+          vendorName: '', firstName: '', lastName: '', countryCode: '+91',
+          phoneNumber: '', organizationMailId: userProfile.email,
+          address: '', state: '', city: '', pincode: '',
+        };
+      }
+      return {
+        ...prev,
+        firstName: prev.firstName || first || '',
+        lastName: prev.lastName || rest.join(' ') || '',
+        organizationMailId: userProfile.email || prev.organizationMailId || '',
+      };
+    });
+  }, [userProfile]);
+
+  // Drafts are keyed by email — hydrated/handoff users have no stable `id`,
+  // so id-keyed drafts would collide across accounts.
+  const draftEmail = currentUser?.email || userProfile?.email || null;
+
+  // Load saved data from localStorage when component mounts.
+  // Drafts are wrapped with an _owner marker — anything without it (legacy or
+  // written under a different account) is discarded.
+  useEffect(() => {
+    if (!draftEmail) return;
+    const userKey = `user-${draftEmail}-form1Data`;
+    const savedData = localStorage.getItem(userKey);
+    if (!savedData) return;
+    try {
+      const parsed = JSON.parse(savedData);
+      if (parsed?._owner === draftEmail && parsed?.data) {
+        setFormData(parsed.data);
+      } else {
+        localStorage.removeItem(userKey);
+      }
+    } catch {
+      localStorage.removeItem(userKey);
     }
-  }, [currentUser]);
+  }, [draftEmail]);
 
   // Auto-save form data on every change so it persists across sessions
   useEffect(() => {
-    if (currentUser) {
-      localStorage.setItem(`user-${currentUser.id}-form1Data`, JSON.stringify(formData));
+    if (draftEmail) {
+      localStorage.setItem(`user-${draftEmail}-form1Data`, JSON.stringify({ _owner: draftEmail, data: formData }));
     }
-  }, [formData, currentUser]);
+  }, [formData, draftEmail]);
 
   // Load states on component mount
   useEffect(() => {
@@ -133,8 +196,8 @@ function Form1() {
 
   const handleNext = () => {
     setIsSubmitting(true);
-    if (currentUser) {
-      localStorage.setItem(`user-${currentUser.id}-form1Data`, JSON.stringify(formData));
+    if (draftEmail) {
+      localStorage.setItem(`user-${draftEmail}-form1Data`, JSON.stringify({ _owner: draftEmail, data: formData }));
     }
     setVendorData((prev) => ({
       ...prev,
@@ -249,7 +312,11 @@ function Form1() {
             Vendor Details
           </h1>
 
+          <ResubmitBanner sectionKey="vendor" />
+
           <form onSubmit={handleSubmit} className="max-w-none space-y-8">
+            <div className={sectionReadOnly ? 'pointer-events-none select-none opacity-60' : undefined}>
+            <fieldset disabled={sectionReadOnly} className="contents space-y-8">
             {/* Vendor Information Section */}
             <div className="space-y-6">
               <div className="flex flex-col md:flex-row items-start gap-6">
@@ -412,6 +479,8 @@ function Form1() {
                 </div>
               </div>
           </div>
+            </fieldset>
+            </div>
 
             {/* Save Changes Indicator */}
             {showSaveIndicator && (

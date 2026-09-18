@@ -4,14 +4,23 @@ import { VendorContext } from "../context/VendorContext";
 import { UserContext } from "../context/UserContext";
 import { useNavigate } from "react-router-dom";
 import { uploadFileToS3, deleteFileFromS3 } from "../utils/fileUpload";
+import { resolveUserEmail } from "../utils/resolveUserIdentity";
 import StepIndicator from "./StepIndicator";
 import SidebarContent from "./SidebarContent";
+import ResubmitBanner from "./ResubmitBanner";
+import { isResubmitMode, isSectionEditable } from "../utils/resubmitPermissions";
 
 export default function Form5() {
   const navigate = useNavigate();
   const { vendorData, setVendorData, currentUser: vendorContextUser } = useContext(VendorContext);
   const { currentUser } = useContext(UserContext) || {};
+  // Resubmit gating: Form5 renders the 'compliance' KYC section. When the auditor
+  // requested resubmission and didn't grant this section, the fields are read-only.
+  const sectionReadOnly = isResubmitMode(vendorContextUser) && !isSectionEditable(vendorContextUser, 'compliance');
   const [userEmail, setUserEmail] = useState(null);
+  // Drafts are keyed by email — hydrated/handoff users have no stable `id`,
+  // so id-keyed drafts would collide across accounts.
+  const draftEmail = vendorContextUser?.email || userEmail || currentUser?.email;
 
   const vendorType = vendorData.serviceProductDetails?.vendorType || "";
   const isMFG = vendorType === "manufacturer" || vendorType === "both";
@@ -47,30 +56,13 @@ export default function Form5() {
           return;
         }
 
-        // Fallback: Fetch from API
-        const token = localStorage.getItem('authToken');
-        if (!token) {
-          console.log('[FORM5_NO_TOKEN] No auth token found');
-          return;
-        }
-
-        const response = await fetch(`${window.location.origin}/api/vendor/me`, {
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
-          },
-          credentials: 'include'
-        });
-
-        if (response.ok) {
-          const data = await response.json();
-          const fetchedEmail = data?.data?.email || data?.data?.vendorDetails?.primaryContactEmail;
-          if (fetchedEmail) {
-            console.log('[FORM5_USER_FROM_API]', fetchedEmail);
-            setUserEmail(fetchedEmail);
-          }
+        // Fallback: cookie-authenticated API (/api/vendor/me → /api/auth/verify)
+        const fetchedEmail = await resolveUserEmail();
+        if (fetchedEmail) {
+          console.log('[FORM5_USER_FROM_API]', fetchedEmail);
+          setUserEmail(fetchedEmail);
         } else {
-          console.log('[FORM5_API_FETCH_FAILED]', response.status);
+          console.log('[FORM5_API_FETCH_FAILED] no email resolved');
         }
       } catch (error) {
         console.error('[FORM5_FETCH_USER_ERROR]', error);
@@ -78,25 +70,32 @@ export default function Form5() {
     };
 
     fetchUserEmail();
-    if (currentUser) {
-      const savedData = localStorage.getItem(`form5Data_${currentUser.id}`);
+    if (draftEmail) {
+      const savedData = localStorage.getItem(`form5Data_${draftEmail}`);
       if (savedData) {
-        const parsedData = JSON.parse(savedData);
-        setFormData(parsedData);
-        setVendorData(prev => ({
-          ...prev,
-          complianceCertifications: parsedData
-        }));
+        try {
+          const parsed = JSON.parse(savedData);
+          if (parsed?._owner === draftEmail && parsed?.data) {
+            setFormData(parsed.data);
+            setVendorData(prev => ({
+              ...prev,
+              complianceCertifications: parsed.data
+            }));
+          } else {
+            // Legacy/foreign draft — could carry another account's data; discard.
+            localStorage.removeItem(`form5Data_${draftEmail}`);
+          }
+        } catch {}
       }
     }
-  }, [vendorContextUser, currentUser]);
+  }, [vendorContextUser, currentUser, draftEmail]);
 
   // Auto-save on every change
   useEffect(() => {
-    if (currentUser) {
-      localStorage.setItem(`form5Data_${currentUser.id}`, JSON.stringify(formData));
+    if (draftEmail) {
+      localStorage.setItem(`form5Data_${draftEmail}`, JSON.stringify({ _owner: draftEmail, data: formData }));
     }
-  }, [formData, currentUser]);
+  }, [formData, draftEmail]);
 
   const handleInputChange = async (e) => {
     const { name, value, files } = e.target;
@@ -174,8 +173,8 @@ export default function Form5() {
   const handlePrevious = () => navigate("/Form4");
 
   const handleNext = () => {
-    if (currentUser) {
-      localStorage.setItem(`form5Data_${currentUser.id}`, JSON.stringify(formData));
+    if (draftEmail) {
+      localStorage.setItem(`form5Data_${draftEmail}`, JSON.stringify({ _owner: draftEmail, data: formData }));
     }
     setVendorData(prev => ({
       ...prev,
@@ -264,7 +263,11 @@ export default function Form5() {
             Compliance and Certifications
           </h1>
 
+          <ResubmitBanner sectionKey="compliance" />
+
           <form onSubmit={handleSubmit} className="max-w-none space-y-8">
+            <div className={sectionReadOnly ? 'pointer-events-none select-none opacity-60' : undefined}>
+            <fieldset disabled={sectionReadOnly} className="contents space-y-8">
             {/* Certifications Question */}
             <div className="space-y-6">
               <div className="flex flex-col md:flex-row items-start gap-6">
@@ -438,6 +441,8 @@ export default function Form5() {
                   />
                 </div>
               </div>
+            </div>
+            </fieldset>
             </div>
 
             {/* Navigation Buttons */}

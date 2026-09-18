@@ -3,8 +3,11 @@ import { VendorContext } from "../context/VendorContext";
 import { UserContext } from "../context/UserContext";
 import { useNavigate } from "react-router-dom";
 import { uploadFileToS3, deleteFileFromS3 } from "../utils/fileUpload";
+import { resolveUserEmail } from "../utils/resolveUserIdentity";
 import StepIndicator from "./StepIndicator";
 import SidebarContent from "./SidebarContent";
+import ResubmitBanner from "./ResubmitBanner";
+import { isResubmitMode, isSectionEditable } from "../utils/resubmitPermissions";
 
 const VENDOR_TYPES = [
   { id: "service_provider", label: "Service Provider", icon: "🛠️", desc: "Consulting, IT, logistics, HR, legal, and other service-based businesses" },
@@ -87,7 +90,13 @@ export default function Form3() {
   const navigate = useNavigate();
   const { vendorData, setVendorData, currentUser: vendorContextUser } = useContext(VendorContext);
   const { currentUser } = useContext(UserContext) || {};
+  // Resubmit gating: Form3 renders the 'service' KYC section. When the auditor
+  // requested resubmission and didn't grant this section, the fields are read-only.
+  const sectionReadOnly = isResubmitMode(vendorContextUser) && !isSectionEditable(vendorContextUser, 'service');
   const [userEmail, setUserEmail] = useState(null);
+  // Drafts are keyed by email — hydrated/handoff users have no stable `id`,
+  // so id-keyed drafts would collide across accounts.
+  const draftEmail = vendorContextUser?.email || userEmail || currentUser?.email;
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showSaveIndicator, setShowSaveIndicator] = useState(false);
   const [activeTab, setActiveTab] = useState("service_provider");
@@ -106,40 +115,37 @@ export default function Form3() {
   useEffect(() => {
     const fetchUserEmail = async () => {
       if (vendorContextUser?.email) { setUserEmail(vendorContextUser.email); return; }
-      const token = localStorage.getItem("authToken");
-      if (!token) return;
       try {
-        const res = await fetch(`${window.location.origin}/api/vendor/me`, {
-          headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
-          credentials: "include",
-        });
-        if (res.ok) {
-          const data = await res.json();
-          const email = data?.data?.email || data?.data?.vendorDetails?.primaryContactEmail;
-          if (email) setUserEmail(email);
-        }
+        // Cookie-authenticated API (/api/vendor/me → /api/auth/verify)
+        const email = await resolveUserEmail();
+        if (email) setUserEmail(email);
       } catch {}
     };
     fetchUserEmail();
-    if (currentUser) {
-      const saved = localStorage.getItem(`form3Data_${currentUser.id}`);
+    if (draftEmail) {
+      const saved = localStorage.getItem(`form3Data_${draftEmail}`);
       if (saved) {
         try {
           const parsed = JSON.parse(saved);
-          setFormData(parsed);
-          setVendorData(prev => ({ ...prev, serviceProductDetails: parsed }));
+          if (parsed?._owner === draftEmail && parsed?.data) {
+            setFormData(parsed.data);
+            setVendorData(prev => ({ ...prev, serviceProductDetails: parsed.data }));
+          } else {
+            // Legacy/foreign draft — could carry another account's data; discard.
+            localStorage.removeItem(`form3Data_${draftEmail}`);
+          }
         } catch {}
       }
     }
-  }, [vendorContextUser, currentUser]);
+  }, [vendorContextUser, currentUser, draftEmail]);
 
   // Auto-save on every change
   useEffect(() => {
-    if (currentUser) {
+    if (draftEmail) {
       const serializable = stripFileObjects(formData);
-      localStorage.setItem(`form3Data_${currentUser.id}`, JSON.stringify(serializable));
+      localStorage.setItem(`form3Data_${draftEmail}`, JSON.stringify({ _owner: draftEmail, data: serializable }));
     }
-  }, [formData, currentUser]);
+  }, [formData, draftEmail]);
 
   const showSaved = () => {
     setShowSaveIndicator(true);
@@ -265,8 +271,8 @@ export default function Form3() {
 
   const handleNext = () => {
     const serializable = stripFileObjects(formData);
-    if (currentUser) {
-      localStorage.setItem(`form3Data_${currentUser.id}`, JSON.stringify(serializable));
+    if (draftEmail) {
+      localStorage.setItem(`form3Data_${draftEmail}`, JSON.stringify({ _owner: draftEmail, data: serializable }));
     }
     setVendorData(prev => ({ ...prev, serviceProductDetails: { ...serializable } }));
     navigate("/Form4");
@@ -462,8 +468,12 @@ export default function Form3() {
         <div className="w-full max-w-4xl mx-auto px-4 pb-10 bg-white md:px-0">
           <h1 className="text-2xl font-bold text-gray-900 mb-8">Product & Service</h1>
 
+          <ResubmitBanner sectionKey="service" />
+
           <form onSubmit={handleSubmit} className="max-w-none space-y-8">
 
+            <div className={sectionReadOnly ? 'pointer-events-none select-none opacity-60' : undefined}>
+            <fieldset disabled={sectionReadOnly} className="contents space-y-8">
             {/* Vendor Type Selection */}
             <div className="space-y-4">
               <div>
@@ -551,6 +561,8 @@ export default function Form3() {
                 {activeTab === "manufacturer" && renderManufacturerSection()}
               </div>
             )}
+            </fieldset>
+            </div>
 
             {/* Navigation */}
             <div className="flex justify-end space-x-4 pt-6 border-t border-gray-100">

@@ -3,16 +3,49 @@ import { VendorContext } from "../context/VendorContext";
 import { UserContext } from "../context/UserContext";
 import { useNavigate } from "react-router-dom";
 import { uploadFileToS3, deleteFileFromS3 } from "../utils/fileUpload";
+import { resolveUserEmail } from "../utils/resolveUserIdentity";
 import { searchIFSCCode } from "../utils/ifscData";
 import { processChequeOCR } from "../utils/textractOCR";
 import StepIndicator from "./StepIndicator";
 import SidebarContent from "./SidebarContent";
 import OCRPreviewModal from "./OCRPreviewModal";
+import ResubmitBanner from "./ResubmitBanner";
+import { isResubmitMode, isSectionEditable } from "../utils/resubmitPermissions";
 
 export default function Form4() {
   const navigate = useNavigate();
-  const { vendorData, setVendorData } = useContext(VendorContext);
+  const { vendorData, setVendorData, currentUser: vendorContextUser } = useContext(VendorContext);
   const { currentUser } = useContext(UserContext) || {};
+  // Resubmit gating: Form4 renders the 'bank' KYC section. When the auditor
+  // requested resubmission and didn't grant this section, the fields are read-only.
+  const sectionReadOnly = isResubmitMode(vendorContextUser) && !isSectionEditable(vendorContextUser, 'bank');
+
+  // Resolved user email: context first, /api/vendor/me cookie-auth fallback
+  // (handoff logins have no localStorage authToken).
+  const [userEmail, setUserEmail] = useState(null);
+  // Drafts are keyed by email — hydrated/handoff users have no stable `id`,
+  // so id-keyed drafts would collide across accounts.
+  const draftEmail = vendorContextUser?.email || userEmail || currentUser?.email;
+
+  useEffect(() => {
+    const fetchUserEmail = async () => {
+      try {
+        // Only the cookie-session identity is trusted — the UserContext
+        // Cognito session may be a stale different account after handoff.
+        const ctxEmail = vendorContextUser?.email;
+        if (ctxEmail) {
+          setUserEmail(ctxEmail);
+          return;
+        }
+        // Cookie-authenticated API (/api/vendor/me → /api/auth/verify)
+        const fetchedEmail = await resolveUserEmail();
+        if (fetchedEmail) setUserEmail(fetchedEmail);
+      } catch (error) {
+        console.error('[FORM4_FETCH_USER_ERROR]', error);
+      }
+    };
+    fetchUserEmail();
+  }, [vendorContextUser]);
 
   const [formData, setFormData] = useState({
     bankName: vendorData.bankDetails.bankName || "",
@@ -38,25 +71,32 @@ export default function Form4() {
   const [pendingChequeFile, setPendingChequeFile] = useState(null);
 
   useEffect(() => {
-    if (currentUser) {
-      const savedData = localStorage.getItem(`form4Data_${currentUser.id}`);
+    if (draftEmail) {
+      const savedData = localStorage.getItem(`form4Data_${draftEmail}`);
       if (savedData) {
-        const parsedData = JSON.parse(savedData);
-        setFormData(parsedData);
-        setVendorData(prev => ({
-          ...prev,
-          bankDetails: parsedData
-        }));
+        try {
+          const parsed = JSON.parse(savedData);
+          if (parsed?._owner === draftEmail && parsed?.data) {
+            setFormData(parsed.data);
+            setVendorData(prev => ({
+              ...prev,
+              bankDetails: parsed.data
+            }));
+          } else {
+            // Legacy/foreign draft — could carry another account's data; discard.
+            localStorage.removeItem(`form4Data_${draftEmail}`);
+          }
+        } catch {}
       }
     }
-  }, [currentUser, setVendorData]);
+  }, [draftEmail, setVendorData]);
 
   // Auto-save on every change
   useEffect(() => {
-    if (currentUser) {
-      localStorage.setItem(`form4Data_${currentUser.id}`, JSON.stringify(formData));
+    if (draftEmail) {
+      localStorage.setItem(`form4Data_${draftEmail}`, JSON.stringify({ _owner: draftEmail, data: formData }));
     }
-  }, [formData, currentUser]);
+  }, [formData, draftEmail]);
 
   const handleFileChange = async (e) => {
     const { name, files } = e.target;
@@ -77,11 +117,11 @@ export default function Form4() {
       }));
 
       try {
-        if (currentUser?.email) {
+        if (userEmail) {
           const section = "bankDetails";
           const response = await uploadFileToS3(
             file,
-            currentUser.email,
+            userEmail,
             name,
             section
           );
@@ -109,7 +149,7 @@ export default function Form4() {
     setOcrProcessing(true);
     
     try {
-      const result = await processChequeOCR(file, currentUser?.email || "unknown");
+      const result = await processChequeOCR(file, userEmail || "unknown");
 
       if (result.success && result.data.success) {
         setOcrData(result.data);
@@ -155,10 +195,10 @@ export default function Form4() {
 
   const uploadChequeFile = async (file) => {
     try {
-      if (currentUser?.email) {
+      if (userEmail) {
         const response = await uploadFileToS3(
           file,
-          currentUser.email,
+          userEmail,
           "blankCheque",
           "bankDetails"
         );
@@ -236,9 +276,9 @@ export default function Form4() {
 
   const handleDeleteFile = async (fieldName) => {
     try {
-      if (formData[fieldName]?.url && currentUser?.email) {
+      if (formData[fieldName]?.url && userEmail) {
         await deleteFileFromS3(
-          currentUser.email,
+          userEmail,
           fieldName,
           "bankDetails"
         );
@@ -313,8 +353,8 @@ export default function Form4() {
   };
 
   const handleNext = () => {
-    if (currentUser) {
-      localStorage.setItem(`form4Data_${currentUser.id}`, JSON.stringify(formData));
+    if (draftEmail) {
+      localStorage.setItem(`form4Data_${draftEmail}`, JSON.stringify({ _owner: draftEmail, data: formData }));
     }
     setVendorData(prev => ({
       ...prev,
@@ -384,7 +424,11 @@ export default function Form4() {
             Bank Details
           </h1>
 
+          <ResubmitBanner sectionKey="bank" />
+
           <form onSubmit={handleSubmit} className="max-w-none space-y-8">
+            <div className={sectionReadOnly ? 'pointer-events-none select-none opacity-60' : undefined}>
+            <fieldset disabled={sectionReadOnly} className="contents space-y-8">
             {/* Bank Information Section */}
             <div className="space-y-6">
               <div className="flex flex-col md:flex-row items-start gap-6">
@@ -592,6 +636,8 @@ export default function Form4() {
                   <p className="text-xs text-gray-500 mt-2">Max 5MB • OCR will extract account number and name automatically</p>
                 </div>
               </div>
+            </fieldset>
+            </div>
               
             {/* Navigation Buttons */}
             <div className="flex justify-end space-x-4 pt-6">

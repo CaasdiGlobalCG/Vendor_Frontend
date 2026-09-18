@@ -2,6 +2,7 @@ import React, { useState, useRef } from 'react';
 import { Download, Settings, Edit2, X, Upload } from 'lucide-react';
 import html2pdf from 'html2pdf.js';
 import StandardPreview from '../shared/StandardPreview.jsx';
+import operonLogo from '../../../../../assets/operon-symbol-black.png';
 export default function CreditNotesPreviewPanel({ creditNotes, selectedCreditNoteId, onSelectCreditNote, onClose }) {
   const [selectedId, setSelectedId] = useState(selectedCreditNoteId || (creditNotes[0]?.id || creditNotes[0]?.creditNoteId));
   const [creditNotesWithCustomDetails, setCreditNotesWithCustomDetails] = useState(
@@ -40,7 +41,7 @@ export default function CreditNotesPreviewPanel({ creditNotes, selectedCreditNot
 
   const handleEditCompanyClick = () => {
     setEditedCompany({
-      logo: 'https://dummyimage.com/80x80/0d6b5c/ffffff.png&text=CG',
+      logo: operonLogo,
       name: 'Caasdi Ventures LLP',
       address: '262, 80 FEET ROAD, SRINIVASANAGAR, Banashankari Stage 1, Bengaluru, Karnataka, 560050',
       gstin: '29AATFC6608I2ZB',
@@ -174,7 +175,7 @@ export default function CreditNotesPreviewPanel({ creditNotes, selectedCreditNot
               <StandardPreview
                 quote={selectedCreditNote}
                 company={selectedCreditNote._customCompanyDetails || {
-                  logo: 'https://dummyimage.com/80x80/0d6b5c/ffffff.png&text=CG',
+                  logo: operonLogo,
                   name: 'Caasdi Ventures LLP',
                   address: '262, 80 FEET ROAD, SRINIVASANAGAR, Banashankari Stage 1, Bengaluru, Karnataka, 560050',
                   gstin: '29AATFC6608I2ZB',

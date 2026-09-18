@@ -99,6 +99,12 @@ export const VendorProvider = ({ children }) => {
     try {
       setIsHydratingUser(true);
 
+      // Clean up legacy drafts keyed under `undefined` — older code used
+      // currentUser.id which was absent for hydrated/handoff users, so drafts
+      // leaked across accounts under a shared `undefined` key.
+      ['user-undefined-form1Data', 'form2Data_undefined', 'form3Data_undefined',
+        'form4Data_undefined', 'form5Data_undefined'].forEach((k) => localStorage.removeItem(k));
+
       // Fetch vendor record securely from cookie-authenticated /me endpoint (no email query param)
       let vendorId = null;
       let name = null;
@@ -106,6 +112,8 @@ export const VendorProvider = ({ children }) => {
       let hasFilledForm = null;
       let email = null;
       let isTeamMember = false;
+      let resubmitPermissions = null;
+      let resubmitRemarks = null;
 
       const tryMe = async () => {
         const res = await authFetch(`${config.VENDOR_BACKEND_URL}/api/vendor/me`, {
@@ -153,6 +161,8 @@ export const VendorProvider = ({ children }) => {
         hasFilledForm = typeof v?.hasFilledForm === 'boolean' ? v.hasFilledForm : null;
         email = email || v?.email || v?.vendorDetails?.primaryContactEmail || null;
         isTeamMember = v?.isTeamMember === true;
+        resubmitPermissions = v?.resubmitPermissions || null;
+        resubmitRemarks = v?.resubmitRemarks || null;
       }
 
       if (
@@ -171,9 +181,17 @@ export const VendorProvider = ({ children }) => {
       }
 
       // If neither token nor session resolves a user, clear state.
+      // Exception: client→vendor handoff users may have no vendor record yet
+      // (KYC not started). The exchange already stashed their registered email
+      // in sessionStorage — use it so they stay logged in for KYC.
       if (!email && !vendorId) {
-        if (!isExternalAccessLink()) setCurrentUser(null);
-        return { ok: false, status: meAttempt?.status || 401 };
+        const handoffEmail = sessionStorage.getItem('vendorHandoffEmail');
+        if (handoffEmail && meAttempt?.status === 404) {
+          email = handoffEmail;
+        } else {
+          if (!isExternalAccessLink()) setCurrentUser(null);
+          return { ok: false, status: meAttempt?.status || 401 };
+        }
       }
 
       const hydratedUser = {
@@ -186,6 +204,8 @@ export const VendorProvider = ({ children }) => {
         status,
         hasFilledForm,
         isTeamMember,
+        resubmitPermissions,
+        resubmitRemarks,
       };
 
       // Restore any in-progress form draft saved in a previous session
@@ -194,8 +214,36 @@ export const VendorProvider = ({ children }) => {
       if (savedDraft) {
         try {
           savedDraftData = JSON.parse(savedDraft);
-          setVendorData(savedDraftData);
+          // Guard: a draft whose stored email belongs to a different account is
+          // foreign (written before identity fixes) — discard, don't restore.
+          const draftEmail = savedDraftData?.vendorDetails?.organizationMailId
+            || savedDraftData?.vendorDetails?.primaryContactEmail;
+          if (draftEmail && draftEmail !== email) {
+            localStorage.removeItem(`vendorFormDraft_${email}`);
+            savedDraftData = null;
+          } else {
+            setVendorData(savedDraftData);
+          }
         } catch {}
+      }
+
+      // Resubmit flow: the auditor granted re-edit access to specific KYC
+      // sections. Seed vendorData from the submitted record so the forms show
+      // the vendor's previous answers (the post-submit draft was cleared and
+      // holds nothing meaningful).
+      if (String(status || '').trim().toLowerCase() === 'resubmit_requested') {
+        const recordData = meAttempt?.me?.data;
+        if (recordData && !hasStartedVendorForm(savedDraftData)) {
+          setVendorData((prev) => ({
+            ...prev,
+            vendorDetails: recordData.vendorDetails || prev.vendorDetails,
+            companyDetails: recordData.companyDetails || prev.companyDetails,
+            serviceProductDetails: recordData.serviceProductDetails || prev.serviceProductDetails,
+            bankDetails: recordData.bankDetails || prev.bankDetails,
+            complianceCertifications: recordData.complianceCertifications || prev.complianceCertifications,
+            additionalDetails: recordData.additionalDetails || prev.additionalDetails,
+          }));
+        }
       }
 
       const hasStartedForm =
@@ -344,6 +392,8 @@ export const VendorProvider = ({ children }) => {
     // 3. Clear session flags, form draft, and any remaining app-level keys.
     sessionStorage.removeItem(AUTH_TRANSITION_KEY);
     sessionStorage.removeItem(AUTH_TRANSITION_STARTED_AT_KEY);
+    sessionStorage.removeItem('vendorHandoffEmail');
+    sessionStorage.removeItem('vendorSwitchIntent');
     if (currentUser?.email) {
       localStorage.removeItem(`vendorFormDraft_${currentUser.email}`);
     }

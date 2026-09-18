@@ -47,6 +47,9 @@ export function getVendorDestination({ status, hasFilledForm, isTeamMember, hasS
 
   if (normalizedStatus === 'approved') return '/VendorDashboard';
   if (normalizedStatus === 'pending' && filled) return '/Auditorapprove';
+  // Auditor granted re-edit access to specific KYC sections — send the vendor
+  // back into the form flow (per-section edit gating happens in the forms).
+  if (normalizedStatus === 'resubmit_requested') return '/Form1';
 
   // rejected, pending-without-form, missing status => onboarding.
   // Users who never started filling go back to role selection so they can
