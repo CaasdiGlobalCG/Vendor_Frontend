@@ -627,6 +627,12 @@ const DraggableElement = ({ element }) => {
             {!element.fileType && element.id !== 'upload-area' && <FileText className="w-6 h-6 text-gray-600" />}
           </>
         )}
+        {element.type === 'cad-files' && (
+          <FileDigit className="w-6 h-6 text-indigo-600" />
+        )}
+        {element.type === 'cdr-files' && (
+          <FileDigit className="w-6 h-6 text-orange-600" />
+        )}
         {(element.type === 'smart-note' || element.nodeType === 'smartNote') && (
           <StickyNote className="w-6 h-6 text-yellow-600" />
         )}
@@ -825,6 +831,26 @@ const ElementsPanel = ({
               }
             ]
           }
+        }
+      ]
+    },
+    'cad-files': {
+      name: 'CAD Files',
+      icon: <FileDigit className="w-5 h-5" />,
+      elements: (elementOptions['cad-files']?.elements) || [
+        {
+          id: 'cad-files-basic',
+          name: 'CAD Files',
+          type: 'cad-files',
+          preview: 'Upload CAD drawings — each file is scanned and shown as a card',
+          cadFilesData: { files: [] }
+        },
+        {
+          id: 'cdr-files-basic',
+          name: 'CDR Files',
+          type: 'cdr-files',
+          preview: 'Upload CorelDRAW .cdr files — each file shows as a card with SVG preview',
+          cdrFilesData: { files: [] }
         }
       ]
     },

@@ -20,6 +20,7 @@ import TaskCardRenderer from '../forms/TaskCardRenderer';
 import MaterialSpecCard from '../forms/MaterialSpecCard';
 import ImageBlockRenderer from '../forms/ImageBlockRenderer';
 import DocumentBlockRenderer from '../forms/DocumentBlockRenderer';
+import CadFilesRenderer from '../forms/CadFilesRenderer';
 import ConcreteBlocksCalculator from '../forms/ConcreteBlocksCalculator';
 import BricksCalculator from '../forms/BricksCalculator';
 import ConcreteCalculator from '../forms/ConcreteCalculator';
@@ -842,6 +843,8 @@ const ElementNode = ({ id, data, isConnectable, selected }) => {
       'image': 'An image placeholder or uploaded image for visual content.',
       'file': 'An uploaded file attachment like documents, PDFs, or spreadsheets.',
       'image-block': 'A block element for displaying images with captions.',
+      'cad-files': 'Upload CAD drawings (.dwg, .dxf, .step, .iges, .stl, .obj) — each file is scanned and shown as a card.',
+      'cdr-files': 'Upload CorelDRAW (.cdr) files — each file is shown as a card with an SVG preview.',
       
       // Special elements
       'calendar': 'A calendar widget for date selection and event display.',
@@ -1766,6 +1769,11 @@ const ElementNode = ({ id, data, isConnectable, selected }) => {
 
       case 'document-block':
         return <DocumentBlockRenderer data={data} nodeId={id} workspaceId={workspaceId} setNodes={setNodes} />;
+
+      case 'cad-files':
+        return <CadFilesRenderer data={data} nodeId={id} workspaceId={workspaceId} taskId={data.taskId} subtaskId={data.subtaskId} setNodes={setNodes} />;
+      case 'cdr-files':
+        return <CadFilesRenderer variant="cdr" data={data} nodeId={id} workspaceId={workspaceId} taskId={data.taskId} subtaskId={data.subtaskId} setNodes={setNodes} />;
 
       case 'procurement-rfq-request': {
         const request = data.procurementRFQData?.request || {};

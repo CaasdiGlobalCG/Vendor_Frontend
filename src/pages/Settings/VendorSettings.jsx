@@ -9,7 +9,7 @@ import {
   Settings, User, Lock, Bell, Mail, Shield, ChevronLeft, ChevronRight,
   Eye, EyeOff, Check, X, Building2, Phone, MapPin, Globe, Camera,
   Megaphone, Newspaper, Package, TrendingUp, AlertCircle, Loader2,
-  LogOut, Trash2, KeyRound, Smartphone
+  LogOut, Trash2, KeyRound, Smartphone, FileText
 } from "lucide-react";
 
 /* ─── Toggle Switch ──────────────────────────────────── */
@@ -149,6 +149,11 @@ export default function VendorSettings() {
   const [testCodeData, setTestCodeData] = useState(null);
   const [testCodeLoading, setTestCodeLoading] = useState(false);
 
+  // KYC update request (Privacy & Data → Update KYC)
+  const [vendorStatus, setVendorStatus] = useState(null);
+  const [kycUpdateRequest, setKycUpdateRequest] = useState(null);
+  const [kycRequestLoading, setKycRequestLoading] = useState(false);
+
   /* ── Sidebar nav items ────────────────────────── */
   const navItems = [
     { id: "profile", label: "Profile", icon: User },
@@ -181,7 +186,11 @@ export default function VendorSettings() {
           vd = v.vendorDetails || vd;
           cd = v.companyDetails || cd;
           imgUrl = v.profileImage?.url || imgUrl;
-          
+
+          // KYC update request state
+          setVendorStatus(v.status || null);
+          setKycUpdateRequest(v.kycUpdateRequest || null);
+
           // Load MFA status from vendor data
           setMfaEnabled(v.totpEnabled === true);
         }
@@ -232,6 +241,31 @@ export default function VendorSettings() {
       setMfaEnabled(true);
     }
   }, [vendorData]);
+
+  /* ── KYC update request (Privacy & Data → Update KYC) ── */
+  const handleKycUpdateRequest = async () => {
+    try {
+      setKycRequestLoading(true);
+      const res = await authFetch(`${config.VENDOR_BACKEND_URL}/api/vendor/kyc-update-request`, {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({}),
+      });
+      const data = await res.json().catch(() => null);
+      if (!res.ok || data?.success === false) {
+        showToast(data?.message || 'Failed to submit KYC update request', 'error');
+        return;
+      }
+      setKycUpdateRequest(data?.data?.kycUpdateRequest || { status: 'pending' });
+      showToast(data?.message || 'KYC update request sent to the auditor');
+    } catch (err) {
+      console.error('[Settings] KYC update request failed:', err);
+      showToast('Failed to submit KYC update request', 'error');
+    } finally {
+      setKycRequestLoading(false);
+    }
+  };
 
   /* ── Save profile ─────────────────────────────── */
   const handleSaveProfile = async () => {
@@ -1195,6 +1229,49 @@ export default function VendorSettings() {
                   </div>
                   <Toggle enabled={true} onChange={() => {}} />
                 </div>
+              </div>
+            </SectionCard>
+
+            {/* Update KYC */}
+            <SectionCard icon={FileText} title="Update KYC" description="Request auditor approval to update your submitted KYC forms">
+              <div className="flex items-center justify-between py-3">
+                <div className="pr-4">
+                  <p className="text-sm font-medium text-gray-900">KYC Update Access</p>
+                  <p className="text-xs text-gray-500 mt-0.5">
+                    {vendorStatus === 'resubmit_requested'
+                      ? 'The auditor has granted update access. You can now edit and resubmit your KYC forms.'
+                      : kycUpdateRequest?.status === 'pending'
+                        ? 'Your request is pending auditor review. You will get edit access once it is approved.'
+                        : 'Request the auditor to unlock your KYC forms so you can update and resubmit them.'}
+                  </p>
+                  {kycUpdateRequest?.status === 'pending' && kycUpdateRequest?.requestedAt && (
+                    <p className="text-[11px] text-gray-400 mt-1">
+                      Requested {new Date(kycUpdateRequest.requestedAt).toLocaleString('en-IN')}
+                    </p>
+                  )}
+                </div>
+                {vendorStatus === 'resubmit_requested' ? (
+                  <button
+                    onClick={() => navigate('/Form1')}
+                    className="px-4 py-2 text-sm font-medium text-white bg-emerald-600 rounded-lg hover:bg-emerald-700 transition-colors flex items-center gap-2 whitespace-nowrap"
+                  >
+                    <FileText className="w-4 h-4" />
+                    Update KYC
+                  </button>
+                ) : kycUpdateRequest?.status === 'pending' ? (
+                  <span className="text-xs font-medium px-3 py-1.5 rounded-full bg-amber-50 text-amber-700 border border-amber-200 whitespace-nowrap">
+                    Pending Approval
+                  </span>
+                ) : (
+                  <button
+                    onClick={handleKycUpdateRequest}
+                    disabled={kycRequestLoading || (vendorStatus !== 'approved' && vendorStatus !== 'initial_approved')}
+                    className="px-4 py-2 text-sm font-medium text-white bg-emerald-600 rounded-lg hover:bg-emerald-700 transition-colors flex items-center gap-2 whitespace-nowrap disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {kycRequestLoading && <Loader2 className="w-4 h-4 animate-spin" />}
+                    Request KYC Update
+                  </button>
+                )}
               </div>
             </SectionCard>
 

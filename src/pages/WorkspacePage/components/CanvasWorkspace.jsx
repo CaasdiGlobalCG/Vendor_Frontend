@@ -1509,6 +1509,14 @@ const edgeTypes = {
         ...(element.type === 'list' && { id: element.id }),
         ...(isTaskCard && taskCardData && { taskCardData }),
         ...(isImageBlock && imageBlockData && { imageBlockData: JSON.parse(JSON.stringify(imageBlockData)) }),
+        // Store CAD files data
+        ...(element.type === 'cad-files' && {
+          cadFilesData: element.cadFilesData || customData?.cadFilesData || { files: [] }
+        }),
+        // Store CDR files data
+        ...(element.type === 'cdr-files' && {
+          cdrFilesData: element.cdrFilesData || customData?.cdrFilesData || { files: [] }
+        }),
         // Store icon ID for icon elements
         ...(element.type === 'icon' && { id: element.id }),
         // Store cost calculator data

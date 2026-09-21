@@ -28,6 +28,7 @@ const ElementsSidebar = ({ isOpen, onClose, onElementSelect, userRole, currentUs
     { id: 'icons', name: 'Icons', icon: Square, color: 'bg-purple-100 text-purple-800' },
     { id: 'image-block', name: 'Image Block', icon: ImageIcon, color: 'bg-cyan-100 text-cyan-800' },
     { id: 'document-block', name: 'Document Block', icon: FileText, color: 'bg-sky-100 text-sky-800' },
+    { id: 'cad-files', name: 'CAD Files', icon: FileDigit, color: 'bg-indigo-100 text-indigo-800' },
     { id: 'list', name: 'List', icon: List, color: 'bg-green-100 text-green-800' },
     { id: 'task-card', name: 'Task Card', icon: ClipboardList, color: 'bg-teal-100 text-teal-800' },
     { id: 'materials', name: 'Materials', icon: Package, color: 'bg-orange-100 text-orange-800' },

@@ -831,6 +831,25 @@ const WorkspacePage = () => {
         { id: 'button', name: 'Button', type: 'button', preview: 'Action button' }
       ]
     },
+    'cad-files': {
+      name: 'CAD Files',
+      elements: [
+        {
+          id: 'cad-files-basic',
+          name: 'CAD Files',
+          type: 'cad-files',
+          preview: 'Upload CAD drawings — each file is scanned and shown as a card',
+          cadFilesData: { files: [] }
+        },
+        {
+          id: 'cdr-files-basic',
+          name: 'CDR Files',
+          type: 'cdr-files',
+          preview: 'Upload CorelDRAW .cdr files — each file shows as a card with SVG preview',
+          cdrFilesData: { files: [] }
+        }
+      ]
+    },
     'image-block': {
       name: 'Image Block',
       elements: [

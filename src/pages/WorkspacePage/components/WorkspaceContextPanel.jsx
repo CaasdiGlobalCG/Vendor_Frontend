@@ -39,7 +39,8 @@ import {
   CreditCard,
   ClipboardList,
   ShieldCheck,
-  CloudSun
+  CloudSun,
+  FileDigit
 } from 'lucide-react';
 import TaskTab from './TaskTab';
 import LayersTab from './LayersTab';
@@ -187,6 +188,13 @@ const WorkspaceContextPanel = ({
       color: 'bg-orange-50 text-orange-700 border-orange-200' 
     },
     { 
+      id: 'cad-files', 
+      name: 'CAD Files', 
+      desc: 'Upload & scan .dwg .dxf .step .iges .stl .obj', 
+      icon: FileDigit,
+      color: 'bg-slate-50 text-slate-700 border-slate-200' 
+    },
+    { 
       id: 'cost-calculators', 
       name: 'Cost Calculators', 
       desc: 'Flooring, painting, concrete, electrical', 
@@ -290,6 +298,12 @@ const WorkspaceContextPanel = ({
       { id: 'ai-helper', name: 'AI Workflow Assistant', type: 'ai-helper', nodeType: 'aiHelper', preview: 'Generate workflows, checklists, and scope with AI' },
     ]);
 
+    // CAD Files list
+    const cadFilesList = pickList(elementOptions['cad-files'], [
+      { id: 'cad-files-basic', name: 'CAD Files', type: 'cad-files', preview: 'Upload CAD drawings — each file is scanned and shown as a card', cadFilesData: { files: [] } },
+      { id: 'cdr-files-basic', name: 'CDR Files', type: 'cdr-files', preview: 'Upload CorelDRAW .cdr files — each file shows as a card with SVG preview', cdrFilesData: { files: [] } },
+    ]);
+
     return {
       'invoices-quotes': invQuotesList,
       'forms': formsList,
@@ -298,6 +312,7 @@ const WorkspaceContextPanel = ({
       'flowcharts': flowchartsList,
       'task-card': taskCardsList,
       'materials': materialsList,
+      'cad-files': cadFilesList,
       'cost-calculators': calculatorsList,
       'smart': rawSmart,
     };
