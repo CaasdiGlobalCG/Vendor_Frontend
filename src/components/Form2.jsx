@@ -12,6 +12,7 @@ import SidebarContent from "./SidebarContent";
 import SearchableSelect from "./SearchableSelect";
 import ResubmitBanner from "./ResubmitBanner";
 import { isResubmitMode, isSectionEditable } from "../utils/resubmitPermissions";
+import { setKycStep } from "./KycFormGuard";
 import { BUSINESS_TYPES, FLAT_BUSINESS_TYPES, INDUSTRY_TYPES, FLAT_INDUSTRY_TYPES } from "../constants/businessIndustryTypes";
 
 export default function Form2() {
@@ -238,12 +239,14 @@ export default function Form2() {
   };
 
   const handlePrevious = () => {
+    setKycStep(1, draftEmail);
     navigate("/Form1");
   };
 
   const handleNext = () => {
     if (draftEmail) {
       localStorage.setItem(`form2Data_${draftEmail}`, JSON.stringify({ _owner: draftEmail, data: formData }));
+      setKycStep(3, draftEmail);
     }
     setVendorData(prev => ({
       ...prev,

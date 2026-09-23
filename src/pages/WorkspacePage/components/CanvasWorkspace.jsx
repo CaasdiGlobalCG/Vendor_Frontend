@@ -1517,6 +1517,10 @@ const edgeTypes = {
         ...(element.type === 'cdr-files' && {
           cdrFilesData: element.cdrFilesData || customData?.cdrFilesData || { files: [] }
         }),
+        // Store floor plan data
+        ...(element.type === 'floor-plan' && {
+          floorPlanData: element.floorPlanData || customData?.floorPlanData || { files: [] }
+        }),
         // Store icon ID for icon elements
         ...(element.type === 'icon' && { id: element.id }),
         // Store cost calculator data

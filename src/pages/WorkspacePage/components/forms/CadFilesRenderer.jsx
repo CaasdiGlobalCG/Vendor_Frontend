@@ -11,6 +11,7 @@ import {
 } from 'lucide-react';
 import { createPortal } from 'react-dom';
 import CadModelViewer from './CadModelViewer';
+import FloorPlanViewer from './FloorPlanViewer';
 import { persistNodeDataPatch } from '../../utils/nodePersistence';
 
 const CAD_EXTENSIONS = ['dwg', 'dxf', 'step', 'stp', 'iges', 'igs', 'stl', 'obj', 'cdr'];
@@ -39,6 +40,17 @@ const VARIANTS = {
     buttonIdle: 'bg-orange-600 cursor-pointer hover:bg-orange-700',
     buttonBusy: 'bg-orange-400 cursor-not-allowed',
     dropHint: 'Drop CorelDRAW (.cdr) files here — each file is shown as a card with an SVG preview.'
+  },
+  floorplan: {
+    extensions: ['dwg', 'dxf', 'png', 'jpg', 'jpeg', 'webp', 'pdf'],
+    dataKey: 'floorPlanData',
+    title: 'Floor Plan 3D',
+    headerClass: 'from-emerald-50 to-teal-50',
+    iconClass: 'text-emerald-600',
+    countClass: 'bg-emerald-100 text-emerald-700',
+    buttonIdle: 'bg-emerald-600 cursor-pointer hover:bg-emerald-700',
+    buttonBusy: 'bg-emerald-400 cursor-not-allowed',
+    dropHint: 'Drop a floor plan here (.dwg .dxf .png .jpg .pdf) — it can be extruded into a 3D model.'
   }
 };
 
@@ -70,6 +82,8 @@ const scanCadFile = (name = '') => {
     : ['step', 'stp', 'iges', 'igs'].includes(ext) ? '3D exchange'
     : ['dwg', 'dxf'].includes(ext) ? '2D/3D drawing'
     : ext === 'cdr' ? 'CorelDRAW'
+    : ['png', 'jpg', 'jpeg', 'webp', 'bmp'].includes(ext) ? 'Raster plan'
+    : ext === 'pdf' ? 'PDF plan'
     : 'CAD file';
   const badgeClass =
     ['stl', 'obj'].includes(ext) ? 'bg-violet-100 text-violet-700 border-violet-200'
@@ -84,6 +98,19 @@ const scanCadFile = (name = '') => {
   const previewable = CAD_EXTENSIONS.includes(ext);
   const convertedPreview = ext === 'cdr';
   return { ext, kind, badgeClass, supported: CAD_EXTENSIONS.includes(ext), previewable, convertedPreview };
+};
+
+/** Per-variant scan — floorplan accepts image/pdf uploads too. */
+const scanForVariant = (name, cfg) => {
+  const scan = scanCadFile(name);
+  const allowed = cfg.extensions.includes(scan.ext);
+  return {
+    ...scan,
+    supported: allowed,
+    previewable: allowed,
+    // floorplan previews run through FloorPlanViewer, not CadModelViewer
+    floorplanPreview: cfg === VARIANTS.floorplan,
+  };
 };
 
 const CadFilesRenderer = ({ data, nodeId, workspaceId, taskId, subtaskId, setNodes, variant = 'cad' }) => {
@@ -124,7 +151,7 @@ const CadFilesRenderer = ({ data, nodeId, workspaceId, taskId, subtaskId, setNod
   }, [files, workspaceId, nodeId, setNodes, cfg.dataKey]);
 
   const uploadOne = async (file) => {
-    const scan = scanCadFile(file.name);
+    const scan = scanForVariant(file.name, cfg);
     if (!scan.supported || !cfg.extensions.includes(scan.ext)) {
       throw new Error(`${file.name}: not a supported format (accepts ${cfg.extensions.join(', ')})`);
     }
@@ -284,7 +311,7 @@ const CadFilesRenderer = ({ data, nodeId, workspaceId, taskId, subtaskId, setNod
         ) : (
           <div className="space-y-2 max-h-72 overflow-y-auto pr-1">
             {files.map((file) => {
-              const scan = scanCadFile(file.name);
+              const scan = scanForVariant(file.name, cfg);
               const canPreview3d = scan.previewable && (file.fileId || file.url);
               return (
                 <div
@@ -357,7 +384,7 @@ const CadFilesRenderer = ({ data, nodeId, workspaceId, taskId, subtaskId, setNod
 
       {previewFile && createPortal(
         (() => {
-          const previewScan = scanCadFile(previewFile.name);
+          const previewScan = scanForVariant(previewFile.name, cfg);
           const hasServerFile = previewFile.fileId && workspaceId && subtaskId;
           const streamUrl = hasServerFile
             ? `/api/workspace-files/stream/${previewFile.fileId}?workspaceId=${encodeURIComponent(workspaceId)}&subtaskId=${encodeURIComponent(subtaskId)}`
@@ -367,6 +394,17 @@ const CadFilesRenderer = ({ data, nodeId, workspaceId, taskId, subtaskId, setNod
           const sourceUrl = previewScan.convertedPreview && hasServerFile
             ? `/api/workspace-files/preview/${previewFile.fileId}?workspaceId=${encodeURIComponent(workspaceId)}&subtaskId=${encodeURIComponent(subtaskId)}`
             : streamUrl;
+          if (previewScan.floorplanPreview) {
+            return (
+              <FloorPlanViewer
+                fileName={previewFile.name}
+                fileUrl={previewFile.url}
+                streamUrl={streamUrl}
+                ext={previewScan.ext}
+                onClose={() => setPreviewFile(null)}
+              />
+            );
+          }
           const previewExt = previewScan.convertedPreview ? 'svg' : previewScan.ext;
           return (
             <CadModelViewer

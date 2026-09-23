@@ -633,6 +633,9 @@ const DraggableElement = ({ element }) => {
         {element.type === 'cdr-files' && (
           <FileDigit className="w-6 h-6 text-orange-600" />
         )}
+        {element.type === 'floor-plan' && (
+          <Box className="w-6 h-6 text-emerald-600" />
+        )}
         {(element.type === 'smart-note' || element.nodeType === 'smartNote') && (
           <StickyNote className="w-6 h-6 text-yellow-600" />
         )}
@@ -851,6 +854,13 @@ const ElementsPanel = ({
           type: 'cdr-files',
           preview: 'Upload CorelDRAW .cdr files — each file shows as a card with SVG preview',
           cdrFilesData: { files: [] }
+        },
+        {
+          id: 'floor-plan-basic',
+          name: 'Floor Plan 3D',
+          type: 'floor-plan',
+          preview: 'Upload a floor plan (.dwg .dxf .png .pdf) — extrude it into a 3D model with specs',
+          floorPlanData: { files: [] }
         }
       ]
     },

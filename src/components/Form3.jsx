@@ -8,6 +8,7 @@ import StepIndicator from "./StepIndicator";
 import SidebarContent from "./SidebarContent";
 import ResubmitBanner from "./ResubmitBanner";
 import { isResubmitMode, isSectionEditable } from "../utils/resubmitPermissions";
+import { setKycStep } from "./KycFormGuard";
 
 const VENDOR_TYPES = [
   { id: "service_provider", label: "Service Provider", icon: "🛠️", desc: "Consulting, IT, logistics, HR, legal, and other service-based businesses" },
@@ -267,12 +268,13 @@ export default function Form3() {
     return result;
   };
 
-  const handlePrevious = () => navigate("/Form2");
+  const handlePrevious = () => { setKycStep(2, draftEmail); navigate("/Form2"); };
 
   const handleNext = () => {
     const serializable = stripFileObjects(formData);
     if (draftEmail) {
       localStorage.setItem(`form3Data_${draftEmail}`, JSON.stringify({ _owner: draftEmail, data: serializable }));
+      setKycStep(4, draftEmail);
     }
     setVendorData(prev => ({ ...prev, serviceProductDetails: { ...serializable } }));
     navigate("/Form4");

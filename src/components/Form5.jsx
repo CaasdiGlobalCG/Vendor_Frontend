@@ -9,6 +9,7 @@ import StepIndicator from "./StepIndicator";
 import SidebarContent from "./SidebarContent";
 import ResubmitBanner from "./ResubmitBanner";
 import { isResubmitMode, isSectionEditable } from "../utils/resubmitPermissions";
+import { setKycStep } from "./KycFormGuard";
 
 export default function Form5() {
   const navigate = useNavigate();
@@ -170,11 +171,12 @@ export default function Form5() {
     }
   };
 
-  const handlePrevious = () => navigate("/Form4");
+  const handlePrevious = () => { setKycStep(4, draftEmail); navigate("/Form4"); };
 
   const handleNext = () => {
     if (draftEmail) {
       localStorage.setItem(`form5Data_${draftEmail}`, JSON.stringify({ _owner: draftEmail, data: formData }));
+      setKycStep(6, draftEmail);
     }
     setVendorData(prev => ({
       ...prev,

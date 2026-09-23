@@ -845,6 +845,7 @@ const ElementNode = ({ id, data, isConnectable, selected }) => {
       'image-block': 'A block element for displaying images with captions.',
       'cad-files': 'Upload CAD drawings (.dwg, .dxf, .step, .iges, .stl, .obj) — each file is scanned and shown as a card.',
       'cdr-files': 'Upload CorelDRAW (.cdr) files — each file is shown as a card with an SVG preview.',
+      'floor-plan': 'Upload a floor plan (.dwg, .dxf, .png, .pdf) — auto-extrudes walls into a 3D model with a spec panel.',
       
       // Special elements
       'calendar': 'A calendar widget for date selection and event display.',
@@ -1774,6 +1775,8 @@ const ElementNode = ({ id, data, isConnectable, selected }) => {
         return <CadFilesRenderer data={data} nodeId={id} workspaceId={workspaceId} taskId={data.taskId} subtaskId={data.subtaskId} setNodes={setNodes} />;
       case 'cdr-files':
         return <CadFilesRenderer variant="cdr" data={data} nodeId={id} workspaceId={workspaceId} taskId={data.taskId} subtaskId={data.subtaskId} setNodes={setNodes} />;
+      case 'floor-plan':
+        return <CadFilesRenderer variant="floorplan" data={data} nodeId={id} workspaceId={workspaceId} taskId={data.taskId} subtaskId={data.subtaskId} setNodes={setNodes} />;
 
       case 'procurement-rfq-request': {
         const request = data.procurementRFQData?.request || {};

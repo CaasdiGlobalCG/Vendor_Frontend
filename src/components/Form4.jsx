@@ -11,6 +11,7 @@ import SidebarContent from "./SidebarContent";
 import OCRPreviewModal from "./OCRPreviewModal";
 import ResubmitBanner from "./ResubmitBanner";
 import { isResubmitMode, isSectionEditable } from "../utils/resubmitPermissions";
+import { setKycStep } from "./KycFormGuard";
 
 export default function Form4() {
   const navigate = useNavigate();
@@ -349,12 +350,14 @@ export default function Form4() {
   };
 
   const handlePrevious = () => {
+    setKycStep(3, draftEmail);
     navigate("/Form3");
   };
 
   const handleNext = () => {
     if (draftEmail) {
       localStorage.setItem(`form4Data_${draftEmail}`, JSON.stringify({ _owner: draftEmail, data: formData }));
+      setKycStep(5, draftEmail);
     }
     setVendorData(prev => ({
       ...prev,

@@ -302,6 +302,7 @@ const WorkspaceContextPanel = ({
     const cadFilesList = pickList(elementOptions['cad-files'], [
       { id: 'cad-files-basic', name: 'CAD Files', type: 'cad-files', preview: 'Upload CAD drawings — each file is scanned and shown as a card', cadFilesData: { files: [] } },
       { id: 'cdr-files-basic', name: 'CDR Files', type: 'cdr-files', preview: 'Upload CorelDRAW .cdr files — each file shows as a card with SVG preview', cdrFilesData: { files: [] } },
+      { id: 'floor-plan-basic', name: 'Floor Plan 3D', type: 'floor-plan', preview: 'Upload a floor plan (.dwg .dxf .png .pdf) — extrude it into a 3D model with specs', floorPlanData: { files: [] } },
     ]);
 
     return {

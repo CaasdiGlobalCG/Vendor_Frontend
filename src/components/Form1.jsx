@@ -5,6 +5,7 @@ import { UserContext } from "../context/UserContext";
 import { getStates, getCitiesByState } from "../utils/statesAndCities";
 import { resolveUserIdentity } from "../utils/resolveUserIdentity";
 import { isResubmitMode, isSectionEditable } from "../utils/resubmitPermissions";
+import { setKycStep } from "./KycFormGuard";
 import StepIndicator from "./StepIndicator";
 import SidebarContent from "./SidebarContent";
 import ResubmitBanner from "./ResubmitBanner";
@@ -198,6 +199,7 @@ function Form1() {
     setIsSubmitting(true);
     if (draftEmail) {
       localStorage.setItem(`user-${draftEmail}-form1Data`, JSON.stringify({ _owner: draftEmail, data: formData }));
+      setKycStep(2, draftEmail);
     }
     setVendorData((prev) => ({
       ...prev,

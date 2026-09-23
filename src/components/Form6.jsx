@@ -8,6 +8,7 @@ import ResubmitBanner from './ResubmitBanner';
 import config from '../config/env';
 import { resolveUserEmail } from '../utils/resolveUserIdentity';
 import { isResubmitMode, isSectionEditable } from '../utils/resubmitPermissions';
+import { clearKycStep, setKycStep } from './KycFormGuard';
 
 export default function Form6() {
   const navigate = useNavigate();
@@ -65,6 +66,7 @@ export default function Form6() {
   };
 
   const handlePrevious = () => {
+    setKycStep(5, currentUser?.email);
     navigate("/Form5");
   };
 
@@ -151,6 +153,7 @@ export default function Form6() {
 
       if (response.ok) {
         sessionStorage.removeItem('vendorHandoffEmail');
+        clearKycStep(userEmail);
         setVendorData({
           vendorDetails: {},
           companyDetails: {},

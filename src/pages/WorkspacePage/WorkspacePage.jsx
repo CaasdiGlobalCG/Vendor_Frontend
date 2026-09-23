@@ -847,6 +847,13 @@ const WorkspacePage = () => {
           type: 'cdr-files',
           preview: 'Upload CorelDRAW .cdr files — each file shows as a card with SVG preview',
           cdrFilesData: { files: [] }
+        },
+        {
+          id: 'floor-plan-basic',
+          name: 'Floor Plan 3D',
+          type: 'floor-plan',
+          preview: 'Upload a floor plan (.dwg .dxf .png .pdf) — extrude it into a 3D model with specs',
+          floorPlanData: { files: [] }
         }
       ]
     },

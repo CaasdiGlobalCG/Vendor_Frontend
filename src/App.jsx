@@ -30,6 +30,7 @@ import Form3 from "./components/Form3";
 import Form4 from "./components/Form4";
 import Form5 from "./components/Form5";
 import Form6 from "./components/Form6";
+import KycFormGuard from "./components/KycFormGuard";
 import Auditor from "./components/AuditorWaiting";
 import Login from "./components/Login";
 import GoogleOAuthCallback from "./components/GoogleOAuthCallback";
@@ -502,12 +503,12 @@ function AppContent() {
 
       {/* Vendor onboarding is authenticated by the Cognito session, but a new
           vendor has no /api/vendor/me record until these forms are submitted. */}
-      <Route path="/Form1" element={<Form1 />} />
-      <Route path="/Form2" element={<Form2 />} />
-      <Route path="/Form3" element={<Form3 />} />
-      <Route path="/Form4" element={<Form4 />} />
-      <Route path="/Form5" element={<Form5 />} />
-      <Route path="/Form6" element={<Form6 />} />
+      <Route path="/Form1" element={<KycFormGuard step={1}><Form1 /></KycFormGuard>} />
+      <Route path="/Form2" element={<KycFormGuard step={2}><Form2 /></KycFormGuard>} />
+      <Route path="/Form3" element={<KycFormGuard step={3}><Form3 /></KycFormGuard>} />
+      <Route path="/Form4" element={<KycFormGuard step={4}><Form4 /></KycFormGuard>} />
+      <Route path="/Form5" element={<KycFormGuard step={5}><Form5 /></KycFormGuard>} />
+      <Route path="/Form6" element={<KycFormGuard step={6}><Form6 /></KycFormGuard>} />
       <Route path="/Auditorapprove" element={<Auditor />} />
 
       {/* ── PROTECTED ROUTES — wrapped in RBACProvider + AccessDeniedGuard ── */}
