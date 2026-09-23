@@ -9,7 +9,7 @@ import authFetch from '../../../../../utils/authFetch';
 import html2pdf from 'html2pdf.js';
 import StandardPreview from '../shared/StandardPreview.jsx';
 import { createRoot } from 'react-dom/client';
-import invoiceFetch from '../utils/invoiceFetch';
+import invoiceFetch, { getIdToken } from '../utils/invoiceFetch';
 
 // Fixed Caasdi Global customer used for all quotations
 const CAASDI_GLOBAL_CUSTOMER = {
@@ -158,6 +158,9 @@ const CustomerDropdown = ({ value, onChange }) => {
     </div>
   );
 };
+
+// How often the quote form is auto-saved as a draft (ms)
+const AUTO_SAVE_INTERVAL_MS = 5000;
 
 // Quote Number Configuration Modal
 const QuoteNumberConfigModal = ({ open, onClose, config, onSave }) => {
@@ -729,6 +732,24 @@ const NewQuoteComponentInner = ({
     const [termsAndConditions, setTermsAndConditions] = useState('');
     const [customerNotes, setCustomerNotes] = useState('Looking forward for your business.');
 
+    // ----- Draft auto-save state -----
+    // The form auto-saves to the backend as a draft every 5s so work survives
+    // navigation, tab closes, and power loss. The first save creates a draft
+    // quotation; subsequent saves update that same draft via PUT.
+    const existingQuotationId = (!duplicateMode && initialData)
+        ? (initialData.quotationId || initialData.id || initialData._id || initialData.quoteId || null)
+        : null;
+    const autoSavedQuotationIdRef = useRef(existingQuotationId);
+    const lastAutoSaveSnapshotRef = useRef(null);
+    const autoSaveInFlightRef = useRef(false);
+    const manualSaveInFlightRef = useRef(false);
+    const savedManuallyRef = useRef(false);
+    const quoteNumbersConsumedRef = useRef(!!existingQuotationId);
+    const authTokenRef = useRef(null);
+    const performAutoSaveRef = useRef(null);
+    const [autoSaveStatus, setAutoSaveStatus] = useState('idle'); // idle | saving | saved | error
+    const [lastAutoSavedAt, setLastAutoSavedAt] = useState(null);
+
     useEffect(() => {
         if (projectId) {
             invoiceFetch(`/api/projects/${projectId}`)
@@ -751,10 +772,10 @@ const NewQuoteComponentInner = ({
                     billingPhone: CAASDI_GLOBAL_CUSTOMER.phone || '',
                     billingEmail: CAASDI_GLOBAL_CUSTOMER.email || '',
                     billingGstin: CAASDI_GLOBAL_CUSTOMER.gstin || '',
-                    shippingAddress: customer.shippingAddress || '',
-                    shippingPhone: customer.shippingPhone || '',
-                    shippingEmail: customer.shippingEmail || '',
-                    shippingGstin: customer.shippingGstin || ''
+                    shippingAddress: customer.shippingAddress || formatAddress(customer.address?.shipping) || '',
+                    shippingPhone: customer.shippingPhone || customer.phone || '',
+                    shippingEmail: customer.shippingEmail || customer.email || '',
+                    shippingGstin: customer.shippingGstin || customer.gstin || ''
                 });
             }
             
@@ -781,12 +802,25 @@ const NewQuoteComponentInner = ({
             
             // Handle quote and reference numbers
             if (!duplicateMode && (initialData.quotationId || initialData.id)) {
-                setCustomQuoteNumber(initialData.quotationId || initialData.id);
+                // Prefer the human-friendly quote number (CG-...) over the system QT- id
+                setCustomQuoteNumber(
+                    initialData.customQuoteId || initialData.quoteNumber || initialData.displayQuoteId ||
+                    initialData.quotationId || initialData.id
+                );
+                // Track the persisted quotation id so auto-save updates instead of duplicating
+                autoSavedQuotationIdRef.current = initialData.quotationId || initialData.id;
+                quoteNumbersConsumedRef.current = true;
             }
             if (!duplicateMode && initialData.referenceNumber) {
                 setCustomReferenceNumber(initialData.referenceNumber);
             }
             // For duplicate mode, new numbers will be set by the config loading effects
+
+            // Restore terms & notes so drafts reopen exactly where they left off
+            setTermsAndConditions(initialData.termsAndConditions || '');
+            if (initialData.customerNotes || initialData.notes) {
+                setCustomerNotes(initialData.customerNotes || initialData.notes);
+            }
         }
     }, [initialData, duplicateMode]);
 
@@ -1311,57 +1345,6 @@ const NewQuoteComponentInner = ({
         }
     }, [currentUser?.vendorId]);
 
-    // Function to increment quote number
-    const incrementQuoteNumber = async () => {
-        if (quoteNumberConfig.autoGenerate) {
-            try {
-                const currentNumber = parseInt(quoteNumberConfig.nextNumber);
-                const nextNumber = (currentNumber + 1).toString();
-                
-                const newConfig = {
-                    ...quoteNumberConfig,
-                    nextNumber: nextNumber
-                };
-                
-                // Save updated config
-                const configKey = `quoteNumberConfig_${currentUser?.vendorId}`;
-                localStorage.setItem(configKey, JSON.stringify(newConfig));
-                
-                setQuoteNumberConfig(newConfig);
-                setCustomQuoteNumber(`${newConfig.prefix}${nextNumber}`);
-                
-                console.log('Quote number incremented to:', `${newConfig.prefix}${nextNumber}`);
-            } catch (error) {
-                console.error('Error incrementing quote number:', error);
-            }
-        }
-    };
-
-    // Function to increment reference number
-    const incrementReferenceNumber = async () => {
-        if (referenceConfig.autoGenerate) {
-            try {
-                const currentNumber = parseInt(referenceConfig.nextNumber);
-                const nextNumber = (currentNumber + 1).toString();
-                
-                const newConfig = {
-                    ...referenceConfig,
-                    nextNumber: nextNumber
-                };
-                
-                // Save updated config
-                const configKey = `referenceNumberConfig_${currentUser?.vendorId}`;
-                localStorage.setItem(configKey, JSON.stringify(newConfig));
-                
-                setReferenceConfig(newConfig);
-                setCustomReferenceNumber(`${newConfig.prefix}${nextNumber}`);
-                
-                console.log('Reference number incremented to:', `${newConfig.prefix}${nextNumber}`);
-            } catch (error) {
-                console.error('Error incrementing reference number:', error);
-            }
-        }
-    };
 
     // Function to generate PDF using the *same* StandardPreview layout (html2pdf)
     const generateQuotePDF = async (quoteData) => {
@@ -1535,6 +1518,11 @@ const NewQuoteComponentInner = ({
                 companyName: quoteCustomer.companyName || quoteCustomer.name || '',
                 displayName: quoteCustomer.displayName || quoteCustomer.name || quoteCustomer.companyName || '',
                 gstin: quoteCustomer.gstin || '',
+                // Persist ship-to edits so reopening a draft restores them
+                shippingAddress: editableCustomerDetails.shippingAddress || '',
+                shippingPhone: editableCustomerDetails.shippingPhone || '',
+                shippingEmail: editableCustomerDetails.shippingEmail || '',
+                shippingGstin: editableCustomerDetails.shippingGstin || '',
                 address: {
                     billing: CAASDI_GLOBAL_CUSTOMER.address.billing,
                     shipping: quoteCustomer.address?.shipping || quoteCustomer.shippingAddress || {}
@@ -1643,6 +1631,186 @@ const NewQuoteComponentInner = ({
         setShowPreview(true);
     };
 
+    // True when the form has anything worth persisting as a draft — prevents
+    // junk drafts when the form is opened and closed without being touched.
+    const formHasMeaningfulContent = () => {
+        const hasItemContent = items.some(item =>
+            item.selectedItem?.name ||
+            (item.description || '').trim() !== '' ||
+            parseFloat(item.quantity) > 0 ||
+            parseFloat(item.rate) > 0
+        );
+        return hasItemContent ||
+            (termsAndConditions || '').trim() !== '' ||
+            (discount || '').toString().trim() !== '' ||
+            (tdsValue || '').toString().trim() !== '' ||
+            (customerNotes || '').trim() !== 'Looking forward for your business.';
+    };
+
+    // Serialized form state used to detect changes since the last auto-save
+    const buildAutoSaveSnapshot = () => JSON.stringify({
+        items,
+        discount,
+        tdsType,
+        tdsValue,
+        quoteDate,
+        expiryDate,
+        termsAndConditions,
+        customerNotes,
+        customQuoteNumber,
+        customReferenceNumber,
+        editableCustomerDetails,
+        selectedCustomer,
+    });
+
+    // Consume the current quote/reference numbers exactly once per new quote —
+    // called on the first successful persist (auto-save or manual save) so an
+    // abandoned draft can't collide with the next quote's visible number.
+    const consumeQuoteNumbersOnce = () => {
+        if (quoteNumbersConsumedRef.current) return;
+        quoteNumbersConsumedRef.current = true;
+        try {
+            // Bump the stored configs without changing the number shown in the
+            // form — the displayed number now belongs to this quote.
+            if (quoteNumberConfig.autoGenerate) {
+                const nextNumber = (parseInt(quoteNumberConfig.nextNumber) + 1).toString();
+                const newConfig = { ...quoteNumberConfig, nextNumber };
+                localStorage.setItem(`quoteNumberConfig_${currentUser?.vendorId}`, JSON.stringify(newConfig));
+                setQuoteNumberConfig(newConfig);
+            }
+            if (referenceConfig.autoGenerate) {
+                const nextNumber = (parseInt(referenceConfig.nextNumber) + 1).toString();
+                const newConfig = { ...referenceConfig, nextNumber };
+                localStorage.setItem(`referenceNumberConfig_${currentUser?.vendorId}`, JSON.stringify(newConfig));
+                setReferenceConfig(newConfig);
+            }
+        } catch (error) {
+            console.error('Error consuming quote/reference numbers:', error);
+        }
+    };
+
+    // Persist the current form as a draft without blocking the UI or generating
+    // a PDF. Called every 5s, on close, and on unmount/page-unload.
+    const performAutoSave = async ({ force = false, keepalive = false } = {}) => {
+        if (savedManuallyRef.current || autoSaveInFlightRef.current || manualSaveInFlightRef.current || saving) return;
+        if (!currentUser?.vendorId || !selectedCustomer) return;
+
+        const draftId = autoSavedQuotationIdRef.current;
+        // Never create a brand-new draft for an untouched form
+        if (!draftId && !formHasMeaningfulContent()) return;
+
+        const snapshot = buildAutoSaveSnapshot();
+        if (!force) {
+            if (lastAutoSaveSnapshotRef.current === null && draftId) {
+                // First check for an existing quote — treat the freshly hydrated
+                // state as the baseline so we don't write identical data.
+                lastAutoSaveSnapshotRef.current = snapshot;
+                return;
+            }
+            if (snapshot === lastAutoSaveSnapshotRef.current) return;
+        }
+
+        const quotationData = buildQuotationData();
+        // Keep the workflow status when editing an existing quote; brand-new
+        // quotes and duplicates are always saved as drafts.
+        quotationData.status = (draftId && initialData && !duplicateMode && initialData.status)
+            ? String(initialData.status).toLowerCase()
+            : 'draft';
+        // Don't let an update overwrite the original creation timestamp
+        delete quotationData.createdAt;
+
+        const url = draftId ? `/api/workspace/quotations/${draftId}` : `/api/workspace/quotations`;
+        const method = draftId ? 'PUT' : 'POST';
+        const headers = {
+            'Content-Type': 'application/json',
+            'x-user-info': JSON.stringify({
+                vendorId: currentUser.vendorId,
+                email: currentUser?.email,
+                role: 'vendor',
+                name: currentUser?.name
+            })
+        };
+        const body = JSON.stringify(quotationData);
+
+        // During page unload there is no time to resolve a token — reuse the
+        // one cached by the last auto-save and fire a keepalive request.
+        if (keepalive && authTokenRef.current) {
+            try {
+                fetch(url, {
+                    method,
+                    headers: { ...headers, Authorization: `Bearer ${authTokenRef.current}` },
+                    body,
+                    credentials: 'include',
+                    keepalive: true,
+                });
+            } catch {}
+            return;
+        }
+
+        autoSaveInFlightRef.current = true;
+        setAutoSaveStatus('saving');
+        try {
+            // Cache the id token so unload-time saves can skip async work
+            getIdToken().then(token => { if (token) authTokenRef.current = token; }).catch(() => {});
+
+            const res = await invoiceFetch(url, { method, headers, body });
+            if (res.ok) {
+                const result = await res.json().catch(() => ({}));
+                const newId = result?.data?.quotationId || result?.data?.id;
+                if (method === 'POST' && newId) {
+                    autoSavedQuotationIdRef.current = newId;
+                    consumeQuoteNumbersOnce();
+                }
+                lastAutoSaveSnapshotRef.current = snapshot;
+                setLastAutoSavedAt(new Date());
+                setAutoSaveStatus('saved');
+            } else {
+                setAutoSaveStatus('error');
+            }
+        } catch (error) {
+            console.warn('Quote auto-save failed:', error);
+            setAutoSaveStatus('error');
+        } finally {
+            autoSaveInFlightRef.current = false;
+        }
+    };
+    performAutoSaveRef.current = performAutoSave;
+
+    // Auto-save every 5s, plus a final best-effort save on in-app unmount and
+    // on tab close/refresh (keepalive request with the cached token).
+    useEffect(() => {
+        // Warm the token cache so unload-time saves can skip async token lookup
+        getIdToken().then(token => { if (token) authTokenRef.current = token; }).catch(() => {});
+
+        const interval = setInterval(() => {
+            performAutoSaveRef.current?.();
+        }, AUTO_SAVE_INTERVAL_MS);
+
+        const handleBeforeUnload = () => {
+            performAutoSaveRef.current?.({ force: true, keepalive: true });
+        };
+        window.addEventListener('beforeunload', handleBeforeUnload);
+
+        return () => {
+            clearInterval(interval);
+            window.removeEventListener('beforeunload', handleBeforeUnload);
+            performAutoSaveRef.current?.({ force: true, keepalive: true });
+        };
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
+
+    // Final draft save before leaving via the close button — bounded wait so
+    // the quotes list refresh (in onBack) picks up the saved draft.
+    const handleCloseWithAutoSave = async () => {
+        try {
+            await Promise.race([
+                performAutoSaveRef.current?.({ force: true }),
+                new Promise(resolve => setTimeout(resolve, 3000)),
+            ]);
+        } catch {}
+        onBack();
+    };
+
     // Save quote
     const handleSaveQuote = async () => {
         setMessage(null);
@@ -1656,6 +1824,8 @@ const NewQuoteComponentInner = ({
         }
         setSaving(true);
         setIsLoading(true);
+        // Block auto-save for the duration of the manual save
+        manualSaveInFlightRef.current = true;
 
         const quotationData = buildQuotationData();
         console.log('Saving quotation data in StandardPreview format:', quotationData);
@@ -1673,17 +1843,31 @@ const NewQuoteComponentInner = ({
             };
 
             const isEdit = !!initialData && !duplicateMode;
-            
+
+            // If an auto-save POST is in-flight, wait for it so we update the
+            // draft it creates instead of POSTing a duplicate quotation.
+            for (let i = 0; i < 40 && autoSaveInFlightRef.current; i++) {
+                await new Promise(resolve => setTimeout(resolve, 250));
+            }
+
+            // If auto-save already persisted a draft, update it instead of
+            // creating a second quotation for the same form.
+            const autoDraftId = autoSavedQuotationIdRef.current;
+            const isUpdate = isEdit || !!autoDraftId;
+
             // Debug: Check what ID fields are available
-            console.log('Edit mode check:', { isEdit, initialData, duplicateMode });
-            
+            console.log('Edit mode check:', { isEdit, isUpdate, autoDraftId, initialData, duplicateMode });
+
             // Try to get the quotation ID from various possible fields
-            const quotationId = initialData?.id || initialData?.quotationId || initialData?._id || initialData?.quoteId;
+            const quotationId =
+                initialData?.id || initialData?.quotationId || initialData?._id || initialData?.quoteId ||
+                autoDraftId;
             console.log('Quotation ID for edit:', quotationId);
-            
-            if (isEdit && !quotationId) {
+
+            if (isUpdate && !quotationId) {
                 console.error('Cannot edit quote: No quotation ID found in initialData:', initialData);
                 setMessage({ type: 'error', text: 'Cannot update quote: Missing quotation ID' });
+                manualSaveInFlightRef.current = false;
                 setSaving(false);
                 setIsLoading(false);
                 return;
@@ -1719,8 +1903,8 @@ const NewQuoteComponentInner = ({
                 dataKeys: Object.keys(quotationData)
             });
             
-            const url = isEdit ? `/api/workspace/quotations/${quotationId}` : `/api/workspace/quotations`;
-            const method = isEdit ? 'PUT' : 'POST';
+            const url = isUpdate ? `/api/workspace/quotations/${quotationId}` : `/api/workspace/quotations`;
+            const method = isUpdate ? 'PUT' : 'POST';
             
             const jsonPayload = JSON.stringify(quotationData);
             console.log('📨 Sending to backend:', {
@@ -1745,14 +1929,13 @@ const NewQuoteComponentInner = ({
                   quotationId ||
                   quotationData.quotationId;
                 
-                setMessage({ type: 'success', text: isEdit ? 'Quotation updated successfully!' : 'Quotation saved successfully!' });
-                
-                // Increment quote and reference numbers for next quote (only for new quotes, not edits)
-                if (!isEdit) {
-                    incrementQuoteNumber();
-                    incrementReferenceNumber();
-                }
-                
+                setMessage({ type: 'success', text: isUpdate ? 'Quotation updated successfully!' : 'Quotation saved successfully!' });
+                savedManuallyRef.current = true;
+
+                // Consume the quote/reference numbers for the next quote. No-op
+                // when auto-save already consumed them for this draft.
+                consumeQuoteNumbersOnce();
+
                 setTimeout(() => onBack(), 2000);
             } else {
                 const errorData = await res.json().catch(() => ({}));
@@ -1761,6 +1944,7 @@ const NewQuoteComponentInner = ({
         } catch (err) {
             setMessage({ type: 'error', text: (!!initialData && !duplicateMode) ? 'Failed to update quotation.' : 'Failed to save quotation.' });
         } finally {
+            manualSaveInFlightRef.current = false;
             setSaving(false);
             setIsLoading(false);
         }
@@ -1801,8 +1985,22 @@ const NewQuoteComponentInner = ({
             <div className="flex-1 p-8 flex flex-col min-h-full">
                 <header className="flex justify-between items-center mb-6">
                     <h1 className="text-2xl font-bold text-gray-800">{initialData ? (duplicateMode ? 'Duplicate Quotation' : 'Edit Quotation') : 'New Quotation'}</h1>
-                    <div className="flex items-center">
-                         <button onClick={onBack} className="p-2 text-gray-500 hover:bg-gray-200 rounded-full\">
+                    <div className="flex items-center gap-3">
+                        {autoSaveStatus === 'saving' && (
+                            <span className="flex items-center gap-1.5 text-xs text-gray-500">
+                                <Loader2 size={13} className="animate-spin" /> Auto-saving draft…
+                            </span>
+                        )}
+                        {autoSaveStatus === 'saved' && lastAutoSavedAt && (
+                            <span className="flex items-center gap-1.5 text-xs text-gray-500">
+                                <Check size={13} className="text-green-600" />
+                                Draft auto-saved at {lastAutoSavedAt.toLocaleTimeString()}
+                            </span>
+                        )}
+                        {autoSaveStatus === 'error' && (
+                            <span className="text-xs text-amber-600">Auto-save failed — will retry</span>
+                        )}
+                         <button onClick={handleCloseWithAutoSave} className="p-2 text-gray-500 hover:bg-gray-200 rounded-full\">
                             <X size={20} />
                         </button>
                     </div>

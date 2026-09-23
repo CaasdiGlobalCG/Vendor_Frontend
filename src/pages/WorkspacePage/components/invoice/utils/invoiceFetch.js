@@ -20,7 +20,7 @@ import authFetch from '../../../../../utils/authFetch';
  * tokens placed in storage by handoff flows.
  * @returns {Promise<string|null>} JWT string or null
  */
-async function getIdToken() {
+export async function getIdToken() {
   try {
     const session = await Auth.currentSession();
     const token = session?.getIdToken?.()?.getJwtToken?.();

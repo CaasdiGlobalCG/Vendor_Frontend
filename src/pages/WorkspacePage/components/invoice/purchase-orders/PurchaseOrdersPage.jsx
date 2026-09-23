@@ -414,13 +414,13 @@ const PurchaseOrdersPage = ({ workspaceId, workspaceName, selectedTask, selected
       console.log('🔄 Approving PO:', order.id);
 
       // Call backend endpoint to approve PO
-      const response = await invoiceFetch(`/api/workspace/purchase-orders/${order.id}/vendor-approve`, {
-        method: 'POST',
+      const response = await invoiceFetch(`/api/workspace/purchase-orders/${order.id}/vendor-response`, {
+        method: 'PATCH',
         headers: headers,
         body: JSON.stringify({
           vendorId: vendorId,
-          vendorName: currentUser?.name || currentUser?.vendorName,
-          approvalDate: new Date().toISOString()
+          response: 'accepted',
+          feedback: ''
         })
       });
 

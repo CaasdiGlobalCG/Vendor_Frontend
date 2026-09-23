@@ -1075,7 +1075,29 @@ const WorkspacePage = () => {
       ]
     }
   }), [invoices, quotes, creditNotes, purchaseOrders, transformToElementOptions]);
-  
+
+  // The Turnkey element category is only available when a Turnkey CAS member
+  // has been invited to the workspace by the PM — visible to all roles
+  // (CAS member, vendor, PM and client).
+  const hasTurnkeyCASMember = useMemo(() => {
+    const isTurnkeyValue = (value) => {
+      const normalized = (value || '').toString().trim().toLowerCase();
+      return normalized === 'trunky' || normalized.includes('turnkey');
+    };
+    const casMembers = [
+      ...(Array.isArray(workspace?.casCollaborators) ? workspace.casCollaborators : []),
+      ...(Array.isArray(workspaceCollaborators) ? workspaceCollaborators.filter(c => c?.isCAS) : [])
+    ];
+    const result = casMembers.some(member =>
+      isTurnkeyValue(member?.casUnit) ||
+      isTurnkeyValue(member?.specialization) ||
+      isTurnkeyValue(member?.role) ||
+      (member?.userId || member?.vendorId || '').toString().toUpperCase().startsWith('TRNK-')
+    );
+    console.log('🔧 Turnkey CAS member check:', { hasTurnkeyCASMember: result, casMembers });
+    return result;
+  }, [workspace?.casCollaborators, workspaceCollaborators]);
+
   // RBAC state
   const [userPermissions, setUserPermissions] = useState({
     canEdit: false,
@@ -1476,8 +1498,9 @@ const WorkspacePage = () => {
 
   const handleCASInviteSuccess = (invitedEmployees) => {
     console.log('✅ CAS members invited successfully:', invitedEmployees);
-    // Optionally refresh workspace data or show a success message
+    // Refresh workspace so casCollaborators (e.g. Turnkey members) is up to date
     triggerActivityRefresh();
+    refetchWorkspace();
   };
 
   // Use workspace layers or fallback to mock data
@@ -2435,6 +2458,7 @@ const WorkspacePage = () => {
               isOpen={!isMobile ? isContextPanelOpen : mobileLeftOpen}
               activeTab={dockActiveTab}
               elementOptions={elementOptions}
+              hasTurnkeyMember={hasTurnkeyCASMember}
               onClose={() => {
                 if (isMobile) setMobileLeftOpen(false);
                 else setIsContextPanelOpen(false);
@@ -2587,6 +2611,7 @@ const WorkspacePage = () => {
         userRole={detectedUserRole}
         currentUser={currentUser}
         elementOptions={elementOptions}
+        hasTurnkeyMember={hasTurnkeyCASMember}
       />
 
       {/* Elements Panel - Render only when visible */}

@@ -78,11 +78,11 @@ const WorkspaceContextPanel = ({
   onUpdateTextElement,
   // Agent props
   onLaunchAgent,
+  // Turnkey visibility — true only when a Turnkey CAS member is in the workspace
+  hasTurnkeyMember = false,
 }) => {
   const [elementsSearch, setElementsSearch] = useState('');
   const [selectedCategory, setSelectedCategory] = useState(null);
-
-  if (!isOpen) return null;
 
   // Helper to trigger drag for canvas
   const handleDragStart = (e, elementData) => {
@@ -136,10 +136,12 @@ const WorkspaceContextPanel = ({
     { type: 'input', label: 'Input', icon: AlignLeft },
   ];
 
-  // Element Categories
-  const categories = [
-    { 
-      id: 'invoices-quotes', 
+  // Element Categories — the Turnkey category is only listed when a Turnkey
+  // CAS member has been invited to the workspace by the PM (visible to all roles).
+  const categories = useMemo(() => {
+    const baseCategories = [
+    {
+      id: 'invoices-quotes',
       name: 'Invoices & Quotes', 
       desc: 'Quotations, invoices, and purchase orders', 
       icon: FileText,
@@ -201,14 +203,28 @@ const WorkspaceContextPanel = ({
       icon: Calculator,
       color: 'bg-purple-50 text-purple-700 border-purple-200' 
     },
-    { 
-      id: 'smart', 
-      name: 'Smart Elements', 
-      desc: 'AI notes, calendar events, approval boards', 
+    {
+      id: 'smart',
+      name: 'Smart Elements',
+      desc: 'AI notes, calendar events, approval boards',
       icon: Sparkles,
-      color: 'bg-violet-50 text-violet-700 border-violet-200' 
+      color: 'bg-violet-50 text-violet-700 border-violet-200'
     },
-  ];
+    ];
+
+    return hasTurnkeyMember
+      ? [
+          {
+            id: 'turnkey',
+            name: 'Turnkey',
+            desc: 'Turnkey workflow and execution tracking',
+            icon: Settings,
+            color: 'bg-red-50 text-red-700 border-red-200'
+          },
+          ...baseCategories
+        ]
+      : baseCategories;
+  }, [hasTurnkeyMember]);
 
   // Comprehensive Category Elements Map
   const categoryElementsMap = useMemo(() => {
@@ -305,7 +321,7 @@ const WorkspaceContextPanel = ({
       { id: 'floor-plan-basic', name: 'Floor Plan 3D', type: 'floor-plan', preview: 'Upload a floor plan (.dwg .dxf .png .pdf) — extrude it into a 3D model with specs', floorPlanData: { files: [] } },
     ]);
 
-    return {
+    const map = {
       'invoices-quotes': invQuotesList,
       'forms': formsList,
       'tables': tablesList,
@@ -317,7 +333,16 @@ const WorkspaceContextPanel = ({
       'cost-calculators': calculatorsList,
       'smart': rawSmart,
     };
-  }, [elementOptions]);
+
+    // Turnkey elements are only exposed when a Turnkey CAS member is in the workspace
+    if (hasTurnkeyMember) {
+      map['turnkey'] = pickList(elementOptions.turnkey, [
+        { id: 'turnkey-workflow', name: 'Turnkey Workflow', type: 'turnkey-workflow', category: 'turnkey', nodeType: 'turnkeyNode', preview: 'Complete workflow visualization with tasks, resources, and status tracking' },
+      ]);
+    }
+
+    return map;
+  }, [elementOptions, hasTurnkeyMember]);
 
   // Search across all categories
   const searchResults = useMemo(() => {
@@ -338,6 +363,8 @@ const WorkspaceContextPanel = ({
     });
     return results;
   }, [elementsSearch, categoryElementsMap, categories]);
+
+  if (!isOpen) return null;
 
   // Current category elements when drilled down
   const currentCategoryMeta = categories.find(c => c.id === selectedCategory);

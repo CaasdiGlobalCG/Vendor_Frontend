@@ -750,6 +750,29 @@ const edgeTypes = {
     setTimeout(() => { isUpdatingNodesLocallyRef.current = false; }, 0);
     console.log('🧹 Canvas cleared - all elements removed');
   };
+
+  // After local deletions, purge the removed ids from the cached canvas data
+  // (subtask canvasData, or the workspace fallback used by getCanvasData) so the
+  // subtask sync effect can't restore them once the canvas becomes empty —
+  // same repopulation path that clearCanvas and the AI-review discard guard against.
+  const purgeDeletedFromCanvasCache = useCallback((deletedNodeIds = [], deletedEdgeIds = []) => {
+    isUpdatingNodesLocallyRef.current = true;
+    const nodeIds = new Set(deletedNodeIds);
+    const edgeIds = new Set(deletedEdgeIds);
+    const cache = selectedSubtask?.canvasData || workspace;
+    if (cache) {
+      if (nodeIds.size > 0) {
+        cache.nodes = (cache.nodes || []).filter(n => !nodeIds.has(n.id));
+      }
+      if (nodeIds.size > 0 || edgeIds.size > 0) {
+        cache.edges = (cache.edges || []).filter(
+          e => !edgeIds.has(e.id) && !nodeIds.has(e.source) && !nodeIds.has(e.target)
+        );
+      }
+    }
+    setTimeout(() => { isUpdatingNodesLocallyRef.current = false; }, 0);
+  }, [selectedSubtask, workspace]);
+
   const [reactFlowInstance, setReactFlowInstance] = useState(null);
   const [isDraggingOver, setIsDraggingOver] = useState(false);
   const [zoomLevel, setZoomLevelState] = useState(Number(canvasData.zoomLevel) || 100);
@@ -936,11 +959,56 @@ const edgeTypes = {
   // marked non-deletable for other roles — React Flow then skips them during
   // keyboard deletes (deleteKeyCode) instead of emitting remove changes.
   const renderedNodes = React.useMemo(() => {
-    if (getCurrentUserRole() === 'pm') return nodes;
-    return nodes.map((node) =>
-      node.type === 'elementNode' ? { ...node, deletable: false } : node
-    );
-  }, [nodes, getCurrentUserRole]);
+    // Node callbacks can't be persisted in node.data (functions don't survive
+    // JSON serialization to the backend), so inject them at render time.
+    const INTERACTIVE_NODE_TYPES = new Set([
+      'quotation', 'invoice', 'purchaseOrder', 'creditNote',
+      'smartNote', 'infoCard', 'formCard',
+    ]);
+    return nodes.map((node) => {
+      let out = node;
+      if (node.type === 'elementNode' && getCurrentUserRole() !== 'pm') {
+        out = { ...out, deletable: false };
+      }
+      if (INTERACTIVE_NODE_TYPES.has(node.type)) {
+        out = {
+          ...out,
+          data: {
+            ...out.data,
+            onUpdate: (updated) =>
+              setNodes((nds) =>
+                nds.map((n) =>
+                  n.id === node.id ? { ...n, data: { ...n.data, ...updated } } : n
+                )
+              ),
+            onSendForApproval: (updated) =>
+              setNodes((nds) =>
+                nds.map((n) =>
+                  n.id === node.id
+                    ? {
+                        ...n,
+                        data: {
+                          ...n.data,
+                          ...updated,
+                          status: 'pending',
+                          approvalStatus: 'pending',
+                        },
+                      }
+                    : n
+                )
+              ),
+            onDelete: () => {
+              setNodes((nds) => nds.filter((n) => n.id !== node.id));
+              setEdges((eds) =>
+                eds.filter((e) => e.source !== node.id && e.target !== node.id)
+              );
+            },
+          },
+        };
+      }
+      return out;
+    });
+  }, [nodes, getCurrentUserRole, setNodes, setEdges]);
 
   // Wrapped cleanup function using the helper
   const cleanupOrphanedNodes = useCallback((nodesToClean) => {
@@ -1135,6 +1203,16 @@ const edgeTypes = {
       isApplyingRemoteRef.current = true;
       try {
         applyRemoteOperation(op, setNodesRaw, setEdgesRaw, updateZoomLevel);
+        // Keep the cached canvas data in sync so a remote delete can't be
+        // restored by the subtask sync effect once the canvas becomes empty.
+        if (op.type === 'NODE_DELETE') {
+          purgeDeletedFromCanvasCache([op.nodeId]);
+        } else if (op.type === 'EDGE_DELETE') {
+          purgeDeletedFromCanvasCache([], [op.edgeId]);
+        } else if (op.type === 'NODES_BATCH_UPDATE' && Array.isArray(op.changes)) {
+          const removedIds = op.changes.filter(c => c.type === 'remove').map(c => c.id);
+          if (removedIds.length > 0) purgeDeletedFromCanvasCache(removedIds);
+        }
       } finally {
         // Use microtask to ensure the flag is reset after React batches state updates
         queueMicrotask(() => { isApplyingRemoteRef.current = false; });
@@ -1142,7 +1220,7 @@ const edgeTypes = {
     });
 
     return () => canvasWebSocket.setOnRemoteOperation(null);
-  }, [canvasWebSocket, setNodesRaw, setEdgesRaw, updateZoomLevel]);
+  }, [canvasWebSocket, setNodesRaw, setEdgesRaw, updateZoomLevel, purgeDeletedFromCanvasCache]);
 
   // Handle full state responses (on reconnect)
   useEffect(() => {
@@ -1550,6 +1628,24 @@ const edgeTypes = {
           subtaskName: selectedSubtask?.title || '',
           ...(element.data || {})
         }),
+        // Bind dragged quotation record to the node so it isn't a blank draft
+        ...(isQuotation && (() => {
+          const taxTotal =
+            element.totalTax ?? element.tax ??
+            ((parseFloat(element.cgst) || 0) + (parseFloat(element.sgst) || 0) + (parseFloat(element.igst) || 0) || '');
+          return {
+            quotationNumber: element.displayQuoteId || element.customQuoteId || element.quotationNumber || element.name || '',
+            customerName: element.customerName || element.customerDetails?.name || element.customerDetails?.displayName || element.customer || '',
+            validUntil: element.validUntil || element.expiryDate || '',
+            subtotal: element.subtotal ?? element.subTotal ?? '',
+            tax: taxTotal,
+            total: element.total ?? element.totalAmount ?? element.grandTotal ?? '',
+            status: (element.status || 'draft').toLowerCase(),
+            items: element.items || [],
+            quotationId: element.quotationId || element.id || null,
+            quotationData: element,
+          };
+        })()),
         // Store workspaceId for all nodes (needed for MaterialsRenderer and other components)
         workspaceId: workspace?.workspaceId || null,
         taskId: selectedTask?.id || null,
@@ -2101,9 +2197,10 @@ const edgeTypes = {
     }
     
     setEdges((eds) => eds.filter((edge) => edge.id !== edgeLabelModal.edgeId));
+    purgeDeletedFromCanvasCache([], [edgeLabelModal.edgeId]);
     closeEdgeLabelModal();
     console.log('🗑️ Edge deleted:', edgeLabelModal.edgeId);
-  }, [edgeLabelModal.edgeId, closeEdgeLabelModal, setEdges]);
+  }, [edgeLabelModal.edgeId, closeEdgeLabelModal, setEdges, purgeDeletedFromCanvasCache]);
 
 
   // Handle node selection changes
@@ -2618,7 +2715,21 @@ const edgeTypes = {
       
       // Remove all edges in the group
       setEdges(eds => eds.filter(edge => edge.data?.flowchartGroup !== groupId));
-      
+
+      // Emit NODE_DELETE ops so the shared snapshot and other collaborators
+      // drop these nodes too (the setNodes wrapper only auto-emits NODE_ADD).
+      groupNodes.forEach(n => emitOpRef.current?.({
+        type: 'NODE_DELETE', nodeId: n.id,
+        taskId: taskIdRef.current, subtaskId: subtaskIdRef.current
+      }));
+
+      // Purge the group's ids from the cached canvas data so the subtask sync
+      // effect can't restore them once the canvas becomes empty.
+      purgeDeletedFromCanvasCache(
+        groupNodes.map(n => n.id),
+        groupEdges.map(e => e.id)
+      );
+
       console.log('🗑️ Deleted flowchart group:', groupId, {
         nodesRemoved: groupNodes.length,
         edgesRemoved: groupEdges.length
@@ -2857,7 +2968,14 @@ const edgeTypes = {
           flowchartGroups.add(node.data.flowchartGroup);
         }
       });
-      
+
+      // Emit NODE_DELETE ops so the shared snapshot and other collaborators
+      // drop these nodes too (the setNodes wrapper only auto-emits NODE_ADD).
+      deletableNodes.forEach(n => emitOpRef.current?.({
+        type: 'NODE_DELETE', nodeId: n.id,
+        taskId: taskIdRef.current, subtaskId: subtaskIdRef.current
+      }));
+
       if (flowchartGroups.size > 0) {
         // Delete flowchart groups
         flowchartGroups.forEach(groupId => {
@@ -2866,14 +2984,18 @@ const edgeTypes = {
       } else {
         // Delete individual nodes
         setNodes(nds => nds.filter(n => !nodeIdsToDelete.includes(n.id)));
-        setEdges(eds => eds.filter(e => 
+        setEdges(eds => eds.filter(e =>
           !nodeIdsToDelete.includes(e.source) && !nodeIdsToDelete.includes(e.target)
         ));
       }
-      
+
+      // Purge the deleted ids from the cached canvas data so the subtask sync
+      // effect can't restore them once the canvas becomes empty.
+      purgeDeletedFromCanvasCache(nodeIdsToDelete);
+
       console.log('🗑️ Deleted elements:', nodeIdsToDelete.length);
     }
-  }, [contextMenu.selectedNodes, setNodes, setEdges, deleteFlowchartGroup, recordDeletionHistory, filterDirectlyDeletableNodes]);
+  }, [contextMenu.selectedNodes, setNodes, setEdges, deleteFlowchartGroup, recordDeletionHistory, filterDirectlyDeletableNodes, purgeDeletedFromCanvasCache]);
 
   const handleContextMenuEdit = useCallback(() => {
     if (contextMenu.selectedNodes.length === 1) {
@@ -4291,10 +4413,21 @@ const edgeTypes = {
       
       // Remove the node from canvas
       setNodes(nds => nds.filter(node => node.id !== elementId));
-      
+
       // Remove all edges connected to this node
       setEdges(eds => eds.filter(edge => edge.source !== elementId && edge.target !== elementId));
-      
+
+      // Emit NODE_DELETE so the shared snapshot and other collaborators drop
+      // this node too (the setNodes wrapper only auto-emits NODE_ADD).
+      emitOpRef.current?.({
+        type: 'NODE_DELETE', nodeId: elementId,
+        taskId: taskIdRef.current, subtaskId: subtaskIdRef.current
+      });
+
+      // Purge the deleted ids from the cached canvas data so the subtask sync
+      // effect can't restore them once the canvas becomes empty.
+      purgeDeletedFromCanvasCache([elementId], connectedEdgeIds);
+
       // Record deletion history
       recordDeletionHistory(elementId, nodeData, {
         deletedVia: 'elements-overview',
@@ -4325,7 +4458,7 @@ const edgeTypes = {
     return () => {
       document.removeEventListener('deleteElement', handleDeleteElement);
     };
-  }, [setNodes, setEdges, trackActivity, recordDeletionHistory, nodes, edges, canEdit, notifyViewOnly, filterDirectlyDeletableNodes]);
+  }, [setNodes, setEdges, trackActivity, recordDeletionHistory, nodes, edges, canEdit, notifyViewOnly, filterDirectlyDeletableNodes, purgeDeletedFromCanvasCache]);
 
 
 
@@ -4370,7 +4503,9 @@ const edgeTypes = {
   const onEdgesDelete = useCallback((edgesToDelete) => {
     console.log('🗑️ Deleting edges:', edgesToDelete);
     setEdges((eds) => eds.filter((edge) => !edgesToDelete.find((e) => e.id === edge.id)));
-  }, [setEdges]);
+    // Keep the cached canvas data in sync so deleted edges can't be restored
+    purgeDeletedFromCanvasCache([], edgesToDelete.map(e => e.id));
+  }, [setEdges, purgeDeletedFromCanvasCache]);
 
   // Handle node deletion
   const onNodesDelete = useCallback((nodesToDelete) => {
@@ -4430,7 +4565,11 @@ const edgeTypes = {
       
       return remainingNodes;
     });
-  }, [setNodes, recordDeletionHistory, nodes, filterDirectlyDeletableNodes]);
+
+    // Purge the deleted ids from the cached canvas data so the subtask sync
+    // effect can't restore them once the canvas becomes empty.
+    purgeDeletedFromCanvasCache(deletableNodes.map(n => n.id));
+  }, [setNodes, recordDeletionHistory, nodes, filterDirectlyDeletableNodes, purgeDeletedFromCanvasCache]);
 
   // Connection validation
   const isValidConnection = useCallback((connection) => {

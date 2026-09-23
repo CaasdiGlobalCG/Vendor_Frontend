@@ -784,9 +784,9 @@ const InvoiceToolReplica = ({ onClose, workspaceId, workspaceName, selectedTask,
   return (
     <div className="flex h-full bg-white">
       {/* Sidebar */}
-      <div className="w-64 bg-teal-800 text-white flex flex-col">
+      <div className="w-64 bg-neutral-900 text-white flex flex-col">
         {/* Header */}
-        <div className="p-6 border-b border-teal-700">
+        <div className="p-6 border-b border-neutral-800">
           <div className="flex items-center">
             <div className="w-8 h-8 bg-white rounded-lg flex items-center justify-center mr-3 p-1">
               <img src={operonLogo} alt="Operon" className="w-full h-full object-contain" />
@@ -806,8 +806,8 @@ const InvoiceToolReplica = ({ onClose, workspaceId, workspaceName, selectedTask,
                     onClick={() => setActiveTab(item.id)}
                     className={`w-full flex items-center px-4 py-3 text-left rounded-lg transition-colors ${
                       activeTab === item.id
-                        ? 'bg-teal-700 text-white'
-                        : 'text-teal-100 hover:bg-teal-700 hover:text-white'
+                        ? 'bg-white text-black'
+                        : 'text-neutral-400 hover:bg-neutral-800 hover:text-white'
                     }`}
                   >
                     <IconComponent className="w-5 h-5 mr-3" />

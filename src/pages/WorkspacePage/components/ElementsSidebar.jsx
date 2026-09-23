@@ -2,22 +2,15 @@ import React, { useState } from 'react';
 import { Search, Grid, Table, BarChart3, Square, List, X, GitBranch, Package, Upload, Settings, FileText, ClipboardList, Image as ImageIcon, Sparkles, Calculator, Layers, Plus, Box, FileDigit } from 'lucide-react';
 
 
-const ElementsSidebar = ({ isOpen, onClose, onElementSelect, userRole, currentUser, elementOptions = {} }) => {
+const ElementsSidebar = ({ isOpen, onClose, onElementSelect, userRole, currentUser, elementOptions = {}, hasTurnkeyMember = false }) => {
   const [selectedCategory, setSelectedCategory] = useState('forms');
   const [searchQuery, setSearchQuery] = useState('');
 
-  // Check if user is CAS member with turnkey access
-  console.log('🔍 Turnkey Detection Debug:', {
-    userRole,
-    currentUser,
-    casUnit: currentUser?.casUnit,
-    specialization: currentUser?.specialization,
-    name: currentUser?.name
-  });
+  // Turnkey category is shown to every role (CAS, vendor, PM, client) only when
+  // a Turnkey CAS member has been invited to the workspace by the PM.
+  const showTurnkeyCategory = hasTurnkeyMember;
 
-  const isTurnkeyCAS = userRole === 'cas'; // Temporarily show for all CAS users
-
-  console.log('🎯 isTurnkeyCAS result:', isTurnkeyCAS);
+  console.log('🎯 Turnkey category visible:', showTurnkeyCategory);
 
   const baseElementCategories = [
     { id: 'invoices-quotes', name: 'Invoices and Quotations', icon: FileText, color: 'bg-pink-100 text-pink-800' },
@@ -39,8 +32,8 @@ const ElementsSidebar = ({ isOpen, onClose, onElementSelect, userRole, currentUs
     { id: 'other', name: 'other elements', icon: Grid, color: 'bg-gray-100 text-gray-800' }
   ];
 
-  // Add turnkey category if user is turnkey CAS member
-  const elementCategories = isTurnkeyCAS ? [
+  // Add turnkey category only when the workspace has a turnkey CAS member
+  const elementCategories = showTurnkeyCategory ? [
     { id: 'turnkey', name: 'Turnkey', icon: Settings, color: 'bg-red-100 text-red-800' },
     ...baseElementCategories
   ] : baseElementCategories;

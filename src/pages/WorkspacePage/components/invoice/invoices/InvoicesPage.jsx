@@ -200,6 +200,20 @@ const InvoicesPage = (props) => {
           border: 'border-orange-200',
           dot: 'bg-orange-500'
         };
+      case 'red_flagged':
+        return {
+          bg: 'bg-gradient-to-r from-red-50 to-rose-50',
+          text: 'text-red-700',
+          border: 'border-red-200',
+          dot: 'bg-red-500'
+        };
+      case 'rejected':
+        return {
+          bg: 'bg-gradient-to-r from-red-50 to-pink-50',
+          text: 'text-red-600',
+          border: 'border-red-200',
+          dot: 'bg-red-400'
+        };
       default:
         return {
           bg: 'bg-gradient-to-r from-gray-50 to-slate-50',
