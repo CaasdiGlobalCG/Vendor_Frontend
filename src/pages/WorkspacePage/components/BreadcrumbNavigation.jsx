@@ -25,11 +25,11 @@ const BreadcrumbSegment = ({
       className={`relative flex items-center gap-2 px-4 py-2 text-[11px] font-medium border transition-colors duration-150 ${
         isFirst ? '' : '-ml-4'
       } ${
-        onClick ? 'cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400' : 'cursor-default'
+        onClick ? 'cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-info' : 'cursor-default'
       } ${
         isActive
-          ? 'bg-purple-50 text-purple-700 border-purple-200 shadow-sm'
-          : 'bg-gray-100 text-gray-600 border-gray-200 hover:bg-gray-200 hover:text-gray-800'
+          ? 'bg-surface-hover text-ink border-line '
+          : 'bg-surface-hover text-dim border-line hover:bg-surface-hover hover:text-ink'
       }`}
       style={{
         clipPath,
@@ -100,7 +100,7 @@ const BreadcrumbNavigation = ({
   }
 
   return (
-    <div className="absolute top-0 left-0 right-0 z-10 bg-white border-b border-gray-200 shadow-sm" data-workspace-navigation>
+    <div className="absolute top-0 left-0 right-0 z-10 bg-surface border-b border-line " data-workspace-navigation>
       <div className="px-6 py-3">
         <div className="flex items-center">
           <div className="flex items-center">

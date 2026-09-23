@@ -7,9 +7,9 @@ const LineSvg = () => (
     <path d="M-16.9989 325.496C126.5 168.5 283.582 -2.21773 518.292 81.6402C753.001 165.498 761 233.5 989.958 251.6C1218.92 269.699 1429.23 0.996465 1429.23 0.996465" stroke="url(#paint0_linear_316_249_inline)" strokeWidth="3"/>
     <defs>
       <linearGradient id="paint0_linear_316_249_inline" x1="-51.6359" y1="241.134" x2="1429.59" y2="238.867" gradientUnits="userSpaceOnUse">
-        <stop stopColor="#00C398"/>
-        <stop offset="0.544" stopColor="#EF21DB"/>
-        <stop offset="1" stopColor="#EF21DB" stopOpacity="0"/>
+        <stop stopColor="rgb(var(--success))"/>
+        <stop offset="0.544" stopColor="rgb(var(--info))"/>
+        <stop offset="1" stopColor="rgb(var(--info))" stopOpacity="0"/>
       </linearGradient>
     </defs>
   </svg>
@@ -69,7 +69,7 @@ const TaglineSection = () => {
         >
           <div className="absolute inset-0 flex flex-col items-center justify-start pt-[8vh] max-[1024px]:pt-[7vh] max-[768px]:pt-[6vh] max-[480px]:pt-[4vh] z-[1]">
             <span
-              className="flex items-center justify-center h-auto font-['Poppins',var(--default-font-family)] text-center bg-gradient-to-r from-[#21be9c] to-[#0f5848] z-[2] bg-clip-text text-transparent px-4
+              className="flex items-center justify-center h-auto font-['Poppins',var(--default-font-family)] text-center text-ink z-[2] px-4
                          text-[clamp(3rem,10vw,6.25rem)] leading-[1.3] mb-[3vh]
                          max-[1024px]:text-[clamp(2.8rem,9vw,5rem)] max-[1024px]:mb-[2.5vh]
                          max-[768px]:text-[clamp(2.5rem,10vw,4rem)] max-[768px]:mb-[2vh] max-[768px]:w-[95%]
@@ -78,14 +78,14 @@ const TaglineSection = () => {
               Invest your time
             </span>
             <span
-              className="flex flex-wrap items-center justify-center h-auto font-['Poppins',var(--default-font-family)] text-center bg-gradient-to-r from-white to-[#c9c9c9] opacity-50 z-[3] bg-clip-text text-transparent px-4
+              className="flex flex-wrap items-center justify-center h-auto font-['Poppins',var(--default-font-family)] text-center text-ink opacity-50 z-[3] px-4
                          text-[clamp(1.5rem,5vw,2.5rem)] leading-[1.3]
                          max-[1024px]:text-[clamp(1.25rem,4vw,2rem)] max-[1024px]:w-[90%]
                          max-[768px]:text-[clamp(1rem,4.5vw,1.5rem)] max-[768px]:w-[85%]
                          max-[480px]:text-[clamp(0.875rem,4.5vw,1.25rem)] max-[480px]:w-[90%]"
             >
               Embark on an&nbsp;
-              <span className="bg-gradient-to-r from-[hsl(166,70%,60%)] to-[hsl(166,71%,50%)] bg-clip-text text-transparent z-[2] whitespace-nowrap">
+              <span className=" z-[2] whitespace-nowrap text-ink">
                 Innovative, Adaptive, Efficient
               </span>
               &nbsp;journey of growth

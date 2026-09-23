@@ -318,9 +318,9 @@ export default function Form2() {
 
 
   return (
-    <div className="flex min-h-screen bg-white">
+    <div className="flex min-h-screen bg-surface">
        {showSaveIndicator && (
-        <div className="fixed top-5 right-5 bg-green-600 text-white py-2 px-4 rounded shadow z-50">
+        <div className="fixed top-5 right-5 bg-success text-white py-2 px-4 rounded shadow z-50">
           Changes saved successfully!
         </div>
       )}
@@ -333,8 +333,8 @@ export default function Form2() {
         <StepIndicator currentStep={2} />
 
         {/* Form Content */}
-        <div className="w-full max-w-4xl mx-auto px-4 pb-10 bg-white md:px-0">
-          <h1 className="text-2xl font-bold text-gray-900 mb-8">
+        <div className="w-full max-w-4xl mx-auto px-4 pb-10 bg-surface md:px-0">
+          <h1 className="text-2xl font-bold text-ink mb-8">
             Business Details
           </h1>
 
@@ -347,8 +347,8 @@ export default function Form2() {
             <div className="space-y-6">
               <div className="flex flex-col md:flex-row items-start gap-6">
                 <div className="w-full md:w-1/3">
-                  <h3 className="text-sm font-semibold text-gray-900 block mb-1">Business Type</h3>
-                  <p className="text-xs text-gray-500">select your business type</p>
+                  <h3 className="text-sm font-semibold text-ink block mb-1">Business Type</h3>
+                  <p className="text-xs text-dim">select your business type</p>
                 </div>
                 <div className="w-full md:w-2/3">
                   <SearchableSelect
@@ -364,8 +364,8 @@ export default function Form2() {
 
               <div className="flex flex-col md:flex-row items-start gap-6">
                 <div className="w-full md:w-1/3">
-                  <h3 className="text-sm font-semibold text-gray-900 block mb-1">Industry Type</h3>
-                  <p className="text-xs text-gray-500">select your industry type</p>
+                  <h3 className="text-sm font-semibold text-ink block mb-1">Industry Type</h3>
+                  <p className="text-xs text-dim">select your industry type</p>
                 </div>
                 <div className="w-full md:w-2/3">
                   <SearchableSelect
@@ -391,15 +391,15 @@ export default function Form2() {
                   placeholder="Year of establishment (YYYY)"
                   min="1900"
                   max={currentYear}
-                  className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                  className="w-full border border-line rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ink focus:border-transparent [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                   />
                 </div>
               </div>
 
               <div className="flex flex-col md:flex-row items-start gap-6">
                 <div className="w-full md:w-1/3">
-                  <h3 className="text-sm font-semibold text-gray-900 block mb-1">GST Number</h3>
-                  <p className="text-xs text-gray-500">enter your GST number</p>
+                  <h3 className="text-sm font-semibold text-ink block mb-1">GST Number</h3>
+                  <p className="text-xs text-dim">enter your GST number</p>
                 </div>
                 <div className="w-full md:w-2/3">
                   <div className="flex gap-2">
@@ -414,19 +414,19 @@ export default function Form2() {
                         maxLength="15"
                         className={`w-full border rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:border-transparent ${
                           gstinErrors.gstNumber
-                            ? 'border-red-500 focus:ring-red-500'
-                            : 'border-gray-300 focus:ring-emerald-500'
-                        } bg-white`}
+                            ? 'border-danger focus:ring-danger'
+                            : 'border-line focus:ring-ink'
+                        } bg-surface`}
                       />
                       {gstinErrors.gstNumber && (
-                        <p className="mt-1 text-xs text-red-500">{gstinErrors.gstNumber}</p>
+                        <p className="mt-1 text-xs text-danger">{gstinErrors.gstNumber}</p>
                       )}
                     </div>
                     <input type="file" name="gstCertificate" id="gstCertificate" onChange={handleFileChange} className="hidden" />
                     <button
                       type="button"
                       onClick={() => document.getElementById('gstCertificate').click()}
-                      className="px-4 py-2 text-sm border border-gray-300 rounded text-gray-600 hover:bg-gray-50 transition-colors whitespace-nowrap"
+                      className="px-4 py-2 text-sm border border-line rounded text-dim hover:bg-canvas transition-colors whitespace-nowrap"
                     >
                       {formData.gstCertificate
                         ? formData.gstCertificate.uploading
@@ -436,9 +436,9 @@ export default function Form2() {
                     </button>
                   </div>
                   {formData.gstCertificate && 
-                    <div className="mt-2 text-xs text-gray-500 flex justify-between items-center">
+                    <div className="mt-2 text-xs text-dim flex justify-between items-center">
                       <span>{formData.gstCertificate.name}</span>
-                      <button type="button" onClick={() => handleDeleteFile('gstCertificate')} className="text-red-500 hover:text-red-700">Delete</button>
+                      <button type="button" onClick={() => handleDeleteFile('gstCertificate')} className="text-danger hover:text-danger">Delete</button>
                     </div>
                   }
                 </div>
@@ -446,8 +446,8 @@ export default function Form2() {
 
               <div className="flex flex-col md:flex-row items-start gap-6">
                 <div className="w-full md:w-1/3">
-                  <h3 className="text-sm font-semibold text-gray-900 block mb-1">PAN Number</h3>
-                  <p className="text-xs text-gray-500">enter your PAN number</p>
+                  <h3 className="text-sm font-semibold text-ink block mb-1">PAN Number</h3>
+                  <p className="text-xs text-dim">enter your PAN number</p>
                 </div>
                 <div className="w-full md:w-2/3">
                   <div className="flex gap-2">
@@ -462,19 +462,19 @@ export default function Form2() {
                         maxLength="10"
                         className={`w-full border rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:border-transparent ${
                           panErrors.panNumber
-                            ? 'border-red-500 focus:ring-red-500'
-                            : 'border-gray-300 focus:ring-emerald-500'
-                        } bg-white`}
+                            ? 'border-danger focus:ring-danger'
+                            : 'border-line focus:ring-ink'
+                        } bg-surface`}
                       />
                       {panErrors.panNumber && (
-                        <p className="mt-1 text-xs text-red-500">{panErrors.panNumber}</p>
+                        <p className="mt-1 text-xs text-danger">{panErrors.panNumber}</p>
                       )}
                     </div>
                     <input type="file" name="panCertificate" id="panCertificate" onChange={handleFileChange} className="hidden" />
                     <button
                       type="button"
                       onClick={() => document.getElementById('panCertificate').click()}
-                      className="px-4 py-2 text-sm border border-gray-300 rounded text-gray-600 hover:bg-gray-50 transition-colors whitespace-nowrap"
+                      className="px-4 py-2 text-sm border border-line rounded text-dim hover:bg-canvas transition-colors whitespace-nowrap"
                     >
                      {formData.panCertificate
                        ? formData.panCertificate.uploading
@@ -484,9 +484,9 @@ export default function Form2() {
                     </button>
                   </div>
                   {formData.panCertificate &&
-                    <div className="mt-2 text-xs text-gray-500 flex justify-between items-center">
+                    <div className="mt-2 text-xs text-dim flex justify-between items-center">
                       <span>{formData.panCertificate.name}</span>
-                      <button type="button" onClick={() => handleDeleteFile('panCertificate')} className="text-red-500 hover:text-red-700">Delete</button>
+                      <button type="button" onClick={() => handleDeleteFile('panCertificate')} className="text-danger hover:text-danger">Delete</button>
                     </div>
                   }
                 </div>
@@ -500,14 +500,14 @@ export default function Form2() {
               <button
                 type="button"
                 onClick={handlePrevious}
-                className="px-8 py-3 text-gray-600 hover:text-gray-800 transition-colors"
+                className="px-8 py-3 text-dim hover:text-ink transition-colors"
               >
                 Back
               </button>
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className="text-white px-8 py-3 rounded-lg font-medium shadow-md bg-gradient-to-r from-[#0F5848] to-[#21BE9C] hover:from-[#0F5848]/90 hover:to-[#21BE9C]/90 focus:outline-none focus:ring-2 focus:ring-emerald-500 disabled:opacity-60 disabled:cursor-not-allowed"
+                className="text-white px-8 py-3 rounded-lg font-medium bg-black hover:from-black/90 hover:to-black/90 focus:outline-none focus:ring-2 focus:ring-ink disabled:opacity-60 disabled:cursor-not-allowed"
               >
                 {isSubmitting ? "Please wait..." : "Next"}
               </button>

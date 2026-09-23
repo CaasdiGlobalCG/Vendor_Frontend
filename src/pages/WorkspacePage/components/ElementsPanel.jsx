@@ -23,13 +23,13 @@ const getFileTypeColor = (fileName) => {
   const extension = fileName?.split('.').pop()?.toLowerCase();
   
   if (['jpg', 'jpeg', 'png', 'gif', 'bmp', 'svg', 'webp'].includes(extension)) {
-    return 'bg-green-100 border-green-300 text-green-800';
+    return 'bg-success/10 border-success/30 text-success';
   } else if (['xlsx', 'xls', 'csv', 'ods'].includes(extension)) {
-    return 'bg-emerald-100 border-emerald-300 text-emerald-800';
+    return 'bg-surface-hover border-line text-ink';
   } else if (['pdf', 'doc', 'docx', 'txt', 'rtf', 'odt'].includes(extension)) {
-    return 'bg-blue-100 border-blue-300 text-blue-800';
+    return 'bg-info/10 border-info/30 text-info';
   } else {
-    return 'bg-gray-100 border-gray-300 text-gray-800';
+    return 'bg-surface-hover border-line text-ink';
   }
 };
 
@@ -108,7 +108,7 @@ const DraggableFileCard = ({ file }) => {
         draggable
         onDragStart={handleDragStart}
         onDoubleClick={handleDoubleClick}
-        className="-mx-2 relative cursor-move hover:shadow-lg transition-all duration-200 overflow-hidden group"
+        className="-mx-2 relative cursor-move  transition-all duration-200 overflow-hidden group"
         title="Drag to canvas or double-click to add"
       >
         {/* Image Preview */}
@@ -126,7 +126,7 @@ const DraggableFileCard = ({ file }) => {
           <p className="text-xs font-medium text-white truncate" title={file.name}>
             {file.name}
           </p>
-          <p className="text-xs text-gray-200">
+          <p className="text-xs text-dim">
             {formatFileSize(file.size)}
           </p>
         </div>
@@ -137,7 +137,7 @@ const DraggableFileCard = ({ file }) => {
             e.stopPropagation();
             removeFile(file.id);
           }}
-          className="absolute top-1 right-1 opacity-0 group-hover:opacity-100 text-red-500 hover:text-red-700 transition-opacity bg-white rounded-full p-1 shadow-md"
+          className="absolute top-1 right-1 opacity-0 group-hover:opacity-100 text-danger hover:text-danger transition-opacity bg-surface rounded-full p-1 "
           title="Remove file"
         >
           <X className="w-3 h-3" />
@@ -151,7 +151,7 @@ const DraggableFileCard = ({ file }) => {
       draggable
       onDragStart={handleDragStart}
       onDoubleClick={handleDoubleClick}
-      className={`p-2 rounded-lg border-2 ${colorClass} group relative cursor-move hover:shadow-md transition-all duration-200`}
+      className={`p-2 rounded-lg border-2 ${colorClass} group relative cursor-move  transition-all duration-200`}
       title="Drag to canvas or double-click to add"
     >
       {/* File Icon and Info */}
@@ -173,7 +173,7 @@ const DraggableFileCard = ({ file }) => {
           e.stopPropagation();
           removeFile(file.id);
         }}
-        className="absolute top-0.5 right-0.5 opacity-0 group-hover:opacity-100 text-red-500 hover:text-red-700 transition-opacity bg-white rounded-full p-0.5"
+        className="absolute top-0.5 right-0.5 opacity-0 group-hover:opacity-100 text-danger hover:text-danger transition-opacity bg-surface rounded-full p-0.5"
         title="Remove file"
       >
         <X className="w-2.5 h-2.5" />
@@ -203,7 +203,7 @@ const UploadsSection = () => {
       {/* Upload Button */}
       <button
         onClick={handleFileSelect}
-        className="w-full flex items-center justify-center space-x-1.5 p-2 bg-gradient-to-r from-cyan-500 to-blue-600 text-white rounded-lg hover:from-cyan-600 hover:to-blue-700 transition-all duration-200 shadow-md hover:shadow-lg"
+        className="w-full flex items-center justify-center space-x-1.5 p-2 bg-black text-white rounded-lg hover:from-black hover:to-black transition-all duration-200 "
       >
         <Upload className="w-3.5 h-3.5" />
         <span className="text-xs font-medium">Upload Files</span>
@@ -221,7 +221,7 @@ const UploadsSection = () => {
       {/* Uploaded Files */}
       {uploadedFiles.length > 0 && (
         <div className="space-y-1.5 overflow-hidden">
-          <p className="text-xs text-gray-600 font-medium">
+          <p className="text-xs text-dim font-medium">
             Uploaded Files ({uploadedFiles.length})
           </p>
           <div className="space-y-0.5 max-h-80 overflow-y-auto overflow-x-hidden">
@@ -234,7 +234,7 @@ const UploadsSection = () => {
 
       {/* Empty State */}
       {uploadedFiles.length === 0 && (
-        <div className="text-center py-3 text-gray-400">
+        <div className="text-center py-3 text-dim">
           <Upload className="w-6 h-6 mx-auto mb-1 opacity-50" />
           <p className="text-xs">No files uploaded yet</p>
         </div>
@@ -290,29 +290,29 @@ const InvoiceQuoteCard = ({ item, onDocumentClick }) => {
   const getStatusColor = (status) => {
     switch (status?.toLowerCase()) {
       case 'paid':
-        return 'bg-green-100 text-green-700';
+        return 'bg-success/10 text-success';
       case 'pending':
       case 'draft':
-        return 'bg-yellow-100 text-yellow-700';
+        return 'bg-warning/10 text-warning';
       case 'overdue':
-        return 'bg-red-100 text-red-700';
+        return 'bg-danger/10 text-danger';
       default:
-        return 'bg-gray-100 text-gray-700';
+        return 'bg-surface-hover text-ink';
     }
   };
 
   const getDocumentTypeColor = (type) => {
     switch (type) {
       case 'invoice':
-        return 'bg-gradient-to-br from-blue-500 to-blue-700';
+        return 'bg-black';
       case 'quotation':
-        return 'bg-gradient-to-br from-purple-500 to-purple-700';
+        return 'bg-black';
       case 'credit-note':
-        return 'bg-gradient-to-br from-orange-500 to-orange-700';
+        return 'bg-black';
       case 'purchase-order':
-        return 'bg-gradient-to-br from-green-500 to-green-700';
+        return 'bg-black';
       default:
-        return 'bg-gradient-to-br from-gray-500 to-gray-700';
+        return 'bg-surface';
     }
   };
 
@@ -336,15 +336,15 @@ const InvoiceQuoteCard = ({ item, onDocumentClick }) => {
       draggable
       onDragStart={handleDragStart}
       onClick={handleClick}
-      className="group -mx-2 relative cursor-pointer hover:shadow-lg transition-all duration-200 overflow-hidden"
+      className="group -mx-2 relative cursor-pointer  transition-all duration-200 overflow-hidden"
       title="Click to view details or drag to canvas"
     >
       {/* Card Background with Gradient */}
       <div className={`w-full h-40 rounded-lg flex flex-col p-4 text-white relative overflow-hidden ${getDocumentTypeColor(item.type)}`}>
         {/* Background Pattern */}
         <div className="absolute inset-0 opacity-10">
-          <div className="absolute top-0 left-0 w-32 h-32 bg-white rounded-full -translate-x-8 -translate-y-8"></div>
-          <div className="absolute bottom-0 right-0 w-40 h-40 bg-white rounded-full translate-x-12 translate-y-12"></div>
+          <div className="absolute top-0 left-0 w-32 h-32 bg-surface rounded-full -translate-x-8 "></div>
+          <div className="absolute bottom-0 right-0 w-40 h-40 bg-surface rounded-full translate-x-12 "></div>
         </div>
 
         {/* Card Content */}
@@ -555,76 +555,76 @@ const DraggableElement = ({ element }) => {
       draggable
       onDragStart={handleDragStart}
       onDoubleClick={handleDoubleClick}
-      className="group p-5 bg-white rounded-xl border border-gray-200 hover:border-blue-400 hover:shadow-lg transition-all duration-300 cursor-move relative flex flex-col space-y-3 hover:bg-gradient-to-br hover:from-blue-50 hover:to-white"
+      className="group p-5 bg-surface rounded-xl border border-line hover:border-info transition-all duration-300 cursor-move relative flex flex-col space-y-3 hover:bg-gradient-to-br hover:from-black hover:to-surface"
       title="Drag to canvas or double-click to add"
     >
       {/* Element Icon and Name Row */}
       <div className="flex items-center space-x-3">
         {/* Element Icon */}
-        <div className="w-14 h-14 bg-gradient-to-br from-gray-50 to-white rounded-xl border border-gray-200 flex items-center justify-center flex-shrink-0 group-hover:border-blue-300 group-hover:shadow-md transition-all duration-300">
+        <div className="w-14 h-14 bg-gradient-to-br from-surface-hover to-surface rounded-xl border border-line flex items-center justify-center flex-shrink-0 group-hover:border-info/30 transition-all duration-300">
         {element.type === 'textarea' && (
-          <div className="w-6 h-4 border border-gray-400 rounded"></div>
+          <div className="w-6 h-4 border border-line rounded"></div>
         )}
         {element.type === 'textbox' && (
-          <div className="w-6 h-3 border border-gray-400 rounded"></div>
+          <div className="w-6 h-3 border border-line rounded"></div>
         )}
         {element.type === 'button' && (
-          <div className="w-6 h-3 bg-gray-400 rounded"></div>
+          <div className="w-6 h-3 bg-cta rounded"></div>
         )}
         {element.type === 'input' && (
-          <div className="w-6 h-0.5 bg-gray-400"></div>
+          <div className="w-6 h-0.5 bg-cta"></div>
         )}
         {element.type === 'select' && (
-          <div className="w-6 h-3 border border-gray-400 rounded flex items-center justify-end px-1">
+          <div className="w-6 h-3 border border-line rounded flex items-center justify-end px-1">
             <div className="w-0 h-0 border-l-2 border-r-2 border-t-2 border-transparent border-t-gray-400"></div>
           </div>
         )}
         {element.type === 'radio' && (
-          <div className="w-4 h-4 border-2 border-gray-400 rounded-full"></div>
+          <div className="w-4 h-4 border-2 border-line rounded-full"></div>
         )}
         {element.type === 'checkbox' && (
-          <div className="w-4 h-4 border-2 border-gray-400 rounded"></div>
+          <div className="w-4 h-4 border-2 border-line rounded"></div>
         )}
         {element.type === 'dropdown' && (
-          <div className="w-6 h-3 border border-gray-400 rounded flex items-center justify-end px-1">
-            <div className="text-gray-400 text-xs">▼</div>
+          <div className="w-6 h-3 border border-line rounded flex items-center justify-end px-1">
+            <div className="text-dim text-xs">▼</div>
           </div>
         )}
         {element.type === 'table' && (
-          <Grid className="w-6 h-6 text-gray-600" />
+          <Grid className="w-6 h-6 text-dim" />
         )}
         {element.type === 'chart' && (
-          <BarChart3 className="w-6 h-6 text-gray-600" />
+          <BarChart3 className="w-6 h-6 text-dim" />
         )}
         {element.type === 'icon' && (
-          <Square className="w-6 h-6 text-gray-600" />
+          <Square className="w-6 h-6 text-dim" />
         )}
         {element.type === 'list' && (
-          <List className="w-6 h-6 text-gray-600" />
+          <List className="w-6 h-6 text-dim" />
         )}
         {element.type === 'turnkey-workflow' && (
-          <Settings className="w-6 h-6 text-blue-600" />
+          <Settings className="w-6 h-6 text-info" />
         )}
         {element.type === 'form-template' && (
-          <div className="w-6 h-6 border-2 border-gray-400 rounded flex flex-col items-center justify-center space-y-0.5">
-            <div className="w-4 h-0.5 bg-gray-400 rounded"></div>
-            <div className="w-3 h-0.5 bg-gray-400 rounded"></div>
-            <div className="w-4 h-0.5 bg-gray-400 rounded"></div>
+          <div className="w-6 h-6 border-2 border-line rounded flex flex-col items-center justify-center space-y-0.5">
+            <div className="w-4 h-0.5 bg-cta rounded"></div>
+            <div className="w-3 h-0.5 bg-cta rounded"></div>
+            <div className="w-4 h-0.5 bg-cta rounded"></div>
           </div>
         )}
         {element.type === 'flowchart' && (
-          <GitBranch className="w-6 h-6 text-gray-600" />
+          <GitBranch className="w-6 h-6 text-dim" />
         )}
         {element.type === 'materials' && (
-          <Package className="w-6 h-6 text-gray-600" />
+          <Package className="w-6 h-6 text-dim" />
         )}
         {element.type === 'upload' && (
           <>
-            {element.id === 'upload-area' && <Upload className="w-6 h-6 text-gray-600" />}
-            {element.fileType === 'image' && <Image className="w-6 h-6 text-gray-600" />}
-            {element.fileType === 'document' && <FileText className="w-6 h-6 text-gray-600" />}
-            {element.fileType === 'spreadsheet' && <FileSpreadsheet className="w-6 h-6 text-gray-600" />}
-            {!element.fileType && element.id !== 'upload-area' && <FileText className="w-6 h-6 text-gray-600" />}
+            {element.id === 'upload-area' && <Upload className="w-6 h-6 text-dim" />}
+            {element.fileType === 'image' && <Image className="w-6 h-6 text-dim" />}
+            {element.fileType === 'document' && <FileText className="w-6 h-6 text-dim" />}
+            {element.fileType === 'spreadsheet' && <FileSpreadsheet className="w-6 h-6 text-dim" />}
+            {!element.fileType && element.id !== 'upload-area' && <FileText className="w-6 h-6 text-dim" />}
           </>
         )}
         {element.type === 'cad-files' && (
@@ -637,59 +637,59 @@ const DraggableElement = ({ element }) => {
           <Box className="w-6 h-6 text-emerald-600" />
         )}
         {(element.type === 'smart-note' || element.nodeType === 'smartNote') && (
-          <StickyNote className="w-6 h-6 text-yellow-600" />
+          <StickyNote className="w-6 h-6 text-warning" />
         )}
         {(element.type === 'calendar-event' || element.nodeType === 'calendarNode') && (
-          <Calendar className="w-6 h-6 text-blue-600" />
+          <Calendar className="w-6 h-6 text-info" />
         )}
         {(element.type === 'approval-board' || element.nodeType === 'approvalBoard') && (
-          <ClipboardCheck className="w-6 h-6 text-green-600" />
+          <ClipboardCheck className="w-6 h-6 text-success" />
         )}
         {element.type === 'divider' && (
-          <Minus className="w-6 h-6 text-gray-600" />
+          <Minus className="w-6 h-6 text-dim" />
         )}
         {element.type === 'spacer' && (
-          <ArrowDown className="w-6 h-6 text-gray-600" />
+          <ArrowDown className="w-6 h-6 text-dim" />
         )}
         {element.type === 'container' && (
-          <Box className="w-6 h-6 text-gray-600" />
+          <Box className="w-6 h-6 text-dim" />
         )}
         {element.type === 'grid' && (
-          <LayoutGrid className="w-6 h-6 text-gray-600" />
+          <LayoutGrid className="w-6 h-6 text-dim" />
         )}
         {element.type === 'task-card' && (
-          <CheckSquare className="w-6 h-6 text-teal-600" />
+          <CheckSquare className="w-6 h-6 text-ink" />
         )}
         {element.type === 'task-card-progress' && (
-          <TrendingUp className="w-6 h-6 text-teal-600" />
+          <TrendingUp className="w-6 h-6 text-ink" />
         )}
         {element.type === 'cost-calculator' && element.elementIcon && (
           element.elementIcon
         )}
         {element.type === 'logistics-shipment' && (
-          <Package className="w-6 h-6 text-blue-600" />
+          <Package className="w-6 h-6 text-info" />
         )}
         {element.type === 'logistics-freight-cost' && (
-          <Calculator className="w-6 h-6 text-emerald-600" />
+          <Calculator className="w-6 h-6 text-ink" />
         )}
         {element.type === 'logistics-route-optimization' && (
-          <TrendingUp className="w-6 h-6 text-orange-600" />
+          <TrendingUp className="w-6 h-6 text-warning" />
         )}
         {element.type === 'logistics-pod' && (
-          <FileCheck className="w-6 h-6 text-green-600" />
+          <FileCheck className="w-6 h-6 text-success" />
         )}
         {element.type === 'logistics-exception-report' && (
-          <AlertCircle className="w-6 h-6 text-red-600" />
+          <AlertCircle className="w-6 h-6 text-danger" />
         )}
         {element.type === 'logistics-carrier-scorecard' && (
-          <BarChart3 className="w-6 h-6 text-indigo-600" />
+          <BarChart3 className="w-6 h-6 text-info" />
         )}
 
         </div>
         
         {/* Element Name */}
         <div className="flex-1 min-w-0">
-          <p className="text-sm font-semibold text-gray-900 group-hover:text-blue-700 transition-colors truncate">
+          <p className="text-sm font-semibold text-ink group-hover:text-info transition-colors truncate">
             {element.name}
           </p>
         </div>
@@ -697,18 +697,18 @@ const DraggableElement = ({ element }) => {
       
       {/* Element Preview */}
       <div className="text-left">
-        <p className="text-xs text-gray-600 leading-relaxed line-clamp-2">{element.preview}</p>
+        <p className="text-xs text-dim leading-relaxed line-clamp-2">{element.preview}</p>
       </div>
       
       {/* Action Hint */}
-      <div className="flex items-center justify-between pt-2 border-t border-gray-100">
-        <p className="text-xs text-gray-400 group-hover:text-blue-500 transition-colors">
+      <div className="flex items-center justify-between pt-2 border-t border-line">
+        <p className="text-xs text-dim group-hover:text-info transition-colors">
           Drag or double-click
         </p>
         <div className="flex items-center space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
-          <div className="w-1.5 h-1.5 bg-blue-400 rounded-full"></div>
-          <div className="w-1.5 h-1.5 bg-blue-400 rounded-full"></div>
-          <div className="w-1.5 h-1.5 bg-blue-400 rounded-full"></div>
+          <div className="w-1.5 h-1.5 bg-info rounded-full"></div>
+          <div className="w-1.5 h-1.5 bg-info rounded-full"></div>
+          <div className="w-1.5 h-1.5 bg-info rounded-full"></div>
         </div>
       </div>
     </div>
@@ -873,8 +873,8 @@ const ElementsPanel = ({
           name: 'Smart Note', 
           type: 'smart-note', 
           preview: 'AI-powered sticky note with smart actions',
-          icon: <StickyNote className="w-4 h-4 mr-2 text-yellow-600" />,
-          color: 'bg-yellow-100 border-yellow-200 text-yellow-800 hover:bg-yellow-200',
+          icon: <StickyNote className="w-4 h-4 mr-2 text-warning" />,
+          color: 'bg-warning/10 border-warning/20 text-warning hover:bg-warning/20',
           nodeType: 'smartNote',
           data: { label: 'Smart Note' }
         },
@@ -883,8 +883,8 @@ const ElementsPanel = ({
           name: 'Calendar Event', 
           type: 'calendar-event', 
           preview: 'Schedule meetings and send invites',
-          icon: <Calendar className="w-4 h-4 mr-2 text-blue-600" />,
-          color: 'bg-blue-50 border-blue-200 text-blue-800 hover:bg-blue-100',
+          icon: <Calendar className="w-4 h-4 mr-2 text-info" />,
+          color: 'bg-info/10 border-info/20 text-info hover:bg-info/10',
           nodeType: 'calendarNode',
           data: { label: 'Calendar Event' }
         },
@@ -893,8 +893,8 @@ const ElementsPanel = ({
           name: 'Approval Board', 
           type: 'approval-board', 
           preview: 'Track and manage approval workflows',
-          icon: <ClipboardCheck className="w-4 h-4 mr-2 text-green-600" />,
-          color: 'bg-green-50 border-green-200 text-green-800 hover:bg-green-100',
+          icon: <ClipboardCheck className="w-4 h-4 mr-2 text-success" />,
+          color: 'bg-success/10 border-success/20 text-success hover:bg-success/10',
           nodeType: 'approvalBoard',
           data: { label: 'Approval Board' }
         },
@@ -903,8 +903,8 @@ const ElementsPanel = ({
           name: 'AI Helper',
           type: 'ai-helper',
           preview: 'Summarize, suggest next steps, or generate flows with AI',
-          icon: <Sparkles className="w-4 h-4 mr-2 text-purple-600" />,
-          color: 'bg-purple-50 border-purple-200 text-purple-800 hover:bg-purple-100',
+          icon: <Sparkles className="w-4 h-4 mr-2 text-ink" />,
+          color: 'bg-surface-hover border-line text-ink hover:bg-surface-hover',
           nodeType: 'aiHelper',
           data: { label: 'AI Helper' }
         }
@@ -1064,7 +1064,7 @@ const ElementsPanel = ({
       name: 'Cost Calculators',
       icon: <Calculator className="w-5 h-5" />,
       elements: [
-        { id: 'boq-generator', name: 'BOQ Generator', type: 'boq-generator', preview: 'Generate professional Bill of Quantities with cost breakdown', elementIcon: <FileDigit className="w-6 h-6 text-purple-600" /> },
+        { id: 'boq-generator', name: 'BOQ Generator', type: 'boq-generator', preview: 'Generate professional Bill of Quantities with cost breakdown', elementIcon: <FileDigit className="w-6 h-6 text-ink" /> },
         { id: 'calc-bricks', name: 'Bricks Calculator', type: 'cost-calculator', preview: 'Estimate bricks, cement bags & sand for a brick wall' },
         { id: 'calc-concrete', name: 'Concrete Calculator', type: 'cost-calculator', preview: 'Estimate cement, sand, and aggregate requirements' },
         { id: 'calc-blocks', name: 'Concrete Blocks Calculator', type: 'cost-calculator', preview: 'AAC/concrete block count with mortar estimate' },
@@ -1157,30 +1157,30 @@ const ElementsPanel = ({
   if (!selectedCategory || !currentCategory) {
     console.log('❌ No category selected or found for:', selectedCategory);
     return (
-      <div className="fixed right-0 top-0 w-80 h-full bg-white shadow-2xl border-l border-gray-200 z-40 flex flex-col">
-        <div className="flex-shrink-0 p-6 border-b border-gray-200">
+      <div className="fixed right-0 top-0 w-80 h-full bg-surface shadow-2xl border-l border-line z-40 flex flex-col">
+        <div className="flex-shrink-0 p-6 border-b border-line">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3">
               <button
                 onClick={onBackToCategories}
-                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                className="p-2 hover:bg-surface-hover rounded-lg transition-colors"
               >
-                <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-5 h-5 text-dim" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
                 </svg>
               </button>
-              <h3 className="text-base font-semibold text-gray-900">Elements</h3>
+              <h3 className="text-base font-semibold text-ink">Elements</h3>
             </div>
             <button
               onClick={onClose}
-              className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+              className="p-2 hover:bg-surface-hover rounded-lg transition-colors"
             >
-              <X className="w-5 h-5 text-gray-500" />
+              <X className="w-5 h-5 text-dim" />
             </button>
           </div>
         </div>
         <div className="flex-1 flex items-center justify-center p-6">
-          <p className="text-gray-500">
+          <p className="text-dim">
             {!selectedCategory 
               ? 'Please select a category' 
               : `Category not found: ${selectedCategory}`}
@@ -1217,30 +1217,30 @@ const ElementsPanel = ({
   // If no category is selected, show a message or the panel header only
   if (!selectedCategory) {
     return (
-      <div className="fixed right-0 top-0 w-80 h-full bg-white shadow-2xl border-l border-gray-200 z-40 flex flex-col">
-        <div className="flex-shrink-0 p-3 border-b border-gray-200">
+      <div className="fixed right-0 top-0 w-80 h-full bg-surface shadow-2xl border-l border-line z-40 flex flex-col">
+        <div className="flex-shrink-0 p-3 border-b border-line">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-2">
               <button
                 onClick={onBackToCategories}
-                className="p-0.5 hover:bg-gray-100 rounded-lg transition-colors"
+                className="p-0.5 hover:bg-surface-hover rounded-lg transition-colors"
               >
-                <svg className="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-4 h-4 text-dim" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
                 </svg>
               </button>
-              <h3 className="text-sm font-semibold text-gray-900">Elements</h3>
+              <h3 className="text-sm font-semibold text-ink">Elements</h3>
             </div>
             <button
               onClick={onClose}
-              className="p-0.5 hover:bg-gray-100 rounded-lg transition-colors"
+              className="p-0.5 hover:bg-surface-hover rounded-lg transition-colors"
             >
-              <X className="w-4 h-4 text-gray-500" />
+              <X className="w-4 h-4 text-dim" />
             </button>
           </div>
         </div>
         <div className="flex-1 flex items-center justify-center p-4">
-          <p className="text-sm text-gray-500">Please select a category</p>
+          <p className="text-sm text-dim">Please select a category</p>
         </div>
       </div>
     );
@@ -1252,25 +1252,25 @@ const ElementsPanel = ({
   }, [selectedCategory]);
 
   return (
-    <div className="fixed right-0 top-0 w-80 h-full bg-white shadow-2xl border-l border-gray-200 z-40 flex flex-col">
+    <div className="fixed right-0 top-0 w-80 h-full bg-surface shadow-2xl border-l border-line z-40 flex flex-col">
       {/* Header */}
-      <div className="flex-shrink-0 px-3 py-2.5 border-b border-gray-200 bg-white">
+      <div className="flex-shrink-0 px-3 py-2.5 border-b border-line bg-surface">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-2">
             <button
               onClick={onBackToCategories}
-              className="p-0.5 hover:bg-gray-100 rounded-lg transition-colors"
+              className="p-0.5 hover:bg-surface-hover rounded-lg transition-colors"
               title="Back to categories"
             >
-              <svg className="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-4 h-4 text-dim" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
               </svg>
             </button>
             <div className="flex items-center space-x-1.5">
-              <div className="text-gray-600">
+              <div className="text-dim">
                 {currentCategory.icon}
               </div>
-              <h3 className="text-sm font-semibold text-gray-900">{currentCategory.name}</h3>
+              <h3 className="text-sm font-semibold text-ink">{currentCategory.name}</h3>
             </div>
             {selectedCategory === 'tables' && (
               <button
@@ -1280,7 +1280,7 @@ const ElementsPanel = ({
                   console.log('Manage BOQ button clicked');
                   setShowManageBOQ(true);
                 }}
-                className="ml-2 px-2 py-1 text-xs font-medium bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center space-x-1 shadow-sm"
+                className="ml-2 px-2 py-1 text-xs font-medium bg-info text-white rounded-lg hover:bg-info transition-colors flex items-center space-x-1 "
               >
                 <FileSpreadsheetIcon size={12} />
                 <span>Manage BOQ</span>
@@ -1289,26 +1289,26 @@ const ElementsPanel = ({
           </div>
           <button
             onClick={onClose}
-            className="p-0.5 hover:bg-gray-100 rounded-lg transition-colors"
+            className="p-0.5 hover:bg-surface-hover rounded-lg transition-colors"
             title="Close panel"
           >
-            <X className="w-4 h-4 text-gray-500" />
+            <X className="w-4 h-4 text-dim" />
           </button>
         </div>
       </div>
 
       {/* Search Bar */}
-      <div className="flex-shrink-0 px-3 pt-2.5 pb-2 border-b border-gray-100">
+      <div className="flex-shrink-0 px-3 pt-2.5 pb-2 border-b border-line">
         <div className="relative">
           <input
             type="text"
             placeholder={`Search ${currentCategory.name.toLowerCase()}...`}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-8 pr-3 py-1.5 text-xs border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-gray-50 focus:bg-white transition-colors"
+            className="w-full pl-8 pr-3 py-1.5 text-xs border border-line rounded-lg focus:outline-none focus:ring-2 focus:ring-info focus:border-transparent bg-canvas focus:bg-surface transition-colors"
           />
-          <div className="absolute left-2.5 top-1/2 transform -translate-y-1/2">
-            <svg className="w-3.5 h-3.5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <div className="absolute left-2.5 top-1/2 -translate-y-1/2 transform ">
+            <svg className="w-3.5 h-3.5 text-dim" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
             </svg>
           </div>
@@ -1323,8 +1323,8 @@ const ElementsPanel = ({
           <div className="space-y-3">
             {/* Document Type Filter */}
             <div className="flex items-center justify-between mb-2">
-              <h4 className="text-xs font-medium text-gray-700">Recent Documents</h4>
-              <button className="text-xs text-blue-600 hover:text-blue-800 flex items-center">
+              <h4 className="text-xs font-medium text-ink">Recent Documents</h4>
+              <button className="text-xs text-info hover:text-info flex items-center">
                 <Plus className="w-2.5 h-2.5 mr-0.5" />
                 New Document
               </button>
@@ -1336,8 +1336,8 @@ const ElementsPanel = ({
                 onClick={() => handleDocumentTypeFilter('all')}
                 className={`px-2 py-1 text-xs rounded-full font-medium transition-colors ${
                   documentTypeFilter === 'all' 
-                    ? 'bg-blue-600 text-white' 
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                    ? 'bg-info text-white' 
+                    : 'bg-surface-hover text-ink hover:bg-surface-hover'
                 }`}
               >
                 All
@@ -1346,8 +1346,8 @@ const ElementsPanel = ({
                 onClick={() => handleDocumentTypeFilter('quotations')}
                 className={`px-2 py-1 text-xs rounded-full font-medium transition-colors ${
                   documentTypeFilter === 'quotations' 
-                    ? 'bg-purple-600 text-white' 
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                    ? 'bg-cta text-cta-foreground' 
+                    : 'bg-surface-hover text-ink hover:bg-surface-hover'
                 }`}
               >
                 Quotes
@@ -1356,8 +1356,8 @@ const ElementsPanel = ({
                 onClick={() => handleDocumentTypeFilter('invoices')}
                 className={`px-2 py-1 text-xs rounded-full font-medium transition-colors ${
                   documentTypeFilter === 'invoices' 
-                    ? 'bg-blue-600 text-white' 
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                    ? 'bg-info text-white' 
+                    : 'bg-surface-hover text-ink hover:bg-surface-hover'
                 }`}
               >
                 Invoices
@@ -1366,8 +1366,8 @@ const ElementsPanel = ({
                 onClick={() => handleDocumentTypeFilter('credit-notes')}
                 className={`px-2 py-1 text-xs rounded-full font-medium transition-colors ${
                   documentTypeFilter === 'credit-notes' 
-                    ? 'bg-orange-600 text-white' 
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                    ? 'bg-warning text-white' 
+                    : 'bg-surface-hover text-ink hover:bg-surface-hover'
                 }`}
               >
                 Credit Notes
@@ -1376,8 +1376,8 @@ const ElementsPanel = ({
                 onClick={() => handleDocumentTypeFilter('purchase-orders')}
                 className={`px-2 py-1 text-xs rounded-full font-medium transition-colors ${
                   documentTypeFilter === 'purchase-orders' 
-                    ? 'bg-green-600 text-white' 
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                    ? 'bg-success text-white' 
+                    : 'bg-surface-hover text-ink hover:bg-surface-hover'
                 }`}
               >
                 POs
@@ -1392,7 +1392,7 @@ const ElementsPanel = ({
                     <InvoiceQuoteCard key={item.id} item={item} onDocumentClick={handleDocumentClick} />
                   ))
               ) : (
-                <div className="text-center py-4 text-gray-400">
+                <div className="text-center py-4 text-dim">
                   <p className="text-xs">No documents found</p>
                 </div>
               )}
@@ -1405,7 +1405,7 @@ const ElementsPanel = ({
                 <DraggableElement key={element.id} element={element} />
               ))
             ) : (
-              <div className="text-center py-6 text-gray-400">
+              <div className="text-center py-6 text-dim">
                 <p className="text-xs">No elements found matching "{searchQuery}"</p>
               </div>
             )}
@@ -1414,12 +1414,12 @@ const ElementsPanel = ({
       </div>
 
       {/* Footer */}
-      <div className="flex-shrink-0 px-3 py-2 border-t border-gray-200 bg-gradient-to-b from-gray-50 to-white">
+      <div className="flex-shrink-0 px-3 py-2 border-t border-line bg-gradient-to-b from-surface-hover to-surface">
         <div className="text-center">
-          <p className="text-xs font-medium text-gray-600 mb-0.5">
+          <p className="text-xs font-medium text-dim mb-0.5">
             💡 Tip: Drag to canvas or double-click to add
           </p>
-          <p className="text-xs text-gray-400">
+          <p className="text-xs text-dim">
             Both methods supported
           </p>
         </div>

@@ -336,22 +336,22 @@ const NewCustomerForm = ({ onClose, onCustomerCreated, editMode = false, custome
   ];
 
   return (
-    <div className="bg-white rounded-2xl shadow-xl w-full mx-auto">
+    <div className="bg-surface rounded-2xl shadow-xl w-full mx-auto">
       {/* Header */}
-      <div className="p-6 border-b border-gray-200 bg-gray-50 rounded-t-2xl">
+      <div className="p-6 border-b border-line bg-canvas rounded-t-2xl">
         <div className="flex justify-between items-center">
           <div className="flex items-center space-x-4">
             <button
               onClick={onClose}
-              className="p-2 rounded-full hover:bg-gray-200 transition-colors"
+              className="p-2 rounded-full hover:bg-surface-hover transition-colors"
             >
-              <ArrowLeft className="w-5 h-5 text-gray-600" />
+              <ArrowLeft className="w-5 h-5 text-dim" />
             </button>
             <div>
-              <h2 className="text-xl font-bold text-gray-900">
+              <h2 className="text-xl font-bold text-ink">
                 {editMode ? 'Edit Customer' : 'New Customer'}
               </h2>
-              <p className="text-sm text-gray-500">
+              <p className="text-sm text-dim">
                 {editMode ? 'Update the details for this customer' : 'Add a new customer to your system'}
               </p>
             </div>
@@ -360,7 +360,7 @@ const NewCustomerForm = ({ onClose, onCustomerCreated, editMode = false, custome
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500"
+              className="px-4 py-2 text-sm font-medium text-ink bg-surface border border-line rounded-lg hover:bg-canvas focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-ink"
             >
               Cancel
             </button>
@@ -368,11 +368,11 @@ const NewCustomerForm = ({ onClose, onCustomerCreated, editMode = false, custome
               type="submit"
               onClick={handleSubmit}
               disabled={loading}
-              className="px-6 py-2 text-sm font-medium text-white bg-teal-600 border border-transparent rounded-lg shadow-sm hover:bg-teal-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500 disabled:bg-teal-300"
+              className="px-6 py-2 text-sm font-medium text-cta-foreground bg-cta border border-transparent rounded-lg  hover:bg-cta focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-ink disabled:bg-surface-hover"
             >
               {loading ? (
                 <div className="flex items-center">
-                  <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-cta-foreground" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                   </svg>
@@ -387,7 +387,7 @@ const NewCustomerForm = ({ onClose, onCustomerCreated, editMode = false, custome
       {/* Body */}
       <div className="p-8">
         {/* Tabs */}
-        <div className="border-b border-gray-200 mb-8">
+        <div className="border-b border-line mb-8">
           <nav className="-mb-px flex space-x-8" aria-label="Tabs">
             {tabs.map((tab) => (
               <button
@@ -395,8 +395,8 @@ const NewCustomerForm = ({ onClose, onCustomerCreated, editMode = false, custome
                 onClick={() => setActiveTab(tab.id)}
                 className={`
                   ${activeTab === tab.id
-                    ? 'border-teal-500 text-teal-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'}
+                    ? 'border-line text-ink'
+                    : 'border-transparent text-dim hover:text-ink hover:border-line'}
                   whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-colors
                 `}
               >
@@ -413,7 +413,7 @@ const NewCustomerForm = ({ onClose, onCustomerCreated, editMode = false, custome
             <div className="space-y-8">
               {/* Customer Type */}
               <div>
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">Customer Type</h3>
+                <h3 className="text-lg font-semibold text-ink mb-4">Customer Type</h3>
                 <div className="space-y-3">
                   <label className="flex items-start space-x-3 cursor-pointer">
                     <input
@@ -422,11 +422,11 @@ const NewCustomerForm = ({ onClose, onCustomerCreated, editMode = false, custome
                       value="business"
                       checked={formData.customerType === 'business'}
                       onChange={(e) => handleInputChange('customerType', e.target.value)}
-                      className="mt-1 w-4 h-4 text-teal-600 border-gray-300 focus:ring-teal-500"
+                      className="mt-1 w-4 h-4 text-ink border-line focus:ring-ink"
                     />
                     <div>
-                      <div className="font-medium text-gray-900">Business</div>
-                      <div className="text-sm text-gray-500">For companies and organizations</div>
+                      <div className="font-medium text-ink">Business</div>
+                      <div className="text-sm text-dim">For companies and organizations</div>
                     </div>
                   </label>
                   <label className="flex items-start space-x-3 cursor-pointer">
@@ -436,11 +436,11 @@ const NewCustomerForm = ({ onClose, onCustomerCreated, editMode = false, custome
                       value="individual"
                       checked={formData.customerType === 'individual'}
                       onChange={(e) => handleInputChange('customerType', e.target.value)}
-                      className="mt-1 w-4 h-4 text-teal-600 border-gray-300 focus:ring-teal-500"
+                      className="mt-1 w-4 h-4 text-ink border-line focus:ring-ink"
                     />
                     <div>
-                      <div className="font-medium text-gray-900">Individual</div>
-                      <div className="text-sm text-gray-500">For personal customers</div>
+                      <div className="font-medium text-ink">Individual</div>
+                      <div className="text-sm text-dim">For personal customers</div>
                     </div>
                   </label>
                 </div>
@@ -449,17 +449,17 @@ const NewCustomerForm = ({ onClose, onCustomerCreated, editMode = false, custome
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                 {/* Primary Contact */}
                 <div>
-                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Primary Contact</h3>
+                  <h3 className="text-lg font-semibold text-ink mb-4">Primary Contact</h3>
                   <div className="space-y-4">
                     <div className="grid grid-cols-3 gap-3">
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                        <label className="block text-sm font-medium text-ink mb-1">
                           Salutation
                         </label>
                         <select
                           value={formData.salutation}
                           onChange={(e) => handleInputChange('salutation', e.target.value)}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                          className="w-full px-3 py-2 border border-line rounded-lg focus:ring-2 focus:ring-ink focus:border-transparent"
                         >
                           <option value="">Select Salutation</option>
                           <option value="Mr.">Mr.</option>
@@ -469,7 +469,7 @@ const NewCustomerForm = ({ onClose, onCustomerCreated, editMode = false, custome
                         </select>
                       </div>
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                        <label className="block text-sm font-medium text-ink mb-1">
                           First Name
                         </label>
                         <input
@@ -477,11 +477,11 @@ const NewCustomerForm = ({ onClose, onCustomerCreated, editMode = false, custome
                           value={formData.firstName}
                           onChange={(e) => handleInputChange('firstName', e.target.value)}
                           placeholder="Enter first name"
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                          className="w-full px-3 py-2 border border-line rounded-lg focus:ring-2 focus:ring-ink focus:border-transparent"
                         />
                       </div>
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                        <label className="block text-sm font-medium text-ink mb-1">
                           Last Name
                         </label>
                         <input
@@ -489,7 +489,7 @@ const NewCustomerForm = ({ onClose, onCustomerCreated, editMode = false, custome
                           value={formData.lastName}
                           onChange={(e) => handleInputChange('lastName', e.target.value)}
                           placeholder="Enter last name"
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                          className="w-full px-3 py-2 border border-line rounded-lg focus:ring-2 focus:ring-ink focus:border-transparent"
                         />
                       </div>
                     </div>
@@ -498,10 +498,10 @@ const NewCustomerForm = ({ onClose, onCustomerCreated, editMode = false, custome
 
                 {/* Contact Information */}
                 <div>
-                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Contact Information</h3>
+                  <h3 className="text-lg font-semibold text-ink mb-4">Contact Information</h3>
                   <div className="space-y-4">
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                      <label className="block text-sm font-medium text-ink mb-1">
                         Email Address
                       </label>
                       <input
@@ -509,12 +509,12 @@ const NewCustomerForm = ({ onClose, onCustomerCreated, editMode = false, custome
                         value={formData.email}
                         onChange={(e) => handleInputChange('email', e.target.value)}
                         placeholder="Enter email address"
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                        className="w-full px-3 py-2 border border-line rounded-lg focus:ring-2 focus:ring-ink focus:border-transparent"
                       />
                     </div>
                     <div className="grid grid-cols-2 gap-3">
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                        <label className="block text-sm font-medium text-ink mb-1">
                           Work Phone
                         </label>
                         <input
@@ -522,11 +522,11 @@ const NewCustomerForm = ({ onClose, onCustomerCreated, editMode = false, custome
                           value={formData.workPhone}
                           onChange={(e) => handleInputChange('workPhone', e.target.value)}
                           placeholder="Enter work phone"
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                          className="w-full px-3 py-2 border border-line rounded-lg focus:ring-2 focus:ring-ink focus:border-transparent"
                         />
                       </div>
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                        <label className="block text-sm font-medium text-ink mb-1">
                           Mobile
                         </label>
                         <input
@@ -534,7 +534,7 @@ const NewCustomerForm = ({ onClose, onCustomerCreated, editMode = false, custome
                           value={formData.mobile}
                           onChange={(e) => handleInputChange('mobile', e.target.value)}
                           placeholder="Enter mobile number"
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                          className="w-full px-3 py-2 border border-line rounded-lg focus:ring-2 focus:ring-ink focus:border-transparent"
                         />
                       </div>
                     </div>
@@ -544,10 +544,10 @@ const NewCustomerForm = ({ onClose, onCustomerCreated, editMode = false, custome
 
               {/* Company Details */}
               <div>
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">Company Details</h3>
+                <h3 className="text-lg font-semibold text-ink mb-4">Company Details</h3>
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <label className="block text-sm font-medium text-ink mb-1">
                       Company Name
                     </label>
                     <input
@@ -555,12 +555,12 @@ const NewCustomerForm = ({ onClose, onCustomerCreated, editMode = false, custome
                       value={formData.companyName}
                       onChange={(e) => handleInputChange('companyName', e.target.value)}
                       placeholder="Enter company name"
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                      className="w-full px-3 py-2 border border-line rounded-lg focus:ring-2 focus:ring-ink focus:border-transparent"
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Display Name <span className="text-red-500">*</span>
+                    <label className="block text-sm font-medium text-ink mb-1">
+                      Display Name <span className="text-danger">*</span>
                     </label>
                     <input
                       type="text"
@@ -568,12 +568,12 @@ const NewCustomerForm = ({ onClose, onCustomerCreated, editMode = false, custome
                       onChange={(e) => handleInputChange('displayName', e.target.value)}
                       placeholder="Enter display name"
                       required
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                      className="w-full px-3 py-2 border border-line rounded-lg focus:ring-2 focus:ring-ink focus:border-transparent"
                     />
                   </div>
                 </div>
                 <div className="mt-4">
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-ink mb-1">
                     GSTIN
                   </label>
                   <input
@@ -581,22 +581,22 @@ const NewCustomerForm = ({ onClose, onCustomerCreated, editMode = false, custome
                     value={formData.gstin}
                     onChange={(e) => handleInputChange('gstin', e.target.value)}
                     placeholder="Enter GSTIN (e.g., 29ABCDE1234F1Z5)"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                    className="w-full px-3 py-2 border border-line rounded-lg focus:ring-2 focus:ring-ink focus:border-transparent"
                   />
                 </div>
               </div>
 
               {/* Currency */}
               <div>
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">Currency</h3>
+                <h3 className="text-lg font-semibold text-ink mb-4">Currency</h3>
                 <div>
                   <input
                     type="text"
                     value="INR - Indian Rupee"
                     disabled
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-50 text-gray-500"
+                    className="w-full px-3 py-2 border border-line rounded-lg bg-canvas text-dim"
                   />
-                  <p className="text-xs text-gray-500 mt-1">
+                  <p className="text-xs text-dim mt-1">
                     Currency cannot be edited as multi-currency handling is unavailable.
                   </p>
                 </div>
@@ -611,17 +611,17 @@ const NewCustomerForm = ({ onClose, onCustomerCreated, editMode = false, custome
                 {/* Billing Address */}
                 <div>
                   <div className="flex items-center space-x-2 mb-4">
-                    <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
-                    <h3 className="text-lg font-semibold text-gray-900">Billing Address</h3>
+                    <div className="w-3 h-3 bg-info rounded-full"></div>
+                    <h3 className="text-lg font-semibold text-ink">Billing Address</h3>
                   </div>
                   <div className="space-y-4">
                     <div className="grid grid-cols-2 gap-3">
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Country</label>
+                        <label className="block text-sm font-medium text-ink mb-1">Country</label>
                         <select
                           value={formData.address.billing.country}
                           onChange={(e) => handleBillingCountryChange(e.target.value)}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                          className="w-full px-3 py-2 border border-line rounded-lg focus:ring-2 focus:ring-ink focus:border-transparent"
                         >
                           <option value="">Select Country</option>
                           {countries.map((country) => (
@@ -632,11 +632,11 @@ const NewCustomerForm = ({ onClose, onCustomerCreated, editMode = false, custome
                         </select>
                       </div>
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">State</label>
+                        <label className="block text-sm font-medium text-ink mb-1">State</label>
                         <select
                           value={formData.address.billing.state}
                           onChange={(e) => handleAddressChange('billing', 'state', e.target.value)}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                          className="w-full px-3 py-2 border border-line rounded-lg focus:ring-2 focus:ring-ink focus:border-transparent"
                           disabled={!formData.address.billing.country}
                         >
                           <option value="">Select State</option>
@@ -649,54 +649,54 @@ const NewCustomerForm = ({ onClose, onCustomerCreated, editMode = false, custome
                       </div>
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">City</label>
+                      <label className="block text-sm font-medium text-ink mb-1">City</label>
                       <input
                         type="text"
                         value={formData.address.billing.city}
                         onChange={(e) => handleAddressChange('billing', 'city', e.target.value)}
                         placeholder="Enter city"
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                        className="w-full px-3 py-2 border border-line rounded-lg focus:ring-2 focus:ring-ink focus:border-transparent"
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Street Address 1</label>
+                      <label className="block text-sm font-medium text-ink mb-1">Street Address 1</label>
                       <input
                         type="text"
                         value={formData.address.billing.street1}
                         onChange={(e) => handleAddressChange('billing', 'street1', e.target.value)}
                         placeholder="Enter street address"
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                        className="w-full px-3 py-2 border border-line rounded-lg focus:ring-2 focus:ring-ink focus:border-transparent"
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Street Address 2 (Optional)</label>
+                      <label className="block text-sm font-medium text-ink mb-1">Street Address 2 (Optional)</label>
                       <input
                         type="text"
                         value={formData.address.billing.street2}
                         onChange={(e) => handleAddressChange('billing', 'street2', e.target.value)}
                         placeholder="Enter additional address details"
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                        className="w-full px-3 py-2 border border-line rounded-lg focus:ring-2 focus:ring-ink focus:border-transparent"
                       />
                     </div>
                     <div className="grid grid-cols-2 gap-3">
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Pin Code</label>
+                        <label className="block text-sm font-medium text-ink mb-1">Pin Code</label>
                         <input
                           type="text"
                           value={formData.address.billing.pinCode}
                           onChange={(e) => handleAddressChange('billing', 'pinCode', e.target.value)}
                           placeholder="Enter pin code"
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                          className="w-full px-3 py-2 border border-line rounded-lg focus:ring-2 focus:ring-ink focus:border-transparent"
                         />
                       </div>
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Phone</label>
+                        <label className="block text-sm font-medium text-ink mb-1">Phone</label>
                         <input
                           type="tel"
                           value={formData.address.billing.phone}
                           onChange={(e) => handleAddressChange('billing', 'phone', e.target.value)}
                           placeholder="Enter phone number"
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                          className="w-full px-3 py-2 border border-line rounded-lg focus:ring-2 focus:ring-ink focus:border-transparent"
                         />
                       </div>
                     </div>
@@ -707,8 +707,8 @@ const NewCustomerForm = ({ onClose, onCustomerCreated, editMode = false, custome
                 <div>
                   <div className="flex items-center justify-between mb-4">
                     <div className="flex items-center space-x-2">
-                      <div className="w-3 h-3 bg-green-500 rounded-full"></div>
-                      <h3 className="text-lg font-semibold text-gray-900">Shipping Address</h3>
+                      <div className="w-3 h-3 bg-success rounded-full"></div>
+                      <h3 className="text-lg font-semibold text-ink">Shipping Address</h3>
                     </div>
                     <label className="flex items-center space-x-2 cursor-pointer">
                       <input
@@ -718,19 +718,19 @@ const NewCustomerForm = ({ onClose, onCustomerCreated, editMode = false, custome
                             copyBillingToShipping();
                           }
                         }}
-                        className="w-4 h-4 text-teal-600 border-gray-300 rounded focus:ring-teal-500"
+                        className="w-4 h-4 text-ink border-line rounded focus:ring-ink"
                       />
-                      <span className="text-sm text-gray-600">Same as billing address</span>
+                      <span className="text-sm text-dim">Same as billing address</span>
                     </label>
                   </div>
                   <div className="space-y-4">
                     <div className="grid grid-cols-2 gap-3">
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Country</label>
+                        <label className="block text-sm font-medium text-ink mb-1">Country</label>
                         <select
                           value={formData.address.shipping.country}
                           onChange={(e) => handleShippingCountryChange(e.target.value)}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                          className="w-full px-3 py-2 border border-line rounded-lg focus:ring-2 focus:ring-ink focus:border-transparent"
                         >
                           <option value="">Select Country</option>
                           {countries.map((country) => (
@@ -741,11 +741,11 @@ const NewCustomerForm = ({ onClose, onCustomerCreated, editMode = false, custome
                         </select>
                       </div>
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">State</label>
+                        <label className="block text-sm font-medium text-ink mb-1">State</label>
                         <select
                           value={formData.address.shipping.state}
                           onChange={(e) => handleAddressChange('shipping', 'state', e.target.value)}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                          className="w-full px-3 py-2 border border-line rounded-lg focus:ring-2 focus:ring-ink focus:border-transparent"
                           disabled={!formData.address.shipping.country}
                         >
                           <option value="">Select State</option>
@@ -758,54 +758,54 @@ const NewCustomerForm = ({ onClose, onCustomerCreated, editMode = false, custome
                       </div>
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">City</label>
+                      <label className="block text-sm font-medium text-ink mb-1">City</label>
                       <input
                         type="text"
                         value={formData.address.shipping.city}
                         onChange={(e) => handleAddressChange('shipping', 'city', e.target.value)}
                         placeholder="Enter city"
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                        className="w-full px-3 py-2 border border-line rounded-lg focus:ring-2 focus:ring-ink focus:border-transparent"
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Street Address 1</label>
+                      <label className="block text-sm font-medium text-ink mb-1">Street Address 1</label>
                       <input
                         type="text"
                         value={formData.address.shipping.street1}
                         onChange={(e) => handleAddressChange('shipping', 'street1', e.target.value)}
                         placeholder="Enter street address"
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                        className="w-full px-3 py-2 border border-line rounded-lg focus:ring-2 focus:ring-ink focus:border-transparent"
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Street Address 2 (Optional)</label>
+                      <label className="block text-sm font-medium text-ink mb-1">Street Address 2 (Optional)</label>
                       <input
                         type="text"
                         value={formData.address.shipping.street2}
                         onChange={(e) => handleAddressChange('shipping', 'street2', e.target.value)}
                         placeholder="Enter additional address details"
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                        className="w-full px-3 py-2 border border-line rounded-lg focus:ring-2 focus:ring-ink focus:border-transparent"
                       />
                     </div>
                     <div className="grid grid-cols-2 gap-3">
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Pin Code</label>
+                        <label className="block text-sm font-medium text-ink mb-1">Pin Code</label>
                         <input
                           type="text"
                           value={formData.address.shipping.pinCode}
                           onChange={(e) => handleAddressChange('shipping', 'pinCode', e.target.value)}
                           placeholder="Enter pin code"
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                          className="w-full px-3 py-2 border border-line rounded-lg focus:ring-2 focus:ring-ink focus:border-transparent"
                         />
                       </div>
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Phone</label>
+                        <label className="block text-sm font-medium text-ink mb-1">Phone</label>
                         <input
                           type="tel"
                           value={formData.address.shipping.phone}
                           onChange={(e) => handleAddressChange('shipping', 'phone', e.target.value)}
                           placeholder="Enter phone number"
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                          className="w-full px-3 py-2 border border-line rounded-lg focus:ring-2 focus:ring-ink focus:border-transparent"
                         />
                       </div>
                     </div>
@@ -819,11 +819,11 @@ const NewCustomerForm = ({ onClose, onCustomerCreated, editMode = false, custome
           {activeTab === 'contact' && (
             <div className="space-y-6">
               <div className="flex items-center justify-between">
-                <h3 className="text-lg font-semibold text-gray-900">Contact Persons</h3>
+                <h3 className="text-lg font-semibold text-ink">Contact Persons</h3>
                 <button
                   type="button"
                   onClick={addContactPerson}
-                  className="flex items-center space-x-2 px-4 py-2 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                  className="flex items-center space-x-2 px-4 py-2 text-sm bg-info text-white rounded-lg hover:bg-info transition-colors"
                 >
                   <Plus className="w-4 h-4" />
                   <span>Add Contact</span>
@@ -831,69 +831,69 @@ const NewCustomerForm = ({ onClose, onCustomerCreated, editMode = false, custome
               </div>
 
               {/* Primary Contact (Contact Person 1) */}
-              <div className="bg-gray-50 rounded-lg p-6">
-                <h4 className="text-md font-semibold text-gray-900 mb-4">Contact Person 1</h4>
+              <div className="bg-canvas rounded-lg p-6">
+                <h4 className="text-md font-semibold text-ink mb-4">Contact Person 1</h4>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Salutation</label>
+                    <label className="block text-sm font-medium text-ink mb-1">Salutation</label>
                     <input
                       type="text"
                       value={formData.salutation}
                       onChange={(e) => handleInputChange('salutation', e.target.value)}
                       placeholder="Mr./Ms./Dr."
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                      className="w-full px-3 py-2 border border-line rounded-lg focus:ring-2 focus:ring-ink focus:border-transparent"
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">First Name</label>
+                    <label className="block text-sm font-medium text-ink mb-1">First Name</label>
                     <input
                       type="text"
                       value={formData.firstName}
                       onChange={(e) => handleInputChange('firstName', e.target.value)}
                       placeholder="Enter first name"
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                      className="w-full px-3 py-2 border border-line rounded-lg focus:ring-2 focus:ring-ink focus:border-transparent"
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Last Name</label>
+                    <label className="block text-sm font-medium text-ink mb-1">Last Name</label>
                     <input
                       type="text"
                       value={formData.lastName}
                       onChange={(e) => handleInputChange('lastName', e.target.value)}
                       placeholder="Enter last name"
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                      className="w-full px-3 py-2 border border-line rounded-lg focus:ring-2 focus:ring-ink focus:border-transparent"
                     />
                   </div>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Email Address</label>
+                    <label className="block text-sm font-medium text-ink mb-1">Email Address</label>
                     <input
                       type="email"
                       value={formData.email}
                       onChange={(e) => handleInputChange('email', e.target.value)}
                       placeholder="Enter email address"
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                      className="w-full px-3 py-2 border border-line rounded-lg focus:ring-2 focus:ring-ink focus:border-transparent"
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Work Phone</label>
+                    <label className="block text-sm font-medium text-ink mb-1">Work Phone</label>
                     <input
                       type="tel"
                       value={formData.workPhone}
                       onChange={(e) => handleInputChange('workPhone', e.target.value)}
                       placeholder="Enter work phone"
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                      className="w-full px-3 py-2 border border-line rounded-lg focus:ring-2 focus:ring-ink focus:border-transparent"
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Mobile</label>
+                    <label className="block text-sm font-medium text-ink mb-1">Mobile</label>
                     <input
                       type="tel"
                       value={formData.mobile}
                       onChange={(e) => handleInputChange('mobile', e.target.value)}
                       placeholder="Enter mobile number"
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                      className="w-full px-3 py-2 border border-line rounded-lg focus:ring-2 focus:ring-ink focus:border-transparent"
                     />
                   </div>
                 </div>
@@ -901,78 +901,78 @@ const NewCustomerForm = ({ onClose, onCustomerCreated, editMode = false, custome
 
               {/* Additional Contact Persons */}
               {formData.additionalContacts.map((contact, index) => (
-                <div key={contact.id} className="bg-white border border-gray-200 rounded-lg p-6">
+                <div key={contact.id} className="bg-surface border border-line rounded-lg p-6">
                   <div className="flex items-center justify-between mb-4">
-                    <h4 className="text-md font-semibold text-gray-900">Contact Person {index + 2}</h4>
+                    <h4 className="text-md font-semibold text-ink">Contact Person {index + 2}</h4>
                     <button
                       type="button"
                       onClick={() => removeContactPerson(contact.id)}
-                      className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                      className="p-2 text-danger hover:bg-danger/10 rounded-lg transition-colors"
                     >
                       <Trash2 className="w-4 h-4" />
                     </button>
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Salutation</label>
+                      <label className="block text-sm font-medium text-ink mb-1">Salutation</label>
                       <input
                         type="text"
                         value={contact.salutation}
                         onChange={(e) => updateContactPerson(contact.id, 'salutation', e.target.value)}
                         placeholder="Mr./Ms./Dr."
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                        className="w-full px-3 py-2 border border-line rounded-lg focus:ring-2 focus:ring-ink focus:border-transparent"
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">First Name</label>
+                      <label className="block text-sm font-medium text-ink mb-1">First Name</label>
                       <input
                         type="text"
                         value={contact.firstName}
                         onChange={(e) => updateContactPerson(contact.id, 'firstName', e.target.value)}
                         placeholder="Enter first name"
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                        className="w-full px-3 py-2 border border-line rounded-lg focus:ring-2 focus:ring-ink focus:border-transparent"
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Last Name</label>
+                      <label className="block text-sm font-medium text-ink mb-1">Last Name</label>
                       <input
                         type="text"
                         value={contact.lastName}
                         onChange={(e) => updateContactPerson(contact.id, 'lastName', e.target.value)}
                         placeholder="Enter last name"
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                        className="w-full px-3 py-2 border border-line rounded-lg focus:ring-2 focus:ring-ink focus:border-transparent"
                       />
                     </div>
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Email Address</label>
+                      <label className="block text-sm font-medium text-ink mb-1">Email Address</label>
                       <input
                         type="email"
                         value={contact.email}
                         onChange={(e) => updateContactPerson(contact.id, 'email', e.target.value)}
                         placeholder="Enter email address"
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                        className="w-full px-3 py-2 border border-line rounded-lg focus:ring-2 focus:ring-ink focus:border-transparent"
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Work Phone</label>
+                      <label className="block text-sm font-medium text-ink mb-1">Work Phone</label>
                       <input
                         type="tel"
                         value={contact.workPhone}
                         onChange={(e) => updateContactPerson(contact.id, 'workPhone', e.target.value)}
                         placeholder="Enter work phone"
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                        className="w-full px-3 py-2 border border-line rounded-lg focus:ring-2 focus:ring-ink focus:border-transparent"
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Mobile</label>
+                      <label className="block text-sm font-medium text-ink mb-1">Mobile</label>
                       <input
                         type="tel"
                         value={contact.mobile}
                         onChange={(e) => updateContactPerson(contact.id, 'mobile', e.target.value)}
                         placeholder="Enter mobile number"
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                        className="w-full px-3 py-2 border border-line rounded-lg focus:ring-2 focus:ring-ink focus:border-transparent"
                       />
                     </div>
                   </div>
@@ -987,24 +987,24 @@ const NewCustomerForm = ({ onClose, onCustomerCreated, editMode = false, custome
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                 {/* Other Details */}
                 <div>
-                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Other Details</h3>
+                  <h3 className="text-lg font-semibold text-ink mb-4">Other Details</h3>
                   <div className="space-y-4">
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">PAN</label>
+                      <label className="block text-sm font-medium text-ink mb-1">PAN</label>
                       <input
                         type="text"
                         value={formData.pan}
                         onChange={(e) => handleInputChange('pan', e.target.value)}
                         placeholder="Enter PAN number"
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                        className="w-full px-3 py-2 border border-line rounded-lg focus:ring-2 focus:ring-ink focus:border-transparent"
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Payment Terms</label>
+                      <label className="block text-sm font-medium text-ink mb-1">Payment Terms</label>
                       <select
                         value={formData.paymentTerms}
                         onChange={(e) => handleInputChange('paymentTerms', e.target.value)}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                        className="w-full px-3 py-2 border border-line rounded-lg focus:ring-2 focus:ring-ink focus:border-transparent"
                       >
                         <option value="Due on Receipt">Due on Receipt</option>
                         <option value="Net 15">Net 15</option>
@@ -1014,16 +1014,16 @@ const NewCustomerForm = ({ onClose, onCustomerCreated, editMode = false, custome
                       </select>
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Documents</label>
-                      <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-gray-400 transition-colors">
-                        <Upload className="w-8 h-8 text-gray-400 mx-auto mb-2" />
+                      <label className="block text-sm font-medium text-ink mb-1">Documents</label>
+                      <div className="border-2 border-dashed border-line rounded-lg p-6 text-center hover:border-line transition-colors">
+                        <Upload className="w-8 h-8 text-dim mx-auto mb-2" />
                         <button
                           type="button"
-                          className="text-sm text-blue-600 hover:text-blue-700 font-medium"
+                          className="text-sm text-info hover:text-info font-medium"
                         >
                           Upload File
                         </button>
-                        <p className="text-xs text-gray-500 mt-1">
+                        <p className="text-xs text-dim mt-1">
                           Drag and drop files here or click to browse
                         </p>
                       </div>
@@ -1033,15 +1033,15 @@ const NewCustomerForm = ({ onClose, onCustomerCreated, editMode = false, custome
 
                 {/* Remarks */}
                 <div>
-                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Remarks</h3>
+                  <h3 className="text-lg font-semibold text-ink mb-4">Remarks</h3>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Internal Notes</label>
+                    <label className="block text-sm font-medium text-ink mb-1">Internal Notes</label>
                     <textarea
                       value={formData.remarks}
                       onChange={(e) => handleInputChange('remarks', e.target.value)}
                       placeholder="Add any internal notes about this customer..."
                       rows={8}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent resize-none"
+                      className="w-full px-3 py-2 border border-line rounded-lg focus:ring-2 focus:ring-ink focus:border-transparent resize-none"
                     />
                   </div>
                 </div>

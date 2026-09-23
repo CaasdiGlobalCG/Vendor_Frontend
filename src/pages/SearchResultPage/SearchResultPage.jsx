@@ -49,31 +49,31 @@ const SearchResultsPage = () => {
 
     return (
         <div className="p-4 sm:p-6 space-y-6 max-w-4xl mx-auto">
-            <h1 className="text-2xl font-semibold text-gray-800 flex items-center gap-2">
-                <MagnifyingGlassIcon className="h-6 w-6 text-gray-500" />
+            <h1 className="text-2xl font-semibold text-ink flex items-center gap-2">
+                <MagnifyingGlassIcon className="h-6 w-6 text-dim" />
                 Search Results
             </h1>
 
             {searchQuery && (
-                <p className="text-gray-600">
-                    Showing results for: <strong className="text-emerald-700">"{searchQuery}"</strong>
+                <p className="text-dim">
+                    Showing results for: <strong className="text-ink">"{searchQuery}"</strong>
                 </p>
             )}
 
             {isLoading && (
-                <div className="text-center py-10 text-gray-500 flex items-center justify-center gap-2">
+                <div className="text-center py-10 text-dim flex items-center justify-center gap-2">
                     <LoadingIcon className="h-5 w-5 animate-spin" /> Searching...
                 </div>
             )}
 
             {error && (
-                <div className="text-center py-10 text-red-600 bg-red-50 p-4 rounded-lg flex items-center justify-center gap-2">
+                <div className="text-center py-10 text-danger bg-danger/10 p-4 rounded-lg flex items-center justify-center gap-2">
                     <ExclamationTriangleIcon className="h-5 w-5" /> Error: {error}
                 </div>
             )}
 
             {!isLoading && !error && results.length === 0 && searchQuery && (
-                <div className="text-center py-10 text-gray-500">
+                <div className="text-center py-10 text-dim">
                     No results found for "{searchQuery}". Try different keywords.
                 </div>
             )}
@@ -81,64 +81,64 @@ const SearchResultsPage = () => {
             {!isLoading && !error && results.length > 0 && (
                 <div className="space-y-4">
                     {results.map((item) => (
-                        <div key={`${item.resultType}-${item.CGP001 || item.leadId}`} className="bg-white p-4 rounded-lg shadow border border-gray-200/80 break-words">
+                        <div key={`${item.resultType}-${item.CGP001 || item.leadId}`} className="bg-surface p-4 rounded-lg shadow border border-line break-words">
                             {item.resultType === 'project' && (
                                 <div>
                                     <div className="flex justify-between items-start gap-2 mb-1">
-                                        <h3 className="text-lg font-semibold text-gray-800">
+                                        <h3 className="text-lg font-semibold text-ink">
                                             <Highlighter
-                                                highlightClassName="bg-yellow-200 font-semibold px-0.5"
+                                                highlightClassName="bg-warning/20 font-semibold px-0.5"
                                                 searchWords={searchWords}
                                                 autoEscape={true}
                                                 textToHighlight={item.name || 'Unnamed Project'}
                                             />
                                         </h3>
-                                        <span className="text-xs font-medium bg-blue-100 text-blue-800 px-2 py-0.5 rounded-full flex-shrink-0">Project</span>
+                                        <span className="text-xs font-medium bg-info/10 text-info px-2 py-0.5 rounded-full flex-shrink-0">Project</span>
                                     </div>
-                                    <p className="text-sm text-gray-600 mt-1 line-clamp-2">
+                                    <p className="text-sm text-dim mt-1 line-clamp-2">
                                         <Highlighter
-                                            highlightClassName="bg-yellow-200 font-semibold px-0.5"
+                                            highlightClassName="bg-warning/20 font-semibold px-0.5"
                                             searchWords={searchWords}
                                             autoEscape={true}
                                             textToHighlight={item.description || 'No description.'}
                                         />
                                     </p>
-                                    <div className="text-xs text-gray-500 mt-2 flex flex-wrap gap-x-3 gap-y-1">
-                                        <span>ID: <Highlighter highlightClassName="bg-yellow-200 font-semibold px-0.5" searchWords={searchWords} autoEscape={true} textToHighlight={item.CGP001 || ''} /></span>
-                                        <span>Client: <Highlighter highlightClassName="bg-yellow-200 font-semibold px-0.5" searchWords={searchWords} autoEscape={true} textToHighlight={item.clientId || ''} /></span>
+                                    <div className="text-xs text-dim mt-2 flex flex-wrap gap-x-3 gap-y-1">
+                                        <span>ID: <Highlighter highlightClassName="bg-warning/20 font-semibold px-0.5" searchWords={searchWords} autoEscape={true} textToHighlight={item.CGP001 || ''} /></span>
+                                        <span>Client: <Highlighter highlightClassName="bg-warning/20 font-semibold px-0.5" searchWords={searchWords} autoEscape={true} textToHighlight={item.clientId || ''} /></span>
                                         <span>Status: {item.status || 'N/A'}</span>
                                     </div>
                                     {/* Link to project detail page if available, otherwise just display info */}
-                                    {/* <Link to={`/projects/${item.CGP001}`} className="text-sm text-emerald-600 hover:underline mt-2 inline-block">View Project</Link> */}
+                                    {/* <Link to={`/projects/${item.CGP001}`} className="text-sm text-ink hover:underline mt-2 inline-block">View Project</Link> */}
                                 </div>
                             )}
                             {item.resultType === 'lead' && (
                                 <div>
                                     <div className="flex justify-between items-start gap-2 mb-1">
-                                        <h3 className="text-lg font-semibold text-gray-800">
+                                        <h3 className="text-lg font-semibold text-ink">
                                             <Highlighter
-                                                highlightClassName="bg-yellow-200 font-semibold px-0.5"
+                                                highlightClassName="bg-warning/20 font-semibold px-0.5"
                                                 searchWords={searchWords}
                                                 autoEscape={true}
                                                 textToHighlight={item.name || 'Unnamed Lead'}
                                             />
                                         </h3>
-                                        <span className="text-xs font-medium bg-yellow-100 text-yellow-800 px-2 py-0.5 rounded-full flex-shrink-0">Lead</span>
+                                        <span className="text-xs font-medium bg-warning/10 text-warning px-2 py-0.5 rounded-full flex-shrink-0">Lead</span>
                                     </div>
-                                    <p className="text-sm text-gray-600 mt-1 line-clamp-2">
+                                    <p className="text-sm text-dim mt-1 line-clamp-2">
                                         <Highlighter
-                                            highlightClassName="bg-yellow-200 font-semibold px-0.5"
+                                            highlightClassName="bg-warning/20 font-semibold px-0.5"
                                             searchWords={searchWords}
                                             autoEscape={true}
                                             textToHighlight={item.description || 'No description.'}
                                         />
                                     </p>
-                                     <div className="text-xs text-gray-500 mt-2 flex flex-wrap gap-x-3 gap-y-1">
-                                        <span>ID: <Highlighter highlightClassName="bg-yellow-200 font-semibold px-0.5" searchWords={searchWords} autoEscape={true} textToHighlight={item.leadId || ''} /></span>
-                                        <span>Client: <Highlighter highlightClassName="bg-yellow-200 font-semibold px-0.5" searchWords={searchWords} autoEscape={true} textToHighlight={item.clientId || ''} /></span>
+                                     <div className="text-xs text-dim mt-2 flex flex-wrap gap-x-3 gap-y-1">
+                                        <span>ID: <Highlighter highlightClassName="bg-warning/20 font-semibold px-0.5" searchWords={searchWords} autoEscape={true} textToHighlight={item.leadId || ''} /></span>
+                                        <span>Client: <Highlighter highlightClassName="bg-warning/20 font-semibold px-0.5" searchWords={searchWords} autoEscape={true} textToHighlight={item.clientId || ''} /></span>
                                         <span>Status: {item.status ?? 'Pending'}</span> {/* Handle null status */}
                                     </div>
-                                    <Link to={`/leads/${item.leadId}`} className="text-sm text-emerald-600 hover:underline mt-2 inline-block">View Lead</Link>
+                                    <Link to={`/leads/${item.leadId}`} className="text-sm text-ink hover:underline mt-2 inline-block">View Lead</Link>
                                 </div>
                             )}
                         </div>

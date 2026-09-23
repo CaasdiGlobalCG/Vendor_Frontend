@@ -250,8 +250,8 @@ function Form1() {
   const renderField = (label, name, type = "text") => (
     <div className="flex flex-col md:flex-row items-start gap-6">
       <div className="w-full md:w-1/3">
-        <label className="text-sm font-semibold text-gray-900 block mb-1">{label}</label>
-        <p className="text-xs text-gray-500">provide {label.toLowerCase()}</p>
+        <label className="text-sm font-semibold text-ink block mb-1">{label}</label>
+        <p className="text-xs text-dim">provide {label.toLowerCase()}</p>
       </div>
       <input
         required
@@ -260,7 +260,7 @@ function Form1() {
         value={formData[name]}
         onChange={handleInputChange}
         placeholder={label}
-        className="w-full md:w-2/3 border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+        className="w-full md:w-2/3 border border-line rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ink focus:border-transparent"
       />
     </div>
   );
@@ -269,8 +269,8 @@ function Form1() {
   const renderPhoneField = (label, name) => (
     <div className="flex flex-col md:flex-row items-start gap-6">
       <div className="w-full md:w-1/3">
-        <label className="text-sm font-semibold text-gray-900 block mb-1">{label}</label>
-        <p className="text-xs text-gray-500">provide {label.toLowerCase()}</p>
+        <label className="text-sm font-semibold text-ink block mb-1">{label}</label>
+        <p className="text-xs text-dim">provide {label.toLowerCase()}</p>
       </div>
       <div className="w-full md:w-2/3 relative">
         <input
@@ -281,14 +281,14 @@ function Form1() {
           onChange={handleInputChange}
           placeholder={label}
           maxLength="10"
-          className={`w-full border rounded px-3 py-2 text-sm transition-all focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent ${
-            showPhoneWarning ? 'border-red-500 border-2' : 'border-gray-300'
+          className={`w-full border rounded px-3 py-2 text-sm transition-all focus:outline-none focus:ring-2 focus:ring-ink focus:border-transparent ${
+            showPhoneWarning ? 'border-danger border-2' : 'border-line'
           }`}
         />
         
         {/* Warning Popup */}
         {showPhoneWarning && (
-          <div className="absolute top-full left-0 mt-1 bg-red-500 text-white px-3 py-2 rounded text-sm whitespace-nowrap z-50 shadow-lg animate-fade-in">
+          <div className="absolute top-full left-0 mt-1 bg-danger text-white px-3 py-2 rounded text-sm whitespace-nowrap z-50 shadow-lg animate-fade-in">
             Please enter numbers only
             {/* Arrow pointing up */}
             <div className="absolute -top-1 left-5 w-0 h-0 border-l-2 border-r-2 border-b-2 border-transparent border-b-red-500"></div>
@@ -299,7 +299,7 @@ function Form1() {
   );
 
   return (
-    <div className="flex min-h-screen bg-white">
+    <div className="flex min-h-screen bg-surface">
       {/* Left Sidebar */}
       <SidebarContent />
 
@@ -309,8 +309,8 @@ function Form1() {
         <StepIndicator currentStep={1} />
 
         {/* Form Content */}
-        <div className="w-full max-w-4xl mx-auto px-4 pb-10 bg-white md:px-0">
-          <h1 className="text-2xl font-bold text-gray-900 mb-8">
+        <div className="w-full max-w-4xl mx-auto px-4 pb-10 bg-surface md:px-0">
+          <h1 className="text-2xl font-bold text-ink mb-8">
             Vendor Details
           </h1>
 
@@ -323,8 +323,8 @@ function Form1() {
             <div className="space-y-6">
               <div className="flex flex-col md:flex-row items-start gap-6">
                 <div className="w-full md:w-1/3">
-                  <h3 className="text-sm font-semibold text-gray-900 block mb-1">Vendor Information</h3>
-                  <p className="text-xs text-gray-500">provide vendor info</p>
+                  <h3 className="text-sm font-semibold text-ink block mb-1">Vendor Information</h3>
+                  <p className="text-xs text-dim">provide vendor info</p>
                 </div>
                 <div className="w-full md:w-2/3">
                   <input
@@ -334,7 +334,7 @@ function Form1() {
                     value={formData.vendorName}
                     onChange={handleInputChange}
                     placeholder="Vendor name"
-                    className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                    className="w-full border border-line rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ink focus:border-transparent"
                   />
                 </div>
               </div>
@@ -344,8 +344,8 @@ function Form1() {
             <div className="space-y-6">
               <div className="flex flex-col md:flex-row items-start gap-6">
                 <div className="w-full md:w-1/3">
-                  <h3 className="text-sm font-semibold text-gray-900 block mb-1">Primary Contact name</h3>
-                  <p className="text-xs text-gray-500">provide your name</p>
+                  <h3 className="text-sm font-semibold text-ink block mb-1">Primary Contact name</h3>
+                  <p className="text-xs text-dim">provide your name</p>
                 </div>
                 <div className="w-full md:w-2/3 space-y-4">
                   <input
@@ -355,7 +355,7 @@ function Form1() {
                     value={formData.firstName}
                     onChange={handleInputChange}
                     placeholder="First name"
-                    className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                    className="w-full border border-line rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ink focus:border-transparent"
                   />
                   <input
                     required
@@ -364,7 +364,7 @@ function Form1() {
                     value={formData.lastName}
                     onChange={handleInputChange}
                     placeholder="Last name"
-                    className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                    className="w-full border border-line rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ink focus:border-transparent"
                   />
                 </div>
               </div>
@@ -374,8 +374,8 @@ function Form1() {
             <div className="space-y-6">
               <div className="flex flex-col md:flex-row items-start gap-6">
                 <div className="w-full md:w-1/3">
-                  <h3 className="text-sm font-semibold text-gray-900 block mb-1">Contact Details</h3>
-                  <p className="text-xs text-gray-500">Provide Contact details</p>
+                  <h3 className="text-sm font-semibold text-ink block mb-1">Contact Details</h3>
+                  <p className="text-xs text-dim">Provide Contact details</p>
                 </div>
                 <div className="w-full md:w-2/3 space-y-4">
                   <div className="relative flex">
@@ -383,7 +383,7 @@ function Form1() {
                       name="countryCode"
                       value={formData.countryCode}
                       onChange={handleInputChange}
-                      className="border border-gray-300 rounded-l px-2 py-2 text-sm bg-gray-50 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+                      className="border border-line rounded-l px-2 py-2 text-sm bg-canvas focus:outline-none focus:ring-2 focus:ring-ink focus:border-line"
                     >
                       <option value="+91">+91 (IN)</option>
                       <option value="+1">+1 (US/CA)</option>
@@ -397,12 +397,12 @@ function Form1() {
                       onChange={handleInputChange}
                       placeholder="Phone number"
                       maxLength={PHONE_RULES[formData.countryCode]?.maxLength || 15}
-                      className={`flex-1 border border-l-0 rounded-r px-3 py-2 text-sm transition-all focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent ${
-                        showPhoneWarning ? 'border-red-500 border-2' : 'border-gray-300'
+                      className={`flex-1 border border-l-0 rounded-r px-3 py-2 text-sm transition-all focus:outline-none focus:ring-2 focus:ring-ink focus:border-transparent ${
+                        showPhoneWarning ? 'border-danger border-2' : 'border-line'
                       }`}
                     />
                     {showPhoneWarning && (
-                      <div className="absolute top-full left-0 mt-1 bg-red-500 text-white px-3 py-2 rounded text-sm whitespace-nowrap z-50 shadow-lg">
+                      <div className="absolute top-full left-0 mt-1 bg-danger text-white px-3 py-2 rounded text-sm whitespace-nowrap z-50 shadow-lg">
                         Please enter numbers only and ensure the length matches the selected country code.
                         <div className="absolute -top-1 left-5 w-0 h-0 border-l-2 border-r-2 border-b-2 border-transparent border-b-red-500"></div>
                       </div>
@@ -415,7 +415,7 @@ function Form1() {
                     value={formData.organizationMailId}
                     onChange={handleInputChange}
                     placeholder="Organization mail ID"
-                    className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                    className="w-full border border-line rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ink focus:border-transparent"
                   />
                 </div>
               </div>
@@ -425,8 +425,8 @@ function Form1() {
             <div className="space-y-6">
               <div className="flex flex-col md:flex-row items-start gap-6">
                 <div className="w-full md:w-1/3">
-                  <h3 className="text-sm font-semibold text-gray-900 block mb-1">Address</h3>
-                  <p className="text-xs text-gray-500">Provide Address details</p>
+                  <h3 className="text-sm font-semibold text-ink block mb-1">Address</h3>
+                  <p className="text-xs text-dim">Provide Address details</p>
                 </div>
                 <div className="w-full md:w-2/3 space-y-4">
                   <input
@@ -436,18 +436,18 @@ function Form1() {
                     value={formData.address}
                     onChange={handleInputChange}
                     placeholder="Address"
-                    className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                    className="w-full border border-line rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ink focus:border-transparent"
                   />
                   <select
                     required
                     name="state"
                     value={formData.state}
                     onChange={handleInputChange}
-                    className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent appearance-none bg-white"
+                    className="w-full border border-line rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ink focus:border-transparent appearance-none bg-surface"
                   >
-                    <option value="" className="text-gray-400">Select State</option>
+                    <option value="" className="text-dim">Select State</option>
                     {states.map((state) => (
-                      <option key={state} value={state} className="text-gray-900">
+                      <option key={state} value={state} className="text-ink">
                         {state}
                       </option>
                     ))}
@@ -458,13 +458,13 @@ function Form1() {
                     value={formData.city}
                     onChange={handleInputChange}
                     disabled={!formData.state}
-                    className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent appearance-none bg-white disabled:bg-gray-50 disabled:cursor-not-allowed disabled:text-gray-400"
+                    className="w-full border border-line rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ink focus:border-transparent appearance-none bg-surface disabled:bg-canvas disabled:cursor-not-allowed disabled:text-dim"
                   >
-                    <option value="" className="text-gray-400">
+                    <option value="" className="text-dim">
                       {!formData.state ? "Select State first" : "Select City"}
                     </option>
                     {cities.map((city) => (
-                      <option key={city} value={city} className="text-gray-900">
+                      <option key={city} value={city} className="text-ink">
                         {city}
                       </option>
                     ))}
@@ -476,7 +476,7 @@ function Form1() {
                     value={formData.pincode}
                     onChange={handleInputChange}
                     placeholder="Pincode"
-                    className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                    className="w-full border border-line rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ink focus:border-transparent"
                   />
                 </div>
               </div>
@@ -486,14 +486,14 @@ function Form1() {
 
             {/* Save Changes Indicator */}
             {showSaveIndicator && (
-              <div className="fixed top-4 right-4 bg-green-500 text-white px-4 py-2 rounded shadow-lg z-50">
+              <div className="fixed top-4 right-4 bg-success text-white px-4 py-2 rounded shadow-lg z-50">
                 Changes saved!
               </div>
             )}
 
             {/* Phone Number Validation Warning */}
             {showPhoneWarning && (
-              <div className="bg-yellow-100 border border-yellow-400 text-yellow-700 px-4 py-3 rounded">
+              <div className="bg-warning/10 border border-warning text-warning px-4 py-3 rounded">
                 <p className="text-sm">
                   <strong>Warning:</strong> Phone number should contain only numbers and match the length for the selected country code.
                 </p>
@@ -505,14 +505,14 @@ function Form1() {
               <button
                 type="button"
                 onClick={() => navigate("/role-selection")}
-                className="px-8 py-3 text-gray-600 hover:text-gray-800 transition-colors"
+                className="px-8 py-3 text-dim hover:text-ink transition-colors"
               >
                 Back
               </button>
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className="text-white px-8 py-3 rounded-lg font-medium shadow-md bg-gradient-to-r from-[#0F5848] to-[#21BE9C] hover:from-[#0F5848]/90 hover:to-[#21BE9C]/90 focus:outline-none focus:ring-2 focus:ring-emerald-500 disabled:opacity-60 disabled:cursor-not-allowed"
+                className="text-white px-8 py-3 rounded-lg font-medium bg-black hover:from-black/90 hover:to-black/90 focus:outline-none focus:ring-2 focus:ring-ink disabled:opacity-60 disabled:cursor-not-allowed"
               >
                 {isSubmitting ? "Please wait..." : "Next"}
               </button>

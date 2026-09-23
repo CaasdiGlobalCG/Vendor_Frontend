@@ -130,31 +130,31 @@ const PurchaseRequisitionsPage = () => {
     switch (urgency) {
       case 'High':
         return {
-          bg: 'bg-red-50',
-          text: 'text-red-700',
-          border: 'border-red-200',
-          dot: 'bg-red-500'
+          bg: 'bg-danger/10',
+          text: 'text-danger',
+          border: 'border-danger/20',
+          dot: 'bg-danger'
         };
       case 'Medium':
         return {
-          bg: 'bg-yellow-50',
-          text: 'text-yellow-700',
-          border: 'border-yellow-200',
-          dot: 'bg-yellow-500'
+          bg: 'bg-warning/10',
+          text: 'text-warning',
+          border: 'border-warning/20',
+          dot: 'bg-warning'
         };
       case 'Low':
         return {
-          bg: 'bg-green-50',
-          text: 'text-green-700',
-          border: 'border-green-200',
-          dot: 'bg-green-500'
+          bg: 'bg-success/10',
+          text: 'text-success',
+          border: 'border-success/20',
+          dot: 'bg-success'
         };
       default:
         return {
-          bg: 'bg-gray-50',
-          text: 'text-gray-600',
-          border: 'border-gray-200',
-          dot: 'bg-gray-400'
+          bg: 'bg-canvas',
+          text: 'text-dim',
+          border: 'border-line',
+          dot: 'bg-cta'
         };
     }
   };
@@ -163,31 +163,31 @@ const PurchaseRequisitionsPage = () => {
     switch (statusType) {
       case 'pending':
         return {
-          bg: 'bg-yellow-50',
-          text: 'text-yellow-700',
-          border: 'border-yellow-200',
-          dot: 'bg-yellow-500'
+          bg: 'bg-warning/10',
+          text: 'text-warning',
+          border: 'border-warning/20',
+          dot: 'bg-warning'
         };
       case 'converted':
         return {
-          bg: 'bg-purple-50',
-          text: 'text-purple-700',
-          border: 'border-purple-200',
-          dot: 'bg-purple-500'
+          bg: 'bg-surface-hover',
+          text: 'text-ink',
+          border: 'border-line',
+          dot: 'bg-cta'
         };
       case 'approved':
         return {
-          bg: 'bg-green-50',
-          text: 'text-green-700',
-          border: 'border-green-200',
-          dot: 'bg-green-500'
+          bg: 'bg-success/10',
+          text: 'text-success',
+          border: 'border-success/20',
+          dot: 'bg-success'
         };
       default:
         return {
-          bg: 'bg-gray-50',
-          text: 'text-gray-600',
-          border: 'border-gray-200',
-          dot: 'bg-gray-400'
+          bg: 'bg-canvas',
+          text: 'text-dim',
+          border: 'border-line',
+          dot: 'bg-cta'
         };
     }
   };
@@ -205,29 +205,29 @@ const PurchaseRequisitionsPage = () => {
   }, 0);
 
   return (
-    <div className="min-h-full bg-gray-50">
+    <div className="min-h-full bg-canvas">
       {/* Professional Header */}
-      <div className="bg-white border-b border-gray-200">
+      <div className="bg-surface border-b border-line">
         <div className="px-8 py-8">
           <div className="flex items-center justify-between mb-8">
             <div className="flex items-center space-x-4">
               <button 
                 onClick={() => navigate(-1)}
-                className="p-2 hover:bg-gray-100 rounded-lg transition-colors duration-200"
+                className="p-2 hover:bg-surface-hover rounded-lg transition-colors duration-200"
                 aria-label="Go back"
               >
-                <ArrowLeft className="w-5 h-5 text-gray-600" />
+                <ArrowLeft className="w-5 h-5 text-dim" />
               </button>
               <div>
-                <h1 className="text-3xl font-bold text-gray-900">
+                <h1 className="text-3xl font-bold text-ink">
                   Purchase Requisitions
                 </h1>
-                <p className="text-gray-600 mt-2">View all purchase requisitions and convert approved ones to purchase orders</p>
+                <p className="text-dim mt-2">View all purchase requisitions and convert approved ones to purchase orders</p>
               </div>
             </div>
             <button 
               onClick={() => setShowNewForm(true)}
-              className="bg-purple-600 text-white px-6 py-3 rounded-lg hover:bg-purple-700 transition-colors duration-200 flex items-center space-x-2"
+              className="bg-cta text-cta-foreground px-6 py-3 rounded-lg hover:bg-cta transition-colors duration-200 flex items-center space-x-2"
             >
               <Plus className="w-5 h-5" />
               <span className="font-medium">Create Requisition</span>
@@ -236,48 +236,48 @@ const PurchaseRequisitionsPage = () => {
 
           {/* Stats Cards */}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-            <div className="bg-white border border-gray-200 rounded-lg p-6 shadow-sm">
+            <div className="bg-surface border border-line rounded-lg p-6 ">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-gray-600 mb-1">Total Requisitions</p>
-                  <p className="text-2xl font-bold text-gray-900">{totalRequisitions}</p>
+                  <p className="text-sm font-medium text-dim mb-1">Total Requisitions</p>
+                  <p className="text-2xl font-bold text-ink">{totalRequisitions}</p>
                 </div>
-                <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
-                  <Package className="w-6 h-6 text-blue-600" />
+                <div className="w-12 h-12 bg-info/10 rounded-lg flex items-center justify-center">
+                  <Package className="w-6 h-6 text-info" />
                 </div>
               </div>
             </div>
             
             {/* Additional stat cards */}
-            <div className="bg-white border border-gray-200 rounded-lg p-6 shadow-sm">
+            <div className="bg-surface border border-line rounded-lg p-6 ">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-gray-600 mb-1">Pending Approval</p>
-                  <p className="text-2xl font-bold text-gray-900">{pendingRequisitions}</p>
+                  <p className="text-sm font-medium text-dim mb-1">Pending Approval</p>
+                  <p className="text-2xl font-bold text-ink">{pendingRequisitions}</p>
                 </div>
-                <div className="w-12 h-12 bg-yellow-100 rounded-lg flex items-center justify-center">
-                  <Clock className="w-6 h-6 text-yellow-600" />
+                <div className="w-12 h-12 bg-warning/10 rounded-lg flex items-center justify-center">
+                  <Clock className="w-6 h-6 text-warning" />
                 </div>
               </div>
             </div>
             
-            <div className="bg-white border border-gray-200 rounded-lg p-6 shadow-sm">
+            <div className="bg-surface border border-line rounded-lg p-6 ">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-gray-600 mb-1">Approved</p>
-                  <p className="text-2xl font-bold text-gray-900">{approvedRequisitions}</p>
+                  <p className="text-sm font-medium text-dim mb-1">Approved</p>
+                  <p className="text-2xl font-bold text-ink">{approvedRequisitions}</p>
                 </div>
-                <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
-                  <CheckCircle className="w-6 h-6 text-green-600" />
+                <div className="w-12 h-12 bg-success/10 rounded-lg flex items-center justify-center">
+                  <CheckCircle className="w-6 h-6 text-success" />
                 </div>
               </div>
             </div>
             
-            <div className="bg-white border border-gray-200 rounded-lg p-6 shadow-sm">
+            <div className="bg-surface border border-line rounded-lg p-6 ">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-gray-600 mb-1">Total Value</p>
-                  <p className="text-2xl font-bold text-gray-900">
+                  <p className="text-sm font-medium text-dim mb-1">Total Value</p>
+                  <p className="text-2xl font-bold text-ink">
                     {new Intl.NumberFormat('en-IN', {
                       style: 'currency',
                       currency: 'INR',
@@ -286,8 +286,8 @@ const PurchaseRequisitionsPage = () => {
                     }).format(totalValue)}
                   </p>
                 </div>
-                <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
-                  <IndianRupee className="w-6 h-6 text-purple-600" />
+                <div className="w-12 h-12 bg-surface-hover rounded-lg flex items-center justify-center">
+                  <IndianRupee className="w-6 h-6 text-ink" />
                 </div>
               </div>
             </div>
@@ -298,13 +298,13 @@ const PurchaseRequisitionsPage = () => {
           {/* Secondary action button removed to avoid duplication */}
 
       {success && (
-        <div className="rounded-md bg-green-50 p-4 mb-6">
+        <div className="rounded-md bg-success/10 p-4 mb-6">
           <div className="flex">
             <div className="flex-shrink-0">
-              <CheckCircle className="h-5 w-5 text-green-400" aria-hidden="true" />
+              <CheckCircle className="h-5 w-5 text-success" aria-hidden="true" />
             </div>
             <div className="ml-3">
-              <p className="text-sm font-medium text-green-800">{success}</p>
+              <p className="text-sm font-medium text-success">{success}</p>
             </div>
           </div>
         </div>
@@ -314,10 +314,10 @@ const PurchaseRequisitionsPage = () => {
 
       {/* Purchase Requisitions Table */}
       <div className="px-8 py-8">
-        <div className="bg-white border border-gray-200 rounded-lg overflow-hidden shadow-sm">
+        <div className="bg-surface border border-line rounded-lg overflow-hidden ">
           {/* Table Header */}
-          <div className="bg-gray-50 border-b border-gray-200 px-6 py-4">
-            <div className="grid grid-cols-7 gap-4 text-sm font-semibold text-gray-600 uppercase tracking-wider">
+          <div className="bg-canvas border-b border-line px-6 py-4">
+            <div className="grid grid-cols-7 gap-4 text-sm font-semibold text-dim uppercase tracking-wider">
               <div>Project</div>
               <div>Request Date</div>
               <div>Urgency</div>
@@ -329,23 +329,23 @@ const PurchaseRequisitionsPage = () => {
           </div>
 
           {/* Table Body */}
-          <div className="divide-y divide-gray-200">
+          <div className="divide-y divide-line">
             {requisitionsData.map((requisition, index) => {
               const urgencyConfig = getUrgencyConfig(requisition.urgency);
               const statusConfig = getStatusConfig(requisition.statusType);
               
               return (
-                <div key={index} className="grid grid-cols-7 gap-4 px-6 py-4 hover:bg-gray-50 transition-colors duration-200">
+                <div key={index} className="grid grid-cols-7 gap-4 px-6 py-4 hover:bg-canvas transition-colors duration-200">
                   {/* Project */}
                   <div className="flex items-center">
-                    <div className="text-sm font-medium text-gray-900">
+                    <div className="text-sm font-medium text-ink">
                       {requisition.project}
                     </div>
                   </div>
 
                   {/* Request Date */}
-                  <div className="flex items-center space-x-2 text-sm text-gray-600">
-                    <Calendar className="w-4 h-4 text-gray-400" />
+                  <div className="flex items-center space-x-2 text-sm text-dim">
+                    <Calendar className="w-4 h-4 text-dim" />
                     <span>{requisition.requestDate}</span>
                   </div>
 
@@ -358,14 +358,14 @@ const PurchaseRequisitionsPage = () => {
                   </div>
 
                   {/* Items */}
-                  <div className="flex items-center space-x-2 text-sm text-gray-600">
-                    <Package className="w-4 h-4 text-gray-400" />
+                  <div className="flex items-center space-x-2 text-sm text-dim">
+                    <Package className="w-4 h-4 text-dim" />
                     <span>{requisition.itemsCount || 0} items</span>
                   </div>
 
                   {/* Total Cost */}
                   <div className="flex items-center">
-                    <div className="text-lg font-bold text-gray-900">
+                    <div className="text-lg font-bold text-ink">
                       ₹{new Intl.NumberFormat('en-IN', {
                       minimumFractionDigits: 2,
                       maximumFractionDigits: 2
@@ -383,12 +383,12 @@ const PurchaseRequisitionsPage = () => {
 
                   {/* Actions */}
                   <div className="flex items-center space-x-2">
-                    <button className="px-3 py-1.5 text-xs bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors duration-200 flex items-center space-x-1">
+                    <button className="px-3 py-1.5 text-xs bg-info text-white rounded hover:bg-info transition-colors duration-200 flex items-center space-x-1">
                       <Eye className="w-3 h-3" />
                       <span>View</span>
                     </button>
                     {Array.isArray(requisition.actions) && requisition.actions.includes('From CRM') && (
-                      <span className="px-3 py-1.5 text-xs bg-gray-100 text-gray-700 rounded border border-gray-200">
+                      <span className="px-3 py-1.5 text-xs bg-surface-hover text-ink rounded border border-line">
                         From CRM
                       </span>
                     )}
@@ -401,12 +401,12 @@ const PurchaseRequisitionsPage = () => {
           {/* Empty State */}
           {requisitionsData.length === 0 && (
             <div className="text-center py-16">
-              <div className="w-20 h-20 bg-gray-100 rounded-lg flex items-center justify-center mx-auto mb-6">
-                <Package className="w-10 h-10 text-gray-400" />
+              <div className="w-20 h-20 bg-surface-hover rounded-lg flex items-center justify-center mx-auto mb-6">
+                <Package className="w-10 h-10 text-dim" />
               </div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">No purchase requisitions found</h3>
-              <p className="text-gray-500 mb-6">Create your first purchase requisition to get started</p>
-              <button onClick={() => setShowNewForm(true)} className="bg-purple-600 text-white px-6 py-3 rounded-lg hover:bg-purple-700 transition-colors duration-200">
+              <h3 className="text-lg font-semibold text-ink mb-2">No purchase requisitions found</h3>
+              <p className="text-dim mb-6">Create your first purchase requisition to get started</p>
+              <button onClick={() => setShowNewForm(true)} className="bg-cta text-cta-foreground px-6 py-3 rounded-lg hover:bg-cta transition-colors duration-200">
                 Create New Requisition
               </button>
             </div>
@@ -417,13 +417,13 @@ const PurchaseRequisitionsPage = () => {
         {requisitionsData.length > 0 && (
           <div className="flex items-center justify-center mt-8">
             <div className="flex items-center space-x-2">
-              <button className="px-4 py-2 text-sm text-gray-500 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors duration-200 disabled:opacity-50" disabled>
+              <button className="px-4 py-2 text-sm text-dim bg-surface border border-line rounded-lg hover:bg-canvas transition-colors duration-200 disabled:opacity-50" disabled>
                 Previous
               </button>
-              <button className="px-4 py-2 text-sm bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors duration-200">
+              <button className="px-4 py-2 text-sm bg-cta text-cta-foreground rounded-lg hover:bg-cta transition-colors duration-200">
                 1
               </button>
-              <button className="px-4 py-2 text-sm text-gray-500 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors duration-200 disabled:opacity-50" disabled>
+              <button className="px-4 py-2 text-sm text-dim bg-surface border border-line rounded-lg hover:bg-canvas transition-colors duration-200 disabled:opacity-50" disabled>
                 Next
               </button>
             </div>
@@ -433,12 +433,12 @@ const PurchaseRequisitionsPage = () => {
       {/* New Purchase Requisition Form Modal */}
       {showNewForm && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] overflow-y-auto">
-            <div className="flex justify-between items-center p-4 border-b sticky top-0 bg-white z-10">
+          <div className="bg-surface rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] overflow-y-auto">
+            <div className="flex justify-between items-center p-4 border-b sticky top-0 bg-surface z-10">
               <h2 className="text-xl font-semibold">Create New Purchase Requisition</h2>
               <button 
                 onClick={() => setShowNewForm(false)}
-                className="text-gray-500 hover:text-gray-700"
+                className="text-dim hover:text-ink"
               >
                 <X className="w-6 h-6" />
               </button>

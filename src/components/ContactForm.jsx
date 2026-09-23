@@ -67,7 +67,7 @@ const ContactSection = () => {
     : "border-r-3 border-transparent";
 
   return (
-    <section className="relative w-full min-h-screen py-20 bg-gradient-to-br from-black via-black to-[rgba(33,190,156,0.5)] overflow-hidden">
+    <section className="relative w-full min-h-screen py-20 bg-black to-[rgba(33,190,156,0.5)] overflow-hidden">
       <div className="max-w-[1200px] mx-auto px-5 flex flex-wrap gap-[60px]">
         <div className="flex-1 min-w-[300px] flex flex-col justify-center max-[576px]:items-center">
           <h2 className="font-['Poppins'] text-[60px] font-semibold leading-[1.5] mb-[60px] max-w-[500px] text-white text-left max-[576px]:text-[36px] max-[576px]:text-center max-[576px]:max-w-full max-[576px]:mb-2">
@@ -78,7 +78,7 @@ const ContactSection = () => {
             >
                 Get in Touch:&nbsp;
             </span>
-            <span className="bg-gradient-to-r from-[#21be9c] to-[#f88feb] bg-clip-text text-transparent max-[576px]:text-[30px]">
+            <span className=" max-[576px]:text-[30px]">
               We're Here to Answer Your Questions
             </span>
           </h2>
@@ -86,7 +86,7 @@ const ContactSection = () => {
             className="relative w-full max-w-[498px] h-[62px] rounded-[50px] cursor-pointer flex items-center justify-center p-0.5 group active:scale-95 transition-transform duration-200 ease-out max-[576px]:max-w-[75%]"
             onClick={() => window.open("https://wa.me/919606461633", "_blank")}
           >
-            <span className="absolute inset-0 rounded-[50px] bg-gradient-to-r from-[#21be9c] to-[#0f5848] group-hover:opacity-90 transition-opacity"></span>
+            <span className="absolute inset-0 rounded-[50px] bg-black group-hover:opacity-90 transition-opacity"></span>
             <span className="relative z-10 w-full h-full bg-black rounded-[48px] flex items-center justify-center text-white font-['Poppins'] text-[20px] font-medium max-[576px]:text-[1.4rem]">
               Book your free consultant
             </span>
@@ -95,7 +95,7 @@ const ContactSection = () => {
 
         <div className="flex-1 min-w-[300px] rounded-[21px] p-10 bg-transparent bg-cover flex flex-col justify-center items-center max-[576px]:min-w-full max-[576px]:p-3">
           <form 
-            className="w-full h-full flex flex-col gap-5 p-6 sm:p-12 bg-gradient-to-br from-[#0f5848] to-[#21be9c] rounded-[30px] max-[576px]:p-3 max-[576px]:gap-2.5 max-[576px]:rounded-[20px]" 
+            className="w-full h-full flex flex-col gap-5 p-6 sm:p-12 bg-black rounded-[30px] max-[576px]:p-3 max-[576px]:gap-2.5 max-[576px]:rounded-[20px]" 
             onSubmit={handleSubmit}
           >
             <div className="pb-4 text-center">
@@ -107,7 +107,7 @@ const ContactSection = () => {
               <div className="flex-1 mb-2 max-[576px]:mb-0">
                 <input 
                   type="text" 
-                  className="w-full h-[56px] bg-transparent border border-white rounded-[30px] px-5 text-white font-['Poppins'] text-base py-6 placeholder-[#c9c9c9] placeholder:font-light" 
+                  className="w-full h-[56px] bg-transparent border border-white rounded-[30px] px-5 text-white font-['Poppins'] text-base py-6 text-dim placeholder:font-light" 
                   name="firstName" 
                   placeholder="First name" 
                   value={formData.firstName} 
@@ -118,7 +118,7 @@ const ContactSection = () => {
               <div className="flex-1 mb-2 max-[576px]:mb-0">
                 <input 
                   type="text" 
-                  className="w-full h-[56px] bg-transparent border border-white rounded-[30px] px-5 text-white font-['Poppins'] text-base py-6 placeholder-[#c9c9c9] placeholder:font-light" 
+                  className="w-full h-[56px] bg-transparent border border-white rounded-[30px] px-5 text-white font-['Poppins'] text-base py-6 text-dim placeholder:font-light" 
                   name="lastName" 
                   placeholder="Last name" 
                   value={formData.lastName} 
@@ -131,7 +131,7 @@ const ContactSection = () => {
             <div className="mb-2">
               <input 
                 type="email" 
-                className="w-full h-[56px] bg-transparent border border-white rounded-[30px] px-5 text-white font-['Poppins'] text-base py-6 placeholder-[#c9c9c9] placeholder:font-light" 
+                className="w-full h-[56px] bg-transparent border border-white rounded-[30px] px-5 text-white font-['Poppins'] text-base py-6 text-dim placeholder:font-light" 
                 name="email" 
                 placeholder="Email" 
                 value={formData.email} 
@@ -143,7 +143,7 @@ const ContactSection = () => {
             <div className="mb-2">
               <input 
                 type="tel" 
-                className="w-full h-[56px] bg-transparent border border-white rounded-[30px] px-5 text-white font-['Poppins'] text-base py-6 placeholder-[#c9c9c9] placeholder:font-light" 
+                className="w-full h-[56px] bg-transparent border border-white rounded-[30px] px-5 text-white font-['Poppins'] text-base py-6 text-dim placeholder:font-light" 
                 name="phone" 
                 placeholder="Phone number" 
                 value={formData.phone} 
@@ -154,7 +154,7 @@ const ContactSection = () => {
 
             <div className="mb-2">
               <textarea 
-                className="w-full h-[166px] bg-transparent border border-white rounded-[30px] p-5 text-white font-['Poppins'] text-base resize-none placeholder-[#c9c9c9] placeholder:font-light" 
+                className="w-full h-[166px] bg-transparent border border-white rounded-[30px] p-5 text-white font-['Poppins'] text-base resize-none text-dim placeholder:font-light" 
                 name="message" 
                 placeholder="Your message" 
                 rows="5" 
@@ -166,8 +166,7 @@ const ContactSection = () => {
 
             <button 
               type="submit" 
-              className="w-[114px] h-[52px] bg-gradient-to-r from-[#21be9c] to-[#0f5848] border-none rounded-[16px] cursor-pointer self-end relative transition-transform duration-150 ease-in-out active:scale-90
-                         max-[576px]:w-[75px] max-[576px]:h-[45px]"
+              className="w-[114px] h-[52px] bg-black border-none rounded-[16px] cursor-pointer self-end relative transition-transform duration-150 ease-in-out active:scale-90 max-[576px]:w-[75px] max-[576px]:h-[45px]"
             >
               <span className="text-white font-['Poppins'] text-xl font-medium leading-[1.5] relative z-[2] max-[576px]:text-sm max-[576px]:font-light">Submit</span>
             </button>

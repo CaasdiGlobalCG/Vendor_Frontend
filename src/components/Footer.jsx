@@ -11,9 +11,9 @@ const TermsAndConditionsModal = ({ isOpen, onClose }) => {
 
   return (
     <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-[1000] p-4">
-      <div className="bg-white rounded-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden shadow-2xl animate-modalFadeIn">
+      <div className="bg-surface rounded-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden shadow-2xl animate-modalFadeIn">
         {/* Header */}
-        <div className="bg-gradient-to-r from-[#21be9c] to-[#0f5848] px-8 py-6 flex justify-between items-center">
+        <div className="bg-black px-8 py-6 flex justify-between items-center">
           <div>
             <h2 className="text-2xl font-bold text-white">Terms and Conditions</h2>
             <p className="text-white/80 text-sm mt-1">Caasdi Global Pvt. Ltd.</p>
@@ -28,18 +28,18 @@ const TermsAndConditionsModal = ({ isOpen, onClose }) => {
 
         {/* Content */}
         <div className="p-8 overflow-y-auto max-h-[calc(90vh-180px)]">
-          <p className="text-gray-500 text-sm mb-6">Last Updated: December 2024</p>
+          <p className="text-dim text-sm mb-6">Last Updated: December 2024</p>
 
-          <div className="space-y-6 text-gray-700">
+          <div className="space-y-6 text-ink">
             <section>
-              <h3 className="text-lg font-semibold text-black mb-3">1. Acceptance of Terms</h3>
+              <h3 className="text-lg font-semibold text-ink mb-3">1. Acceptance of Terms</h3>
               <p className="leading-relaxed">
                 By accessing and using Caasdi Global's services, website, and platform, you acknowledge that you have read, understood, and agree to be bound by these Terms and Conditions. If you do not agree with any part of these terms, you must not use our services.
               </p>
             </section>
 
             <section>
-              <h3 className="text-lg font-semibold text-black mb-3">2. Services Description</h3>
+              <h3 className="text-lg font-semibold text-ink mb-3">2. Services Description</h3>
               <p className="leading-relaxed">
                 Caasdi Global provides vendor and project management services, including but not limited to:
               </p>
@@ -54,7 +54,7 @@ const TermsAndConditionsModal = ({ isOpen, onClose }) => {
             </section>
 
             <section>
-              <h3 className="text-lg font-semibold text-black mb-3">3. User Obligations</h3>
+              <h3 className="text-lg font-semibold text-ink mb-3">3. User Obligations</h3>
               <p className="leading-relaxed">Users of our platform agree to:</p>
               <ul className="list-disc ml-6 mt-2 space-y-1">
                 <li>Provide accurate, current, and complete information during registration</li>
@@ -66,7 +66,7 @@ const TermsAndConditionsModal = ({ isOpen, onClose }) => {
             </section>
 
             <section>
-              <h3 className="text-lg font-semibold text-black mb-3">4. Vendor and Client Responsibilities</h3>
+              <h3 className="text-lg font-semibold text-ink mb-3">4. Vendor and Client Responsibilities</h3>
               <p className="leading-relaxed">
                 <strong>For Vendors:</strong> Vendors must provide accurate information about their products, services, capabilities, and certifications. All pricing, delivery timelines, and quality commitments must be honored as agreed upon through the platform.
               </p>
@@ -76,61 +76,61 @@ const TermsAndConditionsModal = ({ isOpen, onClose }) => {
             </section>
 
             <section>
-              <h3 className="text-lg font-semibold text-black mb-3">5. Payment Terms</h3>
+              <h3 className="text-lg font-semibold text-ink mb-3">5. Payment Terms</h3>
               <p className="leading-relaxed">
                 All payments processed through our platform are subject to our payment policies. Service fees, transaction charges, and payment schedules will be clearly communicated before engagement. Late payments may incur additional charges as specified in individual service agreements.
               </p>
             </section>
 
             <section>
-              <h3 className="text-lg font-semibold text-black mb-3">6. Intellectual Property</h3>
+              <h3 className="text-lg font-semibold text-ink mb-3">6. Intellectual Property</h3>
               <p className="leading-relaxed">
                 All content, trademarks, logos, and intellectual property displayed on the Caasdi Global platform are owned by Caasdi Global Pvt. Ltd. or its licensors. Users may not copy, reproduce, distribute, or create derivative works without express written permission.
               </p>
             </section>
 
             <section>
-              <h3 className="text-lg font-semibold text-black mb-3">7. Confidentiality</h3>
+              <h3 className="text-lg font-semibold text-ink mb-3">7. Confidentiality</h3>
               <p className="leading-relaxed">
                 Both parties agree to maintain strict confidentiality of all business information, trade secrets, pricing details, and proprietary data shared through the platform. This obligation survives the termination of services.
               </p>
             </section>
 
             <section>
-              <h3 className="text-lg font-semibold text-black mb-3">8. Limitation of Liability</h3>
+              <h3 className="text-lg font-semibold text-ink mb-3">8. Limitation of Liability</h3>
               <p className="leading-relaxed">
                 Caasdi Global shall not be liable for any indirect, incidental, special, consequential, or punitive damages arising from the use of our services. Our total liability shall not exceed the fees paid by the user in the twelve months preceding the claim.
               </p>
             </section>
 
             <section>
-              <h3 className="text-lg font-semibold text-black mb-3">9. Dispute Resolution</h3>
+              <h3 className="text-lg font-semibold text-ink mb-3">9. Dispute Resolution</h3>
               <p className="leading-relaxed">
                 Any disputes arising from these terms shall first be attempted to be resolved through good-faith negotiations. If unresolved, disputes shall be subject to arbitration in Bengaluru, Karnataka, India, in accordance with the Arbitration and Conciliation Act, 1996.
               </p>
             </section>
 
             <section>
-              <h3 className="text-lg font-semibold text-black mb-3">10. Governing Law</h3>
+              <h3 className="text-lg font-semibold text-ink mb-3">10. Governing Law</h3>
               <p className="leading-relaxed">
                 These Terms and Conditions are governed by and construed in accordance with the laws of India. The courts of Bengaluru, Karnataka shall have exclusive jurisdiction over any legal proceedings.
               </p>
             </section>
 
             <section>
-              <h3 className="text-lg font-semibold text-black mb-3">11. Modifications</h3>
+              <h3 className="text-lg font-semibold text-ink mb-3">11. Modifications</h3>
               <p className="leading-relaxed">
                 Caasdi Global reserves the right to modify these Terms and Conditions at any time. Users will be notified of significant changes via email or platform notifications. Continued use of services after modifications constitutes acceptance of updated terms.
               </p>
             </section>
 
             <section>
-              <h3 className="text-lg font-semibold text-black mb-3">12. Contact Information</h3>
+              <h3 className="text-lg font-semibold text-ink mb-3">12. Contact Information</h3>
               <p className="leading-relaxed">
                 For questions regarding these Terms and Conditions, please contact us at:
               </p>
-              <div className="mt-3 p-4 bg-gray-50 rounded-lg">
-                <p className="font-semibold text-black">Caasdi Global Pvt. Ltd.</p>
+              <div className="mt-3 p-4 bg-canvas rounded-lg">
+                <p className="font-semibold text-ink">Caasdi Global Pvt. Ltd.</p>
                 <p>#262, 80ft Road, BSK 1st stage, 2nd Block,</p>
                 <p>Srinivasnagar, Bengaluru, Karnataka-560050</p>
                 <p className="mt-2">Email: corporate@caasdiglobal.in</p>
@@ -141,10 +141,10 @@ const TermsAndConditionsModal = ({ isOpen, onClose }) => {
         </div>
 
         {/* Footer */}
-        <div className="border-t border-gray-200 px-8 py-4 bg-gray-50 flex justify-end gap-4">
+        <div className="border-t border-line px-8 py-4 bg-canvas flex justify-end gap-4">
           <button
             onClick={onClose}
-            className="px-6 py-2 bg-black text-white rounded-full font-medium hover:bg-gray-800 transition-colors"
+            className="px-6 py-2 bg-black text-cta-foreground rounded-full font-medium hover:bg-cta transition-colors"
           >
             I Understand
           </button>
@@ -159,9 +159,9 @@ const PoliciesModal = ({ isOpen, onClose }) => {
 
   return (
     <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-[1000] p-4">
-      <div className="bg-white rounded-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden shadow-2xl animate-modalFadeIn">
+      <div className="bg-surface rounded-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden shadow-2xl animate-modalFadeIn">
         {/* Header */}
-        <div className="bg-gradient-to-r from-[#21be9c] to-[#0f5848] px-8 py-6 flex justify-between items-center">
+        <div className="bg-black px-8 py-6 flex justify-between items-center">
           <div>
             <h2 className="text-2xl font-bold text-white">Privacy & Company Policies</h2>
             <p className="text-white/80 text-sm mt-1">Caasdi Global Pvt. Ltd.</p>
@@ -176,15 +176,15 @@ const PoliciesModal = ({ isOpen, onClose }) => {
 
         {/* Content */}
         <div className="p-8 overflow-y-auto max-h-[calc(90vh-180px)]">
-          <p className="text-gray-500 text-sm mb-6">Last Updated: December 2024</p>
+          <p className="text-dim text-sm mb-6">Last Updated: December 2024</p>
 
-          <div className="space-y-6 text-gray-700">
+          <div className="space-y-6 text-ink">
             {/* Privacy Policy */}
-            <div className="border-b border-gray-200 pb-6">
-              <h2 className="text-xl font-bold text-[#21be9c] mb-4">Privacy Policy</h2>
+            <div className="border-b border-line pb-6">
+              <h2 className="text-xl font-bold text-success mb-4">Privacy Policy</h2>
               
               <section>
-                <h3 className="text-lg font-semibold text-black mb-3">1. Information We Collect</h3>
+                <h3 className="text-lg font-semibold text-ink mb-3">1. Information We Collect</h3>
                 <p className="leading-relaxed mb-3">
                   We collect information that you provide directly to us, including:
                 </p>
@@ -198,7 +198,7 @@ const PoliciesModal = ({ isOpen, onClose }) => {
               </section>
 
               <section className="mt-4">
-                <h3 className="text-lg font-semibold text-black mb-3">2. How We Use Your Information</h3>
+                <h3 className="text-lg font-semibold text-ink mb-3">2. How We Use Your Information</h3>
                 <p className="leading-relaxed">We use the collected information to:</p>
                 <ul className="list-disc ml-6 mt-2 space-y-1">
                   <li>Provide, maintain, and improve our vendor management platform</li>
@@ -212,7 +212,7 @@ const PoliciesModal = ({ isOpen, onClose }) => {
               </section>
 
               <section className="mt-4">
-                <h3 className="text-lg font-semibold text-black mb-3">3. Information Sharing</h3>
+                <h3 className="text-lg font-semibold text-ink mb-3">3. Information Sharing</h3>
                 <p className="leading-relaxed">
                   We do not sell your personal information. We may share your information with:
                 </p>
@@ -225,14 +225,14 @@ const PoliciesModal = ({ isOpen, onClose }) => {
               </section>
 
               <section className="mt-4">
-                <h3 className="text-lg font-semibold text-black mb-3">4. Data Security</h3>
+                <h3 className="text-lg font-semibold text-ink mb-3">4. Data Security</h3>
                 <p className="leading-relaxed">
                   We implement industry-standard security measures including encryption, secure servers, and regular security audits to protect your personal information. However, no method of transmission over the Internet is 100% secure.
                 </p>
               </section>
 
               <section className="mt-4">
-                <h3 className="text-lg font-semibold text-black mb-3">5. Your Rights</h3>
+                <h3 className="text-lg font-semibold text-ink mb-3">5. Your Rights</h3>
                 <p className="leading-relaxed">You have the right to:</p>
                 <ul className="list-disc ml-6 mt-2 space-y-1">
                   <li>Access and receive a copy of your personal data</li>
@@ -246,11 +246,11 @@ const PoliciesModal = ({ isOpen, onClose }) => {
             </div>
 
             {/* Cookie Policy */}
-            <div className="border-b border-gray-200 pb-6">
-              <h2 className="text-xl font-bold text-[#21be9c] mb-4">Cookie Policy</h2>
+            <div className="border-b border-line pb-6">
+              <h2 className="text-xl font-bold text-success mb-4">Cookie Policy</h2>
               
               <section>
-                <h3 className="text-lg font-semibold text-black mb-3">Use of Cookies</h3>
+                <h3 className="text-lg font-semibold text-ink mb-3">Use of Cookies</h3>
                 <p className="leading-relaxed mb-3">
                   Our platform uses cookies and similar tracking technologies to enhance your experience. Types of cookies we use:
                 </p>
@@ -267,18 +267,18 @@ const PoliciesModal = ({ isOpen, onClose }) => {
             </div>
 
             {/* Refund Policy */}
-            <div className="border-b border-gray-200 pb-6">
-              <h2 className="text-xl font-bold text-[#21be9c] mb-4">Refund & Cancellation Policy</h2>
+            <div className="border-b border-line pb-6">
+              <h2 className="text-xl font-bold text-success mb-4">Refund & Cancellation Policy</h2>
               
               <section>
-                <h3 className="text-lg font-semibold text-black mb-3">Service Cancellations</h3>
+                <h3 className="text-lg font-semibold text-ink mb-3">Service Cancellations</h3>
                 <p className="leading-relaxed">
                   Cancellation requests must be submitted in writing at least 7 business days before the scheduled service date. Cancellations made within 7 days may be subject to cancellation fees as outlined in your service agreement.
                 </p>
               </section>
 
               <section className="mt-4">
-                <h3 className="text-lg font-semibold text-black mb-3">Refund Eligibility</h3>
+                <h3 className="text-lg font-semibold text-ink mb-3">Refund Eligibility</h3>
                 <ul className="list-disc ml-6 space-y-1">
                   <li>Full refunds are available for services not yet commenced</li>
                   <li>Partial refunds may be issued based on work completed</li>
@@ -288,7 +288,7 @@ const PoliciesModal = ({ isOpen, onClose }) => {
               </section>
 
               <section className="mt-4">
-                <h3 className="text-lg font-semibold text-black mb-3">Refund Processing</h3>
+                <h3 className="text-lg font-semibold text-ink mb-3">Refund Processing</h3>
                 <p className="leading-relaxed">
                   Approved refunds will be processed within 7-10 business days. Refunds will be credited to the original payment method.
                 </p>
@@ -296,8 +296,8 @@ const PoliciesModal = ({ isOpen, onClose }) => {
             </div>
 
             {/* Data Retention Policy */}
-            <div className="border-b border-gray-200 pb-6">
-              <h2 className="text-xl font-bold text-[#21be9c] mb-4">Data Retention Policy</h2>
+            <div className="border-b border-line pb-6">
+              <h2 className="text-xl font-bold text-success mb-4">Data Retention Policy</h2>
               <p className="leading-relaxed">
                 We retain your personal information for as long as necessary to fulfill the purposes outlined in this policy, unless a longer retention period is required by law. Typically:
               </p>
@@ -311,7 +311,7 @@ const PoliciesModal = ({ isOpen, onClose }) => {
 
             {/* Anti-Corruption Policy */}
             <div className="pb-6">
-              <h2 className="text-xl font-bold text-[#21be9c] mb-4">Anti-Corruption & Ethics Policy</h2>
+              <h2 className="text-xl font-bold text-success mb-4">Anti-Corruption & Ethics Policy</h2>
               <p className="leading-relaxed mb-3">
                 Caasdi Global is committed to conducting business ethically and in compliance with all applicable anti-corruption laws. We prohibit:
               </p>
@@ -329,12 +329,12 @@ const PoliciesModal = ({ isOpen, onClose }) => {
 
             {/* Contact */}
             <section>
-              <h3 className="text-lg font-semibold text-black mb-3">Policy Inquiries</h3>
+              <h3 className="text-lg font-semibold text-ink mb-3">Policy Inquiries</h3>
               <p className="leading-relaxed">
                 For questions about our policies or to exercise your data rights, please contact:
               </p>
-              <div className="mt-3 p-4 bg-gray-50 rounded-lg">
-                <p className="font-semibold text-black">Data Protection Officer</p>
+              <div className="mt-3 p-4 bg-canvas rounded-lg">
+                <p className="font-semibold text-ink">Data Protection Officer</p>
                 <p>Caasdi Global Pvt. Ltd.</p>
                 <p>#262, 80ft Road, BSK 1st stage, 2nd Block,</p>
                 <p>Srinivasnagar, Bengaluru, Karnataka-560050</p>
@@ -346,10 +346,10 @@ const PoliciesModal = ({ isOpen, onClose }) => {
         </div>
 
         {/* Footer */}
-        <div className="border-t border-gray-200 px-8 py-4 bg-gray-50 flex justify-end gap-4">
+        <div className="border-t border-line px-8 py-4 bg-canvas flex justify-end gap-4">
           <button
             onClick={onClose}
-            className="px-6 py-2 bg-black text-white rounded-full font-medium hover:bg-gray-800 transition-colors"
+            className="px-6 py-2 bg-black text-cta-foreground rounded-full font-medium hover:bg-cta transition-colors"
           >
             I Understand
           </button>
@@ -378,13 +378,13 @@ const Footer = () => {
             </div>
             <div className="flex flex-col gap-[15px]">
               <h3 className="text-white font-poppins font-bold text-lg">Caasdi Global</h3>
-              <p className="text-gray-400 font-poppins text-base leading-normal">
+              <p className="text-dim font-poppins text-base leading-normal">
                 #262, 80ft Road, BSK 1st stage, 2nd Block,<br />
                 Srinivasnagar, Bengaluru, Karnataka-560050
               </p>
               <h3 className="text-white font-poppins font-bold text-lg">Contact Information</h3>
-              <p className="text-gray-400 font-poppins text-base leading-normal">Email: corporate@caasdiglobal.in</p>
-              <p className="text-gray-400 font-poppins text-base leading-normal">
+              <p className="text-dim font-poppins text-base leading-normal">Email: corporate@caasdiglobal.in</p>
+              <p className="text-dim font-poppins text-base leading-normal">
                 Phone: +91-9606461633, +91-9606461642, 
                 <br />+91-9606461643
               </p>

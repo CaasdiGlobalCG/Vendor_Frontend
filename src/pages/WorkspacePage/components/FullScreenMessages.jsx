@@ -174,14 +174,14 @@ const FullScreenMessages = ({
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
-      <div className="bg-white rounded-2xl shadow-2xl w-full h-full max-w-6xl max-h-[90vh] flex flex-col">
+      <div className="bg-surface rounded-2xl shadow-2xl w-full h-full max-w-6xl max-h-[90vh] flex flex-col">
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-gray-200">
+        <div className="flex items-center justify-between p-6 border-b border-line">
           <div className="flex items-center space-x-4">
-            <MessageCircle className="w-6 h-6 text-blue-600" />
+            <MessageCircle className="w-6 h-6 text-info" />
             <div>
-              <h2 className="text-xl font-semibold text-gray-900">Workspace Messages</h2>
-              <p className="text-sm text-gray-500">
+              <h2 className="text-xl font-semibold text-ink">Workspace Messages</h2>
+              <p className="text-sm text-dim">
                 {filteredMessages.length} of {messages.length} messages
               </p>
             </div>
@@ -190,21 +190,21 @@ const FullScreenMessages = ({
           <div className="flex items-center space-x-3">
             <button
               onClick={exportMessages}
-              className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+              className="p-2 text-dim hover:text-ink hover:bg-surface-hover rounded-lg transition-colors"
               title="Export Messages"
             >
               <Download className="w-5 h-5" />
             </button>
             <button
               onClick={() => setShowFilters(!showFilters)}
-              className={`p-2 rounded-lg transition-colors ${showFilters ? 'text-blue-600 bg-blue-50' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-100'}`}
+              className={`p-2 rounded-lg transition-colors ${showFilters ? 'text-info bg-info/10' : 'text-dim hover:text-ink hover:bg-surface-hover'}`}
               title="Toggle Filters"
             >
               <Filter className="w-5 h-5" />
             </button>
             <button
               onClick={onClose}
-              className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+              className="p-2 text-dim hover:text-ink hover:bg-surface-hover rounded-lg transition-colors"
             >
               <X className="w-5 h-5" />
             </button>
@@ -212,29 +212,29 @@ const FullScreenMessages = ({
         </div>
 
         {/* Search and Filters */}
-        <div className="p-6 border-b border-gray-100 space-y-4">
+        <div className="p-6 border-b border-line space-y-4">
           {/* Search Bar */}
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 transform  w-5 h-5 text-dim" />
             <input
               ref={searchInputRef}
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search messages..."
-              className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
+              className="w-full pl-10 pr-4 py-3 border border-line rounded-xl focus:ring-2 focus:ring-info focus:border-transparent outline-none transition-all"
             />
           </div>
 
           {/* Filters */}
           {showFilters && (
-            <div className="flex flex-wrap items-center gap-4 p-4 bg-gray-50 rounded-xl">
+            <div className="flex flex-wrap items-center gap-4 p-4 bg-canvas rounded-xl">
               <div className="flex items-center space-x-2">
-                <Calendar className="w-4 h-4 text-gray-500" />
+                <Calendar className="w-4 h-4 text-dim" />
                 <select
                   value={selectedDate}
                   onChange={(e) => setSelectedDate(e.target.value)}
-                  className="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+                  className="border border-line rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-info focus:border-transparent outline-none"
                 >
                   <option value="">All dates</option>
                   {uniqueDates.map(date => (
@@ -244,11 +244,11 @@ const FullScreenMessages = ({
               </div>
 
               <div className="flex items-center space-x-2">
-                <User className="w-4 h-4 text-gray-500" />
+                <User className="w-4 h-4 text-dim" />
                 <select
                   value={selectedUser}
                   onChange={(e) => setSelectedUser(e.target.value)}
-                  className="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+                  className="border border-line rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-info focus:border-transparent outline-none"
                 >
                   <option value="">All users</option>
                   {uniqueUsers.map(user => (
@@ -260,7 +260,7 @@ const FullScreenMessages = ({
               {(searchQuery || selectedDate || selectedUser) && (
                 <button
                   onClick={clearFilters}
-                  className="text-sm text-blue-600 hover:text-blue-700 font-medium"
+                  className="text-sm text-info hover:text-info font-medium"
                 >
                   Clear filters
                 </button>
@@ -273,7 +273,7 @@ const FullScreenMessages = ({
         <div className="flex-1 overflow-y-auto p-6 space-y-4">
           {loading ? (
             <div className="flex items-center justify-center py-12">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-info"></div>
             </div>
           ) : filteredMessages.length > 0 ? (
             <>
@@ -282,13 +282,13 @@ const FullScreenMessages = ({
                 return (
                   <div key={message.messageId} className={`flex items-start space-x-4 ${isCurrentUser ? 'justify-end' : ''}`}>
                     {!isCurrentUser && (
-                      <div className="flex items-center justify-center w-10 h-10 bg-gray-200 rounded-full flex-shrink-0">
-                        <User className="w-5 h-5 text-gray-600" />
+                      <div className="flex items-center justify-center w-10 h-10 bg-surface-hover rounded-full flex-shrink-0">
+                        <User className="w-5 h-5 text-dim" />
                       </div>
                     )}
                     
                     <div className={`flex-1 max-w-2xl ${isCurrentUser ? 'text-right' : ''}`}>
-                      <div className={`${isCurrentUser ? 'bg-blue-600 text-white rounded-tr-sm' : 'bg-gray-100 text-gray-900 rounded-tl-sm'} rounded-2xl px-6 py-4 ${isCurrentUser ? 'inline-block' : ''}`}>
+                      <div className={`${isCurrentUser ? 'bg-info text-white rounded-tr-sm' : 'bg-surface-hover text-ink rounded-tl-sm'} rounded-2xl px-6 py-4 ${isCurrentUser ? 'inline-block' : ''}`}>
                         {message.replyTo && (
                           <div className="mb-2 p-2 bg-black bg-opacity-10 rounded-lg text-sm opacity-75">
                             <p className="text-xs mb-1">Replying to:</p>
@@ -303,34 +303,34 @@ const FullScreenMessages = ({
                         {message.attachments && message.attachments.length > 0 && (
                           <div className="mt-4 space-y-3">
                             {message.attachments.map((file, index) => (
-                              <div key={index} className={`p-5 rounded-xl border-2 border-dashed transition-all hover:border-solid hover:shadow-sm ${isCurrentUser ? 'border-blue-300 bg-blue-50 bg-opacity-50' : 'border-gray-300 bg-gray-50'}`}>
+                              <div key={index} className={`p-5 rounded-xl border-2 border-dashed transition-all hover:border-solid  ${isCurrentUser ? 'border-info/30 bg-info/10 bg-opacity-50' : 'border-line bg-canvas'}`}>
                                 <div className="flex items-center space-x-4">
                                   <div className="flex-shrink-0">
                                     {file.fileType?.startsWith('image/') ? (
                                       <img 
                                         src={file.s3Url} 
                                         alt={file.fileName}
-                                        className="w-14 h-14 object-cover rounded-xl cursor-pointer shadow-sm border border-gray-200 hover:shadow-md transition-shadow"
+                                        className="w-14 h-14 object-cover rounded-xl cursor-pointer  border border-line  transition-shadow"
                                         onClick={() => window.open(file.s3Url, '_blank')}
                                       />
                                     ) : (
-                                      <div className={`w-14 h-14 rounded-xl flex items-center justify-center ${isCurrentUser ? 'bg-blue-100' : 'bg-blue-50'} shadow-sm`}>
-                                        <FileText className={`w-7 h-7 ${isCurrentUser ? 'text-blue-700' : 'text-blue-600'}`} />
+                                      <div className={`w-14 h-14 rounded-xl flex items-center justify-center ${isCurrentUser ? 'bg-info/10' : 'bg-info/10'} `}>
+                                        <FileText className={`w-7 h-7 ${isCurrentUser ? 'text-info' : 'text-info'}`} />
                                       </div>
                                     )}
                                   </div>
                                   <div className="flex-1 min-w-0">
-                                    <p className={`text-base font-semibold break-words ${isCurrentUser ? 'text-blue-900' : 'text-gray-900'}`}>
+                                    <p className={`text-base font-semibold break-words ${isCurrentUser ? 'text-info' : 'text-ink'}`}>
                                       {file.fileName}
                                     </p>
-                                    <p className={`text-sm mt-1 ${isCurrentUser ? 'text-blue-700' : 'text-gray-600'}`}>
+                                    <p className={`text-sm mt-1 ${isCurrentUser ? 'text-info' : 'text-dim'}`}>
                                       {file.fileSize ? `${Math.round(file.fileSize / 1024)} KB` : 'Unknown size'}
                                     </p>
                                   </div>
                                   <div className="flex items-center space-x-3">
                                     <button
                                       onClick={() => window.open(file.s3Url, '_blank')}
-                                      className={`p-3 rounded-xl transition-all shadow-sm hover:shadow-md ${isCurrentUser ? 'hover:bg-blue-200 text-blue-700 bg-blue-100' : 'hover:bg-gray-200 text-gray-700 bg-gray-100'}`}
+                                      className={`p-3 rounded-xl transition-all   ${isCurrentUser ? 'hover:bg-info/20 text-info bg-info/10' : 'hover:bg-surface-hover text-ink bg-surface-hover'}`}
                                       title="View file"
                                     >
                                       <Eye className="w-5 h-5" />
@@ -342,7 +342,7 @@ const FullScreenMessages = ({
                                         link.download = file.fileName;
                                         link.click();
                                       }}
-                                      className={`p-3 rounded-xl transition-all shadow-sm hover:shadow-md ${isCurrentUser ? 'hover:bg-blue-200 text-blue-700 bg-blue-100' : 'hover:bg-gray-200 text-gray-700 bg-gray-100'}`}
+                                      className={`p-3 rounded-xl transition-all   ${isCurrentUser ? 'hover:bg-info/20 text-info bg-info/10' : 'hover:bg-surface-hover text-ink bg-surface-hover'}`}
                                       title="Download file"
                                     >
                                       <Download className="w-5 h-5" />
@@ -357,33 +357,33 @@ const FullScreenMessages = ({
                       
                       <div className="flex items-center justify-between mt-2">
                         <div className="flex items-center space-x-2">
-                          <p className={`text-xs text-gray-500 ${isCurrentUser ? 'mr-1' : 'ml-1'}`}>
+                          <p className={`text-xs text-dim ${isCurrentUser ? 'mr-1' : 'ml-1'}`}>
                             {isCurrentUser ? 'You' : message.senderName} • {formatMessageTime(message.timestamp)}
                           </p>
                           {message.isEdited && (
-                            <span className="text-xs text-gray-400 italic">edited</span>
+                            <span className="text-xs text-dim italic">edited</span>
                           )}
                         </div>
                         
                         <div className="flex items-center space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
                           <button
                             onClick={() => setReplyingTo(message)}
-                            className="p-1 text-gray-400 hover:text-gray-600 rounded transition-colors"
+                            className="p-1 text-dim hover:text-dim rounded transition-colors"
                             title="Reply"
                           >
                             <Reply className="w-4 h-4" />
                           </button>
                           {isCurrentUser && (
                             <>
-                              <button className="p-1 text-gray-400 hover:text-gray-600 rounded transition-colors" title="Edit">
+                              <button className="p-1 text-dim hover:text-dim rounded transition-colors" title="Edit">
                                 <Edit3 className="w-4 h-4" />
                               </button>
-                              <button className="p-1 text-gray-400 hover:text-red-600 rounded transition-colors" title="Delete">
+                              <button className="p-1 text-dim hover:text-danger rounded transition-colors" title="Delete">
                                 <Trash2 className="w-4 h-4" />
                               </button>
                             </>
                           )}
-                          <button className="p-1 text-gray-400 hover:text-gray-600 rounded transition-colors" title="More">
+                          <button className="p-1 text-dim hover:text-dim rounded transition-colors" title="More">
                             <MoreVertical className="w-4 h-4" />
                           </button>
                         </div>
@@ -391,7 +391,7 @@ const FullScreenMessages = ({
                     </div>
                     
                     {isCurrentUser && (
-                      <div className="flex items-center justify-center w-10 h-10 bg-blue-600 rounded-full flex-shrink-0">
+                      <div className="flex items-center justify-center w-10 h-10 bg-info rounded-full flex-shrink-0">
                         <User className="w-5 h-5 text-white" />
                       </div>
                     )}
@@ -402,11 +402,11 @@ const FullScreenMessages = ({
             </>
           ) : (
             <div className="text-center py-12">
-              <MessageCircle className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-              <p className="text-lg text-gray-500 mb-2">
+              <MessageCircle className="w-16 h-16 text-dim mx-auto mb-4" />
+              <p className="text-lg text-dim mb-2">
                 {searchQuery || selectedDate || selectedUser ? 'No messages match your filters' : 'No messages yet'}
               </p>
-              <p className="text-sm text-gray-400">
+              <p className="text-sm text-dim">
                 {searchQuery || selectedDate || selectedUser ? 'Try adjusting your search or filters' : 'Start a conversation in this workspace'}
               </p>
             </div>
@@ -415,18 +415,18 @@ const FullScreenMessages = ({
 
         {/* Reply Banner */}
         {replyingTo && (
-          <div className="px-6 py-3 bg-blue-50 border-t border-blue-100">
+          <div className="px-6 py-3 bg-info/10 border-t border-info/10">
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-3">
-                <Reply className="w-4 h-4 text-blue-600" />
+                <Reply className="w-4 h-4 text-info" />
                 <div>
-                  <p className="text-sm text-blue-900">Replying to {replyingTo.senderName}</p>
-                  <p className="text-xs text-blue-700 truncate max-w-md">{replyingTo.content}</p>
+                  <p className="text-sm text-info">Replying to {replyingTo.senderName}</p>
+                  <p className="text-xs text-info truncate max-w-md">{replyingTo.content}</p>
                 </div>
               </div>
               <button
                 onClick={() => setReplyingTo(null)}
-                className="p-1 text-blue-600 hover:text-blue-700 rounded transition-colors"
+                className="p-1 text-info hover:text-info rounded transition-colors"
               >
                 <X className="w-4 h-4" />
               </button>
@@ -435,10 +435,10 @@ const FullScreenMessages = ({
         )}
 
         {/* Message Input */}
-        <div className="p-6 border-t border-gray-200">
-          <div className="flex items-end space-x-4 p-4 bg-gray-50 rounded-2xl border border-gray-200 focus-within:border-blue-300 focus-within:bg-white transition-all duration-200">
-            <button className="p-2 hover:bg-gray-200 rounded-lg transition-colors">
-              <Paperclip className="w-5 h-5 text-gray-400" />
+        <div className="p-6 border-t border-line">
+          <div className="flex items-end space-x-4 p-4 bg-canvas rounded-2xl border border-line focus-within:border-info/30 focus-within:bg-surface transition-all duration-200">
+            <button className="p-2 hover:bg-surface-hover rounded-lg transition-colors">
+              <Paperclip className="w-5 h-5 text-dim" />
             </button>
             <div className="flex-1">
               <textarea
@@ -446,7 +446,7 @@ const FullScreenMessages = ({
                 onChange={(e) => setNewMessage(e.target.value)}
                 onKeyPress={handleKeyPress}
                 placeholder={replyingTo ? `Reply to ${replyingTo.senderName}...` : "Type a message..."}
-                className="w-full bg-transparent text-sm outline-none placeholder-gray-400 resize-none"
+                className="w-full bg-transparent text-sm outline-none placeholder-dim resize-none"
                 rows="1"
                 style={{ minHeight: '20px', maxHeight: '120px' }}
                 disabled={sendingMessage}
@@ -455,7 +455,7 @@ const FullScreenMessages = ({
             <button 
               onClick={sendMessage}
               disabled={!newMessage.trim() || sendingMessage}
-              className="p-3 bg-blue-600 hover:bg-blue-700 rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="p-3 bg-info hover:bg-info rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {sendingMessage ? (
                 <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>

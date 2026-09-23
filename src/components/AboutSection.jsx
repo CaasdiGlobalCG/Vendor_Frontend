@@ -48,10 +48,7 @@ const AboutSection = () => {
         animate={inView ? "visible" : "hidden"}
       >
         <motion.h2 
-          className="text-[4rem] font-semibold leading-[1.28] mb-8 bg-gradient-to-r from-white to-[#c6c6c6] bg-clip-text text-transparent
-                     max-[1200px]:text-[3.5rem]
-                     max-[768px]:text-[2.5rem]
-                     max-[480px]:text-[2rem]"
+          className="text-[4rem] font-semibold leading-[1.28] mb-8 max-[1200px]:text-[3.5rem] max-[768px]:text-[2.5rem] max-[480px]:text-[2rem]"
           variants={itemVariants}
         >
           Step beyond marketplaces, seize success!

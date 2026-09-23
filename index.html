@@ -5,7 +5,16 @@
     <link rel="icon" href="./src/assets/logo-favicon.jpg">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Caasdi Global</title>
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500&display=swap" />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" />
+    <script>
+      // Applies the saved theme before first paint so a chosen dark mode never
+      // flashes light. Default is light — dark only after the user toggles it.
+      try {
+        if (localStorage.getItem('theme') === 'dark') {
+          document.documentElement.classList.add('dark');
+        }
+      } catch (e) {}
+    </script>
   </head>
   <script>
      window.global ||= window;

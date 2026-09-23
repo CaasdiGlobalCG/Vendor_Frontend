@@ -71,20 +71,20 @@ const RouteOptimizationBlock = ({ data, nodeId, workspaceId, setNodes }) => {
   const getTrafficColor = (condition) => {
     switch (condition) {
       case 'low':
-        return 'bg-green-50 border-green-200';
+        return 'bg-success/10 border-success/20';
       case 'moderate':
-        return 'bg-yellow-50 border-yellow-200';
+        return 'bg-warning/10 border-warning/20';
       case 'high':
-        return 'bg-red-50 border-red-200';
+        return 'bg-danger/10 border-danger/20';
       default:
-        return 'bg-gray-50 border-gray-200';
+        return 'bg-canvas border-line';
     }
   };
 
   return (
-    <div className="w-full bg-white rounded-lg overflow-hidden">
+    <div className="w-full bg-surface rounded-lg overflow-hidden">
       {/* Header */}
-      <div className="bg-gradient-to-r from-purple-500 to-purple-600 p-4">
+      <div className="bg-black p-4">
         <div className="flex items-center gap-2">
           <MapPin className="w-6 h-6 text-white" />
           <h3 className="text-lg font-bold text-white">Route Optimization</h3>
@@ -95,7 +95,7 @@ const RouteOptimizationBlock = ({ data, nodeId, workspaceId, setNodes }) => {
       <div className="p-4 space-y-3">
         {routes.length === 0 ? (
           <div className="text-center py-8">
-            <p className="text-gray-500">No routes available</p>
+            <p className="text-dim">No routes available</p>
           </div>
         ) : (
           routes.map((route) => (
@@ -104,29 +104,29 @@ const RouteOptimizationBlock = ({ data, nodeId, workspaceId, setNodes }) => {
               onClick={() => handleSelectRoute(route.routeId)}
               className={`border-2 rounded-lg p-4 cursor-pointer transition-all ${
                 selectedRoute === route.routeId
-                  ? 'border-purple-500 bg-purple-50'
-                  : `${getTrafficColor(route.trafficCondition)} hover:border-purple-300`
+                  ? 'border-line bg-surface-hover'
+                  : `${getTrafficColor(route.trafficCondition)} hover:border-line`
               }`}
             >
               {/* Route Header */}
               <div className="flex items-start justify-between mb-3">
                 <div className="flex items-center gap-2 flex-1">
                   {selectedRoute === route.routeId && (
-                    <CheckCircle className="w-5 h-5 text-purple-600 flex-shrink-0" />
+                    <CheckCircle className="w-5 h-5 text-ink flex-shrink-0" />
                   )}
                   <div>
-                    <h4 className="font-semibold text-gray-900">{route.name}</h4>
+                    <h4 className="font-semibold text-ink">{route.name}</h4>
                     <div className="flex items-center gap-2 mt-1">
-                      <span className="text-xs font-medium text-gray-600">
+                      <span className="text-xs font-medium text-dim">
                         {getTrafficIcon(route.trafficCondition)} {route.trafficCondition.toUpperCase()}
                       </span>
                       {route.tollRoads && (
-                        <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">
+                        <span className="text-xs bg-info/10 text-info px-2 py-1 rounded">
                           Toll Roads
                         </span>
                       )}
                       {route.recommended && (
-                        <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded">
+                        <span className="text-xs bg-success/10 text-success px-2 py-1 rounded">
                           ⭐ Recommended
                         </span>
                       )}
@@ -137,28 +137,28 @@ const RouteOptimizationBlock = ({ data, nodeId, workspaceId, setNodes }) => {
 
               {/* Route Metrics */}
               <div className="grid grid-cols-3 gap-3">
-                <div className="bg-white p-3 rounded border border-gray-200">
+                <div className="bg-surface p-3 rounded border border-line">
                   <div className="flex items-center gap-2 mb-1">
-                    <MapPin className="w-4 h-4 text-gray-600" />
-                    <p className="text-xs text-gray-600 font-medium">Distance</p>
+                    <MapPin className="w-4 h-4 text-dim" />
+                    <p className="text-xs text-dim font-medium">Distance</p>
                   </div>
-                  <p className="text-lg font-bold text-gray-900">{route.distance} km</p>
+                  <p className="text-lg font-bold text-ink">{route.distance} km</p>
                 </div>
 
-                <div className="bg-white p-3 rounded border border-gray-200">
+                <div className="bg-surface p-3 rounded border border-line">
                   <div className="flex items-center gap-2 mb-1">
-                    <Clock className="w-4 h-4 text-gray-600" />
-                    <p className="text-xs text-gray-600 font-medium">ETA</p>
+                    <Clock className="w-4 h-4 text-dim" />
+                    <p className="text-xs text-dim font-medium">ETA</p>
                   </div>
-                  <p className="text-lg font-bold text-gray-900">{route.estimatedTime}h</p>
+                  <p className="text-lg font-bold text-ink">{route.estimatedTime}h</p>
                 </div>
 
-                <div className="bg-white p-3 rounded border border-gray-200">
+                <div className="bg-surface p-3 rounded border border-line">
                   <div className="flex items-center gap-2 mb-1">
-                    <DollarSign className="w-4 h-4 text-gray-600" />
-                    <p className="text-xs text-gray-600 font-medium">Estimated Cost</p>
+                    <DollarSign className="w-4 h-4 text-dim" />
+                    <p className="text-xs text-dim font-medium">Estimated Cost</p>
                   </div>
-                  <p className="text-lg font-bold text-gray-900">₹{route.estimatedCost.toLocaleString()}</p>
+                  <p className="text-lg font-bold text-ink">₹{route.estimatedCost.toLocaleString()}</p>
                 </div>
               </div>
             </div>
@@ -168,14 +168,14 @@ const RouteOptimizationBlock = ({ data, nodeId, workspaceId, setNodes }) => {
 
       {/* Summary */}
       {selectedRoute && (
-        <div className="p-4 bg-purple-50 border-t border-purple-200">
+        <div className="p-4 bg-surface-hover border-t border-line">
           <div className="flex items-start gap-3">
-            <Zap className="w-5 h-5 text-purple-600 flex-shrink-0 mt-0.5" />
+            <Zap className="w-5 h-5 text-ink flex-shrink-0 mt-0.5" />
             <div className="flex-1">
-              <p className="text-sm font-semibold text-purple-900">
+              <p className="text-sm font-semibold text-ink">
                 {routes.find(r => r.routeId === selectedRoute)?.name} selected
               </p>
-              <p className="text-xs text-purple-700 mt-1">
+              <p className="text-xs text-ink mt-1">
                 This route will take approximately {routes.find(r => r.routeId === selectedRoute)?.estimatedTime}
                 {' '}hours and cost around ₹{routes.find(r => r.routeId === selectedRoute)?.estimatedCost.toLocaleString()}
               </p>

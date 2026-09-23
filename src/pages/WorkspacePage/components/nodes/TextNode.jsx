@@ -108,15 +108,15 @@ const TextNode = ({ id, data, isConnectable, selected }) => {
   // Determine border style based on selection state
   const getBorderStyle = () => {
     if (data.isManuallySelected) {
-      return 'border-purple-600 ring-4 ring-purple-200 shadow-purple-200';
+      return 'border-line ring-4 ring-ink shadow-purple-200';
     }
     if (data.isInSelectionMode) {
-      return 'border-purple-300 hover:border-purple-500 cursor-pointer';
+      return 'border-line hover:border-line cursor-pointer';
     }
     if (selected) {
-      return 'border-purple-600 ring-2 ring-purple-200';
+      return 'border-line ring-2 ring-ink';
     }
-    return 'border-purple-500';
+    return 'border-line';
   };
 
   const getTextStyle = () => {
@@ -200,7 +200,7 @@ const TextNode = ({ id, data, isConnectable, selected }) => {
         position={Position.Top}
         id="top-out"
         style={{ left: '48%' }}
-        className="w-3 h-3 !bg-gray-500 !border-2 !border-white opacity-0 group-hover:opacity-100 transition-opacity hover:!bg-gray-700"
+        className="w-3 h-3 !bg-cta !border-2 !border-white opacity-0 group-hover:opacity-100 transition-opacity hover:!bg-cta"
         isConnectable={isConnectable}
       />
       <Handle
@@ -208,7 +208,7 @@ const TextNode = ({ id, data, isConnectable, selected }) => {
         position={Position.Top}
         id="top-in"
         style={{ left: '52%' }}
-        className="w-3 h-3 !bg-gray-500 !border-2 !border-white opacity-0 group-hover:opacity-100 transition-opacity hover:!bg-gray-700"
+        className="w-3 h-3 !bg-cta !border-2 !border-white opacity-0 group-hover:opacity-100 transition-opacity hover:!bg-cta"
         isConnectable={isConnectable}
       />
       
@@ -217,7 +217,7 @@ const TextNode = ({ id, data, isConnectable, selected }) => {
         position={Position.Right}
         id="right-out"
         style={{ top: '48%' }}
-        className="w-3 h-3 !bg-gray-500 !border-2 !border-white opacity-0 group-hover:opacity-100 transition-opacity hover:!bg-gray-700"
+        className="w-3 h-3 !bg-cta !border-2 !border-white opacity-0 group-hover:opacity-100 transition-opacity hover:!bg-cta"
         isConnectable={isConnectable}
       />
       <Handle
@@ -225,7 +225,7 @@ const TextNode = ({ id, data, isConnectable, selected }) => {
         position={Position.Right}
         id="right-in"
         style={{ top: '52%' }}
-        className="w-3 h-3 !bg-gray-500 !border-2 !border-white opacity-0 group-hover:opacity-100 transition-opacity hover:!bg-gray-700"
+        className="w-3 h-3 !bg-cta !border-2 !border-white opacity-0 group-hover:opacity-100 transition-opacity hover:!bg-cta"
         isConnectable={isConnectable}
       />
       
@@ -234,7 +234,7 @@ const TextNode = ({ id, data, isConnectable, selected }) => {
         position={Position.Bottom}
         id="bottom-out"
         style={{ left: '48%' }}
-        className="w-3 h-3 !bg-gray-500 !border-2 !border-white opacity-0 group-hover:opacity-100 transition-opacity hover:!bg-gray-700"
+        className="w-3 h-3 !bg-cta !border-2 !border-white opacity-0 group-hover:opacity-100 transition-opacity hover:!bg-cta"
         isConnectable={isConnectable}
       />
       <Handle
@@ -242,7 +242,7 @@ const TextNode = ({ id, data, isConnectable, selected }) => {
         position={Position.Bottom}
         id="bottom-in"
         style={{ left: '52%' }}
-        className="w-3 h-3 !bg-gray-500 !border-2 !border-white opacity-0 group-hover:opacity-100 transition-opacity hover:!bg-gray-700"
+        className="w-3 h-3 !bg-cta !border-2 !border-white opacity-0 group-hover:opacity-100 transition-opacity hover:!bg-cta"
         isConnectable={isConnectable}
       />
       
@@ -251,7 +251,7 @@ const TextNode = ({ id, data, isConnectable, selected }) => {
         position={Position.Left}
         id="left-out"
         style={{ top: '48%' }}
-        className="w-3 h-3 !bg-gray-500 !border-2 !border-white opacity-0 group-hover:opacity-100 transition-opacity hover:!bg-gray-700"
+        className="w-3 h-3 !bg-cta !border-2 !border-white opacity-0 group-hover:opacity-100 transition-opacity hover:!bg-cta"
         isConnectable={isConnectable}
       />
       <Handle
@@ -259,7 +259,7 @@ const TextNode = ({ id, data, isConnectable, selected }) => {
         position={Position.Left}
         id="left-in"
         style={{ top: '52%' }}
-        className="w-3 h-3 !bg-gray-500 !border-2 !border-white opacity-0 group-hover:opacity-100 transition-opacity hover:!bg-gray-700"
+        className="w-3 h-3 !bg-cta !border-2 !border-white opacity-0 group-hover:opacity-100 transition-opacity hover:!bg-cta"
         isConnectable={isConnectable}
       />
       
@@ -303,14 +303,14 @@ const TextNode = ({ id, data, isConnectable, selected }) => {
             setIsImportant(!isImportant);
             await persistIsImportantLocal(!isImportant);
           }}
-          className={`px-2 py-1 rounded ${isImportant ? 'bg-yellow-400 text-white' : 'bg-white text-yellow-600 border border-yellow-400'}`}
+          className={`px-2 py-1 rounded ${isImportant ? 'bg-warning text-white' : 'bg-surface text-warning border border-warning'}`}
           title={isImportant ? 'Unmark as Important' : 'Mark as Important'}
         >
           {isImportant ? '★' : '☆'}
         </button>
         <button
           onClick={() => setShowDeadlineInput(!showDeadlineInput)}
-          className="px-2 py-1 rounded bg-white text-blue-600 border border-blue-400"
+          className="px-2 py-1 rounded bg-surface text-info border border-info"
           title="Set Deadline"
         >
           ⏰
@@ -319,7 +319,7 @@ const TextNode = ({ id, data, isConnectable, selected }) => {
 
       {/* Deadline Input */}
       {showDeadlineInput && (
-        <div className="absolute top-12 right-2 bg-white border border-gray-300 rounded shadow-lg p-2 z-20">
+        <div className="absolute top-12 right-2 bg-surface border border-line rounded shadow-lg p-2 z-20">
           <input
             type="datetime-local"
             className="border rounded px-2 py-1 text-xs w-40"
@@ -328,7 +328,7 @@ const TextNode = ({ id, data, isConnectable, selected }) => {
             disabled={saving}
           />
           <button
-            className="mt-1 w-full px-2 py-1 text-xs bg-blue-500 text-white rounded"
+            className="mt-1 w-full px-2 py-1 text-xs bg-info text-white rounded"
             onClick={async () => {
               setShowDeadlineInput(false);
               await persistDeadlineLocal(deadline);
@@ -342,26 +342,26 @@ const TextNode = ({ id, data, isConnectable, selected }) => {
 
       {/* Deadline Display */}
       {deadline && timeLeft && !timeLeft.isExpired && (
-        <div className="absolute bottom-2 right-2 text-xs text-blue-600 bg-blue-50 px-2 py-1 rounded">
+        <div className="absolute bottom-2 right-2 text-xs text-info bg-info/10 px-2 py-1 rounded">
           ⏱ {formatTimeLeft(timeLeft)}
         </div>
       )}
       
       {/* Text Type Label */}
-      <div className="absolute -top-2 -left-2 px-2 py-1 bg-purple-500 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity">
+      <div className="absolute -top-2 -left-2 px-2 py-1 bg-cta text-cta-foreground text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity">
         {data.name}
       </div>
       
       {/* Sequence Number Badge - Top left corner */}
       {data.sequenceNumber && (
-        <div className="absolute -top-4 -left-4 z-20 w-8 h-8 bg-gradient-to-br from-green-500 to-emerald-600 text-white rounded-full flex items-center justify-center text-sm font-bold shadow-lg border-2 border-white hover:shadow-xl transition-shadow">
+        <div className="absolute -top-4 -left-4 z-20 w-8 h-8 bg-black text-white rounded-full flex items-center justify-center text-sm font-bold shadow-lg border-2 border-white hover:shadow-xl transition-shadow">
           {data.sequenceNumber}
         </div>
       )}
       
       {/* Selection indicator */}
       {selected && (
-        <div className="absolute -top-3 -right-3 w-6 h-6 bg-purple-500 text-white rounded-full flex items-center justify-center text-xs font-bold">
+        <div className="absolute -top-3 -right-3 w-6 h-6 bg-cta text-cta-foreground rounded-full flex items-center justify-center text-xs font-bold">
           T
         </div>
       )}

@@ -273,9 +273,9 @@ const NewPurchaseRequisitionForm = ({ onBack, workspaceId }) => {
 
   const getPriorityBadge = (priority) => {
     const styles = {
-      high: 'bg-red-100 text-red-800',
-      medium: 'bg-yellow-100 text-yellow-800',
-      low: 'bg-green-100 text-green-800'
+      high: 'bg-danger/10 text-danger',
+      medium: 'bg-warning/10 text-warning',
+      low: 'bg-success/10 text-success'
     };
     
     const text = {
@@ -292,16 +292,16 @@ const NewPurchaseRequisitionForm = ({ onBack, workspaceId }) => {
   };
 
   return (
-    <div className="space-y-6 p-6 bg-white rounded-lg shadow-sm">
+    <div className="space-y-6 p-6 bg-surface rounded-lg ">
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-3">
           <button 
             onClick={onBack}
-            className="p-1.5 rounded-full hover:bg-gray-100"
+            className="p-1.5 rounded-full hover:bg-surface-hover"
           >
-            <ArrowLeft className="h-5 w-5 text-gray-500" />
+            <ArrowLeft className="h-5 w-5 text-dim" />
           </button>
-          <h2 className="text-2xl font-semibold text-gray-900">New Purchase Requisition</h2>
+          <h2 className="text-2xl font-semibold text-ink">New Purchase Requisition</h2>
         </div>
         <div className="flex space-x-3">
           <button
@@ -313,7 +313,7 @@ const NewPurchaseRequisitionForm = ({ onBack, workspaceId }) => {
               }));
               // Save as draft logic here
             }}
-            className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+            className="px-4 py-2 text-sm font-medium text-ink bg-surface border border-line rounded-md  hover:bg-canvas focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-info"
           >
             Save as Draft
           </button>
@@ -321,7 +321,7 @@ const NewPurchaseRequisitionForm = ({ onBack, workspaceId }) => {
             type="button"
             onClick={handleSubmit}
             disabled={loading}
-            className="px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="px-4 py-2 text-sm font-medium text-white bg-info border border-transparent rounded-md  hover:bg-info focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-info disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {loading ? 'Submitting...' : 'Submit Requisition'}
           </button>
@@ -329,7 +329,7 @@ const NewPurchaseRequisitionForm = ({ onBack, workspaceId }) => {
       </div>
 
       {error && (
-        <div className="p-4 text-sm text-red-700 bg-red-100 rounded-md">
+        <div className="p-4 text-sm text-danger bg-danger/10 rounded-md">
           <div className="flex items-center">
             <AlertTriangle className="w-5 h-5 mr-2" />
             {error}
@@ -338,7 +338,7 @@ const NewPurchaseRequisitionForm = ({ onBack, workspaceId }) => {
       )}
 
       {success && (
-        <div className="p-4 text-sm text-green-700 bg-green-100 rounded-md">
+        <div className="p-4 text-sm text-success bg-success/10 rounded-md">
           <div className="flex items-center">
             <CheckCircle className="w-5 h-5 mr-2" />
             {success}
@@ -348,15 +348,15 @@ const NewPurchaseRequisitionForm = ({ onBack, workspaceId }) => {
 
       <form onSubmit={handleSubmit} className="space-y-6">
         {/* Basic Information */}
-        <div className="bg-white shadow overflow-hidden sm:rounded-md">
+        <div className="bg-surface shadow overflow-hidden sm:rounded-md">
           <div className="px-4 py-5 sm:p-6">
-            <h3 className="text-lg font-medium leading-6 text-gray-900">Basic Information</h3>
-            <p className="mt-1 text-sm text-gray-500">Enter the basic details of your purchase requisition.</p>
+            <h3 className="text-lg font-medium leading-6 text-ink">Basic Information</h3>
+            <p className="mt-1 text-sm text-dim">Enter the basic details of your purchase requisition.</p>
             
             <div className="mt-6 grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-6">
               <div className="sm:col-span-4">
-                <label htmlFor="title" className="block text-sm font-medium text-gray-700">
-                  Title <span className="text-red-500">*</span>
+                <label htmlFor="title" className="block text-sm font-medium text-ink">
+                  Title <span className="text-danger">*</span>
                 </label>
                 <div className="mt-1">
                   <input
@@ -366,14 +366,14 @@ const NewPurchaseRequisitionForm = ({ onBack, workspaceId }) => {
                     required
                     value={formData.title}
                     onChange={handleInputChange}
-                    className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+                    className="block w-full rounded-md border-line  focus:border-info focus:ring-info sm:text-sm"
                     placeholder="E.g., Office Chairs for New Employees"
                   />
                 </div>
               </div>
 
               <div className="sm:col-span-2">
-                <label htmlFor="priority" className="block text-sm font-medium text-gray-700">
+                <label htmlFor="priority" className="block text-sm font-medium text-ink">
                   Priority
                 </label>
                 <select
@@ -381,7 +381,7 @@ const NewPurchaseRequisitionForm = ({ onBack, workspaceId }) => {
                   name="priority"
                   value={formData.priority}
                   onChange={handleInputChange}
-                  className="mt-1 block w-full rounded-md border-gray-300 py-2 pl-3 pr-10 text-base focus:border-blue-500 focus:outline-none focus:ring-blue-500 sm:text-sm"
+                  className="mt-1 block w-full rounded-md border-line py-2 pl-3 pr-10 text-base focus:border-info focus:outline-none focus:ring-info sm:text-sm"
                 >
                   <option value="low">Low</option>
                   <option value="medium">Medium</option>
@@ -390,7 +390,7 @@ const NewPurchaseRequisitionForm = ({ onBack, workspaceId }) => {
               </div>
 
               <div className="sm:col-span-6">
-                <label htmlFor="description" className="block text-sm font-medium text-gray-700">
+                <label htmlFor="description" className="block text-sm font-medium text-ink">
                   Description
                 </label>
                 <div className="mt-1">
@@ -400,7 +400,7 @@ const NewPurchaseRequisitionForm = ({ onBack, workspaceId }) => {
                     rows={2}
                     value={formData.description}
                     onChange={handleInputChange}
-                    className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+                    className="block w-full rounded-md border-line  focus:border-info focus:ring-info sm:text-sm"
                     placeholder="Provide details about the purchase requisition..."
                   />
                 </div>
@@ -408,8 +408,8 @@ const NewPurchaseRequisitionForm = ({ onBack, workspaceId }) => {
 
               {/* Delivery Address */}
               <div className="sm:col-span-6">
-                <label htmlFor="deliveryAddress" className="block text-sm font-medium text-gray-700">
-                  Delivery Address <span className="text-red-500">*</span>
+                <label htmlFor="deliveryAddress" className="block text-sm font-medium text-ink">
+                  Delivery Address <span className="text-danger">*</span>
                 </label>
                 <div className="mt-1">
                   <textarea
@@ -419,7 +419,7 @@ const NewPurchaseRequisitionForm = ({ onBack, workspaceId }) => {
                     required
                     value={formData.deliveryAddress}
                     onChange={handleInputChange}
-                    className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+                    className="block w-full rounded-md border-line  focus:border-info focus:ring-info sm:text-sm"
                     placeholder="Enter the delivery address..."
                   />
                 </div>
@@ -427,8 +427,8 @@ const NewPurchaseRequisitionForm = ({ onBack, workspaceId }) => {
 
               {/* Purpose of Purchase */}
               <div className="sm:col-span-6">
-                <label htmlFor="purpose" className="block text-sm font-medium text-gray-700">
-                  Purpose of Purchase <span className="text-red-500">*</span>
+                <label htmlFor="purpose" className="block text-sm font-medium text-ink">
+                  Purpose of Purchase <span className="text-danger">*</span>
                 </label>
                 <div className="mt-1">
                   <input
@@ -438,19 +438,19 @@ const NewPurchaseRequisitionForm = ({ onBack, workspaceId }) => {
                     required
                     value={formData.purpose}
                     onChange={handleInputChange}
-                    className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+                    className="block w-full rounded-md border-line  focus:border-info focus:ring-info sm:text-sm"
                     placeholder="E.g., Office equipment for new employees"
                   />
                 </div>
               </div>
 
               <div className="sm:col-span-2">
-                <label htmlFor="requiredBy" className="block text-sm font-medium text-gray-700">
+                <label htmlFor="requiredBy" className="block text-sm font-medium text-ink">
                   Required By
                 </label>
-                <div className="mt-1 relative rounded-md shadow-sm">
+                <div className="mt-1 relative rounded-md ">
                   <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <CalendarIcon className="h-5 w-5 text-gray-400" aria-hidden="true" />
+                    <CalendarIcon className="h-5 w-5 text-dim" aria-hidden="true" />
                   </div>
                   <input
                     type="date"
@@ -459,7 +459,7 @@ const NewPurchaseRequisitionForm = ({ onBack, workspaceId }) => {
                     value={formData.requiredBy}
                     onChange={handleInputChange}
                     min={new Date().toISOString().split('T')[0]}
-                    className="block w-full pl-10 rounded-md border-gray-300 focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+                    className="block w-full pl-10 rounded-md border-line focus:border-info focus:ring-info sm:text-sm"
                   />
                 </div>
               </div>
@@ -468,14 +468,14 @@ const NewPurchaseRequisitionForm = ({ onBack, workspaceId }) => {
         </div>
 
         {/* Items */}
-        <div className="bg-white shadow overflow-hidden sm:rounded-md">
+        <div className="bg-surface shadow overflow-hidden sm:rounded-md">
           <div className="px-4 py-5 sm:p-6">
             <div className="flex justify-between items-center">
-              <h3 className="text-lg font-medium leading-6 text-gray-900">Items</h3>
+              <h3 className="text-lg font-medium leading-6 text-ink">Items</h3>
               <button
                 type="button"
                 onClick={addItem}
-                className="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                className="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded-md  text-white bg-info hover:bg-info focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-info"
               >
                 <Plus className="-ml-0.5 mr-1.5 h-4 w-4" />
                 Add Item
@@ -484,12 +484,12 @@ const NewPurchaseRequisitionForm = ({ onBack, workspaceId }) => {
 
             <div className="mt-6 space-y-6">
               {formData.items.map((item, index) => (
-                <div key={index} className="relative border border-gray-200 rounded-lg p-4">
+                <div key={index} className="relative border border-line rounded-lg p-4">
                   {formData.items.length > 1 && (
                     <button
                       type="button"
                       onClick={() => removeItem(index)}
-                      className="absolute top-2 right-2 text-gray-400 hover:text-red-500"
+                      className="absolute top-2 right-2 text-dim hover:text-danger"
                       title="Remove item"
                     >
                       <X className="h-5 w-5" />
@@ -498,8 +498,8 @@ const NewPurchaseRequisitionForm = ({ onBack, workspaceId }) => {
                   
                   <div className="grid grid-cols-1 gap-y-4 gap-x-4 sm:grid-cols-6">
                     <div className="sm:col-span-2">
-                      <label className="block text-sm font-medium text-gray-700">
-                        Item Name <span className="text-red-500">*</span>
+                      <label className="block text-sm font-medium text-ink">
+                        Item Name <span className="text-danger">*</span>
                       </label>
                       <input
                         type="text"
@@ -507,20 +507,20 @@ const NewPurchaseRequisitionForm = ({ onBack, workspaceId }) => {
                         required
                         value={item.name}
                         onChange={(e) => handleItemChange(index, e)}
-                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+                        className="mt-1 block w-full rounded-md border-line  focus:border-info focus:ring-info sm:text-sm"
                         placeholder="E.g., Ergonomic Chair"
                       />
                     </div>
 
                     <div className="sm:col-span-2">
-                      <label className="block text-sm font-medium text-gray-700">
+                      <label className="block text-sm font-medium text-ink">
                         Category
                       </label>
                       <select
                         name="category"
                         value={item.category}
                         onChange={(e) => handleItemChange(index, e)}
-                        className="mt-1 block w-full rounded-md border-gray-300 py-2 pl-3 pr-10 text-base focus:border-blue-500 focus:outline-none focus:ring-blue-500 sm:text-sm"
+                        className="mt-1 block w-full rounded-md border-line py-2 pl-3 pr-10 text-base focus:border-info focus:outline-none focus:ring-info sm:text-sm"
                       >
                         <option value="">Select a category</option>
                         {categories.map((cat) => (
@@ -532,7 +532,7 @@ const NewPurchaseRequisitionForm = ({ onBack, workspaceId }) => {
                     </div>
 
                     <div className="sm:col-span-2">
-                      <label className="block text-sm font-medium text-gray-700">
+                      <label className="block text-sm font-medium text-ink">
                         Vendor/Supplier
                       </label>
                       <input
@@ -540,13 +540,13 @@ const NewPurchaseRequisitionForm = ({ onBack, workspaceId }) => {
                         name="vendor"
                         value={item.vendor}
                         onChange={(e) => handleItemChange(index, e)}
-                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+                        className="mt-1 block w-full rounded-md border-line  focus:border-info focus:ring-info sm:text-sm"
                         placeholder="Vendor name"
                       />
                     </div>
 
                     <div className="sm:col-span-4">
-                      <label className="block text-sm font-medium text-gray-700">
+                      <label className="block text-sm font-medium text-ink">
                         Description
                       </label>
                       <input
@@ -554,13 +554,13 @@ const NewPurchaseRequisitionForm = ({ onBack, workspaceId }) => {
                         name="description"
                         value={item.description}
                         onChange={(e) => handleItemChange(index, e)}
-                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+                        className="mt-1 block w-full rounded-md border-line  focus:border-info focus:ring-info sm:text-sm"
                         placeholder="Item description or specifications"
                       />
                     </div>
 
                     <div className="sm:col-span-1">
-                      <label className="block text-sm font-medium text-gray-700">
+                      <label className="block text-sm font-medium text-ink">
                         Quantity
                       </label>
                       <input
@@ -569,17 +569,17 @@ const NewPurchaseRequisitionForm = ({ onBack, workspaceId }) => {
                         min="1"
                         value={item.quantity}
                         onChange={(e) => handleItemChange(index, e)}
-                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+                        className="mt-1 block w-full rounded-md border-line  focus:border-info focus:ring-info sm:text-sm"
                       />
                     </div>
 
                     <div className="sm:col-span-1">
-                      <label className="block text-sm font-medium text-gray-700">
+                      <label className="block text-sm font-medium text-ink">
                         Est. Unit Cost
                       </label>
-                      <div className="mt-1 relative rounded-md shadow-sm">
+                      <div className="mt-1 relative rounded-md ">
                         <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                          <IndianRupee className="h-4 w-4 text-gray-500" />
+                          <IndianRupee className="h-4 w-4 text-dim" />
                         </div>
                         <input
                           type="number"
@@ -588,25 +588,25 @@ const NewPurchaseRequisitionForm = ({ onBack, workspaceId }) => {
                           step="0.01"
                           value={item.estimatedCost}
                           onChange={(e) => handleItemChange(index, e)}
-                          className="block w-full pl-7 pr-12 sm:text-sm border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                          className="block w-full pl-7 pr-12 sm:text-sm border-line rounded-md focus:ring-info focus:border-info"
                           placeholder="0.00"
                         />
                       </div>
                     </div>
 
                     <div className="sm:col-span-1">
-                      <label className="block text-sm font-medium text-gray-700">
+                      <label className="block text-sm font-medium text-ink">
                         Total
                       </label>
-                      <div className="mt-1 relative rounded-md shadow-sm">
+                      <div className="mt-1 relative rounded-md ">
                         <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                          <IndianRupee className="h-4 w-4 text-gray-500" />
+                          <IndianRupee className="h-4 w-4 text-dim" />
                         </div>
                         <input
                           type="text"
                           readOnly
                           value={(item.estimatedCost * item.quantity).toFixed(2)}
-                          className="block w-full pl-7 pr-12 sm:text-sm border-gray-300 bg-gray-50 rounded-md"
+                          className="block w-full pl-7 pr-12 sm:text-sm border-line bg-canvas rounded-md"
                         />
                       </div>
                     </div>
@@ -617,7 +617,7 @@ const NewPurchaseRequisitionForm = ({ onBack, workspaceId }) => {
 
             <div className="mt-6 flex justify-end">
               <div className="text-right">
-                <div className="text-sm text-gray-500">Total Estimated Cost:</div>
+                <div className="text-sm text-dim">Total Estimated Cost:</div>
                 <div className="text-2xl font-semibold">
                   ₹{(formData.totalCost || 0).toFixed(2)}
                 </div>
@@ -627,12 +627,12 @@ const NewPurchaseRequisitionForm = ({ onBack, workspaceId }) => {
         </div>
 
         {/* Additional Information */}
-        <div className="bg-white shadow overflow-hidden sm:rounded-md">
+        <div className="bg-surface shadow overflow-hidden sm:rounded-md">
           <div className="px-4 py-5 sm:p-6">
-            <h3 className="text-lg font-medium leading-6 text-gray-900">Additional Information</h3>
+            <h3 className="text-lg font-medium leading-6 text-ink">Additional Information</h3>
             
             <div className="mt-6">
-              <label htmlFor="notes" className="block text-sm font-medium text-gray-700">
+              <label htmlFor="notes" className="block text-sm font-medium text-ink">
                 Notes (Optional)
               </label>
               <div className="mt-1">
@@ -642,11 +642,11 @@ const NewPurchaseRequisitionForm = ({ onBack, workspaceId }) => {
                   rows={3}
                   value={formData.notes}
                   onChange={handleInputChange}
-                  className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+                  className="block w-full rounded-md border-line  focus:border-info focus:ring-info sm:text-sm"
                   placeholder="Any additional information or special instructions..."
                 />
               </div>
-              <p className="mt-2 text-sm text-gray-500">
+              <p className="mt-2 text-sm text-dim">
                 Provide any additional details that might be helpful for the approver.
               </p>
             </div>
@@ -654,11 +654,11 @@ const NewPurchaseRequisitionForm = ({ onBack, workspaceId }) => {
         </div>
 
         {/* Form Actions */}
-        <div className="flex justify-end space-x-3 pt-4 border-t border-gray-200">
+        <div className="flex justify-end space-x-3 pt-4 border-t border-line">
           <button
             type="button"
             onClick={onBack}
-            className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+            className="px-4 py-2 text-sm font-medium text-ink bg-surface border border-line rounded-md  hover:bg-canvas focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-info"
           >
             Cancel
           </button>
@@ -671,14 +671,14 @@ const NewPurchaseRequisitionForm = ({ onBack, workspaceId }) => {
               }));
               // Save as draft logic here
             }}
-            className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+            className="px-4 py-2 text-sm font-medium text-ink bg-surface border border-line rounded-md  hover:bg-canvas focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-info"
           >
             Save as Draft
           </button>
           <button
             type="submit"
             disabled={loading}
-            className="inline-flex justify-center px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="inline-flex justify-center px-4 py-2 text-sm font-medium text-white bg-info border border-transparent rounded-md  hover:bg-info focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-info disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {loading ? (
               <>

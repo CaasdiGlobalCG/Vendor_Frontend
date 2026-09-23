@@ -12,11 +12,11 @@ import { ACTION_LABELS, getModulesByCategory } from '../constants/modules';
 
 /** Colour config for category header badges */
 const CATEGORY_COLORS = {
-  core:        { bg: 'bg-blue-50',   text: 'text-blue-700',   border: 'border-blue-200' },
-  sales:       { bg: 'bg-purple-50', text: 'text-purple-700', border: 'border-purple-200' },
-  procurement: { bg: 'bg-indigo-50', text: 'text-indigo-700', border: 'border-indigo-200' },
-  logistics:   { bg: 'bg-orange-50', text: 'text-orange-700', border: 'border-orange-200' },
-  system:      { bg: 'bg-gray-50',   text: 'text-gray-600',   border: 'border-gray-200' },
+  core:        { bg: 'bg-info/10',   text: 'text-info',   border: 'border-info/20' },
+  sales:       { bg: 'bg-surface-hover', text: 'text-ink', border: 'border-line' },
+  procurement: { bg: 'bg-info/10', text: 'text-info', border: 'border-info/20' },
+  logistics:   { bg: 'bg-warning/10', text: 'text-warning', border: 'border-warning/20' },
+  system:      { bg: 'bg-canvas',   text: 'text-dim',   border: 'border-line' },
 };
 
 /**
@@ -155,35 +155,35 @@ export function EditablePermissionMatrix({
   const headerPx = compact ? 'px-2 py-2' : 'px-3 py-3';
 
   return (
-    <div className="overflow-x-auto bg-white">
-      <div className="border-b border-gray-200 bg-gray-50 px-4 py-2 text-[11px] text-gray-600">
+    <div className="overflow-x-auto bg-surface">
+      <div className="border-b border-line bg-canvas px-4 py-2 text-[11px] text-dim">
         {editable
           ? 'Tip: use category select-all for fast setup, then fine-tune module permissions as needed.'
           : 'This matrix reflects your current effective permissions and module access.'}
       </div>
-      <table className="min-w-full divide-y divide-gray-200">
+      <table className="min-w-full divide-y divide-line">
         {/* ── Header Row ── */}
-        <thead className="bg-gray-50 sticky top-0 z-10">
+        <thead className="bg-canvas sticky top-0 z-10">
           <tr>
-            <th className={`${headerPx} text-left text-xs font-medium text-gray-500 uppercase tracking-wider`}>
+            <th className={`${headerPx} text-left text-xs font-medium text-dim uppercase tracking-wider`}>
               Module
             </th>
             {actions.map(action => (
               <th
                 key={action}
-                className={`${headerPx} text-center text-xs font-medium text-gray-500 uppercase tracking-wider`}
+                className={`${headerPx} text-center text-xs font-medium text-dim uppercase tracking-wider`}
               >
                 {ACTION_LABELS[action]}
               </th>
             ))}
-            <th className={`${headerPx} text-center text-xs font-medium text-gray-500 uppercase tracking-wider`}>
+            <th className={`${headerPx} text-center text-xs font-medium text-dim uppercase tracking-wider`}>
               {ACTION_LABELS.manage}
             </th>
           </tr>
         </thead>
 
         {/* ── Body: Category groups → Module rows ── */}
-        <tbody className="bg-white divide-y divide-gray-100">
+        <tbody className="bg-surface divide-y divide-line">
           {groups.map(({ categoryKey, category, modules }) => {
             // Check if every module in this category is fully checked
             const isCategoryAllChecked = !permSet.has('*:*') && modules.every(({ code }) => {
@@ -201,13 +201,13 @@ export function EditablePermissionMatrix({
                   <div className="flex items-center gap-2">
                     <span
                       className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold border
-                        ${CATEGORY_COLORS[categoryKey]?.bg || 'bg-gray-50'}
-                        ${CATEGORY_COLORS[categoryKey]?.text || 'text-gray-600'}
-                        ${CATEGORY_COLORS[categoryKey]?.border || 'border-gray-200'}`}
+                        ${CATEGORY_COLORS[categoryKey]?.bg || 'bg-canvas'}
+                        ${CATEGORY_COLORS[categoryKey]?.text || 'text-dim'}
+                        ${CATEGORY_COLORS[categoryKey]?.border || 'border-line'}`}
                     >
                       {category.label}
                     </span>
-                    <span className="text-xs text-gray-400">{category.description}</span>
+                    <span className="text-xs text-dim">{category.description}</span>
                   </div>
                 </td>
                 {/* Select-all checkbox above the Full Access column */}
@@ -219,9 +219,9 @@ export function EditablePermissionMatrix({
                         checked={isCategoryChecked}
                         onChange={() => toggleAllForCategory(modules)}
                         disabled={disabled || permSet.has('*:*')}
-                        className="h-4 w-4 rounded border-gray-300 text-teal-600 focus:ring-teal-500"
+                        className="h-4 w-4 rounded border-line text-ink focus:ring-ink"
                       />
-                      <span className="text-[10px] text-gray-400 select-none leading-tight">Select all</span>
+                      <span className="text-[10px] text-dim select-none leading-tight">Select all</span>
                     </label>
                   )}
                 </td>
@@ -234,14 +234,14 @@ export function EditablePermissionMatrix({
                 const allChecked = hasManage || checkedCount === actions.length;
 
                 return (
-                  <tr key={code} className="hover:bg-gray-50 transition-colors">
+                  <tr key={code} className="hover:bg-canvas transition-colors">
                     {/* Module name cell */}
-                    <td className={`${cellPx} text-sm font-medium text-gray-900 pl-6`}>
+                    <td className={`${cellPx} text-sm font-medium text-ink pl-6`}>
                       <div className="flex items-center gap-2">
                         <span>{config.label}</span>
                         {/* Show count badge in editable mode */}
                         {editable && checkedCount > 0 && !hasManage && (
-                          <span className="text-[10px] bg-teal-50 text-teal-600 px-1.5 py-0.5 rounded-full font-medium">
+                          <span className="text-[10px] bg-surface-hover text-ink px-1.5 py-0.5 rounded-full font-medium">
                             {checkedCount}/{actions.length}
                           </span>
                         )}
@@ -259,16 +259,16 @@ export function EditablePermissionMatrix({
                               checked={isChecked}
                               onChange={() => togglePermission(code, action)}
                               disabled={disabled || hasManage || permSet.has('*:*')}
-                              className="h-4 w-4 rounded border-gray-300 text-teal-600 focus:ring-teal-500
+                              className="h-4 w-4 rounded border-line text-ink focus:ring-ink
                                          disabled:opacity-50 disabled:cursor-not-allowed"
                             />
                           ) : (
                             isChecked ? (
-                              <span className="inline-flex w-6 h-6 items-center justify-center rounded-full bg-emerald-100 text-emerald-600 text-xs font-bold">
+                              <span className="inline-flex w-6 h-6 items-center justify-center rounded-full bg-surface-hover text-ink text-xs font-bold">
                                 ✓
                               </span>
                             ) : (
-                              <span className="inline-flex w-6 h-6 items-center justify-center rounded-full bg-gray-100 text-gray-400 text-xs">
+                              <span className="inline-flex w-6 h-6 items-center justify-center rounded-full bg-surface-hover text-dim text-xs">
                                 —
                               </span>
                             )
@@ -285,16 +285,16 @@ export function EditablePermissionMatrix({
                           checked={hasManage}
                           onChange={() => toggleManage(code)}
                           disabled={disabled || permSet.has('*:*')}
-                          className="h-4 w-4 rounded border-gray-300 text-teal-600 focus:ring-teal-500
+                          className="h-4 w-4 rounded border-line text-ink focus:ring-ink
                                      disabled:opacity-50 disabled:cursor-not-allowed"
                         />
                       ) : (
                         hasManage ? (
-                          <span className="inline-flex w-6 h-6 items-center justify-center rounded-full bg-emerald-100 text-emerald-600 text-xs font-bold">
+                          <span className="inline-flex w-6 h-6 items-center justify-center rounded-full bg-surface-hover text-ink text-xs font-bold">
                             ✓
                           </span>
                         ) : (
-                          <span className="inline-flex w-6 h-6 items-center justify-center rounded-full bg-gray-100 text-gray-400 text-xs">
+                          <span className="inline-flex w-6 h-6 items-center justify-center rounded-full bg-surface-hover text-dim text-xs">
                             —
                           </span>
                         )
@@ -311,13 +311,13 @@ export function EditablePermissionMatrix({
 
       {/* ── Legend (read-only mode) ── */}
       {!editable && (
-        <div className="px-4 py-3 bg-gray-50 border-t border-gray-200 flex items-center gap-4 text-xs text-gray-500">
+        <div className="px-4 py-3 bg-canvas border-t border-line flex items-center gap-4 text-xs text-dim">
           <div className="flex items-center gap-1">
-            <span className="inline-flex w-5 h-5 items-center justify-center rounded-full bg-emerald-100 text-emerald-600 text-[10px] font-bold">✓</span>
+            <span className="inline-flex w-5 h-5 items-center justify-center rounded-full bg-surface-hover text-ink text-[10px] font-bold">✓</span>
             <span>Access granted</span>
           </div>
           <div className="flex items-center gap-1">
-            <span className="inline-flex w-5 h-5 items-center justify-center rounded-full bg-gray-100 text-gray-400 text-[10px]">—</span>
+            <span className="inline-flex w-5 h-5 items-center justify-center rounded-full bg-surface-hover text-dim text-[10px]">—</span>
             <span>No access</span>
           </div>
         </div>
@@ -325,9 +325,9 @@ export function EditablePermissionMatrix({
 
       {/* ── Selection summary (editable mode) ── */}
       {editable && (
-        <div className="px-4 py-2 bg-gray-50 border-t border-gray-200 text-xs text-gray-500">
+        <div className="px-4 py-2 bg-canvas border-t border-line text-xs text-dim">
           {permissions.length === 0 ? (
-            <span className="text-amber-600">No permissions selected — role will have no access</span>
+            <span className="text-warning">No permissions selected — role will have no access</span>
           ) : (
             <span>{permissions.length} permission{permissions.length !== 1 ? 's' : ''} selected</span>
           )}

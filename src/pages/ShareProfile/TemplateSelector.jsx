@@ -16,12 +16,12 @@ export default function TemplateSelector({ selectedId, onSelect, accentColor }) 
             <button
               key={template.id}
               onClick={() => onSelect(template)}
-              className={`relative text-left rounded-xl border-2 overflow-hidden transition-all hover:shadow-lg group ${
+              className={`relative text-left rounded-xl border-2 overflow-hidden transition-all  group ${
                 isSelected ? 'ring-2 ring-offset-2 shadow-lg scale-[1.02]' : 'hover:scale-[1.01]'
               }`}
               style={{
-                borderColor: isSelected ? template.accentColor : '#e5e7eb',
-                ringColor: isSelected ? template.accentColor : 'transparent',
+                borderColor: isSelected ? template.accentColor: 'rgb(var(--surface-hover))',
+                ringColor: isSelected ? template.accentColor: 'transparent',
               }}
             >
               {/* Selected badge */}
@@ -72,9 +72,9 @@ export default function TemplateSelector({ selectedId, onSelect, accentColor }) 
               <div className="p-3" style={{ backgroundColor: isSelected ? template.preview.cardBg : '#fff' }}>
                 <div className="flex items-center gap-2 mb-1">
                   <div className="w-3 h-3 rounded-full" style={{ backgroundColor: template.accentColor }} />
-                  <p className="text-sm font-bold text-gray-900">{template.name}</p>
+                  <p className="text-sm font-bold text-ink">{template.name}</p>
                 </div>
-                <p className="text-[10px] text-gray-500 leading-relaxed">{template.description}</p>
+                <p className="text-[10px] text-dim leading-relaxed">{template.description}</p>
               </div>
             </button>
           );

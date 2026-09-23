@@ -75,13 +75,13 @@ export const renderTextWithHighlights = (text) => {
   return parts.map((part, index) => {
     if (part.type === 'mention') {
       return (
-        <span key={index} className="text-green-600 font-medium">
+        <span key={index} className="text-success font-medium">
           {part.content}
         </span>
       );
     } else if (part.type === 'hashtag') {
       return (
-        <span key={index} className="text-purple-600 font-medium">
+        <span key={index} className="text-ink font-medium">
           {part.content}
         </span>
       );

@@ -184,12 +184,12 @@ const ManageBOQModal = ({ isOpen, onClose, onTablesExtracted }) => {
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4" onClick={onClose}>
-      <div className="bg-white rounded-lg w-full max-w-4xl max-h-[90vh] flex flex-col overflow-hidden" onClick={(e) => e.stopPropagation()}>
+      <div className="bg-surface rounded-lg w-full max-w-4xl max-h-[90vh] flex flex-col overflow-hidden" onClick={(e) => e.stopPropagation()}>
         <div className="flex justify-between items-center p-4 border-b">
           <h2 className="text-xl font-semibold">Manage BOQ</h2>
           <button 
             onClick={handleClose}
-            className="text-gray-500 hover:text-gray-700"
+            className="text-dim hover:text-ink"
           >
             <X size={24} />
           </button>
@@ -199,13 +199,13 @@ const ManageBOQModal = ({ isOpen, onClose, onTablesExtracted }) => {
           <div 
             {...getRootProps()} 
             className={`border-2 border-dashed rounded-lg p-8 text-center cursor-pointer transition-colors ${
-              isDragActive ? 'border-blue-500 bg-blue-50' : 'border-gray-300 hover:border-blue-400'
+              isDragActive ? 'border-info bg-info/10' : 'border-line hover:border-info'
             }`}
           >
             <input {...getInputProps()} />
             <div className="space-y-2">
               <div className="flex justify-center">
-                <Upload size={32} className="text-gray-400 mx-auto" />
+                <Upload size={32} className="text-dim mx-auto" />
               </div>
               <p className="text-lg font-medium">
                 {isDragActive 
@@ -214,12 +214,12 @@ const ManageBOQModal = ({ isOpen, onClose, onTablesExtracted }) => {
                     ? file.name 
                     : 'Drag & drop an Excel or CSV file here, or click to select'}
               </p>
-              <p className="text-sm text-gray-500">
+              <p className="text-sm text-dim">
                 Supports .xlsx, .xls, .csv files (Max 10MB)
               </p>
             </div>
               {file && (
-                <div className="mt-2 text-sm text-gray-600">
+                <div className="mt-2 text-sm text-dim">
                   <p>File: {file.name}</p>
                   <p>Size: {(file.size / 1024 / 1024).toFixed(2)} MB</p>
                 </div>
@@ -228,21 +228,21 @@ const ManageBOQModal = ({ isOpen, onClose, onTablesExtracted }) => {
 
           {isLoading && (
             <div className="mt-4 text-center py-4">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto"></div>
-              <p className="mt-2 text-gray-600">Processing file...</p>
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-info mx-auto"></div>
+              <p className="mt-2 text-dim">Processing file...</p>
             </div>
           )}
 
           {error && (
-            <div className="mt-4 p-4 bg-red-50 border border-red-200 rounded-lg text-red-700 flex items-start">
-              <XCircle className="flex-shrink-0 h-5 w-5 text-red-500 mr-2 mt-0.5" />
+            <div className="mt-4 p-4 bg-danger/10 border border-danger/20 rounded-lg text-danger flex items-start">
+              <XCircle className="flex-shrink-0 h-5 w-5 text-danger mr-2 mt-0.5" />
               <span>{error}</span>
             </div>
           )}
 
           {success && (
-            <div className="mt-4 p-4 bg-green-50 border border-green-200 rounded-lg text-green-700 flex items-start">
-              <CheckCircle2 className="flex-shrink-0 h-5 w-5 text-green-500 mr-2 mt-0.5" />
+            <div className="mt-4 p-4 bg-success/10 border border-success/20 rounded-lg text-success flex items-start">
+              <CheckCircle2 className="flex-shrink-0 h-5 w-5 text-success mr-2 mt-0.5" />
               <span>{success}</span>
             </div>
           )}
@@ -251,7 +251,7 @@ const ManageBOQModal = ({ isOpen, onClose, onTablesExtracted }) => {
             <div className="mt-6">
               <div className="flex items-center justify-between mb-3">
                 <h3 className="text-lg font-medium">Extracted Tables</h3>
-                <span className="text-sm text-gray-500">{tables.length} table(s) found</span>
+                <span className="text-sm text-dim">{tables.length} table(s) found</span>
               </div>
               <div className="space-y-4 max-h-96 overflow-y-auto pr-2">
                 {tables.map((table) => (
@@ -259,15 +259,15 @@ const ManageBOQModal = ({ isOpen, onClose, onTablesExtracted }) => {
                     key={table.id}
                     draggable
                     onDragStart={(e) => handleDragTable(e, table)}
-                    className="border rounded-lg p-4 bg-white shadow-sm hover:shadow-md transition-shadow cursor-move group"
+                    className="border rounded-lg p-4 bg-surface   transition-shadow cursor-move group"
                   >
                     <div className="flex justify-between items-start mb-2">
                       <div className="flex items-center space-x-2">
-                        <TableIcon className="w-4 h-4 text-blue-500" />
-                        <h4 className="font-medium text-gray-800">{table.name}</h4>
+                        <TableIcon className="w-4 h-4 text-info" />
+                        <h4 className="font-medium text-ink">{table.name}</h4>
                       </div>
                       <div className="flex items-center space-x-2">
-                        <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">
+                        <span className="text-xs bg-info/10 text-info px-2 py-1 rounded">
                           {table.rows.length} rows × {table.headers.length} columns
                         </span>
                         <button
@@ -276,7 +276,7 @@ const ManageBOQModal = ({ isOpen, onClose, onTablesExtracted }) => {
                             e.stopPropagation();
                             moveTableToCanvas(table);
                           }}
-                          className="text-xs px-2 py-1 rounded bg-blue-600 text-white hover:bg-blue-700"
+                          className="text-xs px-2 py-1 rounded bg-info text-white hover:bg-info"
                           title="Move to canvas"
                         >
                           Move to canvas
@@ -284,7 +284,7 @@ const ManageBOQModal = ({ isOpen, onClose, onTablesExtracted }) => {
                       </div>
                     </div>
                     
-                    <div className="text-xs text-gray-500 mb-2">
+                    <div className="text-xs text-dim mb-2">
                       {table.sheetName && `Sheet: ${table.sheetName} • `}
                       {table.headers.length} columns, {table.rows.length} rows
                     </div>
@@ -292,18 +292,18 @@ const ManageBOQModal = ({ isOpen, onClose, onTablesExtracted }) => {
                     <div className="overflow-x-auto border rounded">
                       <table className="min-w-full text-xs border-collapse">
                         <thead>
-                          <tr className="bg-gray-50">
+                          <tr className="bg-canvas">
                             {table.headers.slice(0, 4).map((header, idx) => (
                               <th 
                                 key={idx} 
-                                className="border px-2 py-1.5 text-left text-gray-600 font-medium truncate max-w-[150px]"
+                                className="border px-2 py-1.5 text-left text-dim font-medium truncate max-w-[150px]"
                                 title={header || `Column ${idx + 1}`}
                               >
                                 {header || `Column ${idx + 1}`}
                               </th>
                             ))}
                             {table.headers.length > 4 && (
-                              <th className="border px-2 py-1.5 text-left bg-gray-50 text-gray-400">
+                              <th className="border px-2 py-1.5 text-left bg-canvas text-dim">
                                 +{table.headers.length - 4} more
                               </th>
                             )}
@@ -311,7 +311,7 @@ const ManageBOQModal = ({ isOpen, onClose, onTablesExtracted }) => {
                         </thead>
                         <tbody>
                           {table.rows.slice(0, 3).map((row, rowIdx) => (
-                            <tr key={rowIdx} className="hover:bg-gray-50">
+                            <tr key={rowIdx} className="hover:bg-canvas">
                               {row.slice(0, 4).map((cell, cellIdx) => (
                                 <td 
                                   key={cellIdx} 
@@ -322,7 +322,7 @@ const ManageBOQModal = ({ isOpen, onClose, onTablesExtracted }) => {
                                 </td>
                               ))}
                               {row.length > 4 && (
-                                <td className="border px-2 py-1.5 text-gray-400">...</td>
+                                <td className="border px-2 py-1.5 text-dim">...</td>
                               )}
                             </tr>
                           ))}
@@ -330,7 +330,7 @@ const ManageBOQModal = ({ isOpen, onClose, onTablesExtracted }) => {
                             <tr>
                               <td 
                                 colSpan={Math.min(5, table.headers.length)} 
-                                className="text-center text-gray-400 text-xs py-1.5 bg-gray-50"
+                                className="text-center text-dim text-xs py-1.5 bg-canvas"
                               >
                                 ... and {table.rows.length - 3} more rows
                               </td>
@@ -340,7 +340,7 @@ const ManageBOQModal = ({ isOpen, onClose, onTablesExtracted }) => {
                             <tr>
                               <td 
                                 colSpan={Math.max(1, Math.min(5, table.headers.length))}
-                                className="text-center text-gray-400 py-4"
+                                className="text-center text-dim py-4"
                               >
                                 No data rows found
                               </td>
@@ -350,9 +350,9 @@ const ManageBOQModal = ({ isOpen, onClose, onTablesExtracted }) => {
                       </table>
                     </div>
                     
-                    <div className="mt-2 text-xs text-gray-500 flex items-center justify-between">
+                    <div className="mt-2 text-xs text-dim flex items-center justify-between">
                       <span>Drag to canvas to add table, or use Move to canvas</span>
-                      <span className="text-blue-600 hover:text-blue-800 cursor-pointer">View full table</span>
+                      <span className="text-info hover:text-info cursor-pointer">View full table</span>
                     </div>
                   </div>
                 ))}
@@ -361,8 +361,8 @@ const ManageBOQModal = ({ isOpen, onClose, onTablesExtracted }) => {
           )}
         </div>
         
-        <div className="p-4 border-t flex justify-between items-center bg-gray-50">
-          <div className="text-sm text-gray-500">
+        <div className="p-4 border-t flex justify-between items-center bg-canvas">
+          <div className="text-sm text-dim">
             {tables.length > 0 ? (
               <span>Drag tables to the canvas to add them</span>
             ) : (
@@ -372,7 +372,7 @@ const ManageBOQModal = ({ isOpen, onClose, onTablesExtracted }) => {
           <div className="flex space-x-3">
             <button
               onClick={handleClose}
-              className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 bg-white hover:bg-gray-50 transition-colors"
+              className="px-4 py-2 border border-line rounded-md text-ink bg-surface hover:bg-canvas transition-colors"
             >
               Close
             </button>
@@ -382,7 +382,7 @@ const ManageBOQModal = ({ isOpen, onClose, onTablesExtracted }) => {
                   const evt = new CustomEvent('addTablesToCanvas', { detail: { tables } });
                   document.dispatchEvent(evt);
                 }}
-                className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+                className="px-4 py-2 bg-info text-white rounded-md hover:bg-info transition-colors"
               >
                 Add All to Canvas
               </button>

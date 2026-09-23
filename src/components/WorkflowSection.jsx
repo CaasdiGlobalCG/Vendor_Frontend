@@ -16,8 +16,7 @@ const WorkflowSection = () => {
       >
         <header className="text-center mb-[4rem] w-full max-w-[1200px]">
           <h1
-            className="font-poppins font-medium leading-[1.2] text-center bg-gradient-to-r from-gradient-from to-gradient-to bg-clip-text text-transparent mb-[1rem]
-                       text-[1.5rem] xs:text-[1.5rem] sm:text-[2rem] md:text-[clamp(2rem,4vw,3rem)] lg:text-[clamp(2.5rem,5vw,4rem)]"
+            className="font-poppins font-medium leading-[1.2] text-center mb-[1rem] text-[1.5rem] xs:text-[1.5rem] sm:text-[2rem] md:text-[clamp(2rem,4vw,3rem)] lg:text-[clamp(2.5rem,5vw,4rem)]"
             style={{ fontSize: typeof window !== 'undefined' && window.innerWidth < 768 && window.innerWidth >= 640 ? '2rem' : typeof window !== 'undefined' && window.innerWidth < 640 ? '1.5rem' : 'clamp(2.5rem, 5vw, 4rem)' }}
           >
             How We Work

@@ -12,10 +12,10 @@ const steps = [
   
   const Sidebar = ({ currentStep = 1 }) => {
     return (
-      <div className="w-0 md:w-[33%] h-full bg-[#f6fffd] text-black hidden md:flex flex-col fixed md:relative overflow-y-auto px-4 md:px-6 py-6">
-        <div className="text-3xl font-bold text-[#105a4a] mb-1">CG</div>
+      <div className="w-0 md:w-[33%] h-full bg-surface text-ink hidden md:flex flex-col fixed md:relative overflow-y-auto px-4 md:px-6 py-6 border-r border-line">
+        <div className="text-3xl font-bold text-ink mb-1">CG</div>
         <span className="block text-lg font-medium">Complete your KYC</span>
-        <span className="block text-sm font-light leading-6 opacity-50 mb-6">
+        <span className="block text-sm font-light leading-6 text-dim mb-6">
           Please complete your KYC verification by submitting the required documents to ensure seamless access to our services
         </span>
   
@@ -29,8 +29,8 @@ const steps = [
               ? completed 
               : incompleteIcon;
   
-            const opacity = isCurrent || isCompleted ? "opacity-100" : "opacity-50";
-            const fontWeight = isCurrent || isCompleted ? "font-medium" : "font-medium opacity-50";
+            const opacity = isCurrent || isCompleted ? "text-ink" : "text-dim";
+            const fontWeight = isCurrent || isCompleted ? "font-medium text-ink" : "font-medium text-dim";
   
             return (
               <div key={index}>

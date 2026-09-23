@@ -254,13 +254,13 @@ const getFileTypeColor = (fileName) => {
   const extension = fileName?.split('.').pop()?.toLowerCase();
   
   if (['jpg', 'jpeg', 'png', 'gif', 'bmp', 'svg', 'webp'].includes(extension)) {
-    return 'bg-green-100 border-green-300 text-green-800';
+    return 'bg-success/10 border-success/30 text-success';
   } else if (['xlsx', 'xls', 'csv', 'ods'].includes(extension)) {
-    return 'bg-emerald-100 border-emerald-300 text-emerald-800';
+    return 'bg-surface-hover border-line text-ink';
   } else if (['pdf', 'doc', 'docx', 'txt', 'rtf', 'odt'].includes(extension)) {
-    return 'bg-blue-100 border-blue-300 text-blue-800';
+    return 'bg-info/10 border-info/30 text-info';
   } else {
-    return 'bg-gray-100 border-gray-300 text-gray-800';
+    return 'bg-surface-hover border-line text-ink';
   }
 };
 
@@ -359,7 +359,7 @@ const DraggableFileCard = ({ file }) => {
       draggable
       onDragStart={handleDragStart}
       onDoubleClick={handleDoubleClick}
-      className={`p-3 rounded-lg border-2 ${colorClass} group relative cursor-move hover:shadow-md transition-all duration-200`}
+      className={`p-3 rounded-lg border-2 ${colorClass} group relative cursor-move  transition-all duration-200`}
       title="Drag to canvas or double-click to add"
     >
       {/* File Icon and Info */}
@@ -388,7 +388,7 @@ const DraggableFileCard = ({ file }) => {
                 handleViewFile();
               }}
               disabled={isLoading}
-              className="text-blue-500 hover:text-blue-700 transition-colors bg-white rounded-full p-1 shadow-sm"
+              className="text-info hover:text-info transition-colors bg-surface rounded-full p-1 "
               title="View file"
             >
               <Eye className="w-3 h-3" />
@@ -399,7 +399,7 @@ const DraggableFileCard = ({ file }) => {
                 handleDownloadFile();
               }}
               disabled={isLoading}
-              className="text-green-500 hover:text-green-700 transition-colors bg-white rounded-full p-1 shadow-sm"
+              className="text-success hover:text-success transition-colors bg-surface rounded-full p-1 "
               title="Download file"
             >
               <Download className="w-3 h-3" />
@@ -411,7 +411,7 @@ const DraggableFileCard = ({ file }) => {
             e.stopPropagation();
             removeFile(file.id);
           }}
-          className="text-red-500 hover:text-red-700 transition-colors bg-white rounded-full p-1 shadow-sm"
+          className="text-danger hover:text-danger transition-colors bg-surface rounded-full p-1 "
           title="Remove file"
         >
           <X className="w-3 h-3" />
@@ -421,7 +421,7 @@ const DraggableFileCard = ({ file }) => {
       {/* Status indicator */}
       {file.isUploaded && (
         <div className="absolute top-2 left-2 opacity-0 group-hover:opacity-100 transition-opacity">
-          <div className="text-xs text-green-600 bg-green-100 px-2 py-1 rounded-full">
+          <div className="text-xs text-success bg-success/10 px-2 py-1 rounded-full">
             Uploaded
           </div>
         </div>
@@ -429,14 +429,14 @@ const DraggableFileCard = ({ file }) => {
 
       {/* Loading indicator */}
       {isLoading && (
-        <div className="absolute inset-0 bg-white bg-opacity-75 flex items-center justify-center rounded-lg">
-          <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
+        <div className="absolute inset-0 bg-surface bg-opacity-75 flex items-center justify-center rounded-lg">
+          <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-info"></div>
         </div>
       )}
 
       {/* Drag Indicator */}
       <div className="absolute bottom-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
-        <div className="text-xs text-gray-500 bg-white bg-opacity-75 px-2 py-1 rounded">
+        <div className="text-xs text-dim bg-surface bg-opacity-75 px-2 py-1 rounded">
           Drag to canvas
         </div>
       </div>
@@ -474,7 +474,7 @@ const UploadManager = ({ data }) => {
               handleFileSelect();
             }}
             disabled={loading}
-            className="flex items-center space-x-3 px-6 py-4 bg-gradient-to-r from-cyan-500 to-blue-600 text-white rounded-lg hover:from-cyan-600 hover:to-blue-700 transition-all duration-200 shadow-md hover:shadow-lg font-medium mx-auto disabled:opacity-50 disabled:cursor-not-allowed"
+            className="flex items-center space-x-3 px-6 py-4 bg-black text-white rounded-lg hover:from-black hover:to-black transition-all duration-200 font-medium mx-auto disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {loading ? (
               <>
@@ -489,7 +489,7 @@ const UploadManager = ({ data }) => {
             )}
           </button>
           
-          <p className="text-sm text-gray-600 mt-2">
+          <p className="text-sm text-dim mt-2">
             Click to select files to upload
           </p>
           
@@ -506,7 +506,7 @@ const UploadManager = ({ data }) => {
         {/* Uploaded Files Display */}
         {uploadedFiles.length > 0 && (
           <div className="space-y-3">
-            <div className="flex items-center space-x-2 text-sm text-gray-700">
+            <div className="flex items-center space-x-2 text-sm text-ink">
               <FolderOpen className="w-4 h-4" />
               <span>Uploaded Files ({uploadedFiles.length})</span>
             </div>
@@ -523,7 +523,7 @@ const UploadManager = ({ data }) => {
                   e.stopPropagation();
                   handleFileSelect();
                 }}
-                className="flex items-center space-x-2 px-4 py-2 text-sm bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-md transition-colors mx-auto"
+                className="flex items-center space-x-2 px-4 py-2 text-sm bg-surface-hover hover:bg-surface-hover text-ink rounded-md transition-colors mx-auto"
               >
                 <Plus className="w-4 h-4" />
                 <span>Upload More Files</span>
@@ -534,8 +534,8 @@ const UploadManager = ({ data }) => {
 
         {/* Empty State */}
         {uploadedFiles.length === 0 && (
-          <div className="text-center py-8 text-gray-500">
-            <FolderOpen className="w-12 h-12 mx-auto mb-3 text-gray-300" />
+          <div className="text-center py-8 text-dim">
+            <FolderOpen className="w-12 h-12 mx-auto mb-3 text-dim" />
             <p className="text-sm">No files uploaded yet</p>
             <p className="text-xs mt-1">Click the upload button to add files</p>
           </div>
@@ -546,7 +546,7 @@ const UploadManager = ({ data }) => {
 
   // Default fallback
   return (
-    <div className="w-full p-4 text-center text-gray-500">
+    <div className="w-full p-4 text-center text-dim">
       <Upload className="w-8 h-8 mx-auto mb-2" />
       <p className="text-sm">Upload Manager</p>
     </div>

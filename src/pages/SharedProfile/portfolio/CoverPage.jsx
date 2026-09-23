@@ -8,7 +8,7 @@ export default function CoverPage({ companyName, profileImage, tagline, accentCo
   const displayYear = year || new Date().getFullYear();
 
   return (
-    <div pageTitle="Cover" className="relative flex flex-col overflow-hidden bg-white" style={{ minHeight: '1123px' }}>
+    <div pageTitle="Cover" className="relative flex flex-col overflow-hidden bg-surface" style={{ minHeight: '1123px' }}>
       {/* ---- BACKGROUND GEOMETRIC ELEMENTS ---- */}
       {/* Diagonal accent block */}
       <div className="absolute top-0 right-0 h-full" style={{
@@ -21,7 +21,7 @@ export default function CoverPage({ companyName, profileImage, tagline, accentCo
       <svg className="absolute inset-0 w-full h-full opacity-[0.04] pointer-events-none" xmlns="http://www.w3.org/2000/svg">
         <defs>
           <pattern id="coverGrid" width="60" height="60" patternUnits="userSpaceOnUse">
-            <path d="M 60 0 L 0 60" stroke="#000" strokeWidth="0.5" fill="none" />
+            <path d="M 60 0 L 0 60" stroke="currentColor" strokeWidth="0.5" fill="none" />
           </pattern>
         </defs>
         <rect width="100%" height="100%" fill="url(#coverGrid)" />
@@ -45,23 +45,23 @@ export default function CoverPage({ companyName, profileImage, tagline, accentCo
           <div className="flex items-center gap-3">
             {profileImage ? (
               <img src={profileImage} alt={companyName}
-                className="w-14 h-14 rounded-lg object-cover shadow-md border-2 border-white z-[50] relative" />
+                className="w-14 h-14 rounded-lg object-cover  border-2 border-white z-[50] relative" />
             ) : (
-              <div className="w-14 h-14 rounded-lg flex items-center justify-center text-white font-black text-2xl shadow-md"
+              <div className="w-14 h-14 rounded-lg flex items-center justify-center text-white font-black text-2xl "
                 style={{ backgroundColor: accentColor }}>
                 {companyName?.charAt(0)}
               </div>
             )}
             <div>
-              <span className="font-black text-gray-900 text-sm tracking-[0.2em] uppercase block">{companyName}</span>
-              <span className="text-[10px] text-gray-400 tracking-widest uppercase">Company Portfolio</span>
+              <span className="font-black text-ink text-sm tracking-[0.2em] uppercase block">{companyName}</span>
+              <span className="text-[10px] text-dim tracking-widest uppercase">Company Portfolio</span>
               {(gstNumber || panNumber) && (
                 <div className="mt-2 space-y-0.5">
                   {gstNumber && gstNumber !== 'Not provided' && (
-                    <p className="text-[8px] text-gray-500 tracking-widest uppercase font-medium">GST: <span className="font-mono text-gray-700">{gstNumber}</span></p>
+                    <p className="text-[8px] text-dim tracking-widest uppercase font-medium">GST: <span className="font-mono text-ink">{gstNumber}</span></p>
                   )}
                   {panNumber && panNumber !== 'Not provided' && (
-                    <p className="text-[8px] text-gray-500 tracking-widest uppercase font-medium">PAN: <span className="font-mono text-gray-700">{panNumber}</span></p>
+                    <p className="text-[8px] text-dim tracking-widest uppercase font-medium">PAN: <span className="font-mono text-ink">{panNumber}</span></p>
                   )}
                 </div>
               )}
@@ -78,8 +78,8 @@ export default function CoverPage({ companyName, profileImage, tagline, accentCo
         </div>
 
         {/* Left side vertical text accent */}
-        <div className="absolute left-3 top-1/2 -translate-y-1/2 -rotate-90 hidden md:block">
-          <span className="text-[9px] tracking-[0.4em] text-gray-300 uppercase font-semibold whitespace-nowrap">
+        <div className="absolute left-3 top-1/2 -translate-y-1/2  -rotate-90 hidden md:block">
+          <span className="text-[9px] tracking-[0.4em] text-dim uppercase font-semibold whitespace-nowrap">
             Company Portfolio {displayYear}
           </span>
         </div>
@@ -95,19 +95,19 @@ export default function CoverPage({ companyName, profileImage, tagline, accentCo
                 <div className="w-3 h-[3px]" style={{ backgroundColor: accentColor }} />
               </div>
 
-              <h1 className="text-gray-900 mb-2">
-                <span className="block text-lg font-semibold tracking-[0.3em] uppercase text-gray-500 mb-1">Company</span>
+              <h1 className="text-ink mb-2">
+                <span className="block text-lg font-semibold tracking-[0.3em] uppercase text-dim mb-1">Company</span>
                 <span className="block text-7xl md:text-[90px] font-black leading-[0.85] tracking-tight">
                   PROFILE
                 </span>
               </h1>
 
-              <p className="text-xs text-gray-400 uppercase tracking-[0.25em] mt-6 mb-8 font-medium">
+              <p className="text-xs text-dim uppercase tracking-[0.25em] mt-6 mb-8 font-medium">
                 Grow Your Business To The Next Level
               </p>
 
               {tagline && (
-                <p className="text-gray-600 text-sm leading-relaxed max-w-xs border-l-2 pl-4 italic"
+                <p className="text-dim text-sm leading-relaxed max-w-xs border-l-2 pl-4 italic"
                   style={{ borderColor: accentColor }}>
                   {tagline}
                 </p>
@@ -159,13 +159,13 @@ export default function CoverPage({ companyName, profileImage, tagline, accentCo
               style={{ backgroundColor: accentColor }}>
               prepared by
             </div>
-            <span className="font-black text-gray-900 uppercase tracking-wider text-sm">{companyName}</span>
+            <span className="font-black text-ink uppercase tracking-wider text-sm">{companyName}</span>
           </div>
 
           {/* Bottom-right decorative dots */}
           <div className="flex gap-1.5">
             {[...Array(4)].map((_, i) => (
-              <div key={i} className="w-2 h-2 rounded-full" style={{ backgroundColor: i === 0 ? accentColor : '#ddd' }} />
+              <div key={i} className="w-2 h-2 rounded-full" style={{ backgroundColor: i === 0 ? accentColor: 'rgb(var(--surface-hover))' }} />
             ))}
           </div>
         </div>

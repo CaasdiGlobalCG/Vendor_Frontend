@@ -309,13 +309,13 @@ const VinylFlooringCalculator = ({ data, nodeId, workspaceId, setNodes }) => {
 
   const ConfigModal = () => (
     <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center">
-      <div className="bg-white rounded-lg shadow-2xl w-full max-w-4xl max-h-[92vh] overflow-y-auto">
-        <div className="sticky top-0 bg-white border-b border-gray-200 p-4 flex justify-between items-center">
+      <div className="bg-surface rounded-lg shadow-2xl w-full max-w-4xl max-h-[92vh] overflow-y-auto">
+        <div className="sticky top-0 bg-surface border-b border-line p-4 flex justify-between items-center">
           <div>
-            <h3 className="text-xl font-bold text-gray-900">Vinyl Flooring Calculator</h3>
-            <p className="text-sm text-gray-600 mt-1">Professional contractor-grade estimator</p>
+            <h3 className="text-xl font-bold text-ink">Vinyl Flooring Calculator</h3>
+            <p className="text-sm text-dim mt-1">Professional contractor-grade estimator</p>
           </div>
-          <button onClick={() => setShowConfigModal(false)} className="text-gray-400 hover:text-gray-600">
+          <button onClick={() => setShowConfigModal(false)} className="text-dim hover:text-dim">
             <X size={24} />
           </button>
         </div>
@@ -323,7 +323,7 @@ const VinylFlooringCalculator = ({ data, nodeId, workspaceId, setNodes }) => {
         <div className="p-6 space-y-4">
           {/* Flooring Type Selector */}
           <div className="space-y-2">
-            <label className="block text-sm font-bold text-gray-900">Flooring Type</label>
+            <label className="block text-sm font-bold text-ink">Flooring Type</label>
             <div className="grid grid-cols-4 gap-2">
               {[
                 { id: 'sheet', label: '🌊 Vinyl Sheet' },
@@ -336,8 +336,8 @@ const VinylFlooringCalculator = ({ data, nodeId, workspaceId, setNodes }) => {
                   onClick={() => setFlooringType(type.id)}
                   className={`p-3 rounded-lg border-2 transition-all text-left font-medium text-xs ${
                     flooringType === type.id
-                      ? 'border-blue-600 bg-blue-50'
-                      : 'border-gray-200 bg-white hover:border-blue-400'
+                      ? 'border-info bg-info/10'
+                      : 'border-line bg-surface hover:border-info'
                   }`}
                 >
                   {type.label}
@@ -347,49 +347,49 @@ const VinylFlooringCalculator = ({ data, nodeId, workspaceId, setNodes }) => {
           </div>
 
           {/* General Inputs */}
-          <div className="border-t border-gray-200 pt-4 space-y-4">
+          <div className="border-t border-line pt-4 space-y-4">
             <div className="grid grid-cols-4 gap-3">
               <div>
-                <label htmlFor="unit" className="block text-xs font-medium text-gray-700">Unit</label>
-                <select id="unit" value={unit} onChange={(e) => setUnit(e.target.value)} className="w-full px-2 py-2 border border-gray-300 rounded text-sm">
+                <label htmlFor="unit" className="block text-xs font-medium text-ink">Unit</label>
+                <select id="unit" value={unit} onChange={(e) => setUnit(e.target.value)} className="w-full px-2 py-2 border border-line rounded text-sm">
                   <option value="meter">Meter (m)</option>
                   <option value="feet">Feet (ft)</option>
                 </select>
               </div>
               <div>
-                <label htmlFor="roomLength" className="block text-xs font-medium text-gray-700">Length ({unit === 'meter' ? 'm' : 'ft'})</label>
-                <input id="roomLength" type="number" value={roomLength} onChange={(e) => setRoomLength(e.target.value)} className="w-full px-2 py-2 border border-gray-300 rounded text-sm" step="0.1" />
+                <label htmlFor="roomLength" className="block text-xs font-medium text-ink">Length ({unit === 'meter' ? 'm' : 'ft'})</label>
+                <input id="roomLength" type="number" value={roomLength} onChange={(e) => setRoomLength(e.target.value)} className="w-full px-2 py-2 border border-line rounded text-sm" step="0.1" />
               </div>
               <div>
-                <label htmlFor="roomWidth" className="block text-xs font-medium text-gray-700">Width ({unit === 'meter' ? 'm' : 'ft'})</label>
-                <input id="roomWidth" type="number" value={roomWidth} onChange={(e) => setRoomWidth(e.target.value)} className="w-full px-2 py-2 border border-gray-300 rounded text-sm" step="0.1" />
+                <label htmlFor="roomWidth" className="block text-xs font-medium text-ink">Width ({unit === 'meter' ? 'm' : 'ft'})</label>
+                <input id="roomWidth" type="number" value={roomWidth} onChange={(e) => setRoomWidth(e.target.value)} className="w-full px-2 py-2 border border-line rounded text-sm" step="0.1" />
               </div>
               <div>
-                <label htmlFor="wastage" className="block text-xs font-medium text-gray-700">Wastage (%)</label>
-                <input id="wastage" type="number" value={wastagePercent} onChange={(e) => setWastagePercent(e.target.value)} className="w-full px-2 py-2 border border-gray-300 rounded text-sm" step="0.1" />
+                <label htmlFor="wastage" className="block text-xs font-medium text-ink">Wastage (%)</label>
+                <input id="wastage" type="number" value={wastagePercent} onChange={(e) => setWastagePercent(e.target.value)} className="w-full px-2 py-2 border border-line rounded text-sm" step="0.1" />
               </div>
             </div>
 
             <div className="grid grid-cols-3 gap-3">
               <div>
-                <label htmlFor="installation" className="block text-xs font-medium text-gray-700">Installation Type</label>
-                <select id="installation" value={installationType} onChange={(e) => setInstallationType(e.target.value)} className="w-full px-2 py-2 border border-gray-300 rounded text-sm">
+                <label htmlFor="installation" className="block text-xs font-medium text-ink">Installation Type</label>
+                <select id="installation" value={installationType} onChange={(e) => setInstallationType(e.target.value)} className="w-full px-2 py-2 border border-line rounded text-sm">
                   <option value="glue-down">Glue-down</option>
                   <option value="click-lock">Click-lock (Floating)</option>
                   <option value="loose-lay">Loose Lay</option>
                 </select>
               </div>
               <div>
-                <label htmlFor="traffic" className="block text-xs font-medium text-gray-700">Traffic Grade</label>
-                <select id="traffic" value={trafficGrade} onChange={(e) => setTrafficGrade(e.target.value)} className="w-full px-2 py-2 border border-gray-300 rounded text-sm">
+                <label htmlFor="traffic" className="block text-xs font-medium text-ink">Traffic Grade</label>
+                <select id="traffic" value={trafficGrade} onChange={(e) => setTrafficGrade(e.target.value)} className="w-full px-2 py-2 border border-line rounded text-sm">
                   <option value="residential">Residential</option>
                   <option value="light-commercial">Light Commercial</option>
                   <option value="heavy-commercial">Heavy Commercial</option>
                 </select>
               </div>
               <div>
-                <label htmlFor="thickness" className="block text-xs font-medium text-gray-700">Thickness</label>
-                <select id="thickness" value={thickness} onChange={(e) => setThickness(e.target.value)} className="w-full px-2 py-2 border border-gray-300 rounded text-sm">
+                <label htmlFor="thickness" className="block text-xs font-medium text-ink">Thickness</label>
+                <select id="thickness" value={thickness} onChange={(e) => setThickness(e.target.value)} className="w-full px-2 py-2 border border-line rounded text-sm">
                   {THICKNESS_OPTIONS.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
                 </select>
               </div>
@@ -398,24 +398,24 @@ const VinylFlooringCalculator = ({ data, nodeId, workspaceId, setNodes }) => {
 
           {/* Sheet-specific inputs */}
           {(flooringType === 'sheet' || flooringType === 'roll') && (
-            <div className="border-t border-gray-200 pt-4 space-y-4">
-              <label className="block text-sm font-bold text-gray-900">Sheet Specifications</label>
+            <div className="border-t border-line pt-4 space-y-4">
+              <label className="block text-sm font-bold text-ink">Sheet Specifications</label>
               <div className="grid grid-cols-4 gap-3">
                 <div>
-                  <label htmlFor="rollWidth" className="block text-xs font-medium text-gray-700">Roll Width (m)</label>
-                  <input id="rollWidth" type="number" value={rollWidth} onChange={(e) => setRollWidth(e.target.value)} className="w-full px-2 py-2 border border-gray-300 rounded text-sm" step="0.1" />
+                  <label htmlFor="rollWidth" className="block text-xs font-medium text-ink">Roll Width (m)</label>
+                  <input id="rollWidth" type="number" value={rollWidth} onChange={(e) => setRollWidth(e.target.value)} className="w-full px-2 py-2 border border-line rounded text-sm" step="0.1" />
                 </div>
                 <div>
-                  <label htmlFor="rollLength" className="block text-xs font-medium text-gray-700">Roll Length (m) (optional)</label>
-                  <input id="rollLength" type="number" value={rollLength} onChange={(e) => setRollLength(e.target.value)} className="w-full px-2 py-2 border border-gray-300 rounded text-sm" step="0.1" />
+                  <label htmlFor="rollLength" className="block text-xs font-medium text-ink">Roll Length (m) (optional)</label>
+                  <input id="rollLength" type="number" value={rollLength} onChange={(e) => setRollLength(e.target.value)} className="w-full px-2 py-2 border border-line rounded text-sm" step="0.1" />
                 </div>
                 <div>
-                  <label htmlFor="seamAllowance" className="block text-xs font-medium text-gray-700">Seam Allowance (%)</label>
-                  <input id="seamAllowance" type="number" value={seamAllowance} onChange={(e) => setSeamAllowance(e.target.value)} className="w-full px-2 py-2 border border-gray-300 rounded text-sm" step="0.1" />
+                  <label htmlFor="seamAllowance" className="block text-xs font-medium text-ink">Seam Allowance (%)</label>
+                  <input id="seamAllowance" type="number" value={seamAllowance} onChange={(e) => setSeamAllowance(e.target.value)} className="w-full px-2 py-2 border border-line rounded text-sm" step="0.1" />
                 </div>
                 <div>
-                  <label htmlFor="expansionGap" className="block text-xs font-medium text-gray-700">Expansion Gap (mm)</label>
-                  <input id="expansionGap" type="number" value={expansionGap} onChange={(e) => setExpansionGap(e.target.value)} className="w-full px-2 py-2 border border-gray-300 rounded text-sm" />
+                  <label htmlFor="expansionGap" className="block text-xs font-medium text-ink">Expansion Gap (mm)</label>
+                  <input id="expansionGap" type="number" value={expansionGap} onChange={(e) => setExpansionGap(e.target.value)} className="w-full px-2 py-2 border border-line rounded text-sm" />
                 </div>
               </div>
             </div>
@@ -423,24 +423,24 @@ const VinylFlooringCalculator = ({ data, nodeId, workspaceId, setNodes }) => {
 
           {/* Plank/Tile-specific inputs */}
           {(flooringType === 'plank' || flooringType === 'tile') && (
-            <div className="border-t border-gray-200 pt-4 space-y-4">
-              <label className="block text-sm font-bold text-gray-900">Plank/Tile Specifications</label>
+            <div className="border-t border-line pt-4 space-y-4">
+              <label className="block text-sm font-bold text-ink">Plank/Tile Specifications</label>
               <div className="grid grid-cols-4 gap-3">
                 <div>
-                  <label htmlFor="plankLength" className="block text-xs font-medium text-gray-700">Length (m)</label>
-                  <input id="plankLength" type="number" value={plankLength} onChange={(e) => setPlankLength(e.target.value)} className="w-full px-2 py-2 border border-gray-300 rounded text-sm" step="0.01" />
+                  <label htmlFor="plankLength" className="block text-xs font-medium text-ink">Length (m)</label>
+                  <input id="plankLength" type="number" value={plankLength} onChange={(e) => setPlankLength(e.target.value)} className="w-full px-2 py-2 border border-line rounded text-sm" step="0.01" />
                 </div>
                 <div>
-                  <label htmlFor="plankWidth" className="block text-xs font-medium text-gray-700">Width (m)</label>
-                  <input id="plankWidth" type="number" value={plankWidth} onChange={(e) => setPlankWidth(e.target.value)} className="w-full px-2 py-2 border border-gray-300 rounded text-sm" step="0.01" />
+                  <label htmlFor="plankWidth" className="block text-xs font-medium text-ink">Width (m)</label>
+                  <input id="plankWidth" type="number" value={plankWidth} onChange={(e) => setPlankWidth(e.target.value)} className="w-full px-2 py-2 border border-line rounded text-sm" step="0.01" />
                 </div>
                 <div>
-                  <label htmlFor="piecesPerBox" className="block text-xs font-medium text-gray-700">Pieces/Box</label>
-                  <input id="piecesPerBox" type="number" value={piecesPerBox} onChange={(e) => setPiecesPerBox(e.target.value)} className="w-full px-2 py-2 border border-gray-300 rounded text-sm" />
+                  <label htmlFor="piecesPerBox" className="block text-xs font-medium text-ink">Pieces/Box</label>
+                  <input id="piecesPerBox" type="number" value={piecesPerBox} onChange={(e) => setPiecesPerBox(e.target.value)} className="w-full px-2 py-2 border border-line rounded text-sm" />
                 </div>
                 <div>
-                  <label htmlFor="pattern" className="block text-xs font-medium text-gray-700">Pattern</label>
-                  <select id="pattern" value={patternLayout} onChange={(e) => setPatternLayout(e.target.value)} className="w-full px-2 py-2 border border-gray-300 rounded text-sm">
+                  <label htmlFor="pattern" className="block text-xs font-medium text-ink">Pattern</label>
+                  <select id="pattern" value={patternLayout} onChange={(e) => setPatternLayout(e.target.value)} className="w-full px-2 py-2 border border-line rounded text-sm">
                     <option value="straight">Straight</option>
                     <option value="staggered">Staggered (+5%)</option>
                     <option value="herringbone">Herringbone (+12%)</option>
@@ -451,39 +451,39 @@ const VinylFlooringCalculator = ({ data, nodeId, workspaceId, setNodes }) => {
           )}
 
           {/* Cost inputs */}
-          <div className="border-t border-gray-200 pt-4 space-y-4">
-            <label className="block text-sm font-bold text-gray-900">Cost Information</label>
+          <div className="border-t border-line pt-4 space-y-4">
+            <label className="block text-sm font-bold text-ink">Cost Information</label>
             <div className="grid grid-cols-3 gap-3">
               <div>
-                <label htmlFor="costPerM2" className="block text-xs font-medium text-gray-700">Cost per m² ({currency})</label>
-                <input id="costPerM2" type="number" value={costPerM2} onChange={(e) => setCostPerM2(e.target.value)} className="w-full px-2 py-2 border border-gray-300 rounded text-sm" />
+                <label htmlFor="costPerM2" className="block text-xs font-medium text-ink">Cost per m² ({currency})</label>
+                <input id="costPerM2" type="number" value={costPerM2} onChange={(e) => setCostPerM2(e.target.value)} className="w-full px-2 py-2 border border-line rounded text-sm" />
               </div>
               <div>
-                <label htmlFor="adhesiveCost" className="block text-xs font-medium text-gray-700">Adhesive/Bucket ({currency})</label>
-                <input id="adhesiveCost" type="number" value={adhesiveCost} onChange={(e) => setAdhesiveCost(e.target.value)} className="w-full px-2 py-2 border border-gray-300 rounded text-sm" />
+                <label htmlFor="adhesiveCost" className="block text-xs font-medium text-ink">Adhesive/Bucket ({currency})</label>
+                <input id="adhesiveCost" type="number" value={adhesiveCost} onChange={(e) => setAdhesiveCost(e.target.value)} className="w-full px-2 py-2 border border-line rounded text-sm" />
               </div>
               <div>
-                <label htmlFor="laborCost" className="block text-xs font-medium text-gray-700">Labor per m² ({currency})</label>
-                <input id="laborCost" type="number" value={laborCostPerM2} onChange={(e) => setLaborCostPerM2(e.target.value)} className="w-full px-2 py-2 border border-gray-300 rounded text-sm" />
+                <label htmlFor="laborCost" className="block text-xs font-medium text-ink">Labor per m² ({currency})</label>
+                <input id="laborCost" type="number" value={laborCostPerM2} onChange={(e) => setLaborCostPerM2(e.target.value)} className="w-full px-2 py-2 border border-line rounded text-sm" />
               </div>
             </div>
           </div>
 
           {/* Validation Errors */}
           {validationErrors.length > 0 && (
-            <div className="bg-red-50 border-l-4 border-red-400 p-3 rounded">
-              <ul className="list-disc list-inside text-xs text-red-800 space-y-1">
+            <div className="bg-danger/10 border-l-4 border-danger p-3 rounded">
+              <ul className="list-disc list-inside text-xs text-danger space-y-1">
                 {validationErrors.map((err, i) => <li key={i}>{err}</li>)}
               </ul>
             </div>
           )}
 
           {/* Action Buttons */}
-          <div className="grid grid-cols-2 gap-3 pt-4 border-t border-gray-200">
-            <button onClick={() => setShowConfigModal(false)} className="bg-gray-200 hover:bg-gray-300 text-gray-900 font-bold py-2 rounded-lg text-sm">
+          <div className="grid grid-cols-2 gap-3 pt-4 border-t border-line">
+            <button onClick={() => setShowConfigModal(false)} className="bg-surface-hover hover:bg-surface-hover text-ink font-bold py-2 rounded-lg text-sm">
               Cancel
             </button>
-            <button onClick={runCalculation} className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 rounded-lg text-sm">
+            <button onClick={runCalculation} className="bg-info hover:bg-info text-white font-bold py-2 rounded-lg text-sm">
               Calculate Estimate
             </button>
           </div>
@@ -494,10 +494,10 @@ const VinylFlooringCalculator = ({ data, nodeId, workspaceId, setNodes }) => {
 
   const DetailsModal = () => (
     <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center">
-      <div className="bg-white rounded-lg shadow-2xl w-full max-w-3xl max-h-[92vh] overflow-y-auto">
-        <div className="sticky top-0 bg-white border-b border-gray-200 p-4 flex justify-between items-center">
-          <h3 className="text-xl font-bold text-gray-900">Professional Flooring Breakdown</h3>
-          <button onClick={() => setShowDetailsModal(false)} className="text-gray-400 hover:text-gray-600">
+      <div className="bg-surface rounded-lg shadow-2xl w-full max-w-3xl max-h-[92vh] overflow-y-auto">
+        <div className="sticky top-0 bg-surface border-b border-line p-4 flex justify-between items-center">
+          <h3 className="text-xl font-bold text-ink">Professional Flooring Breakdown</h3>
+          <button onClick={() => setShowDetailsModal(false)} className="text-dim hover:text-dim">
             <X size={24} />
           </button>
         </div>
@@ -505,30 +505,30 @@ const VinylFlooringCalculator = ({ data, nodeId, workspaceId, setNodes }) => {
         {results && (
           <div className="p-6 space-y-4">
             {/* Coverage Summary */}
-            <div className="bg-blue-50 border-2 border-blue-200 rounded-lg p-4">
-              <p className="text-sm font-bold text-gray-900 mb-3">Coverage Summary</p>
+            <div className="bg-info/10 border-2 border-info/20 rounded-lg p-4">
+              <p className="text-sm font-bold text-ink mb-3">Coverage Summary</p>
               <div className="space-y-2 text-sm">
                 <div className="flex justify-between"><span>Base Room Area</span><span className="font-bold">{results.baseArea} m²</span></div>
                 <div className="flex justify-between"><span>Wastage Applied</span><span className="font-bold">{results.wastagePercent}%</span></div>
                 <div className="flex justify-between"><span>Pattern Factor</span><span className="font-bold">{PATTERN_FACTORS[results.patternLayout] || 1}x</span></div>
-                <div className="flex justify-between pt-2 border-t font-bold text-lg"><span>Total Adjusted Area</span><span className="text-blue-600">{results.adjustedArea} m²</span></div>
+                <div className="flex justify-between pt-2 border-t font-bold text-lg"><span>Total Adjusted Area</span><span className="text-info">{results.adjustedArea} m²</span></div>
               </div>
             </div>
 
             {/* Material Requirements */}
-            <div className="border border-gray-200 rounded-lg overflow-hidden">
-              <div className="bg-gray-50 p-3 border-b font-bold text-sm">Material Requirements</div>
+            <div className="border border-line rounded-lg overflow-hidden">
+              <div className="bg-canvas p-3 border-b font-bold text-sm">Material Requirements</div>
               <div className="p-4 space-y-2 text-sm">
                 {results.materials.rollsRequired && (
                   <>
-                    <div className="flex justify-between"><span>Rolls Required</span><span className="font-bold text-blue-600">{results.materials.rollsRequired}</span></div>
+                    <div className="flex justify-between"><span>Rolls Required</span><span className="font-bold text-info">{results.materials.rollsRequired}</span></div>
                     <div className="flex justify-between"><span>Estimated Seams</span><span className="font-bold">{results.materials.seamCount}</span></div>
                   </>
                 )}
                 {results.materials.tilesRequired && (
                   <>
-                    <div className="flex justify-between"><span>Total {results.flooringType === 'plank' ? 'Planks' : 'Tiles'}</span><span className="font-bold text-blue-600">{results.materials.tilesRequired}</span></div>
-                    <div className="flex justify-between"><span>Boxes Required</span><span className="font-bold text-blue-600">{results.materials.boxesRequired}</span></div>
+                    <div className="flex justify-between"><span>Total {results.flooringType === 'plank' ? 'Planks' : 'Tiles'}</span><span className="font-bold text-info">{results.materials.tilesRequired}</span></div>
+                    <div className="flex justify-between"><span>Boxes Required</span><span className="font-bold text-info">{results.materials.boxesRequired}</span></div>
                   </>
                 )}
                 <div className="flex justify-between pt-2 border-t"><span>Adhesive Buckets</span><span className="font-bold">{results.materials.adhesive.bucketsRequired}</span></div>
@@ -543,8 +543,8 @@ const VinylFlooringCalculator = ({ data, nodeId, workspaceId, setNodes }) => {
             </div>
 
             {/* Cost Breakdown */}
-            <div className="border border-gray-200 rounded-lg overflow-hidden">
-              <div className="bg-gray-50 p-3 border-b font-bold text-sm">Cost Breakdown ({currency})</div>
+            <div className="border border-line rounded-lg overflow-hidden">
+              <div className="bg-canvas p-3 border-b font-bold text-sm">Cost Breakdown ({currency})</div>
               <div className="p-4 space-y-2 text-sm">
                 <div className="flex justify-between"><span>Vinyl Material</span><span>{currency}{results.costs.vinylCost.toLocaleString()}</span></div>
                 {results.costs.boxCost > 0 && (
@@ -556,13 +556,13 @@ const VinylFlooringCalculator = ({ data, nodeId, workspaceId, setNodes }) => {
                 )}
                 <div className="flex justify-between pt-2 border-t"><span>Material Subtotal</span><span className="font-bold">{currency}{results.costs.totalMaterialCost.toLocaleString()}</span></div>
                 <div className="flex justify-between"><span>Labor Cost</span><span className="font-bold">{currency}{results.costs.laborCost.toLocaleString()}</span></div>
-                <div className="flex justify-between pt-2 border-t font-bold text-lg"><span>Grand Total</span><span className="text-green-600">{currency}{results.costs.grandTotal.toLocaleString()}</span></div>
+                <div className="flex justify-between pt-2 border-t font-bold text-lg"><span>Grand Total</span><span className="text-success">{currency}{results.costs.grandTotal.toLocaleString()}</span></div>
               </div>
             </div>
 
             {/* Layout Notes */}
-            <div className="border border-gray-200 rounded-lg overflow-hidden">
-              <div className="bg-gray-50 p-3 border-b font-bold text-sm">Installation Notes</div>
+            <div className="border border-line rounded-lg overflow-hidden">
+              <div className="bg-canvas p-3 border-b font-bold text-sm">Installation Notes</div>
               <div className="p-4 space-y-2 text-sm">
                 <div><span className="font-bold">Type:</span> {results.flooringType.toUpperCase()}</div>
                 <div><span className="font-bold">Installation:</span> {results.installationType.toUpperCase()}</div>
@@ -572,7 +572,7 @@ const VinylFlooringCalculator = ({ data, nodeId, workspaceId, setNodes }) => {
               </div>
             </div>
 
-            <button onClick={() => setShowDetailsModal(false)} className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 rounded-lg text-sm">
+            <button onClick={() => setShowDetailsModal(false)} className="w-full bg-info hover:bg-info text-white font-bold py-2 rounded-lg text-sm">
               Close
             </button>
           </div>
@@ -583,57 +583,57 @@ const VinylFlooringCalculator = ({ data, nodeId, workspaceId, setNodes }) => {
 
   // ==================== MAIN RENDER ====================
   return (
-    <div className="w-full bg-white rounded-lg shadow-lg p-6">
+    <div className="w-full bg-surface rounded-lg shadow-lg p-6">
       {!results ? (
         <div className="space-y-4">
           <div>
-            <h3 className="text-lg font-bold text-gray-900">Professional Vinyl Flooring</h3>
-            <p className="text-xs text-gray-600 mt-1">Contractor-grade cost estimator</p>
+            <h3 className="text-lg font-bold text-ink">Professional Vinyl Flooring</h3>
+            <p className="text-xs text-dim mt-1">Contractor-grade cost estimator</p>
           </div>
-          <button onClick={() => setShowConfigModal(true)} className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg transition-colors text-sm">
+          <button onClick={() => setShowConfigModal(true)} className="w-full bg-info hover:bg-info text-white font-bold py-3 px-4 rounded-lg transition-colors text-sm">
             Start Estimation
           </button>
         </div>
       ) : (
         <div className="space-y-4">
           <div className="grid grid-cols-2 gap-3">
-            <div className="bg-blue-50 border-2 border-blue-200 p-4 rounded-lg">
-              <p className="text-xs text-gray-600">Total Area to Cover</p>
-              <p className="text-2xl font-bold text-blue-600">{results.adjustedArea}</p>
-              <p className="text-xs text-gray-600">m² (with {results.wastagePercent}% wastage)</p>
-              <button onClick={() => setShowDetailsModal(true)} className="mt-2 text-blue-600 hover:text-blue-800 flex items-center gap-1 text-xs">
+            <div className="bg-info/10 border-2 border-info/20 p-4 rounded-lg">
+              <p className="text-xs text-dim">Total Area to Cover</p>
+              <p className="text-2xl font-bold text-info">{results.adjustedArea}</p>
+              <p className="text-xs text-dim">m² (with {results.wastagePercent}% wastage)</p>
+              <button onClick={() => setShowDetailsModal(true)} className="mt-2 text-info hover:text-info flex items-center gap-1 text-xs">
                 <Info size={14} /> Details
               </button>
             </div>
 
-            <div className="bg-green-50 border-2 border-green-200 p-4 rounded-lg">
-              <p className="text-xs text-gray-600">Total Estimated Cost</p>
-              <p className="text-2xl font-bold text-green-600">{currency}{results.costs.grandTotal.toLocaleString()}</p>
-              <p className="text-xs text-gray-600">Material + Labor</p>
+            <div className="bg-success/10 border-2 border-success/20 p-4 rounded-lg">
+              <p className="text-xs text-dim">Total Estimated Cost</p>
+              <p className="text-2xl font-bold text-success">{currency}{results.costs.grandTotal.toLocaleString()}</p>
+              <p className="text-xs text-dim">Material + Labor</p>
             </div>
 
             {results.materials.boxesRequired && (
-              <div className="bg-purple-50 border-2 border-purple-200 p-4 rounded-lg">
-                <p className="text-xs text-gray-600">Boxes Required</p>
-                <p className="text-2xl font-bold text-purple-600">{results.materials.boxesRequired}</p>
-                <p className="text-xs text-gray-600">{results.materials.tilesRequired} pieces</p>
+              <div className="bg-surface-hover border-2 border-line p-4 rounded-lg">
+                <p className="text-xs text-dim">Boxes Required</p>
+                <p className="text-2xl font-bold text-ink">{results.materials.boxesRequired}</p>
+                <p className="text-xs text-dim">{results.materials.tilesRequired} pieces</p>
               </div>
             )}
 
             {results.materials.rollsRequired && (
-              <div className="bg-orange-50 border-2 border-orange-200 p-4 rounded-lg">
-                <p className="text-xs text-gray-600">Rolls Required</p>
-                <p className="text-2xl font-bold text-orange-600">{results.materials.rollsRequired}</p>
-                <p className="text-xs text-gray-600">{results.materials.seamCount} seams</p>
+              <div className="bg-warning/10 border-2 border-warning/20 p-4 rounded-lg">
+                <p className="text-xs text-dim">Rolls Required</p>
+                <p className="text-2xl font-bold text-warning">{results.materials.rollsRequired}</p>
+                <p className="text-xs text-dim">{results.materials.seamCount} seams</p>
               </div>
             )}
           </div>
 
           <div className="grid grid-cols-2 gap-2 pt-2">
-            <button onClick={handleReset} className="bg-gray-200 hover:bg-gray-300 text-gray-900 font-bold py-2 rounded-lg transition-colors flex items-center justify-center gap-2 text-sm">
+            <button onClick={handleReset} className="bg-surface-hover hover:bg-surface-hover text-ink font-bold py-2 rounded-lg transition-colors flex items-center justify-center gap-2 text-sm">
               <RotateCcw size={16} /> Reset
             </button>
-            <button onClick={() => setShowConfigModal(true)} className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 rounded-lg transition-colors text-sm">
+            <button onClick={() => setShowConfigModal(true)} className="bg-info hover:bg-info text-white font-bold py-2 rounded-lg transition-colors text-sm">
               Edit Estimation
             </button>
           </div>

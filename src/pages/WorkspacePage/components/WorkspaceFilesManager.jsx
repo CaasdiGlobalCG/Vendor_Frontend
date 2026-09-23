@@ -44,23 +44,23 @@ const WorkspaceFilesManager = ({
     const extension = fileName?.split('.').pop()?.toLowerCase();
     
     if (fileType?.startsWith('image/') || ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'svg', 'webp'].includes(extension)) {
-      return <Image className="w-8 h-8 text-blue-500" />;
+      return <Image className="w-8 h-8 text-info" />;
     } else if (fileType?.includes('pdf') || extension === 'pdf') {
-      return <FileText className="w-8 h-8 text-red-500" />;
+      return <FileText className="w-8 h-8 text-danger" />;
     } else if (fileType?.includes('word') || fileType?.includes('document') || ['doc', 'docx'].includes(extension)) {
-      return <FileText className="w-8 h-8 text-blue-600" />;
+      return <FileText className="w-8 h-8 text-info" />;
     } else if (fileType?.includes('excel') || fileType?.includes('spreadsheet') || ['xls', 'xlsx', 'csv'].includes(extension)) {
-      return <FileSpreadsheet className="w-8 h-8 text-green-600" />;
+      return <FileSpreadsheet className="w-8 h-8 text-success" />;
     } else if (fileType?.includes('powerpoint') || fileType?.includes('presentation') || ['ppt', 'pptx'].includes(extension)) {
-      return <FileText className="w-8 h-8 text-orange-600" />;
+      return <FileText className="w-8 h-8 text-warning" />;
     } else if (fileType?.includes('zip') || fileType?.includes('rar') || fileType?.includes('7z') || ['zip', 'rar', '7z', 'gz', 'tar'].includes(extension)) {
-      return <Archive className="w-8 h-8 text-purple-500" />;
+      return <Archive className="w-8 h-8 text-ink" />;
     } else if (fileType?.startsWith('audio/') || ['mp3', 'wav', 'ogg', 'm4a'].includes(extension)) {
-      return <Music className="w-8 h-8 text-pink-500" />;
+      return <Music className="w-8 h-8 text-ink" />;
     } else if (fileType?.startsWith('video/') || ['mp4', 'avi', 'mov', 'webm', 'mkv'].includes(extension)) {
-      return <Video className="w-8 h-8 text-indigo-500" />;
+      return <Video className="w-8 h-8 text-info" />;
     } else {
-      return <File className="w-8 h-8 text-gray-500" />;
+      return <File className="w-8 h-8 text-dim" />;
     }
   };
 
@@ -176,21 +176,21 @@ const WorkspaceFilesManager = ({
   };
 
   return (
-    <div className="w-full h-full bg-white rounded-lg shadow-sm border border-gray-200">
+    <div className="w-full h-full bg-surface rounded-lg  border border-line">
       {/* Header */}
-      <div className="p-4 border-b border-gray-200">
+      <div className="p-4 border-b border-line">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center space-x-2">
-            <FolderOpen className="w-5 h-5 text-blue-600" />
-            <h2 className="text-lg font-semibold text-gray-900">Workspace Files</h2>
-            <span className="text-sm text-gray-500">({filteredAndSortedFiles.length} files)</span>
+            <FolderOpen className="w-5 h-5 text-info" />
+            <h2 className="text-lg font-semibold text-ink">Workspace Files</h2>
+            <span className="text-sm text-dim">({filteredAndSortedFiles.length} files)</span>
           </div>
           
           <div className="flex items-center space-x-2">
             <button
               onClick={() => refreshFiles()}
               disabled={loading}
-              className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+              className="p-2 text-dim hover:text-ink hover:bg-surface-hover rounded-lg transition-colors"
               title="Refresh files"
             >
               <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
@@ -198,7 +198,7 @@ const WorkspaceFilesManager = ({
             
             <button
               onClick={() => setShowUploadModal(true)}
-              className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+              className="flex items-center space-x-2 px-4 py-2 bg-info text-white rounded-lg hover:bg-info transition-colors"
             >
               <Upload className="w-4 h-4" />
               <span>Upload Files</span>
@@ -209,20 +209,20 @@ const WorkspaceFilesManager = ({
         {/* Search and Filters */}
         <div className="flex items-center space-x-4">
           <div className="flex-1 relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 transform  w-4 h-4 text-dim" />
             <input
               type="text"
               placeholder="Search files..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full pl-10 pr-4 py-2 border border-line rounded-lg focus:ring-2 focus:ring-info focus:border-transparent"
             />
           </div>
           
           <select
             value={filterType}
             onChange={(e) => setFilterType(e.target.value)}
-            className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="px-3 py-2 border border-line rounded-lg focus:ring-2 focus:ring-info focus:border-transparent"
           >
             <option value="all">All Files</option>
             <option value="images">Images</option>
@@ -239,7 +239,7 @@ const WorkspaceFilesManager = ({
               setSortBy(sort);
               setSortOrder(order);
             }}
-            className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="px-3 py-2 border border-line rounded-lg focus:ring-2 focus:ring-info focus:border-transparent"
           >
             <option value="date-desc">Newest First</option>
             <option value="date-asc">Oldest First</option>
@@ -249,17 +249,17 @@ const WorkspaceFilesManager = ({
             <option value="size-asc">Smallest First</option>
           </select>
           
-          <div className="flex border border-gray-300 rounded-lg">
+          <div className="flex border border-line rounded-lg">
             <button
               onClick={() => setViewMode('grid')}
-              className={`p-2 ${viewMode === 'grid' ? 'bg-blue-100 text-blue-600' : 'text-gray-500 hover:text-gray-700'} transition-colors`}
+              className={`p-2 ${viewMode === 'grid' ? 'bg-info/10 text-info' : 'text-dim hover:text-ink'} transition-colors`}
               title="Grid view"
             >
               <Grid className="w-4 h-4" />
             </button>
             <button
               onClick={() => setViewMode('list')}
-              className={`p-2 ${viewMode === 'list' ? 'bg-blue-100 text-blue-600' : 'text-gray-500 hover:text-gray-700'} transition-colors`}
+              className={`p-2 ${viewMode === 'list' ? 'bg-info/10 text-info' : 'text-dim hover:text-ink'} transition-colors`}
               title="List view"
             >
               <List className="w-4 h-4" />
@@ -273,16 +273,16 @@ const WorkspaceFilesManager = ({
         {loading && filteredAndSortedFiles.length === 0 ? (
           <div className="flex items-center justify-center h-full">
             <div className="text-center">
-              <RefreshCw className="w-8 h-8 text-gray-400 animate-spin mx-auto mb-2" />
-              <p className="text-gray-500">Loading files...</p>
+              <RefreshCw className="w-8 h-8 text-dim animate-spin mx-auto mb-2" />
+              <p className="text-dim">Loading files...</p>
             </div>
           </div>
         ) : filteredAndSortedFiles.length === 0 ? (
           <div className="flex items-center justify-center h-full">
             <div className="text-center">
-              <FolderOpen className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-              <h3 className="text-lg font-medium text-gray-900 mb-2">No files found</h3>
-              <p className="text-gray-500 mb-4">
+              <FolderOpen className="w-16 h-16 text-dim mx-auto mb-4" />
+              <h3 className="text-lg font-medium text-ink mb-2">No files found</h3>
+              <p className="text-dim mb-4">
                 {searchTerm || filterType !== 'all' 
                   ? 'Try adjusting your search or filter criteria'
                   : 'Upload files to get started'
@@ -291,7 +291,7 @@ const WorkspaceFilesManager = ({
               {!searchTerm && filterType === 'all' && (
                 <button
                   onClick={() => setShowUploadModal(true)}
-                  className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors mx-auto"
+                  className="flex items-center space-x-2 px-4 py-2 bg-info text-white rounded-lg hover:bg-info transition-colors mx-auto"
                 >
                   <Upload className="w-4 h-4" />
                   <span>Upload Files</span>
@@ -302,21 +302,21 @@ const WorkspaceFilesManager = ({
         ) : viewMode === 'grid' ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
             {filteredAndSortedFiles.map((file) => (
-              <div key={file.id} className="group bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition-all duration-200">
+              <div key={file.id} className="group bg-surface border border-line rounded-lg p-4  transition-all duration-200">
                 <div className="flex flex-col items-center text-center">
                   <div className="mb-3">
                     {getFileIcon(file.name, file.type)}
                   </div>
                   
-                  <h3 className="text-sm font-medium text-gray-900 mb-1 truncate w-full" title={file.name}>
+                  <h3 className="text-sm font-medium text-ink mb-1 truncate w-full" title={file.name}>
                     {file.name}
                   </h3>
                   
-                  <p className="text-xs text-gray-500 mb-2">
+                  <p className="text-xs text-dim mb-2">
                     {formatFileSize(file.size)}
                   </p>
                   
-                  <p className="text-xs text-gray-400 mb-3">
+                  <p className="text-xs text-dim mb-3">
                     {formatDate(file.uploadedAt || file.lastModified)}
                   </p>
                   
@@ -324,21 +324,21 @@ const WorkspaceFilesManager = ({
                   <div className="flex space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
                     <button
                       onClick={() => handleViewFile(file)}
-                      className="p-1 text-blue-500 hover:text-blue-700 hover:bg-blue-50 rounded transition-colors"
+                      className="p-1 text-info hover:text-info hover:bg-info/10 rounded transition-colors"
                       title="View file"
                     >
                       <Eye className="w-4 h-4" />
                     </button>
                     <button
                       onClick={() => handleDownloadFile(file)}
-                      className="p-1 text-green-500 hover:text-green-700 hover:bg-green-50 rounded transition-colors"
+                      className="p-1 text-success hover:text-success hover:bg-success/10 rounded transition-colors"
                       title="Download file"
                     >
                       <Download className="w-4 h-4" />
                     </button>
                     <button
                       onClick={() => handleDeleteFile(file)}
-                      className="p-1 text-red-500 hover:text-red-700 hover:bg-red-50 rounded transition-colors"
+                      className="p-1 text-danger hover:text-danger hover:bg-danger/10 rounded transition-colors"
                       title="Delete file"
                     >
                       <Trash2 className="w-4 h-4" />
@@ -351,16 +351,16 @@ const WorkspaceFilesManager = ({
         ) : (
           <div className="space-y-2">
             {filteredAndSortedFiles.map((file) => (
-              <div key={file.id} className="group flex items-center space-x-4 p-3 bg-white border border-gray-200 rounded-lg hover:shadow-sm transition-all duration-200">
+              <div key={file.id} className="group flex items-center space-x-4 p-3 bg-surface border border-line rounded-lg  transition-all duration-200">
                 <div className="flex-shrink-0">
                   {getFileIcon(file.name, file.type)}
                 </div>
                 
                 <div className="flex-1 min-w-0">
-                  <h3 className="text-sm font-medium text-gray-900 truncate" title={file.name}>
+                  <h3 className="text-sm font-medium text-ink truncate" title={file.name}>
                     {file.name}
                   </h3>
-                  <div className="flex items-center space-x-4 text-xs text-gray-500 mt-1">
+                  <div className="flex items-center space-x-4 text-xs text-dim mt-1">
                     <span>{formatFileSize(file.size)}</span>
                     <span>{formatDate(file.uploadedAt || file.lastModified)}</span>
                     {file.vendorId && (
@@ -376,21 +376,21 @@ const WorkspaceFilesManager = ({
                 <div className="flex space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
                   <button
                     onClick={() => handleViewFile(file)}
-                    className="p-2 text-blue-500 hover:text-blue-700 hover:bg-blue-50 rounded transition-colors"
+                    className="p-2 text-info hover:text-info hover:bg-info/10 rounded transition-colors"
                     title="View file"
                   >
                     <Eye className="w-4 h-4" />
                   </button>
                   <button
                     onClick={() => handleDownloadFile(file)}
-                    className="p-2 text-green-500 hover:text-green-700 hover:bg-green-50 rounded transition-colors"
+                    className="p-2 text-success hover:text-success hover:bg-success/10 rounded transition-colors"
                     title="Download file"
                   >
                     <Download className="w-4 h-4" />
                   </button>
                   <button
                     onClick={() => handleDeleteFile(file)}
-                    className="p-2 text-red-500 hover:text-red-700 hover:bg-red-50 rounded transition-colors"
+                    className="p-2 text-danger hover:text-danger hover:bg-danger/10 rounded transition-colors"
                     title="Delete file"
                   >
                     <Trash2 className="w-4 h-4" />

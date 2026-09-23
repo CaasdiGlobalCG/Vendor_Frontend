@@ -230,26 +230,26 @@ export default function EditCompany() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-100 flex items-center justify-center">
+      <div className="min-h-screen bg-surface-hover flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-emerald-800 mx-auto"></div>
-          <p className="mt-4 text-gray-700">Loading company data...</p>
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-line mx-auto"></div>
+          <p className="mt-4 text-ink">Loading company data...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-100 font-sans pb-12">
+    <div className="min-h-screen bg-surface-hover font-sans pb-12">
       {/* Header Banner */}
-      <section className="bg-gradient-to-r from-[#095B49] to-[#000000] text-white rounded-xl p-4 relative rounded-b-lg" style={{ height: "120px" }}>
+      <section className="bg-black text-white rounded-xl p-4 relative rounded-b-lg" style={{ height: "120px" }}>
         <div className="absolute top-2 left-4 text-xs text-white/80">
           GSTIN: {vendorData?.companyDetails?.taxIdentificationNumber || "Not provided"}
         </div>
 
         {/* Top right icons */}
         <div className="absolute top-4 right-4 flex items-center gap-4">
-          <Award className="w-5 h-5 text-yellow-400" />
+          <Award className="w-5 h-5 text-warning" />
           <button>
             <Share2 className="w-5 h-5 text-white" />
           </button>
@@ -261,7 +261,7 @@ export default function EditCompany() {
         <div className="flex items-center mt-8">
           <button 
             onClick={handleCancel}
-            className="flex items-center text-white hover:text-emerald-200 transition-colors"
+            className="flex items-center text-white hover:text-ink transition-colors"
           >
             <ArrowLeft className="w-5 h-5 mr-2" />
             Back to Profile
@@ -278,15 +278,15 @@ export default function EditCompany() {
       </section>
 
       {/* Form Section */}
-      <div className="max-w-4xl mx-auto mt-8 bg-white rounded-lg shadow-md p-6">
+      <div className="max-w-4xl mx-auto mt-8 bg-surface rounded-lg  p-6">
         {error && (
-          <div className="mb-6 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
+          <div className="mb-6 bg-danger/10 border border-danger text-danger px-4 py-3 rounded">
             <p>{error}</p>
           </div>
         )}
         
         {successMessage && (
-          <div className="mb-6 bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded">
+          <div className="mb-6 bg-success/10 border border-success text-success px-4 py-3 rounded">
             <p>{successMessage}</p>
           </div>
         )}
@@ -294,7 +294,7 @@ export default function EditCompany() {
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Industry Type */}
           <div>
-            <label htmlFor="industryType" className="block text-sm font-medium text-gray-700 mb-1">
+            <label htmlFor="industryType" className="block text-sm font-medium text-ink mb-1">
               Industry Type
             </label>
             <select
@@ -302,7 +302,7 @@ export default function EditCompany() {
               name="industryType"
               value={formData.industryType}
               onChange={handleInputChange}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+              className="w-full px-3 py-2 border border-line rounded-md  focus:outline-none focus:ring-2 focus:ring-ink focus:border-transparent"
             >
               <option value="">Select Industry Type</option>
               <option value="Technology">Technology</option>
@@ -317,17 +317,17 @@ export default function EditCompany() {
 
           {/* Segments */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-ink mb-1">
               Segments
             </label>
             <div className="flex flex-wrap gap-2 mb-2">
               {formData.segments.map((segment, index) => (
-                <div key={index} className="bg-gray-100 px-3 py-1 rounded-full text-sm font-medium flex items-center">
+                <div key={index} className="bg-surface-hover px-3 py-1 rounded-full text-sm font-medium flex items-center">
                   <span>{segment}</span>
                   <button
                     type="button"
                     onClick={() => handleRemoveSegment(index)}
-                    className="ml-2 text-gray-500 hover:text-red-500"
+                    className="ml-2 text-dim hover:text-danger"
                   >
                     <CloseIcon size={14} />
                   </button>
@@ -340,12 +340,12 @@ export default function EditCompany() {
                 value={newSegment}
                 onChange={(e) => setNewSegment(e.target.value)}
                 placeholder="Add a segment"
-                className="flex-1 px-3 py-2 border border-gray-300 rounded-l-md shadow-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                className="flex-1 px-3 py-2 border border-line rounded-l-md  focus:outline-none focus:ring-2 focus:ring-ink focus:border-transparent"
               />
               <button
                 type="button"
                 onClick={handleAddSegment}
-                className="bg-emerald-800 text-white px-4 py-2 rounded-r-md hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500"
+                className="bg-cta text-cta-foreground px-4 py-2 rounded-r-md hover:bg-cta focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-ink"
               >
                 Add
               </button>
@@ -354,7 +354,7 @@ export default function EditCompany() {
 
           {/* Year of Establishment */}
           <div>
-            <label htmlFor="yearOfEstablishment" className="block text-sm font-medium text-gray-700 mb-1">
+            <label htmlFor="yearOfEstablishment" className="block text-sm font-medium text-ink mb-1">
               Year of Establishment
             </label>
             <input
@@ -364,13 +364,13 @@ export default function EditCompany() {
               value={formData.yearOfEstablishment}
               onChange={handleInputChange}
               placeholder="e.g., 25th March, 1990"
-              className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+              className="w-full px-3 py-2 border border-line rounded-md  focus:outline-none focus:ring-2 focus:ring-ink focus:border-transparent"
             />
           </div>
 
           {/* Vision and Mission */}
           <div>
-            <label htmlFor="visionAndMission" className="block text-sm font-medium text-gray-700 mb-1">
+            <label htmlFor="visionAndMission" className="block text-sm font-medium text-ink mb-1">
               Vision and Mission
             </label>
             <textarea
@@ -379,14 +379,14 @@ export default function EditCompany() {
               value={formData.visionAndMission}
               onChange={handleInputChange}
               rows={4}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+              className="w-full px-3 py-2 border border-line rounded-md  focus:outline-none focus:ring-2 focus:ring-ink focus:border-transparent"
               placeholder="Describe your company's vision and mission"
             />
           </div>
 
           {/* Company Overview */}
           <div>
-            <label htmlFor="companyOverview" className="block text-sm font-medium text-gray-700 mb-1">
+            <label htmlFor="companyOverview" className="block text-sm font-medium text-ink mb-1">
               Company Overview
             </label>
             <textarea
@@ -395,14 +395,14 @@ export default function EditCompany() {
               value={formData.companyOverview}
               onChange={handleInputChange}
               rows={4}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+              className="w-full px-3 py-2 border border-line rounded-md  focus:outline-none focus:ring-2 focus:ring-ink focus:border-transparent"
               placeholder="Provide an overview of your company"
             />
           </div>
 
           {/* Industry Overview */}
           <div>
-            <label htmlFor="industryOverview" className="block text-sm font-medium text-gray-700 mb-1">
+            <label htmlFor="industryOverview" className="block text-sm font-medium text-ink mb-1">
               Industry Overview
             </label>
             <textarea
@@ -411,24 +411,24 @@ export default function EditCompany() {
               value={formData.industryOverview}
               onChange={handleInputChange}
               rows={4}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+              className="w-full px-3 py-2 border border-line rounded-md  focus:outline-none focus:ring-2 focus:ring-ink focus:border-transparent"
               placeholder="Provide an overview of your industry"
             />
           </div>
 
           {/* Core Values */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-ink mb-1">
               Core Values
             </label>
             <div className="flex flex-wrap gap-2 mb-2">
               {formData.coreValues.map((value, index) => (
-                <div key={index} className="bg-gray-100 px-3 py-1 rounded-full text-sm font-medium flex items-center">
+                <div key={index} className="bg-surface-hover px-3 py-1 rounded-full text-sm font-medium flex items-center">
                   <span>{value}</span>
                   <button
                     type="button"
                     onClick={() => handleRemoveCoreValue(index)}
-                    className="ml-2 text-gray-500 hover:text-red-500"
+                    className="ml-2 text-dim hover:text-danger"
                   >
                     <CloseIcon size={14} />
                   </button>
@@ -441,12 +441,12 @@ export default function EditCompany() {
                 value={newCoreValue}
                 onChange={(e) => setNewCoreValue(e.target.value)}
                 placeholder="Add a core value"
-                className="flex-1 px-3 py-2 border border-gray-300 rounded-l-md shadow-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                className="flex-1 px-3 py-2 border border-line rounded-l-md  focus:outline-none focus:ring-2 focus:ring-ink focus:border-transparent"
               />
               <button
                 type="button"
                 onClick={handleAddCoreValue}
-                className="bg-emerald-800 text-white px-4 py-2 rounded-r-md hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500"
+                className="bg-cta text-cta-foreground px-4 py-2 rounded-r-md hover:bg-cta focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-ink"
               >
                 Add
               </button>
@@ -455,22 +455,22 @@ export default function EditCompany() {
 
           {/* Certifications */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-ink mb-1">
               Certifications
             </label>
             <div className="flex flex-wrap gap-2 mb-2">
               {formData.certifications.map((cert, index) => (
-                <div key={index} className="bg-gray-100 px-3 py-1 rounded-full text-sm font-medium">
+                <div key={index} className="bg-surface-hover px-3 py-1 rounded-full text-sm font-medium">
                   {cert.name || "Certificate"}
                 </div>
               ))}
               {certificationFiles.map((file, index) => (
-                <div key={`new-${index}`} className="bg-emerald-100 px-3 py-1 rounded-full text-sm font-medium flex items-center">
+                <div key={`new-${index}`} className="bg-surface-hover px-3 py-1 rounded-full text-sm font-medium flex items-center">
                   <span>{file.name}</span>
                   <button
                     type="button"
                     onClick={() => handleRemoveCertificationFile(index)}
-                    className="ml-2 text-gray-500 hover:text-red-500"
+                    className="ml-2 text-dim hover:text-danger"
                   >
                     <CloseIcon size={14} />
                   </button>
@@ -478,7 +478,7 @@ export default function EditCompany() {
               ))}
             </div>
             <div className="mt-2">
-              <label htmlFor="certifications" className="cursor-pointer bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-medium px-4 py-2 rounded-md transition-colors flex items-center w-fit">
+              <label htmlFor="certifications" className="cursor-pointer bg-surface-hover hover:bg-surface-hover text-ink text-sm font-medium px-4 py-2 rounded-md transition-colors flex items-center w-fit">
                 <Upload className="w-4 h-4 mr-2" />
                 Upload Certifications
                 <input
@@ -490,13 +490,13 @@ export default function EditCompany() {
                   accept=".pdf,.jpg,.jpeg,.png"
                 />
               </label>
-              <p className="text-xs text-gray-500 mt-1">Upload certification documents (PDF, JPG, PNG)</p>
+              <p className="text-xs text-dim mt-1">Upload certification documents (PDF, JPG, PNG)</p>
             </div>
           </div>
 
           {/* Team Size */}
           <div>
-            <label htmlFor="teamSize" className="block text-sm font-medium text-gray-700 mb-1">
+            <label htmlFor="teamSize" className="block text-sm font-medium text-ink mb-1">
               Team Size
             </label>
             <textarea
@@ -505,14 +505,14 @@ export default function EditCompany() {
               value={formData.teamSize}
               onChange={handleInputChange}
               rows={2}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+              className="w-full px-3 py-2 border border-line rounded-md  focus:outline-none focus:ring-2 focus:ring-ink focus:border-transparent"
               placeholder="Describe your team size and global presence"
             />
           </div>
 
           {/* Unique Selling Proposition */}
           <div>
-            <label htmlFor="uniqueSellingProposition" className="block text-sm font-medium text-gray-700 mb-1">
+            <label htmlFor="uniqueSellingProposition" className="block text-sm font-medium text-ink mb-1">
               Unique Selling Proposition
             </label>
             <textarea
@@ -521,14 +521,14 @@ export default function EditCompany() {
               value={formData.uniqueSellingProposition}
               onChange={handleInputChange}
               rows={3}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+              className="w-full px-3 py-2 border border-line rounded-md  focus:outline-none focus:ring-2 focus:ring-ink focus:border-transparent"
               placeholder="What makes your company unique?"
             />
           </div>
 
           {/* Social Impact/ECG Focus */}
           <div>
-            <label htmlFor="socialImpact" className="block text-sm font-medium text-gray-700 mb-1">
+            <label htmlFor="socialImpact" className="block text-sm font-medium text-ink mb-1">
               Social Impact/ECG Focus
             </label>
             <textarea
@@ -537,7 +537,7 @@ export default function EditCompany() {
               value={formData.socialImpact}
               onChange={handleInputChange}
               rows={3}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+              className="w-full px-3 py-2 border border-line rounded-md  focus:outline-none focus:ring-2 focus:ring-ink focus:border-transparent"
               placeholder="Describe your company's social impact initiatives"
             />
           </div>
@@ -547,14 +547,14 @@ export default function EditCompany() {
             <button
               type="button"
               onClick={handleCancel}
-              className="px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-400 transition-colors"
+              className="px-4 py-2 bg-surface-hover text-ink rounded-md hover:bg-surface-hover focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-line transition-colors"
               disabled={saving}
             >
               Cancel
             </button>
             <button
               type="submit"
-              className="px-4 py-2 bg-gradient-to-l from-[#095B49] to-[#000000] text-white rounded-md hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 transition-opacity flex items-center"
+              className="px-4 py-2 bg-black text-white rounded-md hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-ink transition-opacity flex items-center"
               disabled={saving}
             >
               {saving ? (

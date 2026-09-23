@@ -12,12 +12,12 @@ import React from 'react';
  * Matches the 5 system roles defined in backend roles.js.
  */
 const ROLE_COLORS = {
-  super_admin: { bg: 'bg-purple-100', text: 'text-purple-800', border: 'border-purple-200' },
-  admin:       { bg: 'bg-blue-100',   text: 'text-blue-800',   border: 'border-blue-200' },
-  sales_admin: { bg: 'bg-emerald-100', text: 'text-emerald-800', border: 'border-emerald-200' },
-  manager:     { bg: 'bg-teal-100',   text: 'text-teal-800',   border: 'border-teal-200' },
-  member:      { bg: 'bg-gray-100',   text: 'text-gray-700',   border: 'border-gray-200' },
-  viewer:      { bg: 'bg-amber-100',  text: 'text-amber-800',  border: 'border-amber-200' },
+  super_admin: { bg: 'bg-surface-hover', text: 'text-ink', border: 'border-line' },
+  admin:       { bg: 'bg-info/10',   text: 'text-info',   border: 'border-info/20' },
+  sales_admin: { bg: 'bg-surface-hover', text: 'text-ink', border: 'border-line' },
+  manager:     { bg: 'bg-surface-hover',   text: 'text-ink',   border: 'border-line' },
+  member:      { bg: 'bg-surface-hover',   text: 'text-ink',   border: 'border-line' },
+  viewer:      { bg: 'bg-warning/10',  text: 'text-warning',  border: 'border-warning/20' },
 };
 
 /**

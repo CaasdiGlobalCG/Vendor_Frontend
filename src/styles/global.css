@@ -12,8 +12,8 @@
     Ubuntu, "Helvetica Neue", Helvetica, Arial, "PingFang SC",
     "Hiragino Sans GB", "Microsoft Yahei UI", "Microsoft Yahei",
     "Source Han Sans CN", sans-serif;
-  --primary-color: #21be9c;
-  --primary-dark: #0f5848;
+  --primary-color: rgb(var(--text-primary));
+  --primary-dark: rgb(var(--text-primary));
   --text-light: #ffffff;
   --text-dark: #000000;
   --card-shadow: 0 4px 23.3px 0 rgba(0, 0, 0, 0.25);

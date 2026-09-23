@@ -10,23 +10,23 @@ export default function ServicesPage({ services, accentColor = '#F5A623' }) {
   const serviceIcons = [Wrench, Settings, Truck, Package, Cpu, Zap];
 
   return (
-    <div pageTitle="Our Services" className="bg-white relative overflow-hidden" style={{ minHeight: '1123px' }}>
+    <div pageTitle="Our Services" className="bg-surface relative overflow-hidden" style={{ minHeight: '1123px' }}>
       {/* ===== HEADER ===== */}
       <div className="px-10 md:px-14 pt-10 pb-6 relative">
         <div className="flex items-center gap-3 mb-2">
           <div className="w-10 h-[3px]" style={{ backgroundColor: accentColor }} />
-          <span className="text-[10px] font-bold uppercase tracking-[0.3em] text-gray-400">What We Offer</span>
+          <span className="text-[10px] font-bold uppercase tracking-[0.3em] text-dim">What We Offer</span>
         </div>
         <div className="flex items-end justify-between">
-          <h2 className="text-4xl font-black text-gray-900 tracking-tight">
+          <h2 className="text-4xl font-black text-ink tracking-tight">
             Our <span className="italic font-light" style={{ color: accentColor }}>Services</span>
           </h2>
-          <p className="text-gray-400 text-xs max-w-[200px] text-right leading-relaxed">
+          <p className="text-dim text-xs max-w-[200px] text-right leading-relaxed">
             Comprehensive solutions tailored to meet your business needs.
           </p>
         </div>
         {/* Divider */}
-        <div className="mt-5 h-[2px] bg-gray-100 relative">
+        <div className="mt-5 h-[2px] bg-surface-hover relative">
           <div className="absolute left-0 top-0 h-full w-20" style={{ backgroundColor: accentColor }} />
         </div>
       </div>
@@ -57,7 +57,7 @@ export default function ServicesPage({ services, accentColor = '#F5A623' }) {
                   {/* Icon */}
                   <div className="w-10 h-10 rounded-sm flex items-center justify-center mb-4 relative z-10"
                     style={{
-                      backgroundColor: isAccent ? 'rgba(255,255,255,0.2)' : isDark ? accentColor : 'white',
+                      backgroundColor: isAccent ? 'rgba(255,255,255,0.2)' : isDark ? accentColor: 'white',
                       border: !isAccent && !isDark ? `1px solid ${accentColor}30` : 'none'
                     }}>
                     <Icon size={16} style={{ color: isAccent ? 'white' : isDark ? 'white' : accentColor }} />
@@ -83,23 +83,23 @@ export default function ServicesPage({ services, accentColor = '#F5A623' }) {
             })}
           </div>
         ) : (
-          <div className="text-center py-16 bg-gray-50 rounded-sm">
-            <Wrench size={32} className="mx-auto mb-3 text-gray-300" />
-            <p className="text-gray-400 text-sm">Services will appear here</p>
+          <div className="text-center py-16 bg-canvas rounded-sm">
+            <Wrench size={32} className="mx-auto mb-3 text-dim" />
+            <p className="text-dim text-sm">Services will appear here</p>
           </div>
         )}
       </div>
 
       {/* ===== BOTTOM HIGHLIGHT STRIP ===== */}
       <div className="px-10 md:px-14 mt-auto">
-        <div className="flex items-center gap-6 p-6 rounded-sm bg-gray-50 border border-gray-100">
+        <div className="flex items-center gap-6 p-6 rounded-sm bg-canvas border border-line">
           <div className="w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0"
             style={{ backgroundColor: accentColor }}>
             <ArrowRight size={18} className="text-white" />
           </div>
           <div>
-            <p className="text-sm font-bold text-gray-900 mb-0.5">Need a custom solution?</p>
-            <p className="text-[10px] text-gray-500">We tailor our services to fit your unique requirements. Get in touch to discuss.</p>
+            <p className="text-sm font-bold text-ink mb-0.5">Need a custom solution?</p>
+            <p className="text-[10px] text-dim">We tailor our services to fit your unique requirements. Get in touch to discuss.</p>
           </div>
           <div className="ml-auto flex-shrink-0">
             <span className="text-[10px] font-bold uppercase tracking-widest" style={{ color: accentColor }}>Let&apos;s Talk</span>

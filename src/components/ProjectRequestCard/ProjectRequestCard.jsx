@@ -125,19 +125,19 @@ const ProjectRequestCard = ({ project, onApprove, onReject, isCompareMode, isSel
           ? 'Declined'
           : 'Unknown';
     const statusTone = isPending
-      ? 'border-amber-200 bg-amber-50 text-amber-700'
+      ? 'border-warning/20 bg-warning/10 text-warning'
       : isApproved
-        ? 'border-emerald-200 bg-emerald-50 text-emerald-700'
+        ? 'border-line bg-surface-hover text-ink'
         : isRejected
-          ? 'border-rose-200 bg-rose-50 text-rose-700'
-          : 'border-slate-200 bg-slate-50 text-slate-700';
+          ? 'border-danger/20 bg-danger/10 text-danger'
+          : 'border-line bg-canvas text-ink';
     const accentTone = isPending
-      ? 'from-amber-500/90 via-orange-500/70 to-transparent'
+      ? 'from-black via-black to-transparent'
       : isApproved
-        ? 'from-emerald-500/90 via-teal-500/70 to-transparent'
+        ? 'from-black via-black to-transparent'
         : isRejected
-          ? 'from-rose-500/90 via-red-500/70 to-transparent'
-          : 'from-slate-400/80 via-slate-300/60 to-transparent';
+          ? 'from-black via-black to-transparent'
+          : 'from-surface via-surface to-transparent';
 
     const handleCheckboxChange = () => {
         if (onSelectRequest) {
@@ -171,12 +171,12 @@ const ProjectRequestCard = ({ project, onApprove, onReject, isCompareMode, isSel
 
     // Robustness checks
     if (!project) {
-        return <div className="bg-white rounded-xl shadow-sm p-4 sm:p-6 border border-red-200">Error: Project data missing.</div>;
+        return <div className="bg-surface rounded-xl  p-4 sm:p-6 border border-danger/20">Error: Project data missing.</div>;
     }
 
     return (
         // APPLIED: Enhanced styling from Snippet 1
-        <div className="group relative overflow-hidden rounded-[28px] border border-slate-200 bg-white p-6 shadow-[0_10px_30px_rgba(15,23,42,0.06)] transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_18px_40px_rgba(15,23,42,0.10)]">
+        <div className="group relative overflow-hidden rounded-[28px] border border-line bg-surface p-6 transition-all duration-300  hover:">
           <div className={`pointer-events-none absolute inset-x-0 top-0 h-1.5 bg-gradient-to-r ${accentTone}`}></div>
           <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(16,185,129,0.08),transparent_32%),radial-gradient(circle_at_bottom_left,rgba(59,130,246,0.06),transparent_28%)] opacity-70"></div>
             {/* Checkbox */}
@@ -186,7 +186,7 @@ const ProjectRequestCard = ({ project, onApprove, onReject, isCompareMode, isSel
                         type="checkbox"
                         checked={isSelected}
                         onChange={handleCheckboxChange}
-                        className="h-5 w-5 rounded text-emerald-600 border-gray-300 focus:ring-emerald-500 cursor-pointer"
+                        className="h-5 w-5 rounded text-ink border-line focus:ring-ink cursor-pointer"
                         aria-label={`Select ${project.name || 'project'} for comparison`}
                     />
                 </div>
@@ -197,35 +197,35 @@ const ProjectRequestCard = ({ project, onApprove, onReject, isCompareMode, isSel
             <div className="relative grid gap-5 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-start">
               <div className={`${isCompareMode ? 'pr-8' : ''} min-w-0`}>
                 <div className="flex flex-wrap items-center gap-2">
-                  <span className="inline-flex items-center rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
+                  <span className="inline-flex items-center rounded-full border border-line bg-canvas px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-dim">
                     Lead
                   </span>
                   {project.priority && (
                     <span className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold border ${
-                      project.priority === 'high' ? 'bg-rose-50 text-rose-700 border-rose-200' :
-                      project.priority === 'medium' ? 'bg-amber-50 text-amber-700 border-amber-200' :
-                      'bg-emerald-50 text-emerald-700 border-emerald-200'
+                      project.priority === 'high' ? 'bg-danger/10 text-danger border-danger/20' :
+                      project.priority === 'medium' ? 'bg-warning/10 text-warning border-warning/20' :
+                      'bg-surface-hover text-ink border-line'
                     }`}>
                       {project.priority.charAt(0).toUpperCase() + project.priority.slice(1)} Priority
                     </span>
                   )}
                 </div>
-                <h2 className="mt-3 text-2xl font-semibold leading-tight text-slate-900">{project.name || 'Unnamed Project'}</h2>
+                <h2 className="mt-3 text-2xl font-semibold leading-tight text-ink">{project.name || 'Unnamed Project'}</h2>
                     {project.projectName && project.projectName !== project.name && (
-                  <p className="mt-2 flex items-center gap-1.5 text-sm font-semibold text-blue-600">
-                            <span className="w-2 h-2 bg-blue-500 rounded-full"></span>
+                  <p className="mt-2 flex items-center gap-1.5 text-sm font-semibold text-info">
+                            <span className="w-2 h-2 bg-info rounded-full"></span>
                             Project: {project.projectName}
                         </p>
                     )}
-                <div className="mt-4 flex flex-wrap items-center gap-2 text-xs text-slate-600">
-                  <span className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1.5 font-medium">Lead ID: {project._id || 'N/A'}</span>
-                  <span className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1.5 font-medium">Project ID: {project.clientId || 'N/A'}</span>
+                <div className="mt-4 flex flex-wrap items-center gap-2 text-xs text-dim">
+                  <span className="rounded-full border border-line bg-canvas px-3 py-1.5 font-medium">Lead ID: {project._id || 'N/A'}</span>
+                  <span className="rounded-full border border-line bg-canvas px-3 py-1.5 font-medium">Project ID: {project.clientId || 'N/A'}</span>
                         {project.specialization && (
-                    <span className="rounded-full border border-blue-200 bg-blue-50 px-3 py-1.5 font-semibold text-blue-700">{project.specialization}</span>
+                    <span className="rounded-full border border-info/20 bg-info/10 px-3 py-1.5 font-semibold text-info">{project.specialization}</span>
                         )}
                     </div>
                     {project.sentAt && (
-                  <p className="mt-3 flex items-center gap-1 text-xs text-slate-500">
+                  <p className="mt-3 flex items-center gap-1 text-xs text-dim">
                             <ClockIcon className="h-3 w-3" />
                             Sent: {new Date(project.sentAt).toLocaleDateString('en-US', {
                                 year: 'numeric',
@@ -244,46 +244,46 @@ const ProjectRequestCard = ({ project, onApprove, onReject, isCompareMode, isSel
                     </div>
                     {project.pmDecision && (
                         <div className={`inline-flex items-center rounded-full border px-3 py-1.5 text-xs font-semibold ${
-                          project.pmDecision.approved ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-rose-50 text-rose-700 border-rose-200'
+                          project.pmDecision.approved ? 'bg-surface-hover text-ink border-line' : 'bg-danger/10 text-danger border-danger/20'
                         }`}>
                             PM: {project.pmDecision.approved ? 'Approved' : 'Rejected'}
                         </div>
                     )}
                     {/* Needs Revision Badge (NEW) */}
                     {(project.status === 'sent' || project.rawStatus === 'sent') && project.rejectionReason && (
-                        <div className={`text-xs px-3 py-1.5 rounded-full font-semibold border bg-gradient-to-r from-orange-50 to-orange-100 text-orange-700 border-orange-200 flex items-center gap-1 animate-pulse`}>
-                            <span className="inline-block w-2 h-2 bg-orange-500 rounded-full"></span>
+                        <div className={`text-xs px-3 py-1.5 rounded-full font-semibold border bg-black text-warning border-warning/20 flex items-center gap-1 animate-pulse`}>
+                            <span className="inline-block w-2 h-2 bg-warning rounded-full"></span>
                             Needs Revision
                         </div>
                     )}
                     {project.rawStatus === 'pm_rejected_for_revision' && project.rejectionReason && (
-                        <div className="text-xs px-3 py-1.5 rounded-full font-semibold border bg-gradient-to-r from-rose-50 to-rose-100 text-rose-700 border-rose-200 flex items-center gap-1">
-                            <span className="w-1.5 h-1.5 bg-rose-500 rounded-full animate-pulse"></span>
+                        <div className="text-xs px-3 py-1.5 rounded-full font-semibold border bg-black text-danger border-danger/20 flex items-center gap-1">
+                            <span className="w-1.5 h-1.5 bg-danger rounded-full animate-pulse"></span>
                             Needs Revision
                         </div>
                     )}
                     <button
                       type="button"
                       onClick={() => setIsExpanded(prev => !prev)}
-                      className="mt-2 text-xs font-medium text-emerald-700 underline-offset-2 transition hover:text-emerald-900 hover:underline"
+                      className="mt-2 text-xs font-medium text-ink underline-offset-2 transition hover:text-ink hover:underline"
                     >
                       {isExpanded ? 'Hide details' : 'View details'}
                     </button>
                 </div>
             </div>
 
-                <div className="relative mt-5 grid gap-3 border-t border-slate-100 pt-5 sm:grid-cols-3 xl:grid-cols-5">
-                  <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
-                    <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-500">Duration</p>
-                    <p className="mt-2 text-base font-semibold text-slate-900">{project.duration || 'N/A'}</p>
+                <div className="relative mt-5 grid gap-3 border-t border-line pt-5 sm:grid-cols-3 xl:grid-cols-5">
+                  <div className="rounded-2xl border border-line bg-canvas px-4 py-3">
+                    <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-dim">Duration</p>
+                    <p className="mt-2 text-base font-semibold text-ink">{project.duration || 'N/A'}</p>
                   </div>
-                  <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
-                    <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-500">Budget</p>
-                    <p className="mt-2 text-base font-semibold text-slate-900">{project.budget || 'N/A'}</p>
+                  <div className="rounded-2xl border border-line bg-canvas px-4 py-3">
+                    <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-dim">Budget</p>
+                    <p className="mt-2 text-base font-semibold text-ink">{project.budget || 'N/A'}</p>
                   </div>
-                  <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 sm:col-span-1 xl:col-span-2">
-                    <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-500">Summary</p>
-                    <p className="mt-2 line-clamp-2 text-sm text-slate-600">
+                  <div className="rounded-2xl border border-line bg-canvas px-4 py-3 sm:col-span-1 xl:col-span-2">
+                    <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-dim">Summary</p>
+                    <p className="mt-2 line-clamp-2 text-sm text-dim">
                       {project.description || 'No description provided yet for this lead.'}
                     </p>
                   </div>
@@ -291,7 +291,7 @@ const ProjectRequestCard = ({ project, onApprove, onReject, isCompareMode, isSel
                     <Link
                       to={`/leads/${project._id}`}
                       state={{ projectData: project }}
-                      className="inline-flex w-full items-center justify-center gap-2 rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-700 shadow-sm transition hover:border-slate-300 hover:bg-slate-50 sm:w-auto"
+                      className="inline-flex w-full items-center justify-center gap-2 rounded-2xl border border-line bg-surface px-4 py-3 text-sm font-semibold text-ink  transition hover:border-line hover:bg-canvas sm:w-auto"
                     >
                       <span>Learn more</span>
                       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -306,27 +306,27 @@ const ProjectRequestCard = ({ project, onApprove, onReject, isCompareMode, isSel
               <>
                 {/* Description */}
                   <div className="relative mt-5 mb-4">
-                    <p className="rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm leading-relaxed text-slate-700">
+                    <p className="rounded-2xl border border-line bg-canvas p-4 text-sm leading-relaxed text-ink">
                     {project.description || 'No description.'}
                   </p>
                 </div>
 
                 {/* Vendor Response Section */}
                 {project.vendorResponse && (
-                  <div className="mb-4 p-4 bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-xl shadow-sm">
-                    <h4 className="text-sm font-bold text-blue-800 mb-2 flex items-center gap-2">
-                      <span className="w-2 h-2 bg-blue-500 rounded-full"></span>
+                  <div className="mb-4 p-4 bg-black border border-info/20 rounded-xl ">
+                    <h4 className="text-sm font-bold text-info mb-2 flex items-center gap-2">
+                      <span className="w-2 h-2 bg-info rounded-full"></span>
                       Your Response
                     </h4>
-                    <p className="text-sm text-blue-700 mb-3 leading-relaxed">
+                    <p className="text-sm text-info mb-3 leading-relaxed">
                       {project.vendorResponse.message}
                     </p>
                     {project.vendorResponse.proposedBudget && (
-                      <div className="flex flex-wrap gap-4 text-xs text-blue-600 font-medium">
-                        <span className="bg-white px-3 py-1.5 rounded-full border border-blue-200">
+                      <div className="flex flex-wrap gap-4 text-xs text-info font-medium">
+                        <span className="bg-surface px-3 py-1.5 rounded-full border border-info/20">
                           Proposed Budget: {project.vendorResponse.proposedBudget}
                         </span>
-                        <span className="bg-white px-3 py-1.5 rounded-full border border-blue-200">
+                        <span className="bg-surface px-3 py-1.5 rounded-full border border-info/20">
                           Proposed Timeline: {project.vendorResponse.proposedTimeline}
                         </span>
                       </div>
@@ -337,20 +337,20 @@ const ProjectRequestCard = ({ project, onApprove, onReject, isCompareMode, isSel
                 {/* PM Decision Section */}
                 {project.pmDecision && (
                   <div
-                    className={`mb-4 p-4 border rounded-xl shadow-sm ${
+                    className={`mb-4 p-4 border rounded-xl  ${
                       project.pmDecision.approved
-                        ? 'bg-gradient-to-r from-emerald-50 to-green-50 border-emerald-200'
-                        : 'bg-gradient-to-r from-red-50 to-pink-50 border-red-200'
+                        ? 'bg-black border-line'
+                        : 'bg-black border-danger/20'
                     }`}
                   >
                     <h4
                       className={`text-sm font-bold mb-2 flex items-center gap-2 ${
-                        project.pmDecision.approved ? 'text-emerald-800' : 'text-red-800'
+                        project.pmDecision.approved ? 'text-ink' : 'text-danger'
                       }`}
                     >
                       <span
                         className={`w-2 h-2 rounded-full ${
-                          project.pmDecision.approved ? 'bg-emerald-500' : 'bg-red-500'
+                          project.pmDecision.approved ? 'bg-cta' : 'bg-danger'
                         }`}
                       ></span>
                       PM Decision: {project.pmDecision.approved ? 'Approved' : 'Rejected'}
@@ -358,14 +358,14 @@ const ProjectRequestCard = ({ project, onApprove, onReject, isCompareMode, isSel
                     {project.pmDecision.feedback && (
                       <p
                         className={`text-sm mb-3 leading-relaxed ${
-                          project.pmDecision.approved ? 'text-emerald-700' : 'text-red-700'
+                          project.pmDecision.approved ? 'text-ink' : 'text-danger'
                         }`}
                       >
                         {project.pmDecision.feedback}
                       </p>
                     )}
                     {project.pmDecision.approved && project.pmDecision.workspaceAccess && (
-                      <div className="flex items-center gap-2 text-xs text-emerald-600 bg-emerald-100 px-3 py-2 rounded-full border border-emerald-200 font-medium">
+                      <div className="flex items-center gap-2 text-xs text-ink bg-surface-hover px-3 py-2 rounded-full border border-line font-medium">
                         <CheckIcon className="h-3 w-3" />
                         <span>Workspace access granted</span>
                       </div>
@@ -375,34 +375,34 @@ const ProjectRequestCard = ({ project, onApprove, onReject, isCompareMode, isSel
 
                 {/* PM Rejection Feedback - For Revision */}
                 {(project.status === 'sent' || project.rawStatus === 'sent') && project.rejectionReason && (
-                  <div className="mb-4 rounded-xl border border-rose-200 border-l-4 border-l-rose-500 bg-rose-50 p-4 shadow-sm">
-                    <h4 className="text-sm font-bold text-rose-800 mb-3 flex items-center gap-2">
-                      <span className="w-2 h-2 bg-rose-500 rounded-full"></span>
+                  <div className="mb-4 rounded-xl border border-danger/20 border-l-4 border-l-rose-500 bg-danger/10 p-4 ">
+                    <h4 className="text-sm font-bold text-danger mb-3 flex items-center gap-2">
+                      <span className="w-2 h-2 bg-danger rounded-full"></span>
                       Lead Returned for Revision (v{project.leadVersion || 1})
                     </h4>
                     
                     <div className="mb-3">
-                      <p className="text-xs font-semibold text-rose-700 mb-1">Reason for Rejection:</p>
-                      <p className="text-sm text-rose-800 bg-white rounded px-3 py-2 border border-rose-200 font-medium">
+                      <p className="text-xs font-semibold text-danger mb-1">Reason for Rejection:</p>
+                      <p className="text-sm text-danger bg-surface rounded px-3 py-2 border border-danger/20 font-medium">
                         {project.rejectionReason}
                       </p>
                     </div>
 
                     {project.pmDecision?.feedback && (
                       <div className="mb-3">
-                        <p className="text-xs font-semibold text-rose-700 mb-1">PM Feedback:</p>
-                        <p className="text-sm text-rose-700 bg-white rounded px-3 py-2 border border-rose-200">
+                        <p className="text-xs font-semibold text-danger mb-1">PM Feedback:</p>
+                        <p className="text-sm text-danger bg-surface rounded px-3 py-2 border border-danger/20">
                           {project.pmDecision.feedback}
                         </p>
                       </div>
                     )}
 
                     {project.negotiationHistory && project.negotiationHistory.length > 0 && (
-                      <div className="pt-3 border-t border-rose-200">
-                        <p className="text-xs font-semibold text-rose-700 mb-2">Negotiation History:</p>
+                      <div className="pt-3 border-t border-danger/20">
+                        <p className="text-xs font-semibold text-danger mb-2">Negotiation History:</p>
                         <div className="space-y-1">
                           {project.negotiationHistory.map((entry, idx) => (
-                            <div key={idx} className="text-xs text-rose-700 bg-white rounded px-2 py-1 border border-rose-100">
+                            <div key={idx} className="text-xs text-danger bg-surface rounded px-2 py-1 border border-danger/10">
                               <span className="font-semibold">v{entry.version}:</span> {entry.action === 'pm_rejected' ? 'PM Rejected' : 'PM Resent'} {entry.rejectionReason && `- ${entry.rejectionReason}`}
                             </div>
                           ))}
@@ -410,28 +410,28 @@ const ProjectRequestCard = ({ project, onApprove, onReject, isCompareMode, isSel
                       </div>
                     )}
 
-                    <p className="text-xs text-rose-600 mt-3 italic">
+                    <p className="text-xs text-danger mt-3 italic">
                       💡 Please review the feedback and update your quotation to address the concerns.
                     </p>
                   </div>
                 )}
 
                 {/* File Section Preview */}
-                <div className="mb-6 flex flex-wrap gap-3 border-t border-slate-100 pt-4 text-xs">
+                <div className="mb-6 flex flex-wrap gap-3 border-t border-line pt-4 text-xs">
                   {project.boqFileUrl && (
-                    <div className="flex items-center gap-2 rounded-full border border-blue-200 bg-blue-50 px-3 py-2 font-medium text-blue-600">
+                    <div className="flex items-center gap-2 rounded-full border border-info/20 bg-info/10 px-3 py-2 font-medium text-info">
                       <DocumentArrowDownIcon className="h-4 w-4" />
                       <span>BOQ Added</span>
                     </div>
                   )}
                   {project.quotationFileUrl && (
-                    <div className="flex items-center gap-2 rounded-full border border-purple-200 bg-purple-50 px-3 py-2 font-medium text-purple-600">
+                    <div className="flex items-center gap-2 rounded-full border border-line bg-surface-hover px-3 py-2 font-medium text-ink">
                       <PaperClipIcon className="h-4 w-4" />
                       <span>Quotation Added</span>
                     </div>
                   )}
                   {!project.boqFileUrl && !project.quotationFileUrl && (
-                    <span className="text-gray-400 italic bg-gray-50 px-3 py-2 rounded-full border border-gray-200">
+                    <span className="text-dim italic bg-canvas px-3 py-2 rounded-full border border-line">
                       No documents available.
                     </span>
                   )}
@@ -440,7 +440,7 @@ const ProjectRequestCard = ({ project, onApprove, onReject, isCompareMode, isSel
             )}
 
             {/* Bottom Section */}
-            <div className="relative mt-2 flex flex-wrap items-center justify-end gap-2 border-t border-slate-100 pt-5">
+            <div className="relative mt-2 flex flex-wrap items-center justify-end gap-2 border-t border-line pt-5">
               <div className="flex flex-wrap items-center justify-end gap-2">
                     {/* Workspace Button - Only show for PM-approved collaborative projects */}
                     {project.pmDecision?.approved && project.pmDecision?.workspaceAccess ? (
@@ -450,8 +450,8 @@ const ProjectRequestCard = ({ project, onApprove, onReject, isCompareMode, isSel
                           disabled={isCompareMode}
                           title={isCompareMode ? "Cancel Compare mode to access workspace" : "Open collaborative workspace with PM"}
                           // APPLIED: Gradient, larger size, bolder font, stronger shadow, and hover scale effect
-                          className={`inline-flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-600 px-5 py-3 text-sm font-semibold text-white shadow-md transition-all duration-200 ${
-                            isCompareMode ? 'opacity-50 cursor-not-allowed' : 'hover:from-emerald-600 hover:to-teal-700 hover:shadow-lg'
+                          className={`inline-flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-black to-black px-5 py-3 text-sm font-semibold text-white  transition-all duration-200 ${
+                            isCompareMode ? 'opacity-50 cursor-not-allowed' : 'hover:from-black hover:to-black '
                           }`}
                         >
                           <RectangleGroupIcon className="h-4 w-4" />
@@ -465,8 +465,8 @@ const ProjectRequestCard = ({ project, onApprove, onReject, isCompareMode, isSel
                           disabled={isCompareMode}
                           title={isCompareMode ? "Cancel Compare mode to access workspace" : "Awaiting PM approval for collaborative workspace"}
                           // APPLIED: Gradient, larger size, bolder font, stronger shadow, and hover scale effect
-                          className={`inline-flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-amber-500 to-orange-500 px-5 py-3 text-sm font-semibold text-white shadow-md transition-all duration-200 ${
-                            isCompareMode ? 'opacity-50 cursor-not-allowed' : 'hover:from-amber-600 hover:to-orange-600 hover:shadow-lg'
+                          className={`inline-flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-black to-black px-5 py-3 text-sm font-semibold text-white  transition-all duration-200 ${
+                            isCompareMode ? 'opacity-50 cursor-not-allowed' : 'hover:from-black hover:to-black '
                           }`}
                         >
                           <RectangleGroupIcon className="h-4 w-4" />
@@ -489,8 +489,8 @@ const ProjectRequestCard = ({ project, onApprove, onReject, isCompareMode, isSel
                                 "Accept this lead (quotation upload required)"
                               }
                               // APPLIED: Gradient, larger size, bolder font, stronger shadow, and hover scale effect
-                              className={`inline-flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-600 px-5 py-3 text-sm font-semibold text-white shadow-md transition-all duration-200 ${
-                                (isCompareMode || isApproving || isRejecting) ? 'opacity-50 cursor-not-allowed' : 'hover:from-emerald-600 hover:to-teal-700 hover:shadow-lg'
+                              className={`inline-flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-black to-black px-5 py-3 text-sm font-semibold text-white  transition-all duration-200 ${
+                                (isCompareMode || isApproving || isRejecting) ? 'opacity-50 cursor-not-allowed' : 'hover:from-black hover:to-black '
                               }`}
                             >
                               {isApproving ? (
@@ -518,8 +518,8 @@ const ProjectRequestCard = ({ project, onApprove, onReject, isCompareMode, isSel
                                 "Reject this lead"
                               }
                               // APPLIED: Gradient, larger size, bolder font, stronger shadow, and hover scale effect
-                              className={`inline-flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-rose-500 to-red-600 px-5 py-3 text-sm font-semibold text-white shadow-md transition-all duration-200 ${
-                                (isCompareMode || isApproving || isRejecting) ? 'opacity-50 cursor-not-allowed' : 'hover:from-rose-600 hover:to-red-700 hover:shadow-lg'
+                              className={`inline-flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-black to-black px-5 py-3 text-sm font-semibold text-white  transition-all duration-200 ${
+                                (isCompareMode || isApproving || isRejecting) ? 'opacity-50 cursor-not-allowed' : 'hover:from-black hover:to-black '
                               }`}
                             >
                               {isRejecting ? (
@@ -539,7 +539,7 @@ const ProjectRequestCard = ({ project, onApprove, onReject, isCompareMode, isSel
                           </>
                         </PermissionGate>
                     ) : (
-                      <span className={`rounded-2xl border px-5 py-3 text-sm font-semibold ${project.status === 'approved' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-rose-50 text-rose-700 border-rose-200'}`}>
+                      <span className={`rounded-2xl border px-5 py-3 text-sm font-semibold ${project.status === 'approved' ? 'bg-surface-hover text-ink border-line' : 'bg-danger/10 text-danger border-danger/20'}`}>
                            {project.status === 'approved' ? '✓ Approved' : '✗ Rejected'}
                         </span>
                     )}

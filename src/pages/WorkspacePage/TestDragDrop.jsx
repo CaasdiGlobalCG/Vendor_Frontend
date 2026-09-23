@@ -89,7 +89,7 @@ const DropZone = () => {
           left: '50%',
           transform: 'translate(-50%, -50%)',
           textAlign: 'center',
-          color: '#9ca3af',
+          color: 'rgb(var(--text-dim))',
         }}>
           <div style={{ fontSize: '48px', marginBottom: '10px' }}>🎯</div>
           <h3 style={{ margin: '10px 0' }}>Drop Zone</h3>
@@ -110,7 +110,7 @@ const DropZone = () => {
           zIndex: 10,
         }}>
           <div style={{
-            backgroundColor: '#3b82f6',
+            backgroundColor: 'rgb(var(--info))',
             color: 'white',
             padding: '12px 24px',
             borderRadius: '8px',
@@ -130,7 +130,7 @@ const DropZone = () => {
             left: `${item.position.x - 50}px`,
             top: `${item.position.y - 20}px`,
             padding: '8px 16px',
-            backgroundColor: '#10b981',
+            backgroundColor: 'rgb(var(--success))',
             color: 'white',
             borderRadius: '6px',
             fontSize: '14px',
@@ -181,13 +181,13 @@ const TestDragDrop = () => {
           boxShadow: '0 10px 40px rgba(0, 0, 0, 0.1)',
         }}>
           <h1 style={{ marginBottom: '10px' }}>🧪 React DnD Test Interface</h1>
-          <p style={{ color: '#6b7280', marginBottom: '30px' }}>
+          <p style={{ color: 'rgb(var(--info))', marginBottom: '30px' }}>
             Test the React DnD implementation with visual feedback
           </p>
 
           {/* Status Bar */}
           <div style={{
-            backgroundColor: '#f0f9ff',
+            backgroundColor: 'rgb(var(--surface-hover))',
             border: '1px solid #bae6fd',
             borderRadius: '8px',
             padding: '15px',
@@ -209,7 +209,7 @@ const TestDragDrop = () => {
                 📦 Draggable Elements
               </h2>
               <div style={{
-                backgroundColor: '#f9fafb',
+                backgroundColor: 'rgb(var(--surface-hover))',
                 border: '2px solid #e5e7eb',
                 borderRadius: '12px',
                 padding: '10px',
@@ -232,8 +232,8 @@ const TestDragDrop = () => {
           {/* Console Output */}
           <div style={{
             marginTop: '30px',
-            backgroundColor: '#1f2937',
-            color: '#10b981',
+            backgroundColor: 'rgb(var(--info))',
+            color: 'rgb(var(--success))',
             padding: '15px',
             borderRadius: '8px',
             fontFamily: 'monospace',
@@ -241,7 +241,7 @@ const TestDragDrop = () => {
             maxHeight: '150px',
             overflowY: 'auto',
           }}>
-            <div style={{ marginBottom: '5px', color: '#6b7280' }}>// Console Output:</div>
+            <div style={{ marginBottom: '5px', color: 'rgb(var(--info))' }}>// Console Output:</div>
             {logs.map((log, index) => (
               <div key={index} style={{ marginBottom: '3px' }}>
                 {'>'} {log}
@@ -252,7 +252,7 @@ const TestDragDrop = () => {
           {/* Instructions */}
           <div style={{
             marginTop: '20px',
-            backgroundColor: '#fef3c7',
+            backgroundColor: 'rgb(var(--warning))',
             border: '1px solid #fbbf24',
             borderRadius: '8px',
             padding: '15px',

@@ -66,7 +66,7 @@ const ContextMenu = ({
   return (
     <div
       ref={menuRef}
-      className="fixed z-50 bg-white border border-gray-200 rounded-lg shadow-lg py-1 min-w-48"
+      className="fixed z-50 bg-surface border border-line rounded-lg shadow-lg py-1 min-w-48"
       style={{
         left: position.x,
         top: position.y,
@@ -74,8 +74,8 @@ const ContextMenu = ({
       }}
     >
       {/* Header */}
-      <div className="px-3 py-2 border-b border-gray-100">
-        <div className="text-xs font-medium text-gray-500">
+      <div className="px-3 py-2 border-b border-line">
+        <div className="text-xs font-medium text-dim">
           {isMultipleSelection 
             ? `${selectedNodes.length} elements selected`
             : `${elementName}`
@@ -86,19 +86,19 @@ const ContextMenu = ({
       {/* Duplicate Action */}
       <button
         onClick={() => handleMenuAction(onDuplicate)}
-        className="w-full px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center space-x-2 transition-colors"
+        className="w-full px-3 py-2 text-left text-sm text-ink hover:bg-canvas flex items-center space-x-2 transition-colors"
         disabled={!canEdit}
       >
         <Copy className="w-4 h-4" />
         <span>Duplicate</span>
-        <span className="ml-auto text-xs text-gray-400">Ctrl+D</span>
+        <span className="ml-auto text-xs text-dim">Ctrl+D</span>
       </button>
 
       {/* Edit Action (only for single selection) */}
       {!isMultipleSelection && (
         <button
           onClick={() => handleMenuAction(onEdit)}
-          className="w-full px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center space-x-2 transition-colors"
+          className="w-full px-3 py-2 text-left text-sm text-ink hover:bg-canvas flex items-center space-x-2 transition-colors"
           disabled={!canEdit}
         >
           <Edit3 className="w-4 h-4" />
@@ -107,17 +107,17 @@ const ContextMenu = ({
       )}
 
       {/* Separator */}
-      <div className="border-t border-gray-100 my-1"></div>
+      <div className="border-t border-line my-1"></div>
 
       {/* Delete Action */}
       <button
         onClick={() => handleMenuAction(onDelete)}
-        className="w-full px-3 py-2 text-left text-sm text-red-600 hover:bg-red-50 flex items-center space-x-2 transition-colors"
+        className="w-full px-3 py-2 text-left text-sm text-danger hover:bg-danger/10 flex items-center space-x-2 transition-colors"
         disabled={!canEdit}
       >
         <Trash2 className="w-4 h-4" />
         <span>Delete</span>
-        <span className="ml-auto text-xs text-gray-400">Del</span>
+        <span className="ml-auto text-xs text-dim">Del</span>
       </button>
 
       {/* Disabled state styling */}

@@ -85,27 +85,27 @@ const PostItem = ({
     }
   };
   return (
-    <div className="bg-white rounded-lg border border-gray-200 shadow-sm">
+    <div className="bg-surface rounded-lg border border-line ">
       <div className="flex items-start justify-between px-3 py-2">
         <div className="flex items-center">
-          <div className="w-6 h-6 rounded-full bg-gray-200 flex items-center justify-center mr-2">
-            <User className="w-3 h-3 text-gray-600" />
+          <div className="w-6 h-6 rounded-full bg-surface-hover flex items-center justify-center mr-2">
+            <User className="w-3 h-3 text-dim" />
           </div>
           <div>
-            <div className="text-xs font-medium text-gray-900">{post.author.name}</div>
-            <div className="text-[10px] text-gray-500 bg-gray-100 px-1.5 py-0.5 rounded-full inline-block">{post.author.role}</div>
+            <div className="text-xs font-medium text-ink">{post.author.name}</div>
+            <div className="text-[10px] text-dim bg-surface-hover px-1.5 py-0.5 rounded-full inline-block">{post.author.role}</div>
           </div>
         </div>
-        <div className="text-[10px] text-gray-400">{post.dateLabel}</div>
+        <div className="text-[10px] text-dim">{post.dateLabel}</div>
       </div>
             {/* Task/Subtask Badge */}
       {post.taskName && (
         <div className="px-3 pb-1 flex items-center gap-2 flex-wrap">
-          <div className="inline-flex items-center gap-1 text-[10px] bg-blue-50 text-blue-700 px-2 py-0.5 rounded-full border border-blue-200">
+          <div className="inline-flex items-center gap-1 text-[10px] bg-info/10 text-info px-2 py-0.5 rounded-full border border-info/20">
             <span className="font-medium">{post.taskName}</span>
             {post.subtaskName && (
               <>
-                <span className="text-blue-400">→</span>
+                <span className="text-info">→</span>
                 <span>{post.subtaskName}</span>
               </>
             )}
@@ -113,33 +113,33 @@ const PostItem = ({
           
           {/* Unlock Status Badges */}
           {isUnlockPending && (
-            <div className="inline-flex items-center gap-1 text-[10px] bg-amber-50 text-amber-700 px-2 py-0.5 rounded-full border border-amber-200">
+            <div className="inline-flex items-center gap-1 text-[10px] bg-warning/10 text-warning px-2 py-0.5 rounded-full border border-warning/20">
               <Unlock className="w-2.5 h-2.5" />
               <span>Unlock Pending</span>
             </div>
           )}
           {isUnlockApproved && (
-            <div className="inline-flex items-center gap-1 text-[10px] bg-green-50 text-green-700 px-2 py-0.5 rounded-full border border-green-200">
+            <div className="inline-flex items-center gap-1 text-[10px] bg-success/10 text-success px-2 py-0.5 rounded-full border border-success/20">
               <CheckCircle className="w-2.5 h-2.5" />
               <span>Unlocked</span>
             </div>
           )}
           {isUnlockRejected && (
-            <div className="inline-flex items-center gap-1 text-[10px] bg-red-50 text-red-700 px-2 py-0.5 rounded-full border border-red-200">
+            <div className="inline-flex items-center gap-1 text-[10px] bg-danger/10 text-danger px-2 py-0.5 rounded-full border border-danger/20">
               <XCircle className="w-2.5 h-2.5" />
               <span>Unlock Rejected</span>
             </div>
           )}
         </div>
       )}
-            <div className="px-3 pb-2 text-[11px] text-gray-800 leading-relaxed">
+            <div className="px-3 pb-2 text-[11px] text-ink leading-relaxed">
         {renderTextWithHighlights(post.text)}
       </div>
       
       {/* Handle both old attachment format and new attachments array */}
       {(post.attachment || (post.attachments && post.attachments.length > 0)) && (
         <div className="px-3">
-          <div className="text-[10px] text-gray-600 mb-1">
+          <div className="text-[10px] text-dim mb-1">
             {post.attachments ? `Attachments (${post.attachments.length})` : 'Attachment'}
           </div>
           
@@ -147,7 +147,7 @@ const PostItem = ({
           {post.attachments && post.attachments.length > 0 ? (
             <div className="space-y-2">
               {post.attachments.map((attachment, index) => (
-                <div key={index} className="border border-gray-200 rounded overflow-hidden">
+                <div key={index} className="border border-line rounded overflow-hidden">
                   {attachment.fileType?.startsWith('image/') ? (
                     <div 
                       className="cursor-pointer"
@@ -160,11 +160,11 @@ const PostItem = ({
                       />
                     </div>
                   ) : (
-                    <div className="h-20 bg-gray-100 flex items-center justify-center">
-                      <ImageIcon className="w-4 h-4 text-gray-400" />
+                    <div className="h-20 bg-surface-hover flex items-center justify-center">
+                      <ImageIcon className="w-4 h-4 text-dim" />
                     </div>
                   )}
-                  <div className="flex items-center justify-between text-[10px] text-gray-600 px-2 py-1 bg-gray-50">
+                  <div className="flex items-center justify-between text-[10px] text-dim px-2 py-1 bg-canvas">
                     <span className="truncate">{attachment.fileName}</span>
                     <span>{formatSizeMB(attachment.fileSize)}</span>
                   </div>
@@ -173,7 +173,7 @@ const PostItem = ({
             </div>
           ) : (
             /* Old single attachment format */
-            <div className="border border-gray-200 rounded overflow-hidden">
+            <div className="border border-line rounded overflow-hidden">
               {post.attachment.preview ? (
                 <div 
                   className="cursor-pointer"
@@ -186,11 +186,11 @@ const PostItem = ({
                   />
                 </div>
               ) : (
-                <div className="h-20 bg-gray-100 flex items-center justify-center">
-                  <ImageIcon className="w-4 h-4 text-gray-400" />
+                <div className="h-20 bg-surface-hover flex items-center justify-center">
+                  <ImageIcon className="w-4 h-4 text-dim" />
                 </div>
               )}
-              <div className="flex items-center justify-between text-[10px] text-gray-600 px-2 py-1 bg-gray-50">
+              <div className="flex items-center justify-between text-[10px] text-dim px-2 py-1 bg-canvas">
                 <span>{post.attachment.name}</span>
                 <span>{formatSizeMB(post.attachment.size)}</span>
               </div>
@@ -199,15 +199,15 @@ const PostItem = ({
         </div>
       )}
       
-      <div className="px-3 py-2 border-t border-gray-100">
-        <div className="flex items-center justify-between text-[11px] text-gray-600 mb-2">
-          <button className="inline-flex items-center gap-1 hover:text-gray-800">
+      <div className="px-3 py-2 border-t border-line">
+        <div className="flex items-center justify-between text-[11px] text-dim mb-2">
+          <button className="inline-flex items-center gap-1 hover:text-ink">
             <span className="text-sm leading-none">▢</span>
             <span>{post.replies?.length || 0} replies</span>
           </button>
           <button 
             onClick={() => setReplyingTo(replyingTo === post.id ? null : post.id)}
-            className="hover:text-gray-800 text-[11px]"
+            className="hover:text-ink text-[11px]"
           >
             reply
           </button>
@@ -221,7 +221,7 @@ const PostItem = ({
               <button
                 onClick={handleRequestUnlock}
                 disabled={isRequestingUnlock}
-                className="inline-flex items-center gap-1 text-[11px] bg-amber-50 text-amber-700 px-3 py-1.5 rounded-md border border-amber-200 hover:bg-amber-100 transition-colors disabled:opacity-50"
+                className="inline-flex items-center gap-1 text-[11px] bg-warning/10 text-warning px-3 py-1.5 rounded-md border border-warning/20 hover:bg-warning/10 transition-colors disabled:opacity-50"
               >
                 <Unlock className="w-3 h-3" />
                 <span>{isRequestingUnlock ? 'Requesting...' : 'Request Unlock for This Task'}</span>
@@ -234,7 +234,7 @@ const PostItem = ({
                 <button
                   onClick={() => handleApproveUnlock(true)}
                   disabled={isApprovingUnlock}
-                  className="inline-flex items-center gap-1 text-[11px] bg-green-50 text-green-700 px-3 py-1.5 rounded-md border border-green-200 hover:bg-green-100 transition-colors disabled:opacity-50"
+                  className="inline-flex items-center gap-1 text-[11px] bg-success/10 text-success px-3 py-1.5 rounded-md border border-success/20 hover:bg-success/10 transition-colors disabled:opacity-50"
                 >
                   <CheckCircle className="w-3 h-3" />
                   <span>Approve Unlock</span>
@@ -242,7 +242,7 @@ const PostItem = ({
                 <button
                   onClick={() => handleApproveUnlock(false)}
                   disabled={isApprovingUnlock}
-                  className="inline-flex items-center gap-1 text-[11px] bg-red-50 text-red-700 px-3 py-1.5 rounded-md border border-red-200 hover:bg-red-100 transition-colors disabled:opacity-50"
+                  className="inline-flex items-center gap-1 text-[11px] bg-danger/10 text-danger px-3 py-1.5 rounded-md border border-danger/20 hover:bg-danger/10 transition-colors disabled:opacity-50"
                 >
                   <XCircle className="w-3 h-3" />
                   <span>Reject</span>

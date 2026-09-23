@@ -212,10 +212,10 @@ export default function SharedProfile() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-100 flex items-center justify-center">
+      <div className="min-h-screen bg-surface-hover flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 mx-auto mb-4" style={{ borderColor: portfolioConfig.accentColor }} />
-          <p className="text-gray-600">Loading portfolio...</p>
+          <p className="text-dim">Loading portfolio...</p>
         </div>
       </div>
     );
@@ -223,10 +223,10 @@ export default function SharedProfile() {
 
   if (error || !vendorData) {
     return (
-      <div className="min-h-screen bg-gray-100 flex items-center justify-center">
+      <div className="min-h-screen bg-surface-hover flex items-center justify-center">
         <div className="text-center">
-          <p className="text-red-600 mb-4">{error || 'Profile not found'}</p>
-          <button onClick={() => navigate('/')} className="text-blue-600 hover:text-blue-700 font-medium">
+          <p className="text-danger mb-4">{error || 'Profile not found'}</p>
+          <button onClick={() => navigate('/')} className="text-info hover:text-info font-medium">
             Back to home
           </button>
         </div>
@@ -274,11 +274,11 @@ export default function SharedProfile() {
   ].filter(Boolean);
 
   return (
-    <div className="min-h-screen bg-gray-100">
+    <div className="min-h-screen bg-surface-hover">
       {showDetailsForm && (
         <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-[70] backdrop-blur-sm">
-          <div className="bg-white rounded-xl shadow-2xl max-w-md w-full mx-4">
-            <div className="p-6 border-b border-gray-200" style={{ background: `linear-gradient(135deg, ${portfolioConfig.accentColor}, #1a1a1a)` }}>
+          <div className="bg-surface rounded-xl shadow-2xl max-w-md w-full mx-4">
+            <div className="p-6 border-b border-line" style={{ background: `linear-gradient(135deg, ${portfolioConfig.accentColor}, #1a1a1a)` }}>
               <h2 className="text-xl font-bold text-white">Welcome</h2>
               <p className="text-white/70 text-sm mt-1">Please provide your details to view this company portfolio</p>
             </div>
@@ -291,19 +291,19 @@ export default function SharedProfile() {
                 { name: 'visitorCountry', label: 'Country', type: 'text', placeholder: 'Your country' },
               ].map(field => (
                 <div key={field.name}>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">{field.label} *</label>
+                  <label className="block text-sm font-medium text-ink mb-1">{field.label} *</label>
                   <input
                     type={field.type}
                     name={field.name}
                     value={visitorData[field.name]}
                     onChange={handleFormChange}
                     placeholder={field.placeholder}
-                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:outline-none text-sm"
+                    className="w-full px-4 py-2.5 border border-line rounded-lg focus:ring-2 focus:outline-none text-sm"
                   />
                 </div>
               ))}
             </div>
-            <div className="p-6 border-t border-gray-200">
+            <div className="p-6 border-t border-line">
               <button
                 onClick={handleSaveDetails}
                 disabled={isSaving}

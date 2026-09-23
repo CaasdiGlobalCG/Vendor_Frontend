@@ -25,7 +25,7 @@ export default function ContactPage({ companyName, profileData, accentColor = '#
   ];
 
   return (
-    <div pageTitle="Contact" className="relative overflow-hidden" style={{ minHeight: '1123px', backgroundColor: '#fafafa' }}>
+    <div pageTitle="Contact" className="relative overflow-hidden" style={{ minHeight: '1123px', backgroundColor: 'rgb(var(--surface-hover))' }}>
       {/* ===== HERO — Large "Thank You" Section ===== */}
       <div className="relative h-[400px] overflow-hidden" style={{ backgroundColor: accentColor }}>
         {/* Geometric decorations */}
@@ -38,7 +38,7 @@ export default function ContactPage({ companyName, profileData, accentColor = '#
 
         {/* Diagonal slice at bottom */}
         <div className="absolute bottom-0 left-0 right-0 h-16"
-          style={{ background: '#fafafa', clipPath: 'polygon(0 100%, 100% 100%, 100% 0)' }} />
+          style={{ background: 'rgb(var(--surface-hover))', clipPath: 'polygon(0 100%, 100% 100%, 100% 0)' }} />
 
         <div className="relative z-10 px-10 md:px-14 flex flex-col items-center justify-center h-full text-center">
           <div className="w-12 h-12 rounded-full bg-white/10 flex items-center justify-center mb-6">
@@ -59,28 +59,28 @@ export default function ContactPage({ companyName, profileData, accentColor = '#
       <div className="px-10 md:px-14 py-10">
         <div className="flex items-center gap-3 mb-6">
           <div className="w-10 h-[3px]" style={{ backgroundColor: accentColor }} />
-          <span className="text-[10px] font-bold uppercase tracking-[0.3em] text-gray-400">Get in Touch</span>
+          <span className="text-[10px] font-bold uppercase tracking-[0.3em] text-dim">Get in Touch</span>
         </div>
 
         {contactItems.length > 0 ? (
           <div className="grid grid-cols-2 gap-4 mb-8">
             {contactItems.map(({ icon: Icon, label, value }, i) => (
-              <div key={i} className="flex items-start gap-4 p-5 bg-white rounded-sm border border-gray-100">
+              <div key={i} className="flex items-start gap-4 p-5 bg-surface rounded-sm border border-line">
                 <div className="w-10 h-10 rounded-sm flex items-center justify-center flex-shrink-0"
-                  style={{ backgroundColor: i === 0 ? accentColor : '#1a1a1a' }}>
+                  style={{ backgroundColor: i === 0 ? accentColor: 'rgb(var(--text-ink))' }}>
                   <Icon size={16} className="text-white" />
                 </div>
                 <div>
-                  <p className="text-[9px] font-bold uppercase tracking-widest text-gray-400 mb-1">{label}</p>
-                  <p className="text-sm font-medium text-gray-800 break-all">{value}</p>
+                  <p className="text-[9px] font-bold uppercase tracking-widest text-dim mb-1">{label}</p>
+                  <p className="text-sm font-medium text-ink break-all">{value}</p>
                 </div>
               </div>
             ))}
           </div>
         ) : (
-          <div className="text-center py-8 bg-white rounded-sm border border-gray-100 mb-8">
-            <Mail size={24} className="mx-auto mb-2 text-gray-300" />
-            <p className="text-gray-400 text-sm">Contact information will appear here</p>
+          <div className="text-center py-8 bg-surface rounded-sm border border-line mb-8">
+            <Mail size={24} className="mx-auto mb-2 text-dim" />
+            <p className="text-dim text-sm">Contact information will appear here</p>
           </div>
         )}
 
@@ -89,13 +89,13 @@ export default function ContactPage({ companyName, profileData, accentColor = '#
           <div className="mb-6">
             <div className="flex items-center gap-2 mb-3">
               <FileText size={12} style={{ color: accentColor }} />
-              <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400">Compliance</p>
+              <p className="text-[10px] font-bold uppercase tracking-widest text-dim">Compliance</p>
             </div>
             <div className="flex gap-3">
               {complianceItems.map((item, i) => (
-                <div key={i} className="px-4 py-3 bg-white rounded-sm border border-gray-100 flex-1">
-                  <p className="text-[9px] font-bold uppercase tracking-wider text-gray-400 mb-0.5">{item.label}</p>
-                  <p className="text-xs font-mono font-bold text-gray-800">{item.value}</p>
+                <div key={i} className="px-4 py-3 bg-surface rounded-sm border border-line flex-1">
+                  <p className="text-[9px] font-bold uppercase tracking-wider text-dim mb-0.5">{item.label}</p>
+                  <p className="text-xs font-mono font-bold text-ink">{item.value}</p>
                 </div>
               ))}
             </div>
@@ -105,10 +105,10 @@ export default function ContactPage({ companyName, profileData, accentColor = '#
 
       {/* ===== FOOTER BAR ===== */}
       <div className="absolute bottom-0 left-0 right-0">
-        <div className="bg-gray-900 px-10 md:px-14 py-5 flex items-center justify-between">
+        <div className="bg-cta px-10 md:px-14 py-5 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <Building size={14} style={{ color: accentColor }} />
-            <span className="text-white text-xs font-bold">{companyName || 'Company'}</span>
+            <span className="text-cta-foreground text-xs font-bold">{companyName || 'Company'}</span>
           </div>
           <p className="text-white/30 text-[9px]">
             &copy; {new Date().getFullYear()} All rights reserved

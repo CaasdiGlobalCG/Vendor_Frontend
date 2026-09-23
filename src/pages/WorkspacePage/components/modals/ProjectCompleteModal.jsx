@@ -210,14 +210,14 @@ const ProjectCompleteModal = ({ isOpen, onClose, workspace, userRole, isPM, isCl
   const getStatusBadge = (status) => {
     switch(status) {
       case 'complete':
-        return { bg: 'bg-green-100', text: 'text-green-800', label: '✓ Complete' };
+        return { bg: 'bg-success/10', text: 'text-success', label: '✓ Complete' };
       case 'client_approval_pending':
-        return { bg: 'bg-yellow-100', text: 'text-yellow-800', label: '⏳ Awaiting Client' };
+        return { bg: 'bg-warning/10', text: 'text-warning', label: '⏳ Awaiting Client' };
       case 'rejected':
       case 'client_rejected':
-        return { bg: 'bg-red-100', text: 'text-red-800', label: '✗ Rejected' };
+        return { bg: 'bg-danger/10', text: 'text-danger', label: '✗ Rejected' };
       default:
-        return { bg: 'bg-blue-100', text: 'text-blue-800', label: '⏳ Pending Review' };
+        return { bg: 'bg-info/10', text: 'text-info', label: '⏳ Pending Review' };
     }
   };
 
@@ -225,40 +225,40 @@ const ProjectCompleteModal = ({ isOpen, onClose, workspace, userRole, isPM, isCl
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
-      <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+      <div className="bg-surface rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
         {/* Header */}
-        <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between">
+        <div className="sticky top-0 bg-surface border-b border-line px-6 py-4 flex items-center justify-between">
           <div>
-            <h2 className="text-xl font-semibold text-gray-900">Project Completion Request</h2>
-            <p className="text-sm text-gray-600 mt-1">Review vendor's project completion submission</p>
+            <h2 className="text-xl font-semibold text-ink">Project Completion Request</h2>
+            <p className="text-sm text-dim mt-1">Review vendor's project completion submission</p>
           </div>
           <button
             onClick={onClose}
-            className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+            className="p-2 hover:bg-surface-hover rounded-lg transition-colors"
           >
-            <X className="w-5 h-5 text-gray-600" />
+            <X className="w-5 h-5 text-dim" />
           </button>
         </div>
 
         {/* Content */}
         <div className="p-6">
           {successMessage && (
-            <div className="mb-4 p-4 bg-green-50 border border-green-200 rounded-lg flex items-center space-x-3">
-              <CheckCircle className="w-5 h-5 text-green-600" />
-              <span className="text-green-800">{successMessage}</span>
+            <div className="mb-4 p-4 bg-success/10 border border-success/20 rounded-lg flex items-center space-x-3">
+              <CheckCircle className="w-5 h-5 text-success" />
+              <span className="text-success">{successMessage}</span>
             </div>
           )}
 
           {error && (
-            <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg flex items-center space-x-3">
-              <XCircle className="w-5 h-5 text-red-600" />
-              <span className="text-red-800">{error}</span>
+            <div className="mb-4 p-4 bg-danger/10 border border-danger/20 rounded-lg flex items-center space-x-3">
+              <XCircle className="w-5 h-5 text-danger" />
+              <span className="text-danger">{error}</span>
             </div>
           )}
 
           {loading ? (
             <div className="flex items-center justify-center py-8">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-info"></div>
             </div>
           ) : projectStatus ? (
             <div className="space-y-6">
@@ -274,18 +274,18 @@ const ProjectCompleteModal = ({ isOpen, onClose, workspace, userRole, isPM, isCl
               {/* Completion Details */}
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Completion Description</label>
-                  <p className="text-gray-900 p-4 bg-gray-50 rounded-lg">{projectStatus.completionDescription || 'N/A'}</p>
+                  <label className="block text-sm font-medium text-ink mb-2">Completion Description</label>
+                  <p className="text-ink p-4 bg-canvas rounded-lg">{projectStatus.completionDescription || 'N/A'}</p>
                 </div>
 
                 {projectStatus.completionFiles && (
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Attached Documents</label>
+                    <label className="block text-sm font-medium text-ink mb-2">Attached Documents</label>
                     <a
                       href={projectStatus.completionFiles}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="inline-flex items-center space-x-2 text-blue-600 hover:text-blue-800 underline"
+                      className="inline-flex items-center space-x-2 text-info hover:text-info underline"
                     >
                       <FileDown className="w-4 h-4" />
                       <span>Download File</span>
@@ -294,28 +294,28 @@ const ProjectCompleteModal = ({ isOpen, onClose, workspace, userRole, isPM, isCl
                 )}
 
                 {/* Timeline */}
-                <div className="space-y-2 text-sm text-gray-600 p-4 bg-gray-50 rounded-lg">
+                <div className="space-y-2 text-sm text-dim p-4 bg-canvas rounded-lg">
                   <div className="flex items-center justify-between">
                     <span>Submitted:</span>
                     <span className="font-medium">{new Date(projectStatus.submittedAt).toLocaleString()}</span>
                   </div>
 
                   {projectStatus.pmApprovedAt && (
-                    <div className="flex items-center justify-between text-green-700">
+                    <div className="flex items-center justify-between text-success">
                       <span>PM Approved:</span>
                       <span className="font-medium">{new Date(projectStatus.pmApprovedAt).toLocaleString()}</span>
                     </div>
                   )}
 
                   {projectStatus.clientApprovedAt && (
-                    <div className="flex items-center justify-between text-green-700">
+                    <div className="flex items-center justify-between text-success">
                       <span>Client Approved (Completed):</span>
                       <span className="font-medium">{new Date(projectStatus.clientApprovedAt).toLocaleString()}</span>
                     </div>
                   )}
 
                   {projectStatus.rejectionReason && (
-                    <div className="flex items-start justify-between text-red-700 bg-red-50 p-3 rounded mt-2">
+                    <div className="flex items-start justify-between text-danger bg-danger/10 p-3 rounded mt-2">
                       <span>Rejection Reason:</span>
                       <span className="font-medium text-right ml-2">{projectStatus.rejectionReason}</span>
                     </div>
@@ -325,13 +325,13 @@ const ProjectCompleteModal = ({ isOpen, onClose, workspace, userRole, isPM, isCl
 
               {/* Rejection Form */}
               {showRejectForm && (
-                <div className="p-4 bg-red-50 rounded-lg border border-red-200">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Rejection Reason</label>
+                <div className="p-4 bg-danger/10 rounded-lg border border-danger/20">
+                  <label className="block text-sm font-medium text-ink mb-2">Rejection Reason</label>
                   <textarea
                     value={rejectionReason}
                     onChange={(e) => setRejectionReason(e.target.value)}
                     placeholder="Please explain why this project completion is being rejected..."
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent resize-none"
+                    className="w-full px-4 py-3 border border-line rounded-lg focus:ring-2 focus:ring-danger focus:border-transparent resize-none"
                     rows="3"
                   />
                 </div>
@@ -342,11 +342,11 @@ const ProjectCompleteModal = ({ isOpen, onClose, workspace, userRole, isPM, isCl
                 (isPM === false && projectStatus.reviewStatus === 'client_approval_pending')) && (
                 <>
                   {!showRejectForm ? (
-                    <div className="flex items-center space-x-3 pt-4 border-t border-gray-200">
+                    <div className="flex items-center space-x-3 pt-4 border-t border-line">
                       <button
                         onClick={handleApprove}
                         disabled={approving}
-                        className="flex-1 px-4 py-3 bg-green-600 hover:bg-green-700 disabled:bg-gray-400 text-white font-medium rounded-lg transition-colors flex items-center justify-center space-x-2"
+                        className="flex-1 px-4 py-3 bg-success hover:bg-success disabled:bg-cta text-cta-foreground font-medium rounded-lg transition-colors flex items-center justify-center space-x-2"
                       >
                         <CheckCircle className="w-4 h-4" />
                         <span>{approving ? 'Approving...' : 'Approve Completion'}</span>
@@ -354,25 +354,25 @@ const ProjectCompleteModal = ({ isOpen, onClose, workspace, userRole, isPM, isCl
                       <button
                         onClick={() => setShowRejectForm(true)}
                         disabled={rejecting}
-                        className="flex-1 px-4 py-3 bg-red-600 hover:bg-red-700 disabled:bg-gray-400 text-white font-medium rounded-lg transition-colors flex items-center justify-center space-x-2"
+                        className="flex-1 px-4 py-3 bg-danger hover:bg-danger disabled:bg-cta text-cta-foreground font-medium rounded-lg transition-colors flex items-center justify-center space-x-2"
                       >
                         <XCircle className="w-4 h-4" />
                         <span>{rejecting ? 'Rejecting...' : 'Reject Completion'}</span>
                       </button>
                     </div>
                   ) : (
-                    <div className="flex items-center space-x-3 pt-4 border-t border-gray-200">
+                    <div className="flex items-center space-x-3 pt-4 border-t border-line">
                       <button
                         onClick={handleReject}
                         disabled={rejecting}
-                        className="flex-1 px-4 py-3 bg-red-600 hover:bg-red-700 disabled:bg-gray-400 text-white font-medium rounded-lg transition-colors"
+                        className="flex-1 px-4 py-3 bg-danger hover:bg-danger disabled:bg-cta text-cta-foreground font-medium rounded-lg transition-colors"
                       >
                         {rejecting ? 'Rejecting...' : 'Confirm Rejection'}
                       </button>
                       <button
                         onClick={() => setShowRejectForm(false)}
                         disabled={rejecting}
-                        className="flex-1 px-4 py-3 bg-gray-300 hover:bg-gray-400 disabled:bg-gray-400 text-gray-800 font-medium rounded-lg transition-colors"
+                        className="flex-1 px-4 py-3 bg-surface-hover hover:bg-cta disabled:bg-cta text-ink font-medium rounded-lg transition-colors"
                       >
                         Cancel
                       </button>
@@ -383,7 +383,7 @@ const ProjectCompleteModal = ({ isOpen, onClose, workspace, userRole, isPM, isCl
             </div>
           ) : (
             <div className="text-center py-8">
-              <p className="text-gray-600">No project completion request found</p>
+              <p className="text-dim">No project completion request found</p>
             </div>
           )}
         </div>

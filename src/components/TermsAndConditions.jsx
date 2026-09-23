@@ -20,7 +20,7 @@ function TermsAndConditions() {
   };
 
   return (
-    <div className="flex min-h-screen bg-white">
+    <div className="flex min-h-screen bg-surface">
       {/* Left Sidebar */}
       <SidebarContent />
 
@@ -30,21 +30,21 @@ function TermsAndConditions() {
         <StepIndicator currentStep={7} />
 
         {/* Terms Content */}
-        <div className="w-full max-w-4xl mx-auto px-4 pb-10 bg-white md:px-0">
-          <h1 className="text-2xl font-bold text-gray-900 mb-8">
+        <div className="w-full max-w-4xl mx-auto px-4 pb-10 bg-surface md:px-0">
+          <h1 className="text-2xl font-bold text-ink mb-8">
             Terms & Condition
           </h1>
 
           <div className="max-w-none space-y-8">
             {/* Terms Content */}
-            <div className="border-t border-gray-200 pt-6">
-              <div className="max-h-96 overflow-y-auto space-y-6 text-gray-700">
+            <div className="border-t border-line pt-6">
+              <div className="max-h-96 overflow-y-auto space-y-6 text-ink">
                 <p className="text-sm leading-relaxed">
                   Welcome to CAASDI Global ("Company", "we", "our", or "us"). These Terms and Conditions ("Terms") govern your use of the CAASDI Global platform, services, and related applications (collectively, the "Platform"). By registering, accessing, or using the Platform, you ("User", "Client", "Vendor", or "Project Manager") agree to these Terms.
                 </p>
 
                 <section>
-                  <h3 className="text-base font-semibold text-gray-900 mb-2">
+                  <h3 className="text-base font-semibold text-ink mb-2">
                     1. Eligibility & Account Registration
                   </h3>
                   <div className="space-y-2 text-sm leading-relaxed">
@@ -56,7 +56,7 @@ function TermsAndConditions() {
                 </section>
 
                 <section>
-                  <h3 className="text-base font-semibold text-gray-900 mb-2">
+                  <h3 className="text-base font-semibold text-ink mb-2">
                     2. Platform Services
                   </h3>
                   <div className="space-y-2 text-sm leading-relaxed">
@@ -67,7 +67,7 @@ function TermsAndConditions() {
                 </section>
 
                 <section>
-                  <h3 className="text-base font-semibold text-gray-900 mb-2">
+                  <h3 className="text-base font-semibold text-ink mb-2">
                     3. User Responsibilities
                   </h3>
                   <div className="space-y-2 text-sm leading-relaxed">
@@ -79,7 +79,7 @@ function TermsAndConditions() {
                 </section>
 
                 <section>
-                  <h3 className="text-base font-semibold text-gray-900 mb-2">
+                  <h3 className="text-base font-semibold text-ink mb-2">
                     4. Privacy & Data Protection
                   </h3>
                   <div className="space-y-2 text-sm leading-relaxed">
@@ -90,7 +90,7 @@ function TermsAndConditions() {
                 </section>
 
                 <section>
-                  <h3 className="text-base font-semibold text-gray-900 mb-2">
+                  <h3 className="text-base font-semibold text-ink mb-2">
                     5. Limitation of Liability
                   </h3>
                   <div className="space-y-2 text-sm leading-relaxed">
@@ -101,7 +101,7 @@ function TermsAndConditions() {
                 </section>
 
                 <section>
-                  <h3 className="text-base font-semibold text-gray-900 mb-2">
+                  <h3 className="text-base font-semibold text-ink mb-2">
                     6. Termination
                   </h3>
                   <div className="space-y-2 text-sm leading-relaxed">
@@ -112,7 +112,7 @@ function TermsAndConditions() {
                 </section>
 
                 <section>
-                  <h3 className="text-base font-semibold text-gray-900 mb-2">
+                  <h3 className="text-base font-semibold text-ink mb-2">
                     7. Governing Law
                   </h3>
                   <p className="text-sm leading-relaxed">
@@ -129,9 +129,9 @@ function TermsAndConditions() {
                 id="acceptTerms"
                 checked={isAccepted}
                 onChange={(e) => setIsAccepted(e.target.checked)}
-                className="mt-1 h-4 w-4 text-emerald-600 border-gray-300 rounded focus:ring-emerald-500"
+                className="mt-1 h-4 w-4 text-ink border-line rounded focus:ring-ink"
               />
-              <label htmlFor="acceptTerms" className="text-sm text-gray-700 leading-relaxed">
+              <label htmlFor="acceptTerms" className="text-sm text-ink leading-relaxed">
                 I agree to terms and condition
               </label>
             </div>
@@ -141,7 +141,7 @@ function TermsAndConditions() {
               <button
                 type="button"
                 onClick={handleDecline}
-                className="px-6 py-2 border border-emerald-500 text-emerald-500 rounded-lg hover:bg-emerald-50 transition-colors"
+                className="px-6 py-2 border border-line text-ink rounded-lg hover:bg-surface-hover transition-colors"
               >
                 cancel
               </button>
@@ -149,7 +149,7 @@ function TermsAndConditions() {
                 type="button"
                 onClick={handleAccept}
                 disabled={!isAccepted}
-                className="text-white px-6 py-2 rounded-lg font-medium bg-gradient-to-r from-[#0F5848] to-[#21BE9C] hover:from-[#0F5848]/90 hover:to-[#21BE9C]/90 focus:outline-none focus:ring-2 focus:ring-emerald-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="text-white px-6 py-2 rounded-lg font-medium bg-black hover:from-black/90 hover:to-black/90 focus:outline-none focus:ring-2 focus:ring-ink disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 Agree and continue
               </button>

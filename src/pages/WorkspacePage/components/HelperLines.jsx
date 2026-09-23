@@ -15,13 +15,13 @@ const HelperLines = ({ horizontal = null, vertical = null }) => {
     <div className="absolute inset-0 pointer-events-none" style={{ zIndex: 9 }}>
       {vertical != null && (
         <div
-          className="absolute top-0 bottom-0 bg-blue-500"
+          className="absolute top-0 bottom-0 bg-info"
           style={{ left: vertical * zoom + x, width: 1 }}
         />
       )}
       {horizontal != null && (
         <div
-          className="absolute left-0 right-0 bg-blue-500"
+          className="absolute left-0 right-0 bg-info"
           style={{ top: horizontal * zoom + y, height: 1 }}
         />
       )}

@@ -756,17 +756,17 @@ const ElementNode = ({ id, data, isConnectable, selected }) => {
   const getApprovalStatusColor = () => {
     switch (data.approvalStatus) {
       case 'sent_to_pm':
-        return 'bg-blue-100 text-blue-800 border-blue-300'; // Sent to PM - blue
+        return 'bg-info/10 text-info border-info/30'; // Sent to PM - blue
       case 'pm_approved':
-        return 'bg-yellow-100 text-yellow-800 border-yellow-300'; // PM approved, waiting for client - yellow
+        return 'bg-warning/10 text-warning border-warning/30'; // PM approved, waiting for client - yellow
       case 'client_approved':
-        return 'bg-green-100 text-green-800 border-green-300'; // Fully approved - green
+        return 'bg-success/10 text-success border-success/30'; // Fully approved - green
       case 'locked':
-        return 'bg-gray-100 text-gray-800 border-gray-300'; // Locked - gray
+        return 'bg-surface-hover text-ink border-line'; // Locked - gray
       case 'rejected':
-        return 'bg-red-100 text-red-800 border-red-300'; // Rejected - red
+        return 'bg-danger/10 text-danger border-danger/30'; // Rejected - red
       default:
-        return 'bg-gray-100 text-gray-800 border-gray-300'; // Draft - gray
+        return 'bg-surface-hover text-ink border-line'; // Draft - gray
     }
   };
 
@@ -1154,7 +1154,7 @@ const ElementNode = ({ id, data, isConnectable, selected }) => {
 
     if (!data.documentUrl) {
       return (
-        <div className="p-4 rounded-lg border border-amber-200 bg-amber-50 text-sm text-amber-800">
+        <div className="p-4 rounded-lg border border-warning/20 bg-warning/10 text-sm text-warning">
           Document URL unavailable. Please re-upload the file from the source list.
         </div>
       );
@@ -1165,31 +1165,31 @@ const ElementNode = ({ id, data, isConnectable, selected }) => {
 
     if (isPdf) {
       return (
-        <div className="w-full h-full flex flex-col bg-white overflow-hidden">
+        <div className="w-full h-full flex flex-col bg-surface overflow-hidden">
           {/* Document Header */}
-          <div className="flex items-start justify-between gap-4 p-2 border-b border-slate-200 bg-slate-50 flex-shrink-0">
+          <div className="flex items-start justify-between gap-4 p-2 border-b border-line bg-canvas flex-shrink-0">
             <div className="min-w-0">
-              <p className="text-xs font-semibold text-slate-900 truncate">{data.name}</p>
-              <p className="text-[10px] text-slate-500">{meta.id || 'Document'}</p>
+              <p className="text-xs font-semibold text-ink truncate">{data.name}</p>
+              <p className="text-[10px] text-dim">{meta.id || 'Document'}</p>
             </div>
             <div className="flex items-center space-x-0.5 flex-shrink-0">
               <button
                 onClick={handleDocumentPreviewClick}
-                className="p-1 rounded text-slate-500 hover:text-blue-600 hover:bg-blue-50 transition-colors"
+                className="p-1 rounded text-dim hover:text-info hover:bg-info/10 transition-colors"
                 title="Preview"
               >
                 <Eye className="w-3 h-3" />
               </button>
               <button
                 onClick={handleDocumentDownload}
-                className="p-1 rounded text-slate-500 hover:text-emerald-600 hover:bg-emerald-50 transition-colors"
+                className="p-1 rounded text-dim hover:text-ink hover:bg-surface-hover transition-colors"
                 title="Download"
               >
                 <Download className="w-3 h-3" />
               </button>
               <button
                 onClick={handleDocumentOpen}
-                className="p-1 rounded text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 transition-colors"
+                className="p-1 rounded text-dim hover:text-info hover:bg-info/10 transition-colors"
                 title="Open in new tab"
               >
                 <ExternalLink className="w-3 h-3" />
@@ -1198,7 +1198,7 @@ const ElementNode = ({ id, data, isConnectable, selected }) => {
           </div>
 
           {/* PDF Viewer */}
-          <div className="flex-1 bg-gray-100 overflow-hidden min-h-0">
+          <div className="flex-1 bg-surface-hover overflow-hidden min-h-0">
             <iframe
               src={`${data.documentUrl}#toolbar=0&navpanes=0&zoom=fit`}
               title={data.name}
@@ -1213,30 +1213,30 @@ const ElementNode = ({ id, data, isConnectable, selected }) => {
     // Fallback card view for non-PDF documents
     return (
       <div className="space-y-4">
-        <div className="rounded-xl border border-slate-200 bg-slate-50 p-4 shadow-sm">
+        <div className="rounded-xl border border-line bg-canvas p-4 ">
           <div className="flex items-start justify-between gap-4">
             <div>
-              <p className="text-sm font-semibold text-slate-900">{data.name}</p>
-              <p className="mt-1 text-xs text-slate-500">{meta.id || 'Document'}</p>
+              <p className="text-sm font-semibold text-ink">{data.name}</p>
+              <p className="mt-1 text-xs text-dim">{meta.id || 'Document'}</p>
             </div>
             <div className="flex items-center space-x-2">
               <button
                 onClick={handleDocumentPreviewClick}
-                className="p-2 rounded-md text-slate-500 hover:text-blue-600 hover:bg-blue-50 transition-colors"
+                className="p-2 rounded-md text-dim hover:text-info hover:bg-info/10 transition-colors"
                 title="Preview"
               >
                 <Eye className="w-4 h-4" />
               </button>
               <button
                 onClick={handleDocumentDownload}
-                className="p-2 rounded-md text-slate-500 hover:text-emerald-600 hover:bg-emerald-50 transition-colors"
+                className="p-2 rounded-md text-dim hover:text-ink hover:bg-surface-hover transition-colors"
                 title="Download"
               >
                 <Download className="w-4 h-4" />
               </button>
               <button
                 onClick={handleDocumentOpen}
-                className="p-2 rounded-md text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 transition-colors"
+                className="p-2 rounded-md text-dim hover:text-info hover:bg-info/10 transition-colors"
                 title="Open in new tab"
               >
                 <ExternalLink className="w-4 h-4" />
@@ -1244,24 +1244,24 @@ const ElementNode = ({ id, data, isConnectable, selected }) => {
             </div>
           </div>
 
-          <div className="mt-4 grid grid-cols-2 gap-3 text-xs text-slate-600">
+          <div className="mt-4 grid grid-cols-2 gap-3 text-xs text-dim">
             <div>
-              <p className="font-medium text-slate-500">Customer</p>
-              <p className="mt-0.5 text-slate-800">{meta.customer || '—'}</p>
+              <p className="font-medium text-dim">Customer</p>
+              <p className="mt-0.5 text-ink">{meta.customer || '—'}</p>
             </div>
             <div>
-              <p className="font-medium text-slate-500">Date</p>
-              <p className="mt-0.5 text-slate-800">{meta.date ? new Date(meta.date).toLocaleDateString() : '—'}</p>
+              <p className="font-medium text-dim">Date</p>
+              <p className="mt-0.5 text-ink">{meta.date ? new Date(meta.date).toLocaleDateString() : '—'}</p>
             </div>
             <div>
-              <p className="font-medium text-slate-500">Amount</p>
-              <p className="mt-0.5 text-slate-800">{meta.amount || '—'}</p>
+              <p className="font-medium text-dim">Amount</p>
+              <p className="mt-0.5 text-ink">{meta.amount || '—'}</p>
             </div>
             <div>
-              <p className="font-medium text-slate-500">Status</p>
+              <p className="font-medium text-dim">Status</p>
               <p className="mt-0.5">
                 {meta.status ? (
-                  <span className="inline-flex items-center rounded-full bg-white px-2 py-0.5 text-[11px] font-medium text-slate-700 border border-slate-200">
+                  <span className="inline-flex items-center rounded-full bg-surface px-2 py-0.5 text-[11px] font-medium text-ink border border-line">
                     {meta.status}
                   </span>
                 ) : '—'}
@@ -1375,7 +1375,7 @@ const ElementNode = ({ id, data, isConnectable, selected }) => {
   const renderFieldLabel = (fallback) => {
     if (isElementLocked()) {
       const text = fieldLabel || fallback;
-      return text ? <div className="text-xs font-semibold text-gray-500 mb-1">{text}</div> : null;
+      return text ? <div className="text-xs font-semibold text-dim mb-1">{text}</div> : null;
     }
     return (
       <input
@@ -1385,7 +1385,7 @@ const ElementNode = ({ id, data, isConnectable, selected }) => {
         onChange={(e) => setFieldLabel(e.target.value)}
         onKeyDown={(e) => e.stopPropagation()}
         onClick={(e) => e.stopPropagation()}
-        className="text-xs font-semibold text-gray-600 mb-1 w-full bg-transparent outline-none border-b border-transparent focus:border-blue-300 placeholder-gray-400 pb-0.5"
+        className="text-xs font-semibold text-dim mb-1 w-full bg-transparent outline-none border-b border-transparent focus:border-info/30 placeholder-dim pb-0.5"
       />
     );
   };
@@ -1400,11 +1400,11 @@ const ElementNode = ({ id, data, isConnectable, selected }) => {
             value={opt}
             onChange={(e) => setOptions(options.map((o, j) => (j === i ? e.target.value : o)))}
             onKeyDown={(e) => e.stopPropagation()}
-            className="flex-1 px-2 py-1 text-xs border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
+            className="flex-1 px-2 py-1 text-xs border border-line rounded focus:outline-none focus:ring-1 focus:ring-info"
           />
           <button
             onClick={() => setOptions(options.filter((_, j) => j !== i))}
-            className="p-1 text-gray-400 hover:text-red-500 transition-colors"
+            className="p-1 text-dim hover:text-danger transition-colors"
             title="Remove option"
           >
             <X className="w-3.5 h-3.5" />
@@ -1414,13 +1414,13 @@ const ElementNode = ({ id, data, isConnectable, selected }) => {
       <div className="flex gap-1.5 pt-1">
         <button
           onClick={() => setOptions([...options, `Option ${options.length + 1}`])}
-          className="flex-1 text-[11px] font-medium text-blue-600 hover:bg-blue-50 border border-dashed border-blue-300 rounded py-1.5 transition-colors"
+          className="flex-1 text-[11px] font-medium text-info hover:bg-info/10 border border-dashed border-info/30 rounded py-1.5 transition-colors"
         >
           + Add option
         </button>
         <button
           onClick={() => setIsEditingField(false)}
-          className="px-3 text-[11px] font-medium text-white bg-blue-600 hover:bg-blue-700 rounded py-1.5 transition-colors"
+          className="px-3 text-[11px] font-medium text-white bg-info hover:bg-info rounded py-1.5 transition-colors"
         >
           Done
         </button>
@@ -1436,7 +1436,7 @@ const ElementNode = ({ id, data, isConnectable, selected }) => {
           e.stopPropagation();
           setIsEditingField(true);
         }}
-        className="mt-1.5 text-[11px] font-medium text-blue-600 hover:text-blue-700 flex items-center gap-1 transition-colors"
+        className="mt-1.5 text-[11px] font-medium text-info hover:text-info flex items-center gap-1 transition-colors"
       >
         <Edit2 className="w-3 h-3" />
         Edit options
@@ -1533,8 +1533,8 @@ const ElementNode = ({ id, data, isConnectable, selected }) => {
           <textarea
             value={textareaValue}
             onChange={(e) => !isLocked && setTextareaValue(e.target.value)}
-            className={`w-full h-32 p-4 border-2 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-base ${
-              isLocked ? 'border-gray-200 bg-gray-50 text-gray-500 cursor-not-allowed' : 'border-gray-300'
+            className={`w-full h-32 p-4 border-2 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-info focus:border-info text-base ${
+              isLocked ? 'border-line bg-canvas text-dim cursor-not-allowed' : 'border-line'
             }`}
             placeholder={isLocked ? "Element is locked" : "Enter your text here..."}
             onClick={(e) => e.stopPropagation()}
@@ -1553,8 +1553,8 @@ const ElementNode = ({ id, data, isConnectable, selected }) => {
               type="text"
               value={inputValue}
               onChange={(e) => !isLocked && setInputValue(e.target.value)}
-              className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm bg-white ${
-                isLocked ? 'border-gray-200 bg-gray-50 text-gray-500 cursor-not-allowed' : 'border-gray-300'
+              className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-info focus:border-info text-sm bg-surface ${
+                isLocked ? 'border-line bg-canvas text-dim cursor-not-allowed' : 'border-line'
               }`}
               placeholder={isLocked ? "Element is locked" : "Enter value..."}
               onClick={(e) => e.stopPropagation()}
@@ -1580,7 +1580,7 @@ const ElementNode = ({ id, data, isConnectable, selected }) => {
                   }
                 }}
                 onKeyDown={(e) => e.stopPropagation()}
-                className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full p-2 border border-line rounded-md focus:outline-none focus:ring-2 focus:ring-info"
                 placeholder="Button text"
                 autoFocus
               />
@@ -1598,17 +1598,17 @@ const ElementNode = ({ id, data, isConnectable, selected }) => {
                     setIsEditingButton(true);
                   }
                 }}
-                className={`w-full px-4 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors ${
+                className={`w-full px-4 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-info transition-colors ${
                   isLocked 
-                    ? 'bg-gray-400 text-gray-600 cursor-not-allowed' 
-                    : 'bg-blue-600 text-white hover:bg-blue-700'
+                    ? 'bg-cta text-dim cursor-not-allowed' 
+                    : 'bg-info text-cta-foreground hover:bg-info'
                 }`}
                 disabled={isLocked}
               >
                 {buttonText}
               </button>
             )}
-            <div className="text-xs text-gray-500 text-center">
+            <div className="text-xs text-dim text-center">
               {isLocked ? 'Element is locked' : 'Double-click to edit text'}
             </div>
           </div>
@@ -1630,8 +1630,8 @@ const ElementNode = ({ id, data, isConnectable, selected }) => {
                 <select
                   value={selectValue}
                   onChange={(e) => !isLocked && setSelectValue(e.target.value)}
-                  className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm bg-white ${
-                    isLocked ? 'border-gray-200 bg-gray-50 text-gray-500 cursor-not-allowed' : 'border-gray-300'
+                  className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-info focus:border-info text-sm bg-surface ${
+                    isLocked ? 'border-line bg-canvas text-dim cursor-not-allowed' : 'border-line'
                   }`}
                   onClick={(e) => e.stopPropagation()}
                   onKeyDown={(e) => e.stopPropagation()}
@@ -1665,8 +1665,8 @@ const ElementNode = ({ id, data, isConnectable, selected }) => {
                       key={index}
                       className={`flex items-center gap-2.5 px-2.5 py-1.5 rounded-lg border transition-colors ${
                         checkedItems[option]
-                          ? 'border-blue-300 bg-blue-50'
-                          : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
+                          ? 'border-info/30 bg-info/10'
+                          : 'border-line hover:border-line hover:bg-canvas'
                       } ${isLocked ? 'cursor-not-allowed opacity-70' : 'cursor-pointer'}`}
                     >
                       <input
@@ -1676,13 +1676,13 @@ const ElementNode = ({ id, data, isConnectable, selected }) => {
                           ...checkedItems,
                           [option]: e.target.checked
                         })}
-                        className="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                        className="w-4 h-4 rounded border-line text-info focus:ring-info"
                         onClick={(e) => e.stopPropagation()}
                         onKeyDown={(e) => e.stopPropagation()}
                         onFocus={(e) => e.stopPropagation()}
                         disabled={isLocked}
                       />
-                      <span className={`text-sm ${isLocked ? 'text-gray-500' : 'text-gray-700'}`}>{option}</span>
+                      <span className={`text-sm ${isLocked ? 'text-dim' : 'text-ink'}`}>{option}</span>
                     </label>
                   ))}
                 </div>
@@ -1706,8 +1706,8 @@ const ElementNode = ({ id, data, isConnectable, selected }) => {
                       key={index}
                       className={`flex items-center gap-2.5 px-2.5 py-1.5 rounded-lg border transition-colors ${
                         radioValue === option
-                          ? 'border-blue-300 bg-blue-50'
-                          : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
+                          ? 'border-info/30 bg-info/10'
+                          : 'border-line hover:border-line hover:bg-canvas'
                       } ${isLocked ? 'cursor-not-allowed opacity-70' : 'cursor-pointer'}`}
                     >
                       <input
@@ -1716,13 +1716,13 @@ const ElementNode = ({ id, data, isConnectable, selected }) => {
                         value={option}
                         checked={radioValue === option}
                         onChange={(e) => !isLocked && setRadioValue(e.target.value)}
-                        className="w-4 h-4 border-gray-300 text-blue-600 focus:ring-blue-500"
+                        className="w-4 h-4 border-line text-info focus:ring-info"
                         onClick={(e) => e.stopPropagation()}
                         onKeyDown={(e) => e.stopPropagation()}
                         onFocus={(e) => e.stopPropagation()}
                         disabled={isLocked}
                       />
-                      <span className={`text-sm ${isLocked ? 'text-gray-500' : 'text-gray-700'}`}>{option}</span>
+                      <span className={`text-sm ${isLocked ? 'text-dim' : 'text-ink'}`}>{option}</span>
                     </label>
                   ))}
                 </div>
@@ -1786,9 +1786,9 @@ const ElementNode = ({ id, data, isConnectable, selected }) => {
 
         return (
           <div className="space-y-3">
-            <div className="rounded-lg border border-orange-200 bg-orange-50 p-3">
-              <p className="text-xs font-semibold text-orange-900 uppercase tracking-wide">Procurement RFQ</p>
-              <div className="mt-2 space-y-1 text-xs text-gray-700">
+            <div className="rounded-lg border border-warning/20 bg-warning/10 p-3">
+              <p className="text-xs font-semibold text-warning uppercase tracking-wide">Procurement RFQ</p>
+              <div className="mt-2 space-y-1 text-xs text-ink">
                 <p><span className="font-medium">Item:</span> {product.productName || request.item || '-'}</p>
                 <p><span className="font-medium">Qty:</span> {request.quantity || rfq.quantityPricing?.quantity || '-'} {rfq.quantityPricing?.quantityUnit || ''}</p>
                 <p><span className="font-medium">Priority:</span> {request.priority || '-'}</p>
@@ -1803,7 +1803,7 @@ const ElementNode = ({ id, data, isConnectable, selected }) => {
                   detail: { nodeId: id, requestType: 'procurement-rfq-request' }
                 }));
               }}
-              className="w-full inline-flex items-center justify-center gap-2 rounded-lg border border-blue-200 bg-blue-50 px-3 py-2 text-xs font-semibold text-blue-700 hover:bg-blue-100"
+              className="w-full inline-flex items-center justify-center gap-2 rounded-lg border border-info/20 bg-info/10 px-3 py-2 text-xs font-semibold text-info hover:bg-info/10"
             >
               <Eye className="w-3.5 h-3.5" />
               View Full RFQ
@@ -1818,9 +1818,9 @@ const ElementNode = ({ id, data, isConnectable, selected }) => {
 
         return (
           <div className="space-y-3">
-            <div className="rounded-lg border border-indigo-200 bg-indigo-50 p-3">
-              <p className="text-xs font-semibold text-indigo-900 uppercase tracking-wide">Execution Preview</p>
-              <div className="mt-2 space-y-1 text-xs text-gray-700">
+            <div className="rounded-lg border border-info/20 bg-info/10 p-3">
+              <p className="text-xs font-semibold text-info uppercase tracking-wide">Execution Preview</p>
+              <div className="mt-2 space-y-1 text-xs text-ink">
                 <p><span className="font-medium">Status:</span> {request.status || '-'}</p>
                 <p><span className="font-medium">Location:</span> {request.location || '-'}</p>
                 <p><span className="font-medium">Assignee:</span> {request.assignee || '-'}</p>
@@ -1843,7 +1843,7 @@ const ElementNode = ({ id, data, isConnectable, selected }) => {
                   detail: { nodeId: id, requestType: 'execution-request' }
                 }));
               }}
-              className="w-full inline-flex items-center justify-center gap-2 rounded-lg border border-blue-200 bg-blue-50 px-3 py-2 text-xs font-semibold text-blue-700 hover:bg-blue-100"
+              className="w-full inline-flex items-center justify-center gap-2 rounded-lg border border-info/20 bg-info/10 px-3 py-2 text-xs font-semibold text-info hover:bg-info/10"
             >
               <Eye className="w-3.5 h-3.5" />
               View Full Request
@@ -1929,8 +1929,8 @@ const ElementNode = ({ id, data, isConnectable, selected }) => {
       
       default:
         return (
-          <div className="text-center py-4 bg-gray-100 rounded border">
-            <span className="text-xs font-medium text-gray-600 uppercase tracking-wide">
+          <div className="text-center py-4 bg-surface-hover rounded border">
+            <span className="text-xs font-medium text-dim uppercase tracking-wide">
               {data.type}
             </span>
           </div>
@@ -1959,7 +1959,7 @@ const ElementNode = ({ id, data, isConnectable, selected }) => {
     
     return (
       <div className="flex items-center justify-center p-4">
-        <IconComponent className="w-16 h-16 text-gray-700" />
+        <IconComponent className="w-16 h-16 text-ink" />
       </div>
     );
   };
@@ -1968,7 +1968,7 @@ const ElementNode = ({ id, data, isConnectable, selected }) => {
   const renderDividerElement = () => {
     return (
       <div className="w-full">
-        <hr className="border-t-2 border-gray-400 w-full" />
+        <hr className="border-t-2 border-line w-full" />
       </div>
     );
   };
@@ -1976,8 +1976,8 @@ const ElementNode = ({ id, data, isConnectable, selected }) => {
   // Render spacer element
   const renderSpacerElement = () => {
     return (
-      <div className="w-full h-16 bg-gray-50 border-2 border-dashed border-gray-300 rounded flex items-center justify-center">
-        <span className="text-xs text-gray-400">Spacer</span>
+      <div className="w-full h-16 bg-canvas border-2 border-dashed border-line rounded flex items-center justify-center">
+        <span className="text-xs text-dim">Spacer</span>
       </div>
     );
   };
@@ -1985,12 +1985,12 @@ const ElementNode = ({ id, data, isConnectable, selected }) => {
   // Render container element
   const renderContainerElement = () => {
     return (
-      <div className="w-full min-h-[120px] border-2 border-gray-300 rounded-lg bg-gray-50 p-4 flex items-center justify-center">
+      <div className="w-full min-h-[120px] border-2 border-line rounded-lg bg-canvas p-4 flex items-center justify-center">
         <div className="text-center">
-          <div className="w-12 h-12 border-2 border-gray-400 rounded-lg mx-auto mb-2 flex items-center justify-center">
-            <span className="text-gray-400 text-xs">📦</span>
+          <div className="w-12 h-12 border-2 border-line rounded-lg mx-auto mb-2 flex items-center justify-center">
+            <span className="text-dim text-xs">📦</span>
           </div>
-          <span className="text-xs text-gray-500">Container</span>
+          <span className="text-xs text-dim">Container</span>
         </div>
       </div>
     );
@@ -1999,14 +1999,14 @@ const ElementNode = ({ id, data, isConnectable, selected }) => {
   // Render grid element
   const renderGridElement = () => {
     return (
-      <div className="w-full min-h-[120px] border-2 border-gray-300 rounded-lg bg-gray-50 p-3">
+      <div className="w-full min-h-[120px] border-2 border-line rounded-lg bg-canvas p-3">
         <div className="grid grid-cols-3 gap-2 h-full">
           {[1, 2, 3, 4, 5, 6].map((item) => (
             <div
               key={item}
-              className="border border-gray-300 rounded bg-white flex items-center justify-center min-h-[40px]"
+              className="border border-line rounded bg-surface flex items-center justify-center min-h-[40px]"
             >
-              <span className="text-xs text-gray-400">{item}</span>
+              <span className="text-xs text-dim">{item}</span>
             </div>
           ))}
         </div>
@@ -2017,18 +2017,18 @@ const ElementNode = ({ id, data, isConnectable, selected }) => {
   // Determine border style based on selection state and importance
   const getBorderStyle = () => {
     if (isImportant) {
-      return 'border-yellow-500 ring-4 ring-yellow-200 shadow-yellow-200';
+      return 'border-warning ring-4 ring-warning/20 shadow-yellow-200';
     }
     if (data.isManuallySelected) {
-      return 'border-green-600 ring-4 ring-green-200 shadow-green-200';
+      return 'border-success ring-4 ring-success/20 shadow-green-200';
     }
     if (data.isInSelectionMode) {
-      return 'border-blue-300 hover:border-blue-500 cursor-pointer';
+      return 'border-info/30 hover:border-info cursor-pointer';
     }
     if (selected) {
-      return 'border-blue-600 ring-2 ring-blue-200';
+      return 'border-info ring-2 ring-info/20';
     }
-    return 'border-blue-500';
+    return 'border-info';
   };
 
   // Special rendering for icon type - just show the icon without card wrapper
@@ -2043,7 +2043,7 @@ const ElementNode = ({ id, data, isConnectable, selected }) => {
           position={Position.Top}
           id="top-out"
           style={{ left: '48%' }}
-          className="w-3 h-3 !bg-gray-500 !border-2 !border-white opacity-0 group-hover:opacity-100 transition-opacity hover:!bg-gray-700"
+          className="w-3 h-3 !bg-cta !border-2 !border-white opacity-0 group-hover:opacity-100 transition-opacity hover:!bg-cta"
           isConnectable={isConnectable}
         />
         <Handle
@@ -2051,7 +2051,7 @@ const ElementNode = ({ id, data, isConnectable, selected }) => {
           position={Position.Top}
           id="top-in"
           style={{ left: '52%' }}
-          className="w-3 h-3 !bg-gray-500 !border-2 !border-white opacity-0 group-hover:opacity-100 transition-opacity hover:!bg-gray-700"
+          className="w-3 h-3 !bg-cta !border-2 !border-white opacity-0 group-hover:opacity-100 transition-opacity hover:!bg-cta"
           isConnectable={isConnectable}
         />
         
@@ -2060,7 +2060,7 @@ const ElementNode = ({ id, data, isConnectable, selected }) => {
           position={Position.Right}
           id="right-out"
           style={{ top: '48%' }}
-          className="w-3 h-3 !bg-gray-500 !border-2 !border-white opacity-0 group-hover:opacity-100 transition-opacity hover:!bg-gray-700"
+          className="w-3 h-3 !bg-cta !border-2 !border-white opacity-0 group-hover:opacity-100 transition-opacity hover:!bg-cta"
           isConnectable={isConnectable}
         />
         <Handle
@@ -2068,7 +2068,7 @@ const ElementNode = ({ id, data, isConnectable, selected }) => {
           position={Position.Right}
           id="right-in"
           style={{ top: '52%' }}
-          className="w-3 h-3 !bg-gray-500 !border-2 !border-white opacity-0 group-hover:opacity-100 transition-opacity hover:!bg-gray-700"
+          className="w-3 h-3 !bg-cta !border-2 !border-white opacity-0 group-hover:opacity-100 transition-opacity hover:!bg-cta"
           isConnectable={isConnectable}
         />
         
@@ -2077,7 +2077,7 @@ const ElementNode = ({ id, data, isConnectable, selected }) => {
           position={Position.Bottom}
           id="bottom-out"
           style={{ left: '48%' }}
-          className="w-3 h-3 !bg-gray-500 !border-2 !border-white opacity-0 group-hover:opacity-100 transition-opacity hover:!bg-gray-700"
+          className="w-3 h-3 !bg-cta !border-2 !border-white opacity-0 group-hover:opacity-100 transition-opacity hover:!bg-cta"
           isConnectable={isConnectable}
         />
         <Handle
@@ -2085,7 +2085,7 @@ const ElementNode = ({ id, data, isConnectable, selected }) => {
           position={Position.Bottom}
           id="bottom-in"
           style={{ left: '52%' }}
-          className="w-3 h-3 !bg-gray-500 !border-2 !border-white opacity-0 group-hover:opacity-100 transition-opacity hover:!bg-gray-700"
+          className="w-3 h-3 !bg-cta !border-2 !border-white opacity-0 group-hover:opacity-100 transition-opacity hover:!bg-cta"
           isConnectable={isConnectable}
         />
         
@@ -2094,7 +2094,7 @@ const ElementNode = ({ id, data, isConnectable, selected }) => {
           position={Position.Left}
           id="left-out"
           style={{ top: '48%' }}
-          className="w-3 h-3 !bg-gray-500 !border-2 !border-white opacity-0 group-hover:opacity-100 transition-opacity hover:!bg-gray-700"
+          className="w-3 h-3 !bg-cta !border-2 !border-white opacity-0 group-hover:opacity-100 transition-opacity hover:!bg-cta"
           isConnectable={isConnectable}
         />
         <Handle
@@ -2102,18 +2102,18 @@ const ElementNode = ({ id, data, isConnectable, selected }) => {
           position={Position.Left}
           id="left-in"
           style={{ top: '52%' }}
-          className="w-3 h-3 !bg-gray-500 !border-2 !border-white opacity-0 group-hover:opacity-100 transition-opacity hover:!bg-gray-700"
+          className="w-3 h-3 !bg-cta !border-2 !border-white opacity-0 group-hover:opacity-100 transition-opacity hover:!bg-cta"
           isConnectable={isConnectable}
         />
         
         {/* Icon Element */}
         <div className="flex items-center justify-center">
-          <IconComponent className="w-12 h-12 text-gray-700" />
+          <IconComponent className="w-12 h-12 text-ink" />
         </div>
         
         {/* Selection indicator */}
         {selected && (
-          <div className="absolute -top-2 -right-2 w-5 h-5 bg-blue-500 text-white rounded-full flex items-center justify-center text-[10px] font-bold">
+          <div className="absolute -top-2 -right-2 w-5 h-5 bg-info text-white rounded-full flex items-center justify-center text-[10px] font-bold">
             E
           </div>
         )}
@@ -2172,23 +2172,23 @@ const ElementNode = ({ id, data, isConnectable, selected }) => {
     const buttonTone = BUTTON_ACTION_OPTIONS.find(o => o.id === buttonAction)?.tone || 'neutral';
     const buttonColorClasses = isDone
       ? doneTone === 'positive'
-        ? 'bg-emerald-600 text-white cursor-default'
+        ? 'bg-cta text-cta-foreground cursor-default'
         : doneTone === 'negative'
-          ? 'bg-red-600 text-white cursor-default'
-          : 'bg-gray-500 text-white cursor-default'
+          ? 'bg-danger text-white cursor-default'
+          : 'bg-cta text-cta-foreground cursor-default'
       : isLocked
-        ? 'bg-gray-400 text-gray-600 cursor-not-allowed'
+        ? 'bg-cta text-dim cursor-not-allowed'
         : !isAssignee
           ? (buttonTone === 'positive'
-              ? 'bg-emerald-600 text-white opacity-60 cursor-not-allowed'
+              ? 'bg-cta text-cta-foreground opacity-60 cursor-not-allowed'
               : buttonTone === 'negative'
-                ? 'bg-red-600 text-white opacity-60 cursor-not-allowed'
-                : 'bg-blue-600 text-white opacity-60 cursor-not-allowed')
+                ? 'bg-danger text-white opacity-60 cursor-not-allowed'
+                : 'bg-info text-white opacity-60 cursor-not-allowed')
           : buttonTone === 'positive'
-            ? 'bg-emerald-600 text-white hover:bg-emerald-700 hover:shadow-lg'
+            ? 'bg-cta text-cta-foreground hover:bg-cta '
             : buttonTone === 'negative'
-              ? 'bg-red-600 text-white hover:bg-red-700 hover:shadow-lg'
-              : 'bg-blue-600 text-white hover:bg-blue-700 hover:shadow-lg';
+              ? 'bg-danger text-white hover:bg-danger '
+              : 'bg-info text-white hover:bg-info ';
 
     const persistButtonPatch = async (updates) => {
       try {
@@ -2246,21 +2246,21 @@ const ElementNode = ({ id, data, isConnectable, selected }) => {
       <div className={`relative group ${selected ? 'z-10' : ''}`}>
         {/* Connection Handles - uniform gray, bidirectional */}
         <Handle type="source" position={Position.Top} id="top-out" style={{ left: '48%' }}
-          className="w-2.5 h-2.5 !bg-gray-400 !border-2 !border-white opacity-0 group-hover:opacity-100 transition-opacity" isConnectable={isConnectable} />
+          className="w-2.5 h-2.5 !bg-cta !border-2 !border-white opacity-0 group-hover:opacity-100 transition-opacity" isConnectable={isConnectable} />
         <Handle type="target" position={Position.Top} id="top-in" style={{ left: '52%' }}
-          className="w-2.5 h-2.5 !bg-gray-400 !border-2 !border-white opacity-0 group-hover:opacity-100 transition-opacity" isConnectable={isConnectable} />
+          className="w-2.5 h-2.5 !bg-cta !border-2 !border-white opacity-0 group-hover:opacity-100 transition-opacity" isConnectable={isConnectable} />
         <Handle type="source" position={Position.Right} id="right-out" style={{ top: '48%' }}
-          className="w-2.5 h-2.5 !bg-gray-400 !border-2 !border-white opacity-0 group-hover:opacity-100 transition-opacity" isConnectable={isConnectable} />
+          className="w-2.5 h-2.5 !bg-cta !border-2 !border-white opacity-0 group-hover:opacity-100 transition-opacity" isConnectable={isConnectable} />
         <Handle type="target" position={Position.Right} id="right-in" style={{ top: '52%' }}
-          className="w-2.5 h-2.5 !bg-gray-400 !border-2 !border-white opacity-0 group-hover:opacity-100 transition-opacity" isConnectable={isConnectable} />
+          className="w-2.5 h-2.5 !bg-cta !border-2 !border-white opacity-0 group-hover:opacity-100 transition-opacity" isConnectable={isConnectable} />
         <Handle type="source" position={Position.Bottom} id="bottom-out" style={{ left: '48%' }}
-          className="w-2.5 h-2.5 !bg-gray-400 !border-2 !border-white opacity-0 group-hover:opacity-100 transition-opacity" isConnectable={isConnectable} />
+          className="w-2.5 h-2.5 !bg-cta !border-2 !border-white opacity-0 group-hover:opacity-100 transition-opacity" isConnectable={isConnectable} />
         <Handle type="target" position={Position.Bottom} id="bottom-in" style={{ left: '52%' }}
-          className="w-2.5 h-2.5 !bg-gray-400 !border-2 !border-white opacity-0 group-hover:opacity-100 transition-opacity" isConnectable={isConnectable} />
+          className="w-2.5 h-2.5 !bg-cta !border-2 !border-white opacity-0 group-hover:opacity-100 transition-opacity" isConnectable={isConnectable} />
         <Handle type="source" position={Position.Left} id="left-out" style={{ top: '48%' }}
-          className="w-2.5 h-2.5 !bg-gray-400 !border-2 !border-white opacity-0 group-hover:opacity-100 transition-opacity" isConnectable={isConnectable} />
+          className="w-2.5 h-2.5 !bg-cta !border-2 !border-white opacity-0 group-hover:opacity-100 transition-opacity" isConnectable={isConnectable} />
         <Handle type="target" position={Position.Left} id="left-in" style={{ top: '52%' }}
-          className="w-2.5 h-2.5 !bg-gray-400 !border-2 !border-white opacity-0 group-hover:opacity-100 transition-opacity" isConnectable={isConnectable} />
+          className="w-2.5 h-2.5 !bg-cta !border-2 !border-white opacity-0 group-hover:opacity-100 transition-opacity" isConnectable={isConnectable} />
 
         {/* The button itself */}
         <button
@@ -2279,20 +2279,20 @@ const ElementNode = ({ id, data, isConnectable, selected }) => {
                 ? `Only ${assignedTo.name || 'the assigned user'} can trigger this`
                 : buttonText
           }
-          className={`px-6 py-2.5 rounded-md text-sm font-semibold shadow-md transition-all focus:outline-none focus:ring-2 focus:ring-blue-500 ${buttonColorClasses} ${selected ? 'ring-2 ring-blue-300 ring-offset-2' : ''} ${isImportant ? 'ring-4 ring-yellow-300' : ''}`}
+          className={`px-6 py-2.5 rounded-md text-sm font-semibold  transition-all focus:outline-none focus:ring-2 focus:ring-info ${buttonColorClasses} ${selected ? 'ring-2 ring-info/30 ring-offset-2' : ''} ${isImportant ? 'ring-4 ring-warning/30' : ''}`}
         >
           {isDone ? `${doneTone === 'negative' ? '✗' : '✓'} ${doneLabel}` : buttonText}
         </button>
 
         {/* Status caption under the button */}
         {isDone ? (
-          <div className="absolute top-full left-1/2 -translate-x-1/2 mt-1.5 whitespace-nowrap text-[10px] font-medium text-gray-500">
+          <div className="absolute top-full left-1/2 -translate-x-1/2 mt-1.5 whitespace-nowrap text-[10px] font-medium text-dim">
             {doneLabel} by {buttonResult.by}
             {buttonResult.byRole ? ` (${buttonResult.byRole.toUpperCase()})` : ''}
             {' · '}{new Date(buttonResult.at).toLocaleString()}
           </div>
         ) : assignedTo ? (
-          <div className="absolute top-full left-1/2 -translate-x-1/2 mt-1.5 whitespace-nowrap text-[10px] font-medium text-gray-400">
+          <div className="absolute top-full left-1/2 -translate-x-1/2 mt-1.5 whitespace-nowrap text-[10px] font-medium text-dim">
             {isAssignee
               ? `Assigned to you — click to ${buttonAction === 'custom' ? 'confirm' : buttonAction}`
               : `Waiting for ${assignedTo.name || 'assignee'} to ${buttonAction === 'custom' ? 'act' : buttonAction}`}
@@ -2306,7 +2306,7 @@ const ElementNode = ({ id, data, isConnectable, selected }) => {
               e.stopPropagation();
               setIsEditingButton((v) => !v);
             }}
-            className="absolute -right-9 top-1/2 -translate-y-1/2 z-30 w-6 h-6 bg-white text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-full flex items-center justify-center shadow-md border border-gray-200 transition-colors"
+            className="absolute -right-9 top-1/2 -translate-y-1/2  z-30 w-6 h-6 bg-surface text-dim hover:text-info hover:bg-info/10 rounded-full flex items-center justify-center  border border-line transition-colors"
             title="Edit button"
           >
             <Edit2 className="w-3 h-3" />
@@ -2316,12 +2316,12 @@ const ElementNode = ({ id, data, isConnectable, selected }) => {
         {/* Edit popover - label + action + assignee */}
         {isEditingButton && !isLocked && (
           <div
-            className="absolute top-full left-1/2 -translate-x-1/2 mt-7 z-40 w-60 bg-white border border-gray-200 rounded-lg shadow-xl p-3 space-y-2"
+            className="absolute top-full left-1/2 -translate-x-1/2 mt-7 z-40 w-60 bg-surface border border-line rounded-lg shadow-xl p-3 space-y-2"
             onClick={(e) => e.stopPropagation()}
             onDoubleClick={(e) => e.stopPropagation()}
           >
             <div>
-              <label className="block text-[10px] font-semibold uppercase tracking-wide text-gray-400 mb-1">Label</label>
+              <label className="block text-[10px] font-semibold uppercase tracking-wide text-dim mb-1">Label</label>
               <input
                 type="text"
                 value={buttonText}
@@ -2330,13 +2330,13 @@ const ElementNode = ({ id, data, isConnectable, selected }) => {
                   e.stopPropagation();
                   if (e.key === 'Enter') handleButtonEditDone();
                 }}
-                className="w-full px-2 py-1.5 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-2 py-1.5 border border-line rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-info"
                 placeholder="Button text"
                 autoFocus
               />
             </div>
             <div>
-              <label className="block text-[10px] font-semibold uppercase tracking-wide text-gray-400 mb-1">Action</label>
+              <label className="block text-[10px] font-semibold uppercase tracking-wide text-dim mb-1">Action</label>
               <div className="flex flex-wrap gap-1">
                 {BUTTON_ACTION_OPTIONS.map((option) => (
                   <button
@@ -2345,11 +2345,11 @@ const ElementNode = ({ id, data, isConnectable, selected }) => {
                     className={`px-2 py-1 rounded text-[11px] font-medium border transition-colors ${
                       buttonAction === option.id
                         ? option.tone === 'positive'
-                          ? 'bg-emerald-600 text-white border-emerald-600'
+                          ? 'bg-cta text-cta-foreground border-line'
                           : option.tone === 'negative'
-                            ? 'bg-red-600 text-white border-red-600'
-                            : 'bg-blue-600 text-white border-blue-600'
-                        : 'bg-white text-gray-600 border-gray-300 hover:bg-gray-50'
+                            ? 'bg-danger text-white border-danger'
+                            : 'bg-info text-white border-info'
+                        : 'bg-surface text-dim border-line hover:bg-canvas'
                     }`}
                   >
                     {option.label}
@@ -2358,7 +2358,7 @@ const ElementNode = ({ id, data, isConnectable, selected }) => {
               </div>
             </div>
             <div>
-              <label className="block text-[10px] font-semibold uppercase tracking-wide text-gray-400 mb-1">Who can act</label>
+              <label className="block text-[10px] font-semibold uppercase tracking-wide text-dim mb-1">Who can act</label>
               <select
                 value={buttonAssignee ? (buttonAssignee.vendorId || buttonAssignee.userId || buttonAssignee.email || '') : ''}
                 onChange={(e) => {
@@ -2372,7 +2372,7 @@ const ElementNode = ({ id, data, isConnectable, selected }) => {
                     role: collab.role || collab.userType || null
                   } : null);
                 }}
-                className="w-full px-2 py-1.5 border border-gray-300 rounded-md text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-2 py-1.5 border border-line rounded-md text-sm bg-surface focus:outline-none focus:ring-2 focus:ring-info"
               >
                 <option value="">Anyone</option>
                 {collaborators.map((collab) => {
@@ -2387,13 +2387,13 @@ const ElementNode = ({ id, data, isConnectable, selected }) => {
               </select>
             </div>
             {isDone && (
-              <div className="flex items-center justify-between px-2 py-1.5 bg-gray-50 border border-gray-200 rounded-md">
-                <span className="text-[11px] text-gray-600">
+              <div className="flex items-center justify-between px-2 py-1.5 bg-canvas border border-line rounded-md">
+                <span className="text-[11px] text-dim">
                   {doneLabel} by {buttonResult.by}
                 </span>
                 <button
                   onClick={handleButtonReset}
-                  className="text-[11px] font-medium text-red-600 hover:text-red-700"
+                  className="text-[11px] font-medium text-danger hover:text-danger"
                 >
                   Reset
                 </button>
@@ -2401,7 +2401,7 @@ const ElementNode = ({ id, data, isConnectable, selected }) => {
             )}
             <button
               onClick={handleButtonEditDone}
-              className="w-full px-2 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded-md transition-colors"
+              className="w-full px-2 py-1.5 bg-info hover:bg-info text-white text-xs font-semibold rounded-md transition-colors"
             >
               Done
             </button>
@@ -2410,21 +2410,21 @@ const ElementNode = ({ id, data, isConnectable, selected }) => {
 
         {/* Sequence Number Badge */}
         {data.sequenceNumber && (
-          <div className="absolute -top-3 -left-3 z-20 w-6 h-6 bg-gradient-to-br from-green-500 to-emerald-600 text-white rounded-full flex items-center justify-center text-[10px] font-bold shadow-md border-2 border-white">
+          <div className="absolute -top-3 -left-3 z-20 w-6 h-6 bg-black text-white rounded-full flex items-center justify-center text-[10px] font-bold border-2 border-white">
             {data.sequenceNumber}
           </div>
         )}
 
         {/* Lock Indicator */}
         {data.locked && (
-          <div className="absolute -top-3 -right-3 z-20 w-5 h-5 bg-orange-500 text-white rounded-full flex items-center justify-center shadow-md border-2 border-white" title="Element is locked">
+          <div className="absolute -top-3 -right-3 z-20 w-5 h-5 bg-warning text-white rounded-full flex items-center justify-center  border-2 border-white" title="Element is locked">
             <Lock className="w-3 h-3" />
           </div>
         )}
 
         {/* Selection indicator */}
         {selected && !data.locked && (
-          <div className="absolute -top-2 -right-2 w-5 h-5 bg-blue-500 text-white rounded-full flex items-center justify-center text-[10px] font-bold">
+          <div className="absolute -top-2 -right-2 w-5 h-5 bg-info text-white rounded-full flex items-center justify-center text-[10px] font-bold">
             E
           </div>
         )}
@@ -2471,29 +2471,29 @@ const ElementNode = ({ id, data, isConnectable, selected }) => {
       >
         {/* Connection Handles */}
         <Handle type="source" position={Position.Top} id="top-out" style={{ left: '48%' }}
-          className="w-2.5 h-2.5 !bg-gray-400 !border-2 !border-white opacity-0 group-hover:opacity-100 transition-opacity" isConnectable={isConnectable} />
+          className="w-2.5 h-2.5 !bg-cta !border-2 !border-white opacity-0 group-hover:opacity-100 transition-opacity" isConnectable={isConnectable} />
         <Handle type="target" position={Position.Top} id="top-in" style={{ left: '52%' }}
-          className="w-2.5 h-2.5 !bg-gray-400 !border-2 !border-white opacity-0 group-hover:opacity-100 transition-opacity" isConnectable={isConnectable} />
+          className="w-2.5 h-2.5 !bg-cta !border-2 !border-white opacity-0 group-hover:opacity-100 transition-opacity" isConnectable={isConnectable} />
         <Handle type="source" position={Position.Right} id="right-out" style={{ top: '48%' }}
-          className="w-2.5 h-2.5 !bg-gray-400 !border-2 !border-white opacity-0 group-hover:opacity-100 transition-opacity" isConnectable={isConnectable} />
+          className="w-2.5 h-2.5 !bg-cta !border-2 !border-white opacity-0 group-hover:opacity-100 transition-opacity" isConnectable={isConnectable} />
         <Handle type="target" position={Position.Right} id="right-in" style={{ top: '52%' }}
-          className="w-2.5 h-2.5 !bg-gray-400 !border-2 !border-white opacity-0 group-hover:opacity-100 transition-opacity" isConnectable={isConnectable} />
+          className="w-2.5 h-2.5 !bg-cta !border-2 !border-white opacity-0 group-hover:opacity-100 transition-opacity" isConnectable={isConnectable} />
         <Handle type="source" position={Position.Bottom} id="bottom-out" style={{ left: '48%' }}
-          className="w-2.5 h-2.5 !bg-gray-400 !border-2 !border-white opacity-0 group-hover:opacity-100 transition-opacity" isConnectable={isConnectable} />
+          className="w-2.5 h-2.5 !bg-cta !border-2 !border-white opacity-0 group-hover:opacity-100 transition-opacity" isConnectable={isConnectable} />
         <Handle type="target" position={Position.Bottom} id="bottom-in" style={{ left: '52%' }}
-          className="w-2.5 h-2.5 !bg-gray-400 !border-2 !border-white opacity-0 group-hover:opacity-100 transition-opacity" isConnectable={isConnectable} />
+          className="w-2.5 h-2.5 !bg-cta !border-2 !border-white opacity-0 group-hover:opacity-100 transition-opacity" isConnectable={isConnectable} />
         <Handle type="source" position={Position.Left} id="left-out" style={{ top: '48%' }}
-          className="w-2.5 h-2.5 !bg-gray-400 !border-2 !border-white opacity-0 group-hover:opacity-100 transition-opacity" isConnectable={isConnectable} />
+          className="w-2.5 h-2.5 !bg-cta !border-2 !border-white opacity-0 group-hover:opacity-100 transition-opacity" isConnectable={isConnectable} />
         <Handle type="target" position={Position.Left} id="left-in" style={{ top: '52%' }}
-          className="w-2.5 h-2.5 !bg-gray-400 !border-2 !border-white opacity-0 group-hover:opacity-100 transition-opacity" isConnectable={isConnectable} />
+          className="w-2.5 h-2.5 !bg-cta !border-2 !border-white opacity-0 group-hover:opacity-100 transition-opacity" isConnectable={isConnectable} />
 
         {/* ── Avatar Pin (always visible) ── */}
         <div
           className={`
-            w-9 h-9 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 text-white
+            w-9 h-9 rounded-full bg-gradient-to-br from-black to-black text-white
             flex items-center justify-center text-sm font-bold shadow-lg border-2 border-white
             cursor-pointer transition-transform hover:scale-110
-            ${isImportant ? 'ring-2 ring-yellow-400 ring-offset-1' : ''}
+            ${isImportant ? 'ring-2 ring-warning ring-offset-1' : ''}
           `}
           onClick={(e) => { e.stopPropagation(); setCommentBoxOpen(true); }}
         >
@@ -2502,14 +2502,14 @@ const ElementNode = ({ id, data, isConnectable, selected }) => {
 
         {/* Sequence number badge */}
         {data.sequenceNumber && (
-          <div className="absolute -top-1.5 -right-1.5 z-30 w-5 h-5 bg-gradient-to-br from-green-500 to-emerald-600 text-white rounded-full flex items-center justify-center text-[9px] font-bold shadow-md border-2 border-white">
+          <div className="absolute -top-1.5 -right-1.5 z-30 w-5 h-5 bg-black text-white rounded-full flex items-center justify-center text-[9px] font-bold border-2 border-white">
             {data.sequenceNumber}
           </div>
         )}
 
         {/* Small dot indicator when has content (so user knows there's a comment) */}
         {hasContent && !commentBoxOpen && (
-          <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-blue-500 rounded-full border-2 border-white z-20" />
+          <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-info rounded-full border-2 border-white z-20" />
         )}
 
         {/* ── Comment Box — opens on pin click OR hover ── */}
@@ -2524,46 +2524,46 @@ const ElementNode = ({ id, data, isConnectable, selected }) => {
           style={{ minWidth: 260, maxWidth: 320 }}
         >
           {/* Speech-bubble triangle */}
-          <div className="w-3 h-3 bg-white border-l border-t border-gray-200 rotate-45 absolute -top-1.5 left-3 z-10" />
+          <div className="w-3 h-3 bg-surface border-l border-t border-line rotate-45 absolute -top-1.5 left-3 z-10" />
 
-          <div className={`bg-white rounded-xl shadow-2xl border overflow-hidden mt-1 ${
-            selected ? 'border-blue-500 ring-2 ring-blue-200' : 'border-gray-200'
-          } ${isImportant ? 'border-yellow-400 bg-yellow-50 ring-2 ring-yellow-200' : ''}`}>
+          <div className={`bg-surface rounded-xl shadow-2xl border overflow-hidden mt-1 ${
+            selected ? 'border-info ring-2 ring-info/20' : 'border-line'
+          } ${isImportant ? 'border-warning bg-warning/10 ring-2 ring-warning/20' : ''}`}>
 
             {/* Header — author + timestamp + menu */}
-            <div className="flex items-center justify-between px-3 py-2 bg-gray-50 border-b border-gray-100">
+            <div className="flex items-center justify-between px-3 py-2 bg-canvas border-b border-line">
               <div className="flex items-center space-x-2">
-                <div className="w-5 h-5 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 text-white flex items-center justify-center text-[9px] font-bold flex-shrink-0">
+                <div className="w-5 h-5 rounded-full bg-black text-white flex items-center justify-center text-[9px] font-bold flex-shrink-0">
                   {authorInitial}
                 </div>
-                <span className="text-xs font-semibold text-gray-700 truncate max-w-[120px]">{authorName}</span>
-                <span className="text-[10px] text-gray-400">{timeAgo}</span>
+                <span className="text-xs font-semibold text-ink truncate max-w-[120px]">{authorName}</span>
+                <span className="text-[10px] text-dim">{timeAgo}</span>
               </div>
               <div className="flex items-center space-x-1">
                 {isImportant && (
-                  <span className="text-[10px] px-1.5 py-0.5 bg-yellow-200 text-yellow-800 rounded font-medium">★</span>
+                  <span className="text-[10px] px-1.5 py-0.5 bg-warning/20 text-warning rounded font-medium">★</span>
                 )}
                 {isLocked && (
-                  <Lock className="w-3 h-3 text-gray-400" />
+                  <Lock className="w-3 h-3 text-dim" />
                 )}
                 <div className="relative" ref={menuDropdownRef}>
                   <button
                     onClick={() => setShowMenuDropdown(!showMenuDropdown)}
-                    className="p-0.5 text-gray-300 hover:text-gray-600 hover:bg-gray-200 rounded transition-all"
+                    className="p-0.5 text-dim hover:text-dim hover:bg-surface-hover rounded transition-all"
                   >
                     <MoreVertical className="w-3.5 h-3.5" />
                   </button>
                   {showMenuDropdown && (
-                    <div className="absolute right-0 mt-1 w-36 bg-white border border-gray-200 rounded-lg shadow-xl z-50 py-1">
-                      <button onClick={handleDuplicate} className="w-full px-3 py-1.5 text-left text-xs text-gray-700 hover:bg-gray-50 flex items-center space-x-2">
-                        <Copy className="w-3 h-3 text-gray-400" /><span>Duplicate</span>
+                    <div className="absolute right-0 mt-1 w-36 bg-surface border border-line rounded-lg shadow-xl z-50 py-1">
+                      <button onClick={handleDuplicate} className="w-full px-3 py-1.5 text-left text-xs text-ink hover:bg-canvas flex items-center space-x-2">
+                        <Copy className="w-3 h-3 text-dim" /><span>Duplicate</span>
                       </button>
                       <button onClick={() => { const newImportantState = !isImportant; setIsImportant(newImportantState); persistIsImportant(id, newImportantState, setNodes, workspaceId).catch(err => console.error('Failed to persist:', err)); }}
-                        className="w-full px-3 py-1.5 text-left text-xs text-gray-700 hover:bg-gray-50 flex items-center space-x-2">
-                        <Star className="w-3 h-3 text-yellow-500" /><span>{isImportant ? 'Unmark Important' : 'Mark Important'}</span>
+                        className="w-full px-3 py-1.5 text-left text-xs text-ink hover:bg-canvas flex items-center space-x-2">
+                        <Star className="w-3 h-3 text-warning" /><span>{isImportant ? 'Unmark Important' : 'Mark Important'}</span>
                       </button>
-                      <button onClick={handleDelete} className="w-full px-3 py-1.5 text-left text-xs text-red-600 hover:bg-red-50 flex items-center space-x-2">
-                        <Trash2 className="w-3 h-3 text-red-400" /><span>Delete</span>
+                      <button onClick={handleDelete} className="w-full px-3 py-1.5 text-left text-xs text-danger hover:bg-danger/10 flex items-center space-x-2">
+                        <Trash2 className="w-3 h-3 text-danger" /><span>Delete</span>
                       </button>
                     </div>
                   )}
@@ -2577,8 +2577,8 @@ const ElementNode = ({ id, data, isConnectable, selected }) => {
                 <textarea
                   value={textareaValue}
                   onChange={(e) => !isLocked && setTextareaValue(e.target.value)}
-                  className={`flex-1 text-sm leading-relaxed bg-transparent border-0 resize-none focus:outline-none focus:ring-0 p-0 placeholder-gray-400 ${
-                    isLocked ? 'text-gray-400 cursor-not-allowed' : 'text-gray-700'
+                  className={`flex-1 text-sm leading-relaxed bg-transparent border-0 resize-none focus:outline-none focus:ring-0 p-0 placeholder-dim ${
+                    isLocked ? 'text-dim cursor-not-allowed' : 'text-ink'
                   }`}
                   placeholder={isLocked ? 'Locked' : 'Type a comment...'}
                   rows={Math.max(1, Math.min(6, (textareaValue || '').split('\n').length))}
@@ -2599,7 +2599,7 @@ const ElementNode = ({ id, data, isConnectable, selected }) => {
                 {textareaValue?.trim() && !isLocked && (
                   <button
                     onClick={(e) => { e.stopPropagation(); handleCommentSubmit(); }}
-                    className="flex-shrink-0 w-7 h-7 rounded-full bg-blue-500 hover:bg-blue-600 text-white flex items-center justify-center transition-colors shadow-sm mb-0.5"
+                    className="flex-shrink-0 w-7 h-7 rounded-full bg-info hover:bg-info text-white flex items-center justify-center transition-colors  mb-0.5"
                     title="Save comment (Ctrl+Enter)"
                   >
                     <Send className="w-3.5 h-3.5" style={{ transform: 'rotate(-45deg)', marginLeft: '1px' }} />
@@ -2610,13 +2610,13 @@ const ElementNode = ({ id, data, isConnectable, selected }) => {
 
             {/* Footer — approval status badge */}
             {data.approvalStatus && data.approvalStatus !== 'pending' && (
-              <div className="px-3 py-1.5 border-t border-gray-100 bg-gray-50">
+              <div className="px-3 py-1.5 border-t border-line bg-canvas">
                 <span className={`inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium ${
-                  data.approvalStatus === 'client_approved' ? 'bg-green-100 text-green-700' :
-                  data.approvalStatus === 'pm_approved' ? 'bg-blue-100 text-blue-700' :
-                  data.approvalStatus === 'rejected' ? 'bg-red-100 text-red-700' :
-                  data.approvalStatus === 'sent_to_pm' ? 'bg-yellow-100 text-yellow-700' :
-                  'bg-gray-100 text-gray-600'
+                  data.approvalStatus === 'client_approved' ? 'bg-success/10 text-success' :
+                  data.approvalStatus === 'pm_approved' ? 'bg-info/10 text-info' :
+                  data.approvalStatus === 'rejected' ? 'bg-danger/10 text-danger' :
+                  data.approvalStatus === 'sent_to_pm' ? 'bg-warning/10 text-warning' :
+                  'bg-surface-hover text-dim'
                 }`}>
                   {data.approvalStatus === 'client_approved' ? '✓ Approved' :
                    data.approvalStatus === 'pm_approved' ? '✓ PM Approved' :
@@ -2634,11 +2634,11 @@ const ElementNode = ({ id, data, isConnectable, selected }) => {
 
   // Determine wrapper classes based on element type
   const getWrapperClasses = () => {
-    const baseClasses = `${isImportant ? 'bg-yellow-50' : 'bg-white'} border-2 rounded-xl shadow-xl relative group transition-all`;
+    const baseClasses = `${isImportant ? 'bg-warning/10' : 'bg-surface'} border-2 rounded-xl shadow-xl relative group transition-all`;
     const isOverdue = deadline && calculateTimeLeft(deadline)?.isExpired;
     const recentlyUpdatedClass = isOverdue
-      ? 'ring-2 ring-red-400 ring-offset-1'
-      : isRecentlyUpdated() ? 'ring-2 ring-amber-300 ring-offset-1' : '';
+      ? 'ring-2 ring-danger ring-offset-1'
+      : isRecentlyUpdated() ? 'ring-2 ring-warning/30 ring-offset-1' : '';
     const compactTypes = ['divider', 'spacer', 'container', 'grid'];
     
     // BOQ Generator has special flexible sizing
@@ -2735,8 +2735,8 @@ const ElementNode = ({ id, data, isConnectable, selected }) => {
         isVisible={selected || isNodeHovered}
         minWidth={240}
         minHeight={140}
-        lineClassName="!border-blue-400"
-        handleClassName="!w-3 !h-3 !bg-blue-500 !border-2 !border-white !rounded-md"
+        lineClassName="!border-info"
+        handleClassName="!w-3 !h-3 !bg-info !border-2 !border-white !rounded-md"
       />
 
       {/* Connection Handles - All uniform gray, bidirectional */}
@@ -2745,7 +2745,7 @@ const ElementNode = ({ id, data, isConnectable, selected }) => {
         position={Position.Top}
         id="top-out"
         style={{ left: '48%' }}
-        className="w-3 h-3 !bg-gray-500 !border-2 !border-white opacity-0 group-hover:opacity-100 transition-opacity hover:!bg-gray-700"
+        className="w-3 h-3 !bg-cta !border-2 !border-white opacity-0 group-hover:opacity-100 transition-opacity hover:!bg-cta"
         isConnectable={isConnectable}
       />
       <Handle
@@ -2753,7 +2753,7 @@ const ElementNode = ({ id, data, isConnectable, selected }) => {
         position={Position.Top}
         id="top-in"
         style={{ left: '52%' }}
-        className="w-3 h-3 !bg-gray-500 !border-2 !border-white opacity-0 group-hover:opacity-100 transition-opacity hover:!bg-gray-700"
+        className="w-3 h-3 !bg-cta !border-2 !border-white opacity-0 group-hover:opacity-100 transition-opacity hover:!bg-cta"
         isConnectable={isConnectable}
       />
       
@@ -2762,7 +2762,7 @@ const ElementNode = ({ id, data, isConnectable, selected }) => {
         position={Position.Right}
         id="right-out"
         style={{ top: '48%' }}
-        className="w-3 h-3 !bg-gray-500 !border-2 !border-white opacity-0 group-hover:opacity-100 transition-opacity hover:!bg-gray-700"
+        className="w-3 h-3 !bg-cta !border-2 !border-white opacity-0 group-hover:opacity-100 transition-opacity hover:!bg-cta"
         isConnectable={isConnectable}
       />
       <Handle
@@ -2770,7 +2770,7 @@ const ElementNode = ({ id, data, isConnectable, selected }) => {
         position={Position.Right}
         id="right-in"
         style={{ top: '52%' }}
-        className="w-3 h-3 !bg-gray-500 !border-2 !border-white opacity-0 group-hover:opacity-100 transition-opacity hover:!bg-gray-700"
+        className="w-3 h-3 !bg-cta !border-2 !border-white opacity-0 group-hover:opacity-100 transition-opacity hover:!bg-cta"
         isConnectable={isConnectable}
       />
       
@@ -2779,7 +2779,7 @@ const ElementNode = ({ id, data, isConnectable, selected }) => {
         position={Position.Bottom}
         id="bottom-out"
         style={{ left: '48%' }}
-        className="w-3 h-3 !bg-gray-500 !border-2 !border-white opacity-0 group-hover:opacity-100 transition-opacity hover:!bg-gray-700"
+        className="w-3 h-3 !bg-cta !border-2 !border-white opacity-0 group-hover:opacity-100 transition-opacity hover:!bg-cta"
         isConnectable={isConnectable}
       />
       <Handle
@@ -2787,7 +2787,7 @@ const ElementNode = ({ id, data, isConnectable, selected }) => {
         position={Position.Bottom}
         id="bottom-in"
         style={{ left: '52%' }}
-        className="w-3 h-3 !bg-gray-500 !border-2 !border-white opacity-0 group-hover:opacity-100 transition-opacity hover:!bg-gray-700"
+        className="w-3 h-3 !bg-cta !border-2 !border-white opacity-0 group-hover:opacity-100 transition-opacity hover:!bg-cta"
         isConnectable={isConnectable}
       />
       
@@ -2796,7 +2796,7 @@ const ElementNode = ({ id, data, isConnectable, selected }) => {
         position={Position.Left}
         id="left-out"
         style={{ top: '48%' }}
-        className="w-3 h-3 !bg-gray-500 !border-2 !border-white opacity-0 group-hover:opacity-100 transition-opacity hover:!bg-gray-700"
+        className="w-3 h-3 !bg-cta !border-2 !border-white opacity-0 group-hover:opacity-100 transition-opacity hover:!bg-cta"
         isConnectable={isConnectable}
       />
       <Handle
@@ -2804,7 +2804,7 @@ const ElementNode = ({ id, data, isConnectable, selected }) => {
         position={Position.Left}
         id="left-in"
         style={{ top: '52%' }}
-        className="w-3 h-3 !bg-gray-500 !border-2 !border-white opacity-0 group-hover:opacity-100 transition-opacity hover:!bg-gray-700"
+        className="w-3 h-3 !bg-cta !border-2 !border-white opacity-0 group-hover:opacity-100 transition-opacity hover:!bg-cta"
         isConnectable={isConnectable}
       />
       
@@ -2812,14 +2812,14 @@ const ElementNode = ({ id, data, isConnectable, selected }) => {
       <div className="absolute -top-3 -right-3 z-20 flex items-center space-x-1">
         {/* Recently Updated Badge - Shows when element was added/updated within 5 minutes */}
         {isRecentlyUpdated() && (
-          <div className="w-8 h-8 bg-amber-400 text-white rounded-full flex items-center justify-center shadow-lg border-2 border-white font-bold text-lg animate-pulse" title="Recently updated" role="status" aria-label="Recently updated">
+          <div className="w-8 h-8 bg-warning text-white rounded-full flex items-center justify-center shadow-lg border-2 border-white font-bold text-lg animate-pulse" title="Recently updated" role="status" aria-label="Recently updated">
             ✨
           </div>
         )}
         
         {/* Lock Indicator - Shows when element is locked */}
         {data.locked && (
-          <div className="w-5 h-5 bg-orange-500 hover:bg-orange-600 text-white rounded-full flex items-center justify-center shadow-md border-2 border-white transition-all" title="Element is locked">
+          <div className="w-5 h-5 bg-warning hover:bg-warning text-white rounded-full flex items-center justify-center  border-2 border-white transition-all" title="Element is locked">
             <Lock className="w-3 h-3" />
           </div>
         )}
@@ -2835,7 +2835,7 @@ const ElementNode = ({ id, data, isConnectable, selected }) => {
               e.stopPropagation();
               setShowInfoTooltip(!showInfoTooltip);
             }}
-            className="w-5 h-5 bg-blue-500 hover:bg-blue-600 text-white rounded-full flex items-center justify-center shadow-md transition-all duration-200 hover:scale-110 border-2 border-white"
+            className="w-5 h-5 bg-info hover:bg-info text-white rounded-full flex items-center justify-center  transition-all duration-200 hover:scale-110 border-2 border-white"
             title="Element Info"
           >
             <Info className="w-3 h-3" />
@@ -2843,63 +2843,63 @@ const ElementNode = ({ id, data, isConnectable, selected }) => {
           
           {/* Info Tooltip */}
           {showInfoTooltip && (
-            <div className="absolute right-7 -top-1 z-50 w-72 bg-white rounded-lg shadow-xl border border-gray-200 p-3 text-left animate-fade-in">
+            <div className="absolute right-7 -top-1 z-50 w-72 bg-surface rounded-lg shadow-xl border border-line p-3 text-left animate-fade-in">
               {/* Arrow pointer */}
               <div className="absolute -right-2 top-3 w-0 h-0 border-t-8 border-t-transparent border-b-8 border-b-transparent border-l-8 border-l-white"></div>
               <div className="absolute -right-[9px] top-3 w-0 h-0 border-t-8 border-t-transparent border-b-8 border-b-transparent border-l-8 border-l-gray-200"></div>
               
               {/* Header */}
-              <div className="flex items-center space-x-2 mb-3 pb-2 border-b border-gray-100">
-                <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
-                  <Info className="w-4 h-4 text-blue-600" />
+              <div className="flex items-center space-x-2 mb-3 pb-2 border-b border-line">
+                <div className="w-8 h-8 bg-info/10 rounded-full flex items-center justify-center">
+                  <Info className="w-4 h-4 text-info" />
                 </div>
                 <div>
-                  <h4 className="text-sm font-semibold text-gray-800">Element Details</h4>
+                  <h4 className="text-sm font-semibold text-ink">Element Details</h4>
                 </div>
               </div>
               
               {/* Element Type */}
               <div className="mb-2">
-                <p className="text-xs text-gray-500 uppercase tracking-wide">Element Type</p>
-                <p className="text-sm font-medium text-gray-800 flex items-center">
-                  <span className="w-2 h-2 bg-blue-500 rounded-full mr-2"></span>
+                <p className="text-xs text-dim uppercase tracking-wide">Element Type</p>
+                <p className="text-sm font-medium text-ink flex items-center">
+                  <span className="w-2 h-2 bg-info rounded-full mr-2"></span>
                   {data.name || data.type || 'Unknown Element'}
                 </p>
               </div>
               
               {/* What it does - Description */}
-              <div className="mb-3 p-2 bg-gray-50 rounded-md border border-gray-100">
-                <p className="text-xs text-gray-500 uppercase tracking-wide mb-1">💡 What it does</p>
-                <p className="text-xs text-gray-700 leading-relaxed">
+              <div className="mb-3 p-2 bg-canvas rounded-md border border-line">
+                <p className="text-xs text-dim uppercase tracking-wide mb-1">💡 What it does</p>
+                <p className="text-xs text-ink leading-relaxed">
                   {getElementDescription(data.type)}
                 </p>
               </div>
               
               {/* Added By */}
               <div className="mb-2">
-                <p className="text-xs text-gray-500 uppercase tracking-wide">Added By</p>
-                <p className="text-sm font-medium text-gray-800 flex items-center">
-                  <span className="w-6 h-6 bg-green-100 rounded-full flex items-center justify-center mr-2 text-xs font-bold text-green-600">
+                <p className="text-xs text-dim uppercase tracking-wide">Added By</p>
+                <p className="text-sm font-medium text-ink flex items-center">
+                  <span className="w-6 h-6 bg-success/10 rounded-full flex items-center justify-center mr-2 text-xs font-bold text-success">
                     {(data.addedBy || 'U').charAt(0).toUpperCase()}
                   </span>
                   {data.addedBy || 'Unknown User'}
                 </p>
                 {data.addedByEmail && (
-                  <p className="text-xs text-gray-400 ml-8">{data.addedByEmail}</p>
+                  <p className="text-xs text-dim ml-8">{data.addedByEmail}</p>
                 )}
               </div>
               
               {/* Added At */}
               <div className="mb-2">
-                <p className="text-xs text-gray-500 uppercase tracking-wide">Added On</p>
-                <p className="text-sm font-medium text-gray-800">
+                <p className="text-xs text-dim uppercase tracking-wide">Added On</p>
+                <p className="text-sm font-medium text-ink">
                   📅 {formatDate(data.addedAt)}
                 </p>
               </div>
               
               {/* Element ID */}
-              <div className="pt-2 border-t border-gray-100">
-                <p className="text-xs text-gray-400">
+              <div className="pt-2 border-t border-line">
+                <p className="text-xs text-dim">
                   ID: <span className="font-mono">{id?.slice(0, 20)}...</span>
                 </p>
               </div>
@@ -2912,11 +2912,11 @@ const ElementNode = ({ id, data, isConnectable, selected }) => {
       {!['divider', 'spacer', 'container', 'grid'].includes(data.type) && (
         <div className="mb-4 text-center relative">
           <div className="flex items-center justify-center space-x-2">
-            <h4 className="text-lg font-semibold text-gray-800">{data.name}</h4>
+            <h4 className="text-lg font-semibold text-ink">{data.name}</h4>
             
             {/* Recently Updated Badge */}
             {isRecentlyUpdated() && (
-              <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-bold bg-amber-200 text-amber-800 shadow-md border border-amber-300 whitespace-nowrap">
+              <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-bold bg-warning/20 text-warning  border border-warning/30 whitespace-nowrap">
                 ✨ NEW
               </span>
             )}
@@ -2925,7 +2925,7 @@ const ElementNode = ({ id, data, isConnectable, selected }) => {
             <div className="relative" ref={menuDropdownRef}>
               <button
                 onClick={() => setShowMenuDropdown(!showMenuDropdown)}
-                className="p-1 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded transition-all duration-200"
+                className="p-1 text-dim hover:text-dim hover:bg-surface-hover rounded transition-all duration-200"
                 title="More options"
               >
                 <MoreVertical className="w-4 h-4" />
@@ -2933,26 +2933,26 @@ const ElementNode = ({ id, data, isConnectable, selected }) => {
               
               {/* Dropdown Menu */}
               {showMenuDropdown && (
-                <div className="absolute right-0 mt-2 w-48 bg-white border border-gray-200 rounded-lg shadow-lg z-50">
+                <div className="absolute right-0 mt-2 w-48 bg-surface border border-line rounded-lg shadow-lg z-50">
                   <button
                     onClick={handleDuplicate}
-                    className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100 flex items-center space-x-2 first:rounded-t-lg transition-colors"
+                    className="w-full px-4 py-2 text-left text-sm text-ink hover:bg-surface-hover flex items-center space-x-2 first:rounded-t-lg transition-colors"
                   >
-                    <Copy className="w-4 h-4 text-gray-500" />
+                    <Copy className="w-4 h-4 text-dim" />
                     <span>Duplicate</span>
                   </button>
                   <button
                     onClick={handleDuplicateToAllSubtasks}
-                    className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100 flex items-center space-x-2 transition-colors"
+                    className="w-full px-4 py-2 text-left text-sm text-ink hover:bg-surface-hover flex items-center space-x-2 transition-colors"
                   >
-                    <Copy className="w-4 h-4 text-gray-500" />
+                    <Copy className="w-4 h-4 text-dim" />
                     <span>Duplicate to all subtasks</span>
                   </button>
                   <button
                     onClick={handleEdit}
-                    className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100 flex items-center space-x-2 transition-colors"
+                    className="w-full px-4 py-2 text-left text-sm text-ink hover:bg-surface-hover flex items-center space-x-2 transition-colors"
                   >
-                    <Edit2 className="w-4 h-4 text-gray-500" />
+                    <Edit2 className="w-4 h-4 text-dim" />
                     <span>Edit</span>
                   </button>
                   <button
@@ -2960,16 +2960,16 @@ const ElementNode = ({ id, data, isConnectable, selected }) => {
                       setShowComments(true);
                       setShowMenuDropdown(false);
                     }}
-                    className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100 flex items-center space-x-2 transition-colors"
+                    className="w-full px-4 py-2 text-left text-sm text-ink hover:bg-surface-hover flex items-center space-x-2 transition-colors"
                   >
-                    <MessageCircle className="w-4 h-4 text-gray-500" />
+                    <MessageCircle className="w-4 h-4 text-dim" />
                     <span>Comments</span>
                   </button>
                   <button
                     onClick={handleDelete}
-                    className="w-full px-4 py-2 text-left text-sm text-red-700 hover:bg-red-50 flex items-center space-x-2 last:rounded-b-lg transition-colors"
+                    className="w-full px-4 py-2 text-left text-sm text-danger hover:bg-danger/10 flex items-center space-x-2 last:rounded-b-lg transition-colors"
                   >
-                    <Trash2 className="w-4 h-4 text-red-500" />
+                    <Trash2 className="w-4 h-4 text-danger" />
                     <span>Delete</span>
                   </button>
                 </div>
@@ -2980,14 +2980,14 @@ const ElementNode = ({ id, data, isConnectable, selected }) => {
             <button
               onClick={(e) => { e.stopPropagation(); setShowComments(!showComments); }}
               className={`relative p-1 rounded transition-all duration-200 ${
-                showComments ? 'text-blue-600 bg-blue-100' :
-                'text-gray-400 hover:text-blue-600 hover:bg-blue-50'
+                showComments ? 'text-info bg-info/10' :
+                'text-dim hover:text-info hover:bg-info/10'
               }`}
               title={`Comments${unresolvedCommentCount > 0 ? ` (${unresolvedCommentCount})` : ''}`}
             >
               <MessageCircle className="w-4 h-4" />
               {unresolvedCommentCount > 0 && (
-                <span className="absolute -top-1 -right-1 w-3.5 h-3.5 bg-blue-500 text-white rounded-full text-[8px] font-bold flex items-center justify-center border border-white">
+                <span className="absolute -top-1 -right-1 w-3.5 h-3.5 bg-info text-white rounded-full text-[8px] font-bold flex items-center justify-center border border-white">
                   {unresolvedCommentCount}
                 </span>
               )}
@@ -2997,21 +2997,21 @@ const ElementNode = ({ id, data, isConnectable, selected }) => {
               <>
                 <button
                   onClick={handlePreviewClick}
-                  className="p-1 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-full transition-all duration-200 group/preview"
+                  className="p-1 text-dim hover:text-info hover:bg-info/10 rounded-full transition-all duration-200 group/preview"
                   title="Preview full table"
                 >
                   <Eye className="w-4 h-4" />
                 </button>
                 <button
                   onClick={handleExportGoogleSheets}
-                  className="p-1 text-gray-500 hover:text-green-600 hover:bg-green-50 rounded-full transition-all duration-200"
+                  className="p-1 text-dim hover:text-success hover:bg-success/10 rounded-full transition-all duration-200"
                   title="Export to Google Sheets"
                 >
                   <FileSpreadsheet className="w-4 h-4" />
                 </button>
                 <button
                   onClick={handleDownloadExcel}
-                  className="p-1 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-full transition-all duration-200"
+                  className="p-1 text-dim hover:text-info hover:bg-info/10 rounded-full transition-all duration-200"
                   title="Download Excel (.xlsx)"
                 >
                   <Download className="w-4 h-4" />
@@ -3028,7 +3028,7 @@ const ElementNode = ({ id, data, isConnectable, selected }) => {
                 await persistIsImportantLocal(newImportantState);
                 console.log('✅ isImportant persisted successfully');
               }}
-              className={`ml-2 px-2 py-1 rounded border text-xs font-medium transition-colors duration-150 ${isImportant ? 'bg-yellow-400 text-white border-yellow-500' : 'bg-white text-yellow-600 border-yellow-400 hover:bg-yellow-50'}`}
+              className={`ml-2 px-2 py-1 rounded border text-xs font-medium transition-colors duration-150 ${isImportant ? 'bg-warning text-white border-warning' : 'bg-surface text-warning border-warning hover:bg-warning/10'}`}
               title={isImportant ? 'Unmark as Important' : 'Mark as Important'}
             >
               {isImportant ? '★ Important' : '☆ Mark Important'}
@@ -3036,13 +3036,13 @@ const ElementNode = ({ id, data, isConnectable, selected }) => {
             {/* Deadline Button */}
             <button
               onClick={() => setShowDeadlineInput((v) => !v)}
-              className="ml-2 px-2 py-1 rounded border text-xs font-medium transition-colors duration-150 bg-white text-blue-600 border-blue-400 hover:bg-blue-50"
+              className="ml-2 px-2 py-1 rounded border text-xs font-medium transition-colors duration-150 bg-surface text-info border-info hover:bg-info/10"
               title="Set Deadline"
             >
               {deadline ? 'Edit Deadline' : 'Set Deadline'}
             </button>
           </div>
-          <p className="text-sm text-gray-500 mt-2">{data.preview}</p>
+          <p className="text-sm text-dim mt-2">{data.preview}</p>
           {/* Deadline Input UI */}
           {showDeadlineInput && (
             <div className="mt-2 flex flex-col items-center">
@@ -3055,7 +3055,7 @@ const ElementNode = ({ id, data, isConnectable, selected }) => {
                 disabled={saving}
               />
               <button
-                className="mt-1 px-2 py-1 text-xs bg-blue-500 text-white rounded"
+                className="mt-1 px-2 py-1 text-xs bg-info text-white rounded"
                 onClick={async () => {
                   console.log('⏰ Setting deadline:', { currentDeadline: deadline, nodeId: id });
                   setShowDeadlineInput(false);
@@ -3073,7 +3073,7 @@ const ElementNode = ({ id, data, isConnectable, selected }) => {
           {deadline && (() => {
             const overdue = calculateTimeLeft(deadline)?.isExpired;
             return (
-              <div className={`mt-2 text-xs font-semibold ${overdue ? 'text-red-600' : 'text-blue-700'}`}>
+              <div className={`mt-2 text-xs font-semibold ${overdue ? 'text-danger' : 'text-info'}`}>
                 {overdue ? '⚠ Overdue — deadline reached' : `⏰ Time left: ${getTimeLeft()}`}
               </div>
             );
@@ -3087,7 +3087,7 @@ const ElementNode = ({ id, data, isConnectable, selected }) => {
       </div>
       
       {/* Approval Status & Buttons Section */}
-      <div className="mt-4 pt-3 border-t border-gray-200">
+      <div className="mt-4 pt-3 border-t border-line">
         {/* Current Approval Status */}
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center space-x-2">
@@ -3103,7 +3103,7 @@ const ElementNode = ({ id, data, isConnectable, selected }) => {
           
           {/* Added By Role Badge */}
           <span className={`text-xs px-2 py-0.5 rounded ${
-            data.addedByRole === 'pm' ? 'bg-purple-100 text-purple-700' : 'bg-blue-100 text-blue-700'
+            data.addedByRole === 'pm' ? 'bg-surface-hover text-ink' : 'bg-info/10 text-info'
           }`}>
             Added by {data.addedByRole === 'pm' ? 'PM' : 'Vendor'}
           </span>
@@ -3111,16 +3111,16 @@ const ElementNode = ({ id, data, isConnectable, selected }) => {
         
         {/* Sent for Approval Info */}
         {data.sentForApprovalAt && (
-          <div className="mb-2 p-2 rounded-lg bg-blue-50 border border-blue-200">
+          <div className="mb-2 p-2 rounded-lg bg-info/10 border border-info/20">
             <div className="flex items-center space-x-2 mb-1">
-              <span className="w-5 h-5 rounded-full flex items-center justify-center text-xs bg-blue-500 text-white">
+              <span className="w-5 h-5 rounded-full flex items-center justify-center text-xs bg-info text-white">
                 📤
               </span>
-              <span className="text-xs font-medium text-gray-700">
+              <span className="text-xs font-medium text-ink">
                 Sent for approval by {data.sentForApprovalBy}
               </span>
             </div>
-            <p className="text-xs text-gray-500 ml-7">
+            <p className="text-xs text-dim ml-7">
               📅 {formatDate(data.sentForApprovalAt)}
             </p>
           </div>
@@ -3128,22 +3128,22 @@ const ElementNode = ({ id, data, isConnectable, selected }) => {
         
         {/* Deletion Request Status */}
         {data.deletionRequested && (
-          <div className="mb-2 p-2 rounded-lg bg-red-50 border border-red-200">
+          <div className="mb-2 p-2 rounded-lg bg-danger/10 border border-danger/20">
             <div className="flex items-center space-x-2 mb-1">
-              <span className="w-5 h-5 rounded-full flex items-center justify-center text-xs bg-red-500 text-white">
+              <span className="w-5 h-5 rounded-full flex items-center justify-center text-xs bg-danger text-white">
                 🗑️
               </span>
-              <span className="text-xs font-medium text-gray-700">
+              <span className="text-xs font-medium text-ink">
                 Deletion requested by {data.deletionRequestedBy}
               </span>
             </div>
-            <p className="text-xs text-gray-500 ml-7">
+            <p className="text-xs text-dim ml-7">
               📅 {formatDate(data.deletionRequestedAt)}
             </p>
             {data.deletionReason && (
-              <div className="mt-2 p-2 bg-white rounded border border-gray-100">
-                <p className="text-xs text-gray-500 uppercase tracking-wide mb-1">Deletion Reason</p>
-                <p className="text-xs text-gray-700">{data.deletionReason}</p>
+              <div className="mt-2 p-2 bg-surface rounded border border-line">
+                <p className="text-xs text-dim uppercase tracking-wide mb-1">Deletion Reason</p>
+                <p className="text-xs text-ink">{data.deletionReason}</p>
               </div>
             )}
             
@@ -3152,13 +3152,13 @@ const ElementNode = ({ id, data, isConnectable, selected }) => {
               <div className="mt-2 flex gap-2">
                 <button
                   onClick={handleApproveDeletion}
-                  className="flex-1 px-2 py-1 text-xs bg-red-500 text-white rounded hover:bg-red-600 transition-colors"
+                  className="flex-1 px-2 py-1 text-xs bg-danger text-white rounded hover:bg-danger transition-colors"
                 >
                   Approve Deletion
                 </button>
                 <button
                   onClick={handleRejectDeletion}
-                  className="flex-1 px-2 py-1 text-xs bg-gray-500 text-white rounded hover:bg-gray-600 transition-colors"
+                  className="flex-1 px-2 py-1 text-xs bg-cta text-cta-foreground rounded hover:bg-cta transition-colors"
                 >
                   Reject Deletion
                 </button>
@@ -3169,22 +3169,22 @@ const ElementNode = ({ id, data, isConnectable, selected }) => {
         
         {/* PM Approval Details */}
         {data.pmApproval && (
-          <div className="mb-2 p-2 rounded-lg bg-green-50 border border-green-200">
+          <div className="mb-2 p-2 rounded-lg bg-success/10 border border-success/20">
             <div className="flex items-center space-x-2 mb-1">
-              <span className="w-5 h-5 rounded-full flex items-center justify-center text-xs bg-green-500 text-white">
+              <span className="w-5 h-5 rounded-full flex items-center justify-center text-xs bg-success text-white">
                 ✓
               </span>
-              <span className="text-xs font-medium text-gray-700">
+              <span className="text-xs font-medium text-ink">
                 {data.pmApproval.status === 'approved' ? '✅ PM Approved' : '❌ PM Rejected'} by {data.pmApproval.approvedBy}
               </span>
             </div>
-            <p className="text-xs text-gray-500 ml-7">
+            <p className="text-xs text-dim ml-7">
               📅 {formatDate(data.pmApproval.approvalTimestamp)}
             </p>
             {data.pmApproval.approvalReason && (
-              <div className="mt-2 p-2 bg-white rounded border border-gray-100">
-                <p className="text-xs text-gray-500 uppercase tracking-wide mb-1">PM Reason</p>
-                <p className="text-sm text-gray-700">{data.pmApproval.approvalReason}</p>
+              <div className="mt-2 p-2 bg-surface rounded border border-line">
+                <p className="text-xs text-dim uppercase tracking-wide mb-1">PM Reason</p>
+                <p className="text-sm text-ink">{data.pmApproval.approvalReason}</p>
               </div>
             )}
           </div>
@@ -3192,22 +3192,22 @@ const ElementNode = ({ id, data, isConnectable, selected }) => {
         
         {/* Client Approval Details */}
         {data.clientApproval && (
-          <div className="mb-2 p-2 rounded-lg bg-blue-50 border border-blue-200">
+          <div className="mb-2 p-2 rounded-lg bg-info/10 border border-info/20">
             <div className="flex items-center space-x-2 mb-1">
-              <span className="w-5 h-5 rounded-full flex items-center justify-center text-xs bg-blue-500 text-white">
+              <span className="w-5 h-5 rounded-full flex items-center justify-center text-xs bg-info text-white">
                 ✓
               </span>
-              <span className="text-xs font-medium text-gray-700">
+              <span className="text-xs font-medium text-ink">
                 {data.clientApproval.status === 'approved' ? '✅ Client Approved' : '❌ Client Rejected'} by {data.clientApproval.approvedBy}
               </span>
             </div>
-            <p className="text-xs text-gray-500 ml-7">
+            <p className="text-xs text-dim ml-7">
               📅 {formatDate(data.clientApproval.approvalTimestamp)}
             </p>
             {data.clientApproval.approvalReason && (
-              <div className="mt-2 p-2 bg-white rounded border border-gray-100">
-                <p className="text-xs text-gray-500 uppercase tracking-wide mb-1">Client Reason</p>
-                <p className="text-sm text-gray-700">{data.clientApproval.approvalReason}</p>
+              <div className="mt-2 p-2 bg-surface rounded border border-line">
+                <p className="text-xs text-dim uppercase tracking-wide mb-1">Client Reason</p>
+                <p className="text-sm text-ink">{data.clientApproval.approvalReason}</p>
               </div>
             )}
           </div>
@@ -3227,7 +3227,7 @@ const ElementNode = ({ id, data, isConnectable, selected }) => {
               <button
                 onClick={handleSendForApproval}
                 disabled={isSendingForApproval}
-                className="w-full flex items-center justify-center space-x-2 px-3 py-2 bg-blue-500 hover:bg-blue-600 text-white text-sm font-medium rounded-lg transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full flex items-center justify-center space-x-2 px-3 py-2 bg-info hover:bg-info text-white text-sm font-medium rounded-lg transition-colors  disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {isSendingForApproval ? (
                   <>
@@ -3253,14 +3253,14 @@ const ElementNode = ({ id, data, isConnectable, selected }) => {
           <div className="flex space-x-2">
             <button
               onClick={() => handleApprovalClick('approve')}
-              className="flex-1 flex items-center justify-center space-x-1 px-3 py-2 bg-green-500 hover:bg-green-600 text-white text-sm font-medium rounded-lg transition-colors shadow-sm"
+              className="flex-1 flex items-center justify-center space-x-1 px-3 py-2 bg-success hover:bg-success text-white text-sm font-medium rounded-lg transition-colors "
             >
               <Check className="w-4 h-4" />
               <span>Approve</span>
             </button>
             <button
               onClick={() => handleApprovalClick('reject')}
-              className="flex-1 flex items-center justify-center space-x-1 px-3 py-2 bg-red-500 hover:bg-red-600 text-white text-sm font-medium rounded-lg transition-colors shadow-sm"
+              className="flex-1 flex items-center justify-center space-x-1 px-3 py-2 bg-danger hover:bg-danger text-white text-sm font-medium rounded-lg transition-colors "
             >
               <XIcon className="w-4 h-4" />
               <span>Reject</span>
@@ -3270,27 +3270,27 @@ const ElementNode = ({ id, data, isConnectable, selected }) => {
         
         {/* Message when approval workflow is active */}
         {data.approvalStatus === 'sent_to_pm' && (
-          <p className="text-xs text-center text-blue-600 italic">
+          <p className="text-xs text-center text-info italic">
             ⏳ Waiting for PM to review this element
           </p>
         )}
         {data.approvalStatus === 'pm_approved' && (
-          <p className="text-xs text-center text-yellow-600 italic">
+          <p className="text-xs text-center text-warning italic">
             ⏳ Waiting for Client to review this element
           </p>
         )}
         {data.approvalStatus === 'client_approved' && (
-          <p className="text-xs text-center text-green-600 italic">
+          <p className="text-xs text-center text-success italic">
             ✅ Element has been fully approved
           </p>
         )}
         {data.approvalStatus === 'locked' && (
-          <p className="text-xs text-center text-gray-600 italic">
+          <p className="text-xs text-center text-dim italic">
             🔒 Element is locked and cannot be edited
           </p>
         )}
         {data.approvalStatus === 'rejected' && (
-          <p className="text-xs text-center text-red-600 italic">
+          <p className="text-xs text-center text-danger italic">
             ❌ Element has been rejected
           </p>
         )}
@@ -3298,19 +3298,19 @@ const ElementNode = ({ id, data, isConnectable, selected }) => {
       
       {/* Sequence Number Badge - Top left corner, always visible */}
       {data.sequenceNumber && (
-        <div className="absolute -top-4 -left-4 z-20 w-8 h-8 bg-gradient-to-br from-green-500 to-emerald-600 text-white rounded-full flex items-center justify-center text-sm font-bold shadow-lg border-2 border-white hover:shadow-xl transition-shadow">
+        <div className="absolute -top-4 -left-4 z-20 w-8 h-8 bg-black text-white rounded-full flex items-center justify-center text-sm font-bold shadow-lg border-2 border-white hover:shadow-xl transition-shadow">
           {data.sequenceNumber}
         </div>
       )}
       
       {/* Element Type Label */}
-      <div className="absolute -top-2 left-5 px-2 py-1 bg-blue-500 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity">
+      <div className="absolute -top-2 left-5 px-2 py-1 bg-info text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity">
         {data.type.toUpperCase()}
       </div>
       
       {/* Selection indicator */}
       {selected && (
-        <div className="absolute -top-3 -right-3 w-6 h-6 bg-blue-500 text-white rounded-full flex items-center justify-center text-xs font-bold">
+        <div className="absolute -top-3 -right-3 w-6 h-6 bg-info text-white rounded-full flex items-center justify-center text-xs font-bold">
           E
         </div>
       )}
@@ -3319,7 +3319,7 @@ const ElementNode = ({ id, data, isConnectable, selected }) => {
       {unresolvedCommentCount > 0 && !showComments && (
         <button
           onClick={(e) => { e.stopPropagation(); setShowComments(true); }}
-          className="absolute -bottom-2 -left-2 z-20 flex items-center space-x-0.5 px-1.5 py-0.5 bg-blue-500 text-white rounded-full text-[10px] font-bold shadow-md border-2 border-white hover:bg-blue-600 transition-colors cursor-pointer"
+          className="absolute -bottom-2 -left-2 z-20 flex items-center space-x-0.5 px-1.5 py-0.5 bg-info text-white rounded-full text-[10px] font-bold  border-2 border-white hover:bg-info transition-colors cursor-pointer"
           title={`${unresolvedCommentCount} comment${unresolvedCommentCount !== 1 ? 's' : ''}`}
         >
           <MessageCircle className="w-3 h-3" />
@@ -3361,21 +3361,21 @@ const ElementNode = ({ id, data, isConnectable, selected }) => {
 
       {showDocumentPreview && data.documentUrl && (
         <div className="fixed inset-0 z-[999] flex items-center justify-center bg-black/60">
-          <div className="flex h-[85vh] w-full max-w-4xl flex-col overflow-hidden rounded-2xl bg-white shadow-2xl">
-            <div className="flex items-center justify-between border-b border-slate-200 px-6 py-4">
+          <div className="flex h-[85vh] w-full max-w-4xl flex-col overflow-hidden rounded-2xl bg-surface shadow-2xl">
+            <div className="flex items-center justify-between border-b border-line px-6 py-4">
               <div>
-                <h3 className="text-base font-semibold text-slate-900">{data.name}</h3>
-                <p className="text-xs text-slate-500">{data.documentMeta?.id || 'Document preview'}</p>
+                <h3 className="text-base font-semibold text-ink">{data.name}</h3>
+                <p className="text-xs text-dim">{data.documentMeta?.id || 'Document preview'}</p>
               </div>
               <button
                 onClick={() => setShowDocumentPreview(false)}
-                className="rounded-md p-2 text-slate-400 hover:bg-slate-100 hover:text-slate-700 transition-colors"
+                className="rounded-md p-2 text-dim hover:bg-surface-hover hover:text-ink transition-colors"
                 aria-label="Close preview"
               >
                 <X className="w-4 h-4" />
               </button>
             </div>
-            <div className="flex-1 bg-slate-100">
+            <div className="flex-1 bg-surface-hover">
               <iframe
                 src={`${data.documentUrl}#toolbar=0&navpanes=0`}
                 title={data.documentMeta?.id || 'Document preview'}
@@ -3391,11 +3391,11 @@ const ElementNode = ({ id, data, isConnectable, selected }) => {
       {showApprovalModal && (
         <div className="fixed inset-0 z-[1000] flex items-center justify-center bg-black/50 backdrop-blur-sm">
           <div 
-            className="bg-white rounded-2xl shadow-2xl w-full max-w-md mx-4 overflow-hidden"
+            className="bg-surface rounded-2xl shadow-2xl w-full max-w-md mx-4 overflow-hidden"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Modal Header */}
-            <div className={`px-6 py-4 ${approvalAction === 'approve' ? 'bg-gradient-to-r from-green-500 to-emerald-500' : 'bg-gradient-to-r from-red-500 to-rose-500'}`}>
+            <div className={`px-6 py-4 ${approvalAction === 'approve' ? 'bg-black' : 'bg-black'}`}>
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-3">
                   <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center">
@@ -3424,9 +3424,9 @@ const ElementNode = ({ id, data, isConnectable, selected }) => {
             {/* Modal Body */}
             <div className="p-6">
               <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-ink mb-2">
                   {approvalAction === 'approve' ? 'Approval Reason' : 'Rejection Reason'} 
-                  <span className="text-red-500">*</span>
+                  <span className="text-danger">*</span>
                 </label>
                 <textarea
                   value={approvalReason}
@@ -3434,29 +3434,29 @@ const ElementNode = ({ id, data, isConnectable, selected }) => {
                   placeholder={approvalAction === 'approve' 
                     ? 'Enter reason for approving this element...' 
                     : 'Enter reason for rejecting this element...'}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none transition-all"
+                  className="w-full px-4 py-3 border border-line rounded-xl focus:ring-2 focus:ring-info focus:border-info resize-none transition-all"
                   rows={4}
                 />
               </div>
               
               {/* Element Info */}
-              <div className="bg-gray-50 rounded-lg p-3 mb-4">
-                <p className="text-xs text-gray-500 uppercase tracking-wide mb-1">Element Details</p>
-                <p className="text-sm text-gray-700">
+              <div className="bg-canvas rounded-lg p-3 mb-4">
+                <p className="text-xs text-dim uppercase tracking-wide mb-1">Element Details</p>
+                <p className="text-sm text-ink">
                   <span className="font-medium">Type:</span> {data.type}
                 </p>
-                <p className="text-sm text-gray-700">
+                <p className="text-sm text-ink">
                   <span className="font-medium">Added by:</span> {data.addedBy} ({data.addedByRole === 'pm' ? 'PM' : 'Vendor'})
                 </p>
               </div>
             </div>
             
             {/* Modal Footer */}
-            <div className="px-6 py-4 bg-gray-50 border-t border-gray-100 flex space-x-3">
+            <div className="px-6 py-4 bg-canvas border-t border-line flex space-x-3">
               <button
                 onClick={() => setShowApprovalModal(false)}
                 disabled={isSubmittingApproval}
-                className="flex-1 px-4 py-2.5 border border-gray-300 text-gray-700 rounded-xl hover:bg-gray-100 transition-colors font-medium"
+                className="flex-1 px-4 py-2.5 border border-line text-ink rounded-xl hover:bg-surface-hover transition-colors font-medium"
               >
                 Cancel
               </button>
@@ -3465,8 +3465,8 @@ const ElementNode = ({ id, data, isConnectable, selected }) => {
                 disabled={!approvalReason.trim() || isSubmittingApproval}
                 className={`flex-1 px-4 py-2.5 text-white rounded-xl font-medium transition-all flex items-center justify-center space-x-2 ${
                   approvalAction === 'approve' 
-                    ? 'bg-green-500 hover:bg-green-600 disabled:bg-green-300' 
-                    : 'bg-red-500 hover:bg-red-600 disabled:bg-red-300'
+                    ? 'bg-success hover:bg-success disabled:bg-success/30' 
+                    : 'bg-danger hover:bg-danger disabled:bg-danger/30'
                 } disabled:cursor-not-allowed`}
               >
                 {isSubmittingApproval ? (
@@ -3493,11 +3493,11 @@ const ElementNode = ({ id, data, isConnectable, selected }) => {
       {showDeletionModal && (
         <div className="fixed inset-0 z-[1000] flex items-center justify-center bg-black/50 backdrop-blur-sm">
           <div 
-            className="bg-white rounded-2xl shadow-2xl w-full max-w-md mx-4 overflow-hidden"
+            className="bg-surface rounded-2xl shadow-2xl w-full max-w-md mx-4 overflow-hidden"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Modal Header */}
-            <div className="px-6 py-4 bg-gradient-to-r from-orange-500 to-red-500">
+            <div className="px-6 py-4 bg-black">
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-3">
                   <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center">
@@ -3521,51 +3521,51 @@ const ElementNode = ({ id, data, isConnectable, selected }) => {
             
             {/* Modal Body */}
             <div className="p-6">
-              <div className="mb-4 p-3 rounded-lg bg-orange-50 border border-orange-200">
-                <p className="text-sm text-orange-800">
+              <div className="mb-4 p-3 rounded-lg bg-warning/10 border border-warning/20">
+                <p className="text-sm text-warning">
                   ⚠️ This element will be marked for deletion. A PM will need to approve this request before it's permanently deleted.
                 </p>
               </div>
               
               <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-ink mb-2">
                   Reason for Deletion
-                  <span className="text-red-500">*</span>
+                  <span className="text-danger">*</span>
                 </label>
                 <textarea
                   value={deletionReason}
                   onChange={(e) => setDeletionReason(e.target.value)}
                   placeholder="Enter reason for requesting deletion..."
-                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-orange-500 resize-none transition-all"
+                  className="w-full px-4 py-3 border border-line rounded-xl focus:ring-2 focus:ring-warning focus:border-warning resize-none transition-all"
                   rows={4}
                 />
               </div>
               
               {/* Element Info */}
-              <div className="bg-gray-50 rounded-lg p-3 mb-4">
-                <p className="text-xs text-gray-500 uppercase tracking-wide mb-1">Element Details</p>
-                <p className="text-sm text-gray-700">
+              <div className="bg-canvas rounded-lg p-3 mb-4">
+                <p className="text-xs text-dim uppercase tracking-wide mb-1">Element Details</p>
+                <p className="text-sm text-ink">
                   <span className="font-medium">Type:</span> {data.type}
                 </p>
-                <p className="text-sm text-gray-700">
+                <p className="text-sm text-ink">
                   <span className="font-medium">Added by:</span> {data.addedBy} ({data.addedByRole === 'pm' ? 'PM' : 'Vendor'})
                 </p>
               </div>
             </div>
             
             {/* Modal Footer */}
-            <div className="px-6 py-4 bg-gray-50 border-t border-gray-100 flex space-x-3">
+            <div className="px-6 py-4 bg-canvas border-t border-line flex space-x-3">
               <button
                 onClick={() => setShowDeletionModal(false)}
                 disabled={isSubmittingDeletion}
-                className="flex-1 px-4 py-2.5 border border-gray-300 text-gray-700 rounded-xl hover:bg-gray-100 transition-colors font-medium"
+                className="flex-1 px-4 py-2.5 border border-line text-ink rounded-xl hover:bg-surface-hover transition-colors font-medium"
               >
                 Cancel
               </button>
               <button
                 onClick={handleSubmitDeletionRequest}
                 disabled={!deletionReason.trim() || isSubmittingDeletion}
-                className="flex-1 px-4 py-2.5 text-white rounded-xl font-medium transition-all flex items-center justify-center space-x-2 bg-orange-500 hover:bg-orange-600 disabled:bg-orange-300 disabled:cursor-not-allowed"
+                className="flex-1 px-4 py-2.5 text-white rounded-xl font-medium transition-all flex items-center justify-center space-x-2 bg-warning hover:bg-warning disabled:bg-warning/30 disabled:cursor-not-allowed"
               >
                 {isSubmittingDeletion ? (
                   <>

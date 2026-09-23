@@ -68,24 +68,24 @@ export default function VendorDashboard() {
   }, [location, navigate, vendorContext, currentUser]);
 
   return (
-    <div className="min-h-screen bg-gradient-to-r from-green-100 via-green-200 to-green-300 p-6">
-      <div className="max-w-4xl mx-auto bg-white rounded-lg shadow-lg p-6">
-        <h1 className="text-3xl font-bold mb-6 text-green-800">Vendor Dashboard</h1>
-        <p className="text-lg text-green-700 mb-4">
+    <div className="min-h-screen bg-black p-6">
+      <div className="max-w-4xl mx-auto bg-surface rounded-lg shadow-lg p-6">
+        <h1 className="text-3xl font-bold mb-6 text-success">Vendor Dashboard</h1>
+        <p className="text-lg text-success mb-4">
           Welcome, {vendorInfo?.vendorDetails?.primaryContactName || currentUser?.name || 'Vendor'}!
         </p>
-        <p className="text-green-700">
+        <p className="text-success">
           Your vendor application has been approved. You now have access to the dashboard.
         </p>
         {/* Additional vendor-specific info and features can be added here */}
         {vendorInfo && (
-          <div className="mt-6 p-4 bg-green-50 rounded-lg">
-            <h2 className="text-xl font-semibold mb-3 text-green-800">Your Information</h2>
+          <div className="mt-6 p-4 bg-success/10 rounded-lg">
+            <h2 className="text-xl font-semibold mb-3 text-success">Your Information</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <p><strong>Company:</strong> {vendorInfo.companyDetails?.companyName || 'N/A'}</p>
                 <p><strong>Email:</strong> {vendorInfo.vendorDetails?.primaryContactEmail || 'N/A'}</p>
-                <p><strong>Status:</strong> <span className="text-green-600 font-semibold">Approved</span></p>
+                <p><strong>Status:</strong> <span className="text-success font-semibold">Approved</span></p>
               </div>
               <div>
                 <p><strong>Phone:</strong> {vendorInfo.vendorDetails?.primaryContactPhone || 'N/A'}</p>

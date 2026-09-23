@@ -24,33 +24,26 @@ function PasskeyRegistrationBanner({ userId, email, onPasskeyRegistered }) {
 
   return (
     <>
-      <div className="bg-gradient-to-r from-blue-50 to-emerald-50 border-l-4 border-emerald-500 p-4 mb-6 rounded-lg shadow-sm">
-        <div className="flex items-start justify-between">
-          <div className="flex items-start gap-3 flex-1">
-            <Lock className="w-5 h-5 text-emerald-600 mt-0.5 flex-shrink-0" />
-            <div>
-              <h3 className="font-semibold text-gray-900 mb-1">
-                🔐 Enhance Your Security
-              </h3>
-              <p className="text-sm text-gray-700 mb-3">
-                Register a passkey to log in faster and more securely. Use your face, fingerprint, or security key for instant access.
-              </p>
-              <button
-                onClick={() => setShowSetup(true)}
-                className="inline-flex items-center gap-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg px-4 py-2 text-sm font-medium transition duration-200"
-              >
-                Set Up Passkey Now
-              </button>
-            </div>
-          </div>
-          <button
-            onClick={handleDismiss}
-            className="text-gray-400 hover:text-gray-600 transition flex-shrink-0 mt-0.5"
-            aria-label="Dismiss"
-          >
-            <X size={20} />
-          </button>
-        </div>
+      {/* Slim one-line notice — visible but never dominant */}
+      <div className="mb-4 flex items-center gap-3 rounded-md border border-line bg-surface px-3 py-2">
+        <Lock size={14} className="flex-shrink-0 text-dim" />
+        <p className="min-w-0 flex-1 truncate text-[13px] text-ink">
+          <span className="font-medium">Enhance your security</span>
+          <span className="hidden text-dim sm:inline"> — log in faster with face, fingerprint, or a security key.</span>
+        </p>
+        <button
+          onClick={() => setShowSetup(true)}
+          className="flex-shrink-0 rounded-md bg-cta px-3 py-1.5 text-xs font-medium text-cta-foreground transition hover:opacity-90"
+        >
+          Set up passkey
+        </button>
+        <button
+          onClick={handleDismiss}
+          className="flex-shrink-0 rounded p-1 text-dim transition hover:text-ink"
+          aria-label="Dismiss"
+        >
+          <X size={15} />
+        </button>
       </div>
 
       {showSetup && (

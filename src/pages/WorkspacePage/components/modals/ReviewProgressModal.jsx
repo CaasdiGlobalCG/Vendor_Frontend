@@ -280,48 +280,48 @@ const ReviewProgressModal = ({ isOpen, onClose, workspace, userRole, taskId, sub
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
-      <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+      <div className="bg-surface rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
         {/* Header */}
-        <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between">
+        <div className="sticky top-0 bg-surface border-b border-line px-6 py-4 flex items-center justify-between">
           <div>
-            <h2 className="text-xl font-semibold text-gray-900">Review Progress</h2>
-            <p className="text-sm text-gray-600 mt-1">Review vendor progress submission</p>
+            <h2 className="text-xl font-semibold text-ink">Review Progress</h2>
+            <p className="text-sm text-dim mt-1">Review vendor progress submission</p>
           </div>
           <button
             onClick={onClose}
-            className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+            className="p-2 hover:bg-surface-hover rounded-lg transition-colors"
           >
-            <X className="w-5 h-5 text-gray-600" />
+            <X className="w-5 h-5 text-dim" />
           </button>
         </div>
 
         {/* Content */}
         <div className="p-6">
           {successMessage && (
-            <div className="mb-4 p-4 bg-green-50 border border-green-200 rounded-lg flex items-center space-x-3">
-              <CheckCircle className="w-5 h-5 text-green-600" />
-              <span className="text-green-800">{successMessage}</span>
+            <div className="mb-4 p-4 bg-success/10 border border-success/20 rounded-lg flex items-center space-x-3">
+              <CheckCircle className="w-5 h-5 text-success" />
+              <span className="text-success">{successMessage}</span>
             </div>
           )}
 
           {error && (
-            <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg flex items-center space-x-3">
-              <XCircle className="w-5 h-5 text-red-600" />
-              <span className="text-red-800">{error}</span>
+            <div className="mb-4 p-4 bg-danger/10 border border-danger/20 rounded-lg flex items-center space-x-3">
+              <XCircle className="w-5 h-5 text-danger" />
+              <span className="text-danger">{error}</span>
             </div>
           )}
 
           {loading ? (
             <div className="flex items-center justify-center py-8">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-info"></div>
             </div>
           ) : progressSubmissions.length > 0 ? (
             <div className="space-y-6">
               {/* Submissions List */}
               {progressSubmissions.length > 1 && (
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-3">Progress Submissions</label>
-                  <div className="space-y-2 max-h-64 overflow-y-auto border border-gray-200 rounded-lg p-3 bg-gray-50">
+                  <label className="block text-sm font-medium text-ink mb-3">Progress Submissions</label>
+                  <div className="space-y-2 max-h-64 overflow-y-auto border border-line rounded-lg p-3 bg-canvas">
                     {progressSubmissions.map((submission, index) => (
                       <button
                         key={submission.id}
@@ -331,24 +331,24 @@ const ReviewProgressModal = ({ isOpen, onClose, workspace, userRole, taskId, sub
                         }}
                         className={`w-full text-left p-3 rounded-lg border-2 transition-colors ${
                           selectedProgress?.id === submission.id
-                            ? 'border-blue-500 bg-blue-50'
-                            : 'border-gray-200 bg-white hover:border-gray-300'
+                            ? 'border-info bg-info/10'
+                            : 'border-line bg-surface hover:border-line'
                         }`}
                       >
                         <div className="flex items-center justify-between">
                           <div>
-                            <p className="text-sm font-medium text-gray-900">{submission.title}</p>
-                            <p className="text-xs text-gray-500 mt-1">
+                            <p className="text-sm font-medium text-ink">{submission.title}</p>
+                            <p className="text-xs text-dim mt-1">
                               {new Date(submission.submittedAt).toLocaleDateString()} at {new Date(submission.submittedAt).toLocaleTimeString()}
                             </p>
                           </div>
                           <div className="flex items-center space-x-2">
                             <span className={`text-xs font-semibold px-2 py-1 rounded-full ${
-                              submission.reviewStatus === 'client_approved' ? 'bg-green-100 text-green-800' :
-                              submission.reviewStatus === 'client_approval_pending' ? 'bg-yellow-100 text-yellow-800' :
-                              submission.reviewStatus === 'rejected' ? 'bg-red-100 text-red-800' :
-                              submission.reviewStatus === 'client_rejected' ? 'bg-red-100 text-red-800' :
-                              'bg-blue-100 text-blue-800'
+                              submission.reviewStatus === 'client_approved' ? 'bg-success/10 text-success' :
+                              submission.reviewStatus === 'client_approval_pending' ? 'bg-warning/10 text-warning' :
+                              submission.reviewStatus === 'rejected' ? 'bg-danger/10 text-danger' :
+                              submission.reviewStatus === 'client_rejected' ? 'bg-danger/10 text-danger' :
+                              'bg-info/10 text-info'
                             }`}>
                               {submission.reviewStatus || 'Pending'}
                             </span>
@@ -363,47 +363,47 @@ const ReviewProgressModal = ({ isOpen, onClose, workspace, userRole, taskId, sub
               {/* Status Badge */}
               {selectedProgress && (
                 <>
-                  <div className="flex items-center space-x-3 p-4 bg-blue-50 rounded-lg border border-blue-200">
-                    <Clock className="w-5 h-5 text-blue-600" />
+                  <div className="flex items-center space-x-3 p-4 bg-info/10 rounded-lg border border-info/20">
+                    <Clock className="w-5 h-5 text-info" />
                     <div>
-                      <p className="text-sm font-medium text-blue-900">Review Status</p>
-                      <p className="text-xs text-blue-700">{selectedProgress.reviewStatus || 'Pending Review'}</p>
+                      <p className="text-sm font-medium text-info">Review Status</p>
+                      <p className="text-xs text-info">{selectedProgress.reviewStatus || 'Pending Review'}</p>
                     </div>
                   </div>
 
                   {/* Progress Details */}
                   <div className="space-y-4">
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Title</label>
-                      <p className="text-gray-900">{selectedProgress.title || 'N/A'}</p>
+                      <label className="block text-sm font-medium text-ink mb-2">Title</label>
+                      <p className="text-ink">{selectedProgress.title || 'N/A'}</p>
                     </div>
 
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Description</label>
-                      <p className="text-gray-900">{selectedProgress.description || 'N/A'}</p>
+                      <label className="block text-sm font-medium text-ink mb-2">Description</label>
+                      <p className="text-ink">{selectedProgress.description || 'N/A'}</p>
                     </div>
 
                     <div className="grid grid-cols-2 gap-4">
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">Work Done</label>
-                        <p className="text-gray-900">{selectedProgress.workDone || 'N/A'}</p>
+                        <label className="block text-sm font-medium text-ink mb-2">Work Done</label>
+                        <p className="text-ink">{selectedProgress.workDone || 'N/A'}</p>
                       </div>
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">Work Pending</label>
-                        <p className="text-gray-900">{selectedProgress.workPending || 'N/A'}</p>
+                        <label className="block text-sm font-medium text-ink mb-2">Work Pending</label>
+                        <p className="text-ink">{selectedProgress.workPending || 'N/A'}</p>
                       </div>
                     </div>
 
                     {selectedProgress.taskId && (
                       <div className="grid grid-cols-2 gap-4">
                         <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-2">Task ID</label>
-                          <p className="text-gray-900 text-sm font-mono">{selectedProgress.taskId}</p>
+                          <label className="block text-sm font-medium text-ink mb-2">Task ID</label>
+                          <p className="text-ink text-sm font-mono">{selectedProgress.taskId}</p>
                         </div>
                         {selectedProgress.subtaskId && (
                           <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">Subtask ID</label>
-                            <p className="text-gray-900 text-sm font-mono">{selectedProgress.subtaskId}</p>
+                            <label className="block text-sm font-medium text-ink mb-2">Subtask ID</label>
+                            <p className="text-ink text-sm font-mono">{selectedProgress.subtaskId}</p>
                           </div>
                         )}
                       </div>
@@ -411,12 +411,12 @@ const ReviewProgressModal = ({ isOpen, onClose, workspace, userRole, taskId, sub
 
                     {selectedProgress.proofOfCompletion && (
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">Proof of Completion</label>
+                        <label className="block text-sm font-medium text-ink mb-2">Proof of Completion</label>
                         <a
                           href={selectedProgress.proofOfCompletion}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="text-blue-600 hover:text-blue-800 underline text-sm"
+                          className="text-info hover:text-info underline text-sm"
                         >
                           View Attached File
                         </a>
@@ -425,28 +425,28 @@ const ReviewProgressModal = ({ isOpen, onClose, workspace, userRole, taskId, sub
 
                     {selectedProgress.submittedAt && (
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">Submitted At</label>
-                        <p className="text-gray-900 text-sm">{new Date(selectedProgress.submittedAt).toLocaleString()}</p>
+                        <label className="block text-sm font-medium text-ink mb-2">Submitted At</label>
+                        <p className="text-ink text-sm">{new Date(selectedProgress.submittedAt).toLocaleString()}</p>
                       </div>
                     )}
 
                     {selectedProgress.pmApprovedAt && (
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">PM Approved At</label>
-                        <p className="text-gray-900 text-sm">{new Date(selectedProgress.pmApprovedAt).toLocaleString()}</p>
+                        <label className="block text-sm font-medium text-ink mb-2">PM Approved At</label>
+                        <p className="text-ink text-sm">{new Date(selectedProgress.pmApprovedAt).toLocaleString()}</p>
                       </div>
                     )}
                   </div>
 
                   {/* Rejection Form */}
                   {showRejectForm && canReview && (
-                    <div className="p-4 bg-red-50 rounded-lg border border-red-200">
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Rejection Reason</label>
+                    <div className="p-4 bg-danger/10 rounded-lg border border-danger/20">
+                      <label className="block text-sm font-medium text-ink mb-2">Rejection Reason</label>
                       <textarea
                         value={rejectionReason}
                         onChange={(e) => setRejectionReason(e.target.value)}
                         placeholder="Please explain why this progress is being rejected..."
-                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent resize-none"
+                        className="w-full px-4 py-3 border border-line rounded-lg focus:ring-2 focus:ring-danger focus:border-transparent resize-none"
                         rows="3"
                       />
                     </div>
@@ -455,11 +455,11 @@ const ReviewProgressModal = ({ isOpen, onClose, workspace, userRole, taskId, sub
                   {/* Action Buttons — hidden once this viewer has already acted */}
                   {canReview ? (
                   !showRejectForm ? (
-                    <div className="flex items-center space-x-3 pt-4 border-t border-gray-200">
+                    <div className="flex items-center space-x-3 pt-4 border-t border-line">
                       <button
                         onClick={handleApprove}
                         disabled={approving}
-                        className="flex-1 px-4 py-3 bg-green-600 hover:bg-green-700 disabled:bg-gray-400 text-white font-medium rounded-lg transition-colors flex items-center justify-center space-x-2"
+                        className="flex-1 px-4 py-3 bg-success hover:bg-success disabled:bg-cta text-cta-foreground font-medium rounded-lg transition-colors flex items-center justify-center space-x-2"
                       >
                         <CheckCircle className="w-4 h-4" />
                         <span>{approving ? 'Approving...' : 'Approve Progress'}</span>
@@ -467,35 +467,35 @@ const ReviewProgressModal = ({ isOpen, onClose, workspace, userRole, taskId, sub
                       <button
                         onClick={() => setShowRejectForm(true)}
                         disabled={rejecting}
-                        className="flex-1 px-4 py-3 bg-red-600 hover:bg-red-700 disabled:bg-gray-400 text-white font-medium rounded-lg transition-colors flex items-center justify-center space-x-2"
+                        className="flex-1 px-4 py-3 bg-danger hover:bg-danger disabled:bg-cta text-cta-foreground font-medium rounded-lg transition-colors flex items-center justify-center space-x-2"
                       >
                         <XCircle className="w-4 h-4" />
                         <span>{rejecting ? 'Rejecting...' : 'Reject Progress'}</span>
                       </button>
                     </div>
                   ) : (
-                    <div className="flex items-center space-x-3 pt-4 border-t border-gray-200">
+                    <div className="flex items-center space-x-3 pt-4 border-t border-line">
                       <button
                         onClick={handleReject}
                         disabled={rejecting}
-                        className="flex-1 px-4 py-3 bg-red-600 hover:bg-red-700 disabled:bg-gray-400 text-white font-medium rounded-lg transition-colors"
+                        className="flex-1 px-4 py-3 bg-danger hover:bg-danger disabled:bg-cta text-cta-foreground font-medium rounded-lg transition-colors"
                       >
                         {rejecting ? 'Rejecting...' : 'Confirm Rejection'}
                       </button>
                       <button
                         onClick={() => setShowRejectForm(false)}
                         disabled={rejecting}
-                        className="flex-1 px-4 py-3 bg-gray-300 hover:bg-gray-400 disabled:bg-gray-400 text-gray-800 font-medium rounded-lg transition-colors"
+                        className="flex-1 px-4 py-3 bg-surface-hover hover:bg-cta disabled:bg-cta text-ink font-medium rounded-lg transition-colors"
                       >
                         Cancel
                       </button>
                     </div>
                   )
                   ) : reviewStateMessage ? (
-                    <div className="pt-4 border-t border-gray-200">
-                      <div className="p-4 bg-gray-50 border border-gray-200 rounded-lg flex items-center space-x-3">
-                        <Clock className="w-5 h-5 text-gray-500" />
-                        <span className="text-sm text-gray-700">{reviewStateMessage}</span>
+                    <div className="pt-4 border-t border-line">
+                      <div className="p-4 bg-canvas border border-line rounded-lg flex items-center space-x-3">
+                        <Clock className="w-5 h-5 text-dim" />
+                        <span className="text-sm text-ink">{reviewStateMessage}</span>
                       </div>
                     </div>
                   ) : null}
@@ -504,7 +504,7 @@ const ReviewProgressModal = ({ isOpen, onClose, workspace, userRole, taskId, sub
             </div>
           ) : (
             <div className="text-center py-8">
-              <p className="text-gray-600">No progress submissions available for review</p>
+              <p className="text-dim">No progress submissions available for review</p>
             </div>
           )}
         </div>

@@ -63,11 +63,11 @@ const TableRenderer = ({
       return (
         <div className="w-full">
           <div className="overflow-x-auto">
-            <table className="min-w-full border-collapse border border-gray-300">
-              <thead className="bg-gray-50">
+            <table className="min-w-full border-collapse border border-line">
+              <thead className="bg-canvas">
                 <tr>
                   {columns.map(column => (
-                    <th key={column} className="border border-gray-300 px-4 py-2 text-left font-semibold text-gray-700 capitalize">
+                    <th key={column} className="border border-line px-4 py-2 text-left font-semibold text-ink capitalize">
                       {column}
                     </th>
                   ))}
@@ -75,9 +75,9 @@ const TableRenderer = ({
               </thead>
               <tbody>
                 {actualTableData.slice(0, 3).map(row => (
-                  <tr key={row.id} className="hover:bg-gray-50">
+                  <tr key={row.id} className="hover:bg-canvas">
                     {columns.map(column => (
-                      <td key={column} className="border border-gray-300 px-4 py-2 text-gray-600">
+                      <td key={column} className="border border-line px-4 py-2 text-dim">
                         {row[column]}
                       </td>
                     ))}
@@ -93,13 +93,13 @@ const TableRenderer = ({
       return (
         <div className="w-full">
           <div className="overflow-x-auto">
-            <table className="min-w-full border-collapse border border-gray-300">
-              <thead className="bg-gray-50">
+            <table className="min-w-full border-collapse border border-line">
+              <thead className="bg-canvas">
                 <tr>
                   {columns.map(column => (
                     <th 
                       key={column} 
-                      className="border border-gray-300 px-4 py-2 text-left font-semibold text-gray-700 capitalize cursor-pointer hover:bg-gray-100"
+                      className="border border-line px-4 py-2 text-left font-semibold text-ink capitalize cursor-pointer hover:bg-surface-hover"
                       onClick={(e) => {
                         e.stopPropagation();
                         handleSort(column);
@@ -108,7 +108,7 @@ const TableRenderer = ({
                       <div className="flex items-center justify-between">
                         {column}
                         {sortColumn === column && (
-                          <span className="text-blue-500">
+                          <span className="text-info">
                             {sortDirection === 'asc' ? '↑' : '↓'}
                           </span>
                         )}
@@ -119,9 +119,9 @@ const TableRenderer = ({
               </thead>
               <tbody>
                 {getActualSortedData().slice(0, 3).map(row => (
-                  <tr key={row.id} className="hover:bg-gray-50">
+                  <tr key={row.id} className="hover:bg-canvas">
                     {columns.map(column => (
-                      <td key={column} className="border border-gray-300 px-4 py-2 text-gray-600">
+                      <td key={column} className="border border-line px-4 py-2 text-dim">
                         {row[column]}
                       </td>
                     ))}
@@ -130,7 +130,7 @@ const TableRenderer = ({
               </tbody>
             </table>
           </div>
-          <div className="mt-2 text-xs text-gray-500 text-center">
+          <div className="mt-2 text-xs text-dim text-center">
             Click column headers to sort
           </div>
         </div>
@@ -150,24 +150,24 @@ const TableRenderer = ({
               }}
               onClick={(e) => e.stopPropagation()}
               onKeyDown={(e) => e.stopPropagation()}
-              className="flex-1 px-3 py-1 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
+              className="flex-1 px-3 py-1 border border-line rounded text-sm focus:outline-none focus:ring-1 focus:ring-info"
             />
             <button
               onClick={(e) => {
                 e.stopPropagation();
                 setFilterText('');
               }}
-              className="px-3 py-1 bg-gray-200 text-gray-600 rounded text-sm hover:bg-gray-300"
+              className="px-3 py-1 bg-surface-hover text-dim rounded text-sm hover:bg-surface-hover"
             >
               Clear
             </button>
           </div>
           <div className="overflow-x-auto">
-            <table className="min-w-full border-collapse border border-gray-300">
-              <thead className="bg-gray-50">
+            <table className="min-w-full border-collapse border border-line">
+              <thead className="bg-canvas">
                 <tr>
                   {columns.map(column => (
-                    <th key={column} className="border border-gray-300 px-4 py-2 text-left font-semibold text-gray-700 capitalize">
+                    <th key={column} className="border border-line px-4 py-2 text-left font-semibold text-ink capitalize">
                       {column}
                     </th>
                   ))}
@@ -175,9 +175,9 @@ const TableRenderer = ({
               </thead>
               <tbody>
                 {getActualSortedData().slice(0, 3).map(row => (
-                  <tr key={row.id} className="hover:bg-gray-50">
+                  <tr key={row.id} className="hover:bg-canvas">
                     {columns.map(column => (
-                      <td key={column} className="border border-gray-300 px-4 py-2 text-gray-600">
+                      <td key={column} className="border border-line px-4 py-2 text-dim">
                         {row[column]}
                       </td>
                     ))}
@@ -186,7 +186,7 @@ const TableRenderer = ({
               </tbody>
             </table>
           </div>
-          <div className="text-xs text-gray-500 text-center">
+          <div className="text-xs text-dim text-center">
             Showing {getActualSortedData().length} of {actualTableData.length} rows
           </div>
         </div>
@@ -196,11 +196,11 @@ const TableRenderer = ({
       return (
         <div className="w-full space-y-3">
           <div className="overflow-x-auto">
-            <table className="min-w-full border-collapse border border-gray-300">
-              <thead className="bg-gray-50">
+            <table className="min-w-full border-collapse border border-line">
+              <thead className="bg-canvas">
                 <tr>
                   {columns.map(column => (
-                    <th key={column} className="border border-gray-300 px-4 py-2 text-left font-semibold text-gray-700 capitalize">
+                    <th key={column} className="border border-line px-4 py-2 text-left font-semibold text-ink capitalize">
                       {column}
                     </th>
                   ))}
@@ -208,9 +208,9 @@ const TableRenderer = ({
               </thead>
               <tbody>
                 {getActualPaginatedData().map(row => (
-                  <tr key={row.id} className="hover:bg-gray-50">
+                  <tr key={row.id} className="hover:bg-canvas">
                     {columns.map(column => (
-                      <td key={column} className="border border-gray-300 px-4 py-2 text-gray-600">
+                      <td key={column} className="border border-line px-4 py-2 text-dim">
                         {row[column]}
                       </td>
                     ))}
@@ -221,7 +221,7 @@ const TableRenderer = ({
           </div>
           <div className="flex items-center justify-between text-sm">
             <div className="flex items-center space-x-2">
-              <span className="text-gray-600">Rows per page:</span>
+              <span className="text-dim">Rows per page:</span>
               <select
                 value={itemsPerPage}
                 onChange={(e) => {
@@ -230,7 +230,7 @@ const TableRenderer = ({
                   setCurrentPage(1);
                 }}
                 onClick={(e) => e.stopPropagation()}
-                className="border border-gray-300 rounded px-2 py-1 text-sm"
+                className="border border-line rounded px-2 py-1 text-sm"
               >
                 <option value={2}>2</option>
                 <option value={5}>5</option>
@@ -244,11 +244,11 @@ const TableRenderer = ({
                   setCurrentPage(Math.max(1, currentPage - 1));
                 }}
                 disabled={currentPage === 1}
-                className="px-3 py-1 bg-gray-200 text-gray-600 rounded disabled:opacity-50 hover:bg-gray-300"
+                className="px-3 py-1 bg-surface-hover text-dim rounded disabled:opacity-50 hover:bg-surface-hover"
               >
                 Previous
               </button>
-              <span className="text-gray-600">
+              <span className="text-dim">
                 Page {currentPage} of {totalPages}
               </span>
               <button
@@ -257,7 +257,7 @@ const TableRenderer = ({
                   setCurrentPage(Math.min(totalPages, currentPage + 1));
                 }}
                 disabled={currentPage === totalPages}
-                className="px-3 py-1 bg-gray-200 text-gray-600 rounded disabled:opacity-50 hover:bg-gray-300"
+                className="px-3 py-1 bg-surface-hover text-dim rounded disabled:opacity-50 hover:bg-surface-hover"
               >
                 Next
               </button>
@@ -270,38 +270,38 @@ const TableRenderer = ({
       return (
         <div className="w-full space-y-3">
           <div className="flex justify-between items-center">
-            <span className="text-sm text-gray-600">Double-click cells to edit</span>
+            <span className="text-sm text-dim">Double-click cells to edit</span>
             <button
               onClick={(e) => {
                 e.stopPropagation();
                 addTableRow();
               }}
-              className="px-3 py-1 bg-green-500 text-white rounded text-sm hover:bg-green-600"
+              className="px-3 py-1 bg-success text-white rounded text-sm hover:bg-success"
             >
               Add Row
             </button>
           </div>
           <div className="overflow-x-auto">
-            <table className="min-w-full border-collapse border border-gray-300">
-              <thead className="bg-gray-50">
+            <table className="min-w-full border-collapse border border-line">
+              <thead className="bg-canvas">
                 <tr>
                   {columns.map(column => (
-                    <th key={column} className="border border-gray-300 px-4 py-2 text-left font-semibold text-gray-700 capitalize">
+                    <th key={column} className="border border-line px-4 py-2 text-left font-semibold text-ink capitalize">
                       {column}
                     </th>
                   ))}
-                  <th className="border border-gray-300 px-4 py-2 text-left font-semibold text-gray-700">
+                  <th className="border border-line px-4 py-2 text-left font-semibold text-ink">
                     Actions
                   </th>
                 </tr>
               </thead>
               <tbody>
                 {actualTableData.slice(0, 3).map(row => (
-                  <tr key={row.id} className="hover:bg-gray-50">
+                  <tr key={row.id} className="hover:bg-canvas">
                     {columns.map(column => (
                       <td 
                         key={column} 
-                        className="border border-gray-300 px-4 py-2 text-gray-600 cursor-pointer hover:bg-blue-50"
+                        className="border border-line px-4 py-2 text-dim cursor-pointer hover:bg-info/10"
                         onDoubleClick={(e) => {
                           e.stopPropagation();
                           setEditingCell(`${row.id}-${column}`);
@@ -323,7 +323,7 @@ const TableRenderer = ({
                             }}
                             onClick={(e) => e.stopPropagation()}
                             onKeyDown={(e) => e.stopPropagation()}
-                            className="w-full px-2 py-1 border border-blue-300 rounded focus:outline-none"
+                            className="w-full px-2 py-1 border border-info/30 rounded focus:outline-none"
                             autoFocus
                           />
                         ) : (
@@ -331,13 +331,13 @@ const TableRenderer = ({
                         )}
                       </td>
                     ))}
-                    <td className="border border-gray-300 px-4 py-2">
+                    <td className="border border-line px-4 py-2">
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
                           deleteTableRow(row.id);
                         }}
-                        className="px-2 py-1 bg-red-500 text-white rounded text-xs hover:bg-red-600"
+                        className="px-2 py-1 bg-danger text-white rounded text-xs hover:bg-danger"
                       >
                         Delete
                       </button>
@@ -354,14 +354,14 @@ const TableRenderer = ({
       return (
         <div className="w-full">
           <div className="overflow-x-auto">
-            <table className="min-w-full border-collapse border border-gray-300">
-              <thead className="bg-gray-50">
+            <table className="min-w-full border-collapse border border-line">
+              <thead className="bg-canvas">
                 <tr>
-                  <th className="border border-gray-300 px-4 py-2 text-left font-semibold text-gray-700 w-8">
+                  <th className="border border-line px-4 py-2 text-left font-semibold text-ink w-8">
                     
                   </th>
                   {columns.map(column => (
-                    <th key={column} className="border border-gray-300 px-4 py-2 text-left font-semibold text-gray-700 capitalize">
+                    <th key={column} className="border border-line px-4 py-2 text-left font-semibold text-ink capitalize">
                       {column}
                     </th>
                   ))}
@@ -370,28 +370,28 @@ const TableRenderer = ({
               <tbody>
                 {actualTableData.slice(0, 3).map(row => (
                   <React.Fragment key={row.id}>
-                    <tr className="hover:bg-gray-50">
-                      <td className="border border-gray-300 px-4 py-2">
+                    <tr className="hover:bg-canvas">
+                      <td className="border border-line px-4 py-2">
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
                             toggleRowExpansion(row.id);
                           }}
-                          className="text-blue-500 hover:text-blue-700"
+                          className="text-info hover:text-info"
                         >
                           {expandedRows.has(row.id) ? '−' : '+'}
                         </button>
                       </td>
                       {columns.map(column => (
-                        <td key={column} className="border border-gray-300 px-4 py-2 text-gray-600">
+                        <td key={column} className="border border-line px-4 py-2 text-dim">
                           {row[column]}
                         </td>
                       ))}
                     </tr>
                     {expandedRows.has(row.id) && (
                       <tr>
-                        <td colSpan={columns.length + 1} className="border border-gray-300 px-4 py-2 bg-gray-50">
-                          <div className="text-sm text-gray-600">
+                        <td colSpan={columns.length + 1} className="border border-line px-4 py-2 bg-canvas">
+                          <div className="text-sm text-dim">
                             <strong>Additional Details for {row.name}:</strong>
                             <div className="mt-2 grid grid-cols-2 gap-2">
                               <div>User ID: {row.id}</div>
@@ -408,7 +408,7 @@ const TableRenderer = ({
               </tbody>
             </table>
           </div>
-          <div className="mt-2 text-xs text-gray-500 text-center">
+          <div className="mt-2 text-xs text-dim text-center">
             Click + to expand row details
           </div>
         </div>
@@ -418,11 +418,11 @@ const TableRenderer = ({
       return (
         <div className="w-full">
           <div className="overflow-x-auto">
-            <table className="min-w-full border-collapse border border-gray-300">
-              <thead className="bg-gray-50">
+            <table className="min-w-full border-collapse border border-line">
+              <thead className="bg-canvas">
                 <tr>
                   {columns.map(column => (
-                    <th key={column} className="border border-gray-300 px-4 py-2 text-left font-semibold text-gray-700 capitalize">
+                    <th key={column} className="border border-line px-4 py-2 text-left font-semibold text-ink capitalize">
                       {column}
                     </th>
                   ))}
@@ -430,9 +430,9 @@ const TableRenderer = ({
               </thead>
               <tbody>
                 {actualTableData.slice(0, 3).map(row => (
-                  <tr key={row.id} className="hover:bg-gray-50">
+                  <tr key={row.id} className="hover:bg-canvas">
                     {columns.map(column => (
-                      <td key={column} className="border border-gray-300 px-4 py-2 text-gray-600">
+                      <td key={column} className="border border-line px-4 py-2 text-dim">
                         {row[column]}
                       </td>
                     ))}

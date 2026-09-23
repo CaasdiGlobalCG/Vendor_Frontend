@@ -462,14 +462,14 @@ const VideoCallModal = ({
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-90 z-50 flex items-center justify-center">
-      <div className={`bg-gray-900 rounded-2xl shadow-2xl ${isFullScreen ? 'w-full h-full' : 'w-full max-w-6xl h-5/6'} flex flex-col`}>
+      <div className={`bg-cta rounded-2xl shadow-2xl ${isFullScreen ? 'w-full h-full' : 'w-full max-w-6xl h-5/6'} flex flex-col`}>
         {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b border-gray-700">
+        <div className="flex items-center justify-between p-4 border-b border-line">
           <div className="flex items-center space-x-3">
-            <Video className="w-6 h-6 text-blue-400" />
+            <Video className="w-6 h-6 text-info" />
             <div>
               <h2 className="text-lg font-semibold text-white">{meetingTitle}</h2>
-              <p className="text-sm text-gray-400">
+              <p className="text-sm text-dim">
                 {isConnected ? `${attendees.length + 1} participant${attendees.length !== 0 ? 's' : ''}` : 'Connecting...'}
               </p>
             </div>
@@ -478,14 +478,14 @@ const VideoCallModal = ({
           <div className="flex items-center space-x-2">
             <button
               onClick={() => setIsFullScreen(!isFullScreen)}
-              className="p-2 text-gray-400 hover:text-white hover:bg-gray-700 rounded-lg transition-colors"
+              className="p-2 text-dim hover:text-cta-foreground hover:bg-cta rounded-lg transition-colors"
               title={isFullScreen ? "Exit Fullscreen" : "Fullscreen"}
             >
               {isFullScreen ? <Minimize2 className="w-5 h-5" /> : <Maximize2 className="w-5 h-5" />}
             </button>
             <button
               onClick={handleClose}
-              className="p-2 text-gray-400 hover:text-white hover:bg-gray-700 rounded-lg transition-colors"
+              className="p-2 text-dim hover:text-cta-foreground hover:bg-cta rounded-lg transition-colors"
             >
               <X className="w-5 h-5" />
             </button>
@@ -497,14 +497,14 @@ const VideoCallModal = ({
           {error ? (
             <div className="flex items-center justify-center h-full">
               <div className="text-center">
-                <div className="w-16 h-16 bg-red-500 rounded-full flex items-center justify-center mx-auto mb-4">
+                <div className="w-16 h-16 bg-danger rounded-full flex items-center justify-center mx-auto mb-4">
                   <X className="w-8 h-8 text-white" />
                 </div>
                 <h3 className="text-lg font-medium text-white mb-2">Connection Error</h3>
-                <p className="text-gray-400 mb-4">{error}</p>
+                <p className="text-dim mb-4">{error}</p>
                 <button
                   onClick={initializeMeeting}
-                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                  className="px-4 py-2 bg-info text-white rounded-lg hover:bg-info transition-colors"
                 >
                   Try Again
                 </button>
@@ -513,7 +513,7 @@ const VideoCallModal = ({
           ) : isConnecting ? (
             <div className="flex items-center justify-center h-full">
               <div className="text-center">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-400 mx-auto mb-4"></div>
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-info mx-auto mb-4"></div>
                 <p className="text-white">Connecting to video call...</p>
               </div>
             </div>
@@ -527,20 +527,20 @@ const VideoCallModal = ({
                     className="w-full h-full object-contain bg-black"
                     autoPlay
                     playsInline
-                    style={{ backgroundColor: '#000000' }}
+                    style={{ backgroundColor: 'rgb(var(--text-ink))' }}
                     onLoadedData={() => console.log('🖥️ VideoCall: Content share video loaded')}
                     onPlay={() => console.log('🖥️ VideoCall: Content share video playing')}
                     onError={(e) => console.error('❌ VideoCall: Content share video error:', e)}
                   />
                   
                   {/* Remote Video (smaller when screen sharing) */}
-                  <div className="absolute top-4 left-4 w-48 h-36 bg-gray-800 rounded-lg overflow-hidden border-2 border-gray-600">
+                  <div className="absolute top-4 left-4 w-48 h-36 bg-cta rounded-lg overflow-hidden border-2 border-line">
                     <video
                       ref={remoteVideoRef}
-                      className="w-full h-full object-cover bg-gray-800"
+                      className="w-full h-full object-cover bg-cta"
                       autoPlay
                       playsInline
-                      style={{ backgroundColor: '#1f2937' }}
+                      style={{ backgroundColor: 'rgb(var(--info))' }}
                       onLoadedData={() => console.log('📹 VideoCall: Remote video loaded')}
                       onPlay={() => console.log('📹 VideoCall: Remote video playing')}
                       onError={(e) => console.error('❌ VideoCall: Remote video error:', e)}
@@ -548,27 +548,27 @@ const VideoCallModal = ({
                   </div>
                   
                   {/* Local Video (Picture-in-Picture) */}
-                  <div className="absolute top-4 right-4 w-48 h-36 bg-gray-800 rounded-lg overflow-hidden border-2 border-gray-600">
+                  <div className="absolute top-4 right-4 w-48 h-36 bg-cta rounded-lg overflow-hidden border-2 border-line">
                     <video
                       ref={localVideoRef}
-                      className="w-full h-full object-cover bg-gray-700"
+                      className="w-full h-full object-cover bg-cta"
                       autoPlay
                       playsInline
                       muted
-                      style={{ backgroundColor: '#374151' }}
+                      style={{ backgroundColor: 'rgb(var(--info))' }}
                       onLoadedData={() => console.log('📹 VideoCall: Local video loaded')}
                       onPlay={() => console.log('📹 VideoCall: Local video playing')}
                       onError={(e) => console.error('❌ VideoCall: Local video error:', e)}
                     />
                     {!isVideoEnabled && (
-                      <div className="absolute inset-0 bg-gray-800 flex items-center justify-center">
-                        <VideoOff className="w-8 h-8 text-gray-400" />
+                      <div className="absolute inset-0 bg-cta flex items-center justify-center">
+                        <VideoOff className="w-8 h-8 text-dim" />
                       </div>
                     )}
                   </div>
                   
                   {/* Screen Share Indicator */}
-                  <div className="absolute bottom-4 left-4 bg-blue-600 bg-opacity-90 px-3 py-2 rounded-lg">
+                  <div className="absolute bottom-4 left-4 bg-info bg-opacity-90 px-3 py-2 rounded-lg">
                     <div className="flex items-center space-x-2 text-white">
                       <Monitor className="w-4 h-4" />
                       <span className="text-sm">Screen Sharing</span>
@@ -580,31 +580,31 @@ const VideoCallModal = ({
                   {/* Remote Video (full screen when not screen sharing) */}
                   <video
                     ref={remoteVideoRef}
-                    className="w-full h-full object-cover bg-gray-800"
+                    className="w-full h-full object-cover bg-cta"
                     autoPlay
                     playsInline
-                    style={{ backgroundColor: '#1f2937' }}
+                    style={{ backgroundColor: 'rgb(var(--info))' }}
                     onLoadedData={() => console.log('📹 VideoCall: Remote video loaded')}
                     onPlay={() => console.log('📹 VideoCall: Remote video playing')}
                     onError={(e) => console.error('❌ VideoCall: Remote video error:', e)}
                   />
                   
                   {/* Local Video (Picture-in-Picture) */}
-                  <div className="absolute top-4 right-4 w-48 h-36 bg-gray-800 rounded-lg overflow-hidden border-2 border-gray-600">
+                  <div className="absolute top-4 right-4 w-48 h-36 bg-cta rounded-lg overflow-hidden border-2 border-line">
                     <video
                       ref={localVideoRef}
-                      className="w-full h-full object-cover bg-gray-700"
+                      className="w-full h-full object-cover bg-cta"
                       autoPlay
                       playsInline
                       muted
-                      style={{ backgroundColor: '#374151' }}
+                      style={{ backgroundColor: 'rgb(var(--info))' }}
                       onLoadedData={() => console.log('📹 VideoCall: Local video loaded')}
                       onPlay={() => console.log('📹 VideoCall: Local video playing')}
                       onError={(e) => console.error('❌ VideoCall: Local video error:', e)}
                     />
                     {!isVideoEnabled && (
-                      <div className="absolute inset-0 bg-gray-800 flex items-center justify-center">
-                        <VideoOff className="w-8 h-8 text-gray-400" />
+                      <div className="absolute inset-0 bg-cta flex items-center justify-center">
+                        <VideoOff className="w-8 h-8 text-dim" />
                       </div>
                     )}
                   </div>
@@ -618,7 +618,7 @@ const VideoCallModal = ({
                   className="hidden w-full h-full object-contain bg-black"
                   autoPlay
                   playsInline
-                  style={{ backgroundColor: '#000000' }}
+                  style={{ backgroundColor: 'rgb(var(--text-ink))' }}
                   onLoadedData={() => console.log('🖥️ VideoCall: Content share video loaded (hidden)')}
                   onPlay={() => console.log('🖥️ VideoCall: Content share video playing (hidden)')}
                   onError={(e) => console.error('❌ VideoCall: Content share video error (hidden):', e)}
@@ -637,15 +637,15 @@ const VideoCallModal = ({
         </div>
 
         {/* Controls */}
-        <div className="p-6 border-t border-gray-700">
+        <div className="p-6 border-t border-line">
           <div className="flex items-center justify-center space-x-4">
             {/* Mute Button */}
             <button
               onClick={toggleMute}
               className={`p-4 rounded-full transition-colors ${
                 isMuted 
-                  ? 'bg-red-600 hover:bg-red-700 text-white' 
-                  : 'bg-gray-700 hover:bg-gray-600 text-white'
+                  ? 'bg-danger hover:bg-danger text-white' 
+                  : 'bg-cta hover:bg-cta text-cta-foreground'
               }`}
               title={isMuted ? "Unmute" : "Mute"}
             >
@@ -657,8 +657,8 @@ const VideoCallModal = ({
               onClick={toggleVideo}
               className={`p-4 rounded-full transition-colors ${
                 !isVideoEnabled 
-                  ? 'bg-red-600 hover:bg-red-700 text-white' 
-                  : 'bg-gray-700 hover:bg-gray-600 text-white'
+                  ? 'bg-danger hover:bg-danger text-white' 
+                  : 'bg-cta hover:bg-cta text-cta-foreground'
               }`}
               title={isVideoEnabled ? "Turn off camera" : "Turn on camera"}
             >
@@ -670,8 +670,8 @@ const VideoCallModal = ({
               onClick={toggleScreenShare}
               className={`p-4 rounded-full transition-colors ${
                 isScreenSharing 
-                  ? 'bg-blue-600 hover:bg-blue-700 text-white' 
-                  : 'bg-gray-700 hover:bg-gray-600 text-white'
+                  ? 'bg-info hover:bg-info text-white' 
+                  : 'bg-cta hover:bg-cta text-cta-foreground'
               }`}
               title={isScreenSharing ? "Stop sharing" : "Share screen"}
             >
@@ -681,7 +681,7 @@ const VideoCallModal = ({
             {/* End Call Button */}
             <button
               onClick={handleClose}
-              className="p-4 bg-red-600 hover:bg-red-700 text-white rounded-full transition-colors"
+              className="p-4 bg-danger hover:bg-danger text-white rounded-full transition-colors"
               title="End call"
             >
               <PhoneOff className="w-6 h-6" />

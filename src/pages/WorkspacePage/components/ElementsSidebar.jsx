@@ -13,28 +13,28 @@ const ElementsSidebar = ({ isOpen, onClose, onElementSelect, userRole, currentUs
   console.log('🎯 Turnkey category visible:', showTurnkeyCategory);
 
   const baseElementCategories = [
-    { id: 'invoices-quotes', name: 'Invoices and Quotations', icon: FileText, color: 'bg-pink-100 text-pink-800' },
-    { id: 'forms', name: 'Forms', icon: Grid, color: 'bg-yellow-100 text-yellow-800' },
-    { id: 'tables', name: 'Tables', icon: Table, color: 'bg-gray-100 text-gray-800' },
-    { id: 'charts', name: 'Charts', icon: BarChart3, color: 'bg-blue-100 text-blue-800' },
-    { id: 'flowcharts', name: 'Flowcharts', icon: GitBranch, color: 'bg-indigo-100 text-indigo-800' },
-    { id: 'icons', name: 'Icons', icon: Square, color: 'bg-purple-100 text-purple-800' },
-    { id: 'image-block', name: 'Image Block', icon: ImageIcon, color: 'bg-cyan-100 text-cyan-800' },
-    { id: 'document-block', name: 'Document Block', icon: FileText, color: 'bg-sky-100 text-sky-800' },
+    { id: 'invoices-quotes', name: 'Invoices and Quotations', icon: FileText, color: 'bg-surface-hover text-ink' },
+    { id: 'forms', name: 'Forms', icon: Grid, color: 'bg-warning/10 text-warning' },
+    { id: 'tables', name: 'Tables', icon: Table, color: 'bg-surface-hover text-ink' },
+    { id: 'charts', name: 'Charts', icon: BarChart3, color: 'bg-info/10 text-info' },
+    { id: 'flowcharts', name: 'Flowcharts', icon: GitBranch, color: 'bg-info/10 text-info' },
+    { id: 'icons', name: 'Icons', icon: Square, color: 'bg-surface-hover text-ink' },
+    { id: 'image-block', name: 'Image Block', icon: ImageIcon, color: 'bg-info/10 text-info' },
+    { id: 'document-block', name: 'Document Block', icon: FileText, color: 'bg-info/10 text-info' },
     { id: 'cad-files', name: 'CAD Files', icon: FileDigit, color: 'bg-indigo-100 text-indigo-800' },
-    { id: 'list', name: 'List', icon: List, color: 'bg-green-100 text-green-800' },
-    { id: 'task-card', name: 'Task Card', icon: ClipboardList, color: 'bg-teal-100 text-teal-800' },
-    { id: 'materials', name: 'Materials', icon: Package, color: 'bg-orange-100 text-orange-800' },
-    { id: 'uploads', name: 'Uploads', icon: Upload, color: 'bg-cyan-100 text-cyan-800' },
-    { id: 'cost-calculators', name: 'Cost Calculators', icon: Calculator, color: 'bg-violet-100 text-violet-800' },
-    { id: 'logistics', name: 'Logistics', icon: Package, color: 'bg-blue-100 text-blue-800' },
-    { id: 'smart', name: 'Smart Elements', icon: Sparkles, color: 'bg-yellow-100 text-yellow-800' },
-    { id: 'other', name: 'other elements', icon: Grid, color: 'bg-gray-100 text-gray-800' }
+    { id: 'list', name: 'List', icon: List, color: 'bg-success/10 text-success' },
+    { id: 'task-card', name: 'Task Card', icon: ClipboardList, color: 'bg-surface-hover text-ink' },
+    { id: 'materials', name: 'Materials', icon: Package, color: 'bg-warning/10 text-warning' },
+    { id: 'uploads', name: 'Uploads', icon: Upload, color: 'bg-info/10 text-info' },
+    { id: 'cost-calculators', name: 'Cost Calculators', icon: Calculator, color: 'bg-surface-hover text-ink' },
+    { id: 'logistics', name: 'Logistics', icon: Package, color: 'bg-info/10 text-info' },
+    { id: 'smart', name: 'Smart Elements', icon: Sparkles, color: 'bg-warning/10 text-warning' },
+    { id: 'other', name: 'other elements', icon: Grid, color: 'bg-surface-hover text-ink' }
   ];
 
-  // Add turnkey category only when the workspace has a turnkey CAS member
-  const elementCategories = showTurnkeyCategory ? [
-    { id: 'turnkey', name: 'Turnkey', icon: Settings, color: 'bg-red-100 text-red-800' },
+  // Add turnkey category if user is turnkey CAS member
+  const elementCategories = isTurnkeyCAS ? [
+    { id: 'turnkey', name: 'Turnkey', icon: Settings, color: 'bg-danger/10 text-danger' },
     ...baseElementCategories
   ] : baseElementCategories;
 
@@ -146,7 +146,7 @@ const ElementsSidebar = ({ isOpen, onClose, onElementSelect, userRole, currentUs
       { id: 'tools-equipment', name: 'Tools & Equipment', type: 'materials', preview: 'Request tools and equipment' }
     ],
     'cost-calculators': [
-      { id: 'boq-generator', name: 'BOQ Generator', type: 'boq-generator', preview: 'Generate professional Bill of Quantities with cost breakdown', icon: <FileDigit className="w-6 h-6 text-purple-600" /> },
+      { id: 'boq-generator', name: 'BOQ Generator', type: 'boq-generator', preview: 'Generate professional Bill of Quantities with cost breakdown', icon: <FileDigit className="w-6 h-6 text-ink" /> },
       { id: 'calc-bricks', name: 'Bricks Calculator', type: 'cost-calculator', preview: 'Estimate bricks, cement bags & sand for a brick wall' },
       { id: 'calc-concrete', name: 'Concrete Calculator', type: 'cost-calculator', preview: 'Estimate cement, sand, and aggregate requirements' },
       { id: 'calc-blocks', name: 'Concrete Blocks Calculator', type: 'cost-calculator', preview: 'AAC/concrete block count with mortar estimate' },
@@ -200,37 +200,37 @@ const ElementsSidebar = ({ isOpen, onClose, onElementSelect, userRole, currentUs
       />
       
       {/* Elements Sidebar */}
-      <div data-tour="elements-sidebar" className="w-80 bg-white shadow-2xl flex flex-col max-h-screen">
+      <div data-tour="elements-sidebar" className="w-80 bg-surface shadow-2xl flex flex-col max-h-screen">
         {/* Header - Fixed */}
-        <div className="px-3 py-2.5 border-b border-gray-200 flex-shrink-0 bg-white">
+        <div className="px-3 py-2.5 border-b border-line flex-shrink-0 bg-surface">
           <div className="flex items-center justify-between">
-            <h2 className="text-sm font-bold text-gray-900">Elements</h2>
+            <h2 className="text-sm font-bold text-ink">Elements</h2>
             <button
               onClick={onClose}
-              className="p-0.5 hover:bg-gray-100 rounded-lg transition-colors"
+              className="p-0.5 hover:bg-surface-hover rounded-lg transition-colors"
               title="Close"
             >
-              <X className="w-4 h-4 text-gray-500" />
+              <X className="w-4 h-4 text-dim" />
             </button>
           </div>
         </div>
 
         {/* Search Bar - Fixed */}
-        <div className="px-3 py-2 pt-2.5 border-b border-gray-100 flex-shrink-0 bg-white">
+        <div className="px-3 py-2 pt-2.5 border-b border-line flex-shrink-0 bg-surface">
           <div className="relative">
-            <Search className="absolute left-2.5 top-1/2 transform -translate-y-1/2 w-3.5 h-3.5 text-gray-400" />
+            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 transform  w-3.5 h-3.5 text-dim" />
             <input
               type="text"
               placeholder="Search elements..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-8 pr-3 py-1.5 text-xs border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-gray-50 focus:bg-white transition-colors"
+              className="w-full pl-8 pr-3 py-1.5 text-xs border border-line rounded-lg focus:outline-none focus:ring-2 focus:ring-info focus:border-transparent bg-canvas focus:bg-surface transition-colors"
             />
           </div>
         </div>
 
         {/* Elements Categories - Scrollable */}
-        <div className="flex-1 overflow-y-auto bg-gray-50">
+        <div className="flex-1 overflow-y-auto bg-canvas">
           <div className="p-2.5 space-y-2">
             {elementCategories
               .filter(category => 
@@ -242,22 +242,22 @@ const ElementsSidebar = ({ isOpen, onClose, onElementSelect, userRole, currentUs
                 onClick={() => handleElementSelect(category.id)}
                 className={`group relative flex items-center justify-between p-2.5 rounded-lg cursor-pointer transition-all duration-300 ${
                   selectedCategory === category.id
-                    ? 'bg-white border-2 border-blue-500 shadow-md shadow-blue-100'
-                    : 'bg-white border border-gray-200 hover:border-blue-300 hover:shadow-sm'
+                    ? 'bg-surface border-2 border-info  shadow-blue-100'
+                    : 'bg-surface border border-line hover:border-info/30 '
                 }`}
               >
                 <div className="flex items-center space-x-2.5 flex-1 min-w-0">
                   <div className={`p-1.5 rounded-lg flex-shrink-0 transition-all duration-300 ${
                     selectedCategory === category.id 
-                      ? `${category.color} shadow-sm scale-105` 
-                      : `${category.color} group-hover:shadow-sm group-hover:scale-102`
+                      ? `${category.color}  scale-105` 
+                      : `${category.color}  group-hover:scale-102`
                   }`}>
                     <category.icon className={`w-4 h-4 ${
                       selectedCategory === category.id ? 'text-current' : ''
                     }`} />
                   </div>
                   <span className={`text-xs font-medium truncate ${
-                    selectedCategory === category.id ? 'text-gray-900' : 'text-gray-700 group-hover:text-gray-900'
+                    selectedCategory === category.id ? 'text-ink' : 'text-ink group-hover:text-ink'
                   }`}>
                     {category.name}
                   </span>
@@ -266,8 +266,8 @@ const ElementsSidebar = ({ isOpen, onClose, onElementSelect, userRole, currentUs
                 {/* Right arrow with animation */}
                 <div className={`flex-shrink-0 transition-all duration-300 ${
                   selectedCategory === category.id 
-                    ? 'text-blue-600 translate-x-0.5' 
-                    : 'text-gray-400 group-hover:text-gray-600 group-hover:translate-x-0.5'
+                    ? 'text-info translate-x-0.5' 
+                    : 'text-dim group-hover:text-dim group-hover:translate-x-0.5'
                 }`}>
                   <svg 
                     className="w-3.5 h-3.5" 
@@ -281,7 +281,7 @@ const ElementsSidebar = ({ isOpen, onClose, onElementSelect, userRole, currentUs
                 
                 {/* Selection indicator */}
                 {selectedCategory === category.id && (
-                  <div className="absolute left-0 top-1/2 transform -translate-y-1/2 w-0.5 h-6 bg-blue-500 rounded-r-full"></div>
+                  <div className="absolute left-0 top-1/2 -translate-y-1/2 transform  w-0.5 h-6 bg-info rounded-r-full"></div>
                 )}
               </div>
             ))}
@@ -289,12 +289,12 @@ const ElementsSidebar = ({ isOpen, onClose, onElementSelect, userRole, currentUs
         </div>
 
         {/* Footer - Fixed */}
-        <div className="px-3 py-2 border-t border-gray-200 flex-shrink-0 bg-white">
+        <div className="px-3 py-2 border-t border-line flex-shrink-0 bg-surface">
           <div className="text-center">
-            <p className="text-xs font-medium text-gray-600 mb-0.5">
+            <p className="text-xs font-medium text-dim mb-0.5">
               💡 Select a category
             </p>
-            <p className="text-xs text-gray-400">
+            <p className="text-xs text-dim">
               to browse elements
             </p>
           </div>

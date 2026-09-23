@@ -18,12 +18,12 @@ const Toggle = ({ enabled, onChange, disabled }) => (
     type="button"
     disabled={disabled}
     onClick={() => onChange(!enabled)}
-    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 ${
-      enabled ? "bg-emerald-600" : "bg-gray-300"
+    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-ink focus:ring-offset-2 ${
+      enabled ? "bg-cta" : "bg-surface-hover"
     } ${disabled ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}`}
   >
     <span
-      className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform duration-200 ${
+      className={`inline-block h-4 w-4 transform rounded-full bg-surface transition-transform duration-200 ${
         enabled ? "translate-x-6" : "translate-x-1"
       }`}
     />
@@ -35,19 +35,19 @@ const PasswordField = ({ label, value, onChange, placeholder }) => {
   const [show, setShow] = useState(false);
   return (
     <div>
-      <label className="block text-sm font-medium text-gray-700 mb-1">{label}</label>
+      <label className="block text-sm font-medium text-ink mb-1">{label}</label>
       <div className="relative">
         <input
           type={show ? "text" : "password"}
           value={value}
           onChange={(e) => onChange(e.target.value)}
           placeholder={placeholder}
-          className="w-full px-4 py-2.5 pr-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-sm"
+          className="w-full px-4 py-2.5 pr-10 border border-line rounded-lg focus:ring-2 focus:ring-ink focus:border-line text-sm"
         />
         <button
           type="button"
           onClick={() => setShow(!show)}
-          className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+          className="absolute right-3 top-1/2 -translate-y-1/2  text-dim hover:text-dim"
         >
           {show ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
         </button>
@@ -58,15 +58,15 @@ const PasswordField = ({ label, value, onChange, placeholder }) => {
 
 /* ─── Section Header ─────────────────────────────────── */
 const SectionCard = ({ icon: Icon, title, description, children }) => (
-  <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-    <div className="border-b border-gray-100 px-4 py-4 sm:px-6 sm:py-5">
+  <div className="bg-surface rounded-xl border border-line  overflow-hidden">
+    <div className="border-b border-line px-4 py-4 sm:px-6 sm:py-5">
       <div className="flex items-center gap-3">
-        <div className="w-10 h-10 rounded-lg bg-emerald-50 flex items-center justify-center">
-          <Icon className="w-5 h-5 text-emerald-600" />
+        <div className="w-10 h-10 rounded-lg bg-surface-hover flex items-center justify-center">
+          <Icon className="w-5 h-5 text-ink" />
         </div>
         <div>
-          <h3 className="text-base font-semibold text-gray-900">{title}</h3>
-          {description && <p className="text-sm text-gray-500 mt-0.5">{description}</p>}
+          <h3 className="text-base font-semibold text-ink">{title}</h3>
+          {description && <p className="text-sm text-dim mt-0.5">{description}</p>}
         </div>
       </div>
     </div>
@@ -76,14 +76,14 @@ const SectionCard = ({ icon: Icon, title, description, children }) => (
 
 /* ─── Notification Row ───────────────────────────────── */
 const NotifRow = ({ icon: Icon, color, title, desc, enabled, onChange, disabled }) => (
-  <div className="flex flex-col gap-3 py-3 border-b border-gray-50 last:border-0 sm:flex-row sm:items-center sm:justify-between">
+  <div className="flex flex-col gap-3 py-3 border-b border-line last:border-0 sm:flex-row sm:items-center sm:justify-between">
     <div className="flex items-start gap-3">
       <div className={`w-8 h-8 rounded-lg ${color} flex items-center justify-center mt-0.5`}>
         <Icon className="w-4 h-4 text-white" />
       </div>
       <div>
-        <p className="text-sm font-medium text-gray-900">{title}</p>
-        <p className="text-xs text-gray-500 mt-0.5">{desc}</p>
+        <p className="text-sm font-medium text-ink">{title}</p>
+        <p className="text-xs text-dim mt-0.5">{desc}</p>
       </div>
     </div>
     <div className="self-end sm:self-auto">
@@ -636,10 +636,10 @@ export default function VendorSettings() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-canvas flex items-center justify-center">
         <div className="flex flex-col items-center gap-3">
-          <Loader2 className="w-8 h-8 text-emerald-600 animate-spin" />
-          <p className="text-gray-500 text-sm">Loading settings...</p>
+          <Loader2 className="w-8 h-8 text-ink animate-spin" />
+          <p className="text-dim text-sm">Loading settings...</p>
         </div>
       </div>
     );
@@ -658,7 +658,7 @@ export default function VendorSettings() {
               {/* Avatar */}
               <div className="mb-6 flex flex-col items-start gap-4 sm:mb-8 sm:flex-row sm:items-center sm:gap-5">
                 <div className="relative">
-                  <div className="w-20 h-20 rounded-full bg-gradient-to-br from-emerald-600 to-emerald-800 flex items-center justify-center overflow-hidden">
+                  <div className="w-20 h-20 rounded-full bg-black flex items-center justify-center overflow-hidden">
                     {profileImagePreview ? (
                       <img src={profileImagePreview} alt="Profile" className="w-full h-full object-cover" />
                     ) : (
@@ -667,92 +667,92 @@ export default function VendorSettings() {
                       </span>
                     )}
                   </div>
-                  <label className="absolute -bottom-1 -right-1 w-7 h-7 bg-emerald-600 rounded-full flex items-center justify-center cursor-pointer hover:bg-emerald-700 transition-colors shadow-lg">
-                    <Camera className="w-3.5 h-3.5 text-white" />
+                  <label className="absolute -bottom-1 -right-1 w-7 h-7 bg-cta rounded-full flex items-center justify-center cursor-pointer hover:bg-cta transition-colors shadow-lg">
+                    <Camera className="w-3.5 h-3.5 text-cta-foreground" />
                     <input type="file" accept="image/*" className="hidden" onChange={handleImageChange} />
                   </label>
                 </div>
                 <div>
-                  <p className="font-semibold text-gray-900">{profile.name || "Vendor"}</p>
-                  <p className="text-sm text-gray-500">{currentUser?.vendorId || ""}</p>
+                  <p className="font-semibold text-ink">{profile.name || "Vendor"}</p>
+                  <p className="text-sm text-dim">{currentUser?.vendorId || ""}</p>
                 </div>
               </div>
 
               {/* Form grid */}
               <div className="grid grid-cols-1 gap-4 sm:gap-5 md:grid-cols-2">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Full Name</label>
+                  <label className="block text-sm font-medium text-ink mb-1">Full Name</label>
                   <div className="relative">
-                    <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                    <User className="absolute left-3 top-1/2 -translate-y-1/2  w-4 h-4 text-dim" />
                     <input
                       value={profile.name}
                       onChange={(e) => setProfile(p => ({ ...p, name: e.target.value }))}
-                      className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-sm"
+                      className="w-full pl-10 pr-4 py-2.5 border border-line rounded-lg focus:ring-2 focus:ring-ink focus:border-line text-sm"
                     />
                   </div>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                  <label className="block text-sm font-medium text-ink mb-1">Email</label>
                   <div className="relative">
-                    <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                    <Mail className="absolute left-3 top-1/2 -translate-y-1/2  w-4 h-4 text-dim" />
                     <input
                       value={profile.email}
                       disabled
-                      className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-lg bg-gray-50 text-sm text-gray-500 cursor-not-allowed"
+                      className="w-full pl-10 pr-4 py-2.5 border border-line rounded-lg bg-canvas text-sm text-dim cursor-not-allowed"
                     />
                   </div>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Phone Number</label>
+                  <label className="block text-sm font-medium text-ink mb-1">Phone Number</label>
                   <div className="relative">
-                    <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                    <Phone className="absolute left-3 top-1/2 -translate-y-1/2  w-4 h-4 text-dim" />
                     <input
                       value={profile.phone}
                       onChange={(e) => setProfile(p => ({ ...p, phone: e.target.value }))}
-                      className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-sm"
+                      className="w-full pl-10 pr-4 py-2.5 border border-line rounded-lg focus:ring-2 focus:ring-ink focus:border-line text-sm"
                     />
                   </div>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Company Name</label>
+                  <label className="block text-sm font-medium text-ink mb-1">Company Name</label>
                   <div className="relative">
-                    <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                    <Building2 className="absolute left-3 top-1/2 -translate-y-1/2  w-4 h-4 text-dim" />
                     <input
                       value={profile.companyName}
                       onChange={(e) => setProfile(p => ({ ...p, companyName: e.target.value }))}
-                      className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-sm"
+                      className="w-full pl-10 pr-4 py-2.5 border border-line rounded-lg focus:ring-2 focus:ring-ink focus:border-line text-sm"
                     />
                   </div>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Country</label>
+                  <label className="block text-sm font-medium text-ink mb-1">Country</label>
                   <div className="relative">
-                    <Globe className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                    <Globe className="absolute left-3 top-1/2 -translate-y-1/2  w-4 h-4 text-dim" />
                     <input
                       value={profile.country}
                       onChange={(e) => setProfile(p => ({ ...p, country: e.target.value }))}
-                      className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-sm"
+                      className="w-full pl-10 pr-4 py-2.5 border border-line rounded-lg focus:ring-2 focus:ring-ink focus:border-line text-sm"
                     />
                   </div>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">State</label>
+                  <label className="block text-sm font-medium text-ink mb-1">State</label>
                   <div className="relative">
-                    <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                    <MapPin className="absolute left-3 top-1/2 -translate-y-1/2  w-4 h-4 text-dim" />
                     <input
                       value={profile.state}
                       onChange={(e) => setProfile(p => ({ ...p, state: e.target.value }))}
-                      className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-sm"
+                      className="w-full pl-10 pr-4 py-2.5 border border-line rounded-lg focus:ring-2 focus:ring-ink focus:border-line text-sm"
                     />
                   </div>
                 </div>
                 <div className="md:col-span-2">
-                  <label className="block text-sm font-medium text-gray-700 mb-1">GSTIN</label>
+                  <label className="block text-sm font-medium text-ink mb-1">GSTIN</label>
                   <input
                     value={profile.gstin}
                     onChange={(e) => setProfile(p => ({ ...p, gstin: e.target.value }))}
                     placeholder="e.g. 22AAACT1234A1Z5"
-                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-sm"
+                    className="w-full px-4 py-2.5 border border-line rounded-lg focus:ring-2 focus:ring-ink focus:border-line text-sm"
                   />
                 </div>
               </div>
@@ -761,7 +761,7 @@ export default function VendorSettings() {
                 <button
                   onClick={handleSaveProfile}
                   disabled={saving}
-                  className="flex w-full items-center justify-center gap-2 rounded-lg bg-emerald-600 px-6 py-2.5 text-sm font-medium text-white transition-colors hover:bg-emerald-700 disabled:opacity-50 sm:w-auto"
+                  className="flex w-full items-center justify-center gap-2 rounded-lg bg-cta px-6 py-2.5 text-sm font-medium text-cta-foreground transition-colors hover:bg-cta disabled:opacity-50 sm:w-auto"
                 >
                   {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
                   Save Changes
@@ -797,8 +797,8 @@ export default function VendorSettings() {
                   placeholder="Confirm new password"
                 />
                 {/* Password requirements */}
-                <div className="bg-gray-50 rounded-lg p-3">
-                  <p className="text-xs font-medium text-gray-600 mb-2">Password requirements:</p>
+                <div className="bg-canvas rounded-lg p-3">
+                  <p className="text-xs font-medium text-dim mb-2">Password requirements:</p>
                   <div className="grid grid-cols-1 gap-1 sm:grid-cols-2">
                     {[
                       { test: passwords.new.length >= 8, text: "At least 8 characters" },
@@ -810,24 +810,24 @@ export default function VendorSettings() {
                     ].map(({ test, text }, i) => (
                       <div key={i} className="flex items-center gap-1.5">
                         {test ? (
-                          <Check className="w-3 h-3 text-emerald-600" />
+                          <Check className="w-3 h-3 text-ink" />
                         ) : (
-                          <X className="w-3 h-3 text-gray-300" />
+                          <X className="w-3 h-3 text-dim" />
                         )}
-                        <span className={`text-xs ${test ? "text-emerald-700" : "text-gray-400"}`}>{text}</span>
+                        <span className={`text-xs ${test ? "text-ink" : "text-dim"}`}>{text}</span>
                       </div>
                     ))}
                   </div>
                 </div>
 
                 {pwdError && (
-                  <div className="flex items-center gap-2 text-red-600 bg-red-50 rounded-lg px-3 py-2">
+                  <div className="flex items-center gap-2 text-danger bg-danger/10 rounded-lg px-3 py-2">
                     <AlertCircle className="w-4 h-4 flex-shrink-0" />
                     <span className="text-sm">{pwdError}</span>
                   </div>
                 )}
                 {pwdSuccess && (
-                  <div className="flex items-center gap-2 text-emerald-600 bg-emerald-50 rounded-lg px-3 py-2">
+                  <div className="flex items-center gap-2 text-ink bg-surface-hover rounded-lg px-3 py-2">
                     <Check className="w-4 h-4 flex-shrink-0" />
                     <span className="text-sm">{pwdSuccess}</span>
                   </div>
@@ -836,7 +836,7 @@ export default function VendorSettings() {
                 <button
                   onClick={handleChangePassword}
                   disabled={saving}
-                  className="px-6 py-2.5 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors text-sm font-medium disabled:opacity-50 flex items-center gap-2"
+                  className="px-6 py-2.5 bg-cta text-cta-foreground rounded-lg hover:bg-cta transition-colors text-sm font-medium disabled:opacity-50 flex items-center gap-2"
                 >
                   {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <KeyRound className="w-4 h-4" />}
                   Update Password
@@ -849,16 +849,16 @@ export default function VendorSettings() {
               {!showMfaSetup ? (
                 <div className="space-y-4">
                   {/* Status Row */}
-                  <div className="flex flex-col gap-3 py-4 border-b border-gray-100 sm:flex-row sm:items-center sm:justify-between">
+                  <div className="flex flex-col gap-3 py-4 border-b border-line sm:flex-row sm:items-center sm:justify-between">
                     <div className="flex items-start gap-3">
-                      <div className={`w-10 h-10 rounded-lg ${mfaEnabled ? "bg-emerald-50" : "bg-blue-50"} flex items-center justify-center`}>
-                        <Shield className={`w-5 h-5 ${mfaEnabled ? "text-emerald-600" : "text-blue-600"}`} />
+                      <div className={`w-10 h-10 rounded-lg ${mfaEnabled ? "bg-surface-hover" : "bg-info/10"} flex items-center justify-center`}>
+                        <Shield className={`w-5 h-5 ${mfaEnabled ? "text-ink" : "text-info"}`} />
                       </div>
                       <div>
-                        <p className="text-sm font-medium text-gray-900">
+                        <p className="text-sm font-medium text-ink">
                           {mfaEnabled ? "Authenticator App Enabled" : "Authenticator App"}
                         </p>
-                        <p className="text-xs text-gray-500 mt-0.5">
+                        <p className="text-xs text-dim mt-0.5">
                           {mfaEnabled 
                             ? "Use an authenticator app on your phone to generate verification codes" 
                             : "Get a verification code from an authenticator app on every login for added security"}
@@ -867,8 +867,8 @@ export default function VendorSettings() {
                     </div>
                     <span className={`self-start rounded-full px-3 py-1 text-xs font-medium sm:self-auto ${
                       mfaEnabled 
-                        ? "bg-emerald-100 text-emerald-700" 
-                        : "bg-gray-100 text-gray-600"
+                        ? "bg-surface-hover text-ink" 
+                        : "bg-surface-hover text-dim"
                     }`}>
                       {mfaEnabled ? "Active" : "Inactive"}
                     </span>
@@ -880,7 +880,7 @@ export default function VendorSettings() {
                       <button
                         onClick={handleDisableMFA}
                         disabled={saving}
-                        className="px-4 py-2.5 text-sm font-medium rounded-lg border border-red-300 text-red-600 hover:bg-red-50 transition-colors disabled:opacity-50 flex items-center gap-2"
+                        className="px-4 py-2.5 text-sm font-medium rounded-lg border border-danger/30 text-danger hover:bg-danger/10 transition-colors disabled:opacity-50 flex items-center gap-2"
                       >
                         {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <X className="w-4 h-4" />}
                         Disable 2FA
@@ -889,7 +889,7 @@ export default function VendorSettings() {
                       <button
                         onClick={handleSetupTOTP}
                         disabled={saving}
-                        className="px-4 py-2.5 text-sm font-medium bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                        className="px-4 py-2.5 text-sm font-medium bg-info text-white rounded-lg hover:bg-info transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
                       >
                         {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Shield className="w-4 h-4" />}
                         Set Up Now
@@ -900,8 +900,8 @@ export default function VendorSettings() {
               ) : (
                 // TOTP Setup Form
                 <div className="space-y-6">
-                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                    <p className="text-sm text-blue-900">
+                  <div className="bg-info/10 border border-info/20 rounded-lg p-4">
+                    <p className="text-sm text-info">
                       📱 Scan the QR code with your authenticator app (Google Authenticator, Microsoft Authenticator, Authy, etc.)
                     </p>
                   </div>
@@ -911,12 +911,12 @@ export default function VendorSettings() {
                       {/* QR Code Display */}
                       {qrCodeUrl && (
                         <div className="flex flex-col items-center gap-4">
-                          <div className="bg-white p-3 sm:p-4 rounded-lg border border-gray-200">
+                          <div className="bg-surface p-3 sm:p-4 rounded-lg border border-line">
                             <img src={qrCodeUrl} alt="TOTP QR Code" className="w-40 h-40 sm:w-48 sm:h-48" />
                           </div>
                           <div className="text-center">
-                            <p className="text-xs text-gray-600 mb-2">Can't scan? Enter this code manually:</p>
-                            <code className="block text-sm font-mono bg-gray-100 rounded px-3 py-2 text-gray-900 break-all">
+                            <p className="text-xs text-dim mb-2">Can't scan? Enter this code manually:</p>
+                            <code className="block text-sm font-mono bg-surface-hover rounded px-3 py-2 text-ink break-all">
                               {totpSecret}
                             </code>
                           </div>
@@ -924,7 +924,7 @@ export default function VendorSettings() {
                       )}
 
                       {mfaError && (
-                        <div className="flex items-center gap-2 text-red-600 bg-red-50 rounded-lg px-3 py-2">
+                        <div className="flex items-center gap-2 text-danger bg-danger/10 rounded-lg px-3 py-2">
                           <AlertCircle className="w-4 h-4 flex-shrink-0" />
                           <span className="text-sm">{mfaError}</span>
                         </div>
@@ -932,7 +932,7 @@ export default function VendorSettings() {
 
                       {/* Verification Code Input */}
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                        <label className="block text-sm font-medium text-ink mb-2">
                           Enter the 6-digit code from your authenticator app
                         </label>
                         <input
@@ -952,35 +952,35 @@ export default function VendorSettings() {
                             setTotpCode(cleaned);
                           }}
                           placeholder="000000"
-                          className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-center text-2xl tracking-widest font-mono"
+                          className="w-full px-4 py-2.5 border border-line rounded-lg focus:ring-2 focus:ring-info focus:border-info text-center text-2xl tracking-widest font-mono"
                         />
-                        <p className="text-xs text-gray-500 mt-1">The code refreshes every 30 seconds. Match it with the "Current" code shown below.</p>
+                        <p className="text-xs text-dim mt-1">The code refreshes every 30 seconds. Match it with the "Current" code shown below.</p>
                         
                         {/* Test Code Section */}
                         <button
                           type="button"
                           onClick={handleTestCode}
                           disabled={testCodeLoading || !totpSecret}
-                          className="mt-3 px-3 py-1.5 text-xs font-medium text-blue-600 border border-blue-200 rounded hover:bg-blue-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                          className="mt-3 px-3 py-1.5 text-xs font-medium text-info border border-info/20 rounded hover:bg-info/10 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                         >
                           {testCodeLoading ? "Generating..." : "🔍 Show Expected Code"}
                         </button>
 
                         {showTestCode && testCodeData && (
-                          <div className="mt-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-                            <p className="text-xs font-medium text-blue-900 mb-2">Expected Codes (for debugging):</p>
+                          <div className="mt-3 p-3 bg-info/10 border border-info/20 rounded-lg">
+                            <p className="text-xs font-medium text-info mb-2">Expected Codes (for debugging):</p>
                             <div className="space-y-1 font-mono text-sm">
-                              <p className="text-blue-600"><strong>Current:</strong> {testCodeData.currentCode}</p>
-                              <p className="text-gray-600 text-xs">Previous: {testCodeData.previousCode}</p>
-                              <p className="text-gray-600 text-xs">Next: {testCodeData.nextCode}</p>
+                              <p className="text-info"><strong>Current:</strong> {testCodeData.currentCode}</p>
+                              <p className="text-dim text-xs">Previous: {testCodeData.previousCode}</p>
+                              <p className="text-dim text-xs">Next: {testCodeData.nextCode}</p>
                             </div>
-                            <p className="text-xs text-blue-700 mt-2">Compare these with your authenticator app. If they don't match, check that your device's time is correct.</p>
+                            <p className="text-xs text-info mt-2">Compare these with your authenticator app. If they don't match, check that your device's time is correct.</p>
                           </div>
                         )}
                       </div>
 
                       {/* Action Buttons */}
-                      <div className="flex flex-col gap-3 justify-end pt-4 border-t border-gray-100 sm:flex-row">
+                      <div className="flex flex-col gap-3 justify-end pt-4 border-t border-line sm:flex-row">
                         <button
                           onClick={() => {
                             setShowMfaSetup(false);
@@ -993,14 +993,14 @@ export default function VendorSettings() {
                             setShowTestCode(false);
                             setTestCodeData(null);
                           }}
-                          className="px-4 py-2.5 text-sm font-medium text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+                          className="px-4 py-2.5 text-sm font-medium text-ink border border-line rounded-lg hover:bg-canvas transition-colors"
                         >
                           Cancel
                         </button>
                         <button
                           onClick={handleVerifyTOTP}
                           disabled={saving || !totpCode || totpCode.length !== 6}
-                          className="px-6 py-2.5 text-sm font-medium bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                          className="px-6 py-2.5 text-sm font-medium bg-cta text-cta-foreground rounded-lg hover:bg-cta transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
                         >
                           {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
                           Verify & Enable
@@ -1010,36 +1010,36 @@ export default function VendorSettings() {
                   ) : (
                     <>
                       {/* Success and Backup Codes */}
-                      <div className="flex items-center gap-2 text-emerald-600 bg-emerald-50 rounded-lg px-3 py-2">
+                      <div className="flex items-center gap-2 text-ink bg-surface-hover rounded-lg px-3 py-2">
                         <Check className="w-4 h-4 flex-shrink-0" />
                         <span className="text-sm">Two-Factor Authentication enabled successfully!</span>
                       </div>
 
-                      <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-                        <p className="text-sm font-medium text-yellow-900 mb-2">
+                      <div className="bg-warning/10 border border-warning/20 rounded-lg p-4">
+                        <p className="text-sm font-medium text-warning mb-2">
                           ⚠️ Save your backup codes in a safe place. You can use these to access your account if you lose your authenticator device.
                         </p>
                       </div>
 
                       {/* Backup Codes Display */}
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-3">
+                        <label className="block text-sm font-medium text-ink mb-3">
                           Backup Codes
                         </label>
-                        <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
+                        <div className="bg-canvas rounded-lg p-4 border border-line">
                           <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
                             {backupCodes.map((code, index) => (
-                              <div key={index} className="font-mono text-sm bg-white p-2 rounded border border-gray-200 text-center">
+                              <div key={index} className="font-mono text-sm bg-surface p-2 rounded border border-line text-center">
                                 {code}
                               </div>
                             ))}
                           </div>
                         </div>
-                        <p className="text-xs text-gray-500 mt-2">Each code can only be used once. Keep them somewhere secure.</p>
+                        <p className="text-xs text-dim mt-2">Each code can only be used once. Keep them somewhere secure.</p>
                       </div>
 
                       {/* Done Button */}
-                      <div className="flex flex-col gap-3 justify-end pt-4 border-t border-gray-100 sm:flex-row">
+                      <div className="flex flex-col gap-3 justify-end pt-4 border-t border-line sm:flex-row">
                         <button
                           onClick={() => {
                             setShowMfaSetup(false);
@@ -1052,7 +1052,7 @@ export default function VendorSettings() {
                             setMfaSuccess("");
                             setMfaEnabled(true);
                           }}
-                          className="px-6 py-2.5 text-sm font-medium bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors flex items-center gap-2"
+                          className="px-6 py-2.5 text-sm font-medium bg-cta text-cta-foreground rounded-lg hover:bg-cta transition-colors flex items-center gap-2"
                         >
                           <Check className="w-4 h-4" />
                           Done
@@ -1067,15 +1067,15 @@ export default function VendorSettings() {
             {/* Active Sessions */}
             <SectionCard icon={Globe} title="Account Actions" description="Manage your account session">
               <div className="space-y-4">
-                <div className="flex items-center justify-between py-3 border-b border-gray-100">
+                <div className="flex items-center justify-between py-3 border-b border-line">
                   <div>
-                    <p className="text-sm font-medium text-gray-900">Sign out of all devices</p>
-                    <p className="text-xs text-gray-500 mt-0.5">This will log you out from all active sessions</p>
+                    <p className="text-sm font-medium text-ink">Sign out of all devices</p>
+                    <p className="text-xs text-dim mt-0.5">This will log you out from all active sessions</p>
                   </div>
                   <button
                     onClick={handleLogout}
                     disabled={saving}
-                    className="px-4 py-2 text-sm font-medium text-red-600 bg-red-50 rounded-lg hover:bg-red-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                    className="px-4 py-2 text-sm font-medium text-danger bg-danger/10 rounded-lg hover:bg-danger/10 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
                   >
                     {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <LogOut className="w-4 h-4" />}
                     Sign Out
@@ -1095,7 +1095,7 @@ export default function VendorSettings() {
               <div className="space-y-1">
                 <NotifRow
                   icon={Package}
-                  color="bg-emerald-500"
+                  color="bg-cta"
                   title="Order & Quotation Updates"
                   desc="Get notified when you receive new orders, quotation requests, or order status changes"
                   enabled={emailPrefs.orderNotifications}
@@ -1103,7 +1103,7 @@ export default function VendorSettings() {
                 />
                 <NotifRow
                   icon={TrendingUp}
-                  color="bg-blue-500"
+                  color="bg-info"
                   title="Lead Alerts"
                   desc="Receive notifications when new leads match your products or services"
                   enabled={emailPrefs.leadAlerts}
@@ -1111,7 +1111,7 @@ export default function VendorSettings() {
                 />
                 <NotifRow
                   icon={Bell}
-                  color="bg-orange-500"
+                  color="bg-warning"
                   title="Quotation Alerts"
                   desc="Get alerts when buyers respond to your quotations or request revisions"
                   enabled={emailPrefs.quotationAlerts}
@@ -1119,7 +1119,7 @@ export default function VendorSettings() {
                 />
                 <NotifRow
                   icon={AlertCircle}
-                  color="bg-red-500"
+                  color="bg-danger"
                   title="System Alerts"
                   desc="Important account alerts, security notices, and platform updates"
                   enabled={emailPrefs.systemAlerts}
@@ -1133,7 +1133,7 @@ export default function VendorSettings() {
               <div className="space-y-1">
                 <NotifRow
                   icon={Megaphone}
-                  color="bg-purple-500"
+                  color="bg-cta"
                   title="Promotions & Deals"
                   desc="Daily product promotions, seasonal deals, and special offers"
                   enabled={emailPrefs.promotions}
@@ -1141,7 +1141,7 @@ export default function VendorSettings() {
                 />
                 <NotifRow
                   icon={Newspaper}
-                  color="bg-indigo-500"
+                  color="bg-info"
                   title="Weekly Newsletter"
                   desc="Industry insights, sourcing tips, and a weekly roundup every Monday"
                   enabled={emailPrefs.newsletter}
@@ -1149,7 +1149,7 @@ export default function VendorSettings() {
                 />
                 <NotifRow
                   icon={Package}
-                  color="bg-teal-500"
+                  color="bg-cta"
                   title="Product & Platform Updates"
                   desc="New features, platform improvements, and product announcements"
                   enabled={emailPrefs.updates}
@@ -1163,7 +1163,7 @@ export default function VendorSettings() {
               <div className="space-y-1">
                 <NotifRow
                   icon={Package}
-                  color="bg-emerald-500"
+                  color="bg-cta"
                   title="Order Alerts"
                   desc="Receive SMS for new orders and order status changes"
                   enabled={smsPrefs.orderAlerts}
@@ -1171,7 +1171,7 @@ export default function VendorSettings() {
                 />
                 <NotifRow
                   icon={TrendingUp}
-                  color="bg-blue-500"
+                  color="bg-info"
                   title="Lead Alerts"
                   desc="Get SMS when new leads match your products or services"
                   enabled={smsPrefs.leadAlerts}
@@ -1179,7 +1179,7 @@ export default function VendorSettings() {
                 />
                 <NotifRow
                   icon={Shield}
-                  color="bg-red-500"
+                  color="bg-danger"
                   title="Security Alerts"
                   desc="Receive SMS for login attempts and security events"
                   enabled={smsPrefs.securityAlerts}
@@ -1192,7 +1192,7 @@ export default function VendorSettings() {
               <button
                 onClick={handleSaveNotifications}
                 disabled={saving}
-                className="px-6 py-2.5 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors text-sm font-medium disabled:opacity-50 flex items-center gap-2"
+                className="px-6 py-2.5 bg-cta text-cta-foreground rounded-lg hover:bg-cta transition-colors text-sm font-medium disabled:opacity-50 flex items-center gap-2"
               >
                 {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
                 Save Preferences
@@ -1208,24 +1208,24 @@ export default function VendorSettings() {
             <SectionCard icon={Shield} title="Data & Privacy" description="Control how your data is used and stored">
               {/* Profile Visibility */}
               <div className="space-y-5">
-                <div className="flex items-center justify-between py-3 border-b border-gray-100">
+                <div className="flex items-center justify-between py-3 border-b border-line">
                   <div>
-                    <p className="text-sm font-medium text-gray-900">Profile Visibility</p>
-                    <p className="text-xs text-gray-500 mt-0.5">Allow potential buyers to view your company profile and portfolio</p>
+                    <p className="text-sm font-medium text-ink">Profile Visibility</p>
+                    <p className="text-xs text-dim mt-0.5">Allow potential buyers to view your company profile and portfolio</p>
                   </div>
                   <Toggle enabled={true} onChange={() => {}} />
                 </div>
-                <div className="flex items-center justify-between py-3 border-b border-gray-100">
+                <div className="flex items-center justify-between py-3 border-b border-line">
                   <div>
-                    <p className="text-sm font-medium text-gray-900">Show Contact Information</p>
-                    <p className="text-xs text-gray-500 mt-0.5">Display your email and phone on your public profile</p>
+                    <p className="text-sm font-medium text-ink">Show Contact Information</p>
+                    <p className="text-xs text-dim mt-0.5">Display your email and phone on your public profile</p>
                   </div>
                   <Toggle enabled={true} onChange={() => {}} />
                 </div>
-                <div className="flex items-center justify-between py-3 border-b border-gray-100">
+                <div className="flex items-center justify-between py-3 border-b border-line">
                   <div>
-                    <p className="text-sm font-medium text-gray-900">Analytics & Usage Data</p>
-                    <p className="text-xs text-gray-500 mt-0.5">Help us improve by sharing anonymous usage data</p>
+                    <p className="text-sm font-medium text-ink">Analytics & Usage Data</p>
+                    <p className="text-xs text-dim mt-0.5">Help us improve by sharing anonymous usage data</p>
                   </div>
                   <Toggle enabled={true} onChange={() => {}} />
                 </div>
@@ -1278,19 +1278,19 @@ export default function VendorSettings() {
             {/* Download Data */}
             <SectionCard icon={Package} title="Your Data" description="Download or delete your account data">
               <div className="space-y-4">
-                <div className="flex items-center justify-between py-3 border-b border-gray-100">
+                <div className="flex items-center justify-between py-3 border-b border-line">
                   <div>
-                    <p className="text-sm font-medium text-gray-900">Download Your Data</p>
-                    <p className="text-xs text-gray-500 mt-0.5">Get a copy of all your data including profile, orders, and activity</p>
+                    <p className="text-sm font-medium text-ink">Download Your Data</p>
+                    <p className="text-xs text-dim mt-0.5">Get a copy of all your data including profile, orders, and activity</p>
                   </div>
-                  <span className="text-xs font-medium px-3 py-1 rounded-full bg-gray-100 text-gray-500">Coming Soon</span>
+                  <span className="text-xs font-medium px-3 py-1 rounded-full bg-surface-hover text-dim">Coming Soon</span>
                 </div>
                 <div className="flex items-center justify-between py-3">
                   <div>
-                    <p className="text-sm font-medium text-red-600">Delete Account</p>
-                    <p className="text-xs text-gray-500 mt-0.5">Permanently delete your account and all associated data. This action cannot be undone.</p>
+                    <p className="text-sm font-medium text-danger">Delete Account</p>
+                    <p className="text-xs text-dim mt-0.5">Permanently delete your account and all associated data. This action cannot be undone.</p>
                   </div>
-                  <button className="px-4 py-2 text-sm font-medium text-red-600 bg-red-50 rounded-lg hover:bg-red-100 transition-colors flex items-center gap-2">
+                  <button className="px-4 py-2 text-sm font-medium text-danger bg-danger/10 rounded-lg hover:bg-danger/10 transition-colors flex items-center gap-2">
                     <Trash2 className="w-4 h-4" />
                     Delete Account
                   </button>
@@ -1309,13 +1309,13 @@ export default function VendorSettings() {
      RENDER
      ────────────────────────────────────────────────── */
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-canvas">
       {/* Toast */}
       {toast && (
         <div className={`fixed left-3 right-3 top-4 z-50 flex items-center gap-2 rounded-xl px-4 py-3 shadow-lg text-sm font-medium transition-all duration-300 sm:left-auto sm:right-6 sm:top-6 sm:px-5 ${
           toast.type === "error"
-            ? "bg-red-600 text-white"
-            : "bg-emerald-600 text-white"
+            ? "bg-danger text-white"
+            : "bg-cta text-cta-foreground"
         }`}>
           {toast.type === "error" ? <AlertCircle className="w-4 h-4" /> : <Check className="w-4 h-4" />}
           {toast.msg}
@@ -1323,7 +1323,7 @@ export default function VendorSettings() {
       )}
 
       {/* Header */}
-      <div className="bg-gradient-to-r from-[#095B49] to-[#000000] px-4 py-6 sm:px-6 sm:py-8">
+      <div className="bg-black px-4 py-6 sm:px-6 sm:py-8">
         <div className="max-w-6xl mx-auto">
           <div className="flex items-center gap-3 mb-3">
             <button
@@ -1334,7 +1334,7 @@ export default function VendorSettings() {
             </button>
             <h1 className="text-xl font-bold text-white sm:text-2xl">Settings</h1>
           </div>
-          <p className="ml-11 text-sm text-emerald-200">Manage your account, security, and preferences</p>
+          <p className="ml-11 text-sm text-ink">Manage your account, security, and preferences</p>
         </div>
       </div>
 
@@ -1343,11 +1343,11 @@ export default function VendorSettings() {
         <div className="flex flex-col gap-4 sm:gap-6 lg:flex-row">
           {/* Sidebar */}
           <div className="w-full flex-shrink-0 lg:w-64">
-            <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden lg:sticky lg:top-6">
+            <div className="bg-surface rounded-xl border border-line  overflow-hidden lg:sticky lg:top-6">
               {/* Profile summary */}
-              <div className="px-5 py-4 border-b border-gray-100">
+              <div className="px-5 py-4 border-b border-line">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-emerald-600 to-emerald-800 flex items-center justify-center overflow-hidden">
+                  <div className="w-10 h-10 rounded-full bg-black flex items-center justify-center overflow-hidden">
                     {profileImagePreview ? (
                       <img src={profileImagePreview} alt="" className="w-full h-full object-cover" />
                     ) : (
@@ -1357,8 +1357,8 @@ export default function VendorSettings() {
                     )}
                   </div>
                   <div className="min-w-0">
-                    <p className="text-sm font-semibold text-gray-900 truncate">{profile.name || "Vendor"}</p>
-                    <p className="text-xs text-gray-500 truncate">{profile.email}</p>
+                    <p className="text-sm font-semibold text-ink truncate">{profile.name || "Vendor"}</p>
+                    <p className="text-xs text-dim truncate">{profile.email}</p>
                   </div>
                 </div>
               </div>
@@ -1371,22 +1371,22 @@ export default function VendorSettings() {
                     onClick={() => setActiveSection(id)}
                     className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm transition-all duration-150 ${
                       activeSection === id
-                        ? "bg-emerald-50 text-emerald-700 font-medium"
-                        : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
+                        ? "bg-surface-hover text-ink font-medium"
+                        : "text-dim hover:bg-canvas hover:text-ink"
                     }`}
                   >
-                    <Icon className={`w-4 h-4 ${activeSection === id ? "text-emerald-600" : "text-gray-400"}`} />
+                    <Icon className={`w-4 h-4 ${activeSection === id ? "text-ink" : "text-dim"}`} />
                     {label}
-                    {activeSection === id && <ChevronRight className="w-4 h-4 ml-auto text-emerald-400" />}
+                    {activeSection === id && <ChevronRight className="w-4 h-4 ml-auto text-ink" />}
                   </button>
                 ))}
               </nav>
 
               {/* Logout */}
-              <div className="p-2 pt-0 border-t border-gray-100 mt-1">
+              <div className="p-2 pt-0 border-t border-line mt-1">
                 <button
                   onClick={handleLogout}
-                  className="w-full flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm text-red-600 hover:bg-red-50 transition-colors"
+                  className="w-full flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm text-danger hover:bg-danger/10 transition-colors"
                 >
                   <LogOut className="w-4 h-4" />
                   Sign Out

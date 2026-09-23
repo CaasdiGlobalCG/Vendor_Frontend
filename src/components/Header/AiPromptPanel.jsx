@@ -41,7 +41,7 @@ const AiSparkleIcon = ({ size = 28 }) => (
     style={{
       width: size,
       height: size,
-      background: "linear-gradient(135deg, #0d9488 0%, #14b8a6 40%, #a3e635 100%)",
+      background: "linear-gradient(135deg, rgb(var(--text-ink)) 0%, rgb(var(--text-ink)) 40%, rgb(var(--success)) 100%)",
     }}
   >
     <svg width={size * 0.55} height={size * 0.55} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -83,18 +83,18 @@ const TypingIndicator = ({ toolStatus }) => (
   <div className="flex gap-3 mb-5">
     <AiSparkleIcon size={32} />
     <div className="flex flex-col gap-1.5">
-      <div className="flex items-center gap-1.5 px-4 py-3 bg-gray-50 rounded-2xl rounded-tl-md">
-        <motion.div className="w-2 h-2 bg-teal-400 rounded-full" animate={{ y: [0, -6, 0] }} transition={{ duration: 0.6, repeat: Infinity, delay: 0 }} />
-        <motion.div className="w-2 h-2 bg-teal-500 rounded-full" animate={{ y: [0, -6, 0] }} transition={{ duration: 0.6, repeat: Infinity, delay: 0.15 }} />
-        <motion.div className="w-2 h-2 bg-teal-600 rounded-full" animate={{ y: [0, -6, 0] }} transition={{ duration: 0.6, repeat: Infinity, delay: 0.3 }} />
+      <div className="flex items-center gap-1.5 px-4 py-3 bg-canvas rounded-2xl rounded-tl-md">
+        <motion.div className="w-2 h-2 bg-cta rounded-full" animate={{ y: [0, -6, 0] }} transition={{ duration: 0.6, repeat: Infinity, delay: 0 }} />
+        <motion.div className="w-2 h-2 bg-cta rounded-full" animate={{ y: [0, -6, 0] }} transition={{ duration: 0.6, repeat: Infinity, delay: 0.15 }} />
+        <motion.div className="w-2 h-2 bg-cta rounded-full" animate={{ y: [0, -6, 0] }} transition={{ duration: 0.6, repeat: Infinity, delay: 0.3 }} />
       </div>
       {toolStatus && (
         <motion.div
           initial={{ opacity: 0, y: 4 }}
           animate={{ opacity: 1, y: 0 }}
-          className="flex items-center gap-2 px-3 py-1.5 text-[11px] text-teal-600 font-medium"
+          className="flex items-center gap-2 px-3 py-1.5 text-[11px] text-ink font-medium"
         >
-          <Loader2 size={12} className="animate-spin text-teal-500" />
+          <Loader2 size={12} className="animate-spin text-ink" />
           <span>{TOOL_STATUS_LABELS[toolStatus] || `Running ${toolStatus}...`}</span>
         </motion.div>
       )}
@@ -134,9 +134,9 @@ const ToolBadge = ({ tool }) => (
   <motion.div
     initial={{ opacity: 0, scale: 0.8 }}
     animate={{ opacity: 1, scale: 1 }}
-    className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-teal-50 border border-teal-100 rounded-full text-[11px] text-teal-700 font-medium mr-2 mb-1"
+    className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-surface-hover border border-line rounded-full text-[11px] text-ink font-medium mr-2 mb-1"
   >
-    <svg className="w-2 h-2 text-teal-400 flex-shrink-0" viewBox="0 0 8 8"><circle cx="4" cy="4" r="4" fill="currentColor" /></svg>
+    <svg className="w-2 h-2 text-ink flex-shrink-0" viewBox="0 0 8 8"><circle cx="4" cy="4" r="4" fill="currentColor" /></svg>
     {TOOL_BADGE_LABELS[tool] || tool}
   </motion.div>
 );
@@ -151,12 +151,12 @@ function renderTable(tableLines, keyPrefix) {
   const dataRows = tableLines.slice(2).map(parseRow);
 
   return (
-    <div key={keyPrefix} className="my-2 overflow-x-auto rounded-lg border border-gray-200">
+    <div key={keyPrefix} className="my-2 overflow-x-auto rounded-lg border border-line">
       <table className="w-full text-[12px] border-collapse">
         <thead>
-          <tr className="bg-teal-50">
+          <tr className="bg-surface-hover">
             {headers.map((h, i) => (
-              <th key={i} className="px-3 py-2 text-left font-semibold text-teal-700 border-b border-teal-100 whitespace-nowrap">
+              <th key={i} className="px-3 py-2 text-left font-semibold text-ink border-b border-line whitespace-nowrap">
                 {renderInline(h)}
               </th>
             ))}
@@ -164,9 +164,9 @@ function renderTable(tableLines, keyPrefix) {
         </thead>
         <tbody>
           {dataRows.map((row, rIdx) => (
-            <tr key={rIdx} className={rIdx % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
+            <tr key={rIdx} className={rIdx % 2 === 0 ? 'bg-surface' : 'bg-canvas'}>
               {row.map((cell, cIdx) => (
-                <td key={cIdx} className="px-3 py-1.5 text-gray-700 border-b border-gray-100">
+                <td key={cIdx} className="px-3 py-1.5 text-ink border-b border-line">
                   {renderInline(cell)}
                 </td>
               ))}
@@ -219,7 +219,7 @@ function renderMarkdown(text) {
       const level = line.match(/^(#{1,3})/)[1].length;
       const content = line.replace(/^#{1,3}\s*/, '');
       const Tag = level === 1 ? 'h3' : level === 2 ? 'h4' : 'h5';
-      result.push(<Tag key={lineIdx} className="font-semibold text-gray-800 mt-2 mb-1">{renderInline(content)}</Tag>);
+      result.push(<Tag key={lineIdx} className="font-semibold text-ink mt-2 mb-1">{renderInline(content)}</Tag>);
       continue;
     }
 
@@ -228,7 +228,7 @@ function renderMarkdown(text) {
       const content = line.replace(/^\s*[-*•]\s*/, '');
       result.push(
         <div key={lineIdx} className="flex gap-2 ml-1 my-0.5">
-          <span className="text-teal-500 mt-0.5 flex-shrink-0">•</span>
+          <span className="text-ink mt-0.5 flex-shrink-0">•</span>
           <span>{renderInline(content)}</span>
         </div>
       );
@@ -240,7 +240,7 @@ function renderMarkdown(text) {
     if (numMatch) {
       result.push(
         <div key={lineIdx} className="flex gap-2 ml-1 my-0.5">
-          <span className="text-teal-600 font-medium flex-shrink-0">{numMatch[1]}.</span>
+          <span className="text-ink font-medium flex-shrink-0">{numMatch[1]}.</span>
           <span>{renderInline(numMatch[2])}</span>
         </div>
       );
@@ -286,7 +286,7 @@ function renderInline(text) {
         <button
           key={key++}
           onClick={() => window.open(`/VendorDashboard/workspace/${wsId}`, '_blank')}
-          className="inline-flex items-center gap-1.5 px-3 py-1.5 my-1 bg-teal-50 hover:bg-teal-100 text-teal-700 text-xs font-semibold rounded-lg border border-teal-200 transition-all duration-200 hover:shadow-sm cursor-pointer"
+          className="inline-flex items-center gap-1.5 px-3 py-1.5 my-1 bg-surface-hover hover:bg-surface-hover text-ink text-xs font-semibold rounded-lg border border-line transition-all duration-200  cursor-pointer"
           title={`Open ${wsTitle} in new tab`}
         >
           <ExternalLink size={12} />
@@ -295,10 +295,10 @@ function renderInline(text) {
       );
     } else if (match[5]) {
       // **bold**
-      parts.push(<strong key={key++} className="font-semibold text-gray-800">{match[5]}</strong>);
+      parts.push(<strong key={key++} className="font-semibold text-ink">{match[5]}</strong>);
     } else if (match[7]) {
       // `code`
-      parts.push(<code key={key++} className="px-1.5 py-0.5 bg-gray-100 rounded text-[12px] font-mono text-teal-700">{match[7]}</code>);
+      parts.push(<code key={key++} className="px-1.5 py-0.5 bg-surface-hover rounded text-[12px] font-mono text-ink">{match[7]}</code>);
     } else if (match[9]) {
       // *italic*
       parts.push(<em key={key++} className="italic">{match[9]}</em>);
@@ -349,10 +349,10 @@ const SlashCommandMenu = ({ filter, onSelect, visible, activeSpace }) => {
       initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: 8 }}
-      className="absolute bottom-full left-0 right-0 mb-1 mx-2 bg-white border border-gray-200 rounded-xl shadow-xl z-50 overflow-hidden"
+      className="absolute bottom-full left-0 right-0 mb-1 mx-2 bg-surface border border-line rounded-xl shadow-xl z-50 overflow-hidden"
     >
-      <div className="px-3 py-2 border-b border-gray-100">
-        <span className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider">Quick Commands</span>
+      <div className="px-3 py-2 border-b border-line">
+        <span className="text-[10px] font-semibold text-dim uppercase tracking-wider">Quick Commands</span>
       </div>
       <div className="max-h-[240px] overflow-y-auto py-1">
         {filtered.map((cmd) => {
@@ -361,19 +361,19 @@ const SlashCommandMenu = ({ filter, onSelect, visible, activeSpace }) => {
             <button
               key={cmd.command}
               onClick={() => onSelect(cmd)}
-              className="w-full flex items-center gap-3 px-3 py-2.5 hover:bg-teal-50 transition-colors text-left group"
+              className="w-full flex items-center gap-3 px-3 py-2.5 hover:bg-surface-hover transition-colors text-left group"
             >
-              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-teal-50 to-emerald-50 border border-teal-100 flex items-center justify-center flex-shrink-0 group-hover:from-teal-100 group-hover:to-emerald-100">
-                <Icon size={15} className="text-teal-600" />
+              <div className="w-8 h-8 rounded-lg bg-black border border-line flex items-center justify-center flex-shrink-0 group-hover:from-black group-hover:to-black">
+                <Icon size={15} className="text-white" />
               </div>
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2">
-                  <span className="text-xs font-mono font-semibold text-teal-600">{cmd.command}</span>
-                  <span className="text-[12px] font-medium text-gray-700">{cmd.label}</span>
+                  <span className="text-xs font-mono font-semibold text-ink">{cmd.command}</span>
+                  <span className="text-[12px] font-medium text-ink">{cmd.label}</span>
                 </div>
-                <p className="text-[11px] text-gray-400 truncate">{cmd.description}</p>
+                <p className="text-[11px] text-dim truncate">{cmd.description}</p>
               </div>
-              <Zap size={12} className="text-teal-400 opacity-0 group-hover:opacity-100 transition-opacity" />
+              <Zap size={12} className="text-ink opacity-0 group-hover:opacity-100 transition-opacity" />
             </button>
           );
         })}
@@ -399,9 +399,9 @@ const SmartSuggestions = ({ suggestions, onSelect, visible }) => {
           animate={{ opacity: 1, scale: 1 }}
           transition={{ delay: 0.4 + i * 0.1 }}
           onClick={() => onSelect(s)}
-          className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-teal-50 to-emerald-50 border border-teal-200 rounded-full text-[11px] text-teal-700 font-medium hover:from-teal-100 hover:to-emerald-100 hover:border-teal-300 transition-all duration-200 shadow-sm"
+          className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-black border border-line rounded-full text-[11px] text-white font-medium hover:from-black hover:to-black hover:border-line transition-all duration-200 "
         >
-          <Zap size={10} className="text-teal-500" />
+          <Zap size={10} className="text-white" />
           {s}
         </motion.button>
       ))}
@@ -443,16 +443,16 @@ const SchedulesView = ({ schedules, loading, onToggle, onDelete, onBack, onCreat
         animate={{ opacity: 1, y: 0 }}
         className={`group relative p-3.5 rounded-xl border transition-all duration-200 ${
           isActive
-            ? 'bg-white border-gray-200 hover:border-teal-200 hover:shadow-sm'
-            : 'bg-gray-50 border-gray-100 opacity-70'
+            ? 'bg-surface border-line hover:border-line '
+            : 'bg-canvas border-line opacity-70'
         }`}
       >
         <div className="flex items-start gap-3">
           {/* Icon */}
           <div className={`w-10 h-10 rounded-xl flex items-center justify-center text-lg flex-shrink-0 ${
             isActive
-              ? 'bg-gradient-to-br from-teal-50 to-emerald-50 border border-teal-100'
-              : 'bg-gray-100 border border-gray-200'
+              ? 'bg-black border border-line'
+              : 'bg-surface-hover border border-line'
           }`}>
             {icon}
           </div>
@@ -460,19 +460,19 @@ const SchedulesView = ({ schedules, loading, onToggle, onDelete, onBack, onCreat
           {/* Content */}
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2">
-              <span className="text-[13px] font-medium text-gray-800 truncate">{schedule.title}</span>
+              <span className="text-[13px] font-medium text-ink truncate">{schedule.title}</span>
               <span className={`px-1.5 py-0.5 rounded text-[9px] font-semibold uppercase tracking-wider ${
                 schedule.type === 'report'
-                  ? 'bg-blue-50 text-blue-600'
-                  : 'bg-amber-50 text-amber-600'
+                  ? 'bg-info/10 text-info'
+                  : 'bg-warning/10 text-warning'
               }`}>
                 {schedule.type}
               </span>
             </div>
 
-            <div className="flex items-center gap-2 mt-1 text-[11px] text-gray-500">
+            <div className="flex items-center gap-2 mt-1 text-[11px] text-dim">
               <span>{scopeLabel}</span>
-              <span className="text-gray-300">·</span>
+              <span className="text-dim">·</span>
               <span className="flex items-center gap-1">
                 <Repeat size={10} />
                 {freq}{day ? ` (${day})` : ''} at {schedule.timeOfDay}
@@ -480,20 +480,20 @@ const SchedulesView = ({ schedules, loading, onToggle, onDelete, onBack, onCreat
             </div>
 
             {schedule.dueDate && (
-              <div className="text-[11px] text-amber-600 mt-1 flex items-center gap-1">
+              <div className="text-[11px] text-warning mt-1 flex items-center gap-1">
                 <CalendarClock size={10} />
                 Due: {new Date(schedule.dueDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
               </div>
             )}
 
             {schedule.entityName && (
-              <div className="text-[11px] text-gray-400 mt-0.5">
+              <div className="text-[11px] text-dim mt-0.5">
                 Entity: {schedule.entityName}
               </div>
             )}
 
             {nextRun && isActive && (
-              <div className="text-[10px] text-teal-600 mt-1.5 flex items-center gap-1">
+              <div className="text-[10px] text-ink mt-1.5 flex items-center gap-1">
                 <Clock size={9} />
                 Next: {nextRun.toLocaleString('en-IN', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
               </div>
@@ -506,7 +506,7 @@ const SchedulesView = ({ schedules, loading, onToggle, onDelete, onBack, onCreat
             <button
               onClick={() => onToggle(schedule.scheduleId)}
               className={`p-1.5 rounded-lg transition-colors ${
-                isActive ? 'text-teal-500 hover:bg-teal-50' : 'text-gray-400 hover:bg-gray-100'
+                isActive ? 'text-ink hover:bg-surface-hover' : 'text-dim hover:bg-surface-hover'
               }`}
               title={isActive ? 'Pause' : 'Resume'}
             >
@@ -515,7 +515,7 @@ const SchedulesView = ({ schedules, loading, onToggle, onDelete, onBack, onCreat
             {/* Delete */}
             <button
               onClick={(e) => onDelete(schedule.scheduleId, e)}
-              className="p-1.5 rounded-lg text-gray-300 hover:text-red-400 hover:bg-red-50 opacity-0 group-hover:opacity-100 transition-all"
+              className="p-1.5 rounded-lg text-dim hover:text-danger hover:bg-danger/10 opacity-0 group-hover:opacity-100 transition-all"
               title="Delete"
             >
               <Trash2 size={14} />
@@ -532,14 +532,14 @@ const SchedulesView = ({ schedules, loading, onToggle, onDelete, onBack, onCreat
         {/* Header */}
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2">
-            <button onClick={onBack} className="p-1 hover:bg-gray-100 rounded-lg transition-colors">
-              <ArrowLeft size={16} className="text-gray-500" />
+            <button onClick={onBack} className="p-1 hover:bg-surface-hover rounded-lg transition-colors">
+              <ArrowLeft size={16} className="text-dim" />
             </button>
-            <h3 className="text-sm font-semibold text-gray-700 font-['Montserrat']">Schedules & Reminders</h3>
+            <h3 className="text-sm font-semibold text-ink font-['Montserrat']">Schedules & Reminders</h3>
           </div>
           <button
             onClick={onCreateViaChat}
-            className="flex items-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-teal-500 to-emerald-500 text-white text-[11px] font-medium rounded-lg hover:from-teal-600 hover:to-emerald-600 transition-all shadow-sm"
+            className="flex items-center gap-1.5 px-3 py-1.5 bg-black text-white text-[11px] font-medium rounded-lg hover:from-black hover:to-black transition-all "
           >
             <Plus size={13} />
             New
@@ -547,26 +547,26 @@ const SchedulesView = ({ schedules, loading, onToggle, onDelete, onBack, onCreat
         </div>
 
         {/* Tip */}
-        <div className="mb-4 px-3 py-2.5 bg-gradient-to-r from-teal-50 to-emerald-50 border border-teal-100 rounded-xl">
-          <p className="text-[11px] text-teal-700 leading-relaxed">
+        <div className="mb-4 px-3 py-2.5 bg-black border border-line rounded-xl">
+          <p className="text-[11px] text-white/80 leading-relaxed">
             <strong>Tip:</strong> Type naturally in the chat, like <em>"Send me a finance summary every Monday at 9am"</em> or <em>"Remind me about invoice INV-001 due March 15"</em>.
           </p>
         </div>
 
         {loading ? (
           <div className="flex items-center justify-center py-16">
-            <Loader2 size={24} className="text-teal-500 animate-spin" />
+            <Loader2 size={24} className="text-ink animate-spin" />
           </div>
         ) : schedules.length === 0 ? (
           <div className="text-center py-16">
-            <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-gradient-to-br from-teal-50 to-emerald-50 flex items-center justify-center">
-              <CalendarClock size={28} className="text-teal-300" />
+            <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-black flex items-center justify-center">
+              <CalendarClock size={28} className="text-white" />
             </div>
-            <p className="text-sm font-medium text-gray-500 mb-1">No schedules yet</p>
-            <p className="text-[11px] text-gray-400 mb-4">Set up recurring reports or deadline reminders</p>
+            <p className="text-sm font-medium text-dim mb-1">No schedules yet</p>
+            <p className="text-[11px] text-dim mb-4">Set up recurring reports or deadline reminders</p>
             <button
               onClick={onCreateViaChat}
-              className="px-5 py-2.5 bg-gradient-to-r from-teal-500 to-emerald-500 text-white text-xs font-medium rounded-xl hover:from-teal-600 hover:to-emerald-600 transition-all shadow-md"
+              className="px-5 py-2.5 bg-black text-white text-xs font-medium rounded-xl hover:from-black hover:to-black transition-all "
             >
               Create via chat
             </button>
@@ -577,10 +577,10 @@ const SchedulesView = ({ schedules, loading, onToggle, onDelete, onBack, onCreat
             {reports.length > 0 && (
               <div>
                 <div className="flex items-center gap-2 mb-2.5">
-                  <FileText size={12} className="text-blue-500" />
-                  <span className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider">Scheduled Reports</span>
-                  <span className="text-[10px] text-gray-300 bg-gray-100 px-1.5 py-0.5 rounded-full">{reports.length}</span>
-                  <div className="flex-1 h-px bg-gray-100" />
+                  <FileText size={12} className="text-info" />
+                  <span className="text-[11px] font-semibold text-dim uppercase tracking-wider">Scheduled Reports</span>
+                  <span className="text-[10px] text-dim bg-surface-hover px-1.5 py-0.5 rounded-full">{reports.length}</span>
+                  <div className="flex-1 h-px bg-surface-hover" />
                 </div>
                 <div className="space-y-2">
                   {reports.map(s => <ScheduleCard key={s.scheduleId} schedule={s} />)}
@@ -592,10 +592,10 @@ const SchedulesView = ({ schedules, loading, onToggle, onDelete, onBack, onCreat
             {reminders.length > 0 && (
               <div>
                 <div className="flex items-center gap-2 mb-2.5">
-                  <Bell size={12} className="text-amber-500" />
-                  <span className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider">Deadline Reminders</span>
-                  <span className="text-[10px] text-gray-300 bg-gray-100 px-1.5 py-0.5 rounded-full">{reminders.length}</span>
-                  <div className="flex-1 h-px bg-gray-100" />
+                  <Bell size={12} className="text-warning" />
+                  <span className="text-[11px] font-semibold text-dim uppercase tracking-wider">Deadline Reminders</span>
+                  <span className="text-[10px] text-dim bg-surface-hover px-1.5 py-0.5 rounded-full">{reminders.length}</span>
+                  <div className="flex-1 h-px bg-surface-hover" />
                 </div>
                 <div className="space-y-2">
                   {reminders.map(s => <ScheduleCard key={s.scheduleId} schedule={s} />)}
@@ -629,14 +629,14 @@ const MentionDropdown = ({ query, visible, onSelect, results, loading, showTypeS
       initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: 8 }}
-      className="absolute bottom-full left-0 right-0 mb-1 mx-2 bg-white border border-gray-200 rounded-xl shadow-xl z-50 overflow-hidden"
+      className="absolute bottom-full left-0 right-0 mb-1 mx-2 bg-surface border border-line rounded-xl shadow-xl z-50 overflow-hidden"
     >
-      <div className="px-3 py-2 border-b border-gray-100 flex items-center gap-2">
-        <AtSign size={12} className="text-blue-500" />
-        <span className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider">
+      <div className="px-3 py-2 border-b border-line flex items-center gap-2">
+        <AtSign size={12} className="text-info" />
+        <span className="text-[10px] font-semibold text-dim uppercase tracking-wider">
           {showTypeSelector ? 'Select Entity Type' : `Mention — ${query || '...'}`}
         </span>
-        {loading && <Loader2 size={12} className="text-teal-500 animate-spin ml-auto" />}
+        {loading && <Loader2 size={12} className="text-ink animate-spin ml-auto" />}
       </div>
 
       <div className="max-h-[220px] overflow-y-auto py-1">
@@ -646,18 +646,18 @@ const MentionDropdown = ({ query, visible, onSelect, results, loading, showTypeS
             <button
               key={t.type}
               onClick={() => onTypeSelect(t.type)}
-              className="w-full flex items-center gap-3 px-3 py-2.5 hover:bg-blue-50 transition-colors text-left group"
+              className="w-full flex items-center gap-3 px-3 py-2.5 hover:bg-info/10 transition-colors text-left group"
             >
               <span className="text-lg">{t.icon}</span>
               <div className="flex-1">
-                <span className="text-xs font-medium text-gray-700">@{t.type}</span>
-                <span className="text-[11px] text-gray-400 ml-2">{t.label}</span>
+                <span className="text-xs font-medium text-ink">@{t.type}</span>
+                <span className="text-[11px] text-dim ml-2">{t.label}</span>
               </div>
-              <ChevronRight size={12} className="text-gray-300 group-hover:text-blue-400" />
+              <ChevronRight size={12} className="text-dim group-hover:text-info" />
             </button>
           ))
         ) : results.length === 0 && !loading ? (
-          <div className="px-3 py-4 text-center text-[11px] text-gray-400">
+          <div className="px-3 py-4 text-center text-[11px] text-dim">
             {query ? 'No matching entities found' : 'Type to search...'}
           </div>
         ) : (
@@ -666,15 +666,15 @@ const MentionDropdown = ({ query, visible, onSelect, results, loading, showTypeS
             <button
               key={`${r.type}-${r.id}`}
               onClick={() => onSelect(r)}
-              className="w-full flex items-center gap-3 px-3 py-2 hover:bg-blue-50 transition-colors text-left group"
+              className="w-full flex items-center gap-3 px-3 py-2 hover:bg-info/10 transition-colors text-left group"
             >
               <span className="text-base">{r.icon}</span>
               <div className="flex-1 min-w-0">
-                <div className="text-xs font-medium text-gray-700 truncate">{r.name}</div>
-                <div className="flex items-center gap-2 text-[10px] text-gray-400">
+                <div className="text-xs font-medium text-ink truncate">{r.name}</div>
+                <div className="flex items-center gap-2 text-[10px] text-dim">
                   <span>{r.type.replace(/_/g, ' ')}</span>
-                  {r.status && <><span className="text-gray-300">·</span><span>{r.status}</span></>}
-                  {r.extra && <><span className="text-gray-300">·</span><span>{r.extra}</span></>}
+                  {r.status && <><span className="text-dim">·</span><span>{r.status}</span></>}
+                  {r.extra && <><span className="text-dim">·</span><span>{r.extra}</span></>}
                 </div>
               </div>
             </button>
@@ -692,16 +692,16 @@ const PinnedMessagesStrip = ({ pinnedMessages, onUnpin, onScrollTo }) => {
   if (!pinnedMessages || pinnedMessages.length === 0) return null;
 
   return (
-    <div className="flex-shrink-0 border-b border-amber-100 bg-gradient-to-r from-amber-50/80 to-yellow-50/80">
+    <div className="flex-shrink-0 border-b border-warning/10 bg-black">
       <button
         onClick={() => setExpanded(!expanded)}
-        className="w-full flex items-center gap-2 px-4 py-2 text-left hover:bg-amber-50 transition-colors"
+        className="w-full flex items-center gap-2 px-4 py-2 text-left hover:bg-warning/10 transition-colors"
       >
-        <Pin size={12} className="text-amber-500 flex-shrink-0" />
-        <span className="text-[11px] font-semibold text-amber-700">
+        <Pin size={12} className="text-warning flex-shrink-0" />
+        <span className="text-[11px] font-semibold text-warning">
           {pinnedMessages.length} Pinned
         </span>
-        <ChevronRight size={12} className={`text-amber-400 transition-transform duration-200 ml-auto ${expanded ? 'rotate-90' : ''}`} />
+        <ChevronRight size={12} className={`text-warning transition-transform duration-200 ml-auto ${expanded ? 'rotate-90' : ''}`} />
       </button>
 
       <AnimatePresence>
@@ -717,22 +717,22 @@ const PinnedMessagesStrip = ({ pinnedMessages, onUnpin, onScrollTo }) => {
               {pinnedMessages.map((pin) => (
                 <div
                   key={pin.id}
-                  className="group flex items-start gap-2 px-2.5 py-2 bg-white/80 rounded-lg border border-amber-100 cursor-pointer hover:border-amber-200 transition-colors"
+                  className="group flex items-start gap-2 px-2.5 py-2 bg-white/80 rounded-lg border border-warning/10 cursor-pointer hover:border-warning/20 transition-colors"
                   onClick={() => { onScrollTo(pin.id); setExpanded(false); }}
                 >
                   <AiSparkleIcon size={18} />
                   <div className="flex-1 min-w-0">
-                    <p className="text-[11px] text-gray-600 line-clamp-2 leading-relaxed">
+                    <p className="text-[11px] text-dim line-clamp-2 leading-relaxed">
                       {pin.text?.slice(0, 120)}{pin.text?.length > 120 ? '...' : ''}
                     </p>
-                    <span className="text-[9px] text-gray-400">{pin.timestamp ? new Date(pin.timestamp).toLocaleString('en-IN', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) : ''}</span>
+                    <span className="text-[9px] text-dim">{pin.timestamp ? new Date(pin.timestamp).toLocaleString('en-IN', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) : ''}</span>
                   </div>
                   <button
                     onClick={(e) => { e.stopPropagation(); onUnpin(pin.id); }}
-                    className="p-1 rounded opacity-0 group-hover:opacity-100 hover:bg-red-50 transition-all"
+                    className="p-1 rounded opacity-0 group-hover:opacity-100 hover:bg-danger/10 transition-all"
                     title="Unpin"
                   >
-                    <PinOff size={11} className="text-red-400" />
+                    <PinOff size={11} className="text-danger" />
                   </button>
                 </div>
               ))}
@@ -746,9 +746,9 @@ const PinnedMessagesStrip = ({ pinnedMessages, onUnpin, onScrollTo }) => {
 
 // ── Proactive Alerts Bar ──
 const SEVERITY_STYLES = {
-  critical: { bg: 'bg-red-50', border: 'border-red-200', text: 'text-red-700', badge: 'bg-red-100 text-red-600' },
-  warning: { bg: 'bg-amber-50', border: 'border-amber-200', text: 'text-amber-700', badge: 'bg-amber-100 text-amber-600' },
-  info: { bg: 'bg-blue-50', border: 'border-blue-200', text: 'text-blue-700', badge: 'bg-blue-100 text-blue-600' },
+  critical: { bg: 'bg-danger/10', border: 'border-danger/20', text: 'text-danger', badge: 'bg-danger/10 text-danger' },
+  warning: { bg: 'bg-warning/10', border: 'border-warning/20', text: 'text-warning', badge: 'bg-warning/10 text-warning' },
+  info: { bg: 'bg-info/10', border: 'border-info/20', text: 'text-info', badge: 'bg-info/10 text-info' },
 };
 
 const ProactiveAlertsBar = ({ alerts, onDismiss, onActOnAlert, expanded, onToggle }) => {
@@ -758,33 +758,33 @@ const ProactiveAlertsBar = ({ alerts, onDismiss, onActOnAlert, expanded, onToggl
   const warningCount = alerts.filter((a) => a.severity === 'warning').length;
 
   return (
-    <div className="flex-shrink-0 border-b border-gray-100">
+    <div className="flex-shrink-0 border-b border-line">
       <button
         onClick={onToggle}
-        className="w-full flex items-center gap-2 px-4 py-2.5 text-left hover:bg-gray-50 transition-colors"
+        className="w-full flex items-center gap-2 px-4 py-2.5 text-left hover:bg-canvas transition-colors"
       >
         <div className="relative">
-          <Sparkles size={14} className="text-amber-500" />
+          <Sparkles size={14} className="text-warning" />
           {criticalCount > 0 && (
-            <span className="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full animate-pulse" />
+            <span className="absolute -top-1 -right-1 w-2 h-2 bg-danger rounded-full animate-pulse" />
           )}
         </div>
-        <span className="text-[11px] font-semibold text-gray-600">
+        <span className="text-[11px] font-semibold text-dim">
           {alerts.length} Insight{alerts.length !== 1 ? 's' : ''}
         </span>
         {criticalCount > 0 && (
-          <span className="px-1.5 py-0.5 rounded-full text-[9px] font-bold bg-red-100 text-red-600">
+          <span className="px-1.5 py-0.5 rounded-full text-[9px] font-bold bg-danger/10 text-danger">
             {criticalCount} urgent
           </span>
         )}
         {warningCount > 0 && (
-          <span className="px-1.5 py-0.5 rounded-full text-[9px] font-bold bg-amber-100 text-amber-600">
+          <span className="px-1.5 py-0.5 rounded-full text-[9px] font-bold bg-warning/10 text-warning">
             {warningCount} warning{warningCount > 1 ? 's' : ''}
           </span>
         )}
         <ChevronRight
           size={12}
-          className={`text-gray-400 transition-transform duration-200 ml-auto ${expanded ? 'rotate-90' : ''}`}
+          className={`text-dim transition-transform duration-200 ml-auto ${expanded ? 'rotate-90' : ''}`}
         />
       </button>
 
@@ -814,12 +814,12 @@ const ProactiveAlertsBar = ({ alerts, onDismiss, onActOnAlert, expanded, onToggl
                           {alert.title}
                         </p>
                         {alert.message && (
-                          <p className="text-[10px] text-gray-500 mt-0.5 leading-relaxed">{alert.message}</p>
+                          <p className="text-[10px] text-dim mt-0.5 leading-relaxed">{alert.message}</p>
                         )}
                         {alert.suggestion && (
                           <button
                             onClick={() => onActOnAlert(alert)}
-                            className="mt-1.5 inline-flex items-center gap-1 px-2 py-1 bg-white/80 border border-gray-200 rounded-lg text-[10px] font-medium text-teal-700 hover:bg-teal-50 hover:border-teal-300 transition-all"
+                            className="mt-1.5 inline-flex items-center gap-1 px-2 py-1 bg-white/80 border border-line rounded-lg text-[10px] font-medium text-ink hover:bg-surface-hover hover:border-line transition-all"
                           >
                             <Sparkles size={10} />
                             {alert.suggestion.length > 50 ? alert.suggestion.slice(0, 50) + '...' : alert.suggestion}
@@ -831,7 +831,7 @@ const ProactiveAlertsBar = ({ alerts, onDismiss, onActOnAlert, expanded, onToggl
                         className="p-0.5 rounded opacity-0 group-hover:opacity-100 hover:bg-white/60 transition-all flex-shrink-0"
                         title="Dismiss"
                       >
-                        <XCircle size={14} className="text-gray-400" />
+                        <XCircle size={14} className="text-dim" />
                       </button>
                     </div>
                   </motion.div>
@@ -925,8 +925,8 @@ const VoiceInputButton = ({ onTranscript, disabled }) => {
       disabled={disabled}
       className={`p-2 rounded-full transition-all duration-200 relative ${
         isListening
-          ? 'bg-red-50 text-red-500 hover:bg-red-100 ring-2 ring-red-200'
-          : 'hover:bg-gray-100 text-gray-400'
+          ? 'bg-danger/10 text-danger hover:bg-danger/10 ring-2 ring-danger/20'
+          : 'hover:bg-surface-hover text-dim'
       }`}
       whileTap={{ scale: 0.9 }}
       aria-label={isListening ? 'Stop listening' : 'Voice input'}
@@ -936,7 +936,7 @@ const VoiceInputButton = ({ onTranscript, disabled }) => {
         <>
           <MicOff size={18} />
           {/* Pulsing ring animation */}
-          <span className="absolute inset-0 rounded-full animate-ping bg-red-200/50" />
+          <span className="absolute inset-0 rounded-full animate-ping bg-danger" />
         </>
       ) : (
         <Mic size={18} />
@@ -2002,7 +2002,7 @@ const AiPromptPanel = ({ isOpen, onClose }) => {
               !isFloating ? 'top-0 right-0' : ''
             }`}
             style={{
-              background: "#fafafa",
+              background: "rgb(var(--surface-hover))",
               borderLeft: isFullscreen ? 'none' : (isFloating ? 'none' : "1px solid rgba(0,0,0,0.08)"),
               border: isFullscreen ? 'none' : (isFloating ? '1px solid rgba(0,0,0,0.12)' : undefined),
               ...(isFloating && !isFullscreen
@@ -2039,7 +2039,7 @@ const AiPromptPanel = ({ isOpen, onClose }) => {
                 className="absolute left-0 top-0 bottom-0 w-[5px] z-[10000] cursor-col-resize group"
                 onMouseDown={startResizeX}
               >
-                <div className="absolute left-0 top-0 bottom-0 w-[3px] bg-transparent group-hover:bg-teal-400/40 transition-colors duration-150" />
+                <div className="absolute left-0 top-0 bottom-0 w-[3px] bg-transparent group-hover:bg-cta transition-colors duration-150" />
               </div>
             )}
 
@@ -2049,13 +2049,13 @@ const AiPromptPanel = ({ isOpen, onClose }) => {
                 className="absolute left-0 right-0 top-0 h-[5px] z-[10000] cursor-row-resize group"
                 onMouseDown={startResizeY}
               >
-                <div className="absolute left-0 right-0 top-0 h-[3px] bg-transparent group-hover:bg-teal-400/40 transition-colors duration-150" />
+                <div className="absolute left-0 right-0 top-0 h-[3px] bg-transparent group-hover:bg-cta transition-colors duration-150" />
               </div>
             )}
             {/* ===== Gradient Header ===== */}
             <div
               className={`relative px-5 pt-5 pb-4 flex-shrink-0 ${isFloating ? 'cursor-grab active:cursor-grabbing' : ''}`}
-              style={{ background: "linear-gradient(135deg, #0f2b26 0%, #134e3a 30%, #166045 50%, #1a7a56 70%, #1e8a5e 100%)" }}
+              style={{ background: "linear-gradient(135deg, rgb(var(--success)) 0%, rgb(var(--success)) 30%, rgb(var(--success)) 50%, rgb(var(--success)) 70%, rgb(var(--success)) 100%)" }}
               onMouseDown={isFloating ? startDrag : undefined}
             >
               <div className="absolute inset-0 opacity-20 pointer-events-none" style={{
@@ -2078,18 +2078,18 @@ const AiPromptPanel = ({ isOpen, onClose }) => {
                   <div className="flex flex-col items-start">
                     <span className="text-white text-sm font-medium font-['Montserrat']">CG Assistant</span>
                     {learningStats && learningStats.totalInteractions > 0 && (
-                      <span className="text-teal-300/70 text-[9px] font-medium leading-tight">
+                      <span className="text-ink text-[9px] font-medium leading-tight">
                         {learningStats.totalInteractions} interaction{learningStats.totalInteractions !== 1 ? 's' : ''} learned
                       </span>
                     )}
                   </div>
                   {activeSpace === 'personal' && (
-                    <span className="px-2 py-0.5 bg-indigo-500/20 border border-indigo-400/30 rounded-full text-[9px] text-indigo-200 font-semibold uppercase tracking-wider">
+                    <span className="px-2 py-0.5 bg-info border border-info rounded-full text-[9px] text-info font-semibold uppercase tracking-wider">
                       Personal
                     </span>
                   )}
                   {aiHealthy === false && (
-                    <span className="text-red-300 text-[10px]">(offline)</span>
+                    <span className="text-danger text-[10px]">(offline)</span>
                   )}
                 </div>
 
@@ -2148,28 +2148,28 @@ const AiPromptPanel = ({ isOpen, onClose }) => {
             </div>
 
             {/* ===== Space Switcher Tabs ===== */}
-            <div className="flex-shrink-0 bg-white border-b border-gray-100 px-3 py-2">
-              <div className="flex items-center bg-gray-100 rounded-xl p-1 gap-1">
+            <div className="flex-shrink-0 bg-surface border-b border-line px-3 py-2">
+              <div className="flex items-center bg-surface-hover rounded-xl p-1 gap-1">
                 <button
                   onClick={() => switchSpace('project')}
                   className={`flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-lg text-xs font-semibold transition-all duration-200 ${
                     activeSpace === 'project'
-                      ? 'bg-white text-teal-700 shadow-sm border border-gray-200'
-                      : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
+                      ? 'bg-surface text-ink  border border-line'
+                      : 'text-dim hover:text-ink hover:bg-canvas'
                   }`}
                 >
-                  <FolderKanban size={14} className={activeSpace === 'project' ? 'text-teal-600' : 'text-gray-400'} />
+                  <FolderKanban size={14} className={activeSpace === 'project' ? 'text-ink' : 'text-dim'} />
                   Project Space
                 </button>
                 <button
                   onClick={() => switchSpace('personal')}
                   className={`flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-lg text-xs font-semibold transition-all duration-200 ${
                     activeSpace === 'personal'
-                      ? 'bg-white text-indigo-700 shadow-sm border border-gray-200'
-                      : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
+                      ? 'bg-surface text-info  border border-line'
+                      : 'text-dim hover:text-ink hover:bg-canvas'
                   }`}
                 >
-                  <Globe size={14} className={activeSpace === 'personal' ? 'text-indigo-500' : 'text-gray-400'} />
+                  <Globe size={14} className={activeSpace === 'personal' ? 'text-info' : 'text-dim'} />
                   Personal Space
                 </button>
               </div>
@@ -2212,10 +2212,10 @@ const AiPromptPanel = ({ isOpen, onClose }) => {
                 <div className="p-4">
                   {/* Header with new chat button */}
                   <div className="flex items-center justify-between mb-4">
-                    <h3 className="text-sm font-semibold text-gray-700 font-['Montserrat']">Recent Chats</h3>
+                    <h3 className="text-sm font-semibold text-ink font-['Montserrat']">Recent Chats</h3>
                     <button
                       onClick={startNewConversation}
-                      className="flex items-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-teal-500 to-emerald-500 text-white text-[11px] font-medium rounded-lg hover:from-teal-600 hover:to-emerald-600 transition-all shadow-sm"
+                      className="flex items-center gap-1.5 px-3 py-1.5 bg-black text-white text-[11px] font-medium rounded-lg hover:from-black hover:to-black transition-all "
                     >
                       <Plus size={13} />
                       New Chat
@@ -2224,14 +2224,14 @@ const AiPromptPanel = ({ isOpen, onClose }) => {
 
                   {conversations.length === 0 ? (
                     <div className="text-center py-16">
-                      <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-gradient-to-br from-gray-100 to-gray-50 flex items-center justify-center">
-                        <MessageSquare size={28} className="text-gray-300" />
+                      <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-gradient-to-br from-surface-hover to-surface-hover flex items-center justify-center">
+                        <MessageSquare size={28} className="text-dim" />
                       </div>
-                      <p className="text-sm font-medium text-gray-500 mb-1">No conversations yet</p>
-                      <p className="text-[11px] text-gray-400 mb-4">Start a chat to see it here</p>
+                      <p className="text-sm font-medium text-dim mb-1">No conversations yet</p>
+                      <p className="text-[11px] text-dim mb-4">Start a chat to see it here</p>
                       <button
                         onClick={startNewConversation}
-                        className="px-5 py-2.5 bg-gradient-to-r from-teal-500 to-emerald-500 text-white text-xs font-medium rounded-xl hover:from-teal-600 hover:to-emerald-600 transition-all shadow-md"
+                        className="px-5 py-2.5 bg-black text-white text-xs font-medium rounded-xl hover:from-black hover:to-black transition-all "
                       >
                         Start a new chat
                       </button>
@@ -2252,9 +2252,9 @@ const AiPromptPanel = ({ isOpen, onClose }) => {
                             <div key={section.label}>
                               {/* Section label */}
                               <div className="flex items-center gap-2 mb-2">
-                                <Clock size={12} className="text-gray-400" />
-                                <span className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider">{section.label}</span>
-                                <div className="flex-1 h-px bg-gray-100" />
+                                <Clock size={12} className="text-dim" />
+                                <span className="text-[11px] font-semibold text-dim uppercase tracking-wider">{section.label}</span>
+                                <div className="flex-1 h-px bg-surface-hover" />
                               </div>
 
                               {/* Conversation cards */}
@@ -2270,31 +2270,31 @@ const AiPromptPanel = ({ isOpen, onClose }) => {
                                       transition={{ delay: idx * 0.04 }}
                                       className={`group flex items-center gap-3 px-3 py-2.5 rounded-xl cursor-pointer transition-all duration-200 ${
                                         isActive
-                                          ? "bg-teal-50 border border-teal-200 shadow-sm"
-                                          : "hover:bg-gray-50 border border-transparent hover:border-gray-100"
+                                          ? "bg-surface-hover border border-line "
+                                          : "hover:bg-canvas border border-transparent hover:border-line"
                                       }`}
                                       onClick={() => loadConversation(convo.conversationId)}
                                     >
                                       {/* Icon */}
                                       <div className={`w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 ${
                                         isActive
-                                          ? "bg-gradient-to-br from-teal-400 to-emerald-500 shadow-sm"
-                                          : "bg-gray-100 group-hover:bg-gradient-to-br group-hover:from-teal-400 group-hover:to-emerald-500"
+                                          ? "bg-black "
+                                          : "bg-surface-hover group-hover:bg-gradient-to-br group-hover:from-black group-hover:to-black"
                                       }`}>
-                                        <MessageSquare size={15} className={isActive ? "text-white" : "text-gray-400 group-hover:text-white"} />
+                                        <MessageSquare size={15} className={isActive ? "text-white" : "text-dim group-hover:text-white"} />
                                       </div>
 
                                       {/* Title & meta */}
                                       <div className="flex-1 min-w-0">
-                                        <p className={`text-[13px] font-medium truncate ${isActive ? "text-teal-800" : "text-gray-700"}`}>
+                                        <p className={`text-[13px] font-medium truncate ${isActive ? "text-ink" : "text-ink"}`}>
                                           {convo.title || "Untitled chat"}
                                         </p>
                                         <div className="flex items-center gap-2 mt-0.5">
-                                          <span className="text-[10px] text-gray-400">{convo.messageCount || 0} msgs</span>
+                                          <span className="text-[10px] text-dim">{convo.messageCount || 0} msgs</span>
                                           {updatedAt && (
                                             <>
-                                              <span className="text-gray-300">·</span>
-                                              <span className="text-[10px] text-gray-400">{timeAgo(updatedAt)}</span>
+                                              <span className="text-dim">·</span>
+                                              <span className="text-[10px] text-dim">{timeAgo(updatedAt)}</span>
                                             </>
                                           )}
                                         </div>
@@ -2303,10 +2303,10 @@ const AiPromptPanel = ({ isOpen, onClose }) => {
                                       {/* Delete button */}
                                       <button
                                         onClick={(e) => handleDeleteConversation(convo.conversationId, e)}
-                                        className="p-1.5 rounded-lg opacity-0 group-hover:opacity-100 hover:bg-red-50 transition-all duration-150"
+                                        className="p-1.5 rounded-lg opacity-0 group-hover:opacity-100 hover:bg-danger/10 transition-all duration-150"
                                         aria-label="Delete conversation"
                                       >
-                                        <Trash2 size={13} className="text-red-400" />
+                                        <Trash2 size={13} className="text-danger" />
                                       </button>
                                     </motion.div>
                                   );
@@ -2337,7 +2337,7 @@ const AiPromptPanel = ({ isOpen, onClose }) => {
                         {activeSpace === 'personal' ? (
                           <div
                             className="flex items-center justify-center rounded-full flex-shrink-0"
-                            style={{ width: 56, height: 56, background: "linear-gradient(135deg, #6366f1 0%, #8b5cf6 40%, #a78bfa 100%)" }}
+                            style={{ width: 56, height: 56, background: "linear-gradient(135deg, rgb(var(--info)) 0%, rgb(var(--info)) 40%, rgb(var(--info)) 100%)" }}
                           >
                             <Globe size={28} className="text-white" />
                           </div>
@@ -2348,7 +2348,7 @@ const AiPromptPanel = ({ isOpen, onClose }) => {
                       <motion.h3
                         initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: 0.35 }}
-                        className="mt-4 text-base font-semibold text-gray-700 font-['Montserrat']"
+                        className="mt-4 text-base font-semibold text-ink font-['Montserrat']"
                       >
                         {activeSpace === 'personal'
                           ? `Your Personal Space`
@@ -2357,7 +2357,7 @@ const AiPromptPanel = ({ isOpen, onClose }) => {
                       <motion.p
                         initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: 0.45 }}
-                        className="mt-2 text-xs text-gray-400 leading-relaxed max-w-[280px]"
+                        className="mt-2 text-xs text-dim leading-relaxed max-w-[280px]"
                       >
                         {activeSpace === 'personal'
                           ? "Use this space for market research, brainstorming, writing, industry trends, and anything beyond your CaaS data."
@@ -2384,10 +2384,10 @@ const AiPromptPanel = ({ isOpen, onClose }) => {
                           <button
                             key={suggestion}
                             onClick={() => { setInputText(suggestion); setTimeout(() => inputRef.current?.focus(), 50); }}
-                            className={`px-3 py-1.5 bg-white border rounded-full text-[11px] transition-all duration-200 ${
+                            className={`px-3 py-1.5 bg-surface border rounded-full text-[11px] transition-all duration-200 ${
                               activeSpace === 'personal'
-                                ? 'border-gray-200 text-gray-600 hover:border-indigo-300 hover:text-indigo-700 hover:bg-indigo-50'
-                                : 'border-gray-200 text-gray-600 hover:border-teal-300 hover:text-teal-700 hover:bg-teal-50'
+                                ? 'border-line text-dim hover:border-info/30 hover:text-info hover:bg-info/10'
+                                : 'border-line text-dim hover:border-line hover:text-ink hover:bg-surface-hover'
                             }`}
                           >
                             {suggestion}
@@ -2401,11 +2401,11 @@ const AiPromptPanel = ({ isOpen, onClose }) => {
                   {error && (
                     <motion.div
                       initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }}
-                      className="mb-4 px-4 py-3 bg-red-50 border border-red-100 rounded-xl flex items-center gap-2"
+                      className="mb-4 px-4 py-3 bg-danger/10 border border-danger/10 rounded-xl flex items-center gap-2"
                     >
-                      <AlertCircle size={16} className="text-red-400 flex-shrink-0" />
-                      <p className="text-xs text-red-600">{error}</p>
-                      <button onClick={() => setError(null)} className="ml-auto p-1"><X size={14} className="text-red-300" /></button>
+                      <AlertCircle size={16} className="text-danger flex-shrink-0" />
+                      <p className="text-xs text-danger">{error}</p>
+                      <button onClick={() => setError(null)} className="ml-auto p-1"><X size={14} className="text-danger" /></button>
                     </motion.div>
                   )}
 
@@ -2427,7 +2427,7 @@ const AiPromptPanel = ({ isOpen, onClose }) => {
                               <div className="flex flex-wrap gap-1.5 mb-1.5 justify-end">
                                 {msg.mentions.map((m) => (
                                   <span key={`${m.type}-${m.id}`}
-                                    className="inline-flex items-center gap-1 px-2 py-0.5 bg-blue-500/10 border border-blue-300/30 rounded-full text-[10px] text-blue-300 font-medium"
+                                    className="inline-flex items-center gap-1 px-2 py-0.5 bg-info border border-info rounded-full text-[10px] text-info font-medium"
                                   >
                                     <span>{m.icon}</span>
                                     <span>@{m.type}:{m.name}</span>
@@ -2437,12 +2437,12 @@ const AiPromptPanel = ({ isOpen, onClose }) => {
                             )}
                             {editingMsgId === msg.id ? (
                               /* Editing mode */
-                              <div className="rounded-2xl rounded-tr-md px-4 py-3 shadow-sm border-2 border-teal-400" style={{ background: "#1a1a2e" }}>
+                              <div className="rounded-2xl rounded-tr-md px-4 py-3  border-2 border-line" style={{ background: "rgb(var(--info))" }}>
                                 <textarea
                                   value={editingText}
                                   onChange={(e) => setEditingText(e.target.value)}
                                   rows={3}
-                                  className="w-full text-[13px] text-gray-200 bg-transparent border-none outline-none focus:ring-0 resize-none p-0 font-['Montserrat']"
+                                  className="w-full text-[13px] text-dim bg-transparent border-none outline-none focus:ring-0 resize-none p-0 font-['Montserrat']"
                                   autoFocus
                                   onKeyDown={(e) => {
                                     if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
@@ -2452,17 +2452,17 @@ const AiPromptPanel = ({ isOpen, onClose }) => {
                                     if (e.key === 'Escape') handleCancelEdit();
                                   }}
                                 />
-                                <div className="flex items-center justify-end gap-2 mt-2 pt-2 border-t border-gray-600">
+                                <div className="flex items-center justify-end gap-2 mt-2 pt-2 border-t border-line">
                                   <button
                                     onClick={handleCancelEdit}
-                                    className="px-3 py-1.5 text-[11px] text-gray-400 hover:text-gray-200 transition-colors rounded-lg hover:bg-gray-700"
+                                    className="px-3 py-1.5 text-[11px] text-dim hover:text-dim transition-colors rounded-lg hover:bg-cta"
                                   >
                                     Cancel
                                   </button>
                                   <button
                                     onClick={() => handleSaveAndResend(msg.id)}
                                     disabled={!editingText.trim()}
-                                    className="px-3 py-1.5 text-[11px] text-white bg-teal-500 hover:bg-teal-600 rounded-lg font-medium disabled:opacity-40 transition-colors flex items-center gap-1.5"
+                                    className="px-3 py-1.5 text-[11px] text-cta-foreground bg-cta hover:bg-cta rounded-lg font-medium disabled:opacity-40 transition-colors flex items-center gap-1.5"
                                   >
                                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none"><path d="M22 2L11 13" stroke="white" strokeWidth="2" strokeLinecap="round"/><path d="M22 2L15 22L11 13L2 9L22 2Z" stroke="white" strokeWidth="2" strokeLinecap="round"/></svg>
                                     Save & Resend
@@ -2473,8 +2473,8 @@ const AiPromptPanel = ({ isOpen, onClose }) => {
                               /* Normal display mode */
                               <div className="relative">
                                 <div
-                                  className="rounded-2xl rounded-tr-md px-4 py-3 text-[13px] leading-relaxed shadow-sm"
-                                  style={{ background: "#1a1a2e", color: "#e2e8f0", fontFamily: "'Montserrat', sans-serif" }}
+                                  className="rounded-2xl rounded-tr-md px-4 py-3 text-[13px] leading-relaxed "
+                                  style={{ background: "rgb(var(--info))", color: "rgb(var(--surface-hover))", fontFamily: "'Montserrat', sans-serif" }}
                                 >
                                   {msg.text}
                                 </div>
@@ -2484,7 +2484,7 @@ const AiPromptPanel = ({ isOpen, onClose }) => {
                                     initial={{ opacity: 0 }}
                                     whileHover={{ scale: 1.1 }}
                                     onClick={() => handleEditMessage(msg.id, msg.text)}
-                                    className="absolute -left-8 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 p-1.5 rounded-full bg-gray-100 hover:bg-gray-200 text-gray-500 transition-all duration-200 shadow-sm"
+                                    className="absolute -left-8 top-1/2 -translate-y-1/2  opacity-0 group-hover:opacity-100 p-1.5 rounded-full bg-surface-hover hover:bg-surface-hover text-dim transition-all duration-200 "
                                     title="Edit & resend"
                                   >
                                     <PenLine size={12} />
@@ -2509,9 +2509,9 @@ const AiPromptPanel = ({ isOpen, onClose }) => {
                                 {toolsUsed.map((tool, i) => <ToolBadge key={i} tool={tool} />)}
                               </div>
                             )}
-                            <div className="text-[13px] leading-relaxed text-gray-700">
+                            <div className="text-[13px] leading-relaxed text-ink">
                               {msg.text ? renderMarkdown(msg.text) : (
-                                <span className="text-gray-300 italic">Thinking...</span>
+                                <span className="text-dim italic">Thinking...</span>
                               )}
                             </div>
 
@@ -2520,17 +2520,17 @@ const AiPromptPanel = ({ isOpen, onClose }) => {
                               <motion.div
                                 initial={{ opacity: 0, y: 8 }}
                                 animate={{ opacity: 1, y: 0 }}
-                                className="mt-3 flex items-center gap-3 px-4 py-3 bg-gradient-to-r from-teal-50 to-emerald-50 border border-teal-200 rounded-xl"
+                                className="mt-3 flex items-center gap-3 px-4 py-3 bg-black border border-line rounded-xl"
                               >
-                                <div className="flex-shrink-0 w-8 h-8 bg-teal-100 rounded-full flex items-center justify-center">
-                                  <Mail size={16} className="text-teal-600" />
+                                <div className="flex-shrink-0 w-8 h-8 bg-white/15 rounded-full flex items-center justify-center">
+                                  <Mail size={16} className="text-white" />
                                 </div>
                                 <div className="flex-1 min-w-0">
                                   <div className="flex items-center gap-1.5">
-                                    <CheckCircle size={13} className="text-emerald-500" />
-                                    <span className="text-xs font-semibold text-emerald-700">Email Sent</span>
+                                    <CheckCircle size={13} className="text-white" />
+                                    <span className="text-xs font-semibold text-white">Email Sent</span>
                                   </div>
-                                  <p className="text-[11px] text-gray-500 mt-0.5 truncate">
+                                  <p className="text-[11px] text-white/60 mt-0.5 truncate">
                                     To: {msg.emailAction.to} &bull; Subject: {msg.emailAction.subject}
                                   </p>
                                 </div>
@@ -2539,7 +2539,7 @@ const AiPromptPanel = ({ isOpen, onClose }) => {
 
                             {msg.timestamp && (
                               <div className="flex items-center gap-1 mt-2">
-                                <span className="text-[11px] text-gray-400 mr-auto">
+                                <span className="text-[11px] text-dim mr-auto">
                                   {new Date(msg.timestamp).toLocaleString("en-IN", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}
                                 </span>
                                 {/* Only show action buttons after response is fully generated */}
@@ -2550,8 +2550,8 @@ const AiPromptPanel = ({ isOpen, onClose }) => {
                                       onClick={() => pinnedMessages.find((p) => p.id === msg.id) ? unpinMessage(msg.id) : pinMessage(msg)}
                                       className={`p-1.5 rounded-full transition-all duration-200 ${
                                         pinnedMessages.find((p) => p.id === msg.id)
-                                          ? "bg-amber-100 text-amber-600"
-                                          : "text-gray-300 hover:text-amber-500 hover:bg-amber-50"
+                                          ? "bg-warning/10 text-warning"
+                                          : "text-dim hover:text-warning hover:bg-warning/10"
                                       }`}
                                       whileHover={{ scale: 1.15 }}
                                       whileTap={{ scale: 0.9 }}
@@ -2566,8 +2566,8 @@ const AiPromptPanel = ({ isOpen, onClose }) => {
                                       onClick={() => handleFeedback(msg.id, "positive")}
                                       className={`p-1.5 rounded-full transition-all duration-200 ${
                                         feedbackMap[msg.id] === "positive"
-                                          ? "bg-emerald-100 text-emerald-600"
-                                          : "text-gray-300 hover:text-emerald-500 hover:bg-emerald-50"
+                                          ? "bg-surface-hover text-ink"
+                                          : "text-dim hover:text-ink hover:bg-surface-hover"
                                       }`}
                                       whileHover={{ scale: 1.15 }}
                                       whileTap={{ scale: 0.9 }}
@@ -2580,8 +2580,8 @@ const AiPromptPanel = ({ isOpen, onClose }) => {
                                       onClick={() => handleFeedback(msg.id, "negative")}
                                       className={`p-1.5 rounded-full transition-all duration-200 ${
                                         feedbackMap[msg.id] === "negative"
-                                          ? "bg-red-100 text-red-500"
-                                          : "text-gray-300 hover:text-red-400 hover:bg-red-50"
+                                          ? "bg-danger/10 text-danger"
+                                          : "text-dim hover:text-danger hover:bg-danger/10"
                                       }`}
                                       whileHover={{ scale: 1.15 }}
                                       whileTap={{ scale: 0.9 }}
@@ -2591,12 +2591,12 @@ const AiPromptPanel = ({ isOpen, onClose }) => {
                                     </motion.button>
 
                                     {/* Divider */}
-                                    <div className="w-px h-4 bg-gray-200 mx-0.5" />
+                                    <div className="w-px h-4 bg-surface-hover mx-0.5" />
 
                                     {/* Export as PDF */}
                                     <motion.button
                                       onClick={() => exportToPdf(msg.text, "AI Response")}
-                                      className="p-1.5 rounded-full text-gray-300 hover:text-rose-500 hover:bg-rose-50 transition-all duration-200"
+                                      className="p-1.5 rounded-full text-dim hover:text-danger hover:bg-danger/10 transition-all duration-200"
                                       whileHover={{ scale: 1.15 }}
                                       whileTap={{ scale: 0.9 }}
                                       title="Export as PDF"
@@ -2607,7 +2607,7 @@ const AiPromptPanel = ({ isOpen, onClose }) => {
                                     {/* Export as Excel */}
                                     <motion.button
                                       onClick={() => exportToExcel(msg.text, "AI Response")}
-                                      className="p-1.5 rounded-full text-gray-300 hover:text-emerald-500 hover:bg-emerald-50 transition-all duration-200"
+                                      className="p-1.5 rounded-full text-dim hover:text-ink hover:bg-surface-hover transition-all duration-200"
                                       whileHover={{ scale: 1.15 }}
                                       whileTap={{ scale: 0.9 }}
                                       title="Export as Excel"
@@ -2618,7 +2618,7 @@ const AiPromptPanel = ({ isOpen, onClose }) => {
                                     {/* Regenerate response */}
                                     <motion.button
                                       onClick={() => handleRegenerate(msg.id)}
-                                      className="p-1.5 rounded-full text-gray-300 hover:text-teal-500 hover:bg-teal-50 transition-all duration-200"
+                                      className="p-1.5 rounded-full text-dim hover:text-ink hover:bg-surface-hover transition-all duration-200"
                                       whileHover={{ scale: 1.15, rotate: -30 }}
                                       whileTap={{ scale: 0.9 }}
                                       title="Regenerate response"
@@ -2652,16 +2652,16 @@ const AiPromptPanel = ({ isOpen, onClose }) => {
 
                 {/* ===== Compose Area ===== */}
                 <motion.div
-                  className="flex-shrink-0 border-t border-gray-100 bg-white relative"
+                  className="flex-shrink-0 border-t border-line bg-surface relative"
                   initial={{ y: 40, opacity: 0 }} animate={{ y: 0, opacity: 1 }}
                   transition={{ delay: 0.3, type: "spring", damping: 25 }}
                 >
                   {/* AI service offline warning */}
                   {aiHealthy === false && (
-                    <div className="px-4 py-2 bg-amber-50 border-b border-amber-100 flex items-center gap-2">
-                      <AlertCircle size={14} className="text-amber-500" />
-                      <span className="text-[11px] text-amber-700">AI assistant is unavailable. Please try again later.</span>
-                      <button onClick={checkHealth} className="ml-auto text-[11px] text-teal-600 font-medium hover:underline">Retry</button>
+                    <div className="px-4 py-2 bg-warning/10 border-b border-warning/10 flex items-center gap-2">
+                      <AlertCircle size={14} className="text-warning" />
+                      <span className="text-[11px] text-warning">AI assistant is unavailable. Please try again later.</span>
+                      <button onClick={checkHealth} className="ml-auto text-[11px] text-ink font-medium hover:underline">Retry</button>
                     </div>
                   )}
 
@@ -2694,13 +2694,13 @@ const AiPromptPanel = ({ isOpen, onClose }) => {
                       {activeMentions.map((m) => (
                         <span
                           key={`${m.type}-${m.id}`}
-                          className="inline-flex items-center gap-1 px-2 py-1 bg-blue-50 border border-blue-200 rounded-lg text-[10px] text-blue-700 font-medium group"
+                          className="inline-flex items-center gap-1 px-2 py-1 bg-info/10 border border-info/20 rounded-lg text-[10px] text-info font-medium group"
                         >
                           <span>{m.icon}</span>
                           <span>@{m.type}:{m.name}</span>
                           <button
                             onClick={() => removeMention(m.id)}
-                            className="ml-0.5 p-0.5 rounded-full hover:bg-blue-100 opacity-60 group-hover:opacity-100 transition-opacity"
+                            className="ml-0.5 p-0.5 rounded-full hover:bg-info/10 opacity-60 group-hover:opacity-100 transition-opacity"
                           >
                             <X size={10} />
                           </button>
@@ -2717,16 +2717,16 @@ const AiPromptPanel = ({ isOpen, onClose }) => {
                         animate={{ opacity: 1, y: 0, scale: 1 }}
                         exit={{ opacity: 0, y: 10, scale: 0.98 }}
                         transition={{ type: "spring", damping: 25, stiffness: 300 }}
-                        className="mx-3 mb-2 bg-white rounded-2xl border border-gray-200 shadow-xl overflow-hidden"
+                        className="mx-3 mb-2 bg-surface rounded-2xl border border-line shadow-xl overflow-hidden"
                       >
                         {/* Header — like macOS Spotlight */}
-                        <div className="flex items-center gap-3 px-4 py-3 bg-gradient-to-r from-teal-500 to-teal-600">
+                        <div className="flex items-center gap-3 px-4 py-3 bg-black">
                           <div className="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center">
                             <Mail size={16} className="text-white" />
                           </div>
                           <div className="flex-1">
                             <span className="text-white text-[13px] font-semibold">Send Email</span>
-                            <span className="text-teal-100 text-[11px] ml-2">via CaaS AI</span>
+                            <span className="text-white/60 text-[11px] ml-2">via CaaS AI</span>
                           </div>
                           <button
                             onClick={() => { setShowEmailCompose(false); setInputText(''); }}
@@ -2737,25 +2737,25 @@ const AiPromptPanel = ({ isOpen, onClose }) => {
                         </div>
 
                         {/* To field */}
-                        <div className="flex items-center gap-2 px-4 py-2.5 border-b border-gray-100">
-                          <span className="text-[11px] text-gray-400 font-medium w-12">To:</span>
+                        <div className="flex items-center gap-2 px-4 py-2.5 border-b border-line">
+                          <span className="text-[11px] text-dim font-medium w-12">To:</span>
                           <input
                             type="email"
                             value={emailTo}
                             onChange={(e) => setEmailTo(e.target.value)}
-                            className="flex-1 text-[13px] text-gray-700 bg-transparent border-none outline-none focus:ring-0 p-0 placeholder-gray-300 font-['Montserrat']"
+                            className="flex-1 text-[13px] text-ink bg-transparent border-none outline-none focus:ring-0 p-0 placeholder-dim font-['Montserrat']"
                             placeholder="tech@caasdiglobal.in"
                           />
                         </div>
 
                         {/* Subject field */}
-                        <div className="flex items-center gap-2 px-4 py-2.5 border-b border-gray-100">
-                          <span className="text-[11px] text-gray-400 font-medium w-12">Subject:</span>
+                        <div className="flex items-center gap-2 px-4 py-2.5 border-b border-line">
+                          <span className="text-[11px] text-dim font-medium w-12">Subject:</span>
                           <input
                             type="text"
                             value={emailSubject}
                             onChange={(e) => setEmailSubject(e.target.value)}
-                            className="flex-1 text-[13px] text-gray-700 bg-transparent border-none outline-none focus:ring-0 p-0 placeholder-gray-300 font-['Montserrat']"
+                            className="flex-1 text-[13px] text-ink bg-transparent border-none outline-none focus:ring-0 p-0 placeholder-dim font-['Montserrat']"
                             placeholder="Auto-generated if left blank"
                           />
                         </div>
@@ -2766,7 +2766,7 @@ const AiPromptPanel = ({ isOpen, onClose }) => {
                             value={emailBody}
                             onChange={(e) => setEmailBody(e.target.value)}
                             rows={4}
-                            className="w-full text-[13px] text-gray-700 bg-gray-50 border border-gray-200 rounded-xl outline-none focus:ring-2 focus:ring-teal-200 focus:border-teal-300 resize-none p-3 placeholder-gray-400 font-['Montserrat'] transition-all"
+                            className="w-full text-[13px] text-ink bg-canvas border border-line rounded-xl outline-none focus:ring-2 focus:ring-ink focus:border-line resize-none p-3 placeholder-dim font-['Montserrat'] transition-all"
                             placeholder="Type your message here..."
                             autoFocus
                           />
@@ -2774,13 +2774,13 @@ const AiPromptPanel = ({ isOpen, onClose }) => {
 
                         {/* Send button */}
                         <div className="flex items-center justify-between px-4 pb-3">
-                          <span className="text-[10px] text-gray-400">
+                          <span className="text-[10px] text-dim">
                             Powered by AWS SES
                           </span>
                           <motion.button
                             onClick={handleSpotlightEmailSend}
                             disabled={!emailBody.trim()}
-                            className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-teal-500 to-teal-600 text-white text-[12px] font-semibold rounded-xl shadow-md disabled:opacity-40 disabled:cursor-not-allowed"
+                            className="flex items-center gap-2 px-4 py-2 bg-black text-white text-[12px] font-semibold rounded-xl disabled:opacity-40 disabled:cursor-not-allowed"
                             whileHover={emailBody.trim() ? { scale: 1.03 } : {}}
                             whileTap={emailBody.trim() ? { scale: 0.97 } : {}}
                           >
@@ -2797,8 +2797,8 @@ const AiPromptPanel = ({ isOpen, onClose }) => {
                     {/* Interim voice transcript */}
                     {interimTranscript && (
                       <div className="mb-1 flex items-center gap-2">
-                        <span className="w-2 h-2 bg-red-400 rounded-full animate-pulse" />
-                        <span className="text-[11px] text-gray-400 italic truncate">{interimTranscript}</span>
+                        <span className="w-2 h-2 bg-danger rounded-full animate-pulse" />
+                        <span className="text-[11px] text-dim italic truncate">{interimTranscript}</span>
                       </div>
                     )}
                     <textarea
@@ -2807,7 +2807,7 @@ const AiPromptPanel = ({ isOpen, onClose }) => {
                       value={inputText}
                       onChange={handleInputChange}
                       onKeyDown={handleKeyDown}
-                      className="w-full text-[13px] text-gray-700 bg-transparent border-none outline-none focus:ring-0 resize-none p-0 placeholder-gray-400 font-['Montserrat']"
+                      className="w-full text-[13px] text-ink bg-transparent border-none outline-none focus:ring-0 resize-none p-0 placeholder-dim font-['Montserrat']"
                       placeholder={isStreaming ? "AI is responding..." : activeSpace === 'personal' ? "Ask anything — research, brainstorm, write..." : "Type @ to mention entities, / for commands..."}
                       disabled={isStreaming}
                     />
@@ -2816,8 +2816,8 @@ const AiPromptPanel = ({ isOpen, onClose }) => {
                   {/* Bottom toolbar */}
                   <div className="flex items-center justify-between px-4 pb-4 pt-1">
                     <div className="flex items-center gap-2">
-                      <button className="p-2 hover:bg-gray-100 rounded-full transition-colors" aria-label="Attach file">
-                        <Paperclip size={18} className="text-gray-400" />
+                      <button className="p-2 hover:bg-surface-hover rounded-full transition-colors" aria-label="Attach file">
+                        <Paperclip size={18} className="text-dim" />
                       </button>
                       {activeSpace === 'project' && (
                         <button
@@ -2830,8 +2830,8 @@ const AiPromptPanel = ({ isOpen, onClose }) => {
                           }}
                           className={`p-2 rounded-full transition-colors ${
                             activeMentions.length > 0
-                              ? 'bg-blue-50 text-blue-500 hover:bg-blue-100'
-                              : 'hover:bg-gray-100 text-gray-400'
+                              ? 'bg-info/10 text-info hover:bg-info/10'
+                              : 'hover:bg-surface-hover text-dim'
                           }`}
                           aria-label="Mention an entity"
                           title="@ Mention an entity"
@@ -2839,8 +2839,8 @@ const AiPromptPanel = ({ isOpen, onClose }) => {
                           <AtSign size={18} />
                         </button>
                       )}
-                      <button className="p-2 hover:bg-gray-100 rounded-full transition-colors" aria-label="Add emoji">
-                        <Smile size={18} className="text-gray-400" />
+                      <button className="p-2 hover:bg-surface-hover rounded-full transition-colors" aria-label="Add emoji">
+                        <Smile size={18} className="text-dim" />
                       </button>
                       <VoiceInputButton onTranscript={handleVoiceTranscript} disabled={isStreaming} />
                     </div>
@@ -2850,14 +2850,14 @@ const AiPromptPanel = ({ isOpen, onClose }) => {
                       <motion.button
                         onClick={handleStopStreaming}
                         className="w-10 h-10 rounded-full flex items-center justify-center shadow-lg"
-                        style={{ background: "linear-gradient(135deg, #ef4444 0%, #f97316 100%)" }}
+                        style={{ background: "linear-gradient(135deg, rgb(var(--danger)) 0%, rgb(var(--warning)) 100%)" }}
                         whileHover={{ scale: 1.08 }}
                         whileTap={{ scale: 0.92 }}
                         transition={{ type: "spring", stiffness: 400, damping: 17 }}
                         aria-label="Stop generating"
                         title="Stop generating"
                       >
-                        <div className="w-3.5 h-3.5 rounded-sm bg-white" />
+                        <div className="w-3.5 h-3.5 rounded-sm bg-surface" />
                       </motion.button>
                     ) : (
                       <motion.button

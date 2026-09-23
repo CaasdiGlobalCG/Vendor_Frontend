@@ -41,11 +41,11 @@ const PermissionGuard = ({
 
   // Default permission denied message
   return (
-    <div className={`flex items-center justify-center p-4 bg-gray-50 border border-gray-200 rounded-lg ${className}`}>
+    <div className={`flex items-center justify-center p-4 bg-canvas border border-line rounded-lg ${className}`}>
       <div className="text-center">
-        <LockClosedIcon className="h-8 w-8 text-gray-400 mx-auto mb-2" />
-        <p className="text-sm text-gray-600 font-medium">Access Restricted</p>
-        <p className="text-xs text-gray-500 mt-1">{getPermissionMessage(permission)}</p>
+        <LockClosedIcon className="h-8 w-8 text-dim mx-auto mb-2" />
+        <p className="text-sm text-dim font-medium">Access Restricted</p>
+        <p className="text-xs text-dim mt-1">{getPermissionMessage(permission)}</p>
       </div>
     </div>
   );
@@ -106,7 +106,7 @@ export const PermissionInput = ({
   workspace, 
   userRole, 
   className = "",
-  disabledClassName = "opacity-50 cursor-not-allowed bg-gray-100",
+  disabledClassName = "opacity-50 cursor-not-allowed bg-surface-hover",
   ...props 
 }) => {
   const { checkPermission } = usePermissions(workspace, userRole);

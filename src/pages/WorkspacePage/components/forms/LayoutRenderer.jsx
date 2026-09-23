@@ -249,24 +249,24 @@ const LayoutRenderer = ({ data, layoutType }) => {
     return (
       <div className="space-y-3">
         <div className="flex items-center justify-between">
-          <h4 className="font-medium text-gray-900">Grouped Elements Grid</h4>
+          <h4 className="font-medium text-ink">Grouped Elements Grid</h4>
           <div className="flex items-center space-x-2">
             <button
               onClick={handleUngroupElements}
-              className="flex items-center space-x-1 px-2 py-1 text-xs bg-red-50 hover:bg-red-100 text-red-700 rounded transition-colors"
+              className="flex items-center space-x-1 px-2 py-1 text-xs bg-danger/10 hover:bg-danger/10 text-danger rounded transition-colors"
               title="Break apart this grouped grid back into individual elements"
             >
               <Minus className="w-3 h-3" />
               <span>Ungroup</span>
             </button>
-            <div className="text-xs text-gray-500">
+            <div className="text-xs text-dim">
               {gridData.filter(item => item.visible).length} elements • {maxCol}×{maxRow} grid
             </div>
           </div>
         </div>
         
         <div 
-          className="grid gap-3 p-3 bg-gray-50 rounded-lg border-2 border-dashed border-gray-300"
+          className="grid gap-3 p-3 bg-canvas rounded-lg border-2 border-dashed border-line"
           style={{ 
             gridTemplateColumns: `repeat(${maxCol}, 1fr)`,
             gridTemplateRows: `repeat(${maxRow}, 1fr)`
@@ -277,8 +277,8 @@ const LayoutRenderer = ({ data, layoutType }) => {
               key={key}
               className={`border-2 rounded-lg p-2 min-h-[120px] transition-all ${
                 gridItem 
-                  ? 'border-blue-300 bg-white shadow-sm' 
-                  : 'border-gray-200 bg-gray-100'
+                  ? 'border-info/30 bg-surface ' 
+                  : 'border-line bg-surface-hover'
               }`}
               style={{ 
                 gridRow: row, 
@@ -290,7 +290,7 @@ const LayoutRenderer = ({ data, layoutType }) => {
                   {renderOriginalElement(gridItem)}
                 </div>
               ) : (
-                <div className="h-full flex items-center justify-center text-gray-400 text-xs">
+                <div className="h-full flex items-center justify-center text-dim text-xs">
                   Empty Cell
                 </div>
               )}
@@ -298,7 +298,7 @@ const LayoutRenderer = ({ data, layoutType }) => {
           ))}
         </div>
         
-        <div className="text-xs text-gray-500 text-center">
+        <div className="text-xs text-dim text-center">
           Original elements preserved within grid structure • Move as single unit
         </div>
       </div>
@@ -318,9 +318,9 @@ const LayoutRenderer = ({ data, layoutType }) => {
     
     if (!originalData) {
       return (
-        <div className="text-center text-gray-500 text-xs p-2">
+        <div className="text-center text-dim text-xs p-2">
           <div className="font-medium">{gridItem.content}</div>
-          <div className="text-gray-400">Original element data not available</div>
+          <div className="text-dim">Original element data not available</div>
         </div>
       );
     }
@@ -335,9 +335,9 @@ const LayoutRenderer = ({ data, layoutType }) => {
         return renderEmbeddedText(originalData);
       default:
         return (
-          <div className="text-center text-gray-500 text-xs p-2">
+          <div className="text-center text-dim text-xs p-2">
             <div className="font-medium">{gridItem.content}</div>
-            <div className="text-gray-400">{originalData.type || 'Unknown'} element</div>
+            <div className="text-dim">{originalData.type || 'Unknown'} element</div>
           </div>
         );
     }
@@ -350,12 +350,12 @@ const LayoutRenderer = ({ data, layoutType }) => {
     
     // Get appropriate icon and color based on element type
     const getElementStyle = (type) => {
-      if (type?.includes('table')) return { bg: 'bg-green-50', border: 'border-green-200', text: 'text-green-800', accent: 'bg-green-100' };
-      if (type?.includes('chart')) return { bg: 'bg-purple-50', border: 'border-purple-200', text: 'text-purple-800', accent: 'bg-purple-100' };
-      if (type?.includes('list')) return { bg: 'bg-orange-50', border: 'border-orange-200', text: 'text-orange-800', accent: 'bg-orange-100' };
-      if (type?.includes('calendar')) return { bg: 'bg-indigo-50', border: 'border-indigo-200', text: 'text-indigo-800', accent: 'bg-indigo-100' };
-      if (type?.includes('material')) return { bg: 'bg-amber-50', border: 'border-amber-200', text: 'text-amber-800', accent: 'bg-amber-100' };
-      return { bg: 'bg-blue-50', border: 'border-blue-200', text: 'text-blue-800', accent: 'bg-blue-100' };
+      if (type?.includes('table')) return { bg: 'bg-success/10', border: 'border-success/20', text: 'text-success', accent: 'bg-success/10' };
+      if (type?.includes('chart')) return { bg: 'bg-surface-hover', border: 'border-line', text: 'text-ink', accent: 'bg-surface-hover' };
+      if (type?.includes('list')) return { bg: 'bg-warning/10', border: 'border-warning/20', text: 'text-warning', accent: 'bg-warning/10' };
+      if (type?.includes('calendar')) return { bg: 'bg-info/10', border: 'border-info/20', text: 'text-info', accent: 'bg-info/10' };
+      if (type?.includes('material')) return { bg: 'bg-warning/10', border: 'border-warning/20', text: 'text-warning', accent: 'bg-warning/10' };
+      return { bg: 'bg-info/10', border: 'border-info/20', text: 'text-info', accent: 'bg-info/10' };
     };
     
     const style = getElementStyle(elementType);
@@ -365,11 +365,11 @@ const LayoutRenderer = ({ data, layoutType }) => {
         <div className={`text-xs font-medium ${style.text} mb-1 truncate`}>
           {data.name || `${elementType} Element`}
         </div>
-        <div className="text-xs text-gray-600 mb-2">
+        <div className="text-xs text-dim mb-2">
           {elementType?.replace(/[-_]/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
         </div>
         {data.preview && (
-          <div className="text-xs text-gray-500 mb-2 truncate">
+          <div className="text-xs text-dim mb-2 truncate">
             {data.preview}
           </div>
         )}
@@ -400,19 +400,19 @@ const LayoutRenderer = ({ data, layoutType }) => {
     };
     
     return (
-      <div className="h-full border border-green-200 rounded p-2 bg-green-50">
-        <div className="text-xs font-medium text-green-800 mb-1 truncate">
+      <div className="h-full border border-success/20 rounded p-2 bg-success/10">
+        <div className="text-xs font-medium text-success mb-1 truncate">
           {data.name || `${layoutType} Layout`}
         </div>
-        <div className="text-xs text-green-600 mb-2">
+        <div className="text-xs text-success mb-2">
           {layoutType?.replace(/[-_]/g, ' ').replace(/\b\w/g, l => l.toUpperCase())} Layout
         </div>
         {data.preview && (
-          <div className="text-xs text-gray-500 mb-2 truncate">
+          <div className="text-xs text-dim mb-2 truncate">
             {data.preview}
           </div>
         )}
-        <div className="text-xs text-green-700 bg-green-100 rounded px-2 py-1 text-center">
+        <div className="text-xs text-success bg-success/10 rounded px-2 py-1 text-center">
           {getLayoutIcon(layoutType)}
         </div>
       </div>
@@ -435,19 +435,19 @@ const LayoutRenderer = ({ data, layoutType }) => {
     };
     
     return (
-      <div className="h-full border border-purple-200 rounded p-2 bg-purple-50">
-        <div className="text-xs font-medium text-purple-800 mb-1 truncate">
+      <div className="h-full border border-line rounded p-2 bg-surface-hover">
+        <div className="text-xs font-medium text-ink mb-1 truncate">
           {data.name || 'Text Element'}
         </div>
-        <div className="text-xs text-purple-600 mb-2">
+        <div className="text-xs text-ink mb-2">
           {getTextIcon(textType)}
         </div>
         {textContent && (
-          <div className="text-xs text-gray-700 mb-2 p-2 bg-white rounded border max-h-12 overflow-hidden">
+          <div className="text-xs text-ink mb-2 p-2 bg-surface rounded border max-h-12 overflow-hidden">
             {textContent.substring(0, 60)}{textContent.length > 60 ? '...' : ''}
           </div>
         )}
-        <div className="text-xs text-purple-700 bg-purple-100 rounded px-2 py-1 text-center">
+        <div className="text-xs text-ink bg-surface-hover rounded px-2 py-1 text-center">
           📝 Formatted Text
         </div>
       </div>
@@ -458,26 +458,26 @@ const LayoutRenderer = ({ data, layoutType }) => {
   const renderFrameLayout = () => (
     <div className="space-y-3">
       <div className="flex items-center justify-between">
-        <h4 className="font-medium text-gray-900">Frame Container</h4>
+        <h4 className="font-medium text-ink">Frame Container</h4>
         <button
           onClick={addFrameItem}
-          className="flex items-center space-x-1 px-2 py-1 text-xs bg-blue-50 hover:bg-blue-100 text-blue-700 rounded transition-colors"
+          className="flex items-center space-x-1 px-2 py-1 text-xs bg-info/10 hover:bg-info/10 text-info rounded transition-colors"
         >
           <Plus className="w-3 h-3" />
           <span>Add Item</span>
         </button>
       </div>
       
-      <div className="border-2 border-dashed border-gray-300 rounded-lg p-3 min-h-[120px] bg-gray-50">
+      <div className="border-2 border-dashed border-line rounded-lg p-3 min-h-[120px] bg-canvas">
         <div className="space-y-2">
           {frameItems.map((item, index) => (
-            <div key={item.id} className="group flex items-center space-x-2 p-2 bg-white rounded border">
+            <div key={item.id} className="group flex items-center space-x-2 p-2 bg-surface rounded border">
               <div className="flex-1">
                 <input
                   type="text"
                   value={item.content}
                   onChange={(e) => updateFrameItem(item.id, e.target.value)}
-                  className="w-full text-sm bg-transparent border-none outline-none focus:bg-gray-50 focus:rounded px-2 py-1"
+                  className="w-full text-sm bg-transparent border-none outline-none focus:bg-canvas focus:rounded px-2 py-1"
                   onClick={(e) => e.stopPropagation()}
                 />
               </div>
@@ -486,7 +486,7 @@ const LayoutRenderer = ({ data, layoutType }) => {
                   e.stopPropagation();
                   removeFrameItem(item.id);
                 }}
-                className="opacity-0 group-hover:opacity-100 text-red-500 hover:text-red-700 transition-opacity"
+                className="opacity-0 group-hover:opacity-100 text-danger hover:text-danger transition-opacity"
                 disabled={frameItems.length === 1}
               >
                 <Trash2 className="w-3 h-3" />
@@ -496,7 +496,7 @@ const LayoutRenderer = ({ data, layoutType }) => {
         </div>
       </div>
       
-      <div className="text-xs text-gray-500 text-center">
+      <div className="text-xs text-dim text-center">
         {frameItems.length} item{frameItems.length !== 1 ? 's' : ''} • Click items to edit
       </div>
     </div>
@@ -505,10 +505,10 @@ const LayoutRenderer = ({ data, layoutType }) => {
   const renderRowsLayout = () => (
     <div className="space-y-3">
       <div className="flex items-center justify-between">
-        <h4 className="font-medium text-gray-900">Row Layout</h4>
+        <h4 className="font-medium text-ink">Row Layout</h4>
         <button
           onClick={addRow}
-          className="flex items-center space-x-1 px-2 py-1 text-xs bg-blue-50 hover:bg-blue-100 text-blue-700 rounded transition-colors"
+          className="flex items-center space-x-1 px-2 py-1 text-xs bg-info/10 hover:bg-info/10 text-info rounded transition-colors"
         >
           <Plus className="w-3 h-3" />
           <span>Add Row</span>
@@ -518,19 +518,19 @@ const LayoutRenderer = ({ data, layoutType }) => {
       <div className="space-y-2">
         {rows.map((row, index) => (
           <div key={row.id} className={`group border rounded-lg p-2 transition-all ${
-            row.visible ? 'bg-blue-50 border-blue-200' : 'bg-gray-100 border-gray-200 opacity-50'
+            row.visible ? 'bg-info/10 border-info/20' : 'bg-surface-hover border-line opacity-50'
           }`}>
             <div className="flex items-center space-x-2">
               <div className="flex items-center space-x-1">
-                <Rows className="w-3 h-3 text-blue-600" />
-                <span className="text-xs font-medium text-gray-600">Row {index + 1}</span>
+                <Rows className="w-3 h-3 text-info" />
+                <span className="text-xs font-medium text-dim">Row {index + 1}</span>
               </div>
               <div className="flex-1">
                 <input
                   type="text"
                   value={row.content}
                   onChange={(e) => updateRow(row.id, 'content', e.target.value)}
-                  className="w-full text-xs bg-transparent border-none outline-none focus:bg-white focus:border focus:border-blue-300 focus:rounded px-2 py-1"
+                  className="w-full text-xs bg-transparent border-none outline-none focus:bg-surface focus:border focus:border-info/30 focus:rounded px-2 py-1"
                   onClick={(e) => e.stopPropagation()}
                 />
               </div>
@@ -540,7 +540,7 @@ const LayoutRenderer = ({ data, layoutType }) => {
                     e.stopPropagation();
                     toggleRowVisibility(row.id);
                   }}
-                  className="text-gray-500 hover:text-gray-700"
+                  className="text-dim hover:text-ink"
                   title={row.visible ? 'Hide row' : 'Show row'}
                 >
                   {row.visible ? <Eye className="w-3 h-3" /> : <EyeOff className="w-3 h-3" />}
@@ -550,7 +550,7 @@ const LayoutRenderer = ({ data, layoutType }) => {
                     e.stopPropagation();
                     removeRow(row.id);
                   }}
-                  className="text-red-500 hover:text-red-700"
+                  className="text-danger hover:text-danger"
                   disabled={rows.length === 1}
                 >
                   <Trash2 className="w-3 h-3" />
@@ -561,7 +561,7 @@ const LayoutRenderer = ({ data, layoutType }) => {
         ))}
       </div>
       
-      <div className="text-xs text-gray-500 text-center">
+      <div className="text-xs text-dim text-center">
         {rows.filter(r => r.visible).length} visible row{rows.filter(r => r.visible).length !== 1 ? 's' : ''} • {rows.length} total
       </div>
     </div>
@@ -570,10 +570,10 @@ const LayoutRenderer = ({ data, layoutType }) => {
   const renderColumnsLayout = () => (
     <div className="space-y-3">
       <div className="flex items-center justify-between">
-        <h4 className="font-medium text-gray-900">Column Layout</h4>
+        <h4 className="font-medium text-ink">Column Layout</h4>
         <button
           onClick={addColumn}
-          className="flex items-center space-x-1 px-2 py-1 text-xs bg-blue-50 hover:bg-blue-100 text-blue-700 rounded transition-colors"
+          className="flex items-center space-x-1 px-2 py-1 text-xs bg-info/10 hover:bg-info/10 text-info rounded transition-colors"
         >
           <Plus className="w-3 h-3" />
           <span>Add Column</span>
@@ -583,13 +583,13 @@ const LayoutRenderer = ({ data, layoutType }) => {
       <div className="flex space-x-2 min-h-[100px]">
         {columns.map((col, index) => (
           <div key={col.id} className={`group border rounded-lg p-2 transition-all ${
-            col.visible ? 'bg-green-50 border-green-200' : 'bg-gray-100 border-gray-200 opacity-50'
+            col.visible ? 'bg-success/10 border-success/20' : 'bg-surface-hover border-line opacity-50'
           }`} style={{ width: col.width }}>
             <div className="space-y-2">
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-1">
-                  <Columns className="w-3 h-3 text-green-600" />
-                  <span className="text-xs font-medium text-gray-600">Col {index + 1}</span>
+                  <Columns className="w-3 h-3 text-success" />
+                  <span className="text-xs font-medium text-dim">Col {index + 1}</span>
                 </div>
                 <div className="flex items-center space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
                   <button
@@ -597,7 +597,7 @@ const LayoutRenderer = ({ data, layoutType }) => {
                       e.stopPropagation();
                       toggleColumnVisibility(col.id);
                     }}
-                    className="text-gray-500 hover:text-gray-700"
+                    className="text-dim hover:text-ink"
                     title={col.visible ? 'Hide column' : 'Show column'}
                   >
                     {col.visible ? <Eye className="w-3 h-3" /> : <EyeOff className="w-3 h-3" />}
@@ -607,7 +607,7 @@ const LayoutRenderer = ({ data, layoutType }) => {
                       e.stopPropagation();
                       removeColumn(col.id);
                     }}
-                    className="text-red-500 hover:text-red-700"
+                    className="text-danger hover:text-danger"
                     disabled={columns.length === 1}
                   >
                     <Trash2 className="w-3 h-3" />
@@ -617,17 +617,17 @@ const LayoutRenderer = ({ data, layoutType }) => {
               <textarea
                 value={col.content}
                 onChange={(e) => updateColumn(col.id, 'content', e.target.value)}
-                className="w-full text-xs bg-transparent border-none outline-none focus:bg-white focus:border focus:border-green-300 focus:rounded px-2 py-1 resize-none"
+                className="w-full text-xs bg-transparent border-none outline-none focus:bg-surface focus:border focus:border-success/30 focus:rounded px-2 py-1 resize-none"
                 rows="3"
                 onClick={(e) => e.stopPropagation()}
               />
-              <div className="text-xs text-gray-500">{col.width}</div>
+              <div className="text-xs text-dim">{col.width}</div>
             </div>
           </div>
         ))}
       </div>
       
-      <div className="text-xs text-gray-500 text-center">
+      <div className="text-xs text-dim text-center">
         {columns.filter(c => c.visible).length} visible column{columns.filter(c => c.visible).length !== 1 ? 's' : ''} • {columns.length} total
       </div>
     </div>
@@ -645,10 +645,10 @@ const LayoutRenderer = ({ data, layoutType }) => {
     return (
       <div className="space-y-3">
         <div className="flex items-center justify-between">
-          <h4 className="font-medium text-gray-900">Grid Layout</h4>
+          <h4 className="font-medium text-ink">Grid Layout</h4>
           <button
             onClick={addGridItem}
-            className="flex items-center space-x-1 px-2 py-1 text-xs bg-blue-50 hover:bg-blue-100 text-blue-700 rounded transition-colors"
+            className="flex items-center space-x-1 px-2 py-1 text-xs bg-info/10 hover:bg-info/10 text-info rounded transition-colors"
           >
             <Plus className="w-3 h-3" />
             <span>Add Item</span>
@@ -658,13 +658,13 @@ const LayoutRenderer = ({ data, layoutType }) => {
         <div className="grid grid-cols-3 gap-2">
           {gridItems.map((item, index) => (
             <div key={item.id} className={`group border rounded-lg p-2 min-h-[60px] transition-all ${
-              item.visible ? 'bg-purple-50 border-purple-200' : 'bg-gray-100 border-gray-200 opacity-50'
+              item.visible ? 'bg-surface-hover border-line' : 'bg-surface-hover border-line opacity-50'
             }`}>
               <div className="space-y-1">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-1">
-                    <Grid className="w-3 h-3 text-purple-600" />
-                    <span className="text-xs font-medium text-gray-600">{index + 1}</span>
+                    <Grid className="w-3 h-3 text-ink" />
+                    <span className="text-xs font-medium text-dim">{index + 1}</span>
                   </div>
                   <div className="flex items-center space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
                     <button
@@ -672,7 +672,7 @@ const LayoutRenderer = ({ data, layoutType }) => {
                         e.stopPropagation();
                         toggleGridItemVisibility(item.id);
                       }}
-                      className="text-gray-500 hover:text-gray-700"
+                      className="text-dim hover:text-ink"
                       title={item.visible ? 'Hide item' : 'Show item'}
                     >
                       {item.visible ? <Eye className="w-3 h-3" /> : <EyeOff className="w-3 h-3" />}
@@ -682,7 +682,7 @@ const LayoutRenderer = ({ data, layoutType }) => {
                         e.stopPropagation();
                         removeGridItem(item.id);
                       }}
-                      className="text-red-500 hover:text-red-700"
+                      className="text-danger hover:text-danger"
                       disabled={gridItems.length === 1}
                     >
                       <Trash2 className="w-3 h-3" />
@@ -692,7 +692,7 @@ const LayoutRenderer = ({ data, layoutType }) => {
                 <textarea
                   value={item.content}
                   onChange={(e) => updateGridItem(item.id, 'content', e.target.value)}
-                  className="w-full text-xs bg-transparent border-none outline-none focus:bg-white focus:border focus:border-purple-300 focus:rounded px-1 py-1 resize-none"
+                  className="w-full text-xs bg-transparent border-none outline-none focus:bg-surface focus:border focus:border-line focus:rounded px-1 py-1 resize-none"
                   rows="2"
                   onClick={(e) => e.stopPropagation()}
                 />
@@ -701,7 +701,7 @@ const LayoutRenderer = ({ data, layoutType }) => {
           ))}
         </div>
         
-        <div className="text-xs text-gray-500 text-center">
+        <div className="text-xs text-dim text-center">
           {gridItems.filter(i => i.visible).length} visible item{gridItems.filter(i => i.visible).length !== 1 ? 's' : ''} • {gridItems.length} total
         </div>
       </div>
@@ -711,10 +711,10 @@ const LayoutRenderer = ({ data, layoutType }) => {
   const renderImageLayout = () => (
     <div className="space-y-3">
       <div className="flex items-center justify-between">
-        <h4 className="font-medium text-gray-900">Image Gallery</h4>
+        <h4 className="font-medium text-ink">Image Gallery</h4>
         <button
           onClick={addImage}
-          className="flex items-center space-x-1 px-2 py-1 text-xs bg-blue-50 hover:bg-blue-100 text-blue-700 rounded transition-colors"
+          className="flex items-center space-x-1 px-2 py-1 text-xs bg-info/10 hover:bg-info/10 text-info rounded transition-colors"
         >
           <Plus className="w-3 h-3" />
           <span>Add Image</span>
@@ -723,19 +723,19 @@ const LayoutRenderer = ({ data, layoutType }) => {
       
       <div className="grid grid-cols-2 gap-3">
         {images.map((img, index) => (
-          <div key={img.id} className="group border rounded-lg p-2 bg-gray-50">
+          <div key={img.id} className="group border rounded-lg p-2 bg-canvas">
             <div className="space-y-2">
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-1">
-                  <Image className="w-3 h-3 text-gray-600" />
-                  <span className="text-xs font-medium text-gray-600">Image {index + 1}</span>
+                  <Image className="w-3 h-3 text-dim" />
+                  <span className="text-xs font-medium text-dim">Image {index + 1}</span>
                 </div>
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
                     removeImage(img.id);
                   }}
-                  className="opacity-0 group-hover:opacity-100 text-red-500 hover:text-red-700 transition-opacity"
+                  className="opacity-0 group-hover:opacity-100 text-danger hover:text-danger transition-opacity"
                   disabled={images.length === 1}
                 >
                   <Trash2 className="w-3 h-3" />
@@ -743,7 +743,7 @@ const LayoutRenderer = ({ data, layoutType }) => {
               </div>
               
               <div 
-                className="w-full h-20 bg-gray-200 rounded border-2 border-dashed border-gray-300 flex items-center justify-center cursor-pointer hover:bg-gray-300 transition-colors"
+                className="w-full h-20 bg-surface-hover rounded border-2 border-dashed border-line flex items-center justify-center cursor-pointer hover:bg-surface-hover transition-colors"
                 onClick={(e) => {
                   e.stopPropagation();
                   fileInputRef.current?.click();
@@ -757,8 +757,8 @@ const LayoutRenderer = ({ data, layoutType }) => {
                   />
                 ) : (
                   <div className="text-center">
-                    <Upload className="w-4 h-4 mx-auto mb-1 text-gray-500" />
-                    <span className="text-xs text-gray-500">Click to upload</span>
+                    <Upload className="w-4 h-4 mx-auto mb-1 text-dim" />
+                    <span className="text-xs text-dim">Click to upload</span>
                   </div>
                 )}
               </div>
@@ -767,7 +767,7 @@ const LayoutRenderer = ({ data, layoutType }) => {
                 type="text"
                 value={img.caption}
                 onChange={(e) => updateImage(img.id, 'caption', e.target.value)}
-                className="w-full text-xs bg-white border border-gray-300 rounded px-2 py-1 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className="w-full text-xs bg-surface border border-line rounded px-2 py-1 focus:ring-2 focus:ring-info focus:border-info"
                 placeholder="Image caption"
                 onClick={(e) => e.stopPropagation()}
               />
@@ -784,7 +784,7 @@ const LayoutRenderer = ({ data, layoutType }) => {
         ))}
       </div>
       
-      <div className="text-xs text-gray-500 text-center">
+      <div className="text-xs text-dim text-center">
         {images.length} image{images.length !== 1 ? 's' : ''} • Click to upload or edit captions
       </div>
     </div>
@@ -843,14 +843,14 @@ const LayoutRenderer = ({ data, layoutType }) => {
             {Array.from({ length: gridConfig.columns * gridConfig.rows }).map((_, idx) => (
               <div 
                 key={idx}
-                className="border-2 border-dashed border-blue-200 rounded-lg bg-white/50"
+                className="border-2 border-dashed border-info/20 rounded-lg bg-white/50"
               />
             ))}
           </div>
           
           {/* Info text */}
           <div className="absolute bottom-2 left-4 right-4 text-center">
-            <p className="text-xs text-blue-400 font-medium">
+            <p className="text-xs text-info font-medium">
               📦 Elements are arranged in {gridConfig.columns}×{gridConfig.rows} grid
             </p>
           </div>
@@ -885,14 +885,14 @@ const LayoutRenderer = ({ data, layoutType }) => {
   return (
     <div className="w-full">
       {/* Layout Header */}
-      <div className="flex items-center justify-between mb-4 pb-2 border-b border-gray-200">
+      <div className="flex items-center justify-between mb-4 pb-2 border-b border-line">
         <div className="flex items-center space-x-2">
-          <Square className="w-4 h-4 text-blue-600" />
+          <Square className="w-4 h-4 text-info" />
           <input
             type="text"
             value={layoutTitle}
             onChange={(e) => setLayoutTitle(e.target.value)}
-            className="font-medium text-gray-900 bg-transparent border-none outline-none focus:bg-white focus:border focus:border-blue-300 focus:rounded px-2 py-1"
+            className="font-medium text-ink bg-transparent border-none outline-none focus:bg-surface focus:border focus:border-info/30 focus:rounded px-2 py-1"
             onClick={(e) => e.stopPropagation()}
           />
         </div>
@@ -902,7 +902,7 @@ const LayoutRenderer = ({ data, layoutType }) => {
             setIsEditing(!isEditing);
           }}
           className={`p-1 rounded transition-colors ${
-            isEditing ? 'bg-blue-100 text-blue-700' : 'text-gray-500 hover:text-gray-700'
+            isEditing ? 'bg-info/10 text-info' : 'text-dim hover:text-ink'
           }`}
           title={isEditing ? 'Exit edit mode' : 'Enter edit mode'}
         >
@@ -916,7 +916,7 @@ const LayoutRenderer = ({ data, layoutType }) => {
       </div>
 
       {/* Layout Info */}
-      <div className="text-center text-xs text-gray-500 pt-2 border-t border-gray-200">
+      <div className="text-center text-xs text-dim pt-2 border-t border-line">
         Interactive {actualLayoutType} layout • Click elements to customize
       </div>
     </div>

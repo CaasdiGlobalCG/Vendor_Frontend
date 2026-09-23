@@ -21,7 +21,7 @@ export function SessionChangeBanner() {
   if (!sessionChanged) return null;
 
   return (
-    <div className="fixed top-0 left-0 right-0 z-[100] bg-amber-500 text-white px-4 py-2.5 flex items-center justify-between shadow-lg">
+    <div className="fixed top-0 left-0 right-0 z-[100] bg-warning text-white px-4 py-2.5 flex items-center justify-between shadow-lg">
       <div className="flex items-center gap-2 text-sm font-medium">
         <svg
           className="w-5 h-5 flex-shrink-0"
@@ -44,7 +44,7 @@ export function SessionChangeBanner() {
       <div className="flex items-center gap-2">
         <button
           onClick={() => window.location.reload()}
-          className="px-3 py-1 bg-white text-amber-700 rounded-md text-sm font-semibold hover:bg-amber-50 transition-colors"
+          className="px-3 py-1 bg-surface text-warning rounded-md text-sm font-semibold hover:bg-warning/10 transition-colors"
         >
           Reload
         </button>

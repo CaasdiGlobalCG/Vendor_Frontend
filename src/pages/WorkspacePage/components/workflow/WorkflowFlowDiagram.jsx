@@ -133,7 +133,7 @@ const buildGraph = (triggers = [], logicOperator = 'AND', actions = []) => {
               <div>
                 <div style={{ fontWeight: 700, marginBottom: 4 }}>DO #{actionIndex + i + 1}</div>
                 <div>{compact(describeAction(item))}</div>
-                <div style={{ marginTop: 4, color: '#3730A3', fontWeight: 600 }}>Runs in parallel: {groupKey}</div>
+                <div style={{ marginTop: 4, color: 'rgb(var(--info))', fontWeight: 600 }}>Runs in parallel: {groupKey}</div>
               </div>
             )
           },
@@ -243,7 +243,7 @@ const WorkflowFlowDiagram = ({ triggers, logicOperator, actions }) => {
   );
 
   return (
-    <div className="w-full h-[380px] rounded-xl border border-gray-200 overflow-hidden bg-white">
+    <div className="w-full h-[380px] rounded-xl border border-line overflow-hidden bg-surface">
       <ReactFlow
         nodes={nodes}
         edges={edges}

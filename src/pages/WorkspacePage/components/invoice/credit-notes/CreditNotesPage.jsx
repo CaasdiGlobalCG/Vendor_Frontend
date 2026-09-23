@@ -177,67 +177,67 @@ const CreditNotesPage = () => {
       case 'approved':
       case 'approved by pm':
         return {
-          bg: 'bg-green-50',
-          text: 'text-green-700',
-          border: 'border-green-200',
-          dot: 'bg-green-500',
+          bg: 'bg-success/10',
+          text: 'text-success',
+          border: 'border-success/20',
+          dot: 'bg-success',
           label: 'Approved',
         };
       case 'pending':
       case 'draft':
         return {
-          bg: 'bg-yellow-50',
-          text: 'text-yellow-700',
-          border: 'border-yellow-200',
-          dot: 'bg-yellow-500',
+          bg: 'bg-warning/10',
+          text: 'text-warning',
+          border: 'border-warning/20',
+          dot: 'bg-warning',
           label: status || 'Draft',
         };
       case 'pending_vendor':
         return {
-          bg: 'bg-orange-50',
-          text: 'text-orange-700',
-          border: 'border-orange-200',
-          dot: 'bg-orange-500',
+          bg: 'bg-warning/10',
+          text: 'text-warning',
+          border: 'border-warning/20',
+          dot: 'bg-warning',
           label: 'Credit Note Requested',
         };
       case 'acknowledged':
         return {
-          bg: 'bg-blue-50',
-          text: 'text-blue-700',
-          border: 'border-blue-200',
-          dot: 'bg-blue-500',
+          bg: 'bg-info/10',
+          text: 'text-info',
+          border: 'border-info/20',
+          dot: 'bg-info',
           label: 'Acknowledged',
         };
       case 'vendor_processing':
         return {
-          bg: 'bg-indigo-50',
-          text: 'text-indigo-700',
-          border: 'border-indigo-200',
-          dot: 'bg-indigo-500',
+          bg: 'bg-info/10',
+          text: 'text-info',
+          border: 'border-info/20',
+          dot: 'bg-info',
           label: 'Processing',
         };
       case 'vendor_issued':
         return {
-          bg: 'bg-green-50',
-          text: 'text-green-700',
-          border: 'border-green-200',
-          dot: 'bg-green-500',
+          bg: 'bg-success/10',
+          text: 'text-success',
+          border: 'border-success/20',
+          dot: 'bg-success',
           label: 'Issued',
         };
       case 'rejected':
         return {
-          bg: 'bg-red-50',
-          text: 'text-red-700',
-          border: 'border-red-200',
-          dot: 'bg-red-500',
+          bg: 'bg-danger/10',
+          text: 'text-danger',
+          border: 'border-danger/20',
+          dot: 'bg-danger',
           label: 'Rejected',
         };
       default:
         return {
-          bg: 'bg-gray-50',
-          text: 'text-gray-600',
-          border: 'border-gray-200',
-          dot: 'bg-gray-400',
+          bg: 'bg-canvas',
+          text: 'text-dim',
+          border: 'border-line',
+          dot: 'bg-cta',
           label: status || 'Draft',
         };
     }
@@ -257,10 +257,10 @@ const CreditNotesPage = () => {
   };
 
   return (
-    <div className="min-h-full bg-gray-50">
+    <div className="min-h-full bg-canvas">
       {/* Preview Modal */}
       {showPreviewModal && (
-        <div className="fixed inset-0 z-50 flex flex-col bg-white">
+        <div className="fixed inset-0 z-50 flex flex-col bg-surface">
           <CreditNotesPreviewPanel 
             creditNotes={creditNotesData} 
             selectedCreditNoteId={previewCreditNoteId} 
@@ -271,23 +271,23 @@ const CreditNotesPage = () => {
       )}
       
       {/* Professional Header */}
-      <div className="bg-white border-b border-gray-200">
+      <div className="bg-surface border-b border-line">
         <div className="px-8 py-8">
           <div className="flex items-center justify-between mb-8">
             <div className="flex items-center space-x-4">
-              <button className="p-2 hover:bg-gray-100 rounded-lg transition-colors duration-200">
-                <ArrowLeft className="w-5 h-5 text-gray-600" />
+              <button className="p-2 hover:bg-surface-hover rounded-lg transition-colors duration-200">
+                <ArrowLeft className="w-5 h-5 text-dim" />
               </button>
               <div>
-                <h1 className="text-3xl font-bold text-gray-900">
+                <h1 className="text-3xl font-bold text-ink">
                   Credit Notes
                 </h1>
-                <p className="text-gray-600 mt-2">View credit notes related to your invoices</p>
+                <p className="text-dim mt-2">View credit notes related to your invoices</p>
               </div>
             </div>
             <button 
               onClick={() => setShowNewCreditNote(true)}
-              className="bg-green-600 text-white px-6 py-3 rounded-lg hover:bg-green-700 transition-colors duration-200 flex items-center space-x-2"
+              className="bg-success text-white px-6 py-3 rounded-lg hover:bg-success transition-colors duration-200 flex items-center space-x-2"
             >
               <Plus className="w-5 h-5" />
               <span className="font-medium">Create Credit Note</span>
@@ -296,50 +296,50 @@ const CreditNotesPage = () => {
 
           {/* Stats Cards */}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-            <div className="bg-white border border-gray-200 rounded-lg p-6 shadow-sm">
+            <div className="bg-surface border border-line rounded-lg p-6 ">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-gray-600 mb-1">Total Credit Notes</p>
-                  <p className="text-2xl font-bold text-gray-900">{stats.totalCreditNotes || creditNotesData.length}</p>
+                  <p className="text-sm font-medium text-dim mb-1">Total Credit Notes</p>
+                  <p className="text-2xl font-bold text-ink">{stats.totalCreditNotes || creditNotesData.length}</p>
                 </div>
-                <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
-                  <FileText className="w-6 h-6 text-blue-600" />
+                <div className="w-12 h-12 bg-info/10 rounded-lg flex items-center justify-center">
+                  <FileText className="w-6 h-6 text-info" />
                 </div>
               </div>
             </div>
             
-            <div className="bg-white border border-gray-200 rounded-lg p-6 shadow-sm">
+            <div className="bg-surface border border-line rounded-lg p-6 ">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-gray-600 mb-1">Total Amount</p>
-                  <p className="text-2xl font-bold text-gray-900">₹{(stats.totalAmount || totalAmount).toLocaleString('en-IN', { maximumFractionDigits: 0 })}</p>
+                  <p className="text-sm font-medium text-dim mb-1">Total Amount</p>
+                  <p className="text-2xl font-bold text-ink">₹{(stats.totalAmount || totalAmount).toLocaleString('en-IN', { maximumFractionDigits: 0 })}</p>
                 </div>
-                <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
-                  <DollarSign className="w-6 h-6 text-green-600" />
+                <div className="w-12 h-12 bg-success/10 rounded-lg flex items-center justify-center">
+                  <DollarSign className="w-6 h-6 text-success" />
                 </div>
               </div>
             </div>
             
-            <div className="bg-white border border-gray-200 rounded-lg p-6 shadow-sm">
+            <div className="bg-surface border border-line rounded-lg p-6 ">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-gray-600 mb-1">Approved</p>
-                  <p className="text-2xl font-bold text-gray-900">{stats.approvedCreditNotes || creditNotesData.filter(note => (note.status || '').toLowerCase() === 'approved').length}</p>
+                  <p className="text-sm font-medium text-dim mb-1">Approved</p>
+                  <p className="text-2xl font-bold text-ink">{stats.approvedCreditNotes || creditNotesData.filter(note => (note.status || '').toLowerCase() === 'approved').length}</p>
                 </div>
-                <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
-                  <CheckCircle className="w-6 h-6 text-green-600" />
+                <div className="w-12 h-12 bg-success/10 rounded-lg flex items-center justify-center">
+                  <CheckCircle className="w-6 h-6 text-success" />
                 </div>
               </div>
             </div>
             
-            <div className="bg-white border border-gray-200 rounded-lg p-6 shadow-sm">
+            <div className="bg-surface border border-line rounded-lg p-6 ">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-gray-600 mb-1">This Month</p>
-                  <p className="text-2xl font-bold text-gray-900">{stats.thisMonthCreditNotes || 0}</p>
+                  <p className="text-sm font-medium text-dim mb-1">This Month</p>
+                  <p className="text-2xl font-bold text-ink">{stats.thisMonthCreditNotes || 0}</p>
                 </div>
-                <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
-                  <TrendingUp className="w-6 h-6 text-purple-600" />
+                <div className="w-12 h-12 bg-surface-hover rounded-lg flex items-center justify-center">
+                  <TrendingUp className="w-6 h-6 text-ink" />
                 </div>
               </div>
             </div>
@@ -347,13 +347,13 @@ const CreditNotesPage = () => {
 
           {/* Search */}
           <div className="relative max-w-md">
-            <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 transform  text-dim w-5 h-5" />
             <input
               type="text"
               placeholder="Search credit notes..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-12 pr-4 py-3 bg-white border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+              className="w-full pl-12 pr-4 py-3 bg-surface border border-line rounded-lg focus:ring-2 focus:ring-info focus:border-transparent text-sm"
             />
           </div>
         </div>
@@ -361,49 +361,49 @@ const CreditNotesPage = () => {
 
       {/* Credit Notes Table */}
       <div className="px-8 py-8">
-        <div className="bg-white border border-gray-200 rounded-lg overflow-hidden shadow-sm">
+        <div className="bg-surface border border-line rounded-lg overflow-hidden ">
           <table className="w-full">
-            <thead className="bg-gray-50 border-b border-gray-200">
+            <thead className="bg-canvas border-b border-line">
               <tr>
-                <th className="text-left py-4 px-6 text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                <th className="text-left py-4 px-6 text-xs font-semibold text-dim uppercase tracking-wider">
                   Credit Note #
                 </th>
-                <th className="text-left py-4 px-6 text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                <th className="text-left py-4 px-6 text-xs font-semibold text-dim uppercase tracking-wider">
                   Date
                 </th>
-                <th className="text-left py-4 px-6 text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                <th className="text-left py-4 px-6 text-xs font-semibold text-dim uppercase tracking-wider">
                   Tax Invoice #
                 </th>
-                <th className="text-left py-4 px-6 text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                <th className="text-left py-4 px-6 text-xs font-semibold text-dim uppercase tracking-wider">
                   Client
                 </th>
-                <th className="text-center py-4 px-6 text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                <th className="text-center py-4 px-6 text-xs font-semibold text-dim uppercase tracking-wider">
                   Status
                 </th>
-                <th className="text-right py-4 px-6 text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                <th className="text-right py-4 px-6 text-xs font-semibold text-dim uppercase tracking-wider">
                   Amount
                 </th>
-                <th className="text-center py-4 px-6 text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                <th className="text-center py-4 px-6 text-xs font-semibold text-dim uppercase tracking-wider">
                   Actions
                 </th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-200">
+            <tbody className="divide-y divide-line">
               {loading ? (
                 <tr>
-                  <td colSpan="7" className="py-8 text-center text-gray-500">
+                  <td colSpan="7" className="py-8 text-center text-dim">
                     Loading credit notes...
                   </td>
                 </tr>
               ) : error ? (
                 <tr>
-                  <td colSpan="7" className="py-8 text-center text-red-500">
+                  <td colSpan="7" className="py-8 text-center text-danger">
                     Error: {error}
                   </td>
                 </tr>
               ) : filteredCreditNotes.length === 0 ? (
                 <tr>
-                  <td colSpan="7" className="py-8 text-center text-gray-500">
+                  <td colSpan="7" className="py-8 text-center text-dim">
                     No credit notes found
                   </td>
                 </tr>
@@ -415,30 +415,30 @@ const CreditNotesPage = () => {
                                      typeof note.totalAmount === 'string' ? parseFloat(note.totalAmount.replace(/[₹,]/g, '')) : 
                                      parseFloat(note.totalAmount) || 0;
                   return (
-                    <tr key={`${note.creditNoteId || note.id || index}`} className="hover:bg-gray-50 transition-colors duration-200">
+                    <tr key={`${note.creditNoteId || note.id || index}`} className="hover:bg-canvas transition-colors duration-200">
                       <td className="py-4 px-6">
                         <div className="flex items-center space-x-3">
-                          <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-                            <FileText className="w-5 h-5 text-blue-600" />
+                          <div className="w-10 h-10 bg-info/10 rounded-lg flex items-center justify-center">
+                            <FileText className="w-5 h-5 text-info" />
                           </div>
-                          <div className="font-semibold text-gray-900">
+                          <div className="font-semibold text-ink">
                             {creditNoteId}
                           </div>
                         </div>
                       </td>
                       <td className="py-4 px-6">
-                        <div className="flex items-center space-x-2 text-sm text-gray-600">
-                          <Calendar className="w-4 h-4 text-gray-400" />
+                        <div className="flex items-center space-x-2 text-sm text-dim">
+                          <Calendar className="w-4 h-4 text-dim" />
                           <span>{note.date || (note.createdAt ? new Date(note.createdAt).toLocaleDateString('en-GB') : 'N/A')}</span>
                         </div>
                       </td>
                       <td className="py-4 px-6">
-                        <div className="text-sm font-mono text-gray-600 bg-gray-50 px-3 py-1 rounded max-w-xs truncate" title={note.invoiceId || ''}>
+                        <div className="text-sm font-mono text-dim bg-canvas px-3 py-1 rounded max-w-xs truncate" title={note.invoiceId || ''}>
                           {note.invoiceId || '-'}
                         </div>
                       </td>
                       <td className="py-4 px-6">
-                        <div className="text-sm font-medium text-gray-900">
+                        <div className="text-sm font-medium text-ink">
                           {note.customer || note.customerName || 'Unknown Customer'}
                         </div>
                       </td>
@@ -449,7 +449,7 @@ const CreditNotesPage = () => {
                         </span>
                       </td>
                       <td className="py-4 px-6 text-right">
-                        <div className="text-lg font-bold text-gray-900">
+                        <div className="text-lg font-bold text-ink">
                           ₹{totalAmount.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                         </div>
                       </td>
@@ -460,17 +460,17 @@ const CreditNotesPage = () => {
                               setPreviewCreditNoteId(note.id || note.creditNoteId);
                               setShowPreviewModal(true);
                             }}
-                            className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors duration-200" 
+                            className="p-2 text-dim hover:text-info hover:bg-info/10 rounded-lg transition-colors duration-200" 
                             title="View"
                           >
                             <Eye className="w-4 h-4" />
                           </button>
-                          <button className="p-2 text-gray-400 hover:text-green-600 hover:bg-green-50 rounded-lg transition-colors duration-200" title="Download">
+                          <button className="p-2 text-dim hover:text-success hover:bg-success/10 rounded-lg transition-colors duration-200" title="Download">
                             <Download className="w-4 h-4" />
                           </button>
                           <button
                             onClick={() => handleGetHelp(note.creditNoteId)}
-                            className="p-2 text-gray-400 hover:text-[#095b49] hover:bg-emerald-50 rounded-lg transition-colors duration-200"
+                            className="p-2 text-dim hover:text-success hover:bg-surface-hover rounded-lg transition-colors duration-200"
                             title="Get Help"
                           >
                             <LifeBuoy className="w-4 h-4" />
@@ -507,7 +507,7 @@ const CreditNotesPage = () => {
                                 }
                               }}
                               disabled={actionLoading === note.creditNoteId}
-                              className="px-3 py-1 text-xs font-medium text-white bg-orange-600 rounded-lg hover:bg-orange-700 transition-colors duration-200 disabled:opacity-50"
+                              className="px-3 py-1 text-xs font-medium text-white bg-warning rounded-lg hover:bg-warning transition-colors duration-200 disabled:opacity-50"
                               title="Acknowledge credit note request"
                             >
                               {actionLoading === note.creditNoteId ? '...' : 'Acknowledge'}
@@ -525,14 +525,14 @@ const CreditNotesPage = () => {
           {/* Empty State - Only show if no credit notes at all (not just filtered) */}
           {!loading && !error && creditNotesData.length === 0 && (
             <div className="text-center py-16">
-              <div className="w-20 h-20 bg-gray-100 rounded-lg flex items-center justify-center mx-auto mb-6">
-                <FileText className="w-10 h-10 text-gray-400" />
+              <div className="w-20 h-20 bg-surface-hover rounded-lg flex items-center justify-center mx-auto mb-6">
+                <FileText className="w-10 h-10 text-dim" />
               </div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">No credit notes found</h3>
-              <p className="text-gray-500 mb-6">Get started by creating your first credit note</p>
+              <h3 className="text-lg font-semibold text-ink mb-2">No credit notes found</h3>
+              <p className="text-dim mb-6">Get started by creating your first credit note</p>
               <button 
                 onClick={() => setShowNewCreditNote(true)}
-                className="bg-green-600 text-white px-6 py-3 rounded-lg hover:bg-green-700 transition-colors duration-200"
+                className="bg-success text-white px-6 py-3 rounded-lg hover:bg-success transition-colors duration-200"
               >
                 Create New Credit Note
               </button>
@@ -542,11 +542,11 @@ const CreditNotesPage = () => {
           {/* No search results */}
           {!loading && !error && creditNotesData.length > 0 && filteredCreditNotes.length === 0 && (
             <div className="text-center py-16">
-              <div className="w-20 h-20 bg-gray-100 rounded-lg flex items-center justify-center mx-auto mb-6">
-                <FileText className="w-10 h-10 text-gray-400" />
+              <div className="w-20 h-20 bg-surface-hover rounded-lg flex items-center justify-center mx-auto mb-6">
+                <FileText className="w-10 h-10 text-dim" />
               </div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">No credit notes match your search</h3>
-              <p className="text-gray-500 mb-6">Try adjusting your search criteria</p>
+              <h3 className="text-lg font-semibold text-ink mb-2">No credit notes match your search</h3>
+              <p className="text-dim mb-6">Try adjusting your search criteria</p>
             </div>
           )}
         </div>
@@ -555,13 +555,13 @@ const CreditNotesPage = () => {
         {filteredCreditNotes.length > 0 && (
           <div className="flex items-center justify-center mt-8">
             <div className="flex items-center space-x-2">
-              <button className="px-4 py-2 text-sm text-gray-500 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors duration-200 disabled:opacity-50" disabled>
+              <button className="px-4 py-2 text-sm text-dim bg-surface border border-line rounded-lg hover:bg-canvas transition-colors duration-200 disabled:opacity-50" disabled>
                 Previous
               </button>
-              <button className="px-4 py-2 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-200">
+              <button className="px-4 py-2 text-sm bg-info text-white rounded-lg hover:bg-info transition-colors duration-200">
                 1
               </button>
-              <button className="px-4 py-2 text-sm text-gray-500 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors duration-200 disabled:opacity-50" disabled>
+              <button className="px-4 py-2 text-sm text-dim bg-surface border border-line rounded-lg hover:bg-canvas transition-colors duration-200 disabled:opacity-50" disabled>
                 Next
               </button>
             </div>

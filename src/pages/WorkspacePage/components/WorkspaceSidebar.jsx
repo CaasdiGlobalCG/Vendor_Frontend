@@ -34,14 +34,14 @@ const WorkspaceSidebar = ({
       className={`
         ${sidebarCollapsed ? 'w-0 overflow-hidden' : 'w-[min(17rem,30vw)] xl:w-72'}
         ${isOverlay ? 'absolute left-0 top-0 bottom-0 z-20 shadow-2xl' : ''}
-        bg-white border-r border-gray-200 flex min-h-0 flex-col flex-shrink-0 overflow-hidden
+        bg-surface border-r border-line flex min-h-0 flex-col flex-shrink-0 overflow-hidden
         transition-all duration-300 ease-in-out
       `}
       onMouseEnter={onMouseEnter}
       onMouseLeave={onMouseLeave}
     >
       {/* Tabs - Made more prominent */}
-      <div className="bg-gray-50 border-b border-gray-200">
+      <div className="bg-canvas border-b border-line">
         <div className="flex overflow-x-auto">
           {['Task', 'Layers', 'Assets'].map((tab) => {
             const isDisabled = (tab === 'Layers' || tab === 'Assets') && !selectedSubtask;
@@ -52,10 +52,10 @@ const WorkspaceSidebar = ({
                 disabled={isDisabled}
                 className={`min-w-[88px] flex-1 px-4 py-3 text-xs font-semibold transition-all duration-200 ${
                   activeTab === tab
-                    ? 'text-blue-600 bg-white border-b-2 border-blue-600 shadow-sm'
+                    ? 'text-info bg-surface border-b-2 border-info '
                     : isDisabled
-                    ? 'text-gray-400 cursor-not-allowed bg-gray-100'
-                    : 'text-gray-600 hover:text-gray-800 hover:bg-gray-100 cursor-pointer'
+                    ? 'text-dim cursor-not-allowed bg-surface-hover'
+                    : 'text-dim hover:text-ink hover:bg-surface-hover cursor-pointer'
                 }`}
               >
                 {tab}

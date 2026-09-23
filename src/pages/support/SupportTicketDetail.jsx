@@ -8,19 +8,19 @@ import { getTicket, getTicketReference, addMessage, rateTicket, reopenTicket } f
 
 /* ── constants ───────────────────────────────────────────── */
 const STATUS_META = {
-  open:        { label: 'Open',        pill: 'bg-emerald-50 text-[#095b49] border border-emerald-100' },
-  in_progress: { label: 'In Progress', pill: 'bg-violet-50 text-violet-700 border border-violet-100' },
-  resolved:    { label: 'Resolved',    pill: 'bg-emerald-50 text-emerald-700 border border-emerald-100' },
-  closed:      { label: 'Closed',      pill: 'bg-gray-100 text-gray-500 border border-gray-200' },
+  open:        { label: 'Open',        pill: 'bg-surface-hover text-success border border-line' },
+  in_progress: { label: 'In Progress', pill: 'bg-surface-hover text-ink border border-line' },
+  resolved:    { label: 'Resolved',    pill: 'bg-surface-hover text-ink border border-line' },
+  closed:      { label: 'Closed',      pill: 'bg-surface-hover text-dim border border-line' },
 };
 const PRIORITY_META = {
-  urgent: 'bg-red-50 text-red-600 border border-red-100',
-  high:   'bg-orange-50 text-orange-600 border border-orange-100',
-  medium: 'bg-amber-50 text-amber-600 border border-amber-100',
-  low:    'bg-gray-50 text-gray-500 border border-gray-100',
+  urgent: 'bg-danger/10 text-danger border border-danger/10',
+  high:   'bg-warning/10 text-warning border border-warning/10',
+  medium: 'bg-warning/10 text-warning border border-warning/10',
+  low:    'bg-canvas text-dim border border-line',
 };
 const CSAT_LABELS = ['', 'Terrible', 'Poor', 'Okay', 'Good', 'Excellent'];
-const CSAT_COLORS = ['', 'text-red-500', 'text-orange-500', 'text-amber-500', 'text-lime-500', 'text-emerald-500'];
+const CSAT_COLORS = ['', 'text-danger', 'text-warning', 'text-warning', 'text-success', 'text-ink'];
 
 /* ── helpers ─────────────────────────────────────────────── */
 function initials(name) {
@@ -72,9 +72,9 @@ function CsatBlock({ ticketId, existing }) {
   };
 
   return (
-    <div className="mx-4 mb-4 mt-2 bg-gradient-to-br from-emerald-50 to-teal-50 border border-emerald-100 rounded-2xl p-4 text-center">
-      <p className="text-xs font-semibold text-[#095b49] uppercase tracking-wide mb-0.5">Rate this experience</p>
-      <p className="text-sm font-medium text-gray-700 mb-3">How would you rate the support you received?</p>
+    <div className="mx-4 mb-4 mt-2 bg-black border border-line rounded-2xl p-4 text-center">
+      <p className="text-xs font-semibold text-success uppercase tracking-wide mb-0.5">Rate this experience</p>
+      <p className="text-sm font-medium text-ink mb-3">How would you rate the support you received?</p>
       <div className="flex justify-center gap-2 mb-2">
         {[1,2,3,4,5].map(n => (
           <button key={n} disabled={saved || loading}
@@ -83,8 +83,8 @@ function CsatBlock({ ticketId, existing }) {
             onClick={() => submit(n)}
             className={`h-9 w-9 rounded-xl flex items-center justify-center transition ${
               saved
-                ? n <= rating ? 'bg-amber-400 text-white' : 'bg-gray-100 text-gray-300'
-                : n <= (hover || rating) ? 'bg-amber-400 text-white scale-110' : 'bg-white border border-gray-200 text-gray-300 hover:border-amber-300'
+                ? n <= rating ? 'bg-warning text-white' : 'bg-surface-hover text-dim'
+                : n <= (hover || rating) ? 'bg-warning text-white scale-110' : 'bg-surface border border-line text-dim hover:border-warning/30'
             }`}>
             <Star size={16} fill={n <= (saved ? rating : hover || rating) ? 'currentColor' : 'none'} />
           </button>
@@ -93,7 +93,7 @@ function CsatBlock({ ticketId, existing }) {
       {(hover || rating) > 0 && (
         <p className={`text-xs font-semibold ${CSAT_COLORS[hover || rating]}`}>{CSAT_LABELS[hover || rating]}</p>
       )}
-      {saved && <p className="text-xs text-gray-400 mt-1">Thank you for your feedback!</p>}
+      {saved && <p className="text-xs text-dim mt-1">Thank you for your feedback!</p>}
     </div>
   );
 }
@@ -102,9 +102,9 @@ function CsatBlock({ ticketId, existing }) {
 function InfoRow({ icon: Icon, label, children }) {
   return (
     <div className="flex items-start gap-2.5">
-      <Icon size={12} className="text-gray-400 mt-0.5 flex-shrink-0" />
+      <Icon size={12} className="text-dim mt-0.5 flex-shrink-0" />
       <div className="flex-1 flex items-center justify-between gap-2 min-w-0">
-        <span className="text-xs text-gray-400 flex-shrink-0">{label}</span>
+        <span className="text-xs text-dim flex-shrink-0">{label}</span>
         <div className="min-w-0">{children}</div>
       </div>
     </div>
@@ -235,32 +235,32 @@ export default function SupportTicketDetail({
   /* ── loading ─── */
   if (loading) {
     const cls = isPanel
-      ? 'w-full h-full flex items-center justify-center bg-white'
-      : 'min-h-screen bg-[#f7f8fc] flex items-center justify-center';
-    return <div className={cls}><Loader2 size={28} className="text-[#095b49] animate-spin" /></div>;
+      ? 'w-full h-full flex items-center justify-center bg-surface'
+      : 'min-h-screen bg-surface flex items-center justify-center';
+    return <div className={cls}><Loader2 size={28} className="text-success animate-spin" /></div>;
   }
 
   /* ── error ─── */
   if (error || !ticket) {
     const cls = isPanel
-      ? 'w-full h-full flex flex-col items-center justify-center bg-white gap-3 px-6'
-      : 'min-h-screen bg-[#f7f8fc] flex items-center justify-center';
+      ? 'w-full h-full flex flex-col items-center justify-center bg-surface gap-3 px-6'
+      : 'min-h-screen bg-surface flex items-center justify-center';
     return (
       <div className={cls}>
         {!isPanel && (
-          <div className="bg-white rounded-2xl p-8 shadow-sm border border-gray-100 max-w-sm w-full text-center">
-            <AlertCircle size={28} className="text-red-400 mx-auto mb-3" />
-            <p className="text-sm font-semibold text-gray-700 mb-4">{error || 'Ticket not found.'}</p>
-            <button onClick={handleBack} className="px-5 py-2.5 bg-[#095b49] text-white text-sm font-semibold rounded-xl hover:bg-[#074a3c] transition">
+          <div className="bg-surface rounded-2xl p-8  border border-line max-w-sm w-full text-center">
+            <AlertCircle size={28} className="text-danger mx-auto mb-3" />
+            <p className="text-sm font-semibold text-ink mb-4">{error || 'Ticket not found.'}</p>
+            <button onClick={handleBack} className="px-5 py-2.5 bg-success text-white text-sm font-semibold rounded-xl hover:bg-success transition">
               Back to Support
             </button>
           </div>
         )}
         {isPanel && (
           <>
-            <AlertCircle size={24} className="text-red-400" />
-            <p className="text-sm text-gray-600 text-center">{error || 'Ticket not found.'}</p>
-            <button onClick={handleBack} className="text-xs text-[#095b49] underline">Close</button>
+            <AlertCircle size={24} className="text-danger" />
+            <p className="text-sm text-dim text-center">{error || 'Ticket not found.'}</p>
+            <button onClick={handleBack} className="text-xs text-success underline">Close</button>
           </>
         )}
       </div>
@@ -275,15 +275,15 @@ export default function SupportTicketDetail({
     return (
       <div key={msg.messageId} className={`flex gap-2.5 ${isUser ? 'flex-row-reverse' : 'flex-row'}`}>
         {!isUser && (
-          <div className="h-7 w-7 flex-shrink-0 rounded-full bg-gradient-to-br from-[#095b49] to-[#074a3c] flex items-center justify-center text-white text-[10px] font-bold mt-1">
+          <div className="h-7 w-7 flex-shrink-0 rounded-full bg-black flex items-center justify-center text-white text-[10px] font-bold mt-1">
             {initials(msg.senderName || 'Agent')}
           </div>
         )}
         <div className={`max-w-[72%] flex flex-col gap-0.5 ${isUser ? 'items-end' : 'items-start'}`}>
           <div className={`px-3.5 py-2.5 text-sm leading-relaxed ${
             isUser
-              ? 'bg-[#095b49] text-white rounded-tl-2xl rounded-tr-sm rounded-bl-2xl rounded-br-2xl'
-              : 'bg-gray-50 border border-gray-100 text-gray-800 rounded-tl-sm rounded-tr-2xl rounded-bl-2xl rounded-br-2xl'
+              ? 'bg-success text-white rounded-tl-2xl rounded-tr-sm rounded-bl-2xl rounded-br-2xl'
+              : 'bg-canvas border border-line text-ink rounded-tl-sm rounded-tr-2xl rounded-bl-2xl rounded-br-2xl'
           }`}>
             {msg.content || msg.body}
             {msg.attachments && msg.attachments.length > 0 && (
@@ -300,16 +300,16 @@ export default function SupportTicketDetail({
               </div>
             )}
           </div>
-          <span className="text-[10px] text-gray-400 px-1">{fmt(msg.createdAt)}</span>
+          <span className="text-[10px] text-dim px-1">{fmt(msg.createdAt)}</span>
         </div>
       </div>
     );
   });
 
   const replyBar = !isTerminal && (
-    <div className="flex-shrink-0 border-t border-gray-100 px-4 py-3 bg-white">
+    <div className="flex-shrink-0 border-t border-line px-4 py-3 bg-surface">
       {sendErr && (
-        <p className="text-xs text-red-500 mb-2 flex items-center gap-1.5">
+        <p className="text-xs text-danger mb-2 flex items-center gap-1.5">
           <AlertCircle size={11} />{sendErr}
         </p>
       )}
@@ -317,10 +317,10 @@ export default function SupportTicketDetail({
       {files.length > 0 && (
         <div className="flex flex-wrap gap-1.5 mb-2">
           {files.map((f, i) => (
-            <span key={i} className="flex items-center gap-1 bg-emerald-50 border border-emerald-100 text-[#095b49] text-[11px] font-medium rounded-lg px-2 py-0.5">
+            <span key={i} className="flex items-center gap-1 bg-surface-hover border border-line text-success text-[11px] font-medium rounded-lg px-2 py-0.5">
               <FileText size={10} />{f.name}
               <button onClick={() => setFiles(prev => prev.filter((_, j) => j !== i))}
-                className="ml-0.5 text-emerald-400 hover:text-[#095b49]"><X size={10} /></button>
+                className="ml-0.5 text-ink hover:text-success"><X size={10} /></button>
             </span>
           ))}
         </div>
@@ -331,25 +331,25 @@ export default function SupportTicketDetail({
           className="hidden"
           onChange={e => setFiles(prev => [...prev, ...Array.from(e.target.files)])} />
         {/* Textarea with paperclip embedded inside at bottom-left */}
-        <div className="relative flex-1 bg-gray-50 border border-gray-200 rounded-xl focus-within:ring-2 focus-within:ring-[#095b49]/20 focus-within:border-[#095b49]/40 transition overflow-hidden">
+        <div className="relative flex-1 bg-canvas border border-line rounded-xl focus-within:ring-2 focus-within:border-success/20 focus-within:border-success/40 transition overflow-hidden">
           <textarea
             value={reply}
             onChange={e => setReply(e.target.value)}
             onKeyDown={e => { if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) handleSend(); }}
             placeholder="Type your reply… (Ctrl+Enter to send)"
             rows={isPanel ? 2 : 3}
-            className="w-full bg-transparent px-3.5 pt-2.5 pb-8 text-sm text-gray-800 placeholder:text-gray-400 focus:outline-none resize-none"
+            className="w-full bg-transparent px-3.5 pt-2.5 pb-8 text-sm text-ink placeholder:text-dim focus:outline-none resize-none"
           />
           <div className="absolute bottom-1.5 left-2">
             <button onClick={() => fileRef.current?.click()}
               title="Attach file"
-              className="h-6 w-6 rounded-lg flex items-center justify-center text-gray-400 hover:text-[#095b49] hover:bg-emerald-50 transition">
+              className="h-6 w-6 rounded-lg flex items-center justify-center text-dim hover:text-success hover:bg-surface-hover transition">
               <Paperclip size={13} />
             </button>
           </div>
         </div>
         <button onClick={handleSend} disabled={sending || (!reply.trim() && files.length === 0)}
-          className="h-10 w-10 rounded-xl bg-[#095b49] text-white flex items-center justify-center hover:bg-[#074a3c] disabled:opacity-40 transition flex-shrink-0">
+          className="h-10 w-10 rounded-xl bg-success text-white flex items-center justify-center hover:bg-success disabled:opacity-40 transition flex-shrink-0">
           {sending ? <Loader2 size={15} className="animate-spin" /> : <Send size={14} />}
         </button>
       </div>
@@ -357,10 +357,10 @@ export default function SupportTicketDetail({
   );
 
   const resolvedFooter = isTerminal && (
-    <div className="flex-shrink-0 border-t border-gray-100 px-5 py-3 bg-white flex items-center justify-between gap-3">
-      <p className="text-xs text-gray-400">This ticket is {ticket.status}. <button onClick={handleBack} className="text-[#095b49] hover:underline">{isPanel ? 'Close' : 'Back to all tickets'}</button></p>
+    <div className="flex-shrink-0 border-t border-line px-5 py-3 bg-surface flex items-center justify-between gap-3">
+      <p className="text-xs text-dim">This ticket is {ticket.status}. <button onClick={handleBack} className="text-success hover:underline">{isPanel ? 'Close' : 'Back to all tickets'}</button></p>
       <button onClick={handleReopen} disabled={reopening}
-        className="flex-shrink-0 px-4 py-2 bg-amber-500 text-white text-xs font-semibold rounded-xl hover:bg-amber-600 transition disabled:opacity-50">
+        className="flex-shrink-0 px-4 py-2 bg-warning text-white text-xs font-semibold rounded-xl hover:bg-warning transition disabled:opacity-50">
         {reopening ? 'Reopening…' : 'Reopen Ticket'}
       </button>
     </div>
@@ -371,28 +371,28 @@ export default function SupportTicketDetail({
   ════════════════════════════════════════════════════════ */
   if (isPanel) {
     return (
-      <div className="w-full flex flex-col overflow-hidden bg-white">
+      <div className="w-full flex flex-col overflow-hidden bg-surface">
         {/* Panel top bar */}
-        <div className="flex-shrink-0 px-4 h-13 min-h-[52px] border-b border-gray-100 flex items-center gap-2.5 bg-white">
+        <div className="flex-shrink-0 px-4 h-13 min-h-[52px] border-b border-line flex items-center gap-2.5 bg-surface">
           <button onClick={handleBack}
-            className="h-7 w-7 rounded-lg hover:bg-gray-100 flex items-center justify-center text-gray-400 hover:text-gray-600 transition flex-shrink-0">
+            className="h-7 w-7 rounded-lg hover:bg-surface-hover flex items-center justify-center text-dim hover:text-dim transition flex-shrink-0">
             <X size={14} />
           </button>
           <div className="flex-1 flex items-center gap-2 min-w-0">
-            <span className="text-[11px] font-mono text-gray-400 flex-shrink-0">{ticket.ticketId}</span>
-            <span className="text-sm font-semibold text-gray-800 truncate">{ticket.subject}</span>
+            <span className="text-[11px] font-mono text-dim flex-shrink-0">{ticket.ticketId}</span>
+            <span className="text-sm font-semibold text-ink truncate">{ticket.subject}</span>
           </div>
           <span className={`flex-shrink-0 text-[10px] font-bold px-2 py-0.5 rounded-full ${s.pill}`}>{s.label}</span>
         </div>
 
         {/* Info strip */}
-        <div className="flex-shrink-0 px-4 py-2 border-b border-gray-50 bg-gray-50/60 flex items-center gap-3 flex-wrap">
+        <div className="flex-shrink-0 px-4 py-2 border-b border-line bg-canvas flex items-center gap-3 flex-wrap">
           <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${pp}`}>{ticket.priority}</span>
-          {ticket.teamLabel && <span className="text-[11px] text-gray-500">{ticket.teamLabel}</span>}
-          <span className="text-[11px] text-gray-500">Waiting on: {waitingLabel}</span>
-          {referenceLabel && <span className="text-[11px] text-gray-400">Linked: {referenceLabel}</span>}
+          {ticket.teamLabel && <span className="text-[11px] text-dim">{ticket.teamLabel}</span>}
+          <span className="text-[11px] text-dim">Waiting on: {waitingLabel}</span>
+          {referenceLabel && <span className="text-[11px] text-dim">Linked: {referenceLabel}</span>}
           {ticket.createdAt && (
-            <span className="text-[11px] text-gray-400">
+            <span className="text-[11px] text-dim">
               {new Date(ticket.createdAt).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'})}
             </span>
           )}
@@ -401,7 +401,7 @@ export default function SupportTicketDetail({
         {/* Thread — fills remaining height */}
         <div ref={threadRef} className="flex-1 overflow-y-auto px-4 py-4 space-y-4">
           {messages.length === 0 && (
-            <p className="text-center text-sm text-gray-400 py-8">No messages yet.</p>
+            <p className="text-center text-sm text-dim py-8">No messages yet.</p>
           )}
           {messageList}
           {isResolved && <CsatBlock ticketId={ticketId} existing={ticket.satisfactionRating || ticket.csatRating} />}
@@ -417,17 +417,17 @@ export default function SupportTicketDetail({
      PAGE MODE (full page / mobile)
   ════════════════════════════════════════════════════════ */
   return (
-    <div className="min-h-screen bg-[#f7f8fc] flex flex-col">
+    <div className="min-h-screen bg-surface flex flex-col">
       {/* Sticky top bar */}
-      <div className="sticky top-0 z-20 bg-white border-b border-gray-100 shadow-sm">
+      <div className="sticky top-0 z-20 bg-surface border-b border-line ">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 h-14 flex items-center gap-3">
           <button onClick={handleBack}
-            className="h-8 w-8 rounded-xl hover:bg-gray-100 flex items-center justify-center text-gray-400 hover:text-gray-700 transition flex-shrink-0">
+            className="h-8 w-8 rounded-xl hover:bg-surface-hover flex items-center justify-center text-dim hover:text-ink transition flex-shrink-0">
             <ArrowLeft size={17} />
           </button>
           <div className="flex-1 flex items-center gap-2.5 min-w-0">
-            <span className="text-xs font-mono text-gray-400 flex-shrink-0">{ticket.ticketId}</span>
-            <span className="text-sm font-semibold text-gray-800 truncate">{ticket.subject}</span>
+            <span className="text-xs font-mono text-dim flex-shrink-0">{ticket.ticketId}</span>
+            <span className="text-sm font-semibold text-ink truncate">{ticket.subject}</span>
           </div>
           <span className={`flex-shrink-0 text-[11px] font-bold px-2.5 py-1 rounded-full ${s.pill}`}>{s.label}</span>
         </div>
@@ -436,10 +436,10 @@ export default function SupportTicketDetail({
       <div className="max-w-4xl mx-auto w-full px-4 sm:px-6 py-6 flex flex-col lg:flex-row gap-5">
         {/* Thread column */}
         <div className="flex-1 flex flex-col min-h-0">
-          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm flex flex-col overflow-hidden">
+          <div className="bg-surface rounded-2xl border border-line  flex flex-col overflow-hidden">
             <div ref={threadRef} className="overflow-y-auto px-4 py-5 space-y-4" style={{minHeight: '260px', maxHeight: '60vh'}}>
               {messages.length === 0 && (
-                <p className="text-center text-sm text-gray-400 py-8">No messages yet.</p>
+                <p className="text-center text-sm text-dim py-8">No messages yet.</p>
               )}
               {messageList}
               {isResolved && <CsatBlock ticketId={ticketId} existing={ticket.satisfactionRating || ticket.csatRating} />}
@@ -452,58 +452,58 @@ export default function SupportTicketDetail({
         {/* Info sidebar */}
         <div className="lg:w-64 flex-shrink-0 space-y-3">
           <button onClick={() => setInfoOpen(v => !v)}
-            className="lg:hidden w-full flex items-center justify-between px-4 py-3 bg-white rounded-2xl border border-gray-100 text-sm font-semibold text-gray-700 shadow-sm">
+            className="lg:hidden w-full flex items-center justify-between px-4 py-3 bg-surface rounded-2xl border border-line text-sm font-semibold text-ink ">
             Ticket Details
-            {infoOpen ? <ChevronUp size={16} className="text-gray-400" /> : <ChevronDown size={16} className="text-gray-400" />}
+            {infoOpen ? <ChevronUp size={16} className="text-dim" /> : <ChevronDown size={16} className="text-dim" />}
           </button>
-          <div className={`bg-white rounded-2xl border border-gray-100 shadow-sm p-4 space-y-4 ${infoOpen ? 'block' : 'hidden lg:block'}`}>
-            <p className="text-xs font-bold text-gray-400 uppercase tracking-wide">Ticket Info</p>
-            <InfoRow icon={Hash} label="ID"><span className="font-mono text-xs text-gray-700">{ticket.ticketId}</span></InfoRow>
+          <div className={`bg-surface rounded-2xl border border-line  p-4 space-y-4 ${infoOpen ? 'block' : 'hidden lg:block'}`}>
+            <p className="text-xs font-bold text-dim uppercase tracking-wide">Ticket Info</p>
+            <InfoRow icon={Hash} label="ID"><span className="font-mono text-xs text-ink">{ticket.ticketId}</span></InfoRow>
             <InfoRow icon={Tag} label="Status"><span className={`text-[11px] font-bold px-2 py-0.5 rounded-full ${s.pill}`}>{s.label}</span></InfoRow>
             <InfoRow icon={Tag} label="Priority"><span className={`text-[11px] font-bold px-2 py-0.5 rounded-full ${pp}`}>{ticket.priority}</span></InfoRow>
-            <InfoRow icon={User} label="Team"><span className="text-xs text-gray-700">{ticket.teamLabel || ticket.assignedTeam || '—'}</span></InfoRow>
-            <InfoRow icon={Clock} label="Waiting On"><span className="text-xs text-gray-700">{waitingLabel}</span></InfoRow>
+            <InfoRow icon={User} label="Team"><span className="text-xs text-ink">{ticket.teamLabel || ticket.assignedTeam || '—'}</span></InfoRow>
+            <InfoRow icon={Clock} label="Waiting On"><span className="text-xs text-ink">{waitingLabel}</span></InfoRow>
             {ticket.firstResponseDeadline && (
               <InfoRow icon={Clock} label="First Response">
-                <span className="text-xs text-gray-500">{fmt(ticket.firstResponseDeadline)}</span>
+                <span className="text-xs text-dim">{fmt(ticket.firstResponseDeadline)}</span>
               </InfoRow>
             )}
             {ticket.resolutionDeadline && (
               <InfoRow icon={Clock} label="Resolution">
-                <span className="text-xs text-gray-500">{fmt(ticket.resolutionDeadline)}</span>
+                <span className="text-xs text-dim">{fmt(ticket.resolutionDeadline)}</span>
               </InfoRow>
             )}
             {ticket.autoCloseAt && (
               <InfoRow icon={Clock} label="Auto Close">
-                <span className="text-xs text-gray-500">{fmt(ticket.autoCloseAt)}</span>
+                <span className="text-xs text-dim">{fmt(ticket.autoCloseAt)}</span>
               </InfoRow>
             )}
             {referenceLabel && (
-              <InfoRow icon={Hash} label="Linked"><span className="text-xs text-gray-700">{referenceLabel}</span></InfoRow>
+              <InfoRow icon={Hash} label="Linked"><span className="text-xs text-ink">{referenceLabel}</span></InfoRow>
             )}
             {(referenceLoading || referenceError || reference) && (
-              <div className="rounded-xl border border-gray-100 bg-gray-50/80 px-3 py-3">
-                <p className="text-[11px] font-semibold uppercase tracking-wide text-gray-500">Linked Record</p>
+              <div className="rounded-xl border border-line bg-canvas px-3 py-3">
+                <p className="text-[11px] font-semibold uppercase tracking-wide text-dim">Linked Record</p>
                 {referenceLoading ? (
-                  <div className="mt-2 flex items-center gap-2 text-xs text-gray-500">
+                  <div className="mt-2 flex items-center gap-2 text-xs text-dim">
                     <Loader2 size={12} className="animate-spin" />Loading linked record...
                   </div>
                 ) : null}
                 {!referenceLoading && referenceError ? (
-                  <p className="mt-2 text-xs text-red-600">{referenceError}</p>
+                  <p className="mt-2 text-xs text-danger">{referenceError}</p>
                 ) : null}
                 {!referenceLoading && !referenceError && reference ? (
                   <div className="mt-2 space-y-2">
                     <div>
-                      <p className="text-sm font-semibold text-gray-800">{reference.title || reference.label}</p>
-                      {reference.description ? <p className="mt-1 text-xs leading-relaxed text-gray-600">{reference.description}</p> : null}
+                      <p className="text-sm font-semibold text-ink">{reference.title || reference.label}</p>
+                      {reference.description ? <p className="mt-1 text-xs leading-relaxed text-dim">{reference.description}</p> : null}
                     </div>
                     {Array.isArray(reference.fields) && reference.fields.length > 0 ? (
                       <div className="space-y-1.5">
                         {reference.fields.map((field) => (
                           <div key={field.label} className="flex items-start justify-between gap-3 text-xs">
-                            <span className="text-gray-400">{field.label}</span>
-                            <span className={field.mono ? 'font-mono text-gray-700' : 'text-gray-700 text-right'}>{field.value}</span>
+                            <span className="text-dim">{field.label}</span>
+                            <span className={field.mono ? 'font-mono text-ink' : 'text-ink text-right'}>{field.value}</span>
                           </div>
                         ))}
                       </div>
@@ -513,13 +513,13 @@ export default function SupportTicketDetail({
               </div>
             )}
             <InfoRow icon={Clock} label="Created">
-              <span className="text-xs text-gray-500">
+              <span className="text-xs text-dim">
                 {ticket.createdAt ? new Date(ticket.createdAt).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'}) : '—'}
               </span>
             </InfoRow>
             {ticket.updatedAt && (
               <InfoRow icon={Clock} label="Updated">
-                <span className="text-xs text-gray-500">
+                <span className="text-xs text-dim">
                   {new Date(ticket.updatedAt).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'})}
                 </span>
               </InfoRow>

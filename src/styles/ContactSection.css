@@ -3,7 +3,7 @@
     width: 100%;
     min-height: 100vh;
     padding: 80px 0;
-    background: linear-gradient(135deg, #000000, #000000, rgba(33, 190, 156, 0.5));
+    background: linear-gradient(135deg, rgb(var(--cta-action)), rgb(var(--cta-action)), rgba(33, 190, 156, 0.5));
     overflow: hidden;
   }
   
@@ -31,13 +31,13 @@
     line-height: 1.5;
     margin: 0 0 60px;
     max-width: 500px;
-    color: #ffffff;
+    color: rgb(var(--text-muted));
     text-align: left;
   }
   
   .contact-section .get-in-touch-81 {
     position: relative;
-    color: #ffffff;
+    color: rgb(var(--text-muted));
     font-family: "Poppins", sans-serif;
     font-size: 60px;
     font-weight: 600;
@@ -67,7 +67,7 @@
   }
   
   .contact-section .answer-questions-82 {
-    background: linear-gradient(200.35deg, #21be9c, #f88feb);
+    background: linear-gradient(200.35deg, rgb(var(--cta-action)), rgb(var(--cta-action)));
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
   }
@@ -98,9 +98,9 @@
     inset: 0;
     border-radius: 50px;
     padding: 2px;
-    background: linear-gradient(90deg, #21be9c, #0f5848);
-    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-    mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    background: linear-gradient(90deg, rgb(var(--cta-action)), rgb(var(--cta-action)));
+    -webkit-mask: linear-gradient(rgb(var(--surface-card)) 0 0) content-box, linear-gradient(rgb(var(--surface-card)) 0 0);
+    mask: linear-gradient(rgb(var(--surface-card)) 0 0) content-box, linear-gradient(rgb(var(--surface-card)) 0 0);
     -webkit-mask-composite: xor;
     mask-composite: exclude;
     z-index: -1;
@@ -111,7 +111,7 @@
   }
   
   .contact-section .book-free-consultant {
-    color: #ffffff;
+    color: rgb(var(--text-muted));
     font-family: Poppins, sans-serif;
     font-size: 24px;
     font-weight: 400;
@@ -138,7 +138,7 @@
     flex-direction: column;
     gap: 20px;
     padding: 50px;
-    background: linear-gradient(135deg, #0f5848, #21be9c);
+    background: linear-gradient(135deg, rgb(var(--cta-action)), rgb(var(--cta-action)));
     border-radius: 30px;
   }
   
@@ -155,11 +155,11 @@
   }
 
   .reach-us-content{
-    color: #ffffff;
+    color: rgb(var(--text-muted));
   }
   
   .contact-section .get-in-touch-7e {
-    color: #ffffff;
+    color: rgb(var(--text-muted));
     font-family: Poppins, sans-serif;
     font-size: 32px;
     font-weight: 500;
@@ -169,7 +169,7 @@
   }
   
   .contact-section .reach-us-anytime {
-    color: #ffffff;
+    color: rgb(var(--text-muted));
     font-family: Poppins, sans-serif;
     font-size: 20px;
     font-weight: 400;
@@ -193,17 +193,17 @@
     width: 100%;
     height: 56px;
     background-color: transparent;
-    border: 1px solid #ffffff;
+    border: 1px solid rgb(var(--border-subtle));
     border-radius: 30px;
     padding: 0 20px;
-    color: #ffffff;
+    color: rgb(var(--text-muted));
     font-family: Poppins, sans-serif;
     font-size: 16px;
     padding: 24px;
   }
   
   .contact-section .form-control::placeholder {
-    color: #c9c9c9;
+    color: rgb(var(--text-muted));
     font-family: Poppins, sans-serif;
     font-size: 16px;
     font-weight: 300;
@@ -218,7 +218,7 @@
   .contact-section .submit-btn {
     width: 114px;
     height: 52px;
-    background: linear-gradient(90deg, #21be9c, #0f5848);
+    background: linear-gradient(90deg, rgb(var(--cta-action)), rgb(var(--cta-action)));
     border: none;
     border-radius: 16px;
     cursor: pointer;
@@ -232,7 +232,7 @@
   }
   
   .contact-section .landing-submit {
-    color: #ffffff;
+    color: rgb(var(--text-muted));
     font-family: Poppins, sans-serif;
     font-size: 20px;
     font-weight: 500;
@@ -320,7 +320,7 @@
     
     }
     .reach-us-content{
-      color: #ffffff;
+      color: rgb(var(--text-muted));
     }
 
 
@@ -331,7 +331,7 @@
     }
 
     .contact-section .landing-submit {
-      color: #ffffff;
+      color: rgb(var(--text-muted));
       font-family: Poppins, sans-serif;
       font-size: 14px;
       font-weight: 300;
@@ -344,7 +344,7 @@
     .contact-section .get-in-content {
       font-size: 24px;
       font-weight: 500;
-      color: #ffffff;
+      color: rgb(var(--text-muted));
     }
 
     .contact-section .contact-form-container {

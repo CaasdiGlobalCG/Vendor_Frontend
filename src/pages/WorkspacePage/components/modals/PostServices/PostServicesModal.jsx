@@ -450,36 +450,36 @@ const PostServicesModal = ({ isOpen, onClose, currentUser, workspaceId, subtaskI
   return (
     <div className="fixed inset-0 z-50 flex justify-end bg-black/40">
       <div className="flex-1" onClick={onClose} role="presentation" />
-      <div className="relative h-full w-full max-w-xl bg-white shadow-2xl flex flex-col">
-        <div className="flex items-center justify-between px-5 py-3 border-b border-gray-200">
+      <div className="relative h-full w-full max-w-xl bg-surface shadow-2xl flex flex-col">
+        <div className="flex items-center justify-between px-5 py-3 border-b border-line">
           <div className="flex-1">
-            <h2 className="text-base font-semibold text-gray-900">Post services</h2>
+            <h2 className="text-base font-semibold text-ink">Post services</h2>
             
             {/* Task and Subtask Selection - Only show for non-vendors */}
             {!isVendor && (
               <div className="mt-2">
                 <div className="flex items-center gap-2 mb-1">
-                  <span className="text-xs text-gray-600">Select task and subtask</span>
-                  <span className="text-xs text-red-500">*Required</span>
+                  <span className="text-xs text-dim">Select task and subtask</span>
+                  <span className="text-xs text-danger">*Required</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <User className="w-4 h-4 text-gray-400" />
+                  <User className="w-4 h-4 text-dim" />
               
                   {/* Task Dropdown */}
                   <div className="relative" data-task-dropdown>
                 <button
                   onClick={() => setShowTaskDropdown(!showTaskDropdown)}
-                  className="flex items-center gap-1 px-2 py-1 text-xs border border-gray-300 rounded-md hover:bg-gray-50 transition-colors"
+                  className="flex items-center gap-1 px-2 py-1 text-xs border border-line rounded-md hover:bg-canvas transition-colors"
                 >
-                  <span className="text-gray-700">{selectedTaskName}</span>
-                  <ChevronDown className="w-3 h-3 text-gray-500" />
+                  <span className="text-ink">{selectedTaskName}</span>
+                  <ChevronDown className="w-3 h-3 text-dim" />
                 </button>
                 
                 {showTaskDropdown && (
-                  <div className="absolute top-full left-0 mt-1 w-48 bg-white border border-gray-200 rounded-lg shadow-lg z-10 max-h-60 overflow-y-auto">
+                  <div className="absolute top-full left-0 mt-1 w-48 bg-surface border border-line rounded-lg shadow-lg z-10 max-h-60 overflow-y-auto">
                     <div className="py-1">
                       {allTasks.length === 0 ? (
-                        <div className="px-3 py-2 text-xs text-gray-500">No tasks available</div>
+                        <div className="px-3 py-2 text-xs text-dim">No tasks available</div>
                       ) : (
                         allTasks.map(task => (
                           <button
@@ -488,7 +488,7 @@ const PostServicesModal = ({ isOpen, onClose, currentUser, workspaceId, subtaskI
                               setSelectedTaskForPost(task.id);
                               setShowTaskDropdown(false);
                             }}
-                            className="w-full text-left px-3 py-2 text-xs hover:bg-gray-100 transition-colors"
+                            className="w-full text-left px-3 py-2 text-xs hover:bg-surface-hover transition-colors"
                           >
                             {task.name}
                           </button>
@@ -502,22 +502,22 @@ const PostServicesModal = ({ isOpen, onClose, currentUser, workspaceId, subtaskI
               {/* Subtask Dropdown - only show if task is selected */}
               {selectedTaskForPost && (
                 <>
-                  <span className="text-gray-400">→</span>
+                  <span className="text-dim">→</span>
                   <div className="relative" data-subtask-dropdown>
                     <button
                       onClick={() => setShowSubtaskDropdown(!showSubtaskDropdown)}
-                      className="flex items-center gap-1 px-2 py-1 text-xs border border-gray-300 rounded-md hover:bg-gray-50 transition-colors"
+                      className="flex items-center gap-1 px-2 py-1 text-xs border border-line rounded-md hover:bg-canvas transition-colors"
                       disabled={availableSubtasks.length === 0}
                     >
-                      <span className="text-gray-700">{selectedSubtaskName}</span>
-                      <ChevronDown className="w-3 h-3 text-gray-500" />
+                      <span className="text-ink">{selectedSubtaskName}</span>
+                      <ChevronDown className="w-3 h-3 text-dim" />
                     </button>
                     
                     {showSubtaskDropdown && (
-                      <div className="absolute top-full left-0 mt-1 w-48 bg-white border border-gray-200 rounded-lg shadow-lg z-10 max-h-60 overflow-y-auto">
+                      <div className="absolute top-full left-0 mt-1 w-48 bg-surface border border-line rounded-lg shadow-lg z-10 max-h-60 overflow-y-auto">
                         <div className="py-1">
                           {availableSubtasks.length === 0 ? (
-                            <div className="px-3 py-2 text-xs text-gray-500">No subtasks available</div>
+                            <div className="px-3 py-2 text-xs text-dim">No subtasks available</div>
                           ) : (
                             availableSubtasks.map(subtask => (
                               <button
@@ -526,7 +526,7 @@ const PostServicesModal = ({ isOpen, onClose, currentUser, workspaceId, subtaskI
                                   setSelectedSubtaskForPost(subtask.id);
                                   setShowSubtaskDropdown(false);
                                 }}
-                                className="w-full text-left px-3 py-2 text-xs hover:bg-gray-100 transition-colors"
+                                className="w-full text-left px-3 py-2 text-xs hover:bg-surface-hover transition-colors"
                               >
                                 {subtask.name}
                               </button>
@@ -547,14 +547,14 @@ const PostServicesModal = ({ isOpen, onClose, currentUser, workspaceId, subtaskI
             {!isVendor && (
               <button
                 onClick={() => setShowComposer(true)}
-                className="inline-flex items-center gap-1 rounded-lg bg-blue-600 px-2.5 py-1 text-xs font-semibold text-white hover:bg-blue-700 transition-colors"
+                className="inline-flex items-center gap-1 rounded-lg bg-info px-2.5 py-1 text-xs font-semibold text-white hover:bg-info transition-colors"
               >
                 <Plus className="w-3.5 h-3.5" />
                 New Post
               </button>
             )}
-            <button onClick={onClose} className="p-2 rounded-lg hover:bg-gray-100" aria-label="Close post services">
-              <X className="w-5 h-5 text-gray-500" />
+            <button onClick={onClose} className="p-2 rounded-lg hover:bg-surface-hover" aria-label="Close post services">
+              <X className="w-5 h-5 text-dim" />
             </button>
           </div>
         </div>

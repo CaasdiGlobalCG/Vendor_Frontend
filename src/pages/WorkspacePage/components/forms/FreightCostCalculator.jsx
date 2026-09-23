@@ -78,9 +78,9 @@ TOTAL: ₹${costs.totalFreightCost}`;
   };
 
   return (
-    <div className="w-full bg-white rounded-lg overflow-hidden">
+    <div className="w-full bg-surface rounded-lg overflow-hidden">
       {/* Header */}
-      <div className="bg-gradient-to-r from-orange-500 to-orange-600 p-4">
+      <div className="bg-black p-4">
         <div className="flex items-center gap-2">
           <DollarSign className="w-6 h-6 text-white" />
           <h3 className="text-lg font-bold text-white">Freight Cost Calculator</h3>
@@ -92,7 +92,7 @@ TOTAL: ₹${costs.totalFreightCost}`;
         <div className="grid grid-cols-2 gap-4">
           {/* Distance */}
           <div>
-            <label className="text-sm font-medium text-gray-700">Distance</label>
+            <label className="text-sm font-medium text-ink">Distance</label>
             <div className="flex gap-2 mt-1">
               <input
                 type="number"
@@ -118,7 +118,7 @@ TOTAL: ₹${costs.totalFreightCost}`;
 
           {/* Rate */}
           <div>
-            <label className="text-sm font-medium text-gray-700">Rate</label>
+            <label className="text-sm font-medium text-ink">Rate</label>
             <div className="flex gap-2 mt-1">
               <input
                 type="number"
@@ -146,7 +146,7 @@ TOTAL: ₹${costs.totalFreightCost}`;
         {/* Charges */}
         <div className="grid grid-cols-3 gap-3">
           <div>
-            <label className="text-sm font-medium text-gray-700">Fuel Surcharge %</label>
+            <label className="text-sm font-medium text-ink">Fuel Surcharge %</label>
             <input
               type="number"
               name="fuelSurchargePercent"
@@ -159,7 +159,7 @@ TOTAL: ₹${costs.totalFreightCost}`;
             />
           </div>
           <div>
-            <label className="text-sm font-medium text-gray-700">Toll Charges (₹)</label>
+            <label className="text-sm font-medium text-ink">Toll Charges (₹)</label>
             <input
               type="number"
               name="tollCharges"
@@ -172,7 +172,7 @@ TOTAL: ₹${costs.totalFreightCost}`;
             />
           </div>
           <div>
-            <label className="text-sm font-medium text-gray-700">Handling Fee (₹)</label>
+            <label className="text-sm font-medium text-ink">Handling Fee (₹)</label>
             <input
               type="number"
               name="handlingFee"
@@ -188,37 +188,37 @@ TOTAL: ₹${costs.totalFreightCost}`;
       </div>
 
       {/* Cost Breakdown Table */}
-      <div className="p-4 bg-gray-50">
+      <div className="p-4 bg-canvas">
         <h4 className="font-semibold mb-3 text-sm">Cost Breakdown</h4>
         <div className="space-y-2 text-sm">
           <div className="flex justify-between items-center">
-            <span className="text-gray-700">Base Freight Cost</span>
+            <span className="text-ink">Base Freight Cost</span>
             <span className="font-medium">₹{costs.baseFreightCost}</span>
           </div>
           <div className="flex justify-between items-center">
-            <span className="text-gray-700">Fuel Surcharge ({formData.fuelSurchargePercent}%)</span>
+            <span className="text-ink">Fuel Surcharge ({formData.fuelSurchargePercent}%)</span>
             <span className="font-medium">₹{costs.fuelSurcharge}</span>
           </div>
           <div className="flex justify-between items-center">
-            <span className="text-gray-700">Toll Charges</span>
+            <span className="text-ink">Toll Charges</span>
             <span className="font-medium">₹{costs.tollCharges}</span>
           </div>
           <div className="flex justify-between items-center">
-            <span className="text-gray-700">Handling Fee</span>
+            <span className="text-ink">Handling Fee</span>
             <span className="font-medium">₹{costs.handlingFee}</span>
           </div>
-          <div className="border-t pt-2 flex justify-between items-center bg-blue-50 -mx-4 px-4 py-2">
-            <span className="font-bold text-blue-900">Total Freight Cost</span>
-            <span className="text-lg font-bold text-blue-600">₹{costs.totalFreightCost}</span>
+          <div className="border-t pt-2 flex justify-between items-center bg-info/10 -mx-4 px-4 py-2">
+            <span className="font-bold text-info">Total Freight Cost</span>
+            <span className="text-lg font-bold text-info">₹{costs.totalFreightCost}</span>
           </div>
         </div>
       </div>
 
       {/* Actions */}
-      <div className="p-4 bg-white border-t flex gap-2 justify-end">
+      <div className="p-4 bg-surface border-t flex gap-2 justify-end">
         <button
           onClick={handleCopyToClipboard}
-          className="flex items-center gap-2 px-3 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg text-sm font-medium transition-colors"
+          className="flex items-center gap-2 px-3 py-2 bg-surface-hover hover:bg-surface-hover text-ink rounded-lg text-sm font-medium transition-colors"
         >
           {copied ? (
             <>
@@ -234,7 +234,7 @@ TOTAL: ₹${costs.totalFreightCost}`;
         </button>
         <button
           onClick={handleSave}
-          className="px-4 py-2 bg-orange-600 hover:bg-orange-700 text-white rounded-lg text-sm font-medium transition-colors"
+          className="px-4 py-2 bg-warning hover:bg-warning text-white rounded-lg text-sm font-medium transition-colors"
         >
           Save Calculation
         </button>

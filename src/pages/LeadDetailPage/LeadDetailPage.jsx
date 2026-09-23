@@ -17,12 +17,12 @@ const Button = ({ children, variant, className = '', ...props }) => {
     const baseStyle = "px-4 py-2 rounded-md font-medium text-sm focus:outline-none focus:ring-2 focus:ring-offset-2 transition ease-in-out duration-150";
     let variantStyle = "";
     if (variant === "outline") {
-        variantStyle = "border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 focus:ring-indigo-500";
-        if (props.id === 'reject-button') { variantStyle = "border-red-300 bg-white text-red-600 hover:bg-red-50 focus:ring-red-500"; }
+        variantStyle = "border border-line bg-surface text-ink hover:bg-canvas focus:ring-info";
+        if (props.id === 'reject-button') { variantStyle = "border-danger/30 bg-surface text-danger hover:bg-danger/10 focus:ring-danger"; }
     } else if (props.id === 'upload-button') {
-         variantStyle = `bg-gray-600 text-white hover:bg-gray-700 ${props.disabled ? 'bg-gray-300 text-gray-500 cursor-not-allowed' : ''}`;
+         variantStyle = `bg-cta text-cta-foreground hover:bg-cta ${props.disabled ? 'bg-surface-hover text-dim cursor-not-allowed' : ''}`;
     } else {
-        variantStyle = "bg-emerald-600 text-white hover:bg-emerald-700 focus:ring-emerald-500";
+        variantStyle = "bg-cta text-cta-foreground hover:bg-cta focus:ring-ink";
         if (props.disabled) { variantStyle += " opacity-50 cursor-not-allowed"; }
     }
     return ( <button className={`${baseStyle} ${variantStyle} ${className}`} {...props}> {children} </button> );
@@ -458,9 +458,9 @@ const LeadDetailPage = () => {
     if (!leadDetails) {
         return (
             <div className="max-w-4xl mx-auto px-4 py-6 text-center">
-                <h2 className="text-xl font-semibold text-red-600 mb-4">Error: Lead Data Not Found</h2>
-                <p className="text-gray-600 mb-4">Could not load lead details. Please go back to the leads list and try again.</p>
-                <Link to="/leads" className="text-emerald-600 hover:underline">
+                <h2 className="text-xl font-semibold text-danger mb-4">Error: Lead Data Not Found</h2>
+                <p className="text-dim mb-4">Could not load lead details. Please go back to the leads list and try again.</p>
+                <Link to="/leads" className="text-ink hover:underline">
                     Go back to Leads
                 </Link>
             </div>
@@ -471,10 +471,10 @@ const LeadDetailPage = () => {
 
     const getStatusStyles = (status) => {
         switch (status) {
-            case 'approved': return 'bg-green-100 text-green-800';
-            case 'rejected': return 'bg-red-100 text-red-800';
-            case null: return 'bg-yellow-100 text-yellow-800'; // Pending
-            default: return 'bg-gray-100 text-gray-800';
+            case 'approved': return 'bg-success/10 text-success';
+            case 'rejected': return 'bg-danger/10 text-danger';
+            case null: return 'bg-warning/10 text-warning'; // Pending
+            default: return 'bg-surface-hover text-ink';
         }
     };
     const formatStatus = (status) => {
@@ -483,10 +483,10 @@ const LeadDetailPage = () => {
     };
 
     return (
-        <div className="max-w-4xl mx-auto px-4 py-6 bg-white rounded-lg shadow mb-10">
+        <div className="max-w-4xl mx-auto px-4 py-6 bg-surface rounded-lg shadow mb-10">
             {/* Back Navigation */}
             <div className="mb-6">
-                <Link to="/VendorDashboard/leads" className="flex items-center text-sm font-medium text-gray-700 hover:text-gray-900">
+                <Link to="/VendorDashboard/leads" className="flex items-center text-sm font-medium text-ink hover:text-ink">
                     <ArrowLeftIcon className="mr-2 h-4 w-4" />
                     Back to Leads
                 </Link>
@@ -495,9 +495,9 @@ const LeadDetailPage = () => {
             {/* Project Header */}
             <div className="flex flex-wrap justify-between items-start mb-8 gap-4">
                 <div>
-                    <h1 className="text-2xl md:text-3xl font-bold text-gray-900">{leadDetails?.name || 'Unnamed Lead'}</h1>
+                    <h1 className="text-2xl md:text-3xl font-bold text-ink">{leadDetails?.name || 'Unnamed Lead'}</h1>
                     <div className="mt-1">
-                        <span className="inline-block bg-gray-200 rounded-full px-3 py-1 text-xs font-medium text-gray-700">
+                        <span className="inline-block bg-surface-hover rounded-full px-3 py-1 text-xs font-medium text-ink">
                             Client ID: {leadDetails?.clientId || 'N/A'}
                         </span>
                     </div>
@@ -506,13 +506,13 @@ const LeadDetailPage = () => {
                     <button
                         type="button"
                         onClick={() => navigate(`/VendorDashboard/support?module=quotation&ref=${encodeURIComponent(leadId)}`)}
-                        className="inline-flex items-center px-4 py-2 border border-emerald-200 bg-emerald-50 text-emerald-700 text-sm font-medium rounded-md hover:bg-emerald-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 transition-colors duration-200"
+                        className="inline-flex items-center px-4 py-2 border border-line bg-surface-hover text-ink text-sm font-medium rounded-md hover:bg-surface-hover focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-ink transition-colors duration-200"
                     >
                         Raise Support
                     </button>
                     <button
                         onClick={openWorkspace}
-                        className="inline-flex items-center px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors duration-200"
+                        className="inline-flex items-center px-4 py-2 bg-info text-white text-sm font-medium rounded-md hover:bg-info focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-info transition-colors duration-200"
                     >
                         <RectangleGroupIcon className="h-4 w-4 mr-2" />
                         Open Workspace
@@ -525,8 +525,8 @@ const LeadDetailPage = () => {
 
             {/* Project Overview */}
             <div className="mb-10">
-                <h2 className="text-xl font-semibold text-gray-900 mb-3">Project Overview</h2>
-                <p className="text-sm text-gray-700 mb-6 leading-relaxed">
+                <h2 className="text-xl font-semibold text-ink mb-3">Project Overview</h2>
+                <p className="text-sm text-ink mb-6 leading-relaxed">
                     {leadDetails?.description || 'No description provided.'}
                 </p>
 
@@ -534,14 +534,14 @@ const LeadDetailPage = () => {
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-x-6 gap-y-8 mt-6">
                     {leadDetails?.duration && (
                         <div className="flex items-start">
-                            <ClockIcon className="h-5 w-5 text-gray-500 mr-2 mt-0.5 flex-shrink-0" />
-                            <div><p className="text-xs sm:text-sm text-gray-500">Duration</p><p className="text-sm sm:text-base font-semibold">{leadDetails.duration}</p></div>
+                            <ClockIcon className="h-5 w-5 text-dim mr-2 mt-0.5 flex-shrink-0" />
+                            <div><p className="text-xs sm:text-sm text-dim">Duration</p><p className="text-sm sm:text-base font-semibold">{leadDetails.duration}</p></div>
                         </div>
                     )}
                     {leadDetails?.budget && (
                         <div className="flex items-start">
-                            <CurrencyRupeeIcon className="h-5 w-5 text-gray-500 mr-2 mt-0.5 flex-shrink-0" />
-                            <div><p className="text-xs sm:text-sm text-gray-500">Budget</p><p className="text-sm sm:text-base font-semibold">{leadDetails.budget}</p></div>
+                            <CurrencyRupeeIcon className="h-5 w-5 text-dim mr-2 mt-0.5 flex-shrink-0" />
+                            <div><p className="text-xs sm:text-sm text-dim">Budget</p><p className="text-sm sm:text-base font-semibold">{leadDetails.budget}</p></div>
                         </div>
                     )}
                     {/* Placeholders */}
@@ -552,40 +552,40 @@ const LeadDetailPage = () => {
             {/* Project Documentation (BOQ Link) */}
             <div className="mb-10">
                  <div className="flex flex-wrap justify-between items-center mb-4 gap-2">
-                    <h2 className="text-xl font-semibold text-gray-900">Project Documentation</h2>
+                    <h2 className="text-xl font-semibold text-ink">Project Documentation</h2>
                     {leadDetails?.boqAttachment || leadDetails?.boqFileUrl ? (
                         <button
                             type="button"
                             onClick={handleDownloadBoq}
-                            className="flex items-center text-emerald-600 hover:text-emerald-800 text-sm font-medium"
+                            className="flex items-center text-ink hover:text-ink text-sm font-medium"
                         >
                             <DownloadIcon className="mr-1 h-4 w-4" />
                             Download BOQ PDF
                         </button>
                     ) : (
-                        <span className="text-sm text-gray-500 italic">No BOQ document</span>
+                        <span className="text-sm text-dim italic">No BOQ document</span>
                     )}
                 </div>
-                <div className="border rounded-md p-4 bg-gray-50 text-sm text-gray-600">
+                <div className="border rounded-md p-4 bg-canvas text-sm text-dim">
                     Detailed Bill of Quantities (BOQ) is available in the downloadable PDF document linked above (if provided).
                 </div>
             </div>
 
             {/* Vendor BOQ Upload Section (always available - mandatory if PM hasn't provided BOQ, optional if PM has) */}
             {true && (
-                <div className="mb-10 p-4 rounded-lg border-l-4 border-blue-500 bg-blue-50">
+                <div className="mb-10 p-4 rounded-lg border-l-4 border-info bg-info/10">
                     <div className="flex items-start gap-3">
                         <div className="flex-shrink-0">
-                            <UploadIcon className="h-5 w-5 text-blue-600 mt-0.5" />
+                            <UploadIcon className="h-5 w-5 text-info mt-0.5" />
                         </div>
                         <div className="flex-1">
-                            <h3 className="text-sm font-semibold text-blue-900 mb-2">
+                            <h3 className="text-sm font-semibold text-info mb-2">
                                 {!leadDetails?.boqAttachment && !leadDetails?.boqFileUrl 
                                     ? 'Create Your Own Bill of Quantities (BOQ) - Required'
                                     : 'Upload Your Own Bill of Quantities (BOQ) - Optional'
                                 }
                             </h3>
-                            <p className="text-sm text-blue-800 mb-4">
+                            <p className="text-sm text-info mb-4">
                                 {!leadDetails?.boqAttachment && !leadDetails?.boqFileUrl 
                                     ? 'No BOQ has been provided by the PM. You must upload your own BOQ and submit a quotation based on it.'
                                     : 'A BOQ has been provided by the PM. You can optionally upload your own BOQ as an alternative and submit a quotation based on it instead.'
@@ -595,16 +595,16 @@ const LeadDetailPage = () => {
                             {/* Vendor BOQ Upload */}
                             {!uploadedVendorBoq ? (
                                 <div>
-                                    <p className="text-sm font-medium text-gray-700 mb-3">Step 1: Upload Your BOQ</p>
-                                    <div className="border-2 border-dashed border-blue-300 rounded-md p-4 flex flex-col items-center justify-center text-center bg-white mb-4">
-                                        <UploadIcon className="h-8 w-8 text-blue-400 mb-2" />
-                                        <p className="text-sm text-gray-700 mb-1">
+                                    <p className="text-sm font-medium text-ink mb-3">Step 1: Upload Your BOQ</p>
+                                    <div className="border-2 border-dashed border-info/30 rounded-md p-4 flex flex-col items-center justify-center text-center bg-surface mb-4">
+                                        <UploadIcon className="h-8 w-8 text-info mb-2" />
+                                        <p className="text-sm text-ink mb-1">
                                             Upload your own Bill of Quantities (BOQ)
                                         </p>
-                                        <p className="text-xs text-gray-500 mb-3">
+                                        <p className="text-xs text-dim mb-3">
                                             Supported format: PDF
                                         </p>
-                                        <label className="inline-flex items-center px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-md cursor-pointer hover:bg-blue-700">
+                                        <label className="inline-flex items-center px-4 py-2 bg-info text-white text-sm font-medium rounded-md cursor-pointer hover:bg-info">
                                             Choose File
                                             <input
                                                 type="file"
@@ -614,7 +614,7 @@ const LeadDetailPage = () => {
                                             />
                                         </label>
                                         {vendorBoqFile && (
-                                            <p className="mt-2 text-xs text-gray-600">
+                                            <p className="mt-2 text-xs text-dim">
                                                 Selected: <span className="font-medium">{vendorBoqFile.name}</span>
                                             </p>
                                         )}
@@ -626,8 +626,8 @@ const LeadDetailPage = () => {
                                             disabled={!vendorBoqFile || isUploadingVendorBoq}
                                             className={`inline-flex items-center px-4 py-2 rounded-md text-sm font-medium text-white ${
                                                 !vendorBoqFile || isUploadingVendorBoq
-                                                    ? 'bg-gray-400 cursor-not-allowed'
-                                                    : 'bg-blue-600 hover:bg-blue-700'
+                                                    ? 'bg-cta cursor-not-allowed'
+                                                    : 'bg-info hover:bg-info'
                                             }`}
                                         >
                                             {isUploadingVendorBoq ? (
@@ -641,18 +641,18 @@ const LeadDetailPage = () => {
                                         </button>
                                     </div>
                                     {vendorBoqError && (
-                                        <p className="mt-2 text-sm text-red-600">{vendorBoqError}</p>
+                                        <p className="mt-2 text-sm text-danger">{vendorBoqError}</p>
                                     )}
                                 </div>
                             ) : (
-                                <div className="bg-green-50 border border-green-200 rounded-md p-3 mb-4">
+                                <div className="bg-success/10 border border-success/20 rounded-md p-3 mb-4">
                                     <div className="flex items-center gap-2 mb-2">
-                                        <CheckIcon className="h-5 w-5 text-green-600 flex-shrink-0" />
-                                        <p className="text-sm font-medium text-green-800">
+                                        <CheckIcon className="h-5 w-5 text-success flex-shrink-0" />
+                                        <p className="text-sm font-medium text-success">
                                             BOQ Uploaded
                                         </p>
                                     </div>
-                                    <p className="text-xs text-green-700">
+                                    <p className="text-xs text-success">
                                         <span className="font-medium">{uploadedVendorBoq.fileName}</span> - Uploaded at {new Date(uploadedVendorBoq.uploadedAt).toLocaleString()}
                                     </p>
                                 </div>
@@ -661,17 +661,17 @@ const LeadDetailPage = () => {
                             {/* Vendor Quotation Upload (shown after BOQ upload) */}
                             {uploadedVendorBoq && (
                                 <div className="mt-6">
-                                    <p className="text-sm font-medium text-gray-700 mb-3">Step 2: Upload Your Quotation</p>
+                                    <p className="text-sm font-medium text-ink mb-3">Step 2: Upload Your Quotation</p>
                                     
                                     {uploadedVendorQuotation ? (
-                                        <div className="bg-green-50 border border-green-200 rounded-md p-3">
+                                        <div className="bg-success/10 border border-success/20 rounded-md p-3">
                                             <div className="flex items-center gap-2">
-                                                <CheckIcon className="h-5 w-5 text-green-600 flex-shrink-0" />
+                                                <CheckIcon className="h-5 w-5 text-success flex-shrink-0" />
                                                 <div>
-                                                    <p className="text-sm font-medium text-green-800">
+                                                    <p className="text-sm font-medium text-success">
                                                         Quotation Sent to PM
                                                     </p>
-                                                    <p className="text-xs text-green-700 mt-1">
+                                                    <p className="text-xs text-success mt-1">
                                                         <span className="font-medium">{uploadedVendorQuotation.fileName}</span> - Uploaded at {new Date(uploadedVendorQuotation.uploadedAt).toLocaleString()}
                                                     </p>
                                                 </div>
@@ -679,15 +679,15 @@ const LeadDetailPage = () => {
                                         </div>
                                     ) : (
                                         <div>
-                                            <div className="border-2 border-dashed border-blue-300 rounded-md p-4 flex flex-col items-center justify-center text-center bg-white mb-4">
-                                                <UploadIcon className="h-8 w-8 text-blue-400 mb-2" />
-                                                <p className="text-sm text-gray-700 mb-1">
+                                            <div className="border-2 border-dashed border-info/30 rounded-md p-4 flex flex-col items-center justify-center text-center bg-surface mb-4">
+                                                <UploadIcon className="h-8 w-8 text-info mb-2" />
+                                                <p className="text-sm text-ink mb-1">
                                                     Upload your quotation based on the BOQ above
                                                 </p>
-                                                <p className="text-xs text-gray-500 mb-3">
+                                                <p className="text-xs text-dim mb-3">
                                                     Supported format: PDF
                                                 </p>
-                                                <label className="inline-flex items-center px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-md cursor-pointer hover:bg-blue-700">
+                                                <label className="inline-flex items-center px-4 py-2 bg-info text-white text-sm font-medium rounded-md cursor-pointer hover:bg-info">
                                                     Choose File
                                                     <input
                                                         type="file"
@@ -697,7 +697,7 @@ const LeadDetailPage = () => {
                                                     />
                                                 </label>
                                                 {vendorQuotationFile && (
-                                                    <p className="mt-2 text-xs text-gray-600">
+                                                    <p className="mt-2 text-xs text-dim">
                                                         Selected: <span className="font-medium">{vendorQuotationFile.name}</span>
                                                     </p>
                                                 )}
@@ -709,8 +709,8 @@ const LeadDetailPage = () => {
                                                     disabled={!vendorQuotationFile || isUploadingVendorQuotation}
                                                     className={`inline-flex items-center px-4 py-2 rounded-md text-sm font-medium text-white ${
                                                         !vendorQuotationFile || isUploadingVendorQuotation
-                                                            ? 'bg-gray-400 cursor-not-allowed'
-                                                            : 'bg-blue-600 hover:bg-blue-700'
+                                                            ? 'bg-cta cursor-not-allowed'
+                                                            : 'bg-info hover:bg-info'
                                                     }`}
                                                 >
                                                     {isUploadingVendorQuotation ? (
@@ -724,7 +724,7 @@ const LeadDetailPage = () => {
                                                 </button>
                                             </div>
                                             {vendorQuotationError && (
-                                                <p className="mt-2 text-sm text-red-600">{vendorQuotationError}</p>
+                                                <p className="mt-2 text-sm text-danger">{vendorQuotationError}</p>
                                             )}
                                         </div>
                                     )}
@@ -737,54 +737,54 @@ const LeadDetailPage = () => {
 
             {/* PM Rejection Feedback (if rejected for revision or has negotiation history) */}
             {(leadDetails?.status === 'sent' || leadDetails?.rejectionReason || leadDetails?.negotiationHistory?.length > 0) && leadDetails?.rejectionReason && (
-                <div className="mb-10 p-4 rounded-lg border-l-4 border-rose-500 bg-rose-50">
+                <div className="mb-10 p-4 rounded-lg border-l-4 border-danger bg-danger/10">
                     <div className="flex items-start gap-3">
                         <div className="flex-shrink-0">
                             {leadDetails?.status === 'sent' && leadDetails?.negotiationHistory?.length > 0 ? (
-                                <ArrowPathIcon className="h-5 w-5 text-orange-600 mt-0.5" />
+                                <ArrowPathIcon className="h-5 w-5 text-warning mt-0.5" />
                             ) : (
-                                <XMarkIcon className="h-5 w-5 text-rose-600 mt-0.5" />
+                                <XMarkIcon className="h-5 w-5 text-danger mt-0.5" />
                             )}
                         </div>
                         <div className="flex-1">
-                            <h3 className="text-sm font-semibold text-rose-800 mb-2">
+                            <h3 className="text-sm font-semibold text-danger mb-2">
                                 {leadDetails?.status === 'sent' && leadDetails?.negotiationHistory?.length > 0 
                                     ? `Lead Updated & Resent for Revision (v${leadDetails?.leadVersion || 1})`
                                     : `Lead Returned for Revision (v${leadDetails?.leadVersion || 1})`
                                 }
                             </h3>
                             {leadDetails?.status === 'sent' && leadDetails?.negotiationHistory?.length > 0 && (
-                                <div className="text-xs text-orange-700 bg-orange-100 rounded px-2 py-1 mb-3 inline-block">
+                                <div className="text-xs text-warning bg-warning/10 rounded px-2 py-1 mb-3 inline-block">
                                     ✓ PM has updated this lead and resent it for your review
                                 </div>
                             )}
-                            <div className="text-sm text-rose-700 mb-3">
+                            <div className="text-sm text-danger mb-3">
                                 <p className="font-medium mb-1">Reason for Rejection:</p>
-                                <p className="bg-white rounded px-3 py-2 border border-rose-200 mb-2">
+                                <p className="bg-surface rounded px-3 py-2 border border-danger/20 mb-2">
                                     {leadDetails.rejectionReason}
                                 </p>
                             </div>
                             {leadDetails?.pmDecision?.feedback && (
-                                <div className="text-sm text-rose-700">
+                                <div className="text-sm text-danger">
                                     <p className="font-medium mb-1">PM Feedback:</p>
-                                    <p className="bg-white rounded px-3 py-2 border border-rose-200">
+                                    <p className="bg-surface rounded px-3 py-2 border border-danger/20">
                                         {leadDetails.pmDecision.feedback}
                                     </p>
                                 </div>
                             )}
                             {leadDetails?.negotiationHistory && leadDetails.negotiationHistory.length > 0 && (
-                                <div className="mt-3 pt-3 border-t border-rose-200">
-                                    <p className="text-xs font-medium text-rose-700 mb-2">Negotiation History:</p>
+                                <div className="mt-3 pt-3 border-t border-danger/20">
+                                    <p className="text-xs font-medium text-danger mb-2">Negotiation History:</p>
                                     <div className="space-y-1">
                                         {leadDetails.negotiationHistory.map((entry, idx) => (
-                                            <div key={idx} className="text-xs text-rose-600 bg-white rounded px-2 py-1 border border-rose-100">
+                                            <div key={idx} className="text-xs text-danger bg-surface rounded px-2 py-1 border border-danger/10">
                                                 <span className="font-medium">v{entry.version}:</span> {entry.action === 'pm_rejected' ? 'PM Rejected' : 'PM Resent'} {entry.rejectionReason && `- ${entry.rejectionReason}`}
                                             </div>
                                         ))}
                                     </div>
                                 </div>
                             )}
-                            <p className="text-xs text-rose-600 mt-3 italic">
+                            <p className="text-xs text-danger mt-3 italic">
                                 Please update your quotation and resubmit below to address the feedback.
                             </p>
                         </div>
@@ -795,20 +795,20 @@ const LeadDetailPage = () => {
             {/* Upload/View Quotation - Show when PM has provided BOQ */}
             {(leadDetails?.boqAttachment || leadDetails?.boqFileUrl) && (
             <div className="mb-10">
-                <h2 className="text-xl font-semibold text-gray-900 mb-4">Your Quotation</h2>
+                <h2 className="text-xl font-semibold text-ink mb-4">Your Quotation</h2>
                 
-                <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-md">
-                    <p className="text-sm text-blue-800">
+                <div className="mb-4 p-3 bg-info/10 border border-info/20 rounded-md">
+                    <p className="text-sm text-info">
                         <span className="font-medium">BOQ Source:</span> You can upload your quotation based on the PM's provided BOQ above, or you can optionally upload your own BOQ (see section above) and use that instead.
                     </p>
                 </div>
 
                 {uploadedQuotation ? (
-                    <div className="flex items-center justify-between gap-3 p-3 border rounded-md bg-green-50 mb-4">
+                    <div className="flex items-center justify-between gap-3 p-3 border rounded-md bg-success/10 mb-4">
                         <div className="flex items-center gap-2">
-                            <PaperClipIcon className="h-5 w-5 text-green-600 flex-shrink-0" />
+                            <PaperClipIcon className="h-5 w-5 text-success flex-shrink-0" />
                             <div>
-                                <p className="text-sm font-medium text-green-800">
+                                <p className="text-sm font-medium text-success">
                                     Quotation sent to PM for review
                                 </p>
                                 {uploadedQuotation.pdfUrl && (
@@ -816,28 +816,28 @@ const LeadDetailPage = () => {
                                         href={uploadedQuotation.pdfUrl}
                                         target="_blank"
                                         rel="noopener noreferrer"
-                                        className="text-xs text-green-700 underline"
+                                        className="text-xs text-success underline"
                                     >
                                         View uploaded PDF
                                     </a>
                                 )}
                             </div>
                         </div>
-                        <span className="text-xs text-green-700">
+                        <span className="text-xs text-success">
                             Status: {uploadedQuotation.status || 'sent to pm for review'}
                         </span>
                     </div>
                 ) : (
                     <>
-                        <div className="border-2 border-dashed border-gray-300 rounded-md p-6 flex flex-col items-center justify-center text-center bg-gray-50">
-                            <UploadIcon className="h-10 w-10 text-gray-400 mb-2" />
-                            <p className="text-sm text-gray-700 mb-1">
+                        <div className="border-2 border-dashed border-line rounded-md p-6 flex flex-col items-center justify-center text-center bg-canvas">
+                            <UploadIcon className="h-10 w-10 text-dim mb-2" />
+                            <p className="text-sm text-ink mb-1">
                                 Upload your quotation (PDF) to send it to the PM for review.
                             </p>
-                            <p className="text-xs text-gray-400 mb-3">
+                            <p className="text-xs text-dim mb-3">
                                 Supported format: PDF. One quotation per lead.
                             </p>
-                            <label className="inline-flex items-center px-4 py-2 bg-gray-800 text-white text-sm font-medium rounded-md cursor-pointer hover:bg-gray-900">
+                            <label className="inline-flex items-center px-4 py-2 bg-cta text-cta-foreground text-sm font-medium rounded-md cursor-pointer hover:bg-cta">
                                 Choose File
                                 <input
                                     type="file"
@@ -847,7 +847,7 @@ const LeadDetailPage = () => {
                                 />
                             </label>
                             {quotationFile && (
-                                <p className="mt-2 text-xs text-gray-600">
+                                <p className="mt-2 text-xs text-dim">
                                     Selected: <span className="font-medium">{quotationFile.name}</span>
                                 </p>
                             )}
@@ -859,8 +859,8 @@ const LeadDetailPage = () => {
                                 disabled={!quotationFile || isUploadingQuotation}
                                 className={`inline-flex items-center px-4 py-2 rounded-md text-sm font-medium text-white ${
                                     !quotationFile || isUploadingQuotation
-                                        ? 'bg-gray-400 cursor-not-allowed'
-                                        : 'bg-emerald-600 hover:bg-emerald-700'
+                                        ? 'bg-cta cursor-not-allowed'
+                                        : 'bg-cta hover:bg-cta'
                                 }`}
                             >
                                 {isUploadingQuotation ? (
@@ -874,7 +874,7 @@ const LeadDetailPage = () => {
                             </button>
                         </div>
                         {quotationError && (
-                            <p className="mt-2 text-sm text-red-600">{quotationError}</p>
+                            <p className="mt-2 text-sm text-danger">{quotationError}</p>
                         )}
                     </>
                 )}
@@ -886,7 +886,7 @@ const LeadDetailPage = () => {
                 <button
                     type="button"
                     onClick={() => navigate(`/VendorDashboard/support?module=quotation&ref=${encodeURIComponent(leadId)}`)}
-                    className="inline-flex items-center px-4 py-2 rounded-md text-sm font-medium border border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-100"
+                    className="inline-flex items-center px-4 py-2 rounded-md text-sm font-medium border border-line bg-surface-hover text-ink hover:bg-surface-hover"
                 >
                     Need help with this lead?
                 </button>

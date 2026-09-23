@@ -76,16 +76,16 @@ const ActivityFullScreen = ({
   // Activity type colors
   const getActivityColor = (activity) => {
     const colorMap = {
-      'create': 'text-green-600 bg-green-100',
-      'update': 'text-blue-600 bg-blue-100',
-      'delete': 'text-red-600 bg-red-100',
-      'move': 'text-purple-600 bg-purple-100',
-      'style': 'text-pink-600 bg-pink-100',
-      'canvas': 'text-indigo-600 bg-indigo-100',
-      'collaboration': 'text-orange-600 bg-orange-100'
+      'create': 'text-success bg-success/10',
+      'update': 'text-info bg-info/10',
+      'delete': 'text-danger bg-danger/10',
+      'move': 'text-ink bg-surface-hover',
+      'style': 'text-ink bg-surface-hover',
+      'canvas': 'text-info bg-info/10',
+      'collaboration': 'text-warning bg-warning/10'
     };
 
-    return colorMap[activity.actionType] || 'text-gray-600 bg-gray-100';
+    return colorMap[activity.actionType] || 'text-dim bg-surface-hover';
   };
 
   // Format activity description
@@ -292,12 +292,12 @@ const ActivityFullScreen = ({
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-7xl h-full max-h-[90vh] flex flex-col">
+      <div className="bg-surface rounded-2xl shadow-2xl w-full max-w-7xl h-full max-h-[90vh] flex flex-col">
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-gray-200">
+        <div className="flex items-center justify-between p-6 border-b border-line">
           <div>
-          <h2 className="text-xl font-bold text-gray-900">Activity History</h2>
-          <p className="text-sm text-gray-600 mt-1">
+          <h2 className="text-xl font-bold text-ink">Activity History</h2>
+          <p className="text-sm text-dim mt-1">
 
               {selectedSubtask 
                 ? `${selectedSubtask.name} activities`
@@ -310,13 +310,13 @@ const ActivityFullScreen = ({
           
           <div className="flex items-center space-x-3">
             {/* View Mode Toggle */}
-            <div className="flex bg-gray-100 rounded-lg p-1">
+            <div className="flex bg-surface-hover rounded-lg p-1">
               <button
                 onClick={() => setViewMode('grouped')}
                 className={`px-2 py-1 rounded text-xs font-medium transition-colors ${
                   viewMode === 'grouped' 
-                    ? 'bg-white text-gray-900 shadow-sm' 
-                    : 'text-gray-600 hover:text-gray-900'
+                    ? 'bg-surface text-ink ' 
+                    : 'text-dim hover:text-ink'
                 }`}
               >
                 By Date
@@ -325,8 +325,8 @@ const ActivityFullScreen = ({
                 onClick={() => setViewMode('list')}
                 className={`px-3 py-1 rounded text-sm font-medium transition-colors ${
                   viewMode === 'list' 
-                    ? 'bg-white text-gray-900 shadow-sm' 
-                    : 'text-gray-600 hover:text-gray-900'
+                    ? 'bg-surface text-ink ' 
+                    : 'text-dim hover:text-ink'
                 }`}
               >
                 List View
@@ -336,7 +336,7 @@ const ActivityFullScreen = ({
             {/* Export Button */}
             <button
               onClick={exportActivities}
-              className="flex items-center space-x-1 px-3 py-1.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+              className="flex items-center space-x-1 px-3 py-1.5 bg-info text-white rounded-lg hover:bg-info transition-colors"
             >
               <Download className="w-3 h-3" />
               <span className="text-xs">Export</span>
@@ -345,49 +345,49 @@ const ActivityFullScreen = ({
             {/* Close Button */}
             <button
               onClick={onClose}
-              className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+              className="p-2 hover:bg-surface-hover rounded-lg transition-colors"
             >
-              <X className="w-5 h-5 text-gray-500" />
+              <X className="w-5 h-5 text-dim" />
             </button>
           </div>
         </div>
 
         {/* Stats Bar */}
         {stats && (
-          <div className="px-6 py-4 bg-gray-50 border-b border-gray-200">
+          <div className="px-6 py-4 bg-canvas border-b border-line">
             <div className="grid grid-cols-4 gap-6">
               <div className="text-center">
-                <div className="text-2xl font-bold text-gray-900">{stats.totalActivities}</div>
-                <div className="text-sm text-gray-600">Total Activities</div>
+                <div className="text-2xl font-bold text-ink">{stats.totalActivities}</div>
+                <div className="text-sm text-dim">Total Activities</div>
               </div>
               <div className="text-center">
-                <div className="text-2xl font-bold text-blue-600">{Object.keys(stats.activitiesByUser).length}</div>
-                <div className="text-sm text-gray-600">Active Users</div>
+                <div className="text-2xl font-bold text-info">{Object.keys(stats.activitiesByUser).length}</div>
+                <div className="text-sm text-dim">Active Users</div>
               </div>
               <div className="text-center">
-                <div className="text-2xl font-bold text-green-600">{stats.activitiesByType.create || 0}</div>
-                <div className="text-sm text-gray-600">Items Created</div>
+                <div className="text-2xl font-bold text-success">{stats.activitiesByType.create || 0}</div>
+                <div className="text-sm text-dim">Items Created</div>
               </div>
               <div className="text-center">
-                <div className="text-2xl font-bold text-purple-600">{stats.mostActiveUser || 'N/A'}</div>
-                <div className="text-sm text-gray-600">Most Active User</div>
+                <div className="text-2xl font-bold text-ink">{stats.mostActiveUser || 'N/A'}</div>
+                <div className="text-sm text-dim">Most Active User</div>
               </div>
             </div>
           </div>
         )}
 
         {/* Filters */}
-        <div className="px-6 py-4 border-b border-gray-200 bg-white">
+        <div className="px-6 py-4 border-b border-line bg-surface">
           <div className="grid grid-cols-6 gap-4">
             {/* Search */}
             <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 transform  w-4 h-4 text-dim" />
               <input
                 type="text"
                 placeholder="Search activities..."
                 value={filters.searchTerm}
                 onChange={(e) => setFilters(prev => ({ ...prev, searchTerm: e.target.value }))}
-                 className="w-full pl-9 pr-3 py-1.5 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                 className="w-full pl-9 pr-3 py-1.5 text-sm border border-line rounded-lg focus:ring-2 focus:ring-info focus:border-transparent"
               />
             </div>
 
@@ -396,20 +396,20 @@ const ActivityFullScreen = ({
               type="date"
               value={filters.startDate}
               onChange={(e) => setFilters(prev => ({ ...prev, startDate: e.target.value }))}
-              className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="px-3 py-2 border border-line rounded-lg focus:ring-2 focus:ring-info focus:border-transparent"
             />
             <input
               type="date"
               value={filters.endDate}
               onChange={(e) => setFilters(prev => ({ ...prev, endDate: e.target.value }))}
-              className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="px-3 py-2 border border-line rounded-lg focus:ring-2 focus:ring-info focus:border-transparent"
             />
 
             {/* User Filter */}
             <select
               value={filters.userId}
               onChange={(e) => setFilters(prev => ({ ...prev, userId: e.target.value }))}
-              className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="px-3 py-2 border border-line rounded-lg focus:ring-2 focus:ring-info focus:border-transparent"
             >
               <option value="">All Users</option>
               {getUniqueUsers().map(user => (
@@ -421,7 +421,7 @@ const ActivityFullScreen = ({
             <select
               value={filters.actionType}
               onChange={(e) => setFilters(prev => ({ ...prev, actionType: e.target.value }))}
-              className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="px-3 py-2 border border-line rounded-lg focus:ring-2 focus:ring-info focus:border-transparent"
             >
               <option value="">All Actions</option>
               <option value="create">Create</option>
@@ -437,7 +437,7 @@ const ActivityFullScreen = ({
             <select
               value={filters.targetType}
               onChange={(e) => setFilters(prev => ({ ...prev, targetType: e.target.value }))}
-              className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="px-3 py-2 border border-line rounded-lg focus:ring-2 focus:ring-info focus:border-transparent"
             >
               <option value="">All Types</option>
               <option value="task">Tasks</option>
@@ -453,7 +453,7 @@ const ActivityFullScreen = ({
         <div className="flex-1 overflow-y-auto p-6">
           {loading ? (
             <div className="flex items-center justify-center h-64">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-info"></div>
             </div>
           ) : viewMode === 'grouped' ? (
             // Grouped by date view
@@ -461,9 +461,9 @@ const ActivityFullScreen = ({
               {Object.entries(groupedActivities).map(([date, dateActivities]) => (
                 <div key={date} className="space-y-4">
                   <div className="flex items-center space-x-2">
-                    <Calendar className="w-4 h-4 text-gray-400" />
-                    <h3 className="text-base font-semibold text-gray-900">{formatDate(date)}</h3>
-                    <span className="text-xs text-gray-500">({dateActivities.length} activities)</span>
+                    <Calendar className="w-4 h-4 text-dim" />
+                    <h3 className="text-base font-semibold text-ink">{formatDate(date)}</h3>
+                    <span className="text-xs text-dim">({dateActivities.length} activities)</span>
                   </div>
                   
                   <div className="space-y-3 ml-8">
@@ -472,25 +472,25 @@ const ActivityFullScreen = ({
                       const colorClass = getActivityColor(activity);
                       
                       return (
-                        <div key={activity.activityId} className="flex items-start space-x-4 p-4 bg-white border border-gray-200 rounded-lg hover:shadow-sm transition-shadow">
+                        <div key={activity.activityId} className="flex items-start space-x-4 p-4 bg-surface border border-line rounded-lg  transition-shadow">
                           <div className={`flex items-center justify-center w-10 h-10 rounded-full flex-shrink-0 ${colorClass}`}>
                             <IconComponent className="w-5 h-5" />
                           </div>
                           
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center justify-between">
-                              <p className="text-sm text-gray-900">
+                              <p className="text-sm text-ink">
                                 <span className="font-medium">{activity.userName}</span>{' '}
                                 {formatActivityDescription(activity)}
                               </p>
-                              <div className="flex items-center space-x-2 text-xs text-gray-500">
+                              <div className="flex items-center space-x-2 text-xs text-dim">
                                 <Clock className="w-3 h-3" />
                                 <span>{formatTime(activity.timestamp)}</span>
                               </div>
                             </div>
                             
                             {activity.details && Object.keys(activity.details).length > 0 && (
-                              <div className="mt-2 text-xs text-gray-600 bg-gray-50 rounded p-2">
+                              <div className="mt-2 text-xs text-dim bg-canvas rounded p-2">
                                 {JSON.stringify(activity.details, null, 2)}
                               </div>
                             )}
@@ -504,9 +504,9 @@ const ActivityFullScreen = ({
               
               {Object.keys(groupedActivities).length === 0 && (
                 <div className="text-center py-12">
-                  <FileText className="w-10 h-10 text-gray-400 mx-auto mb-3" />
-                    <h3 className="text-base font-medium text-gray-900 mb-2">No activities found</h3>
-                    <p className="text-sm text-gray-600">Try adjusting your filters or date range.</p>
+                  <FileText className="w-10 h-10 text-dim mx-auto mb-3" />
+                    <h3 className="text-base font-medium text-ink mb-2">No activities found</h3>
+                    <p className="text-sm text-dim">Try adjusting your filters or date range.</p>
                 </div>
               )}
             </div>
@@ -518,18 +518,18 @@ const ActivityFullScreen = ({
                 const colorClass = getActivityColor(activity);
                 
                 return (
-                  <div key={activity.activityId} className="flex items-start space-x-4 p-4 bg-white border border-gray-200 rounded-lg hover:shadow-sm transition-shadow">
+                  <div key={activity.activityId} className="flex items-start space-x-4 p-4 bg-surface border border-line rounded-lg  transition-shadow">
                     <div className={`flex items-center justify-center w-10 h-10 rounded-full flex-shrink-0 ${colorClass}`}>
                       <IconComponent className="w-5 h-5" />
                     </div>
                     
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center justify-between">
-                        <p className="text-sm text-gray-900">
+                        <p className="text-sm text-ink">
                           <span className="font-medium">{activity.userName}</span>{' '}
                           {formatActivityDescription(activity)}
                         </p>
-                        <div className="flex items-center space-x-2 text-xs text-gray-500">
+                        <div className="flex items-center space-x-2 text-xs text-dim">
                           <span>{formatDate(activity.date)}</span>
                           <Clock className="w-3 h-3" />
                           <span>{formatTime(activity.timestamp)}</span>
@@ -537,7 +537,7 @@ const ActivityFullScreen = ({
                       </div>
                       
                       {activity.details && Object.keys(activity.details).length > 0 && (
-                        <div className="mt-2 text-xs text-gray-600 bg-gray-50 rounded p-2">
+                        <div className="mt-2 text-xs text-dim bg-canvas rounded p-2">
                           {JSON.stringify(activity.details, null, 2)}
                         </div>
                       )}
@@ -548,9 +548,9 @@ const ActivityFullScreen = ({
               
               {activities.length === 0 && (
                 <div className="text-center py-12">
-                  <FileText className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                  <h3 className="text-lg font-medium text-gray-900 mb-2">No activities found</h3>
-                  <p className="text-gray-600">Try adjusting your filters or date range.</p>
+                  <FileText className="w-12 h-12 text-dim mx-auto mb-4" />
+                  <h3 className="text-lg font-medium text-ink mb-2">No activities found</h3>
+                  <p className="text-dim">Try adjusting your filters or date range.</p>
                 </div>
               )}
             </div>

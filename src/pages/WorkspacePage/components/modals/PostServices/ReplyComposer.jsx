@@ -64,18 +64,18 @@ const ReplyComposer = ({
   };
 
   return (
-    <div className="px-3 pb-3 border-t border-gray-100">
+    <div className="px-3 pb-3 border-t border-line">
       <div className="mt-2 flex items-start space-x-2">
-        <div className="w-5 h-5 rounded-full bg-gray-200 flex items-center justify-center flex-shrink-0">
-          <User className="w-2.5 h-2.5 text-gray-600" />
+        <div className="w-5 h-5 rounded-full bg-surface-hover flex items-center justify-center flex-shrink-0">
+          <User className="w-2.5 h-2.5 text-dim" />
         </div>
         <div className="flex-1">
           {/* Reply Text Input with Highlighting */}
           <div className="relative">
-            <div className="w-full min-h-[40px] p-1.5 border border-gray-200 rounded bg-white text-[11px] text-gray-800 whitespace-pre-wrap break-words leading-[1.3] focus-within:ring-1 focus-within:ring-blue-500 focus-within:border-transparent">
+            <div className="w-full min-h-[40px] p-1.5 border border-line rounded bg-surface text-[11px] text-ink whitespace-pre-wrap break-words leading-[1.3] focus-within:ring-1 focus-within:ring-info focus-within:border-transparent">
               {renderTextWithHighlights(replyMessage)}
               {!replyMessage && (
-                <span className="text-gray-400 text-[11px]">Reply to {post.author.name}...</span>
+                <span className="text-dim text-[11px]">Reply to {post.author.name}...</span>
               )}
             </div>
             <textarea
@@ -84,7 +84,7 @@ const ReplyComposer = ({
               placeholder={`Reply to ${post.author.name}...`}
               className="absolute inset-0 w-full h-full resize-none outline-none text-[11px] text-transparent bg-transparent placeholder-transparent [text-indent:2px] cursor-text"
               style={{
-                caretColor: '#374151',
+                caretColor: 'rgb(var(--info))',
                 fontFamily: 'inherit',
                 fontSize: '11px',
                 lineHeight: '1.3',
@@ -115,10 +115,10 @@ const ReplyComposer = ({
           {replyAttachments.length > 0 && (
             <div className="flex flex-wrap gap-1 mt-1">
               {replyAttachments.map(att => (
-                <div key={att.id} className="inline-flex items-center gap-1 px-1.5 py-0.5 bg-gray-100 border border-gray-200 rounded text-[10px]">
-                  <span className="text-[10px] text-gray-700">{att.name}</span>
-                  <button onClick={() => removeReplyAttachment(att.id)} className="p-0.5 hover:bg-gray-200 rounded">
-                    <X className="w-2.5 h-2.5 text-gray-500" />
+                <div key={att.id} className="inline-flex items-center gap-1 px-1.5 py-0.5 bg-surface-hover border border-line rounded text-[10px]">
+                  <span className="text-[10px] text-ink">{att.name}</span>
+                  <button onClick={() => removeReplyAttachment(att.id)} className="p-0.5 hover:bg-surface-hover rounded">
+                    <X className="w-2.5 h-2.5 text-dim" />
                   </button>
                 </div>
               ))}
@@ -127,16 +127,16 @@ const ReplyComposer = ({
 
           <div className="flex items-center justify-between mt-1">
             <div className="flex items-center space-x-1">
-              <span className="text-[10px] text-gray-500">Replying to {post.author.name}</span>
+              <span className="text-[10px] text-dim">Replying to {post.author.name}</span>
               <div className="flex items-center gap-1">
-                <button className="px-1.5 py-0.5 text-[9px] bg-purple-50 text-purple-700 rounded border border-purple-200 hover:bg-purple-100">
+                <button className="px-1.5 py-0.5 text-[9px] bg-surface-hover text-ink rounded border border-line hover:bg-surface-hover">
                   <span className="inline-flex items-center gap-0.5"><Hash className="w-2 h-2" /> dept</span>
                 </button>
-                <button className="px-1.5 py-0.5 text-[9px] bg-green-50 text-green-700 rounded border border-green-200 hover:bg-green-100">
+                <button className="px-1.5 py-0.5 text-[9px] bg-success/10 text-success rounded border border-success/20 hover:bg-success/10">
                   <span className="inline-flex items-center gap-0.5"><AtSign className="w-2 h-2" /> person</span>
                 </button>
-                <button onClick={onPickReplyFile} className="p-0.5 rounded hover:bg-gray-100" title="Attach">
-                  <Paperclip className="w-2.5 h-2.5 text-gray-600" />
+                <button onClick={onPickReplyFile} className="p-0.5 rounded hover:bg-surface-hover" title="Attach">
+                  <Paperclip className="w-2.5 h-2.5 text-dim" />
                 </button>
                 <input ref={fileInputRef} type="file" className="hidden" onChange={(e) => addReplyAttachment(e.target.files?.[0])} />
               </div>
@@ -148,7 +148,7 @@ const ReplyComposer = ({
                   setReplyMessage('');
                   setReplyAttachments([]);
                 }}
-                className="px-2 py-0.5 text-[10px] text-gray-600 hover:text-gray-800"
+                className="px-2 py-0.5 text-[10px] text-dim hover:text-ink"
               >
                 Cancel
               </button>
@@ -157,8 +157,8 @@ const ReplyComposer = ({
                 disabled={isReplying || !replyMessage.trim()}
                 className={`px-2 py-0.5 text-[10px] rounded transition-colors ${
                   isReplying || !replyMessage.trim()
-                    ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                    : 'bg-blue-600 text-white hover:bg-blue-700'
+                    ? 'bg-surface-hover text-dim cursor-not-allowed'
+                    : 'bg-info text-white hover:bg-info'
                 }`}
               >
                 {isReplying ? 'Replying...' : 'Reply'}

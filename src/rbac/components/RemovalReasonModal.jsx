@@ -39,20 +39,20 @@ export function RemovalReasonModal({ memberEmail, onConfirm, onClose }) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-      <div className="bg-white rounded-xl shadow-xl w-full max-w-md mx-4">
+      <div className="bg-surface rounded-xl shadow-xl w-full max-w-md mx-4">
         {/* Header */}
-        <div className="px-6 pt-5 pb-3 border-b border-gray-100">
-          <h3 className="text-lg font-semibold text-gray-900">Remove Team Member</h3>
-          <p className="text-sm text-gray-500 mt-1">
-            You are about to remove <span className="font-medium text-gray-700">{memberEmail}</span> from this organization.
+        <div className="px-6 pt-5 pb-3 border-b border-line">
+          <h3 className="text-lg font-semibold text-ink">Remove Team Member</h3>
+          <p className="text-sm text-dim mt-1">
+            You are about to remove <span className="font-medium text-ink">{memberEmail}</span> from this organization.
           </p>
         </div>
 
         {/* Body */}
         <form onSubmit={handleSubmit} className="px-6 py-4 space-y-4">
           <div>
-            <label htmlFor="removal-reason" className="block text-sm font-medium text-gray-700 mb-1">
-              Reason for removal <span className="text-red-500">*</span>
+            <label htmlFor="removal-reason" className="block text-sm font-medium text-ink mb-1">
+              Reason for removal <span className="text-danger">*</span>
             </label>
             <textarea
               id="removal-reason"
@@ -61,22 +61,22 @@ export function RemovalReasonModal({ memberEmail, onConfirm, onClose }) {
               placeholder="Explain why this member is being removed..."
               rows={3}
               maxLength={500}
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm
-                         focus:ring-2 focus:ring-teal-500 focus:border-teal-500 resize-none"
+              className="w-full border border-line rounded-lg px-3 py-2 text-sm
+                         focus:ring-2 focus:ring-ink focus:border-line resize-none"
               disabled={submitting}
               autoFocus
             />
-            <p className="text-xs text-gray-400 mt-1 text-right">{reason.length}/500</p>
+            <p className="text-xs text-dim mt-1 text-right">{reason.length}/500</p>
           </div>
 
-          <div className="bg-amber-50 border border-amber-200 rounded-lg p-3">
-            <p className="text-xs text-amber-700">
+          <div className="bg-warning/10 border border-warning/20 rounded-lg p-3">
+            <p className="text-xs text-warning">
               The member will receive an email notification with this reason. Their access will be revoked immediately.
             </p>
           </div>
 
           {error && (
-            <p className="text-sm text-red-600 bg-red-50 rounded-lg px-3 py-2">{error}</p>
+            <p className="text-sm text-danger bg-danger/10 rounded-lg px-3 py-2">{error}</p>
           )}
 
           {/* Actions */}
@@ -85,15 +85,15 @@ export function RemovalReasonModal({ memberEmail, onConfirm, onClose }) {
               type="button"
               onClick={onClose}
               disabled={submitting}
-              className="px-4 py-2 text-sm text-gray-600 hover:text-gray-800 font-medium rounded-lg
-                         hover:bg-gray-100 transition-colors"
+              className="px-4 py-2 text-sm text-dim hover:text-ink font-medium rounded-lg
+                         hover:bg-surface-hover transition-colors"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={submitting || !reason.trim()}
-              className="px-4 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700
+              className="px-4 py-2 text-sm font-medium text-white bg-danger hover:bg-danger
                          rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {submitting ? 'Removing…' : 'Remove Member'}

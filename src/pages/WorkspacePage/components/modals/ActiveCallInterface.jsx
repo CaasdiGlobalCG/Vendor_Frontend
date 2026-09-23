@@ -402,18 +402,18 @@ const ActiveCallInterface = ({
     : (call?.initiatorName || 'Project Manager');
   
   return (
-    <div className="fixed inset-0 bg-gray-900 z-50 flex flex-col">
+    <div className="fixed inset-0 bg-cta z-50 flex flex-col">
       {/* Header */}
-      <div className="bg-gray-800 px-6 py-4 flex items-center justify-between">
+      <div className="bg-cta px-6 py-4 flex items-center justify-between">
         <div className="flex items-center gap-4">
-          <div className="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center">
-            <Video className="w-5 h-5 text-white" />
+          <div className="w-10 h-10 bg-info rounded-full flex items-center justify-center">
+            <Video className="w-5 h-5 text-cta-foreground" />
           </div>
           <div>
             <h2 className="text-white font-semibold">
               {call?.callTitle || 'Video Call'}
             </h2>
-            <p className="text-gray-400 text-sm">
+            <p className="text-dim text-sm">
               with {otherParticipantName}
             </p>
           </div>
@@ -423,15 +423,15 @@ const ActiveCallInterface = ({
           {/* Connection status */}
           <div className={`flex items-center gap-2 px-3 py-1 rounded-full text-sm ${
             connectionStatus === 'connected' 
-              ? 'bg-green-900/50 text-green-400' 
+              ? 'bg-success text-success' 
               : connectionStatus === 'connecting' || connectionStatus === 'reconnecting'
-              ? 'bg-yellow-900/50 text-yellow-400'
-              : 'bg-red-900/50 text-red-400'
+              ? 'bg-warning text-warning'
+              : 'bg-danger text-danger'
           }`}>
             {connectionStatus === 'connecting' || connectionStatus === 'reconnecting' ? (
               <Loader2 className="w-4 h-4 animate-spin" />
             ) : connectionStatus === 'connected' ? (
-              <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
+              <div className="w-2 h-2 bg-success rounded-full animate-pulse" />
             ) : (
               <AlertCircle className="w-4 h-4" />
             )}
@@ -439,14 +439,14 @@ const ActiveCallInterface = ({
           </div>
           
           {/* Duration */}
-          <div className="bg-gray-700 px-4 py-2 rounded-lg">
-            <span className="text-white font-mono text-lg">
+          <div className="bg-cta px-4 py-2 rounded-lg">
+            <span className="text-cta-foreground font-mono text-lg">
               {formatDuration(callDuration)}
             </span>
           </div>
           
           {/* Participants count */}
-          <div className="flex items-center gap-2 text-gray-400">
+          <div className="flex items-center gap-2 text-dim">
             <Users className="w-5 h-5" />
             <span>{participants.length + 1}</span>
           </div>
@@ -455,12 +455,12 @@ const ActiveCallInterface = ({
       
       {/* Error banner */}
       {error && (
-        <div className="bg-red-900/50 border-b border-red-800 px-6 py-3 flex items-center gap-3">
-          <AlertCircle className="w-5 h-5 text-red-400" />
-          <span className="text-red-200">{error}</span>
+        <div className="bg-danger border-b border-danger px-6 py-3 flex items-center gap-3">
+          <AlertCircle className="w-5 h-5 text-danger" />
+          <span className="text-danger">{error}</span>
           <button 
             onClick={() => setError(null)}
-            className="ml-auto text-red-400 hover:text-red-300"
+            className="ml-auto text-danger hover:text-danger"
           >
             Dismiss
           </button>
@@ -468,7 +468,7 @@ const ActiveCallInterface = ({
       )}
       
       {/* Video area */}
-      <div className="flex-1 relative bg-gray-900 overflow-hidden">
+      <div className="flex-1 relative bg-cta overflow-hidden">
         {/* Remote video (main) */}
         <div className="absolute inset-0 flex items-center justify-center">
           {Object.keys(remoteVideoTiles).length > 0 ? (
@@ -480,12 +480,12 @@ const ActiveCallInterface = ({
             />
           ) : (
             <div className="flex flex-col items-center gap-4">
-              <div className="w-32 h-32 bg-gray-700 rounded-full flex items-center justify-center">
+              <div className="w-32 h-32 bg-cta rounded-full flex items-center justify-center">
                 <span className="text-4xl text-white font-bold">
                   {otherParticipantName.charAt(0).toUpperCase()}
                 </span>
               </div>
-              <p className="text-gray-400">
+              <p className="text-dim">
                 {connectionStatus === 'connected' 
                   ? 'Waiting for video...' 
                   : 'Connecting...'}
@@ -495,7 +495,7 @@ const ActiveCallInterface = ({
         </div>
         
         {/* Local video (pip) */}
-        <div className="absolute bottom-6 right-6 w-48 h-36 bg-gray-800 rounded-lg overflow-hidden shadow-2xl border-2 border-gray-700">
+        <div className="absolute bottom-6 right-6 w-48 h-36 bg-cta rounded-lg overflow-hidden shadow-2xl border-2 border-line">
           {isVideoOn ? (
             <video
               ref={localVideoRef}
@@ -506,8 +506,8 @@ const ActiveCallInterface = ({
               style={{ transform: 'scaleX(-1)' }}
             />
           ) : (
-            <div className="w-full h-full flex items-center justify-center bg-gray-700">
-              <div className="w-16 h-16 bg-gray-600 rounded-full flex items-center justify-center">
+            <div className="w-full h-full flex items-center justify-center bg-cta">
+              <div className="w-16 h-16 bg-cta rounded-full flex items-center justify-center">
                 <span className="text-xl text-white font-bold">
                   {currentUser?.name?.charAt(0) || 'Y'}
                 </span>
@@ -517,7 +517,7 @@ const ActiveCallInterface = ({
           
           {/* Mute indicator on local video */}
           {isMuted && (
-            <div className="absolute bottom-2 left-2 bg-red-600 p-1 rounded-full">
+            <div className="absolute bottom-2 left-2 bg-danger p-1 rounded-full">
               <MicOff className="w-3 h-3 text-white" />
             </div>
           )}
@@ -525,15 +525,15 @@ const ActiveCallInterface = ({
       </div>
       
       {/* Controls */}
-      <div className="bg-gray-800 px-6 py-4">
+      <div className="bg-cta px-6 py-4">
         <div className="flex items-center justify-center gap-4">
           {/* Mute button */}
           <button
             onClick={toggleMute}
             className={`p-4 rounded-full transition-all ${
               isMuted 
-                ? 'bg-red-600 hover:bg-red-700' 
-                : 'bg-gray-700 hover:bg-gray-600'
+                ? 'bg-danger hover:bg-danger' 
+                : 'bg-cta hover:bg-cta'
             }`}
             title={isMuted ? 'Unmute' : 'Mute'}
           >
@@ -549,8 +549,8 @@ const ActiveCallInterface = ({
             onClick={toggleVideo}
             className={`p-4 rounded-full transition-all ${
               !isVideoOn 
-                ? 'bg-red-600 hover:bg-red-700' 
-                : 'bg-gray-700 hover:bg-gray-600'
+                ? 'bg-danger hover:bg-danger' 
+                : 'bg-cta hover:bg-cta'
             }`}
             title={isVideoOn ? 'Turn off camera' : 'Turn on camera'}
           >
@@ -566,8 +566,8 @@ const ActiveCallInterface = ({
             onClick={toggleScreenShare}
             className={`p-4 rounded-full transition-all ${
               isScreenSharing 
-                ? 'bg-blue-600 hover:bg-blue-700' 
-                : 'bg-gray-700 hover:bg-gray-600'
+                ? 'bg-info hover:bg-info' 
+                : 'bg-cta hover:bg-cta'
             }`}
             title={isScreenSharing ? 'Stop sharing' : 'Share screen'}
           >
@@ -581,7 +581,7 @@ const ActiveCallInterface = ({
           {/* Fullscreen button */}
           <button
             onClick={toggleFullscreen}
-            className="p-4 rounded-full bg-gray-700 hover:bg-gray-600 transition-all"
+            className="p-4 rounded-full bg-cta hover:bg-cta transition-all"
             title={isFullscreen ? 'Exit fullscreen' : 'Fullscreen'}
           >
             {isFullscreen ? (
@@ -594,7 +594,7 @@ const ActiveCallInterface = ({
           {/* End call button */}
           <button
             onClick={handleEndCall}
-            className="p-4 rounded-full bg-red-600 hover:bg-red-700 transition-all ml-4"
+            className="p-4 rounded-full bg-danger hover:bg-danger transition-all ml-4"
             title="End call"
           >
             <PhoneOff className="w-6 h-6 text-white" />

@@ -48,7 +48,7 @@ const ShareProgressModal = ({ open, onClose, workspaceLink }) => {
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden">
+      <div className="bg-surface rounded-2xl shadow-2xl w-full max-w-md overflow-hidden">
         <div className="p-6">
           <h2 className="text-lg font-semibold mb-4">Share Progress</h2>
           <div className="mb-4">
@@ -62,7 +62,7 @@ const ShareProgressModal = ({ open, onClose, workspaceLink }) => {
               />
               <button
                 onClick={handleCopy}
-                className="bg-emerald-500 text-white px-3 py-1 rounded"
+                className="bg-cta text-cta-foreground px-3 py-1 rounded"
               >
                 {copied ? 'Copied!' : 'Copy Link'}
               </button>
@@ -75,22 +75,22 @@ const ShareProgressModal = ({ open, onClose, workspaceLink }) => {
               value={emails}
               onChange={e => setEmails(e.target.value)}
               placeholder="Enter emails, separated by commas"
-              className="border rounded px-2 py-1 w-full text-xs bg-yellow-50"
+              className="border rounded px-2 py-1 w-full text-xs bg-warning/10"
             />
           </div>
-          {error && <div className="text-red-500 text-xs mb-2">{error}</div>}
-          {success && <div className="text-green-600 text-xs mb-2">Email sent successfully!</div>}
+          {error && <div className="text-danger text-xs mb-2">{error}</div>}
+          {success && <div className="text-success text-xs mb-2">Email sent successfully!</div>}
           <div className="flex justify-end gap-2">
             <button
               onClick={onClose}
-              className="bg-gray-300 px-3 py-1 rounded"
+              className="bg-surface-hover px-3 py-1 rounded"
               disabled={loading}
             >
               Cancel
             </button>
             <button
               onClick={handleSend}
-              className="bg-emerald-500 text-white px-3 py-1 rounded"
+              className="bg-cta text-cta-foreground px-3 py-1 rounded"
               disabled={loading}
             >
               {loading ? 'Sending...' : 'Send Email'}

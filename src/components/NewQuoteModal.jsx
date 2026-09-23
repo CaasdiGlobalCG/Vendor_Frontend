@@ -322,16 +322,16 @@ const NewQuoteModal = ({ isOpen, onClose, onQuoteCreated }) => {
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-[95vw] max-h-[95vh] overflow-hidden">
+      <div className="bg-surface rounded-2xl shadow-2xl w-full max-w-[95vw] max-h-[95vh] overflow-hidden">
         {/* Header */}
-        <div className="bg-gradient-to-r from-blue-600 to-blue-700 text-white p-6 flex items-center justify-between border-b">
+        <div className="bg-black text-white p-6 flex items-center justify-between border-b">
           <div className="flex items-center space-x-4">
             <div className="bg-white/20 p-3 rounded-xl">
               <FileText className="w-7 h-7" />
             </div>
             <div>
               <h2 className="text-2xl font-bold">Create New Quotation</h2>
-              <p className="text-blue-200 text-sm mt-1">Quotation #{quoteNumber}</p>
+              <p className="text-info text-sm mt-1">Quotation #{quoteNumber}</p>
             </div>
           </div>
           <button
@@ -347,55 +347,55 @@ const NewQuoteModal = ({ isOpen, onClose, onQuoteCreated }) => {
           <div className="p-8 space-y-8">
             
             {/* Quote Header Section */}
-            <div className="bg-gradient-to-r from-slate-50 to-stone-50 p-6 rounded-xl border border-slate-200">
+            <div className="bg-gradient-to-r from-surface-hover to-surface-hover p-6 rounded-xl border border-line">
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 
                 {/* Company Info */}
                 <div>
-                  <h3 className="text-lg font-semibold text-slate-800 mb-4 flex items-center">
-                    <Building className="w-5 h-5 mr-2 text-blue-600" />
+                  <h3 className="text-lg font-semibold text-ink mb-4 flex items-center">
+                    <Building className="w-5 h-5 mr-2 text-info" />
                     From
                   </h3>
-                  <div className="bg-white p-4 rounded-lg border border-slate-200">
-                    <div className="font-semibold text-slate-800">{currentUser?.companyName || 'Your Company Name'}</div>
-                    <div className="text-sm text-slate-600 mt-1">{currentUser?.name || 'Contact Person'}</div>
-                    <div className="text-sm text-slate-600">{currentUser?.email || 'email@company.com'}</div>
-                    <div className="text-sm text-slate-600">{currentUser?.phone || '+91 XXXXX XXXXX'}</div>
+                  <div className="bg-surface p-4 rounded-lg border border-line">
+                    <div className="font-semibold text-ink">{currentUser?.companyName || 'Your Company Name'}</div>
+                    <div className="text-sm text-dim mt-1">{currentUser?.name || 'Contact Person'}</div>
+                    <div className="text-sm text-dim">{currentUser?.email || 'email@company.com'}</div>
+                    <div className="text-sm text-dim">{currentUser?.phone || '+91 XXXXX XXXXX'}</div>
                   </div>
                 </div>
 
                 {/* Quote Details */}
                 <div>
-                  <h3 className="text-lg font-semibold text-slate-800 mb-4 flex items-center">
-                    <FileText className="w-5 h-5 mr-2 text-blue-600" />
+                  <h3 className="text-lg font-semibold text-ink mb-4 flex items-center">
+                    <FileText className="w-5 h-5 mr-2 text-info" />
                     Quote Details
                   </h3>
                   <div className="space-y-3">
                     <div>
-                      <label className="block text-sm font-medium text-slate-700 mb-1">Quote Number</label>
+                      <label className="block text-sm font-medium text-ink mb-1">Quote Number</label>
                       <input
                         type="text"
                         value={quoteNumber}
                         readOnly
-                        className="w-full px-3 py-2 bg-slate-100 border border-slate-300 rounded-lg text-slate-600"
+                        className="w-full px-3 py-2 bg-surface-hover border border-line rounded-lg text-dim"
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-slate-700 mb-1">Quote Date</label>
+                      <label className="block text-sm font-medium text-ink mb-1">Quote Date</label>
                       <input
                         type="date"
                         value={quoteData.quotationDate}
                         onChange={(e) => setQuoteData(prev => ({ ...prev, quotationDate: e.target.value }))}
-                        className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        className="w-full px-3 py-2 border border-line rounded-lg focus:ring-2 focus:ring-info focus:border-info"
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-slate-700 mb-1">Valid Until</label>
+                      <label className="block text-sm font-medium text-ink mb-1">Valid Until</label>
                       <input
                         type="date"
                         value={quoteData.expiryDate}
                         onChange={(e) => setQuoteData(prev => ({ ...prev, expiryDate: e.target.value }))}
-                        className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        className="w-full px-3 py-2 border border-line rounded-lg focus:ring-2 focus:ring-info focus:border-info"
                       />
                     </div>
                   </div>
@@ -403,14 +403,14 @@ const NewQuoteModal = ({ isOpen, onClose, onQuoteCreated }) => {
 
                 {/* Customer Selection */}
                 <div>
-                  <h3 className="text-lg font-semibold text-slate-800 mb-4 flex items-center">
-                    <User className="w-5 h-5 mr-2 text-blue-600" />
+                  <h3 className="text-lg font-semibold text-ink mb-4 flex items-center">
+                    <User className="w-5 h-5 mr-2 text-info" />
                     Select Customer
                   </h3>
                   {loadingCustomers ? (
                     <div className="text-center py-8">
-                      <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600 mx-auto"></div>
-                      <p className="text-slate-600 mt-2 text-sm">Loading...</p>
+                      <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-info mx-auto"></div>
+                      <p className="text-dim mt-2 text-sm">Loading...</p>
                     </div>
                   ) : (
                     <select
@@ -419,7 +419,7 @@ const NewQuoteModal = ({ isOpen, onClose, onQuoteCreated }) => {
                         const customer = customers.find(c => c.id === e.target.value);
                         if (customer) handleCustomerSelect(customer);
                       }}
-                      className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      className="w-full px-3 py-2 border border-line rounded-lg focus:ring-2 focus:ring-info focus:border-info"
                     >
                       <option value="">Choose a customer...</option>
                       {customers.map((customer) => (
@@ -435,23 +435,23 @@ const NewQuoteModal = ({ isOpen, onClose, onQuoteCreated }) => {
 
             {/* Customer Address Section */}
             {selectedCustomer && (
-              <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-6 rounded-xl border border-blue-200">
-                <h3 className="text-lg font-semibold text-slate-800 mb-4 flex items-center">
-                  <MapPin className="w-5 h-5 mr-2 text-blue-600" />
+              <div className="bg-black p-6 rounded-xl border border-info/20">
+                <h3 className="text-lg font-semibold text-ink mb-4 flex items-center">
+                  <MapPin className="w-5 h-5 mr-2 text-info" />
                   Customer Information
                 </h3>
                 
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                   {/* Billing Address */}
-                  <div className="bg-white p-4 rounded-lg border border-blue-200">
+                  <div className="bg-surface p-4 rounded-lg border border-info/20">
                     <div className="flex items-center justify-between mb-3">
-                      <h5 className="font-semibold text-slate-700 flex items-center">
+                      <h5 className="font-semibold text-ink flex items-center">
                         <Building className="w-4 h-4 mr-2" />
                         Billing Address
                       </h5>
                       <button
                         onClick={() => setEditingAddress(!editingAddress)}
-                        className="text-blue-600 hover:text-blue-700 text-sm flex items-center space-x-1 px-2 py-1 rounded hover:bg-blue-50"
+                        className="text-info hover:text-info text-sm flex items-center space-x-1 px-2 py-1 rounded hover:bg-info/10"
                       >
                         <Edit className="w-4 h-4" />
                         <span>{editingAddress ? 'Save' : 'Edit'}</span>
@@ -465,14 +465,14 @@ const NewQuoteModal = ({ isOpen, onClose, onQuoteCreated }) => {
                           placeholder="Company Name"
                           value={selectedCustomer.name}
                           readOnly
-                          className="w-full px-3 py-2 bg-slate-100 border border-slate-300 rounded-lg text-slate-600"
+                          className="w-full px-3 py-2 bg-surface-hover border border-line rounded-lg text-dim"
                         />
                         <input
                           type="text"
                           placeholder="Street Address"
                           value={quoteData.billingAddress.street || ''}
                           onChange={(e) => handleAddressChange('billingAddress', 'street', e.target.value)}
-                          className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                          className="w-full px-3 py-2 border border-line rounded-lg focus:ring-2 focus:ring-info"
                         />
                         <div className="grid grid-cols-2 gap-2">
                           <input
@@ -480,14 +480,14 @@ const NewQuoteModal = ({ isOpen, onClose, onQuoteCreated }) => {
                             placeholder="City"
                             value={quoteData.billingAddress.city || ''}
                             onChange={(e) => handleAddressChange('billingAddress', 'city', e.target.value)}
-                            className="px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                            className="px-3 py-2 border border-line rounded-lg focus:ring-2 focus:ring-info"
                           />
                           <input
                             type="text"
                             placeholder="Pincode"
                             value={quoteData.billingAddress.pincode || ''}
                             onChange={(e) => handleAddressChange('billingAddress', 'pincode', e.target.value)}
-                            className="px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                            className="px-3 py-2 border border-line rounded-lg focus:ring-2 focus:ring-info"
                           />
                         </div>
                         <input
@@ -498,16 +498,16 @@ const NewQuoteModal = ({ isOpen, onClose, onQuoteCreated }) => {
                             setQuoteData(prev => ({ ...prev, gstin: e.target.value }));
                             setTimeout(() => calculateTotals(), 100);
                           }}
-                          className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                          className="w-full px-3 py-2 border border-line rounded-lg focus:ring-2 focus:ring-info"
                         />
                       </div>
                     ) : (
                       <div className="space-y-2">
-                        <div className="font-medium text-slate-800">{selectedCustomer.name}</div>
-                        <div className="text-sm text-slate-600">{quoteData.billingAddress.street || 'No street address'}</div>
-                        <div className="text-sm text-slate-600">{quoteData.billingAddress.city || 'No city'}, {quoteData.billingAddress.pincode || 'No pincode'}</div>
+                        <div className="font-medium text-ink">{selectedCustomer.name}</div>
+                        <div className="text-sm text-dim">{quoteData.billingAddress.street || 'No street address'}</div>
+                        <div className="text-sm text-dim">{quoteData.billingAddress.city || 'No city'}, {quoteData.billingAddress.pincode || 'No pincode'}</div>
                         {quoteData.gstin && (
-                          <div className="text-sm font-medium text-blue-700 bg-blue-100 px-2 py-1 rounded inline-block">
+                          <div className="text-sm font-medium text-info bg-info/10 px-2 py-1 rounded inline-block">
                             GSTIN: {quoteData.gstin}
                           </div>
                         )}
@@ -516,15 +516,15 @@ const NewQuoteModal = ({ isOpen, onClose, onQuoteCreated }) => {
                   </div>
 
                   {/* Shipping Address */}
-                  <div className="bg-white p-4 rounded-lg border border-blue-200">
-                    <h5 className="font-semibold text-slate-700 mb-3 flex items-center">
+                  <div className="bg-surface p-4 rounded-lg border border-info/20">
+                    <h5 className="font-semibold text-ink mb-3 flex items-center">
                       <MapPin className="w-4 h-4 mr-2" />
                       Shipping Address
                     </h5>
                     <div className="space-y-2">
-                      <div className="font-medium text-slate-800">{selectedCustomer.name}</div>
-                      <div className="text-sm text-slate-600">{quoteData.shippingAddress.street || quoteData.billingAddress.street || 'Same as billing address'}</div>
-                      <div className="text-sm text-slate-600">{quoteData.shippingAddress.city || quoteData.billingAddress.city || ''}, {quoteData.shippingAddress.pincode || quoteData.billingAddress.pincode || ''}</div>
+                      <div className="font-medium text-ink">{selectedCustomer.name}</div>
+                      <div className="text-sm text-dim">{quoteData.shippingAddress.street || quoteData.billingAddress.street || 'Same as billing address'}</div>
+                      <div className="text-sm text-dim">{quoteData.shippingAddress.city || quoteData.billingAddress.city || ''}, {quoteData.shippingAddress.pincode || quoteData.billingAddress.pincode || ''}</div>
                     </div>
                   </div>
                 </div>
@@ -534,11 +534,11 @@ const NewQuoteModal = ({ isOpen, onClose, onQuoteCreated }) => {
 
 
             {/* Items Section */}
-            <div className="bg-white border border-slate-200 rounded-xl overflow-hidden">
-              <div className="bg-gradient-to-r from-green-50 to-emerald-50 p-6 border-b border-slate-200">
+            <div className="bg-surface border border-line rounded-xl overflow-hidden">
+              <div className="bg-black p-6 border-b border-line">
                 <div className="flex items-center justify-between">
-                  <h3 className="text-lg font-semibold text-slate-800 flex items-center">
-                    <Calculator className="w-5 h-5 mr-2 text-green-600" />
+                  <h3 className="text-lg font-semibold text-ink flex items-center">
+                    <Calculator className="w-5 h-5 mr-2 text-success" />
                     Line Items
                   </h3>
                   <div className="flex items-center space-x-3">
@@ -550,7 +550,7 @@ const NewQuoteModal = ({ isOpen, onClose, onQuoteCreated }) => {
                           e.target.value = '';
                         }
                       }}
-                      className="px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-green-500 bg-white"
+                      className="px-4 py-2 border border-line rounded-lg focus:ring-2 focus:ring-success bg-surface"
                       disabled={loadingItems}
                     >
                       <option value="">+ Add Item</option>
@@ -568,52 +568,52 @@ const NewQuoteModal = ({ isOpen, onClose, onQuoteCreated }) => {
               <div className="overflow-x-auto">
                 {quoteData.items.length > 0 ? (
                   <table className="w-full">
-                    <thead className="bg-slate-50">
+                    <thead className="bg-canvas">
                       <tr>
-                        <th className="text-left py-4 px-6 text-sm font-semibold text-slate-700 border-b border-slate-200">#</th>
-                        <th className="text-left py-4 px-6 text-sm font-semibold text-slate-700 border-b border-slate-200">Item & Description</th>
-                        <th className="text-center py-4 px-6 text-sm font-semibold text-slate-700 border-b border-slate-200">HSN/SAC</th>
-                        <th className="text-center py-4 px-6 text-sm font-semibold text-slate-700 border-b border-slate-200">Qty</th>
-                        <th className="text-center py-4 px-6 text-sm font-semibold text-slate-700 border-b border-slate-200">Unit</th>
-                        <th className="text-right py-4 px-6 text-sm font-semibold text-slate-700 border-b border-slate-200">Rate</th>
-                        <th className="text-right py-4 px-6 text-sm font-semibold text-slate-700 border-b border-slate-200">Amount</th>
-                        <th className="text-center py-4 px-6 text-sm font-semibold text-slate-700 border-b border-slate-200">Action</th>
+                        <th className="text-left py-4 px-6 text-sm font-semibold text-ink border-b border-line">#</th>
+                        <th className="text-left py-4 px-6 text-sm font-semibold text-ink border-b border-line">Item & Description</th>
+                        <th className="text-center py-4 px-6 text-sm font-semibold text-ink border-b border-line">HSN/SAC</th>
+                        <th className="text-center py-4 px-6 text-sm font-semibold text-ink border-b border-line">Qty</th>
+                        <th className="text-center py-4 px-6 text-sm font-semibold text-ink border-b border-line">Unit</th>
+                        <th className="text-right py-4 px-6 text-sm font-semibold text-ink border-b border-line">Rate</th>
+                        <th className="text-right py-4 px-6 text-sm font-semibold text-ink border-b border-line">Amount</th>
+                        <th className="text-center py-4 px-6 text-sm font-semibold text-ink border-b border-line">Action</th>
                       </tr>
                     </thead>
                     <tbody>
                       {quoteData.items.map((item, index) => (
-                        <tr key={item.id} className="hover:bg-slate-50 transition-colors">
-                          <td className="py-4 px-6 text-sm text-slate-600 border-b border-slate-100">{index + 1}</td>
-                          <td className="py-4 px-6 border-b border-slate-100">
-                            <div className="font-semibold text-slate-800">{item.name}</div>
+                        <tr key={item.id} className="hover:bg-canvas transition-colors">
+                          <td className="py-4 px-6 text-sm text-dim border-b border-line">{index + 1}</td>
+                          <td className="py-4 px-6 border-b border-line">
+                            <div className="font-semibold text-ink">{item.name}</div>
                             {item.description && (
-                              <div className="text-sm text-slate-600 mt-1">{item.description}</div>
+                              <div className="text-sm text-dim mt-1">{item.description}</div>
                             )}
                           </td>
-                          <td className="py-4 px-6 text-center border-b border-slate-100">
+                          <td className="py-4 px-6 text-center border-b border-line">
                             {item.hsn && (
-                              <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded font-medium">
+                              <span className="text-xs bg-info/10 text-info px-2 py-1 rounded font-medium">
                                 {item.hsn}
                               </span>
                             )}
                           </td>
-                          <td className="py-4 px-6 text-center border-b border-slate-100">
+                          <td className="py-4 px-6 text-center border-b border-line">
                             <input
                               type="number"
                               value={item.quantity}
                               onChange={(e) => updateItemQuantity(item.id, e.target.value)}
-                              className="w-20 px-3 py-2 border border-slate-300 rounded-lg text-center focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                              className="w-20 px-3 py-2 border border-line rounded-lg text-center focus:ring-2 focus:ring-success focus:border-success"
                               min="0"
                               step="0.01"
                             />
                           </td>
-                          <td className="py-4 px-6 text-center text-sm text-slate-600 border-b border-slate-100">{item.unit}</td>
-                          <td className="py-4 px-6 text-right font-medium text-slate-800 border-b border-slate-100">₹{item.rate.toFixed(2)}</td>
-                          <td className="py-4 px-6 text-right font-bold text-slate-900 border-b border-slate-100">₹{item.amount.toFixed(2)}</td>
-                          <td className="py-4 px-6 text-center border-b border-slate-100">
+                          <td className="py-4 px-6 text-center text-sm text-dim border-b border-line">{item.unit}</td>
+                          <td className="py-4 px-6 text-right font-medium text-ink border-b border-line">₹{item.rate.toFixed(2)}</td>
+                          <td className="py-4 px-6 text-right font-bold text-ink border-b border-line">₹{item.amount.toFixed(2)}</td>
+                          <td className="py-4 px-6 text-center border-b border-line">
                             <button
                               onClick={() => removeItem(item.id)}
-                              className="text-red-500 hover:text-red-700 hover:bg-red-50 p-2 rounded-lg transition-colors"
+                              className="text-danger hover:text-danger hover:bg-danger/10 p-2 rounded-lg transition-colors"
                               title="Remove item"
                             >
                               <Trash2 className="w-4 h-4" />
@@ -625,9 +625,9 @@ const NewQuoteModal = ({ isOpen, onClose, onQuoteCreated }) => {
                   </table>
                 ) : (
                   <div className="text-center py-12">
-                    <Calculator className="w-12 h-12 text-slate-300 mx-auto mb-4" />
-                    <p className="text-slate-500 text-lg">No items added yet</p>
-                    <p className="text-slate-400 text-sm">Select items from the dropdown above to add them to your quote</p>
+                    <Calculator className="w-12 h-12 text-dim mx-auto mb-4" />
+                    <p className="text-dim text-lg">No items added yet</p>
+                    <p className="text-dim text-sm">Select items from the dropdown above to add them to your quote</p>
                   </div>
                 )}
               </div>
@@ -638,16 +638,16 @@ const NewQuoteModal = ({ isOpen, onClose, onQuoteCreated }) => {
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                 
                 {/* Additional Charges */}
-                <div className="bg-gradient-to-r from-orange-50 to-amber-50 p-6 rounded-xl border border-orange-200">
-                  <h3 className="text-lg font-semibold text-slate-800 mb-4 flex items-center">
-                    <Percent className="w-5 h-5 mr-2 text-orange-600" />
+                <div className="bg-black p-6 rounded-xl border border-warning/20">
+                  <h3 className="text-lg font-semibold text-ink mb-4 flex items-center">
+                    <Percent className="w-5 h-5 mr-2 text-warning" />
                     Additional Charges
                   </h3>
                   
                   <div className="space-y-4">
                     {/* Discount */}
                     <div>
-                      <label className="block text-sm font-medium text-slate-700 mb-2">Discount</label>
+                      <label className="block text-sm font-medium text-ink mb-2">Discount</label>
                       <div className="flex space-x-2">
                         <input
                           type="number"
@@ -656,7 +656,7 @@ const NewQuoteModal = ({ isOpen, onClose, onQuoteCreated }) => {
                             setQuoteData(prev => ({ ...prev, discount: parseFloat(e.target.value) || 0 }));
                             setTimeout(() => calculateTotals(), 100);
                           }}
-                          className="flex-1 px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-orange-500"
+                          className="flex-1 px-3 py-2 border border-line rounded-lg focus:ring-2 focus:ring-warning"
                           placeholder="0"
                           min="0"
                         />
@@ -666,7 +666,7 @@ const NewQuoteModal = ({ isOpen, onClose, onQuoteCreated }) => {
                             setQuoteData(prev => ({ ...prev, discountType: e.target.value }));
                             setTimeout(() => calculateTotals(), 100);
                           }}
-                          className="px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-orange-500"
+                          className="px-3 py-2 border border-line rounded-lg focus:ring-2 focus:ring-warning"
                         >
                           <option value="percentage">%</option>
                           <option value="fixed">₹</option>
@@ -676,7 +676,7 @@ const NewQuoteModal = ({ isOpen, onClose, onQuoteCreated }) => {
 
                     {/* Shipping Charges */}
                     <div>
-                      <label className="block text-sm font-medium text-slate-700 mb-2">Shipping Charges</label>
+                      <label className="block text-sm font-medium text-ink mb-2">Shipping Charges</label>
                       <input
                         type="number"
                         value={quoteData.shippingCharges}
@@ -684,7 +684,7 @@ const NewQuoteModal = ({ isOpen, onClose, onQuoteCreated }) => {
                           setQuoteData(prev => ({ ...prev, shippingCharges: parseFloat(e.target.value) || 0 }));
                           setTimeout(() => calculateTotals(), 100);
                         }}
-                        className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-orange-500"
+                        className="w-full px-3 py-2 border border-line rounded-lg focus:ring-2 focus:ring-warning"
                         placeholder="0.00"
                         min="0"
                       />
@@ -692,7 +692,7 @@ const NewQuoteModal = ({ isOpen, onClose, onQuoteCreated }) => {
 
                     {/* Other Charges */}
                     <div>
-                      <label className="block text-sm font-medium text-slate-700 mb-2">Other Charges</label>
+                      <label className="block text-sm font-medium text-ink mb-2">Other Charges</label>
                       <input
                         type="number"
                         value={quoteData.otherCharges}
@@ -700,7 +700,7 @@ const NewQuoteModal = ({ isOpen, onClose, onQuoteCreated }) => {
                           setQuoteData(prev => ({ ...prev, otherCharges: parseFloat(e.target.value) || 0 }));
                           setTimeout(() => calculateTotals(), 100);
                         }}
-                        className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-orange-500"
+                        className="w-full px-3 py-2 border border-line rounded-lg focus:ring-2 focus:ring-warning"
                         placeholder="0.00"
                         min="0"
                       />
@@ -709,43 +709,43 @@ const NewQuoteModal = ({ isOpen, onClose, onQuoteCreated }) => {
                 </div>
 
                 {/* Total Calculations */}
-                <div className="bg-gradient-to-r from-slate-50 to-stone-50 p-6 rounded-xl border border-slate-200">
-                  <h3 className="text-lg font-semibold text-slate-800 mb-4 flex items-center">
-                    <Calculator className="w-5 h-5 mr-2 text-slate-600" />
+                <div className="bg-gradient-to-r from-surface-hover to-surface-hover p-6 rounded-xl border border-line">
+                  <h3 className="text-lg font-semibold text-ink mb-4 flex items-center">
+                    <Calculator className="w-5 h-5 mr-2 text-dim" />
                     Quote Summary
                   </h3>
                   
                   <div className="space-y-3">
                     <div className="flex justify-between py-2">
-                      <span className="text-slate-600">Items Subtotal:</span>
+                      <span className="text-dim">Items Subtotal:</span>
                       <span className="font-medium">₹{quoteData.subtotal.toFixed(2)}</span>
                     </div>
                     
                     {quoteData.discount > 0 && (
-                      <div className="flex justify-between py-2 text-orange-600">
+                      <div className="flex justify-between py-2 text-warning">
                         <span>Discount ({quoteData.discountType === 'percentage' ? `${quoteData.discount}%` : '₹'}):</span>
                         <span>-₹{(quoteData.discountType === 'percentage' ? (quoteData.subtotal * quoteData.discount / 100) : quoteData.discount).toFixed(2)}</span>
                       </div>
                     )}
                     
                     <div className="flex justify-between py-2">
-                      <span className="text-slate-600">Taxable Amount:</span>
+                      <span className="text-dim">Taxable Amount:</span>
                       <span className="font-medium">₹{(quoteData.subtotal - (quoteData.discountType === 'percentage' ? (quoteData.subtotal * quoteData.discount / 100) : quoteData.discount)).toFixed(2)}</span>
                     </div>
                     
                     {quoteData.gstin?.startsWith('29') ? (
                       <>
-                        <div className="flex justify-between py-2 text-blue-600">
+                        <div className="flex justify-between py-2 text-info">
                           <span>CGST (9%):</span>
                           <span>₹{quoteData.cgst.toFixed(2)}</span>
                         </div>
-                        <div className="flex justify-between py-2 text-blue-600">
+                        <div className="flex justify-between py-2 text-info">
                           <span>SGST (9%):</span>
                           <span>₹{quoteData.sgst.toFixed(2)}</span>
                         </div>
                       </>
                     ) : (
-                      <div className="flex justify-between py-2 text-blue-600">
+                      <div className="flex justify-between py-2 text-info">
                         <span>IGST (18%):</span>
                         <span>₹{quoteData.igst.toFixed(2)}</span>
                       </div>
@@ -753,22 +753,22 @@ const NewQuoteModal = ({ isOpen, onClose, onQuoteCreated }) => {
                     
                     {quoteData.shippingCharges > 0 && (
                       <div className="flex justify-between py-2">
-                        <span className="text-slate-600">Shipping:</span>
+                        <span className="text-dim">Shipping:</span>
                         <span>₹{quoteData.shippingCharges.toFixed(2)}</span>
                       </div>
                     )}
                     
                     {quoteData.otherCharges > 0 && (
                       <div className="flex justify-between py-2">
-                        <span className="text-slate-600">Other Charges:</span>
+                        <span className="text-dim">Other Charges:</span>
                         <span>₹{quoteData.otherCharges.toFixed(2)}</span>
                       </div>
                     )}
                     
-                    <div className="border-t border-slate-300 pt-3 mt-3">
-                      <div className="flex justify-between text-xl font-bold text-slate-900">
+                    <div className="border-t border-line pt-3 mt-3">
+                      <div className="flex justify-between text-xl font-bold text-ink">
                         <span>Total Amount:</span>
-                        <span className="text-green-600">₹{quoteData.total.toFixed(2)}</span>
+                        <span className="text-success">₹{quoteData.total.toFixed(2)}</span>
                       </div>
                     </div>
                   </div>
@@ -780,11 +780,11 @@ const NewQuoteModal = ({ isOpen, onClose, onQuoteCreated }) => {
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
               {/* Notes */}
               <div>
-                <label className="block text-lg font-semibold text-slate-800 mb-3">Notes</label>
+                <label className="block text-lg font-semibold text-ink mb-3">Notes</label>
                 <textarea
                   value={quoteData.notes}
                   onChange={(e) => setQuoteData(prev => ({ ...prev, notes: e.target.value }))}
-                  className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none"
+                  className="w-full px-4 py-3 border border-line rounded-lg focus:ring-2 focus:ring-info focus:border-info resize-none"
                   rows="4"
                   placeholder="Add any additional notes or instructions..."
                 />
@@ -792,11 +792,11 @@ const NewQuoteModal = ({ isOpen, onClose, onQuoteCreated }) => {
 
               {/* Terms and Conditions */}
               <div>
-                <label className="block text-lg font-semibold text-slate-800 mb-3">Terms & Conditions</label>
+                <label className="block text-lg font-semibold text-ink mb-3">Terms & Conditions</label>
                 <textarea
                   value={quoteData.termsAndConditions}
                   onChange={(e) => setQuoteData(prev => ({ ...prev, termsAndConditions: e.target.value }))}
-                  className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none"
+                  className="w-full px-4 py-3 border border-line rounded-lg focus:ring-2 focus:ring-info focus:border-info resize-none"
                   rows="4"
                   placeholder="Enter terms and conditions..."
                 />
@@ -806,24 +806,24 @@ const NewQuoteModal = ({ isOpen, onClose, onQuoteCreated }) => {
         </div>
 
         {/* Footer */}
-        <div className="bg-gradient-to-r from-slate-50 to-stone-50 border-t border-slate-200 p-6">
+        <div className="bg-gradient-to-r from-surface-hover to-surface-hover border-t border-line p-6">
           <div className="flex items-center justify-between">
-            <div className="text-sm text-slate-600">
+            <div className="text-sm text-dim">
               {selectedCustomer && quoteData.items.length > 0 && (
-                <span>Quote for <strong>{selectedCustomer.name}</strong> • {quoteData.items.length} item(s) • Total: <strong className="text-green-600">₹{quoteData.total.toFixed(2)}</strong></span>
+                <span>Quote for <strong>{selectedCustomer.name}</strong> • {quoteData.items.length} item(s) • Total: <strong className="text-success">₹{quoteData.total.toFixed(2)}</strong></span>
               )}
             </div>
             <div className="flex items-center space-x-4">
               <button
                 onClick={onClose}
-                className="px-6 py-3 text-slate-600 hover:text-slate-800 hover:bg-slate-100 rounded-lg transition-colors font-medium"
+                className="px-6 py-3 text-dim hover:text-ink hover:bg-surface-hover rounded-lg transition-colors font-medium"
               >
                 Cancel
               </button>
               <button
                 onClick={saveAsDraft}
                 disabled={loading || !selectedCustomer || quoteData.items.length === 0}
-                className="px-8 py-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-lg hover:from-blue-700 hover:to-blue-800 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 flex items-center space-x-2 font-semibold shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
+                className="px-8 py-3 bg-black text-white rounded-lg hover:from-black hover:to-black disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 flex items-center space-x-2 font-semibold shadow-lg hover:shadow-xl transform "
               >
                 {loading && (
                   <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>

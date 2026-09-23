@@ -153,9 +153,9 @@ const ItemEditModal = ({ isOpen, onClose, item, onItemUpdated }) => {
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-hidden">
+      <div className="bg-surface rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-hidden">
         {/* Header */}
-        <div className={`bg-gradient-to-r ${isProduct ? 'from-blue-600 to-blue-700' : 'from-green-600 to-green-700'} text-white p-6`}>
+        <div className={`bg-gradient-to-r ${isProduct ? 'from-black to-black' : 'from-black to-black'} text-white p-6`}>
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3">
               <div className="bg-white/20 p-2 rounded-lg">
@@ -166,7 +166,7 @@ const ItemEditModal = ({ isOpen, onClose, item, onItemUpdated }) => {
               </div>
               <div>
                 <h2 className="text-xl font-bold">Edit {item.type}</h2>
-                <p className="text-blue-200 text-sm">
+                <p className="text-info text-sm">
                   Update {item.name}
                 </p>
               </div>
@@ -183,12 +183,12 @@ const ItemEditModal = ({ isOpen, onClose, item, onItemUpdated }) => {
         {/* Content */}
         <div className="p-6 overflow-y-auto max-h-[calc(90vh-180px)]">
           {/* Form Fields */}
-          <div className="bg-stone-50 p-6 rounded-xl border border-stone-200">
-            <h4 className="text-lg font-semibold text-stone-800 mb-4 flex items-center">
-              <div className={`p-2 rounded-lg mr-3 ${isProduct ? 'bg-blue-100' : 'bg-green-100'}`}>
+          <div className="bg-canvas p-6 rounded-xl border border-line">
+            <h4 className="text-lg font-semibold text-ink mb-4 flex items-center">
+              <div className={`p-2 rounded-lg mr-3 ${isProduct ? 'bg-info/10' : 'bg-success/10'}`}>
                 {isProduct ? 
-                  <Package className="w-5 h-5 text-blue-600" /> :
-                  <Wrench className="w-5 h-5 text-green-600" />
+                  <Package className="w-5 h-5 text-info" /> :
+                  <Wrench className="w-5 h-5 text-success" />
                 }
               </div>
               {isProduct ? 'Product Details' : 'Service Details'}
@@ -197,7 +197,7 @@ const ItemEditModal = ({ isOpen, onClose, item, onItemUpdated }) => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {/* Item Name */}
               <div className="md:col-span-2">
-                <label className="block text-sm font-medium text-stone-700 mb-2">
+                <label className="block text-sm font-medium text-ink mb-2">
                   Item Name *
                 </label>
                 <input
@@ -205,13 +205,13 @@ const ItemEditModal = ({ isOpen, onClose, item, onItemUpdated }) => {
                   value={formData.name}
                   onChange={(e) => handleInputChange('name', e.target.value)}
                   placeholder={`Enter ${item.type.toLowerCase()} name`}
-                  className="w-full px-4 py-3 border border-stone-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors bg-white"
+                  className="w-full px-4 py-3 border border-line rounded-lg focus:ring-2 focus:ring-info focus:border-info transition-colors bg-surface"
                 />
               </div>
 
               {/* Description */}
               <div className="md:col-span-2">
-                <label className="block text-sm font-medium text-stone-700 mb-2">
+                <label className="block text-sm font-medium text-ink mb-2">
                   Description
                 </label>
                 <textarea
@@ -219,13 +219,13 @@ const ItemEditModal = ({ isOpen, onClose, item, onItemUpdated }) => {
                   onChange={(e) => handleInputChange('description', e.target.value)}
                   placeholder={`Describe the ${item.type.toLowerCase()}`}
                   rows={3}
-                  className="w-full px-4 py-3 border border-stone-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors bg-white"
+                  className="w-full px-4 py-3 border border-line rounded-lg focus:ring-2 focus:ring-info focus:border-info transition-colors bg-surface"
                 />
               </div>
 
               {/* Unit */}
               <div>
-                <label className="block text-sm font-medium text-stone-700 mb-2">
+                <label className="block text-sm font-medium text-ink mb-2">
                   Unit
                 </label>
                 <input
@@ -233,13 +233,13 @@ const ItemEditModal = ({ isOpen, onClose, item, onItemUpdated }) => {
                   value={formData.unit}
                   onChange={(e) => handleInputChange('unit', e.target.value)}
                   placeholder={isProduct ? 'Nos, Kg, Pcs' : 'Hrs, Days, Months'}
-                  className="w-full px-4 py-3 border border-stone-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors bg-white"
+                  className="w-full px-4 py-3 border border-line rounded-lg focus:ring-2 focus:ring-info focus:border-info transition-colors bg-surface"
                 />
               </div>
 
               {/* Rate */}
               <div>
-                <label className="block text-sm font-medium text-stone-700 mb-2">
+                <label className="block text-sm font-medium text-ink mb-2">
                   Rate (₹) *
                 </label>
                 <input
@@ -249,13 +249,13 @@ const ItemEditModal = ({ isOpen, onClose, item, onItemUpdated }) => {
                   placeholder="0.00"
                   step="0.01"
                   min="0"
-                  className="w-full px-4 py-3 border border-stone-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors bg-white"
+                  className="w-full px-4 py-3 border border-line rounded-lg focus:ring-2 focus:ring-info focus:border-info transition-colors bg-surface"
                 />
               </div>
 
               {/* GST Rate */}
               <div>
-                <label className="block text-sm font-medium text-stone-700 mb-2">
+                <label className="block text-sm font-medium text-ink mb-2">
                   GST Rate (%)
                 </label>
                 <input
@@ -266,19 +266,19 @@ const ItemEditModal = ({ isOpen, onClose, item, onItemUpdated }) => {
                   step="0.01"
                   min="0"
                   max="100"
-                  className="w-full px-4 py-3 border border-stone-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors bg-white"
+                  className="w-full px-4 py-3 border border-line rounded-lg focus:ring-2 focus:ring-info focus:border-info transition-colors bg-surface"
                 />
               </div>
 
               {/* Status */}
               <div>
-                <label className="block text-sm font-medium text-stone-700 mb-2">
+                <label className="block text-sm font-medium text-ink mb-2">
                   Status
                 </label>
                 <select
                   value={formData.status}
                   onChange={(e) => handleInputChange('status', e.target.value)}
-                  className="w-full px-4 py-3 border border-stone-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors bg-white"
+                  className="w-full px-4 py-3 border border-line rounded-lg focus:ring-2 focus:ring-info focus:border-info transition-colors bg-surface"
                 >
                   <option value="Active">Active</option>
                   <option value="Inactive">Inactive</option>
@@ -287,27 +287,27 @@ const ItemEditModal = ({ isOpen, onClose, item, onItemUpdated }) => {
 
               {/* HSN/SAC Code Selection */}
               <div className="md:col-span-2">
-                <label className="block text-sm font-medium text-stone-700 mb-2">
+                <label className="block text-sm font-medium text-ink mb-2">
                   {isProduct ? 'HSN Code' : 'SAC Code'}
                 </label>
                 
                 {formData.hsnSacCode ? (
                   // Show selected code
-                  <div className="border-2 border-green-300 bg-green-50 rounded-lg p-4">
+                  <div className="border-2 border-success/30 bg-success/10 rounded-lg p-4">
                     <div className="flex items-center justify-between">
                       <div className="flex-1">
-                        <div className="font-semibold text-green-800 text-lg">
+                        <div className="font-semibold text-success text-lg">
                           {formData.hsnSacCode}
                         </div>
                         {formData.hsnSacDescription && (
-                          <div className="text-sm text-green-600 mt-1">
+                          <div className="text-sm text-success mt-1">
                             {formData.hsnSacDescription}
                           </div>
                         )}
                       </div>
                       <button
                         onClick={() => setShowHSNSACModal(true)}
-                        className="ml-4 px-4 py-2 text-green-700 hover:text-green-800 border border-green-300 hover:border-green-400 rounded-lg transition-colors"
+                        className="ml-4 px-4 py-2 text-success hover:text-success border border-success/30 hover:border-success rounded-lg transition-colors"
                       >
                         Change
                       </button>
@@ -317,9 +317,9 @@ const ItemEditModal = ({ isOpen, onClose, item, onItemUpdated }) => {
                   // Show selection button
                   <button
                     onClick={() => setShowHSNSACModal(true)}
-                    className="w-full p-4 border-2 border-dashed border-stone-300 hover:border-blue-400 rounded-lg transition-colors group"
+                    className="w-full p-4 border-2 border-dashed border-line hover:border-info rounded-lg transition-colors group"
                   >
-                    <div className="flex items-center justify-center space-x-3 text-stone-600 group-hover:text-blue-600">
+                    <div className="flex items-center justify-center space-x-3 text-dim group-hover:text-info">
                       <Search className="w-5 h-5" />
                       <span className="font-medium">
                         Select {isProduct ? 'HSN' : 'SAC'} Code
@@ -333,17 +333,17 @@ const ItemEditModal = ({ isOpen, onClose, item, onItemUpdated }) => {
         </div>
 
         {/* Footer */}
-        <div className="p-6 border-t border-stone-200 bg-stone-50 flex items-center justify-end space-x-4">
+        <div className="p-6 border-t border-line bg-canvas flex items-center justify-end space-x-4">
           <button
             onClick={onClose}
-            className="px-6 py-2 text-stone-600 hover:text-stone-800 transition-colors"
+            className="px-6 py-2 text-dim hover:text-ink transition-colors"
           >
             Cancel
           </button>
           <button
             onClick={handleSubmit}
             disabled={loading || !formData.name || !formData.rate}
-            className="px-8 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center space-x-2 font-medium"
+            className="px-8 py-3 bg-info text-white rounded-lg hover:bg-info disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center space-x-2 font-medium"
           >
             {loading && (
               <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>

@@ -34,20 +34,20 @@ function FileUploadField({ label, hint, fieldName, value, onUpload, onDelete, ac
   return (
     <div className="flex flex-col md:flex-row items-start gap-6">
       <div className="w-full md:w-1/3">
-        <label className="text-sm font-semibold text-gray-900 block mb-1">{label}</label>
-        {hint && <p className="text-xs text-gray-500">{hint}</p>}
+        <label className="text-sm font-semibold text-ink block mb-1">{label}</label>
+        {hint && <p className="text-xs text-dim">{hint}</p>}
       </div>
       <div className="w-full md:w-2/3">
         {value ? (
-          <div className="border border-gray-200 rounded px-3 py-2 flex items-center justify-between">
+          <div className="border border-line rounded px-3 py-2 flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-800">{value.name}</p>
-              <p className="text-xs text-green-600">{value.uploading ? "Uploading..." : "✓ Uploaded"}</p>
+              <p className="text-sm font-medium text-ink">{value.name}</p>
+              <p className="text-xs text-success">{value.uploading ? "Uploading..." : "✓ Uploaded"}</p>
             </div>
-            <button type="button" onClick={() => onDelete(fieldName)} className="text-red-500 text-xs hover:text-red-700 ml-3">Remove</button>
+            <button type="button" onClick={() => onDelete(fieldName)} className="text-danger text-xs hover:text-danger ml-3">Remove</button>
           </div>
         ) : (
-          <label className="cursor-pointer border border-dashed border-gray-300 rounded px-3 py-2 text-sm text-gray-500 hover:border-emerald-500 transition-colors block">
+          <label className="cursor-pointer border border-dashed border-line rounded px-3 py-2 text-sm text-dim hover:border-line transition-colors block">
             Click to upload {label.toLowerCase()}
             <input type="file" accept={accept} className="hidden" onChange={(e) => { if (e.target.files?.[0]) onUpload(fieldName, e.target.files[0]); }} />
           </label>
@@ -62,11 +62,11 @@ function TextAreaField({ label, hint, name, value, onChange, placeholder, rows =
   return (
     <div className="flex flex-col md:flex-row items-start gap-6">
       <div className="w-full md:w-1/3">
-        <label className="text-sm font-semibold text-gray-900 block mb-1">{label}</label>
-        {hint && <p className="text-xs text-gray-500">{hint}</p>}
+        <label className="text-sm font-semibold text-ink block mb-1">{label}</label>
+        {hint && <p className="text-xs text-dim">{hint}</p>}
       </div>
       <div className="w-full md:w-2/3">
-        <textarea name={name} value={value} onChange={onChange} placeholder={placeholder || label} rows={rows} className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent resize-none" />
+        <textarea name={name} value={value} onChange={onChange} placeholder={placeholder || label} rows={rows} className="w-full border border-line rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ink focus:border-transparent resize-none" />
       </div>
     </div>
   );
@@ -77,11 +77,11 @@ function TextField({ label, hint, name, value, onChange, placeholder, type = "te
   return (
     <div className="flex flex-col md:flex-row items-start gap-6">
       <div className="w-full md:w-1/3">
-        <label className="text-sm font-semibold text-gray-900 block mb-1">{label}</label>
-        {hint && <p className="text-xs text-gray-500">{hint}</p>}
+        <label className="text-sm font-semibold text-ink block mb-1">{label}</label>
+        {hint && <p className="text-xs text-dim">{hint}</p>}
       </div>
       <div className="w-full md:w-2/3">
-        <input type={type} name={name} value={value} onChange={onChange} placeholder={placeholder || label} className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent" />
+        <input type={type} name={name} value={value} onChange={onChange} placeholder={placeholder || label} className="w-full border border-line rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ink focus:border-transparent" />
       </div>
     </div>
   );
@@ -298,7 +298,7 @@ export default function Form3() {
 
   const renderServiceProviderSection = () => (
     <div className="space-y-6 pt-4">
-      <h2 className="text-base font-semibold text-gray-800 border-b border-gray-200 pb-2">D. Service Capability & Infrastructure</h2>
+      <h2 className="text-base font-semibold text-ink border-b border-line pb-2">D. Service Capability & Infrastructure</h2>
 
       <FileUploadField label="Company Profile / Credential Deck" hint="Services overview, client list, experience (PDF/DOC/PPT)" fieldName="credentialDeck" value={spDetails.credentialDeck} onUpload={uploadSPFile} onDelete={deleteSPFile} accept=".pdf,.doc,.docx,.ppt,.pptx" />
 
@@ -314,20 +314,20 @@ export default function Form3() {
 
       <div className="flex flex-col md:flex-row items-start gap-6">
         <div className="w-full md:w-1/3">
-          <label className="text-sm font-semibold text-gray-900 block mb-1">Professional Licences / Certifications</label>
-          <p className="text-xs text-gray-500">ISO 9001, ISO 27001, CA/CS/Legal bar, IT security certs, etc.</p>
+          <label className="text-sm font-semibold text-ink block mb-1">Professional Licences / Certifications</label>
+          <p className="text-xs text-dim">ISO 9001, ISO 27001, CA/CS/Legal bar, IT security certs, etc.</p>
         </div>
         <div className="w-full md:w-2/3 space-y-2">
           {spDetails.professionalLicences.map((lic, i) => (
-            <div key={i} className="flex items-center justify-between border border-gray-200 rounded px-3 py-2">
+            <div key={i} className="flex items-center justify-between border border-line rounded px-3 py-2">
               <div>
                 <p className="text-sm">{lic.name}</p>
-                <p className="text-xs text-green-600">{lic.uploading ? "Uploading..." : "✓ Uploaded"}</p>
+                <p className="text-xs text-success">{lic.uploading ? "Uploading..." : "✓ Uploaded"}</p>
               </div>
-              <button type="button" onClick={() => removeSPLicence(i)} className="text-red-500 text-xs hover:text-red-700">Remove</button>
+              <button type="button" onClick={() => removeSPLicence(i)} className="text-danger text-xs hover:text-danger">Remove</button>
             </div>
           ))}
-          <label className="cursor-pointer border border-dashed border-gray-300 rounded px-3 py-2 text-sm text-gray-500 hover:border-emerald-500 transition-colors block">
+          <label className="cursor-pointer border border-dashed border-line rounded px-3 py-2 text-sm text-dim hover:border-line transition-colors block">
             + Add Licence / Certificate
             <input type="file" className="hidden" accept=".pdf,.jpg,.png,.doc,.docx" onChange={(e) => { if (e.target.files?.[0]) addSPLicence(e.target.files[0]); }} />
           </label>
@@ -347,18 +347,18 @@ export default function Form3() {
   const renderManufacturerSection = () => (
     <div className="space-y-6 pt-4">
       <div>
-        <h2 className="text-base font-semibold text-gray-800 border-b border-gray-200 pb-2 mb-4">Manufacturer Type</h2>
+        <h2 className="text-base font-semibold text-ink border-b border-line pb-2 mb-4">Manufacturer Type</h2>
         <div className="flex flex-col md:flex-row items-start gap-6">
           <div className="w-full md:w-1/3">
-            <label className="text-sm font-semibold text-gray-900 block mb-1">Product Category</label>
-            <p className="text-xs text-gray-500">Select the type of goods manufactured</p>
+            <label className="text-sm font-semibold text-ink block mb-1">Product Category</label>
+            <p className="text-xs text-dim">Select the type of goods manufactured</p>
           </div>
           <div className="w-full md:w-2/3">
             <div className="grid grid-cols-2 gap-3">
               {MFG_SUBTYPES.map((sub) => (
                 <button key={sub.id} type="button"
                   onClick={() => setFormData(prev => ({ ...prev, manufacturerDetails: { ...prev.manufacturerDetails, manufacturerSubType: sub.id } }))}
-                  className={`p-3 border-2 rounded-lg text-sm font-medium text-center transition-all ${mfgDetails.manufacturerSubType === sub.id ? "border-emerald-500 bg-emerald-50 text-emerald-800" : "border-gray-200 hover:border-emerald-300 text-gray-600"}`}>
+                  className={`p-3 border-2 rounded-lg text-sm font-medium text-center transition-all ${mfgDetails.manufacturerSubType === sub.id ? "border-line bg-surface-hover text-ink" : "border-line hover:border-line text-dim"}`}>
                   {sub.label}
                 </button>
               ))}
@@ -367,7 +367,7 @@ export default function Form3() {
         </div>
       </div>
 
-      <h2 className="text-base font-semibold text-gray-800 border-b border-gray-200 pb-2">D. Manufacturing Facility</h2>
+      <h2 className="text-base font-semibold text-ink border-b border-line pb-2">D. Manufacturing Facility</h2>
 
       <TextField label="Factory / Plant Address" hint="Full address of manufacturing facility" name="factoryAddress" value={mfgDetails.factoryAddress} onChange={handleMFGChange} placeholder="Factory/plant address" />
 
@@ -385,51 +385,51 @@ export default function Form3() {
 
       <TextAreaField label="Utility Infrastructure" hint="Power supply, backup DG, water source, process gas" name="utilityInfrastructure" value={mfgDetails.utilityInfrastructure} onChange={handleMFGChange} placeholder="Describe power, water, gas, and backup infrastructure..." />
 
-      <h2 className="text-base font-semibold text-gray-800 border-b border-gray-200 pb-2 pt-2">Machinery & Equipment</h2>
+      <h2 className="text-base font-semibold text-ink border-b border-line pb-2 pt-2">Machinery & Equipment</h2>
       <div className="flex flex-col md:flex-row items-start gap-6">
         <div className="w-full md:w-1/3">
-          <label className="text-sm font-semibold text-gray-900 block mb-1">Machine List</label>
-          <p className="text-xs text-gray-500">Details of all production machinery</p>
+          <label className="text-sm font-semibold text-ink block mb-1">Machine List</label>
+          <p className="text-xs text-dim">Details of all production machinery</p>
         </div>
         <div className="w-full md:w-2/3 space-y-4">
           {mfgDetails.machineryDetails.map((machine, index) => (
             <div key={index} className="p-4 border rounded-lg space-y-4 relative">
-              <h4 className="font-semibold text-gray-800 text-sm">Machine {index + 1}</h4>
+              <h4 className="font-semibold text-ink text-sm">Machine {index + 1}</h4>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <input type="text" name="machineName" value={machine.machineName} onChange={(e) => handleMachineChange(index, e)} placeholder="Brand / Machine Name" className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500" />
-                <input type="text" name="serialNumber" value={machine.serialNumber} onChange={(e) => handleMachineChange(index, e)} placeholder="Serial Number" className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500" />
-                <input type="text" name="modelNumber" value={machine.modelNumber} onChange={(e) => handleMachineChange(index, e)} placeholder="Model Number" className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500" />
-                <input type="text" name="manufacturerName" value={machine.manufacturerName} onChange={(e) => handleMachineChange(index, e)} placeholder="Manufacturer Name" className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500" />
-                <input type="text" name="contact" value={machine.contact} onChange={(e) => handleMachineChange(index, e)} placeholder="Brand Contact" className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500" />
-                <div><label className="text-xs text-gray-500">Date of Purchase</label><input type="date" name="purchaseDate" value={machine.purchaseDate} onChange={(e) => handleMachineChange(index, e)} className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500" /></div>
-                <div><label className="text-xs text-gray-500">Warranty Start</label><input type="date" name="warrantyStart" value={machine.warrantyStart} onChange={(e) => handleMachineChange(index, e)} className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500" /></div>
-                <div><label className="text-xs text-gray-500">Warranty End</label><input type="date" name="warrantyEnd" value={machine.warrantyEnd} onChange={(e) => handleMachineChange(index, e)} className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500" /></div>
+                <input type="text" name="machineName" value={machine.machineName} onChange={(e) => handleMachineChange(index, e)} placeholder="Brand / Machine Name" className="w-full border border-line rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ink" />
+                <input type="text" name="serialNumber" value={machine.serialNumber} onChange={(e) => handleMachineChange(index, e)} placeholder="Serial Number" className="w-full border border-line rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ink" />
+                <input type="text" name="modelNumber" value={machine.modelNumber} onChange={(e) => handleMachineChange(index, e)} placeholder="Model Number" className="w-full border border-line rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ink" />
+                <input type="text" name="manufacturerName" value={machine.manufacturerName} onChange={(e) => handleMachineChange(index, e)} placeholder="Manufacturer Name" className="w-full border border-line rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ink" />
+                <input type="text" name="contact" value={machine.contact} onChange={(e) => handleMachineChange(index, e)} placeholder="Brand Contact" className="w-full border border-line rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ink" />
+                <div><label className="text-xs text-dim">Date of Purchase</label><input type="date" name="purchaseDate" value={machine.purchaseDate} onChange={(e) => handleMachineChange(index, e)} className="w-full border border-line rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ink" /></div>
+                <div><label className="text-xs text-dim">Warranty Start</label><input type="date" name="warrantyStart" value={machine.warrantyStart} onChange={(e) => handleMachineChange(index, e)} className="w-full border border-line rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ink" /></div>
+                <div><label className="text-xs text-dim">Warranty End</label><input type="date" name="warrantyEnd" value={machine.warrantyEnd} onChange={(e) => handleMachineChange(index, e)} className="w-full border border-line rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ink" /></div>
               </div>
-              <textarea name="maintenanceDetails" value={machine.maintenanceDetails} onChange={(e) => handleMachineChange(index, e)} placeholder="Maintenance Details" rows={2} className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500" />
-              {mfgDetails.machineryDetails.length > 1 && <button type="button" onClick={() => removeMachine(index)} className="absolute top-2 right-2 text-red-500 hover:text-red-700 font-bold text-lg leading-none">×</button>}
+              <textarea name="maintenanceDetails" value={machine.maintenanceDetails} onChange={(e) => handleMachineChange(index, e)} placeholder="Maintenance Details" rows={2} className="w-full border border-line rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ink" />
+              {mfgDetails.machineryDetails.length > 1 && <button type="button" onClick={() => removeMachine(index)} className="absolute top-2 right-2 text-danger hover:text-danger font-bold text-lg leading-none">×</button>}
             </div>
           ))}
-          <button type="button" onClick={addMachine} className="w-full text-sm text-emerald-600 hover:text-emerald-800 py-2 border border-dashed border-emerald-500 rounded-lg">+ Add Another Machine</button>
+          <button type="button" onClick={addMachine} className="w-full text-sm text-ink hover:text-ink py-2 border border-dashed border-line rounded-lg">+ Add Another Machine</button>
         </div>
       </div>
 
-      <h2 className="text-base font-semibold text-gray-800 border-b border-gray-200 pb-2 pt-2">E. Product Quality & Certifications</h2>
+      <h2 className="text-base font-semibold text-ink border-b border-line pb-2 pt-2">E. Product Quality & Certifications</h2>
 
       <FileUploadField label="ISO 9001 Quality Certificate" hint="Validity date, scope, certifying body accreditation" fieldName="iso9001Certificate" value={mfgDetails.iso9001Certificate} onUpload={uploadMFGFile} onDelete={deleteMFGFile} accept=".pdf,.jpg,.png" />
 
       <div className="flex flex-col md:flex-row items-start gap-6">
         <div className="w-full md:w-1/3">
-          <label className="text-sm font-semibold text-gray-900 block mb-1">Product-Specific Certifications</label>
-          <p className="text-xs text-gray-500">BIS/ISI, CE, RoHS, REACH, FSSAI, Ayush, NABL, IATF, etc.</p>
+          <label className="text-sm font-semibold text-ink block mb-1">Product-Specific Certifications</label>
+          <p className="text-xs text-dim">BIS/ISI, CE, RoHS, REACH, FSSAI, Ayush, NABL, IATF, etc.</p>
         </div>
         <div className="w-full md:w-2/3 space-y-2">
           {mfgDetails.productCertifications.map((cert, i) => (
-            <div key={i} className="flex items-center justify-between border border-gray-200 rounded px-3 py-2">
-              <div><p className="text-sm">{cert.name}</p><p className="text-xs text-green-600">{cert.uploading ? "Uploading..." : "✓ Uploaded"}</p></div>
-              <button type="button" onClick={() => removeMFGCert(i)} className="text-red-500 text-xs hover:text-red-700">Remove</button>
+            <div key={i} className="flex items-center justify-between border border-line rounded px-3 py-2">
+              <div><p className="text-sm">{cert.name}</p><p className="text-xs text-success">{cert.uploading ? "Uploading..." : "✓ Uploaded"}</p></div>
+              <button type="button" onClick={() => removeMFGCert(i)} className="text-danger text-xs hover:text-danger">Remove</button>
             </div>
           ))}
-          <label className="cursor-pointer border border-dashed border-gray-300 rounded px-3 py-2 text-sm text-gray-500 hover:border-emerald-500 transition-colors block">
+          <label className="cursor-pointer border border-dashed border-line rounded px-3 py-2 text-sm text-dim hover:border-line transition-colors block">
             + Add Product Certification
             <input type="file" className="hidden" accept=".pdf,.jpg,.png" onChange={(e) => { if (e.target.files?.[0]) addMFGCert(e.target.files[0]); }} />
           </label>
@@ -444,7 +444,7 @@ export default function Form3() {
 
       <TextAreaField label="Rejection & Return Rate" hint="Last 12 months rejection statistics and corrective actions" name="rejectionReturnRate" value={mfgDetails.rejectionReturnRate} onChange={handleMFGChange} placeholder="e.g. <0.5% rejection rate; RCA documented, corrective actions implemented..." />
 
-      <h2 className="text-base font-semibold text-gray-800 border-b border-gray-200 pb-2 pt-2">H. Supply Chain & Logistics</h2>
+      <h2 className="text-base font-semibold text-ink border-b border-line pb-2 pt-2">H. Supply Chain & Logistics</h2>
 
       <TextAreaField label="Logistics Infrastructure" hint="Owned fleet or 3PL tie-up; cold chain if perishable goods" name="logisticsInfrastructure" value={mfgDetails.logisticsInfrastructure} onChange={handleMFGChange} placeholder="Describe logistics setup, fleet, and third-party logistics partners..." />
 
@@ -457,9 +457,9 @@ export default function Form3() {
   );
 
   return (
-    <div className="flex min-h-screen bg-white">
+    <div className="flex min-h-screen bg-surface">
       {showSaveIndicator && (
-        <div className="fixed top-5 right-5 bg-green-600 text-white py-2 px-4 rounded shadow z-50">Changes saved successfully!</div>
+        <div className="fixed top-5 right-5 bg-success text-white py-2 px-4 rounded shadow z-50">Changes saved successfully!</div>
       )}
 
       <SidebarContent />
@@ -467,8 +467,8 @@ export default function Form3() {
       <div className="flex-1 flex flex-col">
         <StepIndicator currentStep={3} />
 
-        <div className="w-full max-w-4xl mx-auto px-4 pb-10 bg-white md:px-0">
-          <h1 className="text-2xl font-bold text-gray-900 mb-8">Product & Service</h1>
+        <div className="w-full max-w-4xl mx-auto px-4 pb-10 bg-surface md:px-0">
+          <h1 className="text-2xl font-bold text-ink mb-8">Product & Service</h1>
 
           <ResubmitBanner sectionKey="service" />
 
@@ -479,18 +479,18 @@ export default function Form3() {
             {/* Vendor Type Selection */}
             <div className="space-y-4">
               <div>
-                <h2 className="text-base font-semibold text-gray-900">Vendor Type</h2>
-                <p className="text-xs text-gray-500 mt-1">Select the type that best describes your business</p>
+                <h2 className="text-base font-semibold text-ink">Vendor Type</h2>
+                <p className="text-xs text-dim mt-1">Select the type that best describes your business</p>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 {VENDOR_TYPES.map((type) => (
                   <button key={type.id} type="button" onClick={() => handleVendorTypeSelect(type.id)}
-                    className={`p-5 border-2 rounded-xl text-left transition-all ${formData.vendorType === type.id ? "border-emerald-500 bg-emerald-50 shadow-md" : "border-gray-200 hover:border-emerald-300 hover:bg-gray-50"}`}>
+                    className={`p-5 border-2 rounded-xl text-left transition-all ${formData.vendorType === type.id ? "border-line bg-surface-hover " : "border-line hover:border-line hover:bg-canvas"}`}>
                     <div className="text-2xl mb-2">{type.icon}</div>
-                    <div className="font-semibold text-gray-900 text-sm mb-1">{type.label}</div>
-                    <div className="text-xs text-gray-500 leading-relaxed">{type.desc}</div>
+                    <div className="font-semibold text-ink text-sm mb-1">{type.label}</div>
+                    <div className="text-xs text-dim leading-relaxed">{type.desc}</div>
                     {formData.vendorType === type.id && (
-                      <div className="mt-3 text-emerald-600 text-xs font-semibold flex items-center gap-1">
+                      <div className="mt-3 text-ink text-xs font-semibold flex items-center gap-1">
                         <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" /></svg>
                         Selected
                       </div>
@@ -502,23 +502,23 @@ export default function Form3() {
 
             {/* Common Fields — shown after type is selected */}
             {formData.vendorType && (
-              <div className="space-y-6 pt-2 border-t border-gray-100">
-                <h2 className="text-base font-semibold text-gray-900 pt-4">Business & Service Info</h2>
+              <div className="space-y-6 pt-2 border-t border-line">
+                <h2 className="text-base font-semibold text-ink pt-4">Business & Service Info</h2>
                 <div className="flex flex-col md:flex-row items-start gap-6">
                   <div className="w-full md:w-1/3">
-                    <label className="text-sm font-semibold text-gray-900 block mb-1">Description</label>
-                    <p className="text-xs text-gray-500">Describe your key products / services offered</p>
+                    <label className="text-sm font-semibold text-ink block mb-1">Description</label>
+                    <p className="text-xs text-dim">Describe your key products / services offered</p>
                   </div>
                   <div className="w-full md:w-2/3">
-                    <textarea required name="productDescription" value={formData.productDescription} onChange={handleCommonChange} placeholder="Product & service description" rows={4} className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent resize-none" />
+                    <textarea required name="productDescription" value={formData.productDescription} onChange={handleCommonChange} placeholder="Product & service description" rows={4} className="w-full border border-line rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ink focus:border-transparent resize-none" />
                   </div>
                 </div>
                 <div className="flex flex-col md:flex-row items-start gap-6">
                   <div className="w-full md:w-1/3">
-                    <label className="text-sm font-semibold text-gray-900 block mb-1">Payment Terms</label>
+                    <label className="text-sm font-semibold text-ink block mb-1">Payment Terms</label>
                   </div>
                   <div className="w-full md:w-2/3">
-                    <select required name="paymentTerms" value={formData.paymentTerms} onChange={handleCommonChange} className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 appearance-none bg-white">
+                    <select required name="paymentTerms" value={formData.paymentTerms} onChange={handleCommonChange} className="w-full border border-line rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ink appearance-none bg-surface">
                       <option value="">Select payment terms</option>
                       <option value="Net 30">Net 30</option>
                       <option value="Net 60">Net 60</option>
@@ -528,10 +528,10 @@ export default function Form3() {
                 </div>
                 <div className="flex flex-col md:flex-row items-start gap-6">
                   <div className="w-full md:w-1/3">
-                    <label className="text-sm font-semibold text-gray-900 block mb-1">Mode of Payment</label>
+                    <label className="text-sm font-semibold text-ink block mb-1">Mode of Payment</label>
                   </div>
                   <div className="w-full md:w-2/3">
-                    <select required name="paymentMode" value={formData.paymentMode} onChange={handleCommonChange} className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 appearance-none bg-white">
+                    <select required name="paymentMode" value={formData.paymentMode} onChange={handleCommonChange} className="w-full border border-line rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ink appearance-none bg-surface">
                       <option value="">Select mode of payment</option>
                       <option value="Bank Transfer">Bank Transfer</option>
                       <option value="Credit Card">Credit Card</option>
@@ -550,11 +550,11 @@ export default function Form3() {
 
             {/* Both — Tabbed */}
             {formData.vendorType === "both" && (
-              <div className="space-y-4 border-t border-gray-100 pt-6">
-                <div className="flex border-b border-gray-200">
+              <div className="space-y-4 border-t border-line pt-6">
+                <div className="flex border-b border-line">
                   {[{ id: "service_provider", label: "🛠️ Service Provider" }, { id: "manufacturer", label: "🏭 Manufacturer" }].map((tab) => (
                     <button key={tab.id} type="button" onClick={() => setActiveTab(tab.id)}
-                      className={`px-6 py-3 text-sm font-medium border-b-2 transition-colors ${activeTab === tab.id ? "border-emerald-500 text-emerald-700" : "border-transparent text-gray-500 hover:text-gray-700"}`}>
+                      className={`px-6 py-3 text-sm font-medium border-b-2 transition-colors ${activeTab === tab.id ? "border-line text-ink" : "border-transparent text-dim hover:text-ink"}`}>
                       {tab.label}
                     </button>
                   ))}
@@ -567,9 +567,9 @@ export default function Form3() {
             </div>
 
             {/* Navigation */}
-            <div className="flex justify-end space-x-4 pt-6 border-t border-gray-100">
-              <button type="button" onClick={handlePrevious} className="px-8 py-3 text-gray-600 hover:text-gray-800 transition-colors">Back</button>
-              <button type="submit" disabled={isSubmitting} className="text-white px-8 py-3 rounded-lg font-medium shadow-md bg-gradient-to-r from-[#0F5848] to-[#21BE9C] hover:from-[#0F5848]/90 hover:to-[#21BE9C]/90 focus:outline-none focus:ring-2 focus:ring-emerald-500 disabled:opacity-60 disabled:cursor-not-allowed">
+            <div className="flex justify-end space-x-4 pt-6 border-t border-line">
+              <button type="button" onClick={handlePrevious} className="px-8 py-3 text-dim hover:text-ink transition-colors">Back</button>
+              <button type="submit" disabled={isSubmitting} className="text-white px-8 py-3 rounded-lg font-medium bg-black hover:from-black/90 hover:to-black/90 focus:outline-none focus:ring-2 focus:ring-ink disabled:opacity-60 disabled:cursor-not-allowed">
                 {isSubmitting ? "Please wait..." : "Next"}
               </button>
             </div>

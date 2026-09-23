@@ -93,9 +93,9 @@ const StartCallModal = ({
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+      <div className="bg-surface rounded-lg shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
         {/* Header */}
-        <div className="sticky top-0 bg-gradient-to-r from-blue-500 to-blue-600 text-white p-6 flex items-center justify-between">
+        <div className="sticky top-0 bg-black text-white p-6 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <Phone className="w-6 h-6" />
             <h2 className="text-2xl font-bold">Start Video Call</h2>
@@ -103,7 +103,7 @@ const StartCallModal = ({
           <button
             onClick={onClose}
             disabled={isLoading}
-            className="p-1 hover:bg-blue-700 rounded transition disabled:opacity-50"
+            className="p-1 hover:bg-info rounded transition disabled:opacity-50"
           >
             <X className="w-6 h-6" />
           </button>
@@ -113,8 +113,8 @@ const StartCallModal = ({
         <div className="p-6 space-y-6">
           {/* Error Message */}
           {callError && (
-            <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-              <p className="text-red-800 text-sm">
+            <div className="bg-danger/10 border border-danger/20 rounded-lg p-4">
+              <p className="text-danger text-sm">
                 <strong>Error:</strong> {callError}
               </p>
             </div>
@@ -122,8 +122,8 @@ const StartCallModal = ({
 
           {/* Call Title */}
           <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-2">
-              Call Title <span className="text-red-500">*</span>
+            <label className="block text-sm font-semibold text-ink mb-2">
+              Call Title <span className="text-danger">*</span>
             </label>
             <input
               type="text"
@@ -131,34 +131,34 @@ const StartCallModal = ({
               onChange={(e) => setCallTitle(e.target.value)}
               placeholder="e.g., Project Discussion, Client Meeting"
               disabled={isLoading}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100"
+              className="w-full px-4 py-2 border border-line rounded-lg focus:outline-none focus:ring-2 focus:ring-info disabled:bg-surface-hover"
             />
           </div>
 
           {/* Collaborators Section */}
           <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-3">
+            <label className="block text-sm font-semibold text-ink mb-3">
               <div className="flex items-center gap-2">
                 <Users className="w-4 h-4" />
-                Invite Collaborators <span className="text-red-500">*</span>
+                Invite Collaborators <span className="text-danger">*</span>
               </div>
             </label>
 
             {/* Search Box */}
             <div className="mb-4 relative">
-              <Search className="absolute left-3 top-3 w-4 h-4 text-gray-400" />
+              <Search className="absolute left-3 top-3 w-4 h-4 text-dim" />
               <input
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Search by name or email..."
                 disabled={isLoading}
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100"
+                className="w-full pl-10 pr-4 py-2 border border-line rounded-lg focus:outline-none focus:ring-2 focus:ring-info disabled:bg-surface-hover"
               />
             </div>
 
             {/* Collaborators List */}
-            <div className="border border-gray-200 rounded-lg max-h-64 overflow-y-auto bg-gray-50">
+            <div className="border border-line rounded-lg max-h-64 overflow-y-auto bg-canvas">
               {filteredCollaborators.length > 0 ? (
                 <div className="divide-y">
                   {filteredCollaborators.map((collaborator) => {
@@ -166,25 +166,25 @@ const StartCallModal = ({
                     return (
                     <label
                       key={collaboratorId}
-                      className="flex items-center gap-3 p-4 hover:bg-gray-100 cursor-pointer transition"
+                      className="flex items-center gap-3 p-4 hover:bg-surface-hover cursor-pointer transition"
                     >
                       <input
                         type="checkbox"
                         checked={selectedCollaborators.some(c => (c.vendorId === collaboratorId || c.userId === collaboratorId))}
                         onChange={() => toggleCollaborator(collaborator)}
                         disabled={isLoading}
-                        className="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500 disabled:opacity-50"
+                        className="w-4 h-4 rounded border-line text-info focus:ring-info disabled:opacity-50"
                       />
                       <div className="flex-1">
-                        <p className="font-medium text-gray-900">{collaborator.name || 'Unknown'}</p>
-                        <p className="text-xs text-gray-600">{collaborator.email || 'No email'}</p>
+                        <p className="font-medium text-ink">{collaborator.name || 'Unknown'}</p>
+                        <p className="text-xs text-dim">{collaborator.email || 'No email'}</p>
                         {collaborator.role && (
-                          <p className="text-xs text-blue-600 mt-1">
+                          <p className="text-xs text-info mt-1">
                             {collaborator.role.toUpperCase()}
                           </p>
                         )}
                       </div>
-                      <div className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded">
+                      <div className="text-xs bg-info/10 text-info px-2 py-1 rounded">
                         {collaborator.userType || 'Collaborator'}
                       </div>
                     </label>
@@ -192,7 +192,7 @@ const StartCallModal = ({
                   })}
                 </div>
               ) : (
-                <div className="p-4 text-center text-gray-500">
+                <div className="p-4 text-center text-dim">
                   {collaborators.length === 0
                     ? 'No collaborators available'
                     : 'No matching collaborators found'}
@@ -202,7 +202,7 @@ const StartCallModal = ({
 
             {/* Selected Count */}
             {selectedCollaborators.length > 0 && (
-              <div className="mt-3 text-sm text-blue-600">
+              <div className="mt-3 text-sm text-info">
                 {selectedCollaborators.length} collaborator{selectedCollaborators.length !== 1 ? 's' : ''} selected
               </div>
             )}
@@ -210,18 +210,18 @@ const StartCallModal = ({
         </div>
 
         {/* Footer */}
-        <div className="sticky bottom-0 bg-gray-50 border-t border-gray-200 p-6 flex gap-3 justify-end">
+        <div className="sticky bottom-0 bg-canvas border-t border-line p-6 flex gap-3 justify-end">
           <button
             onClick={onClose}
             disabled={isLoading}
-            className="px-6 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-100 transition disabled:opacity-50 font-medium"
+            className="px-6 py-2 border border-line text-ink rounded-lg hover:bg-surface-hover transition disabled:opacity-50 font-medium"
           >
             Cancel
           </button>
           <button
             onClick={handleStartCall}
             disabled={isLoading || !callTitle.trim() || selectedCollaborators.length === 0}
-            className="px-6 py-2 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg hover:from-blue-600 hover:to-blue-700 transition disabled:opacity-50 font-medium flex items-center gap-2"
+            className="px-6 py-2 bg-black text-white rounded-lg hover:from-black hover:to-black transition disabled:opacity-50 font-medium flex items-center gap-2"
           >
             <Phone className="w-4 h-4" />
             {isLoading ? 'Starting...' : 'Start Call'}

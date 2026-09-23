@@ -128,8 +128,8 @@ const MATERIAL_CATEGORIES = [
   },
 ];
 
-const inputCls = 'w-full px-2 py-1.5 border border-gray-300 rounded-md text-xs focus:outline-none focus:ring-1 focus:ring-blue-500';
-const labelCls = 'block text-[10px] font-semibold uppercase tracking-wide text-gray-400 mb-0.5';
+const inputCls = 'w-full px-2 py-1.5 border border-line rounded-md text-xs focus:outline-none focus:ring-1 focus:ring-info';
+const labelCls = 'block text-[10px] font-semibold uppercase tracking-wide text-dim mb-0.5';
 
 // Migrate legacy single-material specData into the materials[] shape
 const normalizeSpecData = (saved) => {
@@ -245,15 +245,15 @@ const MaterialSpecCard = ({ data, nodeId, workspaceId, setNodes }) => {
   if (isEditing) {
     return (
       <div
-        className="nodrag w-full bg-white rounded-lg border border-gray-200 p-3 space-y-3 max-h-[560px] overflow-y-auto"
+        className="nodrag w-full bg-surface rounded-lg border border-line p-3 space-y-3 max-h-[560px] overflow-y-auto"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between">
-          <span className="text-xs font-semibold text-gray-700 flex items-center gap-1.5">
-            <Package className="w-3.5 h-3.5 text-orange-500" /> Edit Material Specs
+          <span className="text-xs font-semibold text-ink flex items-center gap-1.5">
+            <Package className="w-3.5 h-3.5 text-warning" /> Edit Material Specs
           </span>
-          <button onClick={() => setIsEditing(false)} className="p-1 hover:bg-gray-100 rounded" title="Close">
-            <X className="w-3.5 h-3.5 text-gray-500" />
+          <button onClick={() => setIsEditing(false)} className="p-1 hover:bg-surface-hover rounded" title="Close">
+            <X className="w-3.5 h-3.5 text-dim" />
           </button>
         </div>
 
@@ -266,7 +266,7 @@ const MaterialSpecCard = ({ data, nodeId, workspaceId, setNodes }) => {
                 key={cat.id}
                 type="button"
                 onClick={() => addMaterial(cat)}
-                className="px-2 py-1 rounded-full text-[10px] font-medium bg-orange-50 border border-orange-200 text-orange-700 hover:bg-orange-100 hover:border-orange-300 transition-colors"
+                className="px-2 py-1 rounded-full text-[10px] font-medium bg-warning/10 border border-warning/20 text-warning hover:bg-warning/10 hover:border-warning/30 transition-colors"
               >
                 + {cat.label}
               </button>
@@ -279,16 +279,16 @@ const MaterialSpecCard = ({ data, nodeId, workspaceId, setNodes }) => {
           const cat = MATERIAL_CATEGORIES.find(c => c.label === mat.category);
           const isOpen = expandedIndex === i;
           return (
-            <div key={i} className="border border-gray-200 rounded-lg overflow-hidden">
+            <div key={i} className="border border-line rounded-lg overflow-hidden">
               <button
                 type="button"
                 onClick={() => setExpandedIndex(isOpen ? -1 : i)}
-                className="w-full flex items-center justify-between px-2.5 py-2 bg-gray-50 hover:bg-gray-100 text-left"
+                className="w-full flex items-center justify-between px-2.5 py-2 bg-canvas hover:bg-surface-hover text-left"
               >
-                <span className="text-xs font-semibold text-gray-800 truncate">
+                <span className="text-xs font-semibold text-ink truncate">
                   {i + 1}. {materialTitle(mat, i)}
                   {mat.category && (
-                    <span className="ml-1.5 text-[9px] font-medium uppercase tracking-wide text-orange-600">
+                    <span className="ml-1.5 text-[9px] font-medium uppercase tracking-wide text-warning">
                       {mat.category}
                     </span>
                   )}
@@ -299,14 +299,14 @@ const MaterialSpecCard = ({ data, nodeId, workspaceId, setNodes }) => {
                     tabIndex={0}
                     onClick={(e) => { e.stopPropagation(); removeMaterial(i); }}
                     onKeyDown={(e) => { if (e.key === 'Enter') { e.stopPropagation(); removeMaterial(i); } }}
-                    className="p-1 text-gray-400 hover:text-red-500 rounded"
+                    className="p-1 text-dim hover:text-danger rounded"
                     title="Remove material"
                   >
                     <Trash2 className="w-3 h-3" />
                   </span>
                   {isOpen
-                    ? <ChevronUp className="w-3.5 h-3.5 text-gray-400" />
-                    : <ChevronDown className="w-3.5 h-3.5 text-gray-400" />}
+                    ? <ChevronUp className="w-3.5 h-3.5 text-dim" />
+                    : <ChevronDown className="w-3.5 h-3.5 text-dim" />}
                 </span>
               </button>
 
@@ -321,8 +321,8 @@ const MaterialSpecCard = ({ data, nodeId, workspaceId, setNodes }) => {
                         onClick={() => selectCategory(i, c)}
                         className={`px-2 py-0.5 rounded-full text-[9px] font-medium border transition-colors ${
                           mat.category === c.label
-                            ? 'bg-orange-500 border-orange-500 text-white'
-                            : 'bg-white border-gray-300 text-gray-600 hover:border-orange-400 hover:text-orange-600'
+                            ? 'bg-warning border-warning text-white'
+                            : 'bg-surface border-line text-dim hover:border-warning hover:text-warning'
                         }`}
                       >
                         {c.label}
@@ -369,13 +369,13 @@ const MaterialSpecCard = ({ data, nodeId, workspaceId, setNodes }) => {
                             onChange={(e) => updateSpecRow(i, j, 'value', e.target.value)}
                             onKeyDown={(e) => e.stopPropagation()}
                             className={`${inputCls} flex-1`} />
-                          <button onClick={() => removeSpecRow(i, j)} className="p-1 text-gray-400 hover:text-red-500" title="Remove">
+                          <button onClick={() => removeSpecRow(i, j)} className="p-1 text-dim hover:text-danger" title="Remove">
                             <Trash2 className="w-3 h-3" />
                           </button>
                         </div>
                       ))}
                       <button onClick={() => addSpecRow(i)}
-                        className="flex items-center gap-1 text-[11px] font-medium text-blue-600 hover:text-blue-700">
+                        className="flex items-center gap-1 text-[11px] font-medium text-info hover:text-info">
                         <Plus className="w-3 h-3" /> Add spec
                       </button>
                     </div>
@@ -393,11 +393,11 @@ const MaterialSpecCard = ({ data, nodeId, workspaceId, setNodes }) => {
 
         <div className="flex gap-2 justify-end pt-1">
           <button onClick={() => setIsEditing(false)}
-            className="px-3 py-1.5 text-xs border border-gray-300 rounded-md hover:bg-gray-50">
+            className="px-3 py-1.5 text-xs border border-line rounded-md hover:bg-canvas">
             Cancel
           </button>
           <button onClick={handleSave}
-            className="px-3 py-1.5 text-xs bg-blue-600 text-white rounded-md hover:bg-blue-700 flex items-center gap-1">
+            className="px-3 py-1.5 text-xs bg-info text-white rounded-md hover:bg-info flex items-center gap-1">
             <Save className="w-3 h-3" /> Save
           </button>
         </div>
@@ -407,19 +407,19 @@ const MaterialSpecCard = ({ data, nodeId, workspaceId, setNodes }) => {
 
   // ---------- VIEW MODE ----------
   return (
-    <div className="w-full bg-white rounded-lg border border-gray-200 overflow-hidden">
+    <div className="w-full bg-surface rounded-lg border border-line overflow-hidden">
       {/* Header */}
-      <div className="flex items-start justify-between px-3 py-2.5 bg-orange-50 border-b border-orange-100">
+      <div className="flex items-start justify-between px-3 py-2.5 bg-warning/10 border-b border-warning/10">
         <div className="flex items-center gap-2 min-w-0">
-          <div className="w-7 h-7 rounded-md bg-orange-100 flex items-center justify-center flex-shrink-0">
-            <Package className="w-4 h-4 text-orange-600" />
+          <div className="w-7 h-7 rounded-md bg-warning/10 flex items-center justify-center flex-shrink-0">
+            <Package className="w-4 h-4 text-warning" />
           </div>
           <div className="min-w-0">
-            <p className="text-sm font-semibold text-gray-800 truncate">
+            <p className="text-sm font-semibold text-ink truncate">
               Material Spec{materials.length > 1 ? `s (${materials.length})` : ''}
             </p>
             {materials.length > 0 && (
-              <p className="text-[10px] text-orange-600 font-medium uppercase tracking-wide truncate">
+              <p className="text-[10px] text-warning font-medium uppercase tracking-wide truncate">
                 {[...new Set(materials.map(m => m.category).filter(Boolean))].join(' · ')}
               </p>
             )}
@@ -427,10 +427,10 @@ const MaterialSpecCard = ({ data, nodeId, workspaceId, setNodes }) => {
         </div>
         <button
           onClick={(e) => { e.stopPropagation(); setIsEditing(true); }}
-          className="p-1.5 hover:bg-orange-100 rounded-md flex-shrink-0"
+          className="p-1.5 hover:bg-warning/10 rounded-md flex-shrink-0"
           title="Edit specs"
         >
-          <Edit2 className="w-3.5 h-3.5 text-gray-500" />
+          <Edit2 className="w-3.5 h-3.5 text-dim" />
         </button>
       </div>
 
@@ -438,7 +438,7 @@ const MaterialSpecCard = ({ data, nodeId, workspaceId, setNodes }) => {
       <div className="p-3 space-y-3 max-h-[520px] overflow-y-auto">
         {materials.length === 0 ? (
           <div>
-            <p className="text-xs text-gray-500 mb-2">
+            <p className="text-xs text-dim mb-2">
               Pick a material category to fill in its spec sheet:
             </p>
             <div className="flex flex-wrap gap-1.5">
@@ -451,7 +451,7 @@ const MaterialSpecCard = ({ data, nodeId, workspaceId, setNodes }) => {
                     addMaterial(cat);
                     setIsEditing(true);
                   }}
-                  className="px-2 py-1 rounded-full text-[11px] font-medium bg-orange-50 border border-orange-200 text-orange-700 hover:bg-orange-100 hover:border-orange-300 transition-colors"
+                  className="px-2 py-1 rounded-full text-[11px] font-medium bg-warning/10 border border-warning/20 text-warning hover:bg-warning/10 hover:border-warning/30 transition-colors"
                 >
                   {cat.label}
                 </button>
@@ -464,13 +464,13 @@ const MaterialSpecCard = ({ data, nodeId, workspaceId, setNodes }) => {
               const specRows = (mat.specs || []).filter(r => r.key || r.value);
               const hasSummary = mat.grade || mat.manufacturer || mat.standard;
               return (
-                <div key={i} className={i > 0 ? 'pt-3 border-t border-gray-100' : ''}>
+                <div key={i} className={i > 0 ? 'pt-3 border-t border-line' : ''}>
                   <div className="flex items-baseline gap-1.5 mb-1.5">
-                    <p className="text-xs font-semibold text-gray-800 truncate">
+                    <p className="text-xs font-semibold text-ink truncate">
                       {materialTitle(mat, i)}
                     </p>
                     {mat.category && (
-                      <span className="text-[9px] font-medium uppercase tracking-wide text-orange-600 flex-shrink-0">
+                      <span className="text-[9px] font-medium uppercase tracking-wide text-warning flex-shrink-0">
                         {mat.category}
                       </span>
                     )}
@@ -479,27 +479,27 @@ const MaterialSpecCard = ({ data, nodeId, workspaceId, setNodes }) => {
                   {hasSummary && (
                     <div className="grid grid-cols-2 gap-2">
                       {mat.grade && (
-                        <div className="border border-gray-100 rounded-md px-2 py-1.5 bg-gray-50">
+                        <div className="border border-line rounded-md px-2 py-1.5 bg-canvas">
                           <p className={labelCls}>Grade</p>
-                          <p className="text-xs font-semibold text-gray-800">{mat.grade}</p>
+                          <p className="text-xs font-semibold text-ink">{mat.grade}</p>
                         </div>
                       )}
                       {mat.manufacturer && (
-                        <div className="border border-gray-100 rounded-md px-2 py-1.5 bg-gray-50">
+                        <div className="border border-line rounded-md px-2 py-1.5 bg-canvas">
                           <p className={labelCls}>Manufacturer</p>
-                          <p className="text-xs font-semibold text-gray-800">{mat.manufacturer}</p>
+                          <p className="text-xs font-semibold text-ink">{mat.manufacturer}</p>
                         </div>
                       )}
                       {mat.standard && (
-                        <div className="border border-gray-100 rounded-md px-2 py-1.5 bg-gray-50">
+                        <div className="border border-line rounded-md px-2 py-1.5 bg-canvas">
                           <p className={labelCls}>Standard</p>
-                          <p className="text-xs font-semibold text-gray-800">{mat.standard}</p>
+                          <p className="text-xs font-semibold text-ink">{mat.standard}</p>
                         </div>
                       )}
                       {(mat.quantity || mat.unit) && (
-                        <div className="border border-gray-100 rounded-md px-2 py-1.5 bg-gray-50">
+                        <div className="border border-line rounded-md px-2 py-1.5 bg-canvas">
                           <p className={labelCls}>Quantity</p>
-                          <p className="text-xs font-semibold text-gray-800">
+                          <p className="text-xs font-semibold text-ink">
                             {mat.quantity || '-'}{mat.unit ? ` ${mat.unit}` : ''}
                           </p>
                         </div>
@@ -508,20 +508,20 @@ const MaterialSpecCard = ({ data, nodeId, workspaceId, setNodes }) => {
                   )}
 
                   {specRows.length > 0 && (
-                    <div className="border border-gray-200 rounded-md overflow-hidden mt-2">
+                    <div className="border border-line rounded-md overflow-hidden mt-2">
                       {specRows.map((row, j) => (
-                        <div key={j} className={`flex text-xs ${j % 2 === 0 ? 'bg-white' : 'bg-gray-50'}`}>
-                          <span className="flex-1 px-2 py-1.5 text-gray-500 border-r border-gray-100">{row.key}</span>
-                          <span className="flex-1 px-2 py-1.5 font-medium text-gray-800">{row.value || '—'}</span>
+                        <div key={j} className={`flex text-xs ${j % 2 === 0 ? 'bg-surface' : 'bg-canvas'}`}>
+                          <span className="flex-1 px-2 py-1.5 text-dim border-r border-line">{row.key}</span>
+                          <span className="flex-1 px-2 py-1.5 font-medium text-ink">{row.value || '—'}</span>
                         </div>
                       ))}
                     </div>
                   )}
 
                   {mat.notes && (
-                    <div className="rounded-md bg-blue-50 border border-blue-100 px-2 py-1.5 mt-2">
+                    <div className="rounded-md bg-info/10 border border-info/10 px-2 py-1.5 mt-2">
                       <p className={labelCls}>Notes</p>
-                      <p className="text-xs text-gray-700 whitespace-pre-wrap">{mat.notes}</p>
+                      <p className="text-xs text-ink whitespace-pre-wrap">{mat.notes}</p>
                     </div>
                   )}
                 </div>
@@ -531,7 +531,7 @@ const MaterialSpecCard = ({ data, nodeId, workspaceId, setNodes }) => {
             <button
               type="button"
               onClick={(e) => { e.stopPropagation(); setIsEditing(true); }}
-              className="w-full flex items-center justify-center gap-1.5 px-2 py-1.5 text-[11px] font-medium text-orange-700 bg-orange-50 border border-dashed border-orange-300 rounded-md hover:bg-orange-100 transition-colors"
+              className="w-full flex items-center justify-center gap-1.5 px-2 py-1.5 text-[11px] font-medium text-warning bg-warning/10 border border-dashed border-warning/30 rounded-md hover:bg-warning/10 transition-colors"
             >
               <Plus className="w-3 h-3" /> Add another material
             </button>

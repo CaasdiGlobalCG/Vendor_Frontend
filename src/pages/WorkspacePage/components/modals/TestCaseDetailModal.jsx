@@ -88,24 +88,24 @@ const TestCaseDetailModal = ({ isOpen, onClose, testCase }) => {
   const getStatusIcon = (status) => {
     switch (status) {
       case 'completed':
-        return <CheckCircle2 className="w-5 h-5 text-green-600" />;
+        return <CheckCircle2 className="w-5 h-5 text-success" />;
       case 'active':
-        return <Clock className="w-5 h-5 text-blue-600" />;
+        return <Clock className="w-5 h-5 text-info" />;
       case 'pending':
       default:
-        return <AlertCircle className="w-5 h-5 text-yellow-600" />;
+        return <AlertCircle className="w-5 h-5 text-warning" />;
     }
   };
 
   const getStatusColor = (status) => {
     switch (status) {
       case 'completed':
-        return 'bg-green-100 text-green-800';
+        return 'bg-success/10 text-success';
       case 'active':
-        return 'bg-blue-100 text-blue-800';
+        return 'bg-info/10 text-info';
       case 'pending':
       default:
-        return 'bg-yellow-100 text-yellow-800';
+        return 'bg-warning/10 text-warning';
     }
   };
 
@@ -125,29 +125,29 @@ const TestCaseDetailModal = ({ isOpen, onClose, testCase }) => {
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-30 z-[9999] flex justify-end" onClick={handleBackdropClick}>
-      <div className="bg-white shadow-2xl w-full max-w-md h-full flex flex-col transform transition-transform duration-300 ease-out">
+      <div className="bg-surface shadow-2xl w-full max-w-md h-full flex flex-col transform transition-transform duration-300 ease-out">
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-gray-200">
+        <div className="flex items-center justify-between p-6 border-b border-line">
           <div className="flex items-center space-x-3">
             {getStatusIcon(testCase.status)}
-            <h2 className="text-xl font-semibold text-gray-900">{testCase.name}</h2>
+            <h2 className="text-xl font-semibold text-ink">{testCase.name}</h2>
           </div>
           <button
             onClick={onClose}
-            className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+            className="p-2 text-dim hover:text-ink hover:bg-surface-hover rounded-lg transition-colors"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
 
         {/* Content */}
-        <div className="flex-1 overflow-y-auto p-6 bg-gray-50">
+        <div className="flex-1 overflow-y-auto p-6 bg-canvas">
           {/* Description with Date */}
           <div className="mb-6">
-            <h3 className="text-lg font-medium text-gray-900 mb-2">
+            <h3 className="text-lg font-medium text-ink mb-2">
               {testCase.description || 'Foundation testing - phase 1'}
             </h3>
-            <div className="flex items-center text-gray-500 text-sm">
+            <div className="flex items-center text-dim text-sm">
               <Calendar className="w-4 h-4 mr-1" />
               <span>{formatDate()}</span>
             </div>
@@ -156,7 +156,7 @@ const TestCaseDetailModal = ({ isOpen, onClose, testCase }) => {
           {/* Status */}
           <div className="mb-6">
             <div className="flex items-center space-x-2">
-              <span className="text-sm font-medium text-gray-700">Status:</span>
+              <span className="text-sm font-medium text-ink">Status:</span>
               <span className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(testCase.status)}`}>
                 {testCase.status.charAt(0).toUpperCase() + testCase.status.slice(1)}
               </span>
@@ -165,23 +165,23 @@ const TestCaseDetailModal = ({ isOpen, onClose, testCase }) => {
 
           {/* Tester Information */}
           <div className="mb-6">
-            <div className="bg-gray-50 rounded-lg p-4">
+            <div className="bg-canvas rounded-lg p-4">
               <div className="flex items-center space-x-2 mb-2">
-                <User className="w-4 h-4 text-gray-600" />
-                <span className="text-sm font-medium text-gray-700">Tester</span>
+                <User className="w-4 h-4 text-dim" />
+                <span className="text-sm font-medium text-ink">Tester</span>
               </div>
-              <div className="text-gray-900 font-medium">{testCase.tester || 'QA team Alpha'}</div>
+              <div className="text-ink font-medium">{testCase.tester || 'QA team Alpha'}</div>
             </div>
           </div>
 
           {/* Evidence Section */}
           <div className="mb-6">
-            <div className="bg-gray-50 rounded-lg p-4">
+            <div className="bg-canvas rounded-lg p-4">
               <div className="flex items-center space-x-2 mb-3">
-                <FileText className="w-4 h-4 text-gray-600" />
-                <span className="text-sm font-medium text-gray-700">Evidence</span>
+                <FileText className="w-4 h-4 text-dim" />
+                <span className="text-sm font-medium text-ink">Evidence</span>
               </div>
-              <div className="text-gray-900 font-medium mb-3">
+              <div className="text-ink font-medium mb-3">
                 {Array.isArray(testCase.evidenceFiles) ? testCase.evidenceFiles.length : 0} files
               </div>
 
@@ -196,10 +196,10 @@ const TestCaseDetailModal = ({ isOpen, onClose, testCase }) => {
                     return (
                       <div key={file.id || index} className="relative group">
                         {file.type?.startsWith('image/') ? (
-                          <div className="aspect-video bg-gray-200 rounded-lg overflow-hidden shadow-sm">
+                          <div className="aspect-video bg-surface-hover rounded-lg overflow-hidden ">
                             {isLoadingUrl ? (
                               <div className="w-full h-full flex items-center justify-center">
-                                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-info"></div>
                               </div>
                             ) : signedUrl ? (
                               <img
@@ -240,17 +240,17 @@ const TestCaseDetailModal = ({ isOpen, onClose, testCase }) => {
                             ) : (
                               <div className="w-full h-full flex items-center justify-center">
                                 <div className="text-center">
-                                  <FileText className="w-8 h-8 text-gray-500 mx-auto mb-2" />
-                                  <p className="text-xs text-gray-600">Loading image...</p>
+                                  <FileText className="w-8 h-8 text-dim mx-auto mb-2" />
+                                  <p className="text-xs text-dim">Loading image...</p>
                                 </div>
                               </div>
                             )}
                           </div>
                         ) : (
-                          <div className="aspect-video bg-gray-200 rounded-lg flex items-center justify-center shadow-sm">
+                          <div className="aspect-video bg-surface-hover rounded-lg flex items-center justify-center ">
                             <div className="text-center">
-                              <FileText className="w-8 h-8 text-gray-500 mx-auto mb-2" />
-                              <p className="text-xs text-gray-600 truncate px-2">{file.name}</p>
+                              <FileText className="w-8 h-8 text-dim mx-auto mb-2" />
+                              <p className="text-xs text-dim truncate px-2">{file.name}</p>
                             </div>
                           </div>
                         )}
@@ -259,7 +259,7 @@ const TestCaseDetailModal = ({ isOpen, onClose, testCase }) => {
                   })}
                 </div>
               ) : (
-                <div className="text-center py-8 text-gray-500">
+                <div className="text-center py-8 text-dim">
                   <FileText className="w-12 h-12 mx-auto mb-2 opacity-50" />
                   <p className="text-sm">No evidence files uploaded yet</p>
                 </div>
@@ -269,10 +269,10 @@ const TestCaseDetailModal = ({ isOpen, onClose, testCase }) => {
         </div>
 
         {/* Footer */}
-        <div className="flex items-center justify-end space-x-3 p-6 border-t border-gray-200">
+        <div className="flex items-center justify-end space-x-3 p-6 border-t border-line">
           <button
             onClick={onClose}
-            className="px-6 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
+            className="px-6 py-2 bg-surface-hover text-ink rounded-lg hover:bg-surface-hover transition-colors"
           >
             Close
           </button>

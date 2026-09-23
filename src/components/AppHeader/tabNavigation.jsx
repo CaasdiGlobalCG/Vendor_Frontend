@@ -110,10 +110,10 @@
 
 //   return (
 //     <div className="flex justify-center pt-6">
-//       <div className="bg-white rounded-full overflow-hidden flex shadow-md relative">
+//       <div className="bg-surface rounded-full overflow-hidden flex  relative">
 //         {/* The moving indicator */}
 //         <div
-//           className="absolute h-[90%] rounded-full bg-gradient-to-r from-[#10b981] to-[#047857] will-change-transform"
+//           className="absolute h-[90%] rounded-full bg-black will-change-transform"
 //           style={{
 //             width: indicatorStyle.width ? `${parseFloat(indicatorStyle.width) * 0.97}px` : '0px',
 //             transform: indicatorStyle.transform,
@@ -133,7 +133,7 @@
 //           >
 //             <button 
 //               className={`relative px-6 py-2 z-10 transition-colors duration-300 ${
-//                 activeTab === tab.path ? 'text-white' : 'text-gray-700 hover:text-gray-900'
+//                 activeTab === tab.path ? 'text-white' : 'text-ink hover:text-ink'
 //               }`}
 //             >
 //               {tab.label}
@@ -172,14 +172,14 @@ function ResponsiveNavigationTabs({ compact = false }) {
 
   return (
     <div className={`flex justify-start transition-all duration-300 sm:justify-center ${compact ? 'pt-1' : 'pt-2 sm:pt-4'}`}>
-      <div className={`grid w-full max-w-full grid-cols-3 items-center gap-1.5 rounded-[22px] bg-white/10 p-1.5 shadow-md transition-all duration-300 sm:flex sm:gap-2 sm:overflow-x-auto [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden ${compact ? 'ring-1 ring-white/20' : ''}`}>
+      <div className={`grid w-full max-w-full grid-cols-3 items-center gap-1.5 rounded-[22px] bg-white/10 p-1.5  transition-all duration-300 sm:flex sm:gap-2 sm:overflow-x-auto [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden ${compact ? 'ring-1 ring-white/20' : ''}`}>
         {tabsConfig.map(tab => (
           <button
             key={tab.path}
             type="button"
             className={`relative z-10 whitespace-nowrap rounded-full font-medium text-center transition-all duration-300 sm:min-w-[104px] sm:flex-shrink-0 ${compact ? 'px-2 py-2 text-[12px] sm:px-4 sm:text-[13px]' : 'px-2 py-2.5 text-[13px] sm:px-4 sm:text-sm sm:px-5'} ${
               activeTab === tab.path
-                ? 'bg-white text-[#0b2f28] shadow-[0_6px_18px_rgba(255,255,255,0.2)]'
+                ? 'bg-surface text-success'
                 : 'text-white/80 hover:bg-white/10 hover:text-white'
             }`}
             onClick={() => handleTabClick(tab.path)}

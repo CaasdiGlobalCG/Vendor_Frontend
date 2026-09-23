@@ -129,35 +129,35 @@ const NewSubscriptionComponent = ({ onBack, initialData, onSubscriptionCreated }
   };
 
   return (
-    <div className="flex flex-col md:flex-row bg-gray-100 min-h-screen font-poppins">
+    <div className="flex flex-col md:flex-row bg-surface-hover min-h-screen font-poppins">
       {/* Main Form */}
       <div className="flex-1 p-8 flex flex-col min-h-full">
         <header className="flex justify-between items-center mb-6">
-          <h1 className="text-2xl font-bold text-gray-800">New Subscription</h1>
-          <button onClick={onBack} className="p-2 text-gray-500 hover:bg-gray-200 rounded-full">
+          <h1 className="text-2xl font-bold text-ink">New Subscription</h1>
+          <button onClick={onBack} className="p-2 text-dim hover:bg-surface-hover rounded-full">
             <X size={20} />
           </button>
         </header>
 
-        <div className="bg-white p-8 rounded-lg shadow-sm">
+        <div className="bg-surface p-8 rounded-lg ">
           {message && (
-            <div className={`mb-4 p-3 rounded text-center font-medium ${message.type === 'success' ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'}`}>
+            <div className={`mb-4 p-3 rounded text-center font-medium ${message.type === 'success' ? 'bg-success/10 text-success' : 'bg-danger/10 text-danger'}`}>
               {message.text}
             </div>
           )}
 
           {/* Customer Selection */}
           <div className="mb-6">
-            <label className="block text-sm font-medium text-gray-700 mb-2">Customer*</label>
+            <label className="block text-sm font-medium text-ink mb-2">Customer*</label>
             {selectedCustomer ? (
-              <div className="flex items-center justify-between p-3 bg-blue-50 border border-blue-200 rounded-lg">
+              <div className="flex items-center justify-between p-3 bg-info/10 border border-info/20 rounded-lg">
                 <div>
-                  <p className="font-semibold text-gray-900">{selectedCustomer.name || selectedCustomer.companyName}</p>
-                  <p className="text-xs text-gray-500">{selectedCustomer.email}</p>
+                  <p className="font-semibold text-ink">{selectedCustomer.name || selectedCustomer.companyName}</p>
+                  <p className="text-xs text-dim">{selectedCustomer.email}</p>
                 </div>
                 <button
                   onClick={() => setSelectedCustomer(null)}
-                  className="text-blue-600 hover:text-blue-700 font-medium"
+                  className="text-info hover:text-info font-medium"
                 >
                   Change
                 </button>
@@ -169,10 +169,10 @@ const NewSubscriptionComponent = ({ onBack, initialData, onSubscriptionCreated }
                   placeholder="Search customers..."
                   value={searchCustomer}
                   onChange={(e) => setSearchCustomer(e.target.value)}
-                  className="w-full p-2 border border-gray-300 rounded-lg"
+                  className="w-full p-2 border border-line rounded-lg"
                 />
                 {searchCustomer && filteredCustomers.length > 0 && (
-                  <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-300 rounded-lg shadow-lg z-10 max-h-48 overflow-y-auto">
+                  <div className="absolute top-full left-0 right-0 mt-1 bg-surface border border-line rounded-lg shadow-lg z-10 max-h-48 overflow-y-auto">
                     {filteredCustomers.map(customer => (
                       <button
                         key={customer.id || customer.customerId}
@@ -180,10 +180,10 @@ const NewSubscriptionComponent = ({ onBack, initialData, onSubscriptionCreated }
                           setSelectedCustomer(customer);
                           setSearchCustomer('');
                         }}
-                        className="w-full text-left px-4 py-2 hover:bg-gray-100 border-b border-gray-100 last:border-b-0"
+                        className="w-full text-left px-4 py-2 hover:bg-surface-hover border-b border-line last:border-b-0"
                       >
-                        <p className="font-medium text-gray-900">{customer.name || customer.companyName}</p>
-                        <p className="text-xs text-gray-500">{customer.email}</p>
+                        <p className="font-medium text-ink">{customer.name || customer.companyName}</p>
+                        <p className="text-xs text-dim">{customer.email}</p>
                       </button>
                     ))}
                   </div>
@@ -195,11 +195,11 @@ const NewSubscriptionComponent = ({ onBack, initialData, onSubscriptionCreated }
           {/* Billing Details */}
           <div className="grid grid-cols-2 gap-6 mb-6">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Billing Cycle*</label>
+              <label className="block text-sm font-medium text-ink mb-2">Billing Cycle*</label>
               <select
                 value={billingCycle}
                 onChange={(e) => setBillingCycle(e.target.value)}
-                className="w-full p-2 border border-gray-300 rounded-lg"
+                className="w-full p-2 border border-line rounded-lg"
               >
                 <option value="Monthly">Monthly</option>
                 <option value="Quarterly">Quarterly</option>
@@ -207,13 +207,13 @@ const NewSubscriptionComponent = ({ onBack, initialData, onSubscriptionCreated }
               </select>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Amount*</label>
+              <label className="block text-sm font-medium text-ink mb-2">Amount*</label>
               <input
                 type="number"
                 value={amount}
                 onChange={(e) => setAmount(e.target.value)}
                 placeholder="0.00"
-                className="w-full p-2 border border-gray-300 rounded-lg"
+                className="w-full p-2 border border-line rounded-lg"
               />
             </div>
           </div>
@@ -221,43 +221,43 @@ const NewSubscriptionComponent = ({ onBack, initialData, onSubscriptionCreated }
           {/* Dates */}
           <div className="grid grid-cols-2 gap-6 mb-6">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Start Date*</label>
+              <label className="block text-sm font-medium text-ink mb-2">Start Date*</label>
               <input
                 type="date"
                 value={startDate}
                 onChange={(e) => setStartDate(e.target.value)}
-                className="w-full p-2 border border-gray-300 rounded-lg"
+                className="w-full p-2 border border-line rounded-lg"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">End Date (Optional)</label>
+              <label className="block text-sm font-medium text-ink mb-2">End Date (Optional)</label>
               <input
                 type="date"
                 value={endDate}
                 onChange={(e) => setEndDate(e.target.value)}
-                className="w-full p-2 border border-gray-300 rounded-lg"
+                className="w-full p-2 border border-line rounded-lg"
               />
             </div>
           </div>
 
           {/* Subscription ID */}
           <div className="mb-6">
-            <label className="block text-sm font-medium text-gray-700 mb-2">Subscription ID*</label>
+            <label className="block text-sm font-medium text-ink mb-2">Subscription ID*</label>
             <input
               type="text"
               value={customSubscriptionId}
               onChange={(e) => setCustomSubscriptionId(e.target.value)}
-              className="w-full p-2 border border-gray-300 rounded-lg"
+              className="w-full p-2 border border-line rounded-lg"
             />
           </div>
 
           {/* Status */}
           <div className="mb-6">
-            <label className="block text-sm font-medium text-gray-700 mb-2">Status</label>
+            <label className="block text-sm font-medium text-ink mb-2">Status</label>
             <select
               value={status}
               onChange={(e) => setStatus(e.target.value)}
-              className="w-full p-2 border border-gray-300 rounded-lg"
+              className="w-full p-2 border border-line rounded-lg"
             >
               <option value="active">Active</option>
               <option value="paused">Paused</option>
@@ -267,13 +267,13 @@ const NewSubscriptionComponent = ({ onBack, initialData, onSubscriptionCreated }
 
           {/* Notes */}
           <div className="mb-6">
-            <label className="block text-sm font-medium text-gray-700 mb-2">Notes</label>
+            <label className="block text-sm font-medium text-ink mb-2">Notes</label>
             <textarea
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
               placeholder="Add any notes about this subscription..."
               rows="4"
-              className="w-full p-2 border border-gray-300 rounded-lg"
+              className="w-full p-2 border border-line rounded-lg"
             />
           </div>
 
@@ -282,13 +282,13 @@ const NewSubscriptionComponent = ({ onBack, initialData, onSubscriptionCreated }
             <button
               onClick={handleSaveSubscription}
               disabled={saving}
-              className="flex-1 bg-gradient-to-r from-slate-700 to-gray-700 text-white px-6 py-3 rounded-lg hover:from-slate-800 hover:to-gray-800 transition-all disabled:opacity-50"
+              className="flex-1 bg-surface text-white px-6 py-3 rounded-lg hover:from-surface hover:to-surface transition-all disabled:opacity-50"
             >
               {saving ? 'Creating...' : 'Create Subscription'}
             </button>
             <button
               onClick={onBack}
-              className="flex-1 bg-gray-200 text-gray-700 px-6 py-3 rounded-lg hover:bg-gray-300 transition-all"
+              className="flex-1 bg-surface-hover text-ink px-6 py-3 rounded-lg hover:bg-surface-hover transition-all"
             >
               Cancel
             </button>

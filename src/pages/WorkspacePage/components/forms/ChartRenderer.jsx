@@ -23,7 +23,7 @@ const ChartRenderer = ({ data, chartType }) => {
     const barSpacing = innerWidth / chartData.length * 0.2;
 
     return (
-      <svg width={chartWidth} height={chartHeight} className="border border-gray-200 rounded">
+      <svg width={chartWidth} height={chartHeight} className="border border-line rounded">
         {/* Background */}
         <rect width={chartWidth} height={chartHeight} fill="#fafafa" />
         
@@ -35,7 +35,7 @@ const ChartRenderer = ({ data, chartType }) => {
             y1={padding + innerHeight * ratio}
             x2={chartWidth - padding}
             y2={padding + innerHeight * ratio}
-            stroke="#e5e7eb"
+            stroke="currentColor"
             strokeWidth="1"
           />
         ))}
@@ -60,7 +60,7 @@ const ChartRenderer = ({ data, chartType }) => {
                 x={x + barWidth / 2}
                 y={chartHeight - padding + 15}
                 textAnchor="middle"
-                className="text-xs fill-gray-600"
+                className="text-xs fill-dim"
               >
                 {item.label}
               </text>
@@ -68,7 +68,7 @@ const ChartRenderer = ({ data, chartType }) => {
                 x={x + barWidth / 2}
                 y={y - 5}
                 textAnchor="middle"
-                className="text-xs fill-gray-800 font-medium"
+                className="text-xs fill-ink font-medium"
               >
                 {item.value}
               </text>
@@ -77,18 +77,18 @@ const ChartRenderer = ({ data, chartType }) => {
         })}
         
         {/* Y-axis */}
-        <line x1={padding} y1={padding} x2={padding} y2={chartHeight - padding} stroke="#374151" strokeWidth="2" />
+        <line x1={padding} y1={padding} x2={padding} y2={chartHeight - padding} stroke="rgb(var(--info))" strokeWidth="2" />
         {/* X-axis */}
-        <line x1={padding} y1={chartHeight - padding} x2={chartWidth - padding} y2={chartHeight - padding} stroke="#374151" strokeWidth="2" />
+        <line x1={padding} y1={chartHeight - padding} x2={chartWidth - padding} y2={chartHeight - padding} stroke="rgb(var(--info))" strokeWidth="2" />
         
         {/* Axis labels */}
         {yAxisLabel && (
-          <text x={15} y={chartHeight / 2} textAnchor="middle" className="text-xs fill-gray-700" transform={`rotate(-90, 15, ${chartHeight / 2})`}>
+          <text x={15} y={chartHeight / 2} textAnchor="middle" className="text-xs fill-ink" transform={`rotate(-90, 15, ${chartHeight / 2})`}>
             {yAxisLabel}
           </text>
         )}
         {xAxisLabel && (
-          <text x={chartWidth / 2} y={chartHeight - 5} textAnchor="middle" className="text-xs fill-gray-700">
+          <text x={chartWidth / 2} y={chartHeight - 5} textAnchor="middle" className="text-xs fill-ink">
             {xAxisLabel}
           </text>
         )}
@@ -104,7 +104,7 @@ const ChartRenderer = ({ data, chartType }) => {
     }).join(' ');
 
     return (
-      <svg width={chartWidth} height={chartHeight} className="border border-gray-200 rounded">
+      <svg width={chartWidth} height={chartHeight} className="border border-line rounded">
         {/* Background */}
         <rect width={chartWidth} height={chartHeight} fill="#fafafa" />
         
@@ -116,7 +116,7 @@ const ChartRenderer = ({ data, chartType }) => {
             y1={padding + innerHeight * ratio}
             x2={chartWidth - padding}
             y2={padding + innerHeight * ratio}
-            stroke="#e5e7eb"
+            stroke="currentColor"
             strokeWidth="1"
           />
         ))}
@@ -148,7 +148,7 @@ const ChartRenderer = ({ data, chartType }) => {
                 x={x}
                 y={chartHeight - padding + 15}
                 textAnchor="middle"
-                className="text-xs fill-gray-600"
+                className="text-xs fill-dim"
               >
                 {item.label}
               </text>
@@ -157,17 +157,17 @@ const ChartRenderer = ({ data, chartType }) => {
         })}
         
         {/* Axes */}
-        <line x1={padding} y1={padding} x2={padding} y2={chartHeight - padding} stroke="#374151" strokeWidth="2" />
-        <line x1={padding} y1={chartHeight - padding} x2={chartWidth - padding} y2={chartHeight - padding} stroke="#374151" strokeWidth="2" />
+        <line x1={padding} y1={padding} x2={padding} y2={chartHeight - padding} stroke="rgb(var(--info))" strokeWidth="2" />
+        <line x1={padding} y1={chartHeight - padding} x2={chartWidth - padding} y2={chartHeight - padding} stroke="rgb(var(--info))" strokeWidth="2" />
         
         {/* Axis labels */}
         {yAxisLabel && (
-          <text x={15} y={chartHeight / 2} textAnchor="middle" className="text-xs fill-gray-700" transform={`rotate(-90, 15, ${chartHeight / 2})`}>
+          <text x={15} y={chartHeight / 2} textAnchor="middle" className="text-xs fill-ink" transform={`rotate(-90, 15, ${chartHeight / 2})`}>
             {yAxisLabel}
           </text>
         )}
         {xAxisLabel && (
-          <text x={chartWidth / 2} y={chartHeight - 5} textAnchor="middle" className="text-xs fill-gray-700">
+          <text x={chartWidth / 2} y={chartHeight - 5} textAnchor="middle" className="text-xs fill-ink">
             {xAxisLabel}
           </text>
         )}
@@ -183,7 +183,7 @@ const ChartRenderer = ({ data, chartType }) => {
     const radius = Math.min(innerWidth, innerHeight) / 2;
 
     return (
-      <svg width={chartWidth} height={chartHeight} className="border border-gray-200 rounded">
+      <svg width={chartWidth} height={chartHeight} className="border border-line rounded">
         {/* Background */}
         <rect width={chartWidth} height={chartHeight} fill="#fafafa" />
         
@@ -263,7 +263,7 @@ const ChartRenderer = ({ data, chartType }) => {
     ].join(' ');
 
     return (
-      <svg width={chartWidth} height={chartHeight} className="border border-gray-200 rounded">
+      <svg width={chartWidth} height={chartHeight} className="border border-line rounded">
         {/* Background */}
         <rect width={chartWidth} height={chartHeight} fill="#fafafa" />
         
@@ -275,7 +275,7 @@ const ChartRenderer = ({ data, chartType }) => {
             y1={padding + innerHeight * ratio}
             x2={chartWidth - padding}
             y2={padding + innerHeight * ratio}
-            stroke="#e5e7eb"
+            stroke="currentColor"
             strokeWidth="1"
           />
         ))}
@@ -309,7 +309,7 @@ const ChartRenderer = ({ data, chartType }) => {
               x={point.x}
               y={chartHeight - padding + 15}
               textAnchor="middle"
-              className="text-xs fill-gray-600"
+              className="text-xs fill-dim"
             >
               {chartData[index].label}
             </text>
@@ -317,8 +317,8 @@ const ChartRenderer = ({ data, chartType }) => {
         ))}
         
         {/* Axes */}
-        <line x1={padding} y1={padding} x2={padding} y2={chartHeight - padding} stroke="#374151" strokeWidth="2" />
-        <line x1={padding} y1={chartHeight - padding} x2={chartWidth - padding} y2={chartHeight - padding} stroke="#374151" strokeWidth="2" />
+        <line x1={padding} y1={padding} x2={padding} y2={chartHeight - padding} stroke="rgb(var(--info))" strokeWidth="2" />
+        <line x1={padding} y1={chartHeight - padding} x2={chartWidth - padding} y2={chartHeight - padding} stroke="rgb(var(--info))" strokeWidth="2" />
       </svg>
     );
   };
@@ -332,7 +332,7 @@ const ChartRenderer = ({ data, chartType }) => {
     const innerRadius = outerRadius * 0.5;
 
     return (
-      <svg width={chartWidth} height={chartHeight} className="border border-gray-200 rounded">
+      <svg width={chartWidth} height={chartHeight} className="border border-line rounded">
         {/* Background */}
         <rect width={chartWidth} height={chartHeight} fill="#fafafa" />
         
@@ -379,7 +379,7 @@ const ChartRenderer = ({ data, chartType }) => {
           x={centerX}
           y={centerY}
           textAnchor="middle"
-          className="text-sm fill-gray-800 font-bold"
+          className="text-sm fill-ink font-bold"
         >
           Total
         </text>
@@ -387,7 +387,7 @@ const ChartRenderer = ({ data, chartType }) => {
           x={centerX}
           y={centerY + 15}
           textAnchor="middle"
-          className="text-xs fill-gray-600"
+          className="text-xs fill-dim"
         >
           {total}
         </text>
@@ -397,7 +397,7 @@ const ChartRenderer = ({ data, chartType }) => {
 
   const renderScatterPlot = () => {
     return (
-      <svg width={chartWidth} height={chartHeight} className="border border-gray-200 rounded">
+      <svg width={chartWidth} height={chartHeight} className="border border-line rounded">
         {/* Background */}
         <rect width={chartWidth} height={chartHeight} fill="#fafafa" />
         
@@ -409,7 +409,7 @@ const ChartRenderer = ({ data, chartType }) => {
               y1={padding + innerHeight * ratio}
               x2={chartWidth - padding}
               y2={padding + innerHeight * ratio}
-              stroke="#e5e7eb"
+              stroke="currentColor"
               strokeWidth="1"
             />
             <line
@@ -417,7 +417,7 @@ const ChartRenderer = ({ data, chartType }) => {
               y1={padding}
               x2={padding + innerWidth * ratio}
               y2={chartHeight - padding}
-              stroke="#e5e7eb"
+              stroke="currentColor"
               strokeWidth="1"
             />
           </g>
@@ -441,8 +441,8 @@ const ChartRenderer = ({ data, chartType }) => {
         })}
         
         {/* Axes */}
-        <line x1={padding} y1={padding} x2={padding} y2={chartHeight - padding} stroke="#374151" strokeWidth="2" />
-        <line x1={padding} y1={chartHeight - padding} x2={chartWidth - padding} y2={chartHeight - padding} stroke="#374151" strokeWidth="2" />
+        <line x1={padding} y1={padding} x2={padding} y2={chartHeight - padding} stroke="rgb(var(--info))" strokeWidth="2" />
+        <line x1={padding} y1={chartHeight - padding} x2={chartWidth - padding} y2={chartHeight - padding} stroke="rgb(var(--info))" strokeWidth="2" />
       </svg>
     );
   };
@@ -471,7 +471,7 @@ const ChartRenderer = ({ data, chartType }) => {
     <div className="w-full">
       {/* Chart Title */}
       {title && (
-        <h3 className="text-lg font-semibold text-gray-900 mb-4 text-center">{title}</h3>
+        <h3 className="text-lg font-semibold text-ink mb-4 text-center">{title}</h3>
       )}
       
       {/* Chart */}
@@ -488,14 +488,14 @@ const ChartRenderer = ({ data, chartType }) => {
                 className="w-3 h-3 rounded-full"
                 style={{ backgroundColor: colors[index] || '#3B82F6' }}
               />
-              <span className="text-xs text-gray-700">{item.label}</span>
+              <span className="text-xs text-ink">{item.label}</span>
             </div>
           ))}
         </div>
       )}
       
       {/* Chart info */}
-      <div className="text-center text-xs text-gray-500 mt-2">
+      <div className="text-center text-xs text-dim mt-2">
         {chartData.length} data points • Click to customize
       </div>
     </div>

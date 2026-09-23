@@ -57,7 +57,7 @@ const ExpertiseSection = ({ scrollY }) => {
     scrollToCard(newIndex);
   };
 
-  const iconClassName = "text-[1.5rem] text-[#21bea2]";
+  const iconClassName = "text-[1.5rem] text-success";
 
   return (
     <section
@@ -70,13 +70,11 @@ const ExpertiseSection = ({ scrollY }) => {
       <div className="flex-1 basis-[300px] text-left max-w-[500px]
                       max-[1024px]:overflow-hidden max-[1024px]:text-center max-[1024px]:flex-initial max-[1024px]:w-full /* Ensure it doesn't shrink excessively when stacked */
                       max-[576px]:max-w-[90%] max-[576px]:mx-auto max-[576px]:flex-none">
-        <h2 className="text-[2.7rem] bg-gradient-to-r from-[#21be9c] to-[#0f5848] bg-clip-text text-transparent font-bold
-                       max-[1024px]:text-[2rem]
-                       max-[576px]:text-[1.8rem]">
+        <h2 className="text-[2.7rem] font-bold max-[1024px]:text-[2rem] max-[576px]:text-[1.8rem]">
           <span className="gradient-text">Our Comprehensive</span> Services
         </h2>
 
-        <div className="flex justify-start mt-[25px] text-xl font-semibold text-[#0f5848] h-6 transition-opacity duration-1000 ease-in-out
+        <div className="flex justify-start mt-[25px] text-xl font-semibold text-success h-6 transition-opacity duration-1000 ease-in-out
                         max-[1024px]:text-base max-[1024px]:py-2 max-[1024px]:px-0 max-[1024px]:justify-center /* Center highlight bar text on tablet */
                         max-[576px]:justify-center max-[576px]:text-[0.9rem] max-[576px]:py-1.5">
           <div className="flex items-center gap-2.5">
@@ -92,11 +90,11 @@ const ExpertiseSection = ({ scrollY }) => {
                       max-[1024px]:max-w-full max-[1024px]:min-h-[280px] max-[1024px]:flex-initial
                       max-[576px]:w-full">
         <div className="flex gap-5 overflow-x-auto snap-x snap-mandatory scroll-smooth py-4 px-2 w-full" ref={carouselRef}>
-          <article className="flex-none basis-[90%] max-w-[350px] min-h-[250px] rounded-[16px] bg-white text-[rgb(106,106,106)] shadow-[0_4px_23.3px_0_rgba(0,0,0,0.15)] p-8 flex flex-col justify-start snap-center border border-gray-100
+          <article className="flex-none basis-[90%] max-w-[350px] min-h-[250px] rounded-[16px] bg-surface text-[rgb(106,106,106)] p-8 flex flex-col justify-start snap-center border border-line
                             max-[1024px]:basis-[80%] max-[1024px]:max-w-[320px]
                             max-[576px]:basis-[100%] max-[576px]:max-w-full max-[576px]:min-h-[240px] max-[576px]:p-6">
-            <h3 className="text-2xl font-semibold mb-[0.8rem] text-black max-[576px]:text-xl">Vendor & Project Management</h3>
-            <p className="text-base font-light leading-[1.5] text-black opacity-80 max-[576px]:text-sm">
+            <h3 className="text-2xl font-semibold mb-[0.8rem] text-ink max-[576px]:text-xl">Vendor & Project Management</h3>
+            <p className="text-base font-light leading-[1.5] text-ink opacity-80 max-[576px]:text-sm">
               Offers smart vendor matching, private tendering, dedicated project
               managers, CRM & task management, forecasting & analytics, and
               end-to-end project support. While currently managed manually, we
@@ -104,11 +102,11 @@ const ExpertiseSection = ({ scrollY }) => {
               and automation.
             </p>
           </article>
-          <article className="flex-none basis-[90%] max-w-[350px] min-h-[250px] rounded-[16px] bg-white text-[rgb(106,106,106)] shadow-[0_4px_23.3px_0_rgba(0,0,0,0.15)] p-8 flex flex-col justify-start snap-center border border-gray-100
+          <article className="flex-none basis-[90%] max-w-[350px] min-h-[250px] rounded-[16px] bg-surface text-[rgb(106,106,106)] p-8 flex flex-col justify-start snap-center border border-line
                             max-[1024px]:basis-[80%] max-[1024px]:max-w-[320px]
                             max-[576px]:basis-[100%] max-[576px]:max-w-full max-[576px]:min-h-[240px] max-[576px]:p-6">
-            <h3 className="text-2xl font-semibold mb-[0.8rem] text-black max-[576px]:text-xl">B2B E-Commerce</h3>
-            <p className="text-base font-light leading-[1.5] text-black opacity-80 max-[576px]:text-sm">
+            <h3 className="text-2xl font-semibold mb-[0.8rem] text-ink max-[576px]:text-xl">B2B E-Commerce</h3>
+            <p className="text-base font-light leading-[1.5] text-ink opacity-80 max-[576px]:text-sm">
               Simplifies procurement by connecting businesses with a verified
               supplier network, ensuring quality materials and competitive
               pricing. We currently provide manual procurement assistance, with
@@ -116,11 +114,11 @@ const ExpertiseSection = ({ scrollY }) => {
               transactions coming soon through our SaaS platform.
             </p>
           </article>
-          <article className="flex-none basis-[90%] max-w-[350px] min-h-[250px] rounded-[16px] bg-white text-[rgb(106,106,100)] shadow-[0_4px_23.3px_0_rgba(0,0,0,0.15)] p-8 flex flex-col justify-start snap-center border border-gray-100
+          <article className="flex-none basis-[90%] max-w-[350px] min-h-[250px] rounded-[16px] bg-surface text-[rgb(106,106,100)] p-8 flex flex-col justify-start snap-center border border-line
                             max-[1024px]:basis-[80%] max-[1024px]:max-w-[320px]
                             max-[576px]:basis-[100%] max-[576px]:max-w-full max-[576px]:min-h-[240px] max-[576px]:p-6">
-            <h3 className="text-2xl font-semibold mb-[0.8rem] text-black max-[576px]:text-xl">Cost Estimation & Business Execution</h3>
-            <p className="text-base font-light leading-[1.5] text-black opacity-80 max-[576px]:text-sm">
+            <h3 className="text-2xl font-semibold mb-[0.8rem] text-ink max-[576px]:text-xl">Cost Estimation & Business Execution</h3>
+            <p className="text-base font-light leading-[1.5] text-ink opacity-80 max-[576px]:text-sm">
               Streamlines project budgeting with instant cost breakdowns, vendor
               bidding insights, and transparent pricing. While these processes
               are currently manual, we are developing AI-driven automation to
@@ -131,10 +129,10 @@ const ExpertiseSection = ({ scrollY }) => {
 
         <div className="flex flex-col items-center relative">
           <div className="flex justify-center gap-2.5 mt-2">
-            <button className="bg-[#0a0a0a] border-none text-white py-3 px-4 rounded-full cursor-pointer text-xl transition-all duration-300 hover:bg-[#929394]" onClick={scrollLeft}>
+            <button className="bg-cta border-none text-white py-3 px-4 rounded-full cursor-pointer text-xl transition-all duration-300 hover:bg-surface" onClick={scrollLeft}>
               <FaChevronLeft />
             </button>
-            <button className="bg-[#0a0a0a] border-none text-white py-3 px-4 rounded-full cursor-pointer text-xl transition-all duration-300 hover:bg-[#929394]" onClick={scrollRight}>
+            <button className="bg-cta border-none text-white py-3 px-4 rounded-full cursor-pointer text-xl transition-all duration-300 hover:bg-surface" onClick={scrollRight}>
               <FaChevronRight />
             </button>
           </div>

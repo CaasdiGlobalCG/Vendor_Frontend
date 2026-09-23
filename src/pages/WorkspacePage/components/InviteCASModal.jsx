@@ -156,14 +156,14 @@ const InviteCASModal = ({ isOpen, onClose, workspace, onInviteSuccess }) => {
 
   const getDepartmentColor = (casUnit) => {
     const colors = {
-      'Construction': 'bg-blue-100 text-blue-800',
-      'Marketing': 'bg-green-100 text-green-800',
-      'Procurement': 'bg-purple-100 text-purple-800',
-      'Branding': 'bg-pink-100 text-pink-800',
-      'Logistics': 'bg-orange-100 text-orange-800',
-      'Finance': 'bg-yellow-100 text-yellow-800',
-      'HR': 'bg-indigo-100 text-indigo-800',
-      'default': 'bg-gray-100 text-gray-800'
+      'Construction': 'bg-info/10 text-info',
+      'Marketing': 'bg-success/10 text-success',
+      'Procurement': 'bg-surface-hover text-ink',
+      'Branding': 'bg-surface-hover text-ink',
+      'Logistics': 'bg-warning/10 text-warning',
+      'Finance': 'bg-warning/10 text-warning',
+      'HR': 'bg-info/10 text-info',
+      'default': 'bg-surface-hover text-ink'
     };
     return colors[casUnit] || colors.default;
   };
@@ -172,45 +172,45 @@ const InviteCASModal = ({ isOpen, onClose, workspace, onInviteSuccess }) => {
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg shadow-xl w-full max-w-4xl mx-4 max-h-[90vh] flex flex-col">
+      <div className="bg-surface rounded-lg shadow-xl w-full max-w-4xl mx-4 max-h-[90vh] flex flex-col">
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-gray-200">
+        <div className="flex items-center justify-between p-6 border-b border-line">
           <div>
-            <h2 className="text-xl font-semibold text-gray-900">Invite CAS Members</h2>
-            <p className="text-sm text-gray-600 mt-1">
+            <h2 className="text-xl font-semibold text-ink">Invite CAS Members</h2>
+            <p className="text-sm text-dim mt-1">
               Select CAS members to invite to "{workspace?.title || 'this project'}"
             </p>
           </div>
           <button
             onClick={onClose}
-            className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+            className="p-2 hover:bg-surface-hover rounded-lg transition-colors"
           >
-            <XMarkIcon className="h-5 w-5 text-gray-500" />
+            <XMarkIcon className="h-5 w-5 text-dim" />
           </button>
         </div>
 
         {/* Search Bar */}
-        <div className="p-6 border-b border-gray-200">
+        <div className="p-6 border-b border-line">
           <div className="relative">
-            <MagnifyingGlassIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+            <MagnifyingGlassIcon className="absolute left-3 top-1/2 -translate-y-1/2 transform  h-5 w-5 text-dim" />
             <input
               type="text"
               placeholder="Search by name, email, department, or role..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full pl-10 pr-4 py-2 border border-line rounded-lg focus:ring-2 focus:ring-info focus:border-transparent"
             />
           </div>
           
           {selectedEmployees.length > 0 && (
-            <div className="mt-4 p-3 bg-blue-50 rounded-lg">
+            <div className="mt-4 p-3 bg-info/10 rounded-lg">
               <div className="flex items-center justify-between">
-                <span className="text-sm text-blue-800 font-medium">
+                <span className="text-sm text-info font-medium">
                   {selectedEmployees.length} employee{selectedEmployees.length > 1 ? 's' : ''} selected
                 </span>
                 <button
                   onClick={() => setSelectedEmployees([])}
-                  className="text-xs text-blue-600 hover:text-blue-800"
+                  className="text-xs text-info hover:text-info"
                 >
                   Clear all
                 </button>
@@ -223,17 +223,17 @@ const InviteCASModal = ({ isOpen, onClose, workspace, onInviteSuccess }) => {
         <div className="flex-1 overflow-y-auto p-6">
           {loading ? (
             <div className="flex items-center justify-center py-12">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-              <span className="ml-3 text-gray-600">Loading employees...</span>
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-info"></div>
+              <span className="ml-3 text-dim">Loading employees...</span>
             </div>
           ) : error ? (
             <div className="flex items-center justify-center py-12">
               <div className="text-center">
-                <ExclamationTriangleIcon className="h-12 w-12 text-red-500 mx-auto mb-4" />
-                <p className="text-red-600 font-medium">{error}</p>
+                <ExclamationTriangleIcon className="h-12 w-12 text-danger mx-auto mb-4" />
+                <p className="text-danger font-medium">{error}</p>
                 <button
                   onClick={fetchEmployees}
-                  className="mt-3 px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors"
+                  className="mt-3 px-4 py-2 bg-danger text-white rounded-md hover:bg-danger transition-colors"
                 >
                   Retry
                 </button>
@@ -241,8 +241,8 @@ const InviteCASModal = ({ isOpen, onClose, workspace, onInviteSuccess }) => {
             </div>
           ) : filteredEmployees.length === 0 ? (
             <div className="text-center py-12">
-              <UserIcon className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-              <p className="text-gray-600">
+              <UserIcon className="h-12 w-12 text-dim mx-auto mb-4" />
+              <p className="text-dim">
                 {employees.length === 0 ? 'No employees found' : 'No employees match your search'}
               </p>
             </div>
@@ -257,27 +257,27 @@ const InviteCASModal = ({ isOpen, onClose, workspace, onInviteSuccess }) => {
                     onClick={() => handleEmployeeSelect(employee)}
                     className={`p-4 border-2 rounded-lg cursor-pointer transition-all ${
                       isSelected
-                        ? 'border-blue-500 bg-blue-50'
-                        : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
+                        ? 'border-info bg-info/10'
+                        : 'border-line hover:border-line hover:bg-canvas'
                     }`}
                   >
                     <div className="flex items-center justify-between">
                       <div className="flex items-center space-x-3">
-                        <div className="w-10 h-10 bg-gray-300 rounded-full flex items-center justify-center">
-                          <span className="text-sm font-medium text-gray-700">
+                        <div className="w-10 h-10 bg-surface-hover rounded-full flex items-center justify-center">
+                          <span className="text-sm font-medium text-ink">
                             {employee.firstName?.charAt(0)}{employee.lastName?.charAt(0)}
                           </span>
                         </div>
                         <div className="flex-1">
-                          <h3 className="text-sm font-medium text-gray-900">
+                          <h3 className="text-sm font-medium text-ink">
                             {employee.firstName} {employee.lastName}
                           </h3>
-                          <p className="text-xs text-gray-600">{employee.email}</p>
-                          <p className="text-xs text-gray-500">ID: {employee.userId}</p>
+                          <p className="text-xs text-dim">{employee.email}</p>
+                          <p className="text-xs text-dim">ID: {employee.userId}</p>
                         </div>
                       </div>
                       {isSelected && (
-                        <CheckIcon className="h-5 w-5 text-blue-600" />
+                        <CheckIcon className="h-5 w-5 text-info" />
                       )}
                     </div>
                     
@@ -285,7 +285,7 @@ const InviteCASModal = ({ isOpen, onClose, workspace, onInviteSuccess }) => {
                       <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${getDepartmentColor(employee.casUnit)}`}>
                         {employee.casUnit || 'No Department'}
                       </span>
-                      <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                      <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-surface-hover text-ink">
                         {employee.role || 'No Role'}
                       </span>
                     </div>
@@ -297,27 +297,27 @@ const InviteCASModal = ({ isOpen, onClose, workspace, onInviteSuccess }) => {
         </div>
 
         {/* Footer */}
-        <div className="p-6 border-t border-gray-200 bg-gray-50">
+        <div className="p-6 border-t border-line bg-canvas">
           {success && (
-            <div className="mb-4 p-3 bg-green-100 border border-green-200 rounded-lg">
+            <div className="mb-4 p-3 bg-success/10 border border-success/20 rounded-lg">
               <div className="flex items-center">
-                <CheckIcon className="h-5 w-5 text-green-600 mr-2" />
-                <span className="text-sm text-green-800">{success}</span>
+                <CheckIcon className="h-5 w-5 text-success mr-2" />
+                <span className="text-sm text-success">{success}</span>
               </div>
             </div>
           )}
           
           {error && (
-            <div className="mb-4 p-3 bg-red-100 border border-red-200 rounded-lg">
+            <div className="mb-4 p-3 bg-danger/10 border border-danger/20 rounded-lg">
               <div className="flex items-center">
-                <ExclamationTriangleIcon className="h-5 w-5 text-red-600 mr-2" />
-                <span className="text-sm text-red-800">{error}</span>
+                <ExclamationTriangleIcon className="h-5 w-5 text-danger mr-2" />
+                <span className="text-sm text-danger">{error}</span>
               </div>
             </div>
           )}
 
           <div className="flex items-center justify-between">
-            <div className="flex items-center text-sm text-gray-600">
+            <div className="flex items-center text-sm text-dim">
               <InformationCircleIcon className="h-4 w-4 mr-1" />
               Selected employees will be notified about the project invitation
             </div>
@@ -325,14 +325,14 @@ const InviteCASModal = ({ isOpen, onClose, workspace, onInviteSuccess }) => {
             <div className="flex items-center space-x-3">
               <button
                 onClick={onClose}
-                className="px-4 py-2 text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 transition-colors"
+                className="px-4 py-2 text-ink bg-surface border border-line rounded-md hover:bg-canvas transition-colors"
               >
                 Cancel
               </button>
               <button
                 onClick={handleInviteEmployees}
                 disabled={selectedEmployees.length === 0 || inviting}
-                className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors flex items-center"
+                className="px-4 py-2 bg-info text-cta-foreground rounded-md hover:bg-info disabled:bg-cta disabled:cursor-not-allowed transition-colors flex items-center"
               >
                 {inviting ? (
                   <>

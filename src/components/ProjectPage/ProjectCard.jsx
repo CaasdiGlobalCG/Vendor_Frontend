@@ -11,47 +11,47 @@ function resolveStatusMeta(project) {
   if (rawStatus === 'active' || rawStatus === 'approved' || rawStatus === 'confirmed') {
     return {
       label: 'Confirmed',
-      badge: 'border-green-200 bg-green-50 text-green-700',
-      accent: 'bg-green-500',
+      badge: 'border-success/20 bg-success/10 text-success',
+      accent: 'bg-success',
     };
   }
 
   if (rawStatus === 'rejected' || rawStatus === 'declined') {
     return {
       label: 'Rejected',
-      badge: 'border-red-200 bg-red-50 text-red-700',
-      accent: 'bg-red-500',
+      badge: 'border-danger/20 bg-danger/10 text-danger',
+      accent: 'bg-danger',
     };
   }
 
   if (rawStatus === 'completed' || rawStatus === 'done' || rawStatus === 'closed') {
     return {
       label: 'Completed',
-      badge: 'border-indigo-200 bg-indigo-50 text-indigo-700',
-      accent: 'bg-indigo-500',
+      badge: 'border-info/20 bg-info/10 text-info',
+      accent: 'bg-info',
     };
   }
 
   if (rawStatus === 'pending' || rawStatus === 'sent' || project?.fromLead) {
     return {
       label: 'Pending',
-      badge: 'border-amber-200 bg-amber-50 text-amber-700',
-      accent: 'bg-amber-500',
+      badge: 'border-warning/20 bg-warning/10 text-warning',
+      accent: 'bg-warning',
     };
   }
 
   if (!project?.status) {
     return {
       label: 'New',
-      badge: 'border-teal-200 bg-teal-50 text-teal-700',
-      accent: 'bg-teal-500',
+      badge: 'border-line bg-surface-hover text-ink',
+      accent: 'bg-cta',
     };
   }
 
   return {
     label: project.status,
-    badge: 'border-gray-200 bg-gray-50 text-gray-700',
-    accent: 'bg-gray-500',
+    badge: 'border-line bg-canvas text-ink',
+    accent: 'bg-cta',
   };
 }
 
@@ -198,16 +198,16 @@ const ProjectCard = ({ project, onManageAccess, canManageAccess = false, onRaise
         }
   };
   return (
-    <div className="group relative flex h-full flex-col overflow-hidden rounded-xl border border-gray-200 bg-white p-4 shadow-none transition-colors duration-200 hover:border-gray-300">
+    <div className="group relative flex h-full flex-col overflow-hidden rounded-xl border border-line bg-surface p-4 shadow-none transition-colors duration-200 hover:border-line">
       <div className={`pointer-events-none absolute inset-x-0 top-0 h-0.5 ${statusMeta.accent}`} />
 
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
-          <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-gray-500">Project</p>
-          <h2 className="mt-1 truncate text-[15px] font-semibold leading-5 text-gray-900" title={project.name || 'Untitled Project'}>
+          <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-dim">Project</p>
+          <h2 className="mt-1 truncate text-[15px] font-semibold leading-5 text-ink" title={project.name || 'Untitled Project'}>
             {project.name || 'Untitled Project'}
           </h2>
-          <p className="mt-1 text-xs text-gray-500">
+          <p className="mt-1 text-xs text-dim">
             {`ID ${projectId} • Client ${clientId}`}
           </p>
         </div>
@@ -216,7 +216,7 @@ const ProjectCard = ({ project, onManageAccess, canManageAccess = false, onRaise
           <span className={`inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-medium ${statusMeta.badge}`}>
             {statusMeta.label}
           </span>
-          <span className="inline-flex items-center gap-1 text-xs text-gray-500">
+          <span className="inline-flex items-center gap-1 text-xs text-dim">
             <ClockIcon className="h-3.5 w-3.5" />
             {`Updated ${project.lastUpdate || '—'}`}
           </span>
@@ -224,10 +224,10 @@ const ProjectCard = ({ project, onManageAccess, canManageAccess = false, onRaise
       </div>
 
       {project.fromLead && (
-        <p className="mt-2 text-xs font-medium text-sky-700">Lead approved for collaboration</p>
+        <p className="mt-2 text-xs font-medium text-info">Lead approved for collaboration</p>
       )}
 
-      <p className="mt-3 text-[13px] leading-5 text-gray-700">{visibleDescription}</p>
+      <p className="mt-3 text-[13px] leading-5 text-ink">{visibleDescription}</p>
 
       <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-3">
         <CompactMeta
@@ -247,7 +247,7 @@ const ProjectCard = ({ project, onManageAccess, canManageAccess = false, onRaise
         />
       </div>
 
-      <div className="mt-auto flex flex-wrap items-center justify-end gap-2 border-t border-gray-100 pt-3">
+      <div className="mt-auto flex flex-wrap items-center justify-end gap-2 border-t border-line pt-3">
         {canManageAccess && onManageAccess ? (
           <button
             type="button"
@@ -256,7 +256,7 @@ const ProjectCard = ({ project, onManageAccess, canManageAccess = false, onRaise
               e.stopPropagation();
               onManageAccess(project);
             }}
-            className="h-8 rounded-md border border-teal-300 bg-white px-3 text-xs font-medium text-teal-700 transition-colors hover:bg-teal-50"
+            className="h-8 rounded-md border border-line bg-surface px-3 text-xs font-medium text-ink transition-colors hover:bg-surface-hover"
           >
             Manage Access
           </button>
@@ -264,7 +264,7 @@ const ProjectCard = ({ project, onManageAccess, canManageAccess = false, onRaise
 
         <button
           onClick={openWorkspace}
-          className="inline-flex h-8 items-center gap-1.5 rounded-md bg-emerald-600 px-3 text-xs font-semibold text-white transition-colors hover:bg-emerald-700"
+          className="inline-flex h-8 items-center gap-1.5 rounded-md bg-cta px-3 text-xs font-semibold text-cta-foreground transition-colors hover:bg-cta"
         >
           <CalendarDaysIcon className="h-3.5 w-3.5" />
           Open Workspace
@@ -277,7 +277,7 @@ const ProjectCard = ({ project, onManageAccess, canManageAccess = false, onRaise
               e.stopPropagation();
               onRaiseSupport(project);
             }}
-            className="inline-flex h-8 items-center gap-1.5 rounded-md border border-emerald-200 bg-emerald-50 px-3 text-xs font-semibold text-emerald-700 transition-colors hover:bg-emerald-100"
+            className="inline-flex h-8 items-center gap-1.5 rounded-md border border-line bg-surface-hover px-3 text-xs font-semibold text-ink transition-colors hover:bg-surface-hover"
           >
             Support
           </button>
@@ -289,12 +289,12 @@ const ProjectCard = ({ project, onManageAccess, canManageAccess = false, onRaise
 
 function CompactMeta({ icon: Icon, label, value }) {
   return (
-    <div className="rounded-md border border-gray-200 bg-gray-50 px-2.5 py-2">
+    <div className="rounded-md border border-line bg-canvas px-2.5 py-2">
       <div className="flex items-start gap-1.5">
-        <Icon className="mt-0.5 h-4 w-4 text-gray-500" />
+        <Icon className="mt-0.5 h-4 w-4 text-dim" />
         <div className="min-w-0">
-          <p className="text-[10px] uppercase tracking-wide text-gray-500">{label}</p>
-          <p className="truncate text-xs font-semibold text-gray-800">{value || '—'}</p>
+          <p className="text-[10px] uppercase tracking-wide text-dim">{label}</p>
+          <p className="truncate text-xs font-semibold text-ink">{value || '—'}</p>
         </div>
       </div>
     </div>

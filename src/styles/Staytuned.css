@@ -2,7 +2,7 @@
     position: relative;
     width: 100%;
     padding: 80px 0;
-    background: #000000;
+    background: rgb(var(--cta-action));
   }
   
   .stay-tuned-section .stay-tuned-content {
@@ -27,11 +27,11 @@
   }
   
   .stay-tuned-section .stay-tuned-8c {
-    color: #ffffff;
+    color: rgb(var(--text-muted));
   }
   
   .stay-tuned-section .smiley-face {
-    color: #fadc01;
+    color: rgb(var(--status-warning));
   }
   
   .stay-tuned-section .ecosystem-info {
@@ -43,15 +43,15 @@
   }
   
   .stay-tuned-section .saas-ecosystem {
-    color: #ffffff;
+    color: rgb(var(--text-muted));
   }
   
   .stay-tuned-section .saas-ecosystem-8d {
-    color: #21be9c;
+    color: rgb(var(--text-primary));
   }
   
   .stay-tuned-section .global-operations {
-    color: #ffffff;
+    color: rgb(var(--text-muted));
   }
   
   @media (max-width: 1200px) {

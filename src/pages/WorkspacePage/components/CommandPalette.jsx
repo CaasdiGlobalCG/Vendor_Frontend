@@ -79,14 +79,14 @@ const CommandPalette = ({ isOpen, onClose, commands = [] }) => {
     <div className="fixed inset-0 z-[100] flex items-start justify-center pt-[15vh]" onClick={onClose}>
       <div className="fixed inset-0 bg-black/40 backdrop-blur-sm" />
       <div
-        className="relative w-full max-w-lg bg-white rounded-xl shadow-2xl border border-gray-200 overflow-hidden animate-in"
+        className="relative w-full max-w-lg bg-surface rounded-xl shadow-2xl border border-line overflow-hidden animate-in"
         onClick={e => e.stopPropagation()}
         role="dialog"
         aria-label="Command palette"
       >
         {/* Search input */}
-        <div className="flex items-center px-4 border-b border-gray-200">
-          <Search className="w-4 h-4 text-gray-400 shrink-0" />
+        <div className="flex items-center px-4 border-b border-line">
+          <Search className="w-4 h-4 text-dim shrink-0" />
           <input
             ref={inputRef}
             type="text"
@@ -94,11 +94,11 @@ const CommandPalette = ({ isOpen, onClose, commands = [] }) => {
             onChange={e => setQuery(e.target.value)}
             onKeyDown={handleKeyDown}
             placeholder="Type a command or search..."
-            className="flex-1 px-3 py-3.5 text-sm bg-transparent border-none outline-none placeholder-gray-400"
+            className="flex-1 px-3 py-3.5 text-sm bg-transparent border-none outline-none placeholder-dim"
             autoComplete="off"
             spellCheck={false}
           />
-          <kbd className="hidden sm:inline-flex items-center px-1.5 py-0.5 text-[10px] font-medium text-gray-400 bg-gray-100 rounded border border-gray-200">
+          <kbd className="hidden sm:inline-flex items-center px-1.5 py-0.5 text-[10px] font-medium text-dim bg-surface-hover rounded border border-line">
             ESC
           </kbd>
         </div>
@@ -106,13 +106,13 @@ const CommandPalette = ({ isOpen, onClose, commands = [] }) => {
         {/* Results */}
         <div ref={listRef} className="max-h-[340px] overflow-y-auto py-2" role="listbox">
           {filtered.length === 0 ? (
-            <div className="px-4 py-8 text-center text-sm text-gray-400">
+            <div className="px-4 py-8 text-center text-sm text-dim">
               No commands found for "{query}"
             </div>
           ) : (
             Object.entries(grouped).map(([category, cmds]) => (
               <div key={category}>
-                <div className="px-4 pt-2 pb-1 text-[10px] font-semibold text-gray-400 uppercase tracking-wider">
+                <div className="px-4 pt-2 pb-1 text-[10px] font-semibold text-dim uppercase tracking-wider">
                   {category}
                 </div>
                 {cmds.map(cmd => {
@@ -125,20 +125,20 @@ const CommandPalette = ({ isOpen, onClose, commands = [] }) => {
                       aria-selected={idx === selectedIndex}
                       className={`w-full flex items-center px-4 py-2 text-left text-sm transition-colors ${
                         idx === selectedIndex
-                          ? 'bg-blue-50 text-blue-900'
-                          : 'text-gray-700 hover:bg-gray-50'
+                          ? 'bg-info/10 text-info'
+                          : 'text-ink hover:bg-canvas'
                       }`}
                       onClick={() => executeCommand(cmd)}
                       onMouseEnter={() => setSelectedIndex(idx)}
                     >
                       {cmd.icon && (
-                        <span className={`mr-3 ${idx === selectedIndex ? 'text-blue-600' : 'text-gray-400'}`}>
+                        <span className={`mr-3 ${idx === selectedIndex ? 'text-info' : 'text-dim'}`}>
                           {cmd.icon}
                         </span>
                       )}
                       <span className="flex-1 truncate">{cmd.label}</span>
                       {cmd.shortcut && (
-                        <kbd className="ml-2 hidden sm:inline-flex items-center gap-0.5 text-[10px] font-medium text-gray-400">
+                        <kbd className="ml-2 hidden sm:inline-flex items-center gap-0.5 text-[10px] font-medium text-dim">
                           {cmd.shortcut}
                         </kbd>
                       )}
@@ -151,15 +151,15 @@ const CommandPalette = ({ isOpen, onClose, commands = [] }) => {
         </div>
 
         {/* Footer hint */}
-        <div className="px-4 py-2 border-t border-gray-100 flex items-center gap-4 text-[10px] text-gray-400">
+        <div className="px-4 py-2 border-t border-line flex items-center gap-4 text-[10px] text-dim">
           <span className="flex items-center gap-1">
-            <kbd className="px-1 py-0.5 bg-gray-100 rounded border border-gray-200">↑↓</kbd> navigate
+            <kbd className="px-1 py-0.5 bg-surface-hover rounded border border-line">↑↓</kbd> navigate
           </span>
           <span className="flex items-center gap-1">
-            <kbd className="px-1 py-0.5 bg-gray-100 rounded border border-gray-200">↵</kbd> select
+            <kbd className="px-1 py-0.5 bg-surface-hover rounded border border-line">↵</kbd> select
           </span>
           <span className="flex items-center gap-1">
-            <kbd className="px-1 py-0.5 bg-gray-100 rounded border border-gray-200">esc</kbd> close
+            <kbd className="px-1 py-0.5 bg-surface-hover rounded border border-line">esc</kbd> close
           </span>
         </div>
       </div>

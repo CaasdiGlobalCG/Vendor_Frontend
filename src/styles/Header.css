@@ -43,7 +43,7 @@
 }
 
 .main-nav a {
-  color: #ffffff;
+  color: rgb(var(--text-muted));
   font-size: 1.25rem;
   font-weight: 200;
   text-decoration: none;
@@ -55,7 +55,7 @@
 }
 
 .main-nav a:hover {
-  color: #21be9c;
+  color: rgb(var(--text-primary));
 }
 
 .mobile-menu-button {
@@ -71,7 +71,7 @@
   display: block;
   height: 3px;
   width: 100%;
-  background-color: #ffffff;
+  background-color: rgb(var(--surface-card));
   border-radius: 3px;
 }
 
@@ -109,7 +109,7 @@
   }
 
   .main-nav a {
-    color: #ffffff;
+    color: rgb(var(--text-muted));
     font-size: 1.5rem;
     text-decoration: none;
   }
@@ -125,7 +125,7 @@
     background: none;
     border: none;
     font-size: 2rem;
-    color: #fff;
+    color: rgb(var(--text-muted));
     cursor: pointer;
   }
 }

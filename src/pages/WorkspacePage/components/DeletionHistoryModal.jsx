@@ -34,16 +34,16 @@ const DeletionHistoryModal = ({ isOpen, onClose, subtaskId }) => {
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] flex flex-col">
+      <div className="bg-surface rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] flex flex-col">
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-gray-200">
+        <div className="flex items-center justify-between p-6 border-b border-line">
           <div className="flex items-center gap-2">
-            <Trash2 className="w-5 h-5 text-red-500" />
-            <h2 className="text-xl font-semibold text-gray-800">Deletion History</h2>
+            <Trash2 className="w-5 h-5 text-danger" />
+            <h2 className="text-xl font-semibold text-ink">Deletion History</h2>
           </div>
           <button
             onClick={onClose}
-            className="text-gray-500 hover:text-gray-700 transition-colors"
+            className="text-dim hover:text-ink transition-colors"
           >
             <X className="w-6 h-6" />
           </button>
@@ -53,36 +53,36 @@ const DeletionHistoryModal = ({ isOpen, onClose, subtaskId }) => {
         <div className="flex-1 overflow-y-auto p-6">
           {loading ? (
             <div className="flex items-center justify-center py-8">
-              <div className="text-gray-500">Loading deletion history...</div>
+              <div className="text-dim">Loading deletion history...</div>
             </div>
           ) : error ? (
-            <div className="text-red-500 bg-red-50 p-4 rounded">
+            <div className="text-danger bg-danger/10 p-4 rounded">
               <strong>Error:</strong> {error}
             </div>
           ) : deletionHistory.length === 0 ? (
             <div className="text-center py-8">
-              <Trash2 className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-              <p className="text-gray-500">No deleted elements in this subtask</p>
+              <Trash2 className="w-12 h-12 text-dim mx-auto mb-3" />
+              <p className="text-dim">No deleted elements in this subtask</p>
             </div>
           ) : (
             <div className="space-y-4">
               {deletionHistory.map((deletion) => (
                 <div
                   key={deletion.deletionId}
-                  className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow"
+                  className="border border-line rounded-lg p-4  transition-shadow"
                 >
                   {/* Top row - Element info */}
                   <div className="flex items-start justify-between mb-3">
                     <div className="flex-1">
-                      <h3 className="font-semibold text-gray-900 flex items-center gap-2">
-                        <FileText className="w-4 h-4 text-blue-500" />
+                      <h3 className="font-semibold text-ink flex items-center gap-2">
+                        <FileText className="w-4 h-4 text-info" />
                         {deletion.elementName}
                       </h3>
-                      <p className="text-sm text-gray-500 mt-1">
+                      <p className="text-sm text-dim mt-1">
                         Type: <span className="font-medium">{deletion.elementType}</span>
                       </p>
                     </div>
-                    <span className="px-3 py-1 bg-red-100 text-red-700 text-xs font-medium rounded-full">
+                    <span className="px-3 py-1 bg-danger/10 text-danger text-xs font-medium rounded-full">
                       {deletion.details?.deletedVia || 'canvas'}
                     </span>
                   </div>
@@ -91,22 +91,22 @@ const DeletionHistoryModal = ({ isOpen, onClose, subtaskId }) => {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm mb-3">
                     {/* Deleted by */}
                     <div className="flex items-start gap-2">
-                      <User className="w-4 h-4 text-gray-400 mt-0.5 flex-shrink-0" />
+                      <User className="w-4 h-4 text-dim mt-0.5 flex-shrink-0" />
                       <div>
-                        <p className="text-gray-500">Deleted by</p>
-                        <p className="font-medium text-gray-900">{deletion.deletedBy}</p>
+                        <p className="text-dim">Deleted by</p>
+                        <p className="font-medium text-ink">{deletion.deletedBy}</p>
                         {deletion.deletedByEmail && (
-                          <p className="text-gray-500 text-xs">{deletion.deletedByEmail}</p>
+                          <p className="text-dim text-xs">{deletion.deletedByEmail}</p>
                         )}
                       </div>
                     </div>
 
                     {/* Deleted at */}
                     <div className="flex items-start gap-2">
-                      <Clock className="w-4 h-4 text-gray-400 mt-0.5 flex-shrink-0" />
+                      <Clock className="w-4 h-4 text-dim mt-0.5 flex-shrink-0" />
                       <div>
-                        <p className="text-gray-500">Deleted at</p>
-                        <p className="font-medium text-gray-900">
+                        <p className="text-dim">Deleted at</p>
+                        <p className="font-medium text-ink">
                           {new Date(deletion.deletedAt).toLocaleString()}
                         </p>
                       </div>
@@ -114,19 +114,19 @@ const DeletionHistoryModal = ({ isOpen, onClose, subtaskId }) => {
                   </div>
 
                   {/* Element ID and snapshot info */}
-                  <div className="border-t border-gray-100 pt-3 text-xs">
-                    <p className="text-gray-500 mb-2">
-                      <strong>Element ID:</strong> <code className="bg-gray-100 px-2 py-1 rounded">{deletion.elementId}</code>
+                  <div className="border-t border-line pt-3 text-xs">
+                    <p className="text-dim mb-2">
+                      <strong>Element ID:</strong> <code className="bg-surface-hover px-2 py-1 rounded">{deletion.elementId}</code>
                     </p>
                     
                     {/* Show element snapshot summary */}
                     {deletion.elementDataSnapshot && (
                       <details className="mt-2">
-                        <summary className="cursor-pointer text-blue-600 hover:text-blue-700 font-medium">
+                        <summary className="cursor-pointer text-info hover:text-info font-medium">
                           📋 View element snapshot
                         </summary>
-                        <div className="mt-2 bg-gray-50 p-3 rounded max-h-40 overflow-y-auto">
-                          <pre className="text-xs text-gray-600 overflow-x-auto">
+                        <div className="mt-2 bg-canvas p-3 rounded max-h-40 overflow-y-auto">
+                          <pre className="text-xs text-dim overflow-x-auto">
                             {JSON.stringify(deletion.elementDataSnapshot, null, 2)}
                           </pre>
                         </div>
@@ -135,11 +135,11 @@ const DeletionHistoryModal = ({ isOpen, onClose, subtaskId }) => {
                   </div>
 
                   {/* Status badge */}
-                  <div className="mt-3 pt-3 border-t border-gray-100">
+                  <div className="mt-3 pt-3 border-t border-line">
                     <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
                       deletion.status === 'recovered' 
-                        ? 'bg-green-100 text-green-800' 
-                        : 'bg-red-100 text-red-800'
+                        ? 'bg-success/10 text-success' 
+                        : 'bg-danger/10 text-danger'
                     }`}>
                       {deletion.status === 'recovered' ? '✓ Recovered' : '🗑️ Deleted'}
                     </span>
@@ -151,10 +151,10 @@ const DeletionHistoryModal = ({ isOpen, onClose, subtaskId }) => {
         </div>
 
         {/* Footer */}
-        <div className="flex justify-end gap-3 p-6 border-t border-gray-200">
+        <div className="flex justify-end gap-3 p-6 border-t border-line">
           <button
             onClick={onClose}
-            className="px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition-colors"
+            className="px-4 py-2 bg-surface-hover text-ink rounded-lg hover:bg-surface-hover transition-colors"
           >
             Close
           </button>

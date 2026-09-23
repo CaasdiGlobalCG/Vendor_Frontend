@@ -10,8 +10,8 @@ const TASK_TEMPLATE_OPTIONS = [
   { value: 'procurement-rfq', label: 'Procurement RFQ' }
 ];
 
-const inputClass = 'mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm';
-const labelClass = 'text-xs font-medium text-gray-600';
+const inputClass = 'mt-1 w-full rounded-lg border border-line px-3 py-2 text-sm';
+const labelClass = 'text-xs font-medium text-dim';
 
 const WorkflowActionForm = ({ initialValue, onCancel, onSave }) => {
   const initialType = initialValue?.type || 'create-task';
@@ -164,17 +164,17 @@ const WorkflowActionForm = ({ initialValue, onCancel, onSave }) => {
         onChange={(e) => updateParams('nodeId', e.target.value)}
         placeholder="e.g. execution-request_123"
       />
-      <span className="block mt-1 text-[11px] font-normal text-gray-500">
+      <span className="block mt-1 text-[11px] font-normal text-dim">
         Leave blank to use the element that triggered this workflow.
       </span>
     </label>
   );
 
   return (
-    <div className="rounded-xl border border-emerald-200 bg-emerald-50/40 p-4 space-y-4">
+    <div className="rounded-xl border border-line bg-cta p-4 space-y-4">
       <div className="flex items-center justify-between">
-        <h4 className="text-sm font-semibold text-gray-900">{title}</h4>
-        {typeMeta && <span className="text-[11px] text-gray-500">{typeMeta.description}</span>}
+        <h4 className="text-sm font-semibold text-ink">{title}</h4>
+        {typeMeta && <span className="text-[11px] text-dim">{typeMeta.description}</span>}
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
@@ -187,13 +187,13 @@ const WorkflowActionForm = ({ initialValue, onCancel, onSave }) => {
               type="button"
               onClick={() => handleTypeChange(item.value)}
               className={`flex items-start gap-2.5 rounded-lg border p-2.5 text-left transition-colors ${
-                selected ? `${item.cardClass} ring-1 ring-current` : 'border-gray-200 bg-white hover:bg-gray-50 text-gray-700'
+                selected ? `${item.cardClass} ring-1 ring-current` : 'border-line bg-surface hover:bg-canvas text-ink'
               }`}
             >
               <Icon className="h-4 w-4 mt-0.5 shrink-0" />
               <span>
                 <span className="block text-sm font-medium">{item.label}</span>
-                <span className={`block text-[11px] mt-0.5 ${selected ? 'opacity-80' : 'text-gray-500'}`}>
+                <span className={`block text-[11px] mt-0.5 ${selected ? 'opacity-80' : 'text-dim'}`}>
                   {item.description}
                 </span>
               </span>
@@ -329,7 +329,7 @@ const WorkflowActionForm = ({ initialValue, onCancel, onSave }) => {
                 onChange={(e) => updateParams('recipient', e.target.value)}
                 placeholder="manager@company.com"
               />
-              <span className="block mt-1 text-[11px] font-normal text-gray-500">
+              <span className="block mt-1 text-[11px] font-normal text-dim">
                 Use an exact email, or "from-event-data" with variables.recipientField.
               </span>
             </label>
@@ -349,7 +349,7 @@ const WorkflowActionForm = ({ initialValue, onCancel, onSave }) => {
               value={params.body || ''}
               onChange={(e) => updateParams('body', e.target.value)}
             />
-            <span className="block mt-1 text-[11px] font-normal text-gray-500">
+            <span className="block mt-1 text-[11px] font-normal text-dim">
               You can use placeholders like {'{{workflowName}}'}, {'{{taskName}}'}, {'{{taskStatus}}'}.
             </span>
           </label>
@@ -391,7 +391,7 @@ const WorkflowActionForm = ({ initialValue, onCancel, onSave }) => {
             onChange={(e) => updateParams('subworkflowId', e.target.value)}
             placeholder="WF-..."
           />
-          <span className="block mt-1 text-[11px] font-normal text-gray-500">
+          <span className="block mt-1 text-[11px] font-normal text-dim">
             Paste the ID of another saved workflow in this workspace.
           </span>
         </label>
@@ -421,7 +421,7 @@ const WorkflowActionForm = ({ initialValue, onCancel, onSave }) => {
               />
             </label>
           </div>
-          <label className="inline-flex items-center gap-2 text-xs text-gray-700">
+          <label className="inline-flex items-center gap-2 text-xs text-ink">
             <input
               type="checkbox"
               checked={Boolean(params.autoApprove)}
@@ -442,7 +442,7 @@ const WorkflowActionForm = ({ initialValue, onCancel, onSave }) => {
 
       {type === 'conditional-branch' && (
         <div className="space-y-3">
-          <p className="text-[11px] text-gray-500">
+          <p className="text-[11px] text-dim">
             Advanced: describe the condition and the actions for each branch as JSON.
           </p>
           <label className={`${labelClass} block`}>
@@ -510,7 +510,7 @@ const WorkflowActionForm = ({ initialValue, onCancel, onSave }) => {
             </label>
           </div>
 
-          <p className="text-[11px] text-gray-500">Advanced: the condition and actions are described as JSON.</p>
+          <p className="text-[11px] text-dim">Advanced: the condition and actions are described as JSON.</p>
           <label className={`${labelClass} block`}>
             While condition (JSON)
             <textarea
@@ -535,7 +535,7 @@ const WorkflowActionForm = ({ initialValue, onCancel, onSave }) => {
         <button
           type="button"
           onClick={() => setShowAdvanced((prev) => !prev)}
-          className="inline-flex items-center gap-1 text-xs text-gray-500 hover:text-gray-700"
+          className="inline-flex items-center gap-1 text-xs text-dim hover:text-ink"
         >
           <ChevronDown className={`h-3.5 w-3.5 transition-transform ${showAdvanced ? 'rotate-180' : ''}`} />
           Advanced — run in parallel
@@ -549,27 +549,27 @@ const WorkflowActionForm = ({ initialValue, onCancel, onSave }) => {
               onChange={(e) => setParallelGroup(e.target.value)}
               placeholder="e.g. group-a"
             />
-            <span className="block mt-1 text-[11px] font-normal text-gray-500">
+            <span className="block mt-1 text-[11px] font-normal text-dim">
               Actions sharing the same group name run at the same time instead of one after another.
             </span>
           </label>
         )}
       </div>
 
-      {error && <p className="text-sm text-red-600">{error}</p>}
+      {error && <p className="text-sm text-danger">{error}</p>}
 
       <div className="flex justify-end gap-2 pt-1">
         <button
           type="button"
           onClick={onCancel}
-          className="px-3 py-2 rounded-lg text-sm border border-gray-300 text-gray-700 hover:bg-gray-50 bg-white"
+          className="px-3 py-2 rounded-lg text-sm border border-line text-ink hover:bg-canvas bg-surface"
         >
           Cancel
         </button>
         <button
           type="button"
           onClick={handleSave}
-          className="px-3 py-2 rounded-lg text-sm bg-emerald-600 text-white hover:bg-emerald-700"
+          className="px-3 py-2 rounded-lg text-sm bg-cta text-cta-foreground hover:bg-cta"
         >
           {initialValue ? 'Save changes' : 'Add this step'}
         </button>

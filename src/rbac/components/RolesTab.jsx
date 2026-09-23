@@ -82,14 +82,14 @@ export default function RolesTab({ roles = [], meta = {}, onRefresh, showFeedbac
   return (
     <div className="space-y-5">
       {/* ── Header with Create button ── */}
-      <div className="rounded-xl border border-gray-200 bg-gradient-to-r from-white to-teal-50/40 p-4">
+      <div className="rounded-xl border border-line bg-surface p-4">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
           <div>
-            <h3 className="text-base font-semibold text-gray-900">Role Library</h3>
-            <p className="mt-1 text-sm text-gray-600">
+            <h3 className="text-base font-semibold text-ink">Role Library</h3>
+            <p className="mt-1 text-sm text-dim">
               Keep hierarchy clean and assign only roles below your own authority level.
             </p>
-            <p className="mt-1 text-xs text-gray-500">
+            <p className="mt-1 text-xs text-dim">
               {roles.length} role{roles.length !== 1 ? 's' : ''} total
               {meta.maxCustomRoles != null && (
                 <span className="ml-1.5">
@@ -110,14 +110,14 @@ export default function RolesTab({ roles = [], meta = {}, onRefresh, showFeedbac
       <div className="flex items-center justify-between">
         <div />
         <div className="flex items-center gap-2">
-          <button onClick={onRefresh} className="text-xs text-teal-600 hover:text-teal-700 font-medium">
+          <button onClick={onRefresh} className="text-xs text-ink hover:text-ink font-medium">
             Refresh
           </button>
           <PermissionGate module="user_management" action="manage">
             {meta.canCreateMore !== false && (
               <button
                 onClick={() => setShowCreate(true)}
-                className="px-3 py-1.5 bg-teal-600 hover:bg-teal-700 text-white text-sm font-medium rounded-lg
+                className="px-3 py-1.5 bg-cta hover:bg-cta text-cta-foreground text-sm font-medium rounded-lg
                            flex items-center gap-1.5 transition-colors"
               >
                 <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -253,18 +253,18 @@ function CreateRoleModal({ roles, meta, onClose, onCreated, onError }) {
 
   return (
     <ModalOverlay onClose={onClose}>
-      <div className="bg-white rounded-xl shadow-xl w-full max-w-3xl mx-4 max-h-[90vh] flex flex-col">
+      <div className="bg-surface rounded-xl shadow-xl w-full max-w-3xl mx-4 max-h-[90vh] flex flex-col">
         {/* Header */}
-        <div className="flex items-center justify-between p-5 border-b border-gray-200">
-          <h3 className="text-lg font-medium text-gray-900">Create Custom Role</h3>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-600 text-xl leading-none">&times;</button>
+        <div className="flex items-center justify-between p-5 border-b border-line">
+          <h3 className="text-lg font-medium text-ink">Create Custom Role</h3>
+          <button onClick={onClose} className="text-dim hover:text-dim text-xl leading-none">&times;</button>
         </div>
 
         {/* Body — scrollable */}
         <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-5 space-y-4">
           {/* Role Name with suggestions */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Role Name *</label>
+            <label className="block text-sm font-medium text-ink mb-1">Role Name *</label>
             <div className="relative">
               <input
                 type="text"
@@ -274,16 +274,16 @@ function CreateRoleModal({ roles, meta, onClose, onCreated, onError }) {
                 onChange={(e) => setRoleName(e.target.value)}
                 onFocus={() => suggestions.length > 0 && setShowSuggestions(true)}
                 placeholder="e.g. Sales Manager"
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
+                className="w-full px-3 py-2 border border-line rounded-lg text-sm focus:ring-2 focus:ring-ink focus:border-line"
               />
               {showSuggestions && suggestions.length > 0 && (
-                <div className="absolute z-10 mt-1 w-full bg-white border border-gray-200 rounded-lg shadow-lg max-h-40 overflow-y-auto">
+                <div className="absolute z-10 mt-1 w-full bg-surface border border-line rounded-lg shadow-lg max-h-40 overflow-y-auto">
                   {suggestions.map((name) => (
                     <button
                       key={name}
                       type="button"
                       onClick={() => applySuggestion(name)}
-                      className="w-full text-left px-3 py-2 text-sm hover:bg-gray-50 text-gray-700"
+                      className="w-full text-left px-3 py-2 text-sm hover:bg-canvas text-ink"
                     >
                       {name}
                     </button>
@@ -291,7 +291,7 @@ function CreateRoleModal({ roles, meta, onClose, onCreated, onError }) {
                   <button
                     type="button"
                     onClick={() => setShowSuggestions(false)}
-                    className="w-full text-left px-3 py-1.5 text-xs text-gray-400 hover:bg-gray-50 border-t"
+                    className="w-full text-left px-3 py-1.5 text-xs text-dim hover:bg-canvas border-t"
                   >
                     Close suggestions
                   </button>
@@ -303,11 +303,11 @@ function CreateRoleModal({ roles, meta, onClose, onCreated, onError }) {
           {/* Level + Copy From row */}
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Hierarchy Level *</label>
+              <label className="block text-sm font-medium text-ink mb-1">Hierarchy Level *</label>
               <select
                 value={level}
                 onChange={(e) => setLevel(Number(e.target.value))}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
+                className="w-full px-3 py-2 border border-line rounded-lg text-sm focus:ring-2 focus:ring-ink focus:border-line"
               >
                 {ASSIGNABLE_LEVELS.map(({ value: v, label: l }) => (
                   <option key={v} value={v}>{l}</option>
@@ -315,11 +315,11 @@ function CreateRoleModal({ roles, meta, onClose, onCreated, onError }) {
               </select>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Copy From (optional)</label>
+              <label className="block text-sm font-medium text-ink mb-1">Copy From (optional)</label>
               <select
                 value={copyFrom}
                 onChange={(e) => handleCopyFrom(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
+                className="w-full px-3 py-2 border border-line rounded-lg text-sm focus:ring-2 focus:ring-ink focus:border-line"
               >
                 <option value="">Start blank</option>
                 {roles
@@ -334,23 +334,23 @@ function CreateRoleModal({ roles, meta, onClose, onCreated, onError }) {
 
           {/* Description */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
+            <label className="block text-sm font-medium text-ink mb-1">Description</label>
             <input
               type="text"
               maxLength={200}
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               placeholder="Brief description of what this role is for"
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
+              className="w-full px-3 py-2 border border-line rounded-lg text-sm focus:ring-2 focus:ring-ink focus:border-line"
             />
           </div>
 
           {/* Permission Matrix */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-ink mb-2">
               Permissions
             </label>
-            <div className="border border-gray-200 rounded-lg overflow-hidden">
+            <div className="border border-line rounded-lg overflow-hidden">
               <EditablePermissionMatrix
                 permissions={permissions}
                 onChange={setPermissions}
@@ -363,14 +363,14 @@ function CreateRoleModal({ roles, meta, onClose, onCreated, onError }) {
         </form>
 
         {/* Footer */}
-        <div className="flex justify-end gap-3 p-5 border-t border-gray-200">
-          <button type="button" onClick={onClose} className="px-4 py-2 text-sm text-gray-600 hover:text-gray-800">
+        <div className="flex justify-end gap-3 p-5 border-t border-line">
+          <button type="button" onClick={onClose} className="px-4 py-2 text-sm text-dim hover:text-ink">
             Cancel
           </button>
           <button
             onClick={handleSubmit}
             disabled={saving || !roleName.trim()}
-            className="px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white text-sm font-medium rounded-lg
+            className="px-4 py-2 bg-cta hover:bg-cta text-cta-foreground text-sm font-medium rounded-lg
                        disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
           >
             {saving ? (
@@ -420,46 +420,46 @@ function EditRoleModal({ role, onClose, onUpdated, onError }) {
 
   return (
     <ModalOverlay onClose={onClose}>
-      <div className="bg-white rounded-xl shadow-xl w-full max-w-3xl mx-4 max-h-[90vh] flex flex-col">
+      <div className="bg-surface rounded-xl shadow-xl w-full max-w-3xl mx-4 max-h-[90vh] flex flex-col">
         {/* Header */}
-        <div className="flex items-center justify-between p-5 border-b border-gray-200">
+        <div className="flex items-center justify-between p-5 border-b border-line">
           <div>
-            <h3 className="text-lg font-medium text-gray-900">
+            <h3 className="text-lg font-medium text-ink">
               Edit Role: {role.roleName}
             </h3>
-            <p className="text-xs text-gray-500 mt-0.5">
+            <p className="text-xs text-dim mt-0.5">
               {isSystem ? 'System role — name cannot be changed' : 'Custom role'}
               {' · '}{HIERARCHY_LABELS[role.roleLevel] || `Level ${role.roleLevel}`}
             </p>
           </div>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-600 text-xl leading-none">&times;</button>
+          <button onClick={onClose} className="text-dim hover:text-dim text-xl leading-none">&times;</button>
         </div>
 
         {/* Body */}
         <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-5 space-y-4">
           {isSuperAdmin && (
-            <div className="p-3 bg-amber-50 border border-amber-200 rounded-lg text-sm text-amber-700">
+            <div className="p-3 bg-warning/10 border border-warning/20 rounded-lg text-sm text-warning">
               Super Admin permissions cannot be modified — this role always has full access.
             </div>
           )}
 
           {/* Role name (editable only for custom roles) */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Role Name</label>
+            <label className="block text-sm font-medium text-ink mb-1">Role Name</label>
             <input
               type="text"
               value={roleName}
               onChange={(e) => setRoleName(e.target.value)}
               disabled={isSystem}
               maxLength={50}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-teal-500 focus:border-teal-500
-                         disabled:bg-gray-50 disabled:text-gray-500"
+              className="w-full px-3 py-2 border border-line rounded-lg text-sm focus:ring-2 focus:ring-ink focus:border-line
+                         disabled:bg-canvas disabled:text-dim"
             />
           </div>
 
           {/* Description */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
+            <label className="block text-sm font-medium text-ink mb-1">Description</label>
             <input
               type="text"
               value={description}
@@ -467,16 +467,16 @@ function EditRoleModal({ role, onClose, onUpdated, onError }) {
               disabled={isSuperAdmin}
               maxLength={200}
               placeholder="Brief role description"
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-teal-500 focus:border-teal-500
-                         disabled:bg-gray-50 disabled:text-gray-500"
+              className="w-full px-3 py-2 border border-line rounded-lg text-sm focus:ring-2 focus:ring-ink focus:border-line
+                         disabled:bg-canvas disabled:text-dim"
             />
           </div>
 
           {/* Permission Matrix */}
           {!isSuperAdmin && (
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Permissions</label>
-              <div className="border border-gray-200 rounded-lg overflow-hidden">
+              <label className="block text-sm font-medium text-ink mb-2">Permissions</label>
+              <div className="border border-line rounded-lg overflow-hidden">
                 <EditablePermissionMatrix
                   permissions={permissions}
                   onChange={setPermissions}
@@ -490,15 +490,15 @@ function EditRoleModal({ role, onClose, onUpdated, onError }) {
         </form>
 
         {/* Footer */}
-        <div className="flex justify-end gap-3 p-5 border-t border-gray-200">
-          <button type="button" onClick={onClose} className="px-4 py-2 text-sm text-gray-600 hover:text-gray-800">
+        <div className="flex justify-end gap-3 p-5 border-t border-line">
+          <button type="button" onClick={onClose} className="px-4 py-2 text-sm text-dim hover:text-ink">
             Cancel
           </button>
           {!isSuperAdmin && (
             <button
               onClick={handleSubmit}
               disabled={saving}
-              className="px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white text-sm font-medium rounded-lg
+              className="px-4 py-2 bg-cta hover:bg-cta text-cta-foreground text-sm font-medium rounded-lg
                          disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
             >
               {saving ? (
@@ -545,25 +545,25 @@ function DeleteRoleModal({ role, onClose, onDeleted, onError }) {
 
   return (
     <ModalOverlay onClose={onClose}>
-      <div className="bg-white rounded-xl shadow-xl w-full max-w-md mx-4 p-6">
-        <h3 className="text-lg font-medium text-gray-900 mb-2">Delete Role</h3>
-        <p className="text-sm text-gray-600 mb-4">
+      <div className="bg-surface rounded-xl shadow-xl w-full max-w-md mx-4 p-6">
+        <h3 className="text-lg font-medium text-ink mb-2">Delete Role</h3>
+        <p className="text-sm text-dim mb-4">
           Are you sure you want to delete <strong>{role.roleName}</strong>?
         </p>
         {memberCount > 0 && (
-          <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">
+          <div className="mb-4 p-3 bg-danger/10 border border-danger/20 rounded-lg text-sm text-danger">
             This role is assigned to {memberCount} member{memberCount !== 1 ? 's' : ''}.
             You must reassign them before deleting.
           </div>
         )}
         <div className="flex justify-end gap-3">
-          <button onClick={onClose} className="px-4 py-2 text-sm text-gray-600 hover:text-gray-800">
+          <button onClick={onClose} className="px-4 py-2 text-sm text-dim hover:text-ink">
             Cancel
           </button>
           <button
             onClick={handleDelete}
             disabled={deleting || memberCount > 0}
-            className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-sm font-medium rounded-lg
+            className="px-4 py-2 bg-danger hover:bg-danger text-white text-sm font-medium rounded-lg
                        disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
           >
             {deleting ? (
@@ -586,20 +586,20 @@ function DeleteRoleModal({ role, onClose, onDeleted, onError }) {
 function ViewRoleModal({ role, onClose }) {
   return (
     <ModalOverlay onClose={onClose}>
-      <div className="bg-white rounded-xl shadow-xl w-full max-w-3xl mx-4 max-h-[90vh] flex flex-col">
+      <div className="bg-surface rounded-xl shadow-xl w-full max-w-3xl mx-4 max-h-[90vh] flex flex-col">
         {/* Header */}
-        <div className="flex items-center justify-between p-5 border-b border-gray-200">
+        <div className="flex items-center justify-between p-5 border-b border-line">
           <div>
-            <h3 className="text-lg font-medium text-gray-900">{role.roleName}</h3>
-            <p className="text-xs text-gray-500 mt-0.5">
+            <h3 className="text-lg font-medium text-ink">{role.roleName}</h3>
+            <p className="text-xs text-dim mt-0.5">
               {role.isSystem ? 'System' : 'Custom'} role · {HIERARCHY_LABELS[role.roleLevel] || `Level ${role.roleLevel}`}
               {role.memberCount != null && ` · ${role.memberCount} member${role.memberCount !== 1 ? 's' : ''}`}
             </p>
             {role.description && (
-              <p className="text-sm text-gray-600 mt-1">{role.description}</p>
+              <p className="text-sm text-dim mt-1">{role.description}</p>
             )}
           </div>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-600 text-xl leading-none">&times;</button>
+          <button onClick={onClose} className="text-dim hover:text-dim text-xl leading-none">&times;</button>
         </div>
 
         {/* Permission Matrix */}
@@ -612,8 +612,8 @@ function ViewRoleModal({ role, onClose }) {
         </div>
 
         {/* Footer */}
-        <div className="flex justify-end p-4 border-t border-gray-200">
-          <button onClick={onClose} className="px-4 py-2 text-sm text-gray-600 hover:text-gray-800 font-medium">
+        <div className="flex justify-end p-4 border-t border-line">
+          <button onClick={onClose} className="px-4 py-2 text-sm text-dim hover:text-ink font-medium">
             Close
           </button>
         </div>
@@ -640,9 +640,9 @@ function ModalOverlay({ children, onClose }) {
 
 function MiniMetric({ label, value }) {
   return (
-    <div className="rounded-lg border border-gray-200 bg-white px-2.5 py-2 text-center">
-      <p className="text-[10px] uppercase tracking-wide text-gray-500">{label}</p>
-      <p className="mt-0.5 text-sm font-semibold text-gray-800">{value}</p>
+    <div className="rounded-lg border border-line bg-surface px-2.5 py-2 text-center">
+      <p className="text-[10px] uppercase tracking-wide text-dim">{label}</p>
+      <p className="mt-0.5 text-sm font-semibold text-ink">{value}</p>
     </div>
   );
 }
@@ -651,14 +651,14 @@ function MiniMetric({ label, value }) {
 function RoleSection({ title, subtitle, roles, onViewClick, onEditClick, onDeleteClick }) {
   if (!roles.length) return null;
   return (
-    <div className="rounded-xl border border-gray-200 bg-white p-4">
+    <div className="rounded-xl border border-line bg-surface p-4">
       <div className="mb-3">
-        <h3 className="text-sm font-semibold text-gray-800">{title}</h3>
-        {subtitle && <p className="text-xs text-gray-500">{subtitle}</p>}
+        <h3 className="text-sm font-semibold text-ink">{title}</h3>
+        {subtitle && <p className="text-xs text-dim">{subtitle}</p>}
       </div>
-      <div className="overflow-x-auto border border-gray-200 rounded-lg">
+      <div className="overflow-x-auto border border-line rounded-lg">
         <table className="w-full text-sm">
-          <thead className="bg-gray-50 text-gray-500 text-xs uppercase tracking-wide">
+          <thead className="bg-canvas text-dim text-xs uppercase tracking-wide">
             <tr>
               <th className="px-4 py-3 text-left font-medium">Role Name</th>
               <th className="px-4 py-3 text-left font-medium">Level</th>
@@ -666,24 +666,24 @@ function RoleSection({ title, subtitle, roles, onViewClick, onEditClick, onDelet
               <th className="px-4 py-3 text-right font-medium">Actions</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-gray-100">
+          <tbody className="divide-y divide-line">
             {roles.map((role) => (
-              <tr key={role.roleId} className="hover:bg-gray-50/80 transition-colors">
+              <tr key={role.roleId} className="hover:bg-canvas transition-colors">
                 <td className="px-4 py-3">
                   <div className="flex items-center gap-2">
                     <RoleBadge roleId={role.roleId} roleName={role.roleName} />
                     {role.isSystem && (
-                      <span className="rounded-full border border-slate-200 bg-slate-50 px-2 py-0.5 text-[10px] font-medium text-slate-600">
+                      <span className="rounded-full border border-line bg-canvas px-2 py-0.5 text-[10px] font-medium text-dim">
                         Locked
                       </span>
                     )}
                   </div>
                 </td>
-                <td className="px-4 py-3 text-xs font-medium text-gray-600">
+                <td className="px-4 py-3 text-xs font-medium text-dim">
                   {HIERARCHY_LABELS[role.roleLevel] || `Level ${role.roleLevel}`}
                 </td>
                 <td className="px-4 py-3 text-center">
-                  <span className="inline-flex items-center rounded-full border border-gray-200 bg-gray-50 px-2 py-0.5 text-xs text-gray-600">
+                  <span className="inline-flex items-center rounded-full border border-line bg-canvas px-2 py-0.5 text-xs text-dim">
                     {role.permissions?.includes('*:*') ? 'Full Access' : `${(role.permissions || []).length} perms`}
                   </span>
                 </td>
@@ -691,7 +691,7 @@ function RoleSection({ title, subtitle, roles, onViewClick, onEditClick, onDelet
                   <div className="flex items-center gap-2 justify-end">
                     <button
                       onClick={() => onViewClick(role)}
-                      className="rounded-md border border-gray-200 bg-white px-2 py-1 text-xs font-medium text-gray-600 hover:bg-gray-50"
+                      className="rounded-md border border-line bg-surface px-2 py-1 text-xs font-medium text-dim hover:bg-canvas"
                     >
                       View
                     </button>
@@ -699,7 +699,7 @@ function RoleSection({ title, subtitle, roles, onViewClick, onEditClick, onDelet
                       <PermissionGate module="user_management" action="manage">
                         <button
                           onClick={() => onEditClick(role)}
-                          className="rounded-md border border-teal-200 bg-teal-50 px-2 py-1 text-xs font-medium text-teal-700 hover:bg-teal-100"
+                          className="rounded-md border border-line bg-surface-hover px-2 py-1 text-xs font-medium text-ink hover:bg-surface-hover"
                         >
                           Edit
                         </button>
@@ -709,7 +709,7 @@ function RoleSection({ title, subtitle, roles, onViewClick, onEditClick, onDelet
                       <PermissionGate module="user_management" action="manage">
                         <button
                           onClick={() => onDeleteClick(role)}
-                          className="rounded-md border border-red-200 bg-red-50 px-2 py-1 text-xs font-medium text-red-700 hover:bg-red-100"
+                          className="rounded-md border border-danger/20 bg-danger/10 px-2 py-1 text-xs font-medium text-danger hover:bg-danger/10"
                         >
                           Delete
                         </button>

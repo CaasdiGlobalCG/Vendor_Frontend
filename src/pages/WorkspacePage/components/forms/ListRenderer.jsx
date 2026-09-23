@@ -135,12 +135,12 @@ const ListRenderer = ({ data, listType }) => {
     <div className="space-y-2">
       {listItems.map((item, index) => (
         <div key={index} className="flex items-center space-x-2 group">
-          <span className="text-blue-600 font-bold">•</span>
+          <span className="text-info font-bold">•</span>
           <input
             type="text"
             value={item}
             onChange={(e) => updateItem(index, e.target.value)}
-            className="flex-1 bg-transparent border-none outline-none focus:bg-white focus:border focus:border-blue-300 focus:rounded px-2 py-1"
+            className="flex-1 bg-transparent border-none outline-none focus:bg-surface focus:border focus:border-info/30 focus:rounded px-2 py-1"
             onClick={(e) => e.stopPropagation()}
           />
           <button
@@ -148,7 +148,7 @@ const ListRenderer = ({ data, listType }) => {
               e.stopPropagation();
               removeItem(index);
             }}
-            className="opacity-0 group-hover:opacity-100 text-red-500 hover:text-red-700 transition-opacity"
+            className="opacity-0 group-hover:opacity-100 text-danger hover:text-danger transition-opacity"
             disabled={listItems.length === 1}
           >
             <Minus className="w-4 h-4" />
@@ -162,12 +162,12 @@ const ListRenderer = ({ data, listType }) => {
     <div className="space-y-2">
       {listItems.map((item, index) => (
         <div key={index} className="flex items-center space-x-2 group">
-          <span className="text-blue-600 font-bold min-w-[20px]">{index + 1}.</span>
+          <span className="text-info font-bold min-w-[20px]">{index + 1}.</span>
           <input
             type="text"
             value={item}
             onChange={(e) => updateItem(index, e.target.value)}
-            className="flex-1 bg-transparent border-none outline-none focus:bg-white focus:border focus:border-blue-300 focus:rounded px-2 py-1"
+            className="flex-1 bg-transparent border-none outline-none focus:bg-surface focus:border focus:border-info/30 focus:rounded px-2 py-1"
             onClick={(e) => e.stopPropagation()}
           />
           <button
@@ -175,7 +175,7 @@ const ListRenderer = ({ data, listType }) => {
               e.stopPropagation();
               removeItem(index);
             }}
-            className="opacity-0 group-hover:opacity-100 text-red-500 hover:text-red-700 transition-opacity"
+            className="opacity-0 group-hover:opacity-100 text-danger hover:text-danger transition-opacity"
             disabled={listItems.length === 1}
           >
             <Minus className="w-4 h-4" />
@@ -196,8 +196,8 @@ const ListRenderer = ({ data, listType }) => {
             }}
             className={`w-5 h-5 border-2 rounded flex items-center justify-center transition-colors ${
               item.completed 
-                ? 'bg-green-500 border-green-500 text-white' 
-                : 'border-gray-300 hover:border-green-400'
+                ? 'bg-success border-success text-white' 
+                : 'border-line hover:border-success'
             }`}
           >
             {item.completed && <Check className="w-3 h-3" />}
@@ -206,8 +206,8 @@ const ListRenderer = ({ data, listType }) => {
             type="text"
             value={item.text}
             onChange={(e) => updateItem(index, e.target.value, 'text')}
-            className={`flex-1 bg-transparent border-none outline-none focus:bg-white focus:border focus:border-blue-300 focus:rounded px-2 py-1 ${
-              item.completed ? 'line-through text-gray-500' : ''
+            className={`flex-1 bg-transparent border-none outline-none focus:bg-surface focus:border focus:border-info/30 focus:rounded px-2 py-1 ${
+              item.completed ? 'line-through text-dim' : ''
             }`}
             onClick={(e) => e.stopPropagation()}
           />
@@ -216,7 +216,7 @@ const ListRenderer = ({ data, listType }) => {
               e.stopPropagation();
               removeItem(index);
             }}
-            className="opacity-0 group-hover:opacity-100 text-red-500 hover:text-red-700 transition-opacity"
+            className="opacity-0 group-hover:opacity-100 text-danger hover:text-danger transition-opacity"
             disabled={listItems.length === 1}
           >
             <Minus className="w-4 h-4" />
@@ -235,7 +235,7 @@ const ListRenderer = ({ data, listType }) => {
               type="text"
               value={item.term}
               onChange={(e) => updateItem(index, e.target.value, 'term')}
-              className="font-semibold text-blue-700 bg-transparent border-none outline-none focus:bg-white focus:border focus:border-blue-300 focus:rounded px-2 py-1"
+              className="font-semibold text-info bg-transparent border-none outline-none focus:bg-surface focus:border focus:border-info/30 focus:rounded px-2 py-1"
               placeholder="Term"
               onClick={(e) => e.stopPropagation()}
             />
@@ -244,7 +244,7 @@ const ListRenderer = ({ data, listType }) => {
                 e.stopPropagation();
                 removeItem(index);
               }}
-              className="opacity-0 group-hover:opacity-100 text-red-500 hover:text-red-700 transition-opacity"
+              className="opacity-0 group-hover:opacity-100 text-danger hover:text-danger transition-opacity"
               disabled={listItems.length === 1}
             >
               <Minus className="w-4 h-4" />
@@ -255,7 +255,7 @@ const ListRenderer = ({ data, listType }) => {
               type="text"
               value={item.definition}
               onChange={(e) => updateItem(index, e.target.value, 'definition')}
-              className="w-full text-gray-700 bg-transparent border-none outline-none focus:bg-white focus:border focus:border-blue-300 focus:rounded px-2 py-1"
+              className="w-full text-ink bg-transparent border-none outline-none focus:bg-surface focus:border focus:border-info/30 focus:rounded px-2 py-1"
               placeholder="Definition"
               onClick={(e) => e.stopPropagation()}
             />
@@ -270,12 +270,12 @@ const ListRenderer = ({ data, listType }) => {
       {listItems.map((item, index) => (
         <div key={index} className="group">
           <div className="flex items-center space-x-2 mb-1">
-            <span className="text-blue-600 font-bold">•</span>
+            <span className="text-info font-bold">•</span>
             <input
               type="text"
               value={item.text}
               onChange={(e) => updateItem(index, e.target.value, 'text')}
-              className="flex-1 font-medium bg-transparent border-none outline-none focus:bg-white focus:border focus:border-blue-300 focus:rounded px-2 py-1"
+              className="flex-1 font-medium bg-transparent border-none outline-none focus:bg-surface focus:border focus:border-info/30 focus:rounded px-2 py-1"
               onClick={(e) => e.stopPropagation()}
             />
             <button
@@ -283,7 +283,7 @@ const ListRenderer = ({ data, listType }) => {
                 e.stopPropagation();
                 addSubItem(index);
               }}
-              className="opacity-0 group-hover:opacity-100 text-green-500 hover:text-green-700 transition-opacity"
+              className="opacity-0 group-hover:opacity-100 text-success hover:text-success transition-opacity"
               title="Add sub-item"
             >
               <Plus className="w-3 h-3" />
@@ -293,7 +293,7 @@ const ListRenderer = ({ data, listType }) => {
                 e.stopPropagation();
                 removeItem(index);
               }}
-              className="opacity-0 group-hover:opacity-100 text-red-500 hover:text-red-700 transition-opacity"
+              className="opacity-0 group-hover:opacity-100 text-danger hover:text-danger transition-opacity"
               disabled={listItems.length === 1}
             >
               <Minus className="w-4 h-4" />
@@ -303,12 +303,12 @@ const ListRenderer = ({ data, listType }) => {
             <div className="ml-6 space-y-1">
               {item.children.map((child, subIndex) => (
                 <div key={subIndex} className="flex items-center space-x-2 group/sub">
-                  <ArrowRight className="w-3 h-3 text-gray-400" />
+                  <ArrowRight className="w-3 h-3 text-dim" />
                   <input
                     type="text"
                     value={child}
                     onChange={(e) => updateSubItem(index, subIndex, e.target.value)}
-                    className="flex-1 text-sm bg-transparent border-none outline-none focus:bg-white focus:border focus:border-blue-300 focus:rounded px-2 py-1"
+                    className="flex-1 text-sm bg-transparent border-none outline-none focus:bg-surface focus:border focus:border-info/30 focus:rounded px-2 py-1"
                     onClick={(e) => e.stopPropagation()}
                   />
                   <button
@@ -316,7 +316,7 @@ const ListRenderer = ({ data, listType }) => {
                       e.stopPropagation();
                       removeSubItem(index, subIndex);
                     }}
-                    className="opacity-0 group-hover/sub:opacity-100 text-red-500 hover:text-red-700 transition-opacity"
+                    className="opacity-0 group-hover/sub:opacity-100 text-danger hover:text-danger transition-opacity"
                   >
                     <X className="w-3 h-3" />
                   </button>
@@ -334,9 +334,9 @@ const ListRenderer = ({ data, listType }) => {
       {listItems.map((item, index) => (
         <div key={index} className="flex items-start space-x-3 group">
           <div className="flex flex-col items-center">
-            <Clock className="w-4 h-4 text-blue-500" />
+            <Clock className="w-4 h-4 text-info" />
             {index < listItems.length - 1 && (
-              <div className="w-0.5 h-8 bg-blue-200 mt-1"></div>
+              <div className="w-0.5 h-8 bg-info/20 mt-1"></div>
             )}
           </div>
           <div className="flex-1 space-y-1">
@@ -344,7 +344,7 @@ const ListRenderer = ({ data, listType }) => {
               type="text"
               value={item.time}
               onChange={(e) => updateItem(index, e.target.value, 'time')}
-              className="text-sm font-medium text-blue-600 bg-transparent border-none outline-none focus:bg-white focus:border focus:border-blue-300 focus:rounded px-2 py-1"
+              className="text-sm font-medium text-info bg-transparent border-none outline-none focus:bg-surface focus:border focus:border-info/30 focus:rounded px-2 py-1"
               placeholder="Time"
               onClick={(e) => e.stopPropagation()}
             />
@@ -352,7 +352,7 @@ const ListRenderer = ({ data, listType }) => {
               type="text"
               value={item.event}
               onChange={(e) => updateItem(index, e.target.value, 'event')}
-              className="w-full text-gray-700 bg-transparent border-none outline-none focus:bg-white focus:border focus:border-blue-300 focus:rounded px-2 py-1"
+              className="w-full text-ink bg-transparent border-none outline-none focus:bg-surface focus:border focus:border-info/30 focus:rounded px-2 py-1"
               placeholder="Event"
               onClick={(e) => e.stopPropagation()}
             />
@@ -362,7 +362,7 @@ const ListRenderer = ({ data, listType }) => {
               e.stopPropagation();
               removeItem(index);
             }}
-            className="opacity-0 group-hover:opacity-100 text-red-500 hover:text-red-700 transition-opacity"
+            className="opacity-0 group-hover:opacity-100 text-danger hover:text-danger transition-opacity"
             disabled={listItems.length === 1}
           >
             <Minus className="w-4 h-4" />
@@ -398,7 +398,7 @@ const ListRenderer = ({ data, listType }) => {
       {/* List Title */}
       {listTitle && listTitle !== 'List' && (
         <div className="mb-3">
-          <h3 className="text-lg font-semibold text-gray-900">{listTitle}</h3>
+          <h3 className="text-lg font-semibold text-ink">{listTitle}</h3>
         </div>
       )}
       
@@ -414,7 +414,7 @@ const ListRenderer = ({ data, listType }) => {
             e.stopPropagation();
             addItem();
           }}
-          className="flex items-center space-x-2 px-3 py-2 text-sm bg-blue-50 hover:bg-blue-100 text-blue-700 rounded-md transition-colors border border-blue-200"
+          className="flex items-center space-x-2 px-3 py-2 text-sm bg-info/10 hover:bg-info/10 text-info rounded-md transition-colors border border-info/20"
         >
           <Plus className="w-4 h-4" />
           <span>Add Item</span>
@@ -422,7 +422,7 @@ const ListRenderer = ({ data, listType }) => {
       </div>
       
       {/* List Info */}
-      <div className="text-center text-xs text-gray-500 mt-2">
+      <div className="text-center text-xs text-dim mt-2">
         {listItems.length} item{listItems.length !== 1 ? 's' : ''} • Click to edit
       </div>
     </div>

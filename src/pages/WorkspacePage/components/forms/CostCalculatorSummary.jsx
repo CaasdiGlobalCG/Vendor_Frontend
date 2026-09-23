@@ -60,21 +60,21 @@ const CostCalculatorSummary = ({ data }) => {
   };
 
   return (
-    <div className="w-full h-full bg-white p-6 rounded-lg overflow-auto" ref={tableRef}>
+    <div className="w-full h-full bg-surface p-6 rounded-lg overflow-auto" ref={tableRef}>
       {/* Header */}
-      <div className="mb-6 pb-4 border-b border-gray-200 sticky top-0 bg-white z-10">
-        <h2 className="text-xl font-bold text-gray-900 mb-2">Cost Calculation Summary</h2>
+      <div className="mb-6 pb-4 border-b border-line sticky top-0 bg-surface z-10">
+        <h2 className="text-xl font-bold text-ink mb-2">Cost Calculation Summary</h2>
         <div className="flex gap-2">
           <button
             onClick={exportToPDF}
-            className="flex items-center gap-2 px-3 py-2 bg-red-100 hover:bg-red-200 text-red-700 rounded-lg text-sm font-medium transition-colors"
+            className="flex items-center gap-2 px-3 py-2 bg-danger/10 hover:bg-danger/20 text-danger rounded-lg text-sm font-medium transition-colors"
           >
             <FileText className="w-4 h-4" />
             Export PDF
           </button>
           <button
             onClick={exportToExcel}
-            className="flex items-center gap-2 px-3 py-2 bg-green-100 hover:bg-green-200 text-green-700 rounded-lg text-sm font-medium transition-colors"
+            className="flex items-center gap-2 px-3 py-2 bg-success/10 hover:bg-success/20 text-success rounded-lg text-sm font-medium transition-colors"
           >
             <FileSpreadsheet className="w-4 h-4" />
             Export Excel
@@ -84,22 +84,22 @@ const CostCalculatorSummary = ({ data }) => {
 
       {/* Calculator Results */}
       <div className="mb-8">
-        <h3 className="text-lg font-semibold text-gray-900 mb-3">📊 Calculation Results</h3>
+        <h3 className="text-lg font-semibold text-ink mb-3">📊 Calculation Results</h3>
         <div className="overflow-x-auto">
-          <table className="w-full border border-gray-300 rounded-lg overflow-hidden">
-            <thead className="bg-gray-100">
+          <table className="w-full border border-line rounded-lg overflow-hidden">
+            <thead className="bg-surface-hover">
               <tr>
-                <th className="px-4 py-3 text-left text-sm font-semibold text-gray-900 border-b border-gray-300">#</th>
-                <th className="px-4 py-3 text-left text-sm font-semibold text-gray-900 border-b border-gray-300">Calculator</th>
-                <th className="px-4 py-3 text-left text-sm font-semibold text-gray-900 border-b border-gray-300">Status</th>
+                <th className="px-4 py-3 text-left text-sm font-semibold text-ink border-b border-line">#</th>
+                <th className="px-4 py-3 text-left text-sm font-semibold text-ink border-b border-line">Calculator</th>
+                <th className="px-4 py-3 text-left text-sm font-semibold text-ink border-b border-line">Status</th>
               </tr>
             </thead>
             <tbody>
               {calculatorResults.map((result, idx) => (
-                <tr key={result.id} className="border-b border-gray-200 hover:bg-gray-50">
-                  <td className="px-4 py-3 text-sm text-gray-900 font-medium">{idx + 1}</td>
-                  <td className="px-4 py-3 text-sm text-gray-800 font-medium">{result.name}</td>
-                  <td className="px-4 py-3 text-sm text-green-600 font-medium">✓ Calculated</td>
+                <tr key={result.id} className="border-b border-line hover:bg-canvas">
+                  <td className="px-4 py-3 text-sm text-ink font-medium">{idx + 1}</td>
+                  <td className="px-4 py-3 text-sm text-ink font-medium">{result.name}</td>
+                  <td className="px-4 py-3 text-sm text-success font-medium">✓ Calculated</td>
                 </tr>
               ))}
             </tbody>
@@ -110,31 +110,31 @@ const CostCalculatorSummary = ({ data }) => {
       {/* Labour Costs */}
       {labourCosts.length > 0 && (
         <div className="mb-8">
-          <h3 className="text-lg font-semibold text-gray-900 mb-3">👷 Labour Costs</h3>
+          <h3 className="text-lg font-semibold text-ink mb-3">👷 Labour Costs</h3>
           <div className="overflow-x-auto">
-            <table className="w-full border border-gray-300 rounded-lg overflow-hidden">
-              <thead className="bg-gray-100">
+            <table className="w-full border border-line rounded-lg overflow-hidden">
+              <thead className="bg-surface-hover">
                 <tr>
-                  <th className="px-4 py-3 text-left text-sm font-semibold text-gray-900 border-b border-gray-300">Labour Type</th>
-                  <th className="px-4 py-3 text-right text-sm font-semibold text-gray-900 border-b border-gray-300">Quantity</th>
-                  <th className="px-4 py-3 text-right text-sm font-semibold text-gray-900 border-b border-gray-300">Cost per Unit</th>
-                  <th className="px-4 py-3 text-right text-sm font-semibold text-gray-900 border-b border-gray-300">Total</th>
+                  <th className="px-4 py-3 text-left text-sm font-semibold text-ink border-b border-line">Labour Type</th>
+                  <th className="px-4 py-3 text-right text-sm font-semibold text-ink border-b border-line">Quantity</th>
+                  <th className="px-4 py-3 text-right text-sm font-semibold text-ink border-b border-line">Cost per Unit</th>
+                  <th className="px-4 py-3 text-right text-sm font-semibold text-ink border-b border-line">Total</th>
                 </tr>
               </thead>
               <tbody>
                 {labourCosts.map((labour) => (
-                  <tr key={labour.id} className="border-b border-gray-200 hover:bg-gray-50">
-                    <td className="px-4 py-3 text-sm text-gray-800 font-medium">{labour.description}</td>
-                    <td className="px-4 py-3 text-sm text-gray-600 text-right">{labour.quantity}</td>
-                    <td className="px-4 py-3 text-sm text-gray-600 text-right">₹{parseFloat(labour.unitCost).toLocaleString()}</td>
-                    <td className="px-4 py-3 text-sm text-gray-900 font-semibold text-right">
+                  <tr key={labour.id} className="border-b border-line hover:bg-canvas">
+                    <td className="px-4 py-3 text-sm text-ink font-medium">{labour.description}</td>
+                    <td className="px-4 py-3 text-sm text-dim text-right">{labour.quantity}</td>
+                    <td className="px-4 py-3 text-sm text-dim text-right">₹{parseFloat(labour.unitCost).toLocaleString()}</td>
+                    <td className="px-4 py-3 text-sm text-ink font-semibold text-right">
                       ₹{parseFloat(labour.totalCost).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
                     </td>
                   </tr>
                 ))}
-                <tr className="bg-blue-50 font-semibold border-t-2 border-blue-300">
-                  <td colSpan="3" className="px-4 py-3 text-sm text-gray-900 text-right">Total Labour Cost:</td>
-                  <td className="px-4 py-3 text-sm text-blue-600 text-right">
+                <tr className="bg-info/10 font-semibold border-t-2 border-info/30">
+                  <td colSpan="3" className="px-4 py-3 text-sm text-ink text-right">Total Labour Cost:</td>
+                  <td className="px-4 py-3 text-sm text-info text-right">
                     ₹{totalLabourCost.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
                   </td>
                 </tr>
@@ -146,8 +146,8 @@ const CostCalculatorSummary = ({ data }) => {
 
       {/* No Labour Costs Message */}
       {labourCosts.length === 0 && (
-        <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg text-center">
-          <p className="text-sm text-yellow-800">No labour costs added</p>
+        <div className="p-4 bg-warning/10 border border-warning/20 rounded-lg text-center">
+          <p className="text-sm text-warning">No labour costs added</p>
         </div>
       )}
     </div>

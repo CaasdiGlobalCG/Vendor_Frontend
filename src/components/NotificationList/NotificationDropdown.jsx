@@ -66,17 +66,17 @@ const NotificationDropdown = () => {
   return (
     <div 
       ref={dropdownRef}
-      className="absolute right-0 mt-2 w-80 sm:w-96 bg-white rounded-lg shadow-lg overflow-hidden z-50"
+      className="absolute right-0 mt-2 w-80 sm:w-96 bg-surface rounded-lg shadow-lg overflow-hidden z-50"
       style={{ maxHeight: '80vh', overflowY: 'auto' }}
     >
-      <div className="p-3 border-b border-gray-200 flex justify-between items-center">
-        <h3 className="font-semibold text-gray-700">Notifications</h3>
+      <div className="p-3 border-b border-line flex justify-between items-center">
+        <h3 className="font-semibold text-ink">Notifications</h3>
         <div className="flex items-center gap-2">
-          <span className="text-xs text-gray-500">{unreadCount} unread</span>
+          <span className="text-xs text-dim">{unreadCount} unread</span>
           {unreadCount > 0 && (
             <button 
               onClick={markAllAsRead}
-              className="text-xs text-blue-600 hover:text-blue-800"
+              className="text-xs text-info hover:text-info"
             >
               Mark all as read
             </button>
@@ -84,9 +84,9 @@ const NotificationDropdown = () => {
         </div>
       </div>
       
-      <div className="divide-y divide-gray-200">
+      <div className="divide-y divide-line">
         {isLoading ? (
-          <div className="p-4 text-center text-gray-500">
+          <div className="p-4 text-center text-dim">
             <svg className="animate-spin h-5 w-5 mx-auto mb-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
               <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
               <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
@@ -94,11 +94,11 @@ const NotificationDropdown = () => {
             Loading notifications...
           </div>
         ) : error ? (
-          <div className="p-4 text-center text-red-500">
+          <div className="p-4 text-center text-danger">
             Error loading notifications: {error}
           </div>
         ) : notifications.length === 0 ? (
-          <div className="p-4 text-center text-gray-500">
+          <div className="p-4 text-center text-dim">
             No notifications to display
           </div>
         ) : (
@@ -118,10 +118,10 @@ const NotificationDropdown = () => {
         )}
       </div>
       
-      <div className="p-3 border-t border-gray-200 bg-gray-50 text-center">
+      <div className="p-3 border-t border-line bg-canvas text-center">
         <Link 
           to="/notifications" 
-          className="text-sm text-blue-600 hover:text-blue-800"
+          className="text-sm text-info hover:text-info"
           onClick={closeNotificationDropdown}
         >
           View all notifications

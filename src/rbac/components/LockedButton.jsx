@@ -24,7 +24,7 @@ export function LockedButton({ label, module, action, className = '' }) {
     <button
       disabled
       title={tooltip}
-      className={`inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-gray-100 dark:bg-gray-800 text-gray-400 dark:text-gray-500 cursor-not-allowed ${className}`}
+      className={`inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-surface-hover  text-dim  cursor-not-allowed ${className}`}
     >
       <svg
         className="w-4 h-4"

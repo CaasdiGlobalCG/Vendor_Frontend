@@ -8,7 +8,7 @@ import React from 'react';
  * @param {string} [highlightClass] - Optional Tailwind classes for mention styling
  * @returns {React.ReactNode[]} Array of text and mention spans
  */
-export function renderMentions(text, highlightClass = 'font-semibold text-blue-600 bg-blue-50 px-0.5 rounded') {
+export function renderMentions(text, highlightClass = 'font-semibold text-info bg-info/10 px-0.5 rounded') {
   if (!text) return [text];
 
   // Match @Name or @First Last patterns

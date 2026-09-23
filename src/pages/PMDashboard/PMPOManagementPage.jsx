@@ -387,12 +387,19 @@ const PMPOManagementPage = () => {
   const getStatusBadge = (status) => {
     const statusConfig = {
       'pm_po_created': { bg: 'bg-gray-100', text: 'text-gray-800', label: '� PM PO Ready' },
-      'sent_to_vendor_for_confirmation': { bg: 'bg-yellow-100', text: 'text-yellow-800', label: '📤 Sent to Vendor' },
-      'vendor_accepted': { bg: 'bg-blue-100', text: 'text-blue-800', label: '✓ Vendor Accepted' },
-      'vendor_rejected': { bg: 'bg-red-100', text: 'text-red-800', label: '✗ Vendor Rejected' }
+      // 'sent_to_vendor_for_confirmation': { bg: 'bg-yellow-100', text: 'text-yellow-800', label: '📤 Sent to Vendor' },
+      // 'vendor_accepted': { bg: 'bg-blue-100', text: 'text-blue-800', label: '✓ Vendor Accepted' },
+      // 'vendor_rejected': { bg: 'bg-red-100', text: 'text-red-800', label: '✗ Vendor Rejected' }
+      'sent_to_vendor_for_confirmation': { bg: 'bg-warning/10', text: 'text-warning', label: '📤 Sent to Vendor' },
+      'vendor_accepted': { bg: 'bg-info/10', text: 'text-info', label: '✓ Vendor Accepted' },
+      'vendor_rejected': { bg: 'bg-danger/10', text: 'text-danger', label: '✗ Vendor Rejected' },
+      'ready_for_finance': { bg: 'bg-surface-hover', text: 'text-ink', label: '📊 Ready for Finance' },
+      'sent_to_finance_for_commission': { bg: 'bg-info/10', text: 'text-info', label: '💰 Sent to Finance' },
+      'approved_by_finance': { bg: 'bg-success/10', text: 'text-success', label: '✅ Approved by Finance' },
+      'sent to client': { bg: 'bg-surface-hover', text: 'text-ink', label: '📋 Uploaded by Client' }
     };
 
-    const config = statusConfig[status] || { bg: 'bg-gray-100', text: 'text-gray-800', label: status };
+    const config = statusConfig[status] || { bg: 'bg-surface-hover', text: 'text-ink', label: status };
 
     return (
       <span className={`inline-block px-3 py-1 rounded-full text-xs font-semibold ${config.bg} ${config.text}`}>
@@ -410,40 +417,40 @@ const PMPOManagementPage = () => {
   });
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 p-8">
+    <div className="min-h-screen bg-gradient-to-br from-surface-hover to-surface-hover p-8">
       {/* Header */}
       <div className="mb-8">
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center space-x-4">
             <button
               onClick={() => navigate('/pm-dashboard')}
-              className="p-2 hover:bg-white rounded-lg transition-all"
+              className="p-2 hover:bg-surface rounded-lg transition-all"
             >
-              <ArrowLeftIcon className="w-6 h-6 text-gray-700" />
+              <ArrowLeftIcon className="w-6 h-6 text-ink" />
             </button>
             <div>
-              <h1 className="text-3xl font-bold text-gray-900">Purchase Order Management</h1>
-              <p className="text-sm text-gray-600 mt-1">Review, edit, and route POs for vendor & finance approval</p>
+              <h1 className="text-3xl font-bold text-ink">Purchase Order Management</h1>
+              <p className="text-sm text-dim mt-1">Review, edit, and route POs for vendor & finance approval</p>
             </div>
           </div>
           <button
             onClick={fetchPurchaseOrders}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-all text-sm font-medium"
+            className="px-4 py-2 bg-info text-white rounded-lg hover:bg-info transition-all text-sm font-medium"
           >
             🔄 Refresh
           </button>
         </div>
 
         {/* Filter Tabs */}
-        <div className="flex space-x-3 border-b border-gray-200">
+        <div className="flex space-x-3 border-b border-line">
           {['all', 'client-po', 'pending', 'in-review', 'approved'].map(tab => (
             <button
               key={tab}
               onClick={() => setFilter(tab)}
               className={`px-4 py-3 font-medium transition-all border-b-2 ${
                 filter === tab
-                  ? 'text-blue-600 border-blue-600'
-                  : 'text-gray-600 border-transparent hover:text-gray-900'
+                  ? 'text-info border-info'
+                  : 'text-dim border-transparent hover:text-ink'
               }`}
             >
               {tab === 'all' ? 'All POs' : tab === 'client-po' ? '📋 Client POs' : tab === 'pending' ? 'Pending Review' : tab === 'in-review' ? 'In Review' : 'Approved'}
@@ -455,41 +462,41 @@ const PMPOManagementPage = () => {
       {/* Loading State */}
       {loading && (
         <div className="text-center py-12">
-          <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-          <p className="text-gray-600 mt-4">Loading purchase orders...</p>
+          <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-info"></div>
+          <p className="text-dim mt-4">Loading purchase orders...</p>
         </div>
       )}
 
       {/* Client PO Section */}
       {!loading && (filter === 'all' || filter === 'client-po') && quotations.length > 0 && (
         <div className="mb-8">
-          <h2 className="text-xl font-bold text-gray-900 mb-4">📋 Client Purchase Orders Awaiting PM Review</h2>
+          <h2 className="text-xl font-bold text-ink mb-4">📋 Client Purchase Orders Awaiting PM Review</h2>
           <div className="grid gap-4">
             {quotations.map(quotation => (
               <div
                 key={quotation.quotationId}
-                className="bg-white rounded-lg border-2 border-blue-200 p-6 hover:shadow-lg transition-all"
+                className="bg-surface rounded-lg border-2 border-info/20 p-6  transition-all"
               >
                 <div className="flex items-start justify-between mb-4">
                   <div className="flex-1">
                     <div className="flex items-center space-x-3 mb-2">
-                      <h3 className="text-lg font-semibold text-gray-900">
+                      <h3 className="text-lg font-semibold text-ink">
                         {quotation.customQuoteId || quotation.quotationId}
                       </h3>
-                      <span className="inline-block px-3 py-1 rounded-full text-xs font-semibold bg-blue-100 text-blue-800">
+                      <span className="inline-block px-3 py-1 rounded-full text-xs font-semibold bg-info/10 text-info">
                         ⏳ Awaiting PM Review
                       </span>
                     </div>
-                    <p className="text-sm text-gray-600">
+                    <p className="text-sm text-dim">
                       Customer: {quotation.customerName} | Date: {new Date(quotation.quotationDate).toLocaleDateString()}
                     </p>
                   </div>
                   <div className="text-right">
-                    <p className="text-2xl font-bold text-gray-900">
+                    <p className="text-2xl font-bold text-ink">
                       ₹{parseFloat(quotation.total || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
                     </p>
                     {quotation.commissionPercentage && (
-                      <p className="text-xs text-amber-600 font-medium mt-1">
+                      <p className="text-xs text-warning font-medium mt-1">
                         Commission: {quotation.commissionPercentage}%
                       </p>
                     )}
@@ -497,33 +504,33 @@ const PMPOManagementPage = () => {
                 </div>
 
                 {/* File Info */}
-                <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                <div className="mb-4 p-3 bg-info/10 border border-info/20 rounded-lg">
                   <div className="flex items-center space-x-2 mb-2">
-                    <DocumentTextIcon className="w-4 h-4 text-blue-600" />
-                    <span className="text-sm font-medium text-blue-900">Client PO File Uploaded</span>
+                    <DocumentTextIcon className="w-4 h-4 text-info" />
+                    <span className="text-sm font-medium text-info">Client PO File Uploaded</span>
                   </div>
-                  <p className="text-xs text-blue-700">
+                  <p className="text-xs text-info">
                     {quotation.clientPOFileName || 'client-po.pdf'}
                   </p>
                 </div>
 
                 {/* PO Details */}
-                <div className="grid grid-cols-3 gap-4 mb-4 p-4 bg-gray-50 rounded-lg">
+                <div className="grid grid-cols-3 gap-4 mb-4 p-4 bg-canvas rounded-lg">
                   <div>
-                    <p className="text-xs text-gray-600 font-medium">Subtotal</p>
-                    <p className="text-lg font-semibold text-gray-900">
+                    <p className="text-xs text-dim font-medium">Subtotal</p>
+                    <p className="text-lg font-semibold text-ink">
                       ₹{parseFloat(quotation.subtotal || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
                     </p>
                   </div>
                   <div>
-                    <p className="text-xs text-gray-600 font-medium">Tax</p>
-                    <p className="text-lg font-semibold text-gray-900">
+                    <p className="text-xs text-dim font-medium">Tax</p>
+                    <p className="text-lg font-semibold text-ink">
                       ₹{(parseFloat(quotation.cgst || 0) + parseFloat(quotation.sgst || 0) + parseFloat(quotation.igst || 0)).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
                     </p>
                   </div>
                   <div>
-                    <p className="text-xs text-gray-600 font-medium">Items</p>
-                    <p className="text-lg font-semibold text-gray-900">{(quotation.items || []).length}</p>
+                    <p className="text-xs text-dim font-medium">Items</p>
+                    <p className="text-lg font-semibold text-ink">{(quotation.items || []).length}</p>
                   </div>
                 </div>
 
@@ -631,10 +638,10 @@ const PMPOManagementPage = () => {
 
       {/* Empty state for Client POs */}
       {!loading && (filter === 'client-po' && quotations.length === 0) && (
-        <div className="text-center py-12 bg-white rounded-lg border border-gray-200 mb-8">
-          <DocumentTextIcon className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-          <h3 className="text-lg font-medium text-gray-900 mb-2">No client POs awaiting review</h3>
-          <p className="text-gray-600">Once clients upload PO files, they will appear here.</p>
+        <div className="text-center py-12 bg-surface rounded-lg border border-line mb-8">
+          <DocumentTextIcon className="w-12 h-12 text-dim mx-auto mb-4" />
+          <h3 className="text-lg font-medium text-ink mb-2">No client POs awaiting review</h3>
+          <p className="text-dim">Once clients upload PO files, they will appear here.</p>
         </div>
       )}
 
@@ -644,25 +651,25 @@ const PMPOManagementPage = () => {
           {filteredPOs.map(po => (
             <div
               key={po.purchaseOrderId}
-              className="bg-white rounded-lg border border-gray-200 p-6 hover:shadow-lg transition-all"
+              className="bg-surface rounded-lg border border-line p-6  transition-all"
             >
               <div className="flex items-start justify-between mb-4">
                 <div className="flex-1">
                   <div className="flex items-center space-x-3 mb-2">
-                    <h3 className="text-lg font-semibold text-gray-900">
+                    <h3 className="text-lg font-semibold text-ink">
                       {po.customPoId || po.purchaseOrderNumber || po.purchaseOrderId}
                     </h3>
                     {getStatusBadge(po.status)}
                   </div>
-                  <p className="text-sm text-gray-600">
+                  <p className="text-sm text-dim">
                     Quote Ref: {po.referenceQuoteNumber || 'N/A'} | Vendor: {po.vendorId}
                   </p>
                 </div>
                 <div className="text-right">
-                  <p className="text-2xl font-bold text-gray-900">
+                  <p className="text-2xl font-bold text-ink">
                     ₹{parseFloat(po.total || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
                   </p>
-                  <p className="text-xs text-gray-500 mt-1">
+                  <p className="text-xs text-dim mt-1">
                     {new Date(po.createdAt).toLocaleDateString()}
                   </p>
                 </div>
@@ -670,10 +677,10 @@ const PMPOManagementPage = () => {
 
               {/* Commission Info (if exists) */}
               {po.commission && (
-                <div className="mb-4 p-3 bg-amber-50 border border-amber-200 rounded-lg">
+                <div className="mb-4 p-3 bg-warning/10 border border-warning/20 rounded-lg">
                   <div className="flex items-center justify-between">
-                    <span className="text-sm text-amber-800 font-medium">💰 Commission Added</span>
-                    <span className="text-lg font-bold text-amber-900">
+                    <span className="text-sm text-warning font-medium">💰 Commission Added</span>
+                    <span className="text-lg font-bold text-warning">
                       ₹{parseFloat(po.commission).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
                     </span>
                   </div>
@@ -681,33 +688,33 @@ const PMPOManagementPage = () => {
               )}
 
               {/* PO Details Preview */}
-              <div className="grid grid-cols-3 gap-4 mb-4 p-4 bg-gray-50 rounded-lg">
+              <div className="grid grid-cols-3 gap-4 mb-4 p-4 bg-canvas rounded-lg">
                 <div>
-                  <p className="text-xs text-gray-600 font-medium">Subtotal</p>
-                  <p className="text-lg font-semibold text-gray-900">
+                  <p className="text-xs text-dim font-medium">Subtotal</p>
+                  <p className="text-lg font-semibold text-ink">
                     ₹{parseFloat(po.subtotal || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
                   </p>
                 </div>
                 <div>
-                  <p className="text-xs text-gray-600 font-medium">Tax</p>
-                  <p className="text-lg font-semibold text-gray-900">
+                  <p className="text-xs text-dim font-medium">Tax</p>
+                  <p className="text-lg font-semibold text-ink">
                     ₹{(parseFloat(po.cgst || 0) + parseFloat(po.sgst || 0) + parseFloat(po.igst || 0)).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
                   </p>
                 </div>
                 <div>
-                  <p className="text-xs text-gray-600 font-medium">Items</p>
-                  <p className="text-lg font-semibold text-gray-900">{(po.items || []).length}</p>
+                  <p className="text-xs text-dim font-medium">Items</p>
+                  <p className="text-lg font-semibold text-ink">{(po.items || []).length}</p>
                 </div>
               </div>
 
               {/* Vendor Response Status */}
               {po.vendorResponse && (
-                <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-                  <p className="text-sm font-medium text-blue-900 mb-1">
+                <div className="mb-4 p-3 bg-info/10 border border-info/20 rounded-lg">
+                  <p className="text-sm font-medium text-info mb-1">
                     Vendor Response: {po.vendorResponse.response === 'accepted' ? '✓ Accepted' : '✗ Rejected'}
                   </p>
                   {po.vendorResponse.feedback && (
-                    <p className="text-sm text-blue-800">{po.vendorResponse.feedback}</p>
+                    <p className="text-sm text-info">{po.vendorResponse.feedback}</p>
                   )}
                 </div>
               )}
@@ -717,9 +724,11 @@ const PMPOManagementPage = () => {
                 <button
                   onClick={() => handleReviewPO(po)}
                   className={`flex-1 flex items-center justify-center space-x-2 px-4 py-2 rounded-lg font-medium transition-all ${
-                    po.status === 'pm_po_created'
-                      ? 'bg-blue-600 hover:bg-blue-700 text-white'
-                      : 'bg-gray-200 text-gray-600 cursor-not-allowed'
+                    po.status === 'sent to client'
+                      ? 'bg-info hover:bg-info text-white'
+                      : po.status === 'vendor_accepted'
+                      ? 'bg-cta hover:bg-cta text-cta-foreground'
+                      : 'bg-surface-hover text-dim cursor-not-allowed'
                   }`}
                   disabled={po.status !== 'pm_po_created'}
                 >
@@ -727,6 +736,59 @@ const PMPOManagementPage = () => {
                   <span>Review & Send to Vendor</span>
                 </button>
 
+                {po.status === 'vendor_accepted' && (
+                  <button
+                    onClick={async () => {
+                      try {
+                        const response = await fetch(
+                          `/api/workspace/purchase-orders/${po.purchaseOrderId}/pm-approve-vendor-response`,
+                          {
+                            method: 'PUT',
+                            headers: {
+                              'Authorization': `Bearer ${localStorage.getItem('token')}`
+                            }
+                          }
+                        );
+                        if (!response.ok) throw new Error('Failed');
+                        alert('✅ Vendor response approved! Ready for Finance.');
+                        fetchPurchaseOrders();
+                      } catch (error) {
+                        alert('Failed to approve vendor response');
+                      }
+                    }}
+                    className="flex-1 flex items-center justify-center space-x-2 px-4 py-2 bg-success hover:bg-success text-white rounded-lg font-medium transition-all"
+                  >
+                    <CheckCircleIcon className="w-4 h-4" />
+                    <span>Approve & Send to Finance</span>
+                  </button>
+                )}
+
+                {po.status === 'ready_for_finance' && (
+                  <button
+                    onClick={async () => {
+                      try {
+                        const response = await fetch(
+                          `/api/workspace/purchase-orders/${po.purchaseOrderId}/send-to-finance`,
+                          {
+                            method: 'PUT',
+                            headers: {
+                              'Authorization': `Bearer ${localStorage.getItem('token')}`
+                            }
+                          }
+                        );
+                        if (!response.ok) throw new Error('Failed');
+                        alert('✅ PO sent to Finance for commission & approval.');
+                        fetchPurchaseOrders();
+                      } catch (error) {
+                        alert('Failed to send to Finance');
+                      }
+                    }}
+                    className="flex-1 flex items-center justify-center space-x-2 px-4 py-2 bg-info hover:bg-info text-white rounded-lg font-medium transition-all"
+                  >
+                    <CurrencyDollarIcon className="w-4 h-4" />
+                    <span>Send to Finance</span>
+                  </button>
+                )}
               </div>
             </div>
           ))}
@@ -736,12 +798,12 @@ const PMPOManagementPage = () => {
       {/* Review Modal */}
       {showReviewModal && selectedPO && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+          <div className="bg-surface rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
             {/* Modal Header */}
-            <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between">
+            <div className="sticky top-0 bg-surface border-b border-line px-6 py-4 flex items-center justify-between">
               <div>
-                <h2 className="text-2xl font-bold text-gray-900">Review Purchase Order</h2>
-                <p className="text-sm text-gray-600 mt-1">
+                <h2 className="text-2xl font-bold text-ink">Review Purchase Order</h2>
+                <p className="text-sm text-dim mt-1">
                   PO: {selectedPO.customPoId || selectedPO.purchaseOrderId}
                 </p>
               </div>
@@ -750,7 +812,7 @@ const PMPOManagementPage = () => {
                   setShowReviewModal(false);
                   setSelectedPO(null);
                 }}
-                className="text-gray-400 hover:text-gray-600"
+                className="text-dim hover:text-dim"
               >
                 ✕
               </button>
@@ -759,17 +821,17 @@ const PMPOManagementPage = () => {
             {/* Modal Body */}
             <div className="px-6 py-6 space-y-6">
               {/* Commission Breakdown */}
-              <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
-                <h3 className="font-semibold text-amber-900 mb-3">💰 Commission Breakdown</h3>
+              <div className="bg-warning/10 border border-warning/20 rounded-lg p-4">
+                <h3 className="font-semibold text-warning mb-3">💰 Commission Breakdown</h3>
                 <div className="space-y-2 mb-4">
                   <div className="flex justify-between items-center">
-                    <span className="text-amber-800">Subtotal</span>
-                    <span className="font-semibold text-amber-900">
+                    <span className="text-warning">Subtotal</span>
+                    <span className="font-semibold text-warning">
                       ₹{parseFloat(selectedPO.subtotal || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
                     </span>
                   </div>
                   {selectedPO.commission && (
-                    <div className="flex justify-between items-center text-red-600 font-bold text-lg">
+                    <div className="flex justify-between items-center text-danger font-bold text-lg">
                       <span>Commission to Remove</span>
                       <span>₹{parseFloat(selectedPO.commission).toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
                     </div>
@@ -778,7 +840,7 @@ const PMPOManagementPage = () => {
 
                 {/* Commission Input */}
                 <div>
-                  <label className="block text-sm font-medium text-amber-900 mb-2">
+                  <label className="block text-sm font-medium text-warning mb-2">
                     Enter commission amount to remove (optional)
                   </label>
                   <input
@@ -786,29 +848,29 @@ const PMPOManagementPage = () => {
                     value={commissionToRemove}
                     onChange={(e) => setCommissionToRemove(e.target.value)}
                     placeholder="0.00"
-                    className="w-full px-3 py-2 border border-amber-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+                    className="w-full px-3 py-2 border border-warning/30 rounded-lg focus:ring-2 focus:ring-warning focus:border-transparent"
                   />
-                  <p className="text-xs text-amber-700 mt-1">
+                  <p className="text-xs text-warning mt-1">
                     Amount to be subtracted from total before sending to vendor
                   </p>
                 </div>
               </div>
 
               {/* PO Summary */}
-              <div className="border border-gray-200 rounded-lg p-4">
-                <h3 className="font-semibold text-gray-900 mb-3">PO Summary</h3>
+              <div className="border border-line rounded-lg p-4">
+                <h3 className="font-semibold text-ink mb-3">PO Summary</h3>
                 <div className="space-y-2 text-sm">
                   <div className="flex justify-between">
-                    <span className="text-gray-600">Vendor</span>
-                    <span className="font-medium text-gray-900">{selectedPO.vendorId}</span>
+                    <span className="text-dim">Vendor</span>
+                    <span className="font-medium text-ink">{selectedPO.vendorId}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-gray-600">Items</span>
-                    <span className="font-medium text-gray-900">{(selectedPO.items || []).length}</span>
+                    <span className="text-dim">Items</span>
+                    <span className="font-medium text-ink">{(selectedPO.items || []).length}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-gray-600">Total Amount</span>
-                    <span className="font-bold text-lg text-gray-900">
+                    <span className="text-dim">Total Amount</span>
+                    <span className="font-bold text-lg text-ink">
                       ₹{parseFloat(selectedPO.total || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
                     </span>
                   </div>
@@ -817,16 +879,16 @@ const PMPOManagementPage = () => {
 
               {/* Items List */}
               {selectedPO.items && selectedPO.items.length > 0 && (
-                <div className="border border-gray-200 rounded-lg p-4">
-                  <h3 className="font-semibold text-gray-900 mb-3">Line Items</h3>
+                <div className="border border-line rounded-lg p-4">
+                  <h3 className="font-semibold text-ink mb-3">Line Items</h3>
                   <div className="space-y-2 text-sm max-h-48 overflow-y-auto">
                     {selectedPO.items.map((item, idx) => (
-                      <div key={idx} className="flex justify-between p-2 bg-gray-50 rounded">
+                      <div key={idx} className="flex justify-between p-2 bg-canvas rounded">
                         <div>
-                          <p className="font-medium text-gray-900">{item.description || `Item ${idx + 1}`}</p>
-                          <p className="text-xs text-gray-600">{item.quantity} x ₹{parseFloat(item.rate || 0).toLocaleString('en-IN')}</p>
+                          <p className="font-medium text-ink">{item.description || `Item ${idx + 1}`}</p>
+                          <p className="text-xs text-dim">{item.quantity} x ₹{parseFloat(item.rate || 0).toLocaleString('en-IN')}</p>
                         </div>
-                        <p className="font-semibold text-gray-900">
+                        <p className="font-semibold text-ink">
                           ₹{parseFloat(item.amount || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
                         </p>
                       </div>
@@ -837,13 +899,13 @@ const PMPOManagementPage = () => {
             </div>
 
             {/* Modal Footer */}
-            <div className="sticky bottom-0 bg-white border-t border-gray-200 px-6 py-4 flex justify-end space-x-3">
+            <div className="sticky bottom-0 bg-surface border-t border-line px-6 py-4 flex justify-end space-x-3">
               <button
                 onClick={() => {
                   setShowReviewModal(false);
                   setSelectedPO(null);
                 }}
-                className="px-4 py-2 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg font-medium transition-all"
+                className="px-4 py-2 text-ink bg-surface-hover hover:bg-surface-hover rounded-lg font-medium transition-all"
               >
                 Cancel
               </button>
@@ -854,8 +916,8 @@ const PMPOManagementPage = () => {
               )}
               <button
                 onClick={handleSendToVendor}
-                disabled={sendingToVendor || (selectedPO.requiresAutoCheck && selectedPO.poAutoCheck?.passed !== true && selectedPO.poAutoCheck?.reason?.status !== 'approved')}
-                className="px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white rounded-lg font-medium transition-all flex items-center space-x-2"
+                disabled={sendingToVendor}
+                className="px-4 py-2 bg-info hover:bg-info disabled:opacity-50 text-white rounded-lg font-medium transition-all flex items-center space-x-2"
               >
                 {sendingToVendor ? (
                   <>
@@ -877,12 +939,12 @@ const PMPOManagementPage = () => {
       {/* Client PO View & Edit Modal */}
       {showClientPOModal && editedQuotation && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[95vh] overflow-y-auto">
+          <div className="bg-surface rounded-lg shadow-xl max-w-4xl w-full max-h-[95vh] overflow-y-auto">
             {/* Modal Header */}
-            <div className="sticky top-0 bg-gradient-to-r from-blue-600 to-blue-700 text-white px-6 py-4 flex items-center justify-between">
+            <div className="sticky top-0 bg-black text-white px-6 py-4 flex items-center justify-between">
               <div>
                 <h2 className="text-2xl font-bold">Edit Client Purchase Order</h2>
-                <p className="text-sm text-blue-100 mt-1">
+                <p className="text-sm text-info mt-1">
                   PO: {editedQuotation.customQuoteId || editedQuotation.quotationId} | Status: Remove Commission & Adjust Items
                 </p>
               </div>
@@ -892,7 +954,7 @@ const PMPOManagementPage = () => {
                   setEditedQuotation(null);
                   setSelectedQuotation(null);
                 }}
-                className="text-white hover:bg-blue-800 p-2 rounded-lg transition-all"
+                className="text-white hover:bg-info p-2 rounded-lg transition-all"
               >
                 ✕
               </button>
@@ -901,84 +963,84 @@ const PMPOManagementPage = () => {
             {/* Modal Body */}
             <div className="px-6 py-6 space-y-6">
               {/* Commission Removal Section */}
-              <div className="bg-amber-50 border-2 border-amber-200 rounded-lg p-4">
-                <h3 className="font-bold text-amber-900 mb-4 flex items-center space-x-2">
+              <div className="bg-warning/10 border-2 border-warning/20 rounded-lg p-4">
+                <h3 className="font-bold text-warning mb-4 flex items-center space-x-2">
                   <CurrencyDollarIcon className="w-5 h-5" />
                   <span>Remove Commission from Quotation</span>
                 </h3>
                 
                 <div className="grid grid-cols-2 gap-4 mb-4">
                   <div>
-                    <p className="text-sm text-amber-800 mb-2">Original Commission Percentage</p>
-                    <p className="text-2xl font-bold text-amber-900">
+                    <p className="text-sm text-warning mb-2">Original Commission Percentage</p>
+                    <p className="text-2xl font-bold text-warning">
                       {selectedQuotation.commissionPercentage || 0}%
                     </p>
                   </div>
                   <div>
-                    <p className="text-sm text-amber-800 mb-2">Commission Amount</p>
-                    <p className="text-2xl font-bold text-red-600">
+                    <p className="text-sm text-warning mb-2">Commission Amount</p>
+                    <p className="text-2xl font-bold text-danger">
                       ₹{parseFloat(selectedQuotation.commissionAmount || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
                     </p>
                   </div>
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-amber-900 mb-2">
+                  <label className="block text-sm font-medium text-warning mb-2">
                     Commission to Remove (₹)
                   </label>
                   <input
                     type="number"
                     value={poRemovedCommission}
                     onChange={(e) => setPoRemovedCommission(parseFloat(e.target.value) || 0)}
-                    className="w-full px-4 py-2 border-2 border-amber-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent font-medium"
+                    className="w-full px-4 py-2 border-2 border-warning/30 rounded-lg focus:ring-2 focus:ring-warning focus:border-transparent font-medium"
                   />
-                  <p className="text-xs text-amber-700 mt-2">
+                  <p className="text-xs text-warning mt-2">
                     This amount will be subtracted from the final PO total
                   </p>
                 </div>
               </div>
 
               {/* Items Adjustment Section */}
-              <div className="border-2 border-blue-200 rounded-lg p-4">
-                <h3 className="font-bold text-gray-900 mb-4 flex items-center space-x-2">
-                  <PencilIcon className="w-5 h-5 text-blue-600" />
+              <div className="border-2 border-info/20 rounded-lg p-4">
+                <h3 className="font-bold text-ink mb-4 flex items-center space-x-2">
+                  <PencilIcon className="w-5 h-5 text-info" />
                   <span>Adjust Item Rates & GST</span>
                 </h3>
 
                 <div className="space-y-4 max-h-96 overflow-y-auto">
                   {adjustedItems.map((item, idx) => (
-                    <div key={idx} className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                    <div key={idx} className="bg-canvas border border-line rounded-lg p-4">
                       <div className="mb-4">
-                        <p className="font-medium text-gray-900">{item.description || `Item ${idx + 1}`}</p>
-                        <p className="text-xs text-gray-600">Qty: {item.quantity}</p>
+                        <p className="font-medium text-ink">{item.description || `Item ${idx + 1}`}</p>
+                        <p className="text-xs text-dim">Qty: {item.quantity}</p>
                       </div>
 
                       <div className="grid grid-cols-3 gap-3">
                         <div>
-                          <label className="block text-xs font-medium text-gray-700 mb-1">Rate (₹)</label>
+                          <label className="block text-xs font-medium text-ink mb-1">Rate (₹)</label>
                           <input
                             type="number"
                             value={item.rate || 0}
                             onChange={(e) => handleAdjustItemRate(idx, e.target.value)}
-                            className="w-full px-2 py-1 border border-gray-300 rounded text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            className="w-full px-2 py-1 border border-line rounded text-sm focus:ring-2 focus:ring-info focus:border-transparent"
                           />
                         </div>
                         <div>
-                          <label className="block text-xs font-medium text-gray-700 mb-1">GST %</label>
+                          <label className="block text-xs font-medium text-ink mb-1">GST %</label>
                           <input
                             type="number"
                             value={item.gst || 0}
                             onChange={(e) => handleAdjustGST(idx, e.target.value)}
-                            className="w-full px-2 py-1 border border-gray-300 rounded text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            className="w-full px-2 py-1 border border-line rounded text-sm focus:ring-2 focus:ring-info focus:border-transparent"
                           />
                         </div>
                         <div>
-                          <label className="block text-xs font-medium text-gray-700 mb-1">Amount (₹)</label>
+                          <label className="block text-xs font-medium text-ink mb-1">Amount (₹)</label>
                           <input
                             type="text"
                             value={parseFloat(item.amount || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
                             disabled
-                            className="w-full px-2 py-1 border border-gray-300 rounded text-sm bg-gray-100 font-medium"
+                            className="w-full px-2 py-1 border border-line rounded text-sm bg-surface-hover font-medium"
                           />
                         </div>
                       </div>
@@ -1100,30 +1162,30 @@ const PMPOManagementPage = () => {
               {(() => {
                 const totals = calculateAdjustedTotal();
                 return (
-                  <div className="bg-gradient-to-r from-gray-50 to-gray-100 border-2 border-gray-200 rounded-lg p-4">
-                    <h3 className="font-bold text-gray-900 mb-4">Adjusted PO Total</h3>
+                  <div className="bg-gradient-to-r from-surface-hover to-surface-hover border-2 border-line rounded-lg p-4">
+                    <h3 className="font-bold text-ink mb-4">Adjusted PO Total</h3>
                     <div className="space-y-3">
                       <div className="flex justify-between items-center">
-                        <span className="text-gray-700 font-medium">Subtotal</span>
-                        <span className="text-lg font-bold text-gray-900">
+                        <span className="text-ink font-medium">Subtotal</span>
+                        <span className="text-lg font-bold text-ink">
                           ₹{parseFloat(totals.subtotal).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
                         </span>
                       </div>
                       <div className="flex justify-between items-center">
-                        <span className="text-gray-700 font-medium">GST</span>
-                        <span className="text-lg font-bold text-gray-900">
+                        <span className="text-ink font-medium">GST</span>
+                        <span className="text-lg font-bold text-ink">
                           ₹{parseFloat(totals.gst).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
                         </span>
                       </div>
-                      <div className="flex justify-between items-center border-t-2 border-gray-300 pt-3">
-                        <span className="text-gray-700 font-medium">Commission Removed</span>
-                        <span className="text-lg font-bold text-red-600">
+                      <div className="flex justify-between items-center border-t-2 border-line pt-3">
+                        <span className="text-ink font-medium">Commission Removed</span>
+                        <span className="text-lg font-bold text-danger">
                           -₹{parseFloat(totals.commission).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
                         </span>
                       </div>
-                      <div className="flex justify-between items-center bg-blue-50 p-3 rounded-lg border border-blue-200">
-                        <span className="text-blue-900 font-bold text-lg">Final Total</span>
-                        <span className="text-2xl font-bold text-blue-600">
+                      <div className="flex justify-between items-center bg-info/10 p-3 rounded-lg border border-info/20">
+                        <span className="text-info font-bold text-lg">Final Total</span>
+                        <span className="text-2xl font-bold text-info">
                           ₹{parseFloat(totals.total).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
                         </span>
                       </div>
@@ -1133,29 +1195,29 @@ const PMPOManagementPage = () => {
               })()}
 
               {/* Info Message */}
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
-                <p className="text-sm text-blue-800">
+              <div className="bg-info/10 border border-info/20 rounded-lg p-3">
+                <p className="text-sm text-info">
                   💡 <strong>Note:</strong> When you save, a new PDF will be generated with the adjusted rates and GST. The commission will be removed and a note about the changes will be included.
                 </p>
               </div>
             </div>
 
             {/* Modal Footer */}
-            <div className="sticky bottom-0 bg-white border-t-2 border-gray-200 px-6 py-4 flex justify-end space-x-3">
+            <div className="sticky bottom-0 bg-surface border-t-2 border-line px-6 py-4 flex justify-end space-x-3">
               <button
                 onClick={() => {
                   setShowClientPOModal(false);
                   setEditedQuotation(null);
                   setSelectedQuotation(null);
                 }}
-                className="px-4 py-2 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg font-medium transition-all"
+                className="px-4 py-2 text-ink bg-surface-hover hover:bg-surface-hover rounded-lg font-medium transition-all"
               >
                 Cancel
               </button>
               <button
                 onClick={handleSavePmPO}
                 disabled={savingPmPO}
-                className="px-6 py-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white rounded-lg font-medium transition-all flex items-center space-x-2"
+                className="px-6 py-2 bg-info hover:bg-info disabled:opacity-50 text-white rounded-lg font-medium transition-all flex items-center space-x-2"
               >
                 {savingPmPO ? (
                   <>

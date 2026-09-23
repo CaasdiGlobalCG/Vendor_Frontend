@@ -109,14 +109,14 @@ const FormTemplate = ({ nodeId, workspaceId, onSubmitSuccess, initialFormData = 
       {/* Name Fields */}
       <div className="grid grid-cols-2 gap-3">
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
+          <label className="block text-sm font-medium text-ink mb-1">
             First Name *
           </label>
           <input
             type="text"
             value={formData.firstName}
             onChange={(e) => handleInputChange('firstName', e.target.value)}
-            className="w-full p-2 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+            className="w-full p-2 border-2 border-line rounded-lg focus:outline-none focus:ring-2 focus:ring-info focus:border-info text-sm"
             placeholder="John"
             onClick={(e) => e.stopPropagation()}
             onKeyDown={(e) => e.stopPropagation()}
@@ -125,14 +125,14 @@ const FormTemplate = ({ nodeId, workspaceId, onSubmitSuccess, initialFormData = 
           />
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
+          <label className="block text-sm font-medium text-ink mb-1">
             Last Name *
           </label>
           <input
             type="text"
             value={formData.lastName}
             onChange={(e) => handleInputChange('lastName', e.target.value)}
-            className="w-full p-2 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+            className="w-full p-2 border-2 border-line rounded-lg focus:outline-none focus:ring-2 focus:ring-info focus:border-info text-sm"
             placeholder="Doe"
             onClick={(e) => e.stopPropagation()}
             onKeyDown={(e) => e.stopPropagation()}
@@ -144,14 +144,14 @@ const FormTemplate = ({ nodeId, workspaceId, onSubmitSuccess, initialFormData = 
 
       {/* Contact Fields */}
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">
+        <label className="block text-sm font-medium text-ink mb-1">
           Email Address *
         </label>
         <input
           type="email"
           value={formData.email}
           onChange={(e) => handleInputChange('email', e.target.value)}
-          className="w-full p-2 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+          className="w-full p-2 border-2 border-line rounded-lg focus:outline-none focus:ring-2 focus:ring-info focus:border-info text-sm"
           placeholder="john.doe@example.com"
           onClick={(e) => e.stopPropagation()}
           onKeyDown={(e) => e.stopPropagation()}
@@ -161,14 +161,14 @@ const FormTemplate = ({ nodeId, workspaceId, onSubmitSuccess, initialFormData = 
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">
+        <label className="block text-sm font-medium text-ink mb-1">
           Phone Number
         </label>
         <input
           type="tel"
           value={formData.phone}
           onChange={(e) => handleInputChange('phone', e.target.value)}
-          className="w-full p-2 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+          className="w-full p-2 border-2 border-line rounded-lg focus:outline-none focus:ring-2 focus:ring-info focus:border-info text-sm"
           placeholder="+1 (555) 123-4567"
           onClick={(e) => e.stopPropagation()}
           onKeyDown={(e) => e.stopPropagation()}
@@ -177,14 +177,14 @@ const FormTemplate = ({ nodeId, workspaceId, onSubmitSuccess, initialFormData = 
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">
+        <label className="block text-sm font-medium text-ink mb-1">
           Company
         </label>
         <input
           type="text"
           value={formData.company}
           onChange={(e) => handleInputChange('company', e.target.value)}
-          className="w-full p-2 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+          className="w-full p-2 border-2 border-line rounded-lg focus:outline-none focus:ring-2 focus:ring-info focus:border-info text-sm"
           placeholder="Acme Corporation"
           onClick={(e) => e.stopPropagation()}
           onKeyDown={(e) => e.stopPropagation()}
@@ -194,13 +194,13 @@ const FormTemplate = ({ nodeId, workspaceId, onSubmitSuccess, initialFormData = 
 
       {/* Message Field */}
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">
+        <label className="block text-sm font-medium text-ink mb-1">
           Message
         </label>
         <textarea
           value={formData.message}
           onChange={(e) => handleInputChange('message', e.target.value)}
-          className="w-full p-2 border-2 border-gray-300 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+          className="w-full p-2 border-2 border-line rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-info focus:border-info text-sm"
           rows="3"
           placeholder="Tell us about your inquiry..."
           onClick={(e) => e.stopPropagation()}
@@ -216,18 +216,18 @@ const FormTemplate = ({ nodeId, workspaceId, onSubmitSuccess, initialFormData = 
           id="terms"
           checked={formData.agreeToTerms}
           onChange={(e) => handleInputChange('agreeToTerms', e.target.checked)}
-          className="w-4 h-4 text-blue-600 border-2 border-gray-300 rounded focus:ring-blue-500 mt-0.5"
+          className="w-4 h-4 text-info border-2 border-line rounded focus:ring-info mt-0.5"
           onClick={(e) => e.stopPropagation()}
           onKeyDown={(e) => e.stopPropagation()}
           onFocus={(e) => e.stopPropagation()}
         />
-        <label htmlFor="terms" className="text-sm text-gray-700">
+        <label htmlFor="terms" className="text-sm text-ink">
           I agree to the{' '}
-          <span className="text-blue-600 hover:text-blue-800 cursor-pointer underline">
+          <span className="text-info hover:text-info cursor-pointer underline">
             Terms of Service
           </span>{' '}
           and{' '}
-          <span className="text-blue-600 hover:text-blue-800 cursor-pointer underline">
+          <span className="text-info hover:text-info cursor-pointer underline">
             Privacy Policy
           </span>
         </label>
@@ -238,8 +238,8 @@ const FormTemplate = ({ nodeId, workspaceId, onSubmitSuccess, initialFormData = 
         {submitMessage && (
           <div className={`p-3 rounded-lg text-sm font-medium text-center ${
             submitMessage.includes('Error') 
-              ? 'bg-red-100 text-red-800' 
-              : 'bg-green-100 text-green-800'
+              ? 'bg-danger/10 text-danger' 
+              : 'bg-success/10 text-success'
           }`}>
             {submitMessage}
           </div>
@@ -247,12 +247,12 @@ const FormTemplate = ({ nodeId, workspaceId, onSubmitSuccess, initialFormData = 
         <button
           type="submit"
           disabled={isSubmitting}
-          className={`w-full px-6 py-3 text-sm font-medium rounded-lg transition-all duration-200 shadow-md hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-offset-2 ${
+          className={`w-full px-6 py-3 text-sm font-medium rounded-lg transition-all duration-200   focus:outline-none focus:ring-2 focus:ring-offset-2 ${
             isSubmitting 
-              ? 'bg-gray-400 text-gray-600 cursor-not-allowed' 
+              ? 'bg-cta text-dim cursor-not-allowed' 
               : isFormSubmitted
-              ? 'bg-gradient-to-r from-amber-600 to-amber-700 text-white hover:from-amber-700 hover:to-amber-800 focus:ring-amber-500'
-              : 'bg-gradient-to-r from-blue-600 to-blue-700 text-white hover:from-blue-700 hover:to-blue-800 focus:ring-blue-500'
+              ? 'bg-black text-cta-foreground hover:from-black hover:to-black focus:ring-warning'
+              : 'bg-black text-white hover:from-black hover:to-black focus:ring-info'
           }`}
           onClick={(e) => e.stopPropagation()}
         >

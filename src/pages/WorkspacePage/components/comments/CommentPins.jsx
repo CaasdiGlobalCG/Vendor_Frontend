@@ -39,7 +39,7 @@ const CommentPins = ({ nodes = [] }) => {
               onClick={() => {
                 document.dispatchEvent(new CustomEvent('openNodeComments', { detail: { nodeId: node.id } }));
               }}
-              className="flex items-center gap-0.5 px-1.5 py-0.5 bg-blue-500 text-white text-[9px] font-bold rounded-full shadow-md hover:bg-blue-600 transition-colors"
+              className="flex items-center gap-0.5 px-1.5 py-0.5 bg-info text-white text-[9px] font-bold rounded-full  hover:bg-info transition-colors"
               title={`${unresolvedCount} comment${unresolvedCount > 1 ? 's' : ''} on ${node.data?.name || 'element'}`}
             >
               <MessageCircle className="w-2.5 h-2.5" />

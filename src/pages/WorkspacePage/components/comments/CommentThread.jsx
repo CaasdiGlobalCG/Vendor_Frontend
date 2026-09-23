@@ -93,8 +93,8 @@ const CommentThread = ({ nodeId, comments = [], collaborators = [], onAddComment
           {/* Avatar */}
           <div className={`w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold flex-shrink-0 border ${
             comment.resolved
-              ? 'bg-green-100 text-green-700 border-green-200'
-              : 'bg-gradient-to-br from-blue-500 to-indigo-600 text-white border-white'
+              ? 'bg-success/10 text-success border-success/20'
+              : 'bg-black text-white border-white'
           }`}>
             {comment.resolved ? '✓' : initial}
           </div>
@@ -103,10 +103,10 @@ const CommentThread = ({ nodeId, comments = [], collaborators = [], onAddComment
             {/* Author line */}
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-1.5">
-                <span className="text-xs font-semibold text-gray-800 truncate max-w-[100px]">{comment.authorName}</span>
-                <span className="text-[10px] text-gray-400">{formatTime(comment.createdAt)}</span>
+                <span className="text-xs font-semibold text-ink truncate max-w-[100px]">{comment.authorName}</span>
+                <span className="text-[10px] text-dim">{formatTime(comment.createdAt)}</span>
                 {comment.resolved && (
-                  <span className="text-[9px] px-1 py-0.5 bg-green-100 text-green-700 rounded font-medium">Resolved</span>
+                  <span className="text-[9px] px-1 py-0.5 bg-success/10 text-success rounded font-medium">Resolved</span>
                 )}
               </div>
 
@@ -117,8 +117,8 @@ const CommentThread = ({ nodeId, comments = [], collaborators = [], onAddComment
                   onClick={(e) => { e.stopPropagation(); handleResolveToggle(comment.id); }}
                   className={`p-0.5 rounded transition-colors ${
                     comment.resolved
-                      ? 'text-yellow-500 hover:bg-yellow-50'
-                      : 'text-green-500 hover:bg-green-50'
+                      ? 'text-warning hover:bg-warning/10'
+                      : 'text-success hover:bg-success/10'
                   }`}
                   title={comment.resolved ? 'Reopen' : 'Resolve'}
                 >
@@ -130,15 +130,15 @@ const CommentThread = ({ nodeId, comments = [], collaborators = [], onAddComment
                   <div className="relative" ref={menuOpenId === comment.id ? menuRef : null}>
                     <button
                       onClick={(e) => { e.stopPropagation(); setMenuOpenId(menuOpenId === comment.id ? null : comment.id); }}
-                      className="p-0.5 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded transition-colors"
+                      className="p-0.5 text-dim hover:text-dim hover:bg-surface-hover rounded transition-colors"
                     >
                       <MoreHorizontal className="w-3 h-3" />
                     </button>
                     {menuOpenId === comment.id && (
-                      <div className="absolute right-0 mt-1 w-28 bg-white border border-gray-200 rounded-lg shadow-xl z-50 py-1">
+                      <div className="absolute right-0 mt-1 w-28 bg-surface border border-line rounded-lg shadow-xl z-50 py-1">
                         <button
                           onClick={(e) => { e.stopPropagation(); handleDelete(comment.id); }}
-                          className="w-full px-2.5 py-1.5 text-left text-xs text-red-600 hover:bg-red-50 flex items-center space-x-1.5"
+                          className="w-full px-2.5 py-1.5 text-left text-xs text-danger hover:bg-danger/10 flex items-center space-x-1.5"
                         >
                           <Trash2 className="w-3 h-3" /><span>Delete</span>
                         </button>
@@ -150,7 +150,7 @@ const CommentThread = ({ nodeId, comments = [], collaborators = [], onAddComment
             </div>
 
             {/* Comment text — render @mentions in blue */}
-            <p className="text-xs text-gray-700 mt-0.5 whitespace-pre-wrap break-words leading-relaxed">
+            <p className="text-xs text-ink mt-0.5 whitespace-pre-wrap break-words leading-relaxed">
               {renderCommentText(comment.text)}
             </p>
           </div>
@@ -167,7 +167,7 @@ const CommentThread = ({ nodeId, comments = [], collaborators = [], onAddComment
         const name = part.slice(1).trim();
         const isKnown = collaborators.some(c => c.name === name);
         return (
-          <span key={i} className={`font-medium ${isKnown ? 'text-blue-600 bg-blue-50 px-0.5 rounded' : 'text-blue-500'}`}>
+          <span key={i} className={`font-medium ${isKnown ? 'text-info bg-info/10 px-0.5 rounded' : 'text-info'}`}>
             {part}
           </span>
         );
@@ -179,15 +179,15 @@ const CommentThread = ({ nodeId, comments = [], collaborators = [], onAddComment
   return (
     <div
       ref={containerRef}
-      className="bg-white rounded-xl shadow-2xl border border-gray-200 overflow-hidden flex flex-col"
+      className="bg-surface rounded-xl shadow-2xl border border-line overflow-hidden flex flex-col"
       style={{ width: 300, maxHeight: 400 }}
       onClick={(e) => e.stopPropagation()}
     >
       {/* Header */}
-      <div className="flex items-center justify-between px-3 py-2 bg-gray-50 border-b border-gray-100">
+      <div className="flex items-center justify-between px-3 py-2 bg-canvas border-b border-line">
         <div className="flex items-center space-x-1.5">
-          <MessageCircle className="w-3.5 h-3.5 text-blue-500" />
-          <span className="text-xs font-semibold text-gray-700">
+          <MessageCircle className="w-3.5 h-3.5 text-info" />
+          <span className="text-xs font-semibold text-ink">
             Comments {unresolvedComments.length > 0 && `(${unresolvedComments.length})`}
           </span>
         </div>
@@ -195,16 +195,16 @@ const CommentThread = ({ nodeId, comments = [], collaborators = [], onAddComment
           {resolvedComments.length > 0 && (
             <button
               onClick={(e) => { e.stopPropagation(); setShowResolved(!showResolved); }}
-              className="flex items-center space-x-1 px-1.5 py-0.5 text-[10px] text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded transition-colors"
+              className="flex items-center space-x-1 px-1.5 py-0.5 text-[10px] text-dim hover:text-ink hover:bg-surface-hover rounded transition-colors"
             >
-              <CheckCircle2 className="w-3 h-3 text-green-500" />
+              <CheckCircle2 className="w-3 h-3 text-success" />
               <span>{resolvedComments.length} resolved</span>
               {showResolved ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
             </button>
           )}
           <button
             onClick={(e) => { e.stopPropagation(); onClose?.(); }}
-            className="p-0.5 text-gray-400 hover:text-gray-600 hover:bg-gray-200 rounded transition-colors"
+            className="p-0.5 text-dim hover:text-dim hover:bg-surface-hover rounded transition-colors"
           >
             <X className="w-3.5 h-3.5" />
           </button>
@@ -212,12 +212,12 @@ const CommentThread = ({ nodeId, comments = [], collaborators = [], onAddComment
       </div>
 
       {/* Comment list */}
-      <div className="flex-1 overflow-y-auto divide-y divide-gray-50" style={{ maxHeight: 260 }}>
+      <div className="flex-1 overflow-y-auto divide-y divide-line" style={{ maxHeight: 260 }}>
         {unresolvedComments.length === 0 && !showResolved && (
           <div className="px-4 py-6 text-center">
-            <MessageCircle className="w-8 h-8 text-gray-200 mx-auto mb-2" />
-            <p className="text-xs text-gray-400">No comments yet</p>
-            <p className="text-[10px] text-gray-300 mt-0.5">Use @name to mention collaborators</p>
+            <MessageCircle className="w-8 h-8 text-dim mx-auto mb-2" />
+            <p className="text-xs text-dim">No comments yet</p>
+            <p className="text-[10px] text-dim mt-0.5">Use @name to mention collaborators</p>
           </div>
         )}
 
@@ -227,8 +227,8 @@ const CommentThread = ({ nodeId, comments = [], collaborators = [], onAddComment
         {/* Resolved comments (collapsible) */}
         {showResolved && resolvedComments.length > 0 && (
           <>
-            <div className="px-3 py-1.5 bg-green-50 border-t border-b border-green-100">
-              <span className="text-[10px] font-semibold text-green-600 uppercase tracking-wide">Resolved</span>
+            <div className="px-3 py-1.5 bg-success/10 border-t border-b border-success/10">
+              <span className="text-[10px] font-semibold text-success uppercase tracking-wide">Resolved</span>
             </div>
             {resolvedComments.map(renderComment)}
           </>
@@ -239,7 +239,7 @@ const CommentThread = ({ nodeId, comments = [], collaborators = [], onAddComment
 
       {/* Input area */}
       {!isLocked && (
-        <div className="border-t border-gray-100 p-2 bg-gray-50">
+        <div className="border-t border-line p-2 bg-canvas">
           <MentionInput
             collaborators={collaborators}
             onSubmit={handleAddComment}

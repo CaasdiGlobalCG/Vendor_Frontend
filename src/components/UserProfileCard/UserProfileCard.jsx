@@ -212,10 +212,10 @@ function UserProfileCard({
 
   if (loading) {
     return (
-      <section className="w-full rounded-[24px] bg-white p-4 shadow-md sm:p-5 lg:sticky lg:top-24 lg:w-1/3 lg:max-w-[380px] lg:rounded-[28px]">
+      <section className="w-full rounded-[24px] bg-surface p-4  sm:p-5 lg:sticky lg:top-24 lg:w-1/3 lg:max-w-[380px] lg:rounded-[28px]">
         <div className="flex flex-col items-center justify-center h-64 w-full">
-          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-emerald-700"></div>
-          <p className="mt-4 text-gray-600">Loading profile...</p>
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-line"></div>
+          <p className="mt-4 text-dim">Loading profile...</p>
         </div>
       </section>
     );
@@ -223,14 +223,14 @@ function UserProfileCard({
 
   if (error) {
     return (
-      <section className="w-full rounded-[24px] bg-white p-4 shadow-md sm:p-5 lg:sticky lg:top-24 lg:w-1/3 lg:max-w-[380px] lg:rounded-[28px]">
+      <section className="w-full rounded-[24px] bg-surface p-4  sm:p-5 lg:sticky lg:top-24 lg:w-1/3 lg:max-w-[380px] lg:rounded-[28px]">
         <div className="flex flex-col items-center justify-center h-64 w-full">
-          <div className="text-red-500 mb-2">
+          <div className="text-danger mb-2">
             <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
             </svg>
           </div>
-          <p className="text-center text-red-600">{typeof error === 'string' ? error : 'Failed to load profile.'}</p>
+          <p className="text-center text-danger">{typeof error === 'string' ? error : 'Failed to load profile.'}</p>
           <button 
             onClick={() => {
               setFetchAttempted(false);
@@ -238,7 +238,7 @@ function UserProfileCard({
               setAttemptedVendorIdFetch(false);
               setInternalError(null);
             }} 
-            className="mt-4 px-4 py-2 bg-emerald-700 text-white rounded-md hover:bg-emerald-800"
+            className="mt-4 px-4 py-2 bg-cta text-cta-foreground rounded-md hover:bg-cta"
           >
             Retry
           </button>
@@ -249,14 +249,14 @@ function UserProfileCard({
 
   if (!profileData) {
     return (
-      <section className="w-full min-w-0 rounded-[24px] border border-slate-200 bg-white p-5 shadow-[0_20px_50px_rgba(15,23,42,0.08)] sm:p-6 lg:sticky lg:top-24 lg:w-1/3 lg:max-w-[380px] lg:rounded-[28px]">
+      <section className="w-full min-w-0 rounded-[24px] border border-line bg-surface p-5 sm:p-6 lg:sticky lg:top-24 lg:w-1/3 lg:max-w-[380px] lg:rounded-[28px]">
         <div className="flex flex-col items-center justify-center h-64 w-full">
-          <p className="text-center text-gray-600 mb-4">No profile data available.</p>
+          <p className="text-center text-dim mb-4">No profile data available.</p>
           {!vendorId && !userEmail && (
-            <p className="text-center text-red-600 text-sm mb-4">No Vendor ID or email found.</p>
+            <p className="text-center text-danger text-sm mb-4">No Vendor ID or email found.</p>
           )}
           {!vendorId && userEmail && (
-            <p className="text-center text-amber-600 text-sm mb-4">Using email to fetch profile data.</p>
+            <p className="text-center text-warning text-sm mb-4">Using email to fetch profile data.</p>
           )}
           <button 
             onClick={() => {
@@ -265,7 +265,7 @@ function UserProfileCard({
               setAttemptedVendorIdFetch(false);
               setInternalError(null);
             }}
-            className="px-4 py-2 bg-emerald-700 text-white rounded-md hover:bg-emerald-800"
+            className="px-4 py-2 bg-cta text-cta-foreground rounded-md hover:bg-cta"
           >
             Retry
           </button>
@@ -275,9 +275,9 @@ function UserProfileCard({
   }
 
   return (
-    <section className="w-full min-w-0 rounded-[24px] border border-slate-200 bg-white p-5 shadow-[0_20px_50px_rgba(15,23,42,0.08)] sm:p-6 lg:sticky lg:top-24 lg:w-1/3 lg:max-w-[380px] lg:rounded-[28px]">
+    <section className="w-full min-w-0 rounded-[24px] border border-line bg-surface p-5 sm:p-6 lg:sticky lg:top-24 lg:w-1/3 lg:max-w-[380px] lg:rounded-[28px]">
       <div className="flex flex-col items-center w-full">
-        <div className="relative -mt-16 mb-3 h-24 w-24 cursor-pointer rounded-full ring-4 ring-white shadow-lg transition-transform duration-200 hover:-translate-y-1 sm:-mt-20 sm:h-28 sm:w-28 lg:h-32 lg:w-32 group" onClick={onEditProfileClick}>
+        <div className="relative -mt-16 mb-3 h-24 w-24 cursor-pointer rounded-full ring-4 ring-white shadow-lg transition-transform duration-200  sm:-mt-20 sm:h-28 sm:w-28 lg:h-32 lg:w-32 group" onClick={onEditProfileClick}>
           <img
             src={profileData.image}
             alt={profileData.name}
@@ -289,46 +289,46 @@ function UserProfileCard({
             <Camera className="w-8 h-8 text-white" />
           </div>
         </div>
-        <p className="mt-1 text-xs font-medium uppercase tracking-[0.22em] text-slate-400">Vendor profile</p>
-        <h1 className="mt-3 text-xl font-bold text-slate-900 text-center lg:text-2xl">
+        <p className="mt-1 text-xs font-medium uppercase tracking-[0.22em] text-dim">Vendor profile</p>
+        <h1 className="mt-3 text-xl font-bold text-ink text-center lg:text-2xl">
           {profileData.vendorId || 'Vendor'}
         </h1>
-        <p className="mt-1 text-sm text-slate-500 text-center">Click the avatar or button below to edit profile details.</p>
+        <p className="mt-1 text-sm text-dim text-center">Click the avatar or button below to edit profile details.</p>
 
         <div className="mt-5 w-full space-y-3 text-left">
-          <div className="flex items-start gap-3 rounded-2xl border border-slate-100 bg-slate-50/80 p-3">
-            <div className="w-5 flex-shrink-0 text-gray-700 pt-1"><BuildingIcon className="h-5 w-5" /></div>
-            <div className="min-w-0"><p className="text-sm text-gray-500 leading-tight">Company name</p><p className="break-words font-medium text-base">{profileData.companyName}</p></div>
+          <div className="flex items-start gap-3 rounded-2xl border border-line bg-canvas p-3">
+            <div className="w-5 flex-shrink-0 text-ink pt-1"><BuildingIcon className="h-5 w-5" /></div>
+            <div className="min-w-0"><p className="text-sm text-dim leading-tight">Company name</p><p className="break-words font-medium text-base">{profileData.companyName}</p></div>
           </div>
-          <div className="flex items-start gap-3 rounded-2xl border border-slate-100 bg-slate-50/80 p-3">
-            <div className="w-5 flex-shrink-0 text-gray-700 pt-1"><Phone className="h-5 w-5" /></div>
-            <div className="min-w-0"><p className="text-sm text-gray-500 leading-tight">Phone</p><p className="break-words font-medium text-base">{profileData.phone}</p></div>
+          <div className="flex items-start gap-3 rounded-2xl border border-line bg-canvas p-3">
+            <div className="w-5 flex-shrink-0 text-ink pt-1"><Phone className="h-5 w-5" /></div>
+            <div className="min-w-0"><p className="text-sm text-dim leading-tight">Phone</p><p className="break-words font-medium text-base">{profileData.phone}</p></div>
           </div>
-          <div className="flex items-start gap-3 rounded-2xl border border-slate-100 bg-slate-50/80 p-3">
-            <div className="w-5 flex-shrink-0 text-gray-700 pt-1"><MapPin className="h-5 w-5" /></div>
-            <div className="min-w-0"><p className="text-sm text-gray-500 leading-tight">Location</p><p className="break-words font-medium text-base">{profileData.location}</p></div>
+          <div className="flex items-start gap-3 rounded-2xl border border-line bg-canvas p-3">
+            <div className="w-5 flex-shrink-0 text-ink pt-1"><MapPin className="h-5 w-5" /></div>
+            <div className="min-w-0"><p className="text-sm text-dim leading-tight">Location</p><p className="break-words font-medium text-base">{profileData.location}</p></div>
           </div>
-          <div className="flex items-start gap-3 rounded-2xl border border-slate-100 bg-slate-50/80 p-3">
-            <div className="w-5 flex-shrink-0 text-gray-700 pt-1"><Mail className="h-5 w-5" /></div>
-            <div className="min-w-0"><p className="text-sm text-gray-500 leading-tight">Email</p><p className="break-all font-medium text-base">{profileData.email}</p></div>
+          <div className="flex items-start gap-3 rounded-2xl border border-line bg-canvas p-3">
+            <div className="w-5 flex-shrink-0 text-ink pt-1"><Mail className="h-5 w-5" /></div>
+            <div className="min-w-0"><p className="text-sm text-dim leading-tight">Email</p><p className="break-all font-medium text-base">{profileData.email}</p></div>
           </div>
           {profileData.gstNumber && profileData.gstNumber !== 'Not provided' && (
-            <div className="flex items-start gap-3 rounded-2xl border border-slate-100 bg-slate-50/80 p-3">
-              <div className="w-5 flex-shrink-0 text-gray-700 pt-1"><BuildingIcon className="h-5 w-5" /></div>
-              <div className="min-w-0"><p className="text-sm text-gray-500 leading-tight">GST Number</p><p className="break-all font-medium text-base">{profileData.gstNumber}</p></div>
+            <div className="flex items-start gap-3 rounded-2xl border border-line bg-canvas p-3">
+              <div className="w-5 flex-shrink-0 text-ink pt-1"><BuildingIcon className="h-5 w-5" /></div>
+              <div className="min-w-0"><p className="text-sm text-dim leading-tight">GST Number</p><p className="break-all font-medium text-base">{profileData.gstNumber}</p></div>
             </div>
           )}
           {profileData.panNumber && profileData.panNumber !== 'Not provided' && (
-            <div className="flex items-start gap-3 rounded-2xl border border-slate-100 bg-slate-50/80 p-3">
-              <div className="w-5 flex-shrink-0 text-gray-700 pt-1"><BuildingIcon className="h-5 w-5" /></div>
-              <div className="min-w-0"><p className="text-sm text-gray-500 leading-tight">PAN Number</p><p className="break-all font-medium text-base">{profileData.panNumber}</p></div>
+            <div className="flex items-start gap-3 rounded-2xl border border-line bg-canvas p-3">
+              <div className="w-5 flex-shrink-0 text-ink pt-1"><BuildingIcon className="h-5 w-5" /></div>
+              <div className="min-w-0"><p className="text-sm text-dim leading-tight">PAN Number</p><p className="break-all font-medium text-base">{profileData.panNumber}</p></div>
             </div>
           )}
         </div>
         
         <button
           onClick={onEditProfileClick}
-          className="mt-6 w-full rounded-2xl bg-gradient-to-l from-[#095B49] to-[#000000] px-4 py-3 text-base font-medium text-white transition-opacity hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2"
+          className="mt-6 w-full rounded-2xl bg-black px-4 py-3 text-base font-medium text-white transition-opacity hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-ink focus:ring-offset-2"
         >
           Edit Profile
         </button>

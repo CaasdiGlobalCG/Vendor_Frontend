@@ -616,24 +616,24 @@ const ProcurementRFQModal = ({
 
   if (!isOpen) return null;
 
-  const inputClass = 'w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100';
-  const errorClass = 'mt-1 text-xs text-red-600';
+  const inputClass = 'w-full rounded-lg border border-line px-3 py-2 text-sm focus:border-info focus:outline-none focus:ring-2 focus:ring-info/10';
+  const errorClass = 'mt-1 text-xs text-danger';
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-      <div className="w-full max-w-4xl rounded-2xl bg-white shadow-xl max-h-[92vh] flex flex-col overflow-hidden">
-        <div className="flex items-center justify-between border-b border-gray-200 px-6 py-4 bg-gray-50">
+      <div className="w-full max-w-4xl rounded-2xl bg-surface shadow-xl max-h-[92vh] flex flex-col overflow-hidden">
+        <div className="flex items-center justify-between border-b border-line px-6 py-4 bg-canvas">
           <div>
-            <h2 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
-              <ClipboardList className="w-5 h-5 text-orange-600" />
+            <h2 className="text-lg font-semibold text-ink flex items-center gap-2">
+              <ClipboardList className="w-5 h-5 text-warning" />
               Procurement RFQ Form
             </h2>
-            <p className="text-xs text-gray-600 mt-1">Step {step} of {TOTAL_STEPS}: {STEP_LABELS[step - 1]}</p>
+            <p className="text-xs text-dim mt-1">Step {step} of {TOTAL_STEPS}: {STEP_LABELS[step - 1]}</p>
           </div>
           <button
             type="button"
             onClick={closeAndReset}
-            className="rounded-lg p-2 text-gray-500 hover:bg-gray-200"
+            className="rounded-lg p-2 text-dim hover:bg-surface-hover"
             title="Close"
           >
             <X className="w-5 h-5" />
@@ -643,12 +643,12 @@ const ProcurementRFQModal = ({
         <div className="flex-1 overflow-y-auto px-6 py-5">
           {step === 1 && (
             <div className="space-y-4">
-              <div className="rounded-xl border border-blue-100 bg-blue-50 p-4">
+              <div className="rounded-xl border border-info/10 bg-info/10 p-4">
                 <div className="flex flex-col gap-3 sm:flex-row">
                   <button
                     type="button"
                     onClick={() => setShowProductAi((prev) => !prev)}
-                    className="inline-flex items-center justify-center gap-2 rounded-lg bg-emerald-600 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-700"
+                    className="inline-flex items-center justify-center gap-2 rounded-lg bg-cta px-4 py-2 text-sm font-semibold text-cta-foreground hover:bg-cta"
                   >
                     <Sparkles className="h-4 w-4" />
                     Product AI
@@ -656,20 +656,20 @@ const ProcurementRFQModal = ({
                   <button
                     type="button"
                     onClick={openProcurementChat}
-                    className="inline-flex items-center justify-center gap-2 rounded-lg border border-blue-300 bg-white px-4 py-2 text-sm font-semibold text-blue-700 hover:bg-blue-100"
+                    className="inline-flex items-center justify-center gap-2 rounded-lg border border-info/30 bg-surface px-4 py-2 text-sm font-semibold text-info hover:bg-info/10"
                   >
                     <MessageCircle className="h-4 w-4" />
                     Talk to Procurement
                   </button>
                 </div>
-                <p className="mt-2 text-xs text-blue-700">
+                <p className="mt-2 text-xs text-info">
                   Use Product AI for spec suggestions, or open procurement chat for direct clarifications.
                 </p>
               </div>
 
               {showProductAi && (
-                <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-4">
-                  <label className="text-sm font-semibold text-emerald-900">Ask Product AI</label>
+                <div className="rounded-xl border border-line bg-surface-hover p-4">
+                  <label className="text-sm font-semibold text-ink">Ask Product AI</label>
                   <textarea
                     rows={3}
                     className={`${inputClass} mt-2`}
@@ -685,16 +685,16 @@ const ProcurementRFQModal = ({
                       type="button"
                       onClick={askProductAi}
                       disabled={aiLoading || !aiQuestion.trim()}
-                      className="inline-flex items-center gap-2 rounded-lg bg-emerald-600 px-3 py-2 text-xs font-semibold text-white hover:bg-emerald-700 disabled:opacity-60"
+                      className="inline-flex items-center gap-2 rounded-lg bg-cta px-3 py-2 text-xs font-semibold text-cta-foreground hover:bg-cta disabled:opacity-60"
                     >
                       {aiLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Bot className="h-4 w-4" />}
                       {aiLoading ? 'Thinking...' : 'Ask AI'}
                     </button>
-                    {aiError ? <span className="text-xs text-red-600">{aiError}</span> : null}
+                    {aiError ? <span className="text-xs text-danger">{aiError}</span> : null}
                   </div>
-                  {aiWarning ? <p className="mt-2 text-xs text-amber-700">{aiWarning}</p> : null}
+                  {aiWarning ? <p className="mt-2 text-xs text-warning">{aiWarning}</p> : null}
                   {aiAnswer ? (
-                    <div className="mt-3 rounded-lg border border-emerald-200 bg-white p-3 text-sm text-gray-800 whitespace-pre-wrap">
+                    <div className="mt-3 rounded-lg border border-line bg-surface p-3 text-sm text-ink whitespace-pre-wrap">
                       {aiAnswer}
                     </div>
                   ) : null}
@@ -703,7 +703,7 @@ const ProcurementRFQModal = ({
 
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
               <div className="md:col-span-2">
-                <label className="text-sm font-medium text-gray-700">RFQ Title *</label>
+                <label className="text-sm font-medium text-ink">RFQ Title *</label>
                 <input
                   className={inputClass}
                   value={formData.productDetails.title}
@@ -714,7 +714,7 @@ const ProcurementRFQModal = ({
               </div>
 
               <div>
-                <label className="text-sm font-medium text-gray-700">Category *</label>
+                <label className="text-sm font-medium text-ink">Category *</label>
                 <input
                   className={inputClass}
                   value={formData.productDetails.category}
@@ -725,7 +725,7 @@ const ProcurementRFQModal = ({
               </div>
 
               <div>
-                <label className="text-sm font-medium text-gray-700">Product Name *</label>
+                <label className="text-sm font-medium text-ink">Product Name *</label>
                 <input
                   className={inputClass}
                   value={formData.productDetails.productName}
@@ -736,7 +736,7 @@ const ProcurementRFQModal = ({
               </div>
 
               <div className="md:col-span-2">
-                <label className="text-sm font-medium text-gray-700">Product Description</label>
+                <label className="text-sm font-medium text-ink">Product Description</label>
                 <textarea
                   className={inputClass}
                   rows={3}
@@ -747,7 +747,7 @@ const ProcurementRFQModal = ({
               </div>
 
               <div className="md:col-span-2">
-                <label className="text-sm font-medium text-gray-700">Technical Specifications</label>
+                <label className="text-sm font-medium text-ink">Technical Specifications</label>
                 <textarea
                   className={inputClass}
                   rows={3}
@@ -758,7 +758,7 @@ const ProcurementRFQModal = ({
               </div>
 
               <div className="md:col-span-2">
-                <label className="text-sm font-medium text-gray-700">Brand Preference</label>
+                <label className="text-sm font-medium text-ink">Brand Preference</label>
                 <input
                   className={inputClass}
                   value={formData.productDetails.brandPreference}
@@ -773,7 +773,7 @@ const ProcurementRFQModal = ({
           {step === 2 && (
             <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
               <div>
-                <label className="text-sm font-medium text-gray-700">Quantity *</label>
+                <label className="text-sm font-medium text-ink">Quantity *</label>
                 <input
                   type="number"
                   min="1"
@@ -785,7 +785,7 @@ const ProcurementRFQModal = ({
               </div>
 
               <div>
-                <label className="text-sm font-medium text-gray-700">Quantity Unit</label>
+                <label className="text-sm font-medium text-ink">Quantity Unit</label>
                 <input
                   className={inputClass}
                   value={formData.quantityPricing.quantityUnit}
@@ -794,7 +794,7 @@ const ProcurementRFQModal = ({
               </div>
 
               <div>
-                <label className="text-sm font-medium text-gray-700">Currency</label>
+                <label className="text-sm font-medium text-ink">Currency</label>
                 <select
                   className={inputClass}
                   value={formData.quantityPricing.currency}
@@ -807,7 +807,7 @@ const ProcurementRFQModal = ({
               </div>
 
               <div>
-                <label className="text-sm font-medium text-gray-700">Budget Min</label>
+                <label className="text-sm font-medium text-ink">Budget Min</label>
                 <input
                   type="number"
                   min="0"
@@ -818,7 +818,7 @@ const ProcurementRFQModal = ({
               </div>
 
               <div>
-                <label className="text-sm font-medium text-gray-700">Budget Max</label>
+                <label className="text-sm font-medium text-ink">Budget Max</label>
                 <input
                   type="number"
                   min="0"
@@ -829,7 +829,7 @@ const ProcurementRFQModal = ({
               </div>
 
               <div>
-                <label className="text-sm font-medium text-gray-700">Pricing Type</label>
+                <label className="text-sm font-medium text-ink">Pricing Type</label>
                 <select
                   className={inputClass}
                   value={formData.quantityPricing.pricingType}
@@ -846,7 +846,7 @@ const ProcurementRFQModal = ({
           {step === 3 && (
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
               <div>
-                <label className="text-sm font-medium text-gray-700">Incoterm</label>
+                <label className="text-sm font-medium text-ink">Incoterm</label>
                 <select
                   className={inputClass}
                   value={formData.tradeLogistics.incoterm}
@@ -860,7 +860,7 @@ const ProcurementRFQModal = ({
               </div>
 
               <div>
-                <label className="text-sm font-medium text-gray-700">Shipping Method</label>
+                <label className="text-sm font-medium text-ink">Shipping Method</label>
                 <select
                   className={inputClass}
                   value={formData.tradeLogistics.shippingMethod}
@@ -874,7 +874,7 @@ const ProcurementRFQModal = ({
               </div>
 
               <div>
-                <label className="text-sm font-medium text-gray-700">Delivery Location *</label>
+                <label className="text-sm font-medium text-ink">Delivery Location *</label>
                 <input
                   className={inputClass}
                   value={formData.tradeLogistics.deliveryLocation}
@@ -885,7 +885,7 @@ const ProcurementRFQModal = ({
               </div>
 
               <div>
-                <label className="text-sm font-medium text-gray-700">Required By Date *</label>
+                <label className="text-sm font-medium text-ink">Required By Date *</label>
                 <input
                   type="date"
                   className={inputClass}
@@ -896,7 +896,7 @@ const ProcurementRFQModal = ({
               </div>
 
               <div className="md:col-span-2">
-                <label className="text-sm font-medium text-gray-700">Packaging Requirements</label>
+                <label className="text-sm font-medium text-ink">Packaging Requirements</label>
                 <textarea
                   rows={3}
                   className={inputClass}
@@ -910,7 +910,7 @@ const ProcurementRFQModal = ({
           {step === 4 && (
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
               <div>
-                <label className="text-sm font-medium text-gray-700">Minimum Experience (years)</label>
+                <label className="text-sm font-medium text-ink">Minimum Experience (years)</label>
                 <input
                   type="number"
                   min="0"
@@ -921,7 +921,7 @@ const ProcurementRFQModal = ({
               </div>
 
               <div>
-                <label className="text-sm font-medium text-gray-700">Minimum Supplier Rating</label>
+                <label className="text-sm font-medium text-ink">Minimum Supplier Rating</label>
                 <input
                   type="number"
                   min="0"
@@ -934,7 +934,7 @@ const ProcurementRFQModal = ({
               </div>
 
               <div>
-                <label className="text-sm font-medium text-gray-700">Required Certifications</label>
+                <label className="text-sm font-medium text-ink">Required Certifications</label>
                 <input
                   className={inputClass}
                   value={formData.supplierRequirements.requiredCertifications}
@@ -944,7 +944,7 @@ const ProcurementRFQModal = ({
               </div>
 
               <div>
-                <label className="text-sm font-medium text-gray-700">Preferred Regions</label>
+                <label className="text-sm font-medium text-ink">Preferred Regions</label>
                 <input
                   className={inputClass}
                   value={formData.supplierRequirements.preferredRegions}
@@ -954,7 +954,7 @@ const ProcurementRFQModal = ({
               </div>
 
               <div>
-                <label className="text-sm font-medium text-gray-700">Payment Terms *</label>
+                <label className="text-sm font-medium text-ink">Payment Terms *</label>
                 <input
                   className={inputClass}
                   value={formData.supplierRequirements.paymentTerms}
@@ -965,7 +965,7 @@ const ProcurementRFQModal = ({
               </div>
 
               <div>
-                <label className="text-sm font-medium text-gray-700">Warranty Requirement</label>
+                <label className="text-sm font-medium text-ink">Warranty Requirement</label>
                 <input
                   className={inputClass}
                   value={formData.supplierRequirements.warrantyRequirement}
@@ -979,25 +979,25 @@ const ProcurementRFQModal = ({
           {step === 5 && (
             <div className="space-y-4">
               <div>
-                <label className="text-sm font-medium text-gray-700">Attachments</label>
+                <label className="text-sm font-medium text-ink">Attachments</label>
                 <input
                   type="file"
                   multiple
-                  className="mt-1 block w-full text-sm text-gray-600"
+                  className="mt-1 block w-full text-sm text-dim"
                   onChange={handleAttachmentsChange}
                 />
                 {formData.attachmentsAndNotes.attachmentNames.length > 0 && (
-                  <div className="mt-2 rounded-lg border border-gray-200 bg-gray-50 p-2">
-                    <p className="text-xs font-medium text-gray-700">Selected files</p>
+                  <div className="mt-2 rounded-lg border border-line bg-canvas p-2">
+                    <p className="text-xs font-medium text-ink">Selected files</p>
                     {formData.attachmentsAndNotes.attachmentNames.map((name) => (
-                      <p key={name} className="text-xs text-gray-600">{name}</p>
+                      <p key={name} className="text-xs text-dim">{name}</p>
                     ))}
                   </div>
                 )}
               </div>
 
               <div>
-                <label className="text-sm font-medium text-gray-700">Additional Notes</label>
+                <label className="text-sm font-medium text-ink">Additional Notes</label>
                 <textarea
                   rows={6}
                   className={inputClass}
@@ -1011,9 +1011,9 @@ const ProcurementRFQModal = ({
 
           {step === 6 && (
             <div className="space-y-4">
-              <div className="rounded-xl border border-gray-200 bg-gray-50 p-4">
-                <h3 className="text-sm font-semibold text-gray-800">Review RFQ Summary</h3>
-                <div className="mt-3 grid grid-cols-1 gap-2 text-sm text-gray-700 md:grid-cols-2">
+              <div className="rounded-xl border border-line bg-canvas p-4">
+                <h3 className="text-sm font-semibold text-ink">Review RFQ Summary</h3>
+                <div className="mt-3 grid grid-cols-1 gap-2 text-sm text-ink md:grid-cols-2">
                   <p><span className="font-medium">Title:</span> {formData.productDetails.title || '-'}</p>
                   <p><span className="font-medium">Category:</span> {formData.productDetails.category || '-'}</p>
                   <p><span className="font-medium">Product:</span> {formData.productDetails.productName || '-'}</p>
@@ -1025,7 +1025,7 @@ const ProcurementRFQModal = ({
                 </div>
               </div>
 
-              <div className="rounded-xl border border-orange-200 bg-orange-50 p-4 text-sm text-orange-800">
+              <div className="rounded-xl border border-warning/20 bg-warning/10 p-4 text-sm text-warning">
                 Sending this RFQ will create a procurement request linked to this workspace and make it visible in procurement workflows.
               </div>
 
@@ -1033,8 +1033,8 @@ const ProcurementRFQModal = ({
                 <div
                   className={`rounded-xl border p-3 text-sm flex items-start gap-2 ${
                     submitResult.success
-                      ? 'border-green-200 bg-green-50 text-green-800'
-                      : 'border-red-200 bg-red-50 text-red-800'
+                      ? 'border-success/20 bg-success/10 text-success'
+                      : 'border-danger/20 bg-danger/10 text-danger'
                   }`}
                 >
                   {submitResult.success ? (
@@ -1049,24 +1049,24 @@ const ProcurementRFQModal = ({
           )}
         </div>
 
-        <div className="flex items-center justify-between gap-3 border-t border-gray-200 bg-white px-6 py-4">
+        <div className="flex items-center justify-between gap-3 border-t border-line bg-surface px-6 py-4">
           <button
             type="button"
             onClick={previousStep}
             disabled={step === 1 || isSubmitting}
-            className="inline-flex items-center gap-2 rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
+            className="inline-flex items-center gap-2 rounded-lg border border-line px-4 py-2 text-sm font-medium text-ink hover:bg-canvas disabled:cursor-not-allowed disabled:opacity-50"
           >
             <ChevronLeft className="w-4 h-4" />
             Previous
           </button>
 
-          <div className="text-xs text-gray-500">{STEP_LABELS[step - 1]}</div>
+          <div className="text-xs text-dim">{STEP_LABELS[step - 1]}</div>
 
           {step < TOTAL_STEPS && (
             <button
               type="button"
               onClick={nextStep}
-              className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
+              className="inline-flex items-center gap-2 rounded-lg bg-info px-4 py-2 text-sm font-medium text-white hover:bg-info"
             >
               Next
               <ChevronRight className="w-4 h-4" />
@@ -1078,7 +1078,7 @@ const ProcurementRFQModal = ({
               type="button"
               onClick={handleSubmit}
               disabled={isSubmitting || submitResult.success}
-              className="inline-flex items-center gap-2 rounded-lg bg-orange-600 px-4 py-2 text-sm font-medium text-white hover:bg-orange-700 disabled:cursor-not-allowed disabled:opacity-60"
+              className="inline-flex items-center gap-2 rounded-lg bg-warning px-4 py-2 text-sm font-medium text-white hover:bg-warning disabled:cursor-not-allowed disabled:opacity-60"
             >
               <Send className="w-4 h-4" />
               {isSubmitting ? 'Sending...' : submitResult.success ? 'Sent' : 'Send to Procurement'}
@@ -1088,12 +1088,12 @@ const ProcurementRFQModal = ({
       </div>
 
       {showProcurementChat && (
-        <aside className="fixed right-0 top-0 z-[70] h-full w-full max-w-md bg-white border-l border-gray-200 shadow-2xl flex flex-col">
-          <div className="px-4 py-3 border-b border-gray-100 bg-gradient-to-r from-blue-700 to-indigo-700">
+        <aside className="fixed right-0 top-0 z-[70] h-full w-full max-w-md bg-surface border-l border-line shadow-2xl flex flex-col">
+          <div className="px-4 py-3 border-b border-line bg-black">
             <div className="flex items-start justify-between gap-3">
               <div>
                 <p className="text-sm font-semibold text-white">Workspace Procurement Chat</p>
-                <p className="text-xs text-blue-100 truncate mt-0.5">
+                <p className="text-xs text-info truncate mt-0.5">
                   {queryConversation?.queryTitle || 'Procurement clarification thread'}
                 </p>
               </div>
@@ -1108,13 +1108,13 @@ const ProcurementRFQModal = ({
             </div>
           </div>
 
-          <div ref={queryScrollRef} className="flex-1 overflow-y-auto p-3 space-y-3 bg-gradient-to-b from-blue-50/40 via-slate-50/70 to-white">
+          <div ref={queryScrollRef} className="flex-1 overflow-y-auto p-3 space-y-3 bg-surface">
             {queryLoading ? (
-              <div className="h-full flex items-center justify-center text-gray-500 gap-2">
+              <div className="h-full flex items-center justify-center text-dim gap-2">
                 <Loader2 className="h-4 w-4 animate-spin" /> Loading conversation...
               </div>
             ) : queryMessages.length === 0 ? (
-              <div className="h-full flex flex-col items-center justify-center text-gray-500 gap-2">
+              <div className="h-full flex flex-col items-center justify-center text-dim gap-2">
                 <MessageCircle className="h-5 w-5" />
                 <p className="text-sm">Start your procurement clarification here.</p>
               </div>
@@ -1128,19 +1128,19 @@ const ProcurementRFQModal = ({
                   return (
                     <div key={msg.messageId} className={`flex ${mine ? 'justify-end' : 'justify-start'}`}>
                       <div
-                        className={`max-w-[88%] rounded-2xl px-3 py-2 text-sm shadow-sm border ${
+                        className={`max-w-[88%] rounded-2xl px-3 py-2 text-sm  border ${
                           mine
-                            ? 'bg-blue-600 text-white border-blue-600 rounded-br-sm'
+                            ? 'bg-info text-white border-info rounded-br-sm'
                             : isAi
-                              ? 'bg-emerald-50 border-emerald-200 text-emerald-900 rounded-bl-sm'
-                              : 'bg-white border-gray-200 text-gray-800 rounded-bl-sm'
+                              ? 'bg-surface-hover border-line text-ink rounded-bl-sm'
+                              : 'bg-surface border-line text-ink rounded-bl-sm'
                         }`}
                       >
-                        <p className={`text-[10px] font-semibold uppercase tracking-wide mb-1 ${mine ? 'text-blue-100' : isAi ? 'text-emerald-700' : 'text-indigo-700'}`}>
+                        <p className={`text-[10px] font-semibold uppercase tracking-wide mb-1 ${mine ? 'text-info' : isAi ? 'text-ink' : 'text-info'}`}>
                           {mine ? 'You' : isAi ? 'AI Context' : 'Procurement'}
                         </p>
                         <p className="whitespace-pre-wrap break-words">{msg.message}</p>
-                        <p className={`text-[10px] mt-1 ${mine ? 'text-blue-100' : 'text-gray-400'}`}>
+                        <p className={`text-[10px] mt-1 ${mine ? 'text-info' : 'text-dim'}`}>
                           {formatChatTime(msg.createdAt)}
                         </p>
                       </div>
@@ -1150,8 +1150,8 @@ const ProcurementRFQModal = ({
             )}
           </div>
 
-          <div className="border-t border-gray-200 p-3 space-y-2 bg-white">
-            {queryError ? <p className="text-xs text-red-600">{queryError}</p> : null}
+          <div className="border-t border-line p-3 space-y-2 bg-surface">
+            {queryError ? <p className="text-xs text-danger">{queryError}</p> : null}
             <div className="flex items-end gap-2">
               <textarea
                 rows={2}
@@ -1164,19 +1164,19 @@ const ProcurementRFQModal = ({
                   }
                 }}
                 placeholder="Type your message to procurement..."
-                className="flex-1 resize-none rounded-xl border border-gray-200 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-200"
+                className="flex-1 resize-none rounded-xl border border-line px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-info/20"
               />
               <button
                 type="button"
                 onClick={sendWorkspaceQueryMessage}
                 disabled={querySending || !queryText.trim() || !queryConversationId}
-                className="h-11 w-11 rounded-xl bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50 flex items-center justify-center"
+                className="h-11 w-11 rounded-xl bg-info text-white hover:bg-info disabled:opacity-50 flex items-center justify-center"
                 title="Send message"
               >
                 {querySending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
               </button>
             </div>
-            <p className="text-[11px] text-gray-500">Press Enter to send, Shift+Enter for new line.</p>
+            <p className="text-[11px] text-dim">Press Enter to send, Shift+Enter for new line.</p>
           </div>
         </aside>
       )}

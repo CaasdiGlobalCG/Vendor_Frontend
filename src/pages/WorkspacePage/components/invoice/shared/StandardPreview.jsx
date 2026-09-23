@@ -67,7 +67,7 @@ export default function StandardPreview({
     referenceNumber
 }) {
     if (!quote) {
-        return <div className="p-8 text-gray-400">No data to preview.</div>;
+        return <div className="p-8 text-dim">No data to preview.</div>;
     }
 
     // Vendor context - used for quote-specific branding and signatures
@@ -257,7 +257,7 @@ export default function StandardPreview({
     };
     
     return (
-        <div className="w-full max-w-4xl bg-white shadow-lg relative mx-auto my-8 print:shadow-none print:my-0">
+        <div className="w-full max-w-4xl bg-surface shadow-lg relative mx-auto my-8 print:shadow-none print:my-0">
             <style>{pdfStyles}</style>
             <div className="p-4">
                 <table className="w-full text-xs" style={{ border: '1px solid #ccc', borderCollapse: 'collapse' }}>
@@ -278,7 +278,7 @@ export default function StandardPreview({
                                         // <img
                                          
                                         //   alt="Logo"
-                                        //   className="h-12 w-12 object-contain rounded bg-gray-100 border"
+                                        //   className="h-12 w-12 object-contain rounded bg-surface-hover border"
                                         // />
                                       )} */}
                                       <div className="font-bold text-xl">{company.name}</div>
@@ -338,18 +338,18 @@ export default function StandardPreview({
                         {/* Row 2: Bill To / Ship To */}
                         <tr>
                             <td className="p-2 align-top" style={{ border: '1px solid #ccc' }}>
-                                <div className="font-semibold text-xs mb-1" style={{ background: '#f0f0f0', padding: '2px 4px' }}>Bill To</div>
-                                <div className="font-bold text-blue-700 mt-1">{customerName}</div>
+                                <div className="font-semibold text-xs mb-1" style={{ background: 'rgb(var(--surface-hover))', padding: '2px 4px' }}>Bill To</div>
+                                <div className="font-bold text-info mt-1">{customerName}</div>
                                 <pre className="whitespace-pre-line text-xs" style={{ fontFamily: 'inherit' }}>{formatAddress(billTo)}</pre>
                                 {billToGstin && (
-                                  <div className="text-xs text-gray-600 mt-1">GSTIN: {billToGstin}</div>
+                                  <div className="text-xs text-dim mt-1">GSTIN: {billToGstin}</div>
                                 )}
                             </td>
                             <td className="p-2 align-top" style={{ border: '1px solid #ccc' }}>
-                                <div className="font-semibold text-xs mb-1" style={{ background: '#f0f0f0', padding: '2px 4px' }}>Ship To</div>
+                                <div className="font-semibold text-xs mb-1" style={{ background: 'rgb(var(--surface-hover))', padding: '2px 4px' }}>Ship To</div>
                                 <pre className="whitespace-pre-line text-xs mt-1" style={{ fontFamily: 'inherit' }}>{formatAddress(shipTo)}</pre>
                                 {shipToGstin && (
-                                  <div className="text-xs text-gray-600 mt-1">GSTIN: {shipToGstin}</div>
+                                  <div className="text-xs text-dim mt-1">GSTIN: {shipToGstin}</div>
                                 )}
                             </td>
                         </tr>
@@ -360,7 +360,7 @@ export default function StandardPreview({
                                 <div className="items-table-container">
                                 <table className="w-full text-xs" style={{ borderCollapse: 'collapse', pageBreakInside: 'auto' }}>
                                     <thead style={{ display: 'table-header-group' }}>
-                                        <tr className="bg-gray-100">
+                                        <tr className="bg-surface-hover">
                                             <th className="p-2 border font-semibold text-left">#</th>
                                             <th className="p-2 border font-semibold text-left">Item & Description</th>
                                             <th className="p-2 border font-semibold text-left">HSN/SAC</th>
@@ -385,11 +385,11 @@ export default function StandardPreview({
                                               </div>
                                             )}
                                             {(item.description || item.itemDescription) && (
-                                              <div className="text-sm text-gray-600">{item.description || item.itemDescription}</div>
+                                              <div className="text-sm text-dim">{item.description || item.itemDescription}</div>
                                             )}
                                             {!(item.selectedItem?.name || item.itemName || item.productName || item.item || item.name) &&
                                               !(item.description || item.itemDescription) && (
-                                                        <div className="text-gray-400 italic text-sm">No item selected</div>
+                                                        <div className="text-dim italic text-sm">No item selected</div>
                                                     )}
                                                 </td>
                                           <td className="p-2 border">{item.hsn || item.hsnSac || item.hsnCode || '-'}</td>
@@ -397,9 +397,9 @@ export default function StandardPreview({
                                                 <td className="p-2 border text-right">{formatCurrency(item.rate)}</td>
                                                 {quote.items.some(item => item.ratePerSqft) && <td className="p-2 border text-right">{item.ratePerSqft ? formatCurrency(item.ratePerSqft) : '-'}</td>}
                                                 {quote.items.some(item => item.measurements) && <td className="p-2 border text-center">{item.measurements || '-'}</td>}
-                                                {showCgstSgst && <td className="p-2 border text-right">{formatCurrency(item.cgstAmount)}<br/><span className="text-gray-500 text-xs">@{item.cgstRate}%</span></td>}
-                                                {showCgstSgst && <td className="p-2 border text-right">{formatCurrency(item.sgstAmount)}<br/><span className="text-gray-500 text-xs">@{item.sgstRate}%</span></td>}
-                                                {showIgst && <td className="p-2 border text-right">{formatCurrency(item.igstAmount)}<br/><span className="text-gray-500 text-xs">@{item.igstRate}%</span></td>}
+                                                {showCgstSgst && <td className="p-2 border text-right">{formatCurrency(item.cgstAmount)}<br/><span className="text-dim text-xs">@{item.cgstRate}%</span></td>}
+                                                {showCgstSgst && <td className="p-2 border text-right">{formatCurrency(item.sgstAmount)}<br/><span className="text-dim text-xs">@{item.sgstRate}%</span></td>}
+                                                {showIgst && <td className="p-2 border text-right">{formatCurrency(item.igstAmount)}<br/><span className="text-dim text-xs">@{item.igstRate}%</span></td>}
                                                 <td className="p-2 border text-right">{formatCurrency(item.amount)}</td>
                                             </tr>
                                         ))}
@@ -448,14 +448,14 @@ export default function StandardPreview({
                             <td className="align-top p-2" style={{ border: '1px solid #ccc' }}>
                                 <div className="mb-2">
                                     <div className="font-semibold text-xs">Total In Words</div>
-                                    <div className="italic text-gray-700">{totalInWords}</div>
+                                    <div className="italic text-ink">{totalInWords}</div>
                                 </div>
                                 <div className="mb-2">
                                     <div className="font-semibold text-xs">Notes</div>
                                     <div className="text-xs mt-1">{notes || quote.notes || 'Looking forward for your business.'}</div>
                                 </div>
                                 <div className="font-semibold text-xs mt-6 mb-1">Terms & Conditions</div>
-                                <div className="whitespace-pre-line text-xs text-gray-700">
+                                <div className="whitespace-pre-line text-xs text-ink">
                                     {terms ? formatTermsAndConditions(terms) : 'Payment Terms: All invoices issued by the Company must be paid in full within 7 days from the date of the invoice. Late payments may incur additional charges or interest as permitted by applicable law.\n\nServices/Goods: The Company agrees to provide the goods or services as specified in the invoice or related agreement. The Client agrees to accept and pay for these goods or services in accordance with these terms.\n\nLate Payment: If payment is not received within the 15 days period, the Company reserves the right to suspend services, withhold delivery of goods, or pursue legal remedies to recover the outstanding amount.\n\nDisputes: Any disputes regarding the invoice or services must be reported in writing within 5 days of receiving the invoice. The Client agrees to pay any undisputed portion of the invoice within the 25-day payment period.'}
                                 </div>
                             </td>
@@ -463,15 +463,15 @@ export default function StandardPreview({
                                 <div className="flex flex-col gap-1 text-xs mb-8">
                                     <div className="flex justify-between"><span>Sub Total</span><span>{formatCurrency(subTotal)}</span></div>
                                     {discount > 0 && <div className="flex justify-between"><span>Discount(2.00%)</span><span>(-) {formatCurrency(discount)}</span></div>}
-                                    {amountWithheld > 0 && <div className="flex justify-between"><span>Amount Withheld (Section 194 I)</span><span className="text-red-600">(-) {formatCurrency(amountWithheld)}</span></div>}
-                                    <div className="flex justify-between font-bold border-t border-gray-300 pt-1 mt-1"><span>Total</span><span>₹{formatCurrency(grandTotal)}</span></div>
+                                    {amountWithheld > 0 && <div className="flex justify-between"><span>Amount Withheld (Section 194 I)</span><span className="text-danger">(-) {formatCurrency(amountWithheld)}</span></div>}
+                                    <div className="flex justify-between font-bold border-t border-line pt-1 mt-1"><span>Total</span><span>₹{formatCurrency(grandTotal)}</span></div>
                                 </div>
-                                <div className="mt-8 text-right text-xs text-gray-700 signature-section" style={{borderTop: '1px solid #ccc', paddingTop: '4px'}}>
+                                <div className="mt-8 text-right text-xs text-ink signature-section" style={{borderTop: '1px solid #ccc', paddingTop: '4px'}}>
                                     <div>Authorized Signature</div>
                                     <div className="mt-2 font-semibold text-sm">{vendorName}</div>
                                     <div className="mt-8">
-                                        <div className="border-t border-gray-400 w-32 ml-auto mb-2"></div>
-                                        <div className="text-xs text-gray-500">Vendor/Client Signature</div>
+                                        <div className="border-t border-line w-32 ml-auto mb-2"></div>
+                                        <div className="text-xs text-dim">Vendor/Client Signature</div>
                                     </div>
                                 </div>
                             </td>
@@ -479,7 +479,7 @@ export default function StandardPreview({
                         
                         {/* Row 5: Page Number */}
                         <tr>
-                           <td colSpan={2} className="text-right text-xs text-gray-400 p-2">1</td>
+                           <td colSpan={2} className="text-right text-xs text-dim p-2">1</td>
                         </tr>
                     </tbody>
                 </table>

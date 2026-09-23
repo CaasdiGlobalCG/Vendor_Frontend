@@ -3,7 +3,7 @@
   width: 100%;
   min-height: 675px;
   height: 100vh;
-  background-color: #000000;
+  background-color: rgb(var(--cta-action));
   display: flex;
   align-items: center;
   justify-content: center;
@@ -31,7 +31,7 @@
   top: 0;
   left: 0;
   height: 100%;
-  background: linear-gradient(90deg, #21be9c, #8ff8e1);
+  background: linear-gradient(90deg, rgb(var(--cta-action)), rgb(var(--cta-action)));
 }
 
 .tagline-text {
@@ -42,7 +42,7 @@
   font-size: 5rem;
   font-weight: 400;
   line-height: 1.5;
-  background: linear-gradient(90deg, #21be9c, #0f5848);
+  background: linear-gradient(90deg, rgb(var(--cta-action)), rgb(var(--cta-action)));
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   margin-bottom: 1rem;
@@ -52,7 +52,7 @@
   font-size: 2.5rem;
   font-weight: 400;
   line-height: 1.35;
-  background: linear-gradient(90deg, #ffffff, #c9c9c9);
+  background: linear-gradient(90deg, rgb(var(--surface-card)), rgb(var(--surface-hover)));
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   opacity: 0.5;
@@ -92,7 +92,7 @@
   width: 100%;
   min-height: 675px;
   height: 100vh;
-  background-color: #000000;
+  background-color: rgb(var(--cta-action));
   display: flex;
   align-items: center;
   justify-content: center;
@@ -120,7 +120,7 @@
   top: 0;
   left: 0;
   height: 100%;
-  background: linear-gradient(90deg, #21be9c, #8ff8e1);
+  background: linear-gradient(90deg, rgb(var(--cta-action)), rgb(var(--cta-action)));
 }
 
 .tagline-text {
@@ -131,7 +131,7 @@
   font-size: 5rem;
   font-weight: 400;
   line-height: 1.5;
-  background: linear-gradient(90deg, #21be9c, #0f5848);
+  background: linear-gradient(90deg, rgb(var(--cta-action)), rgb(var(--cta-action)));
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   margin-bottom: 1rem;
@@ -141,7 +141,7 @@
   font-size: 2.5rem;
   font-weight: 400;
   line-height: 1.35;
-  background: linear-gradient(90deg, #ffffff, #c9c9c9);
+  background: linear-gradient(90deg, rgb(var(--surface-card)), rgb(var(--surface-hover)));
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   opacity: 0.5;
@@ -183,7 +183,7 @@
   font-size: 5rem;
   font-weight: 400;
   line-height: 1.5;
-  background: linear-gradient(90deg, #21be9c, #0f5848);
+  background: linear-gradient(90deg, rgb(var(--cta-action)), rgb(var(--cta-action)));
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   margin-bottom: 1rem;
@@ -261,7 +261,7 @@
   line-height: 9.375rem;
   text-align: center;
   white-space: nowrap;
-  background: linear-gradient(90deg, #21be9c, #0f5848);
+  background: linear-gradient(90deg, rgb(var(--cta-action)), rgb(var(--cta-action)));
   z-index: 2;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
@@ -281,7 +281,7 @@
   line-height: 3.375rem;
   text-align: left;
   white-space: nowrap;
-  background: linear-gradient(90deg, #ffffff, #c9c9c9);
+  background: linear-gradient(90deg, rgb(var(--surface-card)), rgb(var(--surface-hover)));
   opacity: 0.5;
   z-index: 3;
   -webkit-background-clip: text;

@@ -575,8 +575,8 @@ function Login() {
       style={{ backgroundImage: `url(${background})` }}
     >
       <div className="my-auto grid w-full max-w-6xl grid-cols-1 items-start gap-6 lg:grid-cols-[minmax(0,30rem)_minmax(0,1fr)] lg:items-center lg:gap-12">
-        <div className="w-full max-w-xl mx-auto rounded-2xl bg-white shadow-2xl">
-          <div className="rounded-2xl bg-white p-5 sm:p-6 md:p-8">
+        <div className="w-full max-w-xl mx-auto rounded-2xl bg-surface border border-line shadow-2xl">
+          <div className="rounded-2xl bg-surface p-5 sm:p-6 md:p-8">
             {showAlert && (
               <div className="mb-4">
                 <Alert message={alertMessage} type={alertType} onClose={() => setShowAlert(false)} />
@@ -585,15 +585,15 @@ function Login() {
 
             {view === "login" && (
               <>
-                <h2 className="mb-2 text-2xl font-semibold text-gray-900 sm:text-[1.75rem]">Hello User</h2>
-                <p className="mb-6 text-sm leading-6 text-gray-600">Enter your email and password to log in</p>
+                <h2 className="mb-2 text-2xl font-semibold text-ink sm:text-[1.75rem]">Hello User</h2>
+                <p className="mb-6 text-sm leading-6 text-dim">Enter your email and password to log in</p>
               </>
             )}
 
             {view === "forgotPassword" && (
               <>
-                <h2 className="text-gray-900 text-2xl font-semibold mb-2">Forgot Password</h2>
-                <p className="text-sm text-gray-600 mb-6">Enter your email to receive a reset code</p>
+                <h2 className="text-ink text-2xl font-semibold mb-2">Forgot Password</h2>
+                <p className="text-sm text-dim mb-6">Enter your email to receive a reset code</p>
               </>
             )}
 
@@ -603,7 +603,7 @@ function Login() {
                   <input
                     type="email"
                     placeholder="Enter your mail id"
-                    className="mb-4 w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                    className="mb-4 w-full rounded-xl border border-line bg-canvas px-4 py-3 text-ink placeholder:text-dim focus:outline-none focus:ring-2 focus:ring-ink"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     required
@@ -612,7 +612,7 @@ function Login() {
                     <input
                       type={showPassword ? "text" : "password"}
                       placeholder="Enter your password"
-                      className="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 pr-10 text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                      className="w-full rounded-xl border border-line bg-canvas px-4 py-3 pr-10 text-ink placeholder:text-dim focus:outline-none focus:ring-2 focus:ring-ink"
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
                       required
@@ -620,7 +620,7 @@ function Login() {
                     <button
                       type="button"
                       onClick={togglePasswordVisibility}
-                      className="absolute inset-y-0 right-3 flex items-center text-gray-500 hover:text-emerald-600"
+                      className="absolute inset-y-0 right-3 flex items-center text-dim hover:text-ink transition-colors duration-150"
                       aria-label={showPassword ? "Hide password" : "Show password"}
                     >
                       {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
@@ -628,7 +628,7 @@ function Login() {
                   </div>
                   <div className="text-right mb-4">
                     <span
-                      className="text-sm text-emerald-600 cursor-pointer hover:underline"
+                      className="text-sm text-ink cursor-pointer hover:underline"
                       onClick={() => setView("forgotPassword")}
                     >
                       Forgot Password?
@@ -636,7 +636,7 @@ function Login() {
                   </div>
                   <button
                     type="submit"
-                    className={`w-full rounded-xl bg-emerald-600 px-6 py-3 text-white transition duration-200 hover:bg-emerald-500 ${
+                    className={`w-full rounded-xl bg-cta px-6 py-3 text-cta-foreground font-medium transition-colors duration-150 hover:bg-surface-hover ${
                       loading ? "opacity-50 cursor-not-allowed" : ""
                     }`}
                     disabled={loading}
@@ -645,10 +645,10 @@ function Login() {
                   </button>
                 </form>
 
-                <p className="text-sm text-gray-600 mt-6 text-center">
+                <p className="text-sm text-dim mt-6 text-center">
                   Don’t have an account?{" "}
                   <span
-                    className="text-emerald-600 underline cursor-pointer font-semibold"
+                    className="text-ink underline cursor-pointer font-semibold"
                     onClick={handleSignUpRedirect}
                   >
                     Signup
@@ -663,14 +663,14 @@ function Login() {
                   <input
                     type="email"
                     placeholder="Email"
-                    className="mb-4 w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                    className="mb-4 w-full rounded-xl border border-line bg-canvas px-4 py-3 text-ink placeholder:text-dim focus:outline-none focus:ring-2 focus:ring-ink"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     required
                   />
                   <button
                     type="submit"
-                    className={`w-full rounded-xl bg-emerald-600 px-6 py-3 text-white transition hover:bg-emerald-500 ${
+                    className={`w-full rounded-xl bg-cta px-6 py-3 text-cta-foreground font-medium transition-colors duration-150 hover:bg-surface-hover ${
                       loading ? "opacity-50 cursor-not-allowed" : ""
                     }`}
                     disabled={loading}
@@ -678,9 +678,9 @@ function Login() {
                     {loading ? "Sending..." : "Send Reset Code"}
                   </button>
                 </form>
-                <p className="text-sm text-gray-600 mt-4">
+                <p className="text-sm text-dim mt-4">
                   <span
-                    className="text-emerald-600 underline cursor-pointer font-semibold"
+                    className="text-ink underline cursor-pointer font-semibold"
                     onClick={() => setView("login")}
                   >
                     Back to Login
@@ -691,13 +691,13 @@ function Login() {
 
             {view === "resetPassword" && (
               <>
-                <h2 className="text-gray-900 text-xl font-semibold mb-2">Reset Your Password</h2>
-                <p className="text-sm text-gray-600 mb-6">Enter the code from your email and a new password.</p>
+                <h2 className="text-ink text-xl font-semibold mb-2">Reset Your Password</h2>
+                <p className="text-sm text-dim mb-6">Enter the code from your email and a new password.</p>
                 <form className="w-full" onSubmit={handleResetPassword}>
                   <input
                     type="text"
                     placeholder="Verification Code"
-                    className="mb-4 w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                    className="mb-4 w-full rounded-xl border border-line bg-canvas px-4 py-3 text-ink placeholder:text-dim focus:outline-none focus:ring-2 focus:ring-ink"
                     value={verificationCode}
                     onChange={(e) => setVerificationCode(e.target.value)}
                     required
@@ -705,14 +705,14 @@ function Login() {
                   <input
                     type="password"
                     placeholder="New Password"
-                    className="mb-4 w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                    className="mb-4 w-full rounded-xl border border-line bg-canvas px-4 py-3 text-ink placeholder:text-dim focus:outline-none focus:ring-2 focus:ring-ink"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     required
                   />
                   <button
                     type="submit"
-                    className={`w-full rounded-xl bg-emerald-600 px-6 py-3 text-white transition hover:bg-emerald-500 ${
+                    className={`w-full rounded-xl bg-cta px-6 py-3 text-cta-foreground font-medium transition-colors duration-150 hover:bg-surface-hover ${
                       loading ? "opacity-50 cursor-not-allowed" : ""
                     }`}
                     disabled={loading}
@@ -720,9 +720,9 @@ function Login() {
                     {loading ? "Resetting..." : "Reset Password"}
                   </button>
                 </form>
-                <p className="text-sm text-gray-600 mt-4">
+                <p className="text-sm text-dim mt-4">
                   <span
-                    className="text-emerald-600 underline cursor-pointer font-semibold"
+                    className="text-ink underline cursor-pointer font-semibold"
                     onClick={() => setView("forgotPassword")}
                   >
                     Resend Code
@@ -745,7 +745,7 @@ function Login() {
                 }`}
               >
                 <h3 className="text-2xl font-semibold mb-3">{item.title}</h3>
-                <p className="text-gray-300/85 max-w-sm text-sm leading-relaxed">{item.description}</p>
+                <p className="text-white/80 max-w-sm text-sm leading-relaxed">{item.description}</p>
               </div>
             ))}
           </div>
@@ -756,7 +756,7 @@ function Login() {
                 key={index}
                 onClick={() => setCurrentCarouselIndex(index)}
                 className={`h-2 rounded-full transition-all duration-300 ${
-                  index === currentCarouselIndex ? "w-8 bg-emerald-500" : "w-2 bg-white/40 hover:bg-white/70"
+                  index === currentCarouselIndex ? "w-8 bg-cta" : "w-2 bg-white/40 hover:bg-white/70"
                 }`}
                 aria-label={`Go to slide ${index + 1}`}
               />

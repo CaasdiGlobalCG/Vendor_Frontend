@@ -6,14 +6,14 @@ import React from 'react';
  */
 export default function AuthSkeletonScreen({ message = 'Loading your workspace...' }) {
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-[#0a2e26] via-[#0d3f33] to-[#061a15] relative overflow-hidden">
+    <div className="min-h-screen flex flex-col items-center justify-center bg-black relative overflow-hidden">
       {/* Ambient glow effects */}
-      <div className="absolute top-[-20%] left-[-10%] w-[600px] h-[600px] rounded-full bg-[#14b8a6]/8 blur-[120px] pointer-events-none" />
-      <div className="absolute bottom-[-15%] right-[-10%] w-[500px] h-[500px] rounded-full bg-[#0f766e]/10 blur-[100px] pointer-events-none" />
+      <div className="absolute top-[-20%] left-[-10%] w-[600px] h-[600px] rounded-full bg-cta/8 blur-[120px] pointer-events-none" />
+      <div className="absolute bottom-[-15%] right-[-10%] w-[500px] h-[500px] rounded-full bg-cta/10 blur-[100px] pointer-events-none" />
 
       {/* Logo / Brand mark */}
       <div className="relative mb-8">
-        <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-[#14b8a6] to-[#0f766e] flex items-center justify-center shadow-lg shadow-teal-900/40">
+        <div className="w-16 h-16 rounded-2xl bg-black flex items-center justify-center shadow-lg shadow-teal-900/40">
           <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
           </svg>
@@ -24,11 +24,11 @@ export default function AuthSkeletonScreen({ message = 'Loading your workspace..
       <div className="relative mb-8">
         <div
           className="w-12 h-12 rounded-full border-[3px] border-white/10"
-          style={{ borderTopColor: '#14b8a6', animation: 'authSpin 0.9s linear infinite' }}
+          style={{ borderTopColor: 'rgb(var(--text-ink))', animation: 'authSpin 0.9s linear infinite' }}
         />
         <div
           className="absolute inset-0 w-12 h-12 rounded-full border-[3px] border-transparent"
-          style={{ borderBottomColor: '#0f766e', animation: 'authSpin 1.4s linear infinite reverse' }}
+          style={{ borderBottomColor: 'rgb(var(--text-ink))', animation: 'authSpin 1.4s linear infinite reverse' }}
         />
       </div>
 
@@ -45,7 +45,7 @@ export default function AuthSkeletonScreen({ message = 'Loading your workspace..
         {[0, 1, 2].map((i) => (
           <div
             key={i}
-            className="w-1.5 h-1.5 rounded-full bg-teal-400/60"
+            className="w-1.5 h-1.5 rounded-full bg-cta"
             style={{
               animation: 'authDotPulse 1.2s ease-in-out infinite',
               animationDelay: `${i * 0.2}s`,

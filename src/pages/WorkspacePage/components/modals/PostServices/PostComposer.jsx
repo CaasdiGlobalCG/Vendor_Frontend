@@ -35,28 +35,28 @@ const PostComposer = ({
   selectedSubtaskForPost
 }) => {
   return (
-    <div className="p-3 border-b border-gray-200 bg-gray-50">
-      <div className="bg-white rounded-lg border border-gray-200 shadow-sm">
+    <div className="p-3 border-b border-line bg-canvas">
+      <div className="bg-surface rounded-lg border border-line ">
         <div className="flex items-center px-3 py-2">
-          <div className="w-7 h-7 rounded-full bg-gray-200 flex items-center justify-center mr-2 overflow-hidden">
+          <div className="w-7 h-7 rounded-full bg-surface-hover flex items-center justify-center mr-2 overflow-hidden">
             {currentUser?.avatarUrl ? (
               <img src={currentUser.avatarUrl} alt={displayUser.name} className="w-full h-full object-cover" />
             ) : (
-              <User className="w-3.5 h-3.5 text-gray-600" />
+              <User className="w-3.5 h-3.5 text-dim" />
             )}
           </div>
           <div>
-            <div className="text-xs font-medium text-gray-900">{displayUser.name}</div>
-            <div className="text-[10px] text-gray-500">{displayUser.role}</div>
+            <div className="text-xs font-medium text-ink">{displayUser.name}</div>
+            <div className="text-[10px] text-dim">{displayUser.role}</div>
           </div>
         </div>
         
         <div className="px-3 pb-2 relative">
           <div className="relative">
-            <div className="w-full min-h-[60px] p-2 border border-gray-200 rounded-lg bg-white text-[11px] text-gray-800 whitespace-pre-wrap break-words leading-[1.3] focus-within:ring-2 focus-within:ring-blue-500 focus-within:border-transparent">
+            <div className="w-full min-h-[60px] p-2 border border-line rounded-lg bg-surface text-[11px] text-ink whitespace-pre-wrap break-words leading-[1.3] focus-within:ring-2 focus-within:ring-info focus-within:border-transparent">
               {renderTextWithHighlights(message)}
               {!message && (
-                <span className="text-gray-400 text-[11px]">Write your service request...</span>
+                <span className="text-dim text-[11px]">Write your service request...</span>
               )}
             </div>
             <textarea
@@ -65,7 +65,7 @@ const PostComposer = ({
               rows={2}
               className="absolute inset-0 w-full h-full resize-none outline-none text-[11px] text-transparent bg-transparent placeholder-transparent [text-indent:2px] cursor-text"
               style={{
-                caretColor: '#374151',
+                caretColor: 'rgb(var(--info))',
                 fontFamily: 'inherit',
                 fontSize: '11px',
                 lineHeight: '1.3',
@@ -95,26 +95,26 @@ const PostComposer = ({
           {/* Attachment chips */}
           <div className="flex flex-wrap gap-1 mt-1">
             {attachments.map(att => (
-              <div key={att.id} className="inline-flex items-center gap-1 px-1.5 py-0.5 bg-gray-100 border border-gray-200 rounded text-[10px]">
-                <span className="text-[10px] text-gray-700">{att.name}</span>
-                <button onClick={() => removeAttachment(att.id)} className="p-0.5 hover:bg-gray-200 rounded">
-                  <X className="w-2.5 h-2.5 text-gray-500" />
+              <div key={att.id} className="inline-flex items-center gap-1 px-1.5 py-0.5 bg-surface-hover border border-line rounded text-[10px]">
+                <span className="text-[10px] text-ink">{att.name}</span>
+                <button onClick={() => removeAttachment(att.id)} className="p-0.5 hover:bg-surface-hover rounded">
+                  <X className="w-2.5 h-2.5 text-dim" />
                 </button>
               </div>
             ))}
           </div>
         </div>
         
-        <div className="flex items-center justify-between px-3 py-2 border-t border-gray-200">
+        <div className="flex items-center justify-between px-3 py-2 border-t border-line">
           <div className="flex items-center gap-1.5">
-            <button className="px-2 py-1 text-[10px] bg-purple-50 text-purple-700 rounded border border-purple-200 hover:bg-purple-100">
+            <button className="px-2 py-1 text-[10px] bg-surface-hover text-ink rounded border border-line hover:bg-surface-hover">
               <span className="inline-flex items-center gap-1"><Hash className="w-2.5 h-2.5" /> dept</span>
             </button>
-            <button className="px-2 py-1 text-[10px] bg-green-50 text-green-700 rounded border border-green-200 hover:bg-green-100">
+            <button className="px-2 py-1 text-[10px] bg-success/10 text-success rounded border border-success/20 hover:bg-success/10">
               <span className="inline-flex items-center gap-1"><AtSign className="w-2.5 h-2.5" /> person</span>
             </button>
-            <button onClick={onPickFile} className="p-1 rounded hover:bg-gray-100" title="Attach">
-              <Paperclip className="w-3 h-3 text-gray-600" />
+            <button onClick={onPickFile} className="p-1 rounded hover:bg-surface-hover" title="Attach">
+              <Paperclip className="w-3 h-3 text-dim" />
             </button>
             <input ref={fileInputRef} type="file" className="hidden" onChange={(e) => addAttachment(e.target.files?.[0])} />
           </div>
@@ -124,8 +124,8 @@ const PostComposer = ({
             title={!selectedTaskForPost || !selectedSubtaskForPost ? 'Please select task and subtask first' : ''}
             className={`px-2.5 py-1 text-[10px] rounded inline-flex items-center gap-1 transition-colors ${
               isPosting || !message.trim() || !selectedTaskForPost || !selectedSubtaskForPost
-                ? 'bg-gray-400 text-gray-200 cursor-not-allowed'
-                : 'bg-blue-600 text-white hover:bg-blue-700'
+                ? 'bg-cta text-dim cursor-not-allowed'
+                : 'bg-info text-cta-foreground hover:bg-info'
             }`}
           >
             {isPosting ? (

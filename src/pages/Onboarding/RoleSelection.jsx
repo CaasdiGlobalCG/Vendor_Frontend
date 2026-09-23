@@ -173,24 +173,24 @@ function RoleSelection() {
   // Information details and submission happen outside the cards for clarity
 
   return (
-    <div className="min-h-screen relative overflow-hidden bg-gradient-to-br from-gray-950 via-emerald-950 to-black flex items-center justify-center p-6">
+    <div className="min-h-screen relative overflow-hidden bg-surface flex items-center justify-center p-6">
       {/* Decorative background accents */}
-      <div className="pointer-events-none absolute -top-24 -left-24 w-[32rem] h-[32rem] rounded-full bg-emerald-500/10 blur-3xl" />
-      <div className="pointer-events-none absolute -bottom-24 -right-24 w-[28rem] h-[28rem] rounded-full bg-cyan-400/10 blur-3xl" />
+      <div className="pointer-events-none absolute -top-24 -left-24 w-[32rem] h-[32rem] rounded-full bg-cta blur-3xl" />
+      <div className="pointer-events-none absolute -bottom-24 -right-24 w-[28rem] h-[28rem] rounded-full bg-info blur-3xl" />
 
       <div className="w-full md:max-w-6xl grid grid-cols-1 md:grid-cols-2 gap-6 mx-auto">
         {/* Left: Brand / Value prop */}
         <div className="backdrop-blur bg-white/10 border border-white/20 rounded-2xl shadow-2xl p-8">
           <div className="flex items-center justify-between mb-6">
             <img src={operonLogo} alt="Operon" className="h-10 w-auto" />
-            <span className="text-emerald-300 text-xs">what’s new?</span>
+            <span className="text-ink text-xs">what’s new?</span>
           </div>
           <h2 className="text-white text-2xl md:text-3xl font-semibold mb-3">Vendor and project management</h2>
-          <p className="text-gray-200/80 leading-relaxed">
+          <p className="text-dim leading-relaxed">
             Smart vendor matching, private tendering, CRM & task management, forecasting & analytics, end-to-end project
             support. Evolving toward an AI-driven platform to enhance efficiency and automation.
           </p>
-          <ul className="mt-4 text-gray-300/80 text-sm space-y-2 list-disc pl-5">
+          <ul className="mt-4 text-dim text-sm space-y-2 list-disc pl-5">
             <li>Trusted B2B vendor network</li>
             <li>Secure authentication (Google/Cognito)</li>
             <li>Real-time notifications and tracking</li>
@@ -202,9 +202,9 @@ function RoleSelection() {
           <div className="mb-6">
             <div className="flex items-center justify-between">
               <h3 className="text-white text-2xl font-semibold">Choose your role</h3>
-              <span className="text-xs text-gray-300/70">Step 2 of 2</span>
+              <span className="text-xs text-dim">Step 2 of 2</span>
             </div>
-            <p className="text-gray-300/80 text-sm">Select one option below. You can change this later in Account Settings.</p>
+            <p className="text-dim text-sm">Select one option below. You can change this later in Account Settings.</p>
             <div className="h-px bg-white/10 mt-4" />
           </div>
 
@@ -217,22 +217,22 @@ function RoleSelection() {
               tabIndex={0}
               onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setRole("vendor"); } }}
               onClick={() => setRole("vendor")}
-              className={`relative overflow-hidden text-left rounded-xl p-5 border transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-emerald-300/60 ${
+              className={`relative overflow-hidden text-left rounded-xl p-5 border transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-ink ${
                 role === "vendor"
-                  ? "bg-gradient-to-br from-emerald-500/25 via-emerald-400/10 to-transparent border-emerald-400/70 ring-2 ring-emerald-400/60 shadow-[0_0_30px_rgba(16,185,129,0.35)] scale-[1.02]"
-                  : "bg-white/5 border-white/20 hover:bg-white/10 hover:border-emerald-300/30 hover:shadow-[0_0_20px_rgba(16,185,129,0.25)]"
+                  ? "bg-black to-transparent border-line ring-2 ring-ink scale-[1.02]"
+                  : "bg-white/5 border-white/20 hover:bg-white/10 hover:border-line hover:"
               }`}
             >
-              <span className="absolute inset-x-0 top-0 h-0.5 bg-gradient-to-r from-transparent via-emerald-400/60 to-transparent" />
+              <span className="absolute inset-x-0 top-0 h-0.5 bg-gradient-to-r from-transparent via-black to-transparent" />
               {role === "vendor" ? (
-                <span className="absolute top-3 right-3 bg-emerald-500 text-black text-xs font-semibold px-2 py-0.5 rounded-full">Selected</span>
+                <span className="absolute top-3 right-3 bg-cta text-ink text-xs font-semibold px-2 py-0.5 rounded-full">Selected</span>
               ) : (
                 <span className="absolute top-3 right-3 w-4 h-4 rounded-full border border-white/40" />
               )}
               <div className="flex items-center gap-3 mb-1">
-                <span className="w-10 h-10 rounded-full bg-emerald-400/20 flex items-center justify-center border border-emerald-400/50">
+                <span className="w-10 h-10 rounded-full bg-cta flex items-center justify-center border border-line">
                   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" className="w-5 h-5">
-                    <path d="M3 7h18M7 7V5a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v2m-1 4H8m-3 6h14a2 2 0 0 0 2-2v-6a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2z" stroke="currentColor" strokeWidth="1.6" className="text-emerald-300" />
+                    <path d="M3 7h18M7 7V5a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v2m-1 4H8m-3 6h14a2 2 0 0 0 2-2v-6a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2z" stroke="currentColor" strokeWidth="1.6" className="text-ink" />
                   </svg>
                 </span>
                 <div>
@@ -250,22 +250,22 @@ function RoleSelection() {
               tabIndex={0}
               onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setRole("client"); } }}
               onClick={() => setRole("client")}
-              className={`relative overflow-hidden text-left rounded-xl p-5 border transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-cyan-300/60 ${
+              className={`relative overflow-hidden text-left rounded-xl p-5 border transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-info ${
                 role === "client"
-                  ? "bg-gradient-to-br from-cyan-400/25 via-indigo-400/10 to-transparent border-cyan-300/70 ring-2 ring-cyan-300/60 shadow-[0_0_30px_rgba(34,211,238,0.35)] scale-[1.02]"
-                  : "bg-white/5 border-white/20 hover:bg-white/10 hover:border-cyan-300/30 hover:shadow-[0_0_20px_rgba(34,211,238,0.25)]"
+                  ? "bg-black to-transparent border-info ring-2 ring-info scale-[1.02]"
+                  : "bg-white/5 border-white/20 hover:bg-white/10 hover:border-info hover:"
               }`}
             >
-              <span className="absolute inset-x-0 top-0 h-0.5 bg-gradient-to-r from-transparent via-cyan-300/60 to-transparent" />
+              <span className="absolute inset-x-0 top-0 h-0.5 bg-gradient-to-r from-transparent via-black to-transparent" />
               {role === "client" ? (
-                <span className="absolute top-3 right-3 bg-cyan-300 text-black text-xs font-semibold px-2 py-0.5 rounded-full">Selected</span>
+                <span className="absolute top-3 right-3 bg-info/30 text-ink text-xs font-semibold px-2 py-0.5 rounded-full">Selected</span>
               ) : (
                 <span className="absolute top-3 right-3 w-4 h-4 rounded-full border border-white/40" />
               )}
               <div className="flex items-center gap-3 mb-1">
-                <span className="w-10 h-10 rounded-full bg-cyan-300/20 flex items-center justify-center border border-cyan-300/50">
+                <span className="w-10 h-10 rounded-full bg-info flex items-center justify-center border border-info">
                   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" className="w-5 h-5">
-                    <path d="M8 11a4 4 0 1 1 8 0m-9 7h10a3 3 0 0 0 3-3v-1a2 2 0 0 0-2-2h-1m-12 6h1a3 3 0 0 0 3-3v-1a2 2 0 0 0-2-2H7" stroke="currentColor" strokeWidth="1.6" className="text-cyan-300" />
+                    <path d="M8 11a4 4 0 1 1 8 0m-9 7h10a3 3 0 0 0 3-3v-1a2 2 0 0 0-2-2h-1m-12 6h1a3 3 0 0 0 3-3v-1a2 2 0 0 0-2-2H7" stroke="currentColor" strokeWidth="1.6" className="text-info" />
                   </svg>
                 </span>
                 <div>
@@ -279,12 +279,12 @@ function RoleSelection() {
           {/* Role description and action outside the cards */}
           <div className="mt-6">
             {!role && (
-              <p className="text-gray-300/80 text-sm">Select a role above to see details and continue.</p>
+              <p className="text-dim text-sm">Select a role above to see details and continue.</p>
             )}
             {role === 'vendor' && (
               <div className="backdrop-blur bg-white/5 border border-white/10 rounded-xl p-4">
                 <h4 className="text-white text-sm font-semibold mb-2">Vendor overview</h4>
-                <ul className="text-gray-300/80 text-sm list-disc pl-5 space-y-1 mb-3">
+                <ul className="text-dim text-sm list-disc pl-5 space-y-1 mb-3">
                   <li>Vendor Dashboard, Leads, Notifications</li>
                   <li>Project portfolio and submissions</li>
                   <li>Manage services and company profile</li>
@@ -292,7 +292,7 @@ function RoleSelection() {
                 <button
                   type="button"
                   onClick={handleRoleSelection}
-                  className="px-4 py-2 rounded-md bg-emerald-500 text-black text-sm font-medium hover:bg-emerald-400 transition"
+                  className="px-4 py-2 rounded-md bg-cta text-ink text-sm font-medium hover:bg-cta transition"
                   aria-label="Continue as Vendor"
                 >
                   Continue as Vendor
@@ -302,7 +302,7 @@ function RoleSelection() {
             {role === 'client' && (
               <div className="backdrop-blur bg-white/5 border border-white/10 rounded-xl p-4">
                 <h4 className="text-white text-sm font-semibold mb-2">Client overview</h4>
-                <ul className="text-gray-300/80 text-sm list-disc pl-5 space-y-1 mb-3">
+                <ul className="text-dim text-sm list-disc pl-5 space-y-1 mb-3">
                   <li>Guided onboarding</li>
                   <li>Track enquiries and quotations</li>
                   <li>Compare vendors and manage requests</li>
@@ -310,14 +310,14 @@ function RoleSelection() {
                 <button
                   type="button"
                   onClick={handleRoleSelection}
-                  className="px-4 py-2 rounded-md bg-cyan-300 text-black text-sm font-medium hover:bg-cyan-200 transition"
+                  className="px-4 py-2 rounded-md bg-info/30 text-ink text-sm font-medium hover:bg-info/20 transition"
                   aria-label="Continue as Client"
                 >
                   Continue as Client
                 </button>
               </div>
             )}
-            <p className="mt-4 text-[11px] text-gray-400/80">By continuing, you agree to our Terms and Privacy Policy.</p>
+            <p className="mt-4 text-[11px] text-dim">By continuing, you agree to our Terms and Privacy Policy.</p>
           </div>
         </div>
       </div>

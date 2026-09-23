@@ -24,7 +24,7 @@ const GroupingToolbar = ({
 
   return (
     <div 
-      className="fixed z-50 bg-white rounded-lg shadow-2xl border-2 border-blue-200 p-4 min-w-[320px] animate-in fade-in slide-in-from-bottom-2 duration-200"
+      className="fixed z-50 bg-surface rounded-lg shadow-2xl border-2 border-info/20 p-4 min-w-[320px] animate-in fade-in slide-in-from-bottom-2 duration-200"
       style={{ 
         left: `${position.x}px`, 
         top: `${position.y}px`,
@@ -34,24 +34,24 @@ const GroupingToolbar = ({
       {/* Header */}
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center space-x-2">
-          <div className="p-1.5 bg-blue-100 rounded-lg">
-            <Users className="w-4 h-4 text-blue-600" />
+          <div className="p-1.5 bg-info/10 rounded-lg">
+            <Users className="w-4 h-4 text-info" />
           </div>
           <div>
-            <h3 className="text-sm font-semibold text-gray-900">
+            <h3 className="text-sm font-semibold text-ink">
               {selectedCount} Elements Selected
             </h3>
-            <p className="text-xs text-gray-500">
+            <p className="text-xs text-dim">
               Group elements together
             </p>
           </div>
         </div>
         <button
           onClick={onClose}
-          className="p-1 hover:bg-gray-100 rounded transition-colors"
+          className="p-1 hover:bg-surface-hover rounded transition-colors"
           title="Close toolbar"
         >
-          <X className="w-4 h-4 text-gray-500" />
+          <X className="w-4 h-4 text-dim" />
         </button>
       </div>
 
@@ -62,14 +62,14 @@ const GroupingToolbar = ({
             console.log('🎯 GroupingToolbar: Group button clicked!');
             onGroupIntoGrid();
           }}
-          className="w-full flex items-center space-x-3 px-3 py-2 text-left bg-blue-50 hover:bg-blue-100 text-blue-700 rounded-lg transition-colors group"
+          className="w-full flex items-center space-x-3 px-3 py-2 text-left bg-info/10 hover:bg-info/10 text-info rounded-lg transition-colors group"
         >
-          <div className="p-1.5 bg-blue-200 rounded group-hover:bg-blue-300 transition-colors">
+          <div className="p-1.5 bg-info/20 rounded group-hover:bg-info/30 transition-colors">
             <Grid className="w-4 h-4" />
           </div>
           <div className="flex-1">
             <div className="text-sm font-medium">Group into Grid</div>
-            <div className="text-xs text-blue-600">
+            <div className="text-xs text-info">
               Combine elements into a single grid layout
             </div>
           </div>
@@ -78,7 +78,7 @@ const GroupingToolbar = ({
         {/* Align & distribute */}
         {onAlign && (
           <div className="pt-1">
-            <div className="text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1.5">Align</div>
+            <div className="text-[10px] font-semibold text-dim uppercase tracking-wide mb-1.5">Align</div>
             <div className="grid grid-cols-4 gap-1">
               {[
                 { mode: 'left', icon: AlignStartVertical, title: 'Align left' },
@@ -94,7 +94,7 @@ const GroupingToolbar = ({
                   key={mode}
                   onClick={() => onAlign(mode)}
                   title={title}
-                  className="flex items-center justify-center p-2 rounded-lg border border-gray-200 text-gray-500 hover:bg-blue-50 hover:text-blue-600 hover:border-blue-300 transition-colors"
+                  className="flex items-center justify-center p-2 rounded-lg border border-line text-dim hover:bg-info/10 hover:text-info hover:border-info/30 transition-colors"
                 >
                   <Icon className="w-4 h-4" />
                 </button>
@@ -105,16 +105,16 @@ const GroupingToolbar = ({
 
         {/* Future grouping options can be added here */}
         <button
-          className="w-full flex items-center space-x-3 px-3 py-2 text-left bg-gray-50 hover:bg-gray-100 text-gray-500 rounded-lg transition-colors group cursor-not-allowed opacity-50"
+          className="w-full flex items-center space-x-3 px-3 py-2 text-left bg-canvas hover:bg-surface-hover text-dim rounded-lg transition-colors group cursor-not-allowed opacity-50"
           disabled
           title="Coming soon"
         >
-          <div className="p-1.5 bg-gray-200 rounded group-hover:bg-gray-300 transition-colors">
+          <div className="p-1.5 bg-surface-hover rounded group-hover:bg-surface-hover transition-colors">
             <Combine className="w-4 h-4" />
           </div>
           <div className="flex-1">
             <div className="text-sm font-medium">Group into Container</div>
-            <div className="text-xs text-gray-400">
+            <div className="text-xs text-dim">
               Coming soon - Wrap in container
             </div>
           </div>
@@ -122,8 +122,8 @@ const GroupingToolbar = ({
       </div>
 
       {/* Footer */}
-      <div className="mt-3 pt-2 border-t border-gray-100">
-        <div className="text-xs text-gray-500 text-center">
+      <div className="mt-3 pt-2 border-t border-line">
+        <div className="text-xs text-dim text-center">
           Select multiple elements to group them together
         </div>
       </div>

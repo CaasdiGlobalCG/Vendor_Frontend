@@ -8,23 +8,23 @@ import TestCaseDetailModal from '../modals/TestCaseDetailModal';
 
 const TurnkeyTaskCard = ({ taskName = "Turnkey task 1", status = "Foundation - phase 1", date = "18-09-2024" }) => {
   return (
-    <div className="bg-white border-2 border-gray-200 rounded-lg p-4 w-64 shadow-sm">
+    <div className="bg-surface border-2 border-line rounded-lg p-4 w-64 ">
       {/* Header */}
       <div className="flex items-center justify-between mb-3">
-        <h3 className="font-semibold text-gray-900 text-sm">{taskName}</h3>
+        <h3 className="font-semibold text-ink text-sm">{taskName}</h3>
         <div className="flex items-center space-x-1">
-          <Clock className="h-4 w-4 text-blue-500" />
-          <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+          <Clock className="h-4 w-4 text-info" />
+          <div className="w-2 h-2 bg-info rounded-full"></div>
         </div>
       </div>
 
       {/* Status badges */}
       <div className="flex items-center space-x-2 mb-3">
-        <div className="flex items-center space-x-1 bg-green-100 text-green-800 px-2 py-1 rounded-full text-xs">
+        <div className="flex items-center space-x-1 bg-success/10 text-success px-2 py-1 rounded-full text-xs">
           <CheckCircle2 className="h-3 w-3" />
           <span>watering</span>
         </div>
-        <div className="flex items-center space-x-1 bg-yellow-100 text-yellow-800 px-2 py-1 rounded-full text-xs">
+        <div className="flex items-center space-x-1 bg-warning/10 text-warning px-2 py-1 rounded-full text-xs">
           <Droplets className="h-3 w-3" />
           <span>Drying</span>
         </div>
@@ -32,13 +32,13 @@ const TurnkeyTaskCard = ({ taskName = "Turnkey task 1", status = "Foundation - p
 
       {/* Test case tag */}
       <div className="mb-3">
-        <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs font-medium">
+        <span className="bg-info/10 text-info px-2 py-1 rounded text-xs font-medium">
           test cases(2)
         </span>
       </div>
 
       {/* Bottom counters */}
-      <div className="flex items-center justify-between text-xs text-gray-600">
+      <div className="flex items-center justify-between text-xs text-dim">
         <div className="flex items-center space-x-1">
           <Users className="h-4 w-4" />
           <span>3 human</span>
@@ -85,11 +85,11 @@ const TurnkeyWorkflow = ({ data = {} }) => {
 
   const getStatusBadgeColor = (color) => {
     const colors = {
-      green: 'bg-green-100 text-green-800',
-      yellow: 'bg-yellow-100 text-yellow-800',
-      blue: 'bg-blue-100 text-blue-800',
-      red: 'bg-red-100 text-red-800',
-      purple: 'bg-purple-100 text-purple-800'
+      green: 'bg-success/10 text-success',
+      yellow: 'bg-warning/10 text-warning',
+      blue: 'bg-info/10 text-info',
+      red: 'bg-danger/10 text-danger',
+      purple: 'bg-surface-hover text-ink'
     };
     return colors[color] || colors.blue;
   };
@@ -105,18 +105,18 @@ const TurnkeyWorkflow = ({ data = {} }) => {
   };
 
   const getTestCaseStyle = (status, index) => {
-    const baseStyle = "bg-white border-2 rounded-xl p-4 w-80 text-center font-medium";
+    const baseStyle = "bg-surface border-2 rounded-xl p-4 w-80 text-center font-medium";
     if (index === 0) {
-      return `${baseStyle} border-blue-400 text-blue-800 bg-blue-50`;
+      return `${baseStyle} border-info text-info bg-info/10`;
     }
-    return `${baseStyle} border-gray-300 text-gray-700`;
+    return `${baseStyle} border-line text-ink`;
   };
 
   return (
     <div className="flex flex-col items-center space-y-4">
       {/* Main Task Card */}
       <div 
-        className="bg-white border-2 border-gray-200 rounded-xl p-4 w-80 shadow-lg cursor-pointer hover:opacity-80 transition-opacity"
+        className="bg-surface border-2 border-line rounded-xl p-4 w-80 shadow-lg cursor-pointer hover:opacity-80 transition-opacity"
         onClick={(e) => {
           e.stopPropagation();
           console.log('🖱️ Main workflow card clicked');
@@ -136,12 +136,12 @@ const TurnkeyWorkflow = ({ data = {} }) => {
         {/* Header */}
         <div className="flex items-center justify-between mb-3">
           <div>
-            <h3 className="font-semibold text-gray-900 text-lg">{taskName}</h3>
-            <p className="text-sm text-gray-500">{description}</p>
+            <h3 className="font-semibold text-ink text-lg">{taskName}</h3>
+            <p className="text-sm text-dim">{description}</p>
           </div>
           <div className="flex items-center space-x-1">
-            <Clock className="h-5 w-5 text-blue-500" />
-            <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
+            <Clock className="h-5 w-5 text-info" />
+            <div className="w-3 h-3 bg-info rounded-full"></div>
           </div>
         </div>
 
@@ -157,19 +157,19 @@ const TurnkeyWorkflow = ({ data = {} }) => {
 
         {/* Test case summary */}
         <div className="mb-4">
-          <span className="bg-blue-100 text-blue-800 px-3 py-1.5 rounded-lg text-sm font-medium">
+          <span className="bg-info/10 text-info px-3 py-1.5 rounded-lg text-sm font-medium">
             test cases({testCases.length})
           </span>
         </div>
 
         {/* Bottom counters */}
-        <div className="flex items-center justify-between text-sm text-gray-700 font-medium">
+        <div className="flex items-center justify-between text-sm text-ink font-medium">
           <div className="flex items-center space-x-2">
-            <Users className="h-5 w-5 text-gray-600" />
+            <Users className="h-5 w-5 text-dim" />
             <span>{humanCount} human</span>
           </div>
           <div className="flex items-center space-x-2">
-            <Package className="h-5 w-5 text-gray-600" />
+            <Package className="h-5 w-5 text-dim" />
             <span>{resourceCount} resources</span>
           </div>
         </div>
@@ -178,9 +178,9 @@ const TurnkeyWorkflow = ({ data = {} }) => {
       {/* Connecting line to first test case */}
       {testCases.length > 0 && (
         <div className="flex flex-col items-center">
-          <div className="w-px h-8 bg-gray-400 border-dashed border-l-2"></div>
-          <div className="w-2 h-2 bg-gray-400 rounded-full"></div>
-          <div className="w-px h-8 bg-gray-400 border-dashed border-l-2"></div>
+          <div className="w-px h-8 bg-cta border-dashed border-l-2"></div>
+          <div className="w-2 h-2 bg-cta rounded-full"></div>
+          <div className="w-px h-8 bg-cta border-dashed border-l-2"></div>
         </div>
       )}
 
@@ -188,17 +188,17 @@ const TurnkeyWorkflow = ({ data = {} }) => {
       {testCases.map((testCase, index) => (
         <React.Fragment key={testCase.id}>
           <div 
-            className={`${getTestCaseStyle(testCase.status, index)} cursor-pointer hover:shadow-md transition-all duration-200 hover:scale-105`}
+            className={`${getTestCaseStyle(testCase.status, index)} cursor-pointer  transition-all duration-200 hover:scale-105`}
             onClick={(e) => handleTestCaseClick(testCase, e)}
             title="Click to view test case details"
           >
             <span className="text-sm font-medium">{testCase.name}</span>
             {testCase.description && (
-              <p className="text-xs text-gray-500 mt-1">{testCase.description}</p>
+              <p className="text-xs text-dim mt-1">{testCase.description}</p>
             )}
             {/* Show evidence count if available */}
             {Array.isArray(testCase.evidenceFiles) && testCase.evidenceFiles.length > 0 && (
-              <p className="text-xs text-blue-600 mt-1">
+              <p className="text-xs text-info mt-1">
                 Evidence: {testCase.evidenceFiles.length} files
               </p>
             )}
@@ -207,9 +207,9 @@ const TurnkeyWorkflow = ({ data = {} }) => {
           {/* Connecting line between test cases */}
           {index < testCases.length - 1 && (
             <div className="flex flex-col items-center">
-              <div className="w-px h-8 bg-gray-400 border-dashed border-l-2"></div>
-              <div className="w-2 h-2 bg-gray-400 rounded-full"></div>
-              <div className="w-px h-8 bg-gray-400 border-dashed border-l-2"></div>
+              <div className="w-px h-8 bg-cta border-dashed border-l-2"></div>
+              <div className="w-2 h-2 bg-cta rounded-full"></div>
+              <div className="w-px h-8 bg-cta border-dashed border-l-2"></div>
             </div>
           )}
         </React.Fragment>
@@ -303,14 +303,14 @@ const TurnkeyNode = ({ data, selected, id, ...props }) => {
         return <TurnkeyWorkflow data={data} />;
       case 'turnkey-resource':
         return (
-          <div className="bg-purple-50 border-2 border-purple-200 rounded-lg p-4 w-64">
-            <h3 className="font-semibold text-purple-900 mb-2">Resource Allocation</h3>
+          <div className="bg-surface-hover border-2 border-line rounded-lg p-4 w-64">
+            <h3 className="font-semibold text-ink mb-2">Resource Allocation</h3>
             <div className="space-y-2 text-sm">
               <div className="flex justify-between">
                 <span>QA team Alpha</span>
-                <span className="text-purple-600">Active</span>
+                <span className="text-ink">Active</span>
               </div>
-              <div className="text-xs text-purple-700">
+              <div className="text-xs text-ink">
                 <div>Tester</div>
                 <div>Evidence: 2 files</div>
               </div>
@@ -331,14 +331,14 @@ const TurnkeyNode = ({ data, selected, id, ...props }) => {
             setIsImportant(!isImportant);
             await persistIsImportantLocal(!isImportant);
           }}
-          className={`px-2 py-1 rounded ${isImportant ? 'bg-yellow-400 text-white' : 'bg-white text-yellow-600 border border-yellow-400'}`}
+          className={`px-2 py-1 rounded ${isImportant ? 'bg-warning text-white' : 'bg-surface text-warning border border-warning'}`}
           title={isImportant ? 'Unmark as Important' : 'Mark as Important'}
         >
           {isImportant ? '★' : '☆'}
         </button>
         <button
           onClick={() => setShowDeadlineInput(!showDeadlineInput)}
-          className="px-2 py-1 rounded bg-white text-blue-600 border border-blue-400"
+          className="px-2 py-1 rounded bg-surface text-info border border-info"
           title="Set Deadline"
         >
           ⏰
@@ -347,7 +347,7 @@ const TurnkeyNode = ({ data, selected, id, ...props }) => {
 
       {/* Deadline Input */}
       {showDeadlineInput && (
-        <div className="absolute top-12 right-2 bg-white border border-gray-300 rounded shadow-lg p-2 z-30">
+        <div className="absolute top-12 right-2 bg-surface border border-line rounded shadow-lg p-2 z-30">
           <input
             type="datetime-local"
             className="border rounded px-2 py-1 text-xs w-40"
@@ -356,7 +356,7 @@ const TurnkeyNode = ({ data, selected, id, ...props }) => {
             disabled={saving}
           />
           <button
-            className="mt-1 w-full px-2 py-1 text-xs bg-blue-500 text-white rounded"
+            className="mt-1 w-full px-2 py-1 text-xs bg-info text-white rounded"
             onClick={async () => {
               setShowDeadlineInput(false);
               await persistDeadlineLocal(deadline);
@@ -370,7 +370,7 @@ const TurnkeyNode = ({ data, selected, id, ...props }) => {
 
       {/* Deadline Display */}
       {deadline && timeLeft && !timeLeft.isExpired && (
-        <div className="absolute bottom-2 right-2 text-xs text-blue-600 bg-blue-50 px-2 py-1 rounded">
+        <div className="absolute bottom-2 right-2 text-xs text-info bg-info/10 px-2 py-1 rounded">
           ⏱ {formatTimeLeft(timeLeft)}
         </div>
       )}
@@ -380,7 +380,7 @@ const TurnkeyNode = ({ data, selected, id, ...props }) => {
       
       {/* Sequence Number Badge - Top left corner */}
       {data.sequenceNumber && (
-        <div className="absolute -top-4 -left-4 z-20 w-8 h-8 bg-gradient-to-br from-green-500 to-emerald-600 text-white rounded-full flex items-center justify-center text-sm font-bold shadow-lg border-2 border-white hover:shadow-xl transition-shadow">
+        <div className="absolute -top-4 -left-4 z-20 w-8 h-8 bg-black text-white rounded-full flex items-center justify-center text-sm font-bold shadow-lg border-2 border-white hover:shadow-xl transition-shadow">
           {data.sequenceNumber}
         </div>
       )}

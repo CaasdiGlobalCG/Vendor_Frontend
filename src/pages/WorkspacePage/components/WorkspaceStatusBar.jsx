@@ -29,14 +29,14 @@ const WorkspaceStatusBar = ({
   return (
     <footer className="ws-statusbar" data-workspace-statusbar>
       {/* Element Count */}
-      <span className="font-medium text-gray-700">
+      <span className="font-medium text-ink">
         {elementCount} {elementCount === 1 ? 'element on canvas' : 'elements on canvas'}
       </span>
 
-      <span className="text-gray-300">·</span>
+      <span className="text-dim">·</span>
 
       {/* Save Status */}
-      <span className="text-gray-500">
+      <span className="text-dim">
         {formatSavedTime()}
       </span>
 
@@ -44,14 +44,14 @@ const WorkspaceStatusBar = ({
 
       {/* Canvas Theme Switcher */}
       <div className="flex items-center gap-1.5 mr-2">
-        <span className="text-[10px] uppercase font-bold tracking-wider text-gray-400">Canvas:</span>
-        <div className="flex items-center gap-1 bg-gray-100 p-0.5 rounded-md border border-gray-200">
+        <span className="text-[10px] uppercase font-bold tracking-wider text-dim">Canvas:</span>
+        <div className="flex items-center gap-1 bg-surface-hover p-0.5 rounded-md border border-line">
           {themes.map((t) => (
             <button
               key={t.id}
               onClick={() => onSelectCanvasTheme && onSelectCanvasTheme(t.id)}
               className={`w-3.5 h-3.5 rounded-full border transition-transform ${
-                canvasTheme === t.id ? 'scale-110 ring-2 ring-blue-500' : 'opacity-70 hover:opacity-100'
+                canvasTheme === t.id ? 'scale-110 ring-2 ring-info' : 'opacity-70 hover:opacity-100'
               }`}
               style={{ backgroundColor: t.color, borderColor: t.border }}
               title={`Canvas theme: ${t.name}`}
@@ -60,7 +60,7 @@ const WorkspaceStatusBar = ({
         </div>
       </div>
 
-      <div className="w-px h-3.5 bg-gray-200" />
+      <div className="w-px h-3.5 bg-surface-hover" />
 
       {/* Pen Tool button */}
       {onOpenPenTools && (
@@ -69,7 +69,7 @@ const WorkspaceStatusBar = ({
           className="ws-zoom-btn"
           title="Drawing pen tools"
         >
-          <Pencil className="w-3.5 h-3.5 text-gray-600" />
+          <Pencil className="w-3.5 h-3.5 text-dim" />
         </button>
       )}
 
@@ -80,7 +80,7 @@ const WorkspaceStatusBar = ({
           className="ws-zoom-btn"
           title="Zoom out"
         >
-          <Minus className="w-3.5 h-3.5 text-gray-600" />
+          <Minus className="w-3.5 h-3.5 text-dim" />
         </button>
 
         <span className="ws-zoom-val">{Math.round(zoomLevel)}%</span>
@@ -90,7 +90,7 @@ const WorkspaceStatusBar = ({
           className="ws-zoom-btn"
           title="Zoom in"
         >
-          <Plus className="w-3.5 h-3.5 text-gray-600" />
+          <Plus className="w-3.5 h-3.5 text-dim" />
         </button>
 
         {onFitView && (
@@ -99,7 +99,7 @@ const WorkspaceStatusBar = ({
             className="ws-zoom-btn ml-1"
             title="Fit view to all elements"
           >
-            <Hand className="w-3.5 h-3.5 text-gray-600" />
+            <Hand className="w-3.5 h-3.5 text-dim" />
           </button>
         )}
       </div>

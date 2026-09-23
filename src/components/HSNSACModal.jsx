@@ -48,9 +48,9 @@ const HSNSACModal = ({ isOpen, onClose, onSelect, type = 'product' }) => {
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[9999] p-4">
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-hidden">
+      <div className="bg-surface rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-hidden">
         {/* Header */}
-        <div className="bg-gradient-to-r from-blue-600 to-blue-700 text-white p-6 flex items-center justify-between">
+        <div className="bg-black text-white p-6 flex items-center justify-between">
           <div className="flex items-center space-x-3">
             <div className="bg-white/20 p-2 rounded-lg">
               {type === 'product' ? 
@@ -60,7 +60,7 @@ const HSNSACModal = ({ isOpen, onClose, onSelect, type = 'product' }) => {
             </div>
             <div>
               <h2 className="text-xl font-bold">Select {codeType} Code</h2>
-              <p className="text-blue-200 text-sm">
+              <p className="text-info text-sm">
                 Choose from {codes.length} available {codeType} codes
               </p>
             </div>
@@ -74,25 +74,25 @@ const HSNSACModal = ({ isOpen, onClose, onSelect, type = 'product' }) => {
         </div>
 
         {/* Search Section */}
-        <div className="p-6 border-b border-stone-200 bg-stone-50">
+        <div className="p-6 border-b border-line bg-canvas">
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-stone-400 w-5 h-5" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 transform  text-dim w-5 h-5" />
             <input
               type="text"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               placeholder={`Search ${codeType} code or description...`}
-              className="w-full pl-10 pr-4 py-3 border border-stone-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors bg-white"
+              className="w-full pl-10 pr-4 py-3 border border-line rounded-lg focus:ring-2 focus:ring-info focus:border-info transition-colors bg-surface"
               autoFocus
             />
           </div>
-          <div className="mt-2 flex items-center justify-between text-sm text-stone-600">
+          <div className="mt-2 flex items-center justify-between text-sm text-dim">
             <span>
               {filteredCodes.length} codes found
               {searchTerm && ` for "${searchTerm}"`}
             </span>
             {filteredCodes.length === 50 && !searchTerm && (
-              <span className="text-blue-600">Showing first 50 codes</span>
+              <span className="text-info">Showing first 50 codes</span>
             )}
           </div>
         </div>
@@ -107,27 +107,27 @@ const HSNSACModal = ({ isOpen, onClose, onSelect, type = 'product' }) => {
                   onClick={() => handleCodeClick(code)}
                   className={`w-full p-4 text-left rounded-lg border-2 transition-all duration-200 ${
                     selectedCode?.code === code.code
-                      ? 'border-blue-500 bg-blue-50 shadow-md'
-                      : 'border-stone-200 hover:border-blue-300 hover:bg-blue-50'
+                      ? 'border-info bg-info/10 '
+                      : 'border-line hover:border-info/30 hover:bg-info/10'
                   }`}
                 >
                   <div className="flex items-start justify-between">
                     <div className="flex-1 min-w-0">
                       <div className={`font-bold text-lg ${
-                        selectedCode?.code === code.code ? 'text-blue-700' : 'text-stone-800'
+                        selectedCode?.code === code.code ? 'text-info' : 'text-ink'
                       }`}>
                         {code.code}
                       </div>
                       <div className={`text-sm mt-1 ${
-                        selectedCode?.code === code.code ? 'text-blue-600' : 'text-stone-600'
+                        selectedCode?.code === code.code ? 'text-info' : 'text-dim'
                       }`}>
                         {code.description}
                       </div>
                     </div>
                     {selectedCode?.code === code.code && (
                       <div className="ml-4 flex-shrink-0">
-                        <div className="w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center">
-                          <div className="w-2 h-2 bg-white rounded-full"></div>
+                        <div className="w-6 h-6 bg-info rounded-full flex items-center justify-center">
+                          <div className="w-2 h-2 bg-surface rounded-full"></div>
                         </div>
                       </div>
                     )}
@@ -137,13 +137,13 @@ const HSNSACModal = ({ isOpen, onClose, onSelect, type = 'product' }) => {
             </div>
           ) : (
             <div className="p-12 text-center">
-              <div className="text-stone-400 mb-4">
+              <div className="text-dim mb-4">
                 <Search className="w-16 h-16 mx-auto" />
               </div>
-              <h3 className="text-lg font-semibold text-stone-700 mb-2">
+              <h3 className="text-lg font-semibold text-ink mb-2">
                 No {codeType} codes found
               </h3>
-              <p className="text-stone-500">
+              <p className="text-dim">
                 Try searching with different keywords or check your spelling
               </p>
             </div>
@@ -151,10 +151,10 @@ const HSNSACModal = ({ isOpen, onClose, onSelect, type = 'product' }) => {
         </div>
 
         {/* Footer */}
-        <div className="p-6 border-t border-stone-200 bg-stone-50 flex items-center justify-between">
-          <div className="text-sm text-stone-600">
+        <div className="p-6 border-t border-line bg-canvas flex items-center justify-between">
+          <div className="text-sm text-dim">
             {selectedCode ? (
-              <span className="font-medium text-blue-600">
+              <span className="font-medium text-info">
                 Selected: {selectedCode.code} - {selectedCode.description.substring(0, 50)}
                 {selectedCode.description.length > 50 ? '...' : ''}
               </span>
@@ -165,14 +165,14 @@ const HSNSACModal = ({ isOpen, onClose, onSelect, type = 'product' }) => {
           <div className="flex items-center space-x-3">
             <button
               onClick={onClose}
-              className="px-6 py-2 text-stone-600 hover:text-stone-800 transition-colors"
+              className="px-6 py-2 text-dim hover:text-ink transition-colors"
             >
               Cancel
             </button>
             <button
               onClick={handleSelect}
               disabled={!selectedCode}
-              className="px-8 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium"
+              className="px-8 py-3 bg-info text-white rounded-lg hover:bg-info disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium"
             >
               Select Code
             </button>

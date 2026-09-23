@@ -156,31 +156,31 @@ const PurchaseOrdersPage = ({ workspaceId, workspaceName, selectedTask, selected
     switch (statusType) {
       case 'accepted':
         return {
-          bg: 'bg-green-50',
-          text: 'text-green-700',
-          border: 'border-green-200',
-          dot: 'bg-green-500'
+          bg: 'bg-success/10',
+          text: 'text-success',
+          border: 'border-success/20',
+          dot: 'bg-success'
         };
       case 'pending':
         return {
-          bg: 'bg-yellow-50',
-          text: 'text-yellow-700',
-          border: 'border-yellow-200',
-          dot: 'bg-yellow-500'
+          bg: 'bg-warning/10',
+          text: 'text-warning',
+          border: 'border-warning/20',
+          dot: 'bg-warning'
         };
       case 'draft':
         return {
-          bg: 'bg-gray-50',
-          text: 'text-gray-600',
-          border: 'border-gray-200',
-          dot: 'bg-gray-400'
+          bg: 'bg-canvas',
+          text: 'text-dim',
+          border: 'border-line',
+          dot: 'bg-cta'
         };
       default:
         return {
-          bg: 'bg-gray-50',
-          text: 'text-gray-600',
-          border: 'border-gray-200',
-          dot: 'bg-gray-400'
+          bg: 'bg-canvas',
+          text: 'text-dim',
+          border: 'border-line',
+          dot: 'bg-cta'
         };
     }
   };
@@ -474,26 +474,26 @@ const PurchaseOrdersPage = ({ workspaceId, workspaceName, selectedTask, selected
   }, 0);
 
   return (
-    <div className="min-h-full bg-gradient-to-br from-gray-50 via-slate-50 to-stone-50">
+    <div className="min-h-full bg-gradient-to-br from-surface-hover via-surface-hover to-surface-hover">
       {/* Approval Success/Error Messages */}
       {approvalMessage && (
-        <div className="fixed top-4 right-4 z-40 bg-green-50 border border-green-200 rounded-lg p-4 flex items-center space-x-3 shadow-lg animate-slide-in">
-          <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0">
-            <CheckCircle className="w-6 h-6 text-green-600" />
+        <div className="fixed top-4 right-4 z-40 bg-success/10 border border-success/20 rounded-lg p-4 flex items-center space-x-3 shadow-lg animate-slide-in">
+          <div className="w-10 h-10 bg-success/10 rounded-full flex items-center justify-center flex-shrink-0">
+            <CheckCircle className="w-6 h-6 text-success" />
           </div>
           <div>
-            <p className="text-sm font-medium text-green-900">{approvalMessage}</p>
+            <p className="text-sm font-medium text-success">{approvalMessage}</p>
           </div>
         </div>
       )}
       
       {approvalError && (
-        <div className="fixed top-4 right-4 z-40 bg-red-50 border border-red-200 rounded-lg p-4 flex items-center space-x-3 shadow-lg animate-slide-in">
-          <div className="w-10 h-10 bg-red-100 rounded-full flex items-center justify-center flex-shrink-0">
-            <AlertCircle className="w-6 h-6 text-red-600" />
+        <div className="fixed top-4 right-4 z-40 bg-danger/10 border border-danger/20 rounded-lg p-4 flex items-center space-x-3 shadow-lg animate-slide-in">
+          <div className="w-10 h-10 bg-danger/10 rounded-full flex items-center justify-center flex-shrink-0">
+            <AlertCircle className="w-6 h-6 text-danger" />
           </div>
           <div>
-            <p className="text-sm font-medium text-red-900">{approvalError}</p>
+            <p className="text-sm font-medium text-danger">{approvalError}</p>
           </div>
         </div>
       )}
@@ -501,15 +501,15 @@ const PurchaseOrdersPage = ({ workspaceId, workspaceName, selectedTask, selected
       {/* PDF Preview Modal */}
       {showPreviewModal && previewPdfUrl && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-          <div className="bg-white rounded-lg shadow-2xl w-full h-full max-w-4xl max-h-[90vh] flex flex-col">
-            <div className="flex items-center justify-between p-6 border-b border-gray-200">
-              <h2 className="text-xl font-bold text-gray-900">Purchase Order Preview</h2>
+          <div className="bg-surface rounded-lg shadow-2xl w-full h-full max-w-4xl max-h-[90vh] flex flex-col">
+            <div className="flex items-center justify-between p-6 border-b border-line">
+              <h2 className="text-xl font-bold text-ink">Purchase Order Preview</h2>
               <button
                 onClick={() => {
                   setShowPreviewModal(false);
                   setPreviewPdfUrl(null);
                 }}
-                className="text-gray-500 hover:text-gray-700 transition-colors"
+                className="text-dim hover:text-ink transition-colors"
               >
                 <X className="w-6 h-6" />
               </button>
@@ -521,13 +521,13 @@ const PurchaseOrdersPage = ({ workspaceId, workspaceName, selectedTask, selected
                 title="Purchase Order Preview"
               />
             </div>
-            <div className="flex items-center justify-between p-6 border-t border-gray-200 bg-gray-50">
+            <div className="flex items-center justify-between p-6 border-t border-line bg-canvas">
               <button
                 onClick={() => {
                   setShowPreviewModal(false);
                   setPreviewPdfUrl(null);
                 }}
-                className="px-6 py-2.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+                className="px-6 py-2.5 text-sm font-medium text-ink bg-surface border border-line rounded-lg hover:bg-canvas transition-colors"
               >
                 Close
               </button>
@@ -537,7 +537,7 @@ const PurchaseOrdersPage = ({ workspaceId, workspaceName, selectedTask, selected
                   download
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="px-6 py-2.5 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors"
+                  className="px-6 py-2.5 text-sm font-medium text-white bg-info rounded-lg hover:bg-info transition-colors"
                 >
                   Download
                 </a>
@@ -549,16 +549,16 @@ const PurchaseOrdersPage = ({ workspaceId, workspaceName, selectedTask, selected
 
       {/* Beautiful Header with Stats */}
       <div className="relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-r from-slate-600/3 via-gray-600/3 to-stone-600/3"></div>
+        <div className="absolute inset-0 bg-surface"></div>
         <div className="relative px-8 py-8">
           <div className="flex items-center justify-between mb-8">
             <div>
-              <h1 className="text-3xl font-bold bg-gradient-to-r from-slate-800 via-gray-700 to-stone-700 bg-clip-text text-transparent">
+              <h1 className="text-3xl font-bold ">
                 Purchase Orders Dashboard
               </h1>
-              <p className="text-gray-600 mt-2">Manage and track all your purchase orders</p>
+              <p className="text-dim mt-2">Manage and track all your purchase orders</p>
             </div>
-            <button className="bg-gradient-to-r from-slate-700 to-gray-700 text-white px-6 py-3 rounded-xl hover:from-slate-800 hover:to-gray-800 transition-all duration-300 flex items-center space-x-2 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5">
+            <button className="bg-surface text-white px-6 py-3 rounded-xl hover:from-surface hover:to-surface transition-all duration-300 flex items-center space-x-2 shadow-lg hover:shadow-xl transform ">
               <Plus className="w-5 h-5" />
               <span className="font-medium">Create Purchase Order</span>
             </button>
@@ -566,54 +566,54 @@ const PurchaseOrdersPage = ({ workspaceId, workspaceName, selectedTask, selected
 
           {/* Stats Cards */}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-            <div className="bg-white border border-gray-200 rounded-lg p-6 shadow-sm hover:shadow-md transition-shadow">
+            <div className="bg-surface border border-line rounded-lg p-6   transition-shadow">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-gray-600 mb-1">Total Orders</p>
-                  <p className="text-2xl font-bold text-gray-900">{totalOrders}</p>
-                  <p className="text-xs text-green-600 mt-1">↗ +8% this month</p>
+                  <p className="text-sm font-medium text-dim mb-1">Total Orders</p>
+                  <p className="text-2xl font-bold text-ink">{totalOrders}</p>
+                  <p className="text-xs text-success mt-1">↗ +8% this month</p>
                 </div>
-                <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
-                  <Package className="w-6 h-6 text-blue-600" />
+                <div className="w-12 h-12 bg-info/10 rounded-lg flex items-center justify-center">
+                  <Package className="w-6 h-6 text-info" />
                 </div>
               </div>
             </div>
             
-            <div className="bg-white border border-gray-200 rounded-lg p-6 shadow-sm hover:shadow-md transition-shadow">
+            <div className="bg-surface border border-line rounded-lg p-6   transition-shadow">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-gray-600 mb-1">Accepted</p>
-                  <p className="text-2xl font-bold text-gray-900">{acceptedOrders}</p>
-                  <p className="text-xs text-green-600 mt-1">↗ +5% this month</p>
+                  <p className="text-sm font-medium text-dim mb-1">Accepted</p>
+                  <p className="text-2xl font-bold text-ink">{acceptedOrders}</p>
+                  <p className="text-xs text-success mt-1">↗ +5% this month</p>
                 </div>
-                <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
-                  <CheckCircle className="w-6 h-6 text-green-600" />
+                <div className="w-12 h-12 bg-success/10 rounded-lg flex items-center justify-center">
+                  <CheckCircle className="w-6 h-6 text-success" />
                 </div>
               </div>
             </div>
             
-            <div className="bg-white border border-gray-200 rounded-lg p-6 shadow-sm hover:shadow-md transition-shadow">
+            <div className="bg-surface border border-line rounded-lg p-6   transition-shadow">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-gray-600 mb-1">Pending Review</p>
-                  <p className="text-2xl font-bold text-gray-900">{pendingOrders}</p>
-                  <p className="text-xs text-yellow-600 mt-1">↗ +3% this month</p>
+                  <p className="text-sm font-medium text-dim mb-1">Pending Review</p>
+                  <p className="text-2xl font-bold text-ink">{pendingOrders}</p>
+                  <p className="text-xs text-warning mt-1">↗ +3% this month</p>
                 </div>
-                <div className="w-12 h-12 bg-yellow-100 rounded-lg flex items-center justify-center">
-                  <Clock className="w-6 h-6 text-yellow-600" />
+                <div className="w-12 h-12 bg-warning/10 rounded-lg flex items-center justify-center">
+                  <Clock className="w-6 h-6 text-warning" />
                 </div>
               </div>
             </div>
             
-            <div className="bg-white border border-gray-200 rounded-lg p-6 shadow-sm hover:shadow-md transition-shadow">
+            <div className="bg-surface border border-line rounded-lg p-6   transition-shadow">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-gray-600 mb-1">Total Value</p>
-                  <p className="text-2xl font-bold text-gray-900">₹{totalValue.toLocaleString('en-IN', { maximumFractionDigits: 0 })}</p>
-                  <p className="text-xs text-green-600 mt-1">↗ +12% this month</p>
+                  <p className="text-sm font-medium text-dim mb-1">Total Value</p>
+                  <p className="text-2xl font-bold text-ink">₹{totalValue.toLocaleString('en-IN', { maximumFractionDigits: 0 })}</p>
+                  <p className="text-xs text-success mt-1">↗ +12% this month</p>
                 </div>
-                <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
-                  <DollarSign className="w-6 h-6 text-purple-600" />
+                <div className="w-12 h-12 bg-surface-hover rounded-lg flex items-center justify-center">
+                  <DollarSign className="w-6 h-6 text-ink" />
                 </div>
               </div>
             </div>
@@ -622,19 +622,19 @@ const PurchaseOrdersPage = ({ workspaceId, workspaceName, selectedTask, selected
           {/* Enhanced Search and Filter */}
           <div className="flex items-center space-x-4">
             <div className="relative flex-1 max-w-md">
-              <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 transform  text-dim w-5 h-5" />
               <input
                 type="text"
                 placeholder="Search purchase orders..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-12 pr-4 py-3 bg-white border border-gray-300 rounded-lg focus:ring-2 focus:ring-slate-500 focus:border-transparent text-sm"
+                className="w-full pl-12 pr-4 py-3 bg-surface border border-line rounded-lg focus:ring-2 focus:ring-line focus:border-transparent text-sm"
               />
             </div>
             <select
               value={selectedStatus}
               onChange={(e) => setSelectedStatus(e.target.value)}
-              className="px-4 py-3 bg-white border border-gray-300 rounded-lg focus:ring-2 focus:ring-slate-500 focus:border-transparent text-sm"
+              className="px-4 py-3 bg-surface border border-line rounded-lg focus:ring-2 focus:ring-line focus:border-transparent text-sm"
             >
               <option value="all">All Status</option>
               <option value="accepted">Accepted</option>
@@ -648,20 +648,20 @@ const PurchaseOrdersPage = ({ workspaceId, workspaceName, selectedTask, selected
       {/* Quote preview section when coming from Quotes dashboard */}
       {highlightedQuote && (
         <div className="px-8 pb-8">
-          <div className="bg-white border border-emerald-200 rounded-xl shadow-md p-6 relative overflow-hidden">
-            <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-emerald-500 to-green-500"></div>
+          <div className="bg-surface border border-line rounded-xl  p-6 relative overflow-hidden">
+            <div className="absolute top-0 left-0 right-0 h-1 bg-black"></div>
             <div className="flex items-center justify-between mb-5">
               <div>
-                <h2 className="text-xl font-bold text-gray-900 mb-1">
+                <h2 className="text-xl font-bold text-ink mb-1">
                   🎯 Raise Purchase Order from {isOrdersOrigin ? 'Final Quotation' : 'Quote'}
                 </h2>
                 <div className="flex items-center space-x-2">
-                  <span className="inline-block px-3 py-1 bg-emerald-50 text-emerald-700 rounded-full text-sm font-semibold">
+                  <span className="inline-block px-3 py-1 bg-surface-hover text-ink rounded-full text-sm font-semibold">
                     {isOrdersOrigin ? 'Final Quotation' : 'Quote'} {highlightedQuote.customQuoteId ||
                       highlightedQuote.displayQuoteId ||
                       highlightedQuote.id}
                   </span>
-                  <p className="text-sm text-gray-600">
+                  <p className="text-sm text-dim">
                     Review the quote details below, then click{' '}
                     <span className="font-semibold">Send PO to {dispatchLabel}</span>.
                   </p>
@@ -676,7 +676,7 @@ const PurchaseOrdersPage = ({ workspaceId, workspaceName, selectedTask, selected
                       onSourceConsumed();
                     }
                   }}
-                  className="px-4 py-2.5 text-xs font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors duration-200"
+                  className="px-4 py-2.5 text-xs font-medium text-ink bg-surface-hover rounded-lg hover:bg-surface-hover transition-colors duration-200"
                 >
                   Dismiss
                 </button>
@@ -684,13 +684,13 @@ const PurchaseOrdersPage = ({ workspaceId, workspaceName, selectedTask, selected
                   type="button"
                   onClick={handleSendPO}
                   disabled={sendingPo}
-                  className="px-4 py-2.5 text-xs font-medium bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
+                  className="px-4 py-2.5 text-xs font-medium bg-cta text-cta-foreground rounded-lg hover:bg-cta disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
                 >
                   {sendingPo ? 'Sending...' : `✓ Send PO to ${dispatchLabel}`}
                 </button>
               </div>
             </div>
-            <div className="bg-gray-50 rounded-lg p-4 max-h-[480px] overflow-auto border border-gray-200" ref={previewRef}>
+            <div className="bg-canvas rounded-lg p-4 max-h-[480px] overflow-auto border border-line" ref={previewRef}>
               <StandardPreview
                 quote={highlightedQuote}
                 docType="purchaseorder"
@@ -720,83 +720,83 @@ const PurchaseOrdersPage = ({ workspaceId, workspaceName, selectedTask, selected
       {/* Purchase Orders List View */}
       <div className="px-8 pb-8">
         {loading ? (
-          <div className="bg-white rounded-lg p-12 text-center">
-            <div className="w-20 h-20 bg-gray-100 rounded-lg flex items-center justify-center mx-auto mb-6">
-              <Package className="w-10 h-10 text-gray-400" />
+          <div className="bg-surface rounded-lg p-12 text-center">
+            <div className="w-20 h-20 bg-surface-hover rounded-lg flex items-center justify-center mx-auto mb-6">
+              <Package className="w-10 h-10 text-dim" />
             </div>
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">Loading purchase orders...</h3>
-            <p className="text-gray-500">Please wait while we fetch the data.</p>
+            <h3 className="text-lg font-semibold text-ink mb-2">Loading purchase orders...</h3>
+            <p className="text-dim">Please wait while we fetch the data.</p>
           </div>
         ) : error ? (
-          <div className="bg-white rounded-lg p-12 text-center">
-            <div className="w-20 h-20 bg-gray-100 rounded-lg flex items-center justify-center mx-auto mb-6">
-              <AlertCircle className="w-10 h-10 text-red-400" />
+          <div className="bg-surface rounded-lg p-12 text-center">
+            <div className="w-20 h-20 bg-surface-hover rounded-lg flex items-center justify-center mx-auto mb-6">
+              <AlertCircle className="w-10 h-10 text-danger" />
             </div>
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">Error: {error}</h3>
-            <p className="text-gray-500 mb-6">Failed to load purchase orders. Please try again later.</p>
-            <button className="bg-slate-700 text-white px-6 py-3 rounded-lg hover:bg-slate-800 transition-colors duration-200">
+            <h3 className="text-lg font-semibold text-ink mb-2">Error: {error}</h3>
+            <p className="text-dim mb-6">Failed to load purchase orders. Please try again later.</p>
+            <button className="bg-cta text-cta-foreground px-6 py-3 rounded-lg hover:bg-cta transition-colors duration-200">
               Retry
             </button>
           </div>
         ) : filteredOrders.length === 0 ? (
-          <div className="bg-white rounded-lg p-12 text-center">
-            <div className="w-20 h-20 bg-gray-100 rounded-lg flex items-center justify-center mx-auto mb-6">
-              <Package className="w-10 h-10 text-gray-400" />
+          <div className="bg-surface rounded-lg p-12 text-center">
+            <div className="w-20 h-20 bg-surface-hover rounded-lg flex items-center justify-center mx-auto mb-6">
+              <Package className="w-10 h-10 text-dim" />
             </div>
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">No purchase orders found</h3>
-            <p className="text-gray-500 mb-6">
+            <h3 className="text-lg font-semibold text-ink mb-2">No purchase orders found</h3>
+            <p className="text-dim mb-6">
               {highlightedQuote
                 ? `Once you send the PO to ${dispatchLabel}, it will appear here.`
                 : 'Try adjusting your search or filter criteria.'}
             </p>
             {!highlightedQuote && (
-              <button className="bg-slate-700 text-white px-6 py-3 rounded-lg hover:bg-slate-800 transition-colors duration-200">
+              <button className="bg-cta text-cta-foreground px-6 py-3 rounded-lg hover:bg-cta transition-colors duration-200">
                 Create New Purchase Order
               </button>
             )}
           </div>
         ) : (
-          <div className="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
+          <div className="bg-surface border border-line rounded-xl  overflow-hidden">
             <table className="w-full">
-              <thead className="bg-gray-50 border-b border-gray-200">
+              <thead className="bg-canvas border-b border-line">
                 <tr>
-                  <th className="text-left py-5 px-6 text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                  <th className="text-left py-5 px-6 text-xs font-semibold text-dim uppercase tracking-wider">
                     Purchase Order
                   </th>
-                  <th className="text-left py-5 px-6 text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                  <th className="text-left py-5 px-6 text-xs font-semibold text-dim uppercase tracking-wider">
                     Vendor
                   </th>
-                  <th className="text-left py-5 px-6 text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                  <th className="text-left py-5 px-6 text-xs font-semibold text-dim uppercase tracking-wider">
                     Project
                   </th>
-                  <th className="text-right py-5 px-6 text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                  <th className="text-right py-5 px-6 text-xs font-semibold text-dim uppercase tracking-wider">
                     Amount
                   </th>
-                  <th className="text-center py-5 px-6 text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                  <th className="text-center py-5 px-6 text-xs font-semibold text-dim uppercase tracking-wider">
                     Items
                   </th>
-                  <th className="text-center py-5 px-6 text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                  <th className="text-center py-5 px-6 text-xs font-semibold text-dim uppercase tracking-wider">
                     Status
                   </th>
-                  <th className="text-center py-5 px-6 text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                  <th className="text-center py-5 px-6 text-xs font-semibold text-dim uppercase tracking-wider">
                     Actions
                   </th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-200">
+              <tbody className="divide-y divide-line">
                 {filteredOrders.map((order) => {
                   const statusConfig = getStatusConfig(order.statusType);
                   return (
-                    <tr key={order.id} className="hover:bg-gray-50 transition-colors duration-200">
+                    <tr key={order.id} className="hover:bg-canvas transition-colors duration-200">
                       <td className="py-5 px-6">
                         <div className="flex items-center space-x-3">
-                          <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                            <FileText className="w-5 h-5 text-blue-600" />
+                          <div className="w-10 h-10 bg-info/10 rounded-lg flex items-center justify-center flex-shrink-0">
+                            <FileText className="w-5 h-5 text-info" />
                           </div>
                           <div>
-                            <div className="font-semibold text-gray-900">{order.id}</div>
+                            <div className="font-semibold text-ink">{order.id}</div>
                             {order.purchaseReturns && order.purchaseReturns !== 'None' && (
-                              <div className="text-xs text-blue-600 bg-blue-50 px-2 py-0.5 rounded mt-1 inline-block">
+                              <div className="text-xs text-info bg-info/10 px-2 py-0.5 rounded mt-1 inline-block">
                                 Returns: {order.purchaseReturns}
                               </div>
                             )}
@@ -804,25 +804,25 @@ const PurchaseOrdersPage = ({ workspaceId, workspaceName, selectedTask, selected
                         </div>
                       </td>
                       <td className="py-5 px-6">
-                        <div className="text-sm font-medium text-gray-900">
+                        <div className="text-sm font-medium text-ink">
                           {order.vendor}
                         </div>
                         {order.email && (
-                          <div className="text-xs text-gray-500">{order.email}</div>
+                          <div className="text-xs text-dim">{order.email}</div>
                         )}
                       </td>
                       <td className="py-5 px-6">
-                        <div className="text-sm text-gray-600">{order.project || 'N/A'}</div>
+                        <div className="text-sm text-dim">{order.project || 'N/A'}</div>
                       </td>
                       <td className="py-5 px-6 text-right">
-                        <div className="text-lg font-bold text-gray-900">
+                        <div className="text-lg font-bold text-ink">
                           {order.amount}
                         </div>
                       </td>
                       <td className="py-5 px-6 text-center">
                         <div className="flex items-center justify-center space-x-1 text-sm">
-                          <Package className="w-4 h-4 text-gray-400" />
-                          <span className="text-gray-900 font-medium">{order.items}</span>
+                          <Package className="w-4 h-4 text-dim" />
+                          <span className="text-ink font-medium">{order.items}</span>
                         </div>
                       </td>
                       <td className="py-5 px-6 text-center">
@@ -835,14 +835,14 @@ const PurchaseOrdersPage = ({ workspaceId, workspaceName, selectedTask, selected
                         <div className="flex items-center justify-center space-x-2">
                           <button 
                             onClick={() => handlePreviewClick(order)}
-                            className="p-2 text-gray-400 hover:text-slate-600 hover:bg-slate-50 rounded-lg transition-all duration-200" 
+                            className="p-2 text-dim hover:text-dim hover:bg-canvas rounded-lg transition-all duration-200" 
                             title="View"
                           >
                             <Eye className="w-4 h-4" />
                           </button>
                           {order.status && (order.status.toLowerCase().includes('pending_review') || order.status.toLowerCase().includes('pending review') || order.status.toLowerCase().includes('requested po') || order.status.toLowerCase().includes('sent_to_vendor_for_confirmation')) && (
                             <button
-                              className="text-xs px-3 py-1.5 bg-emerald-50 text-emerald-700 rounded-lg hover:bg-emerald-100 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                              className="text-xs px-3 py-1.5 bg-surface-hover text-ink rounded-lg hover:bg-surface-hover transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
                               onClick={() => handleApproveAndSendPO(order)}
                               disabled={approvingPoId === order.id}
                               title="Approve and send to PM"
@@ -852,7 +852,7 @@ const PurchaseOrdersPage = ({ workspaceId, workspaceName, selectedTask, selected
                           )}
                           {order.status && (order.status.toLowerCase().includes('requested for invoice') || order.status.toLowerCase().includes('vendor_approved')) && onConvertToInvoice && (
                             <button
-                              className="text-xs px-3 py-1.5 bg-emerald-50 text-emerald-700 rounded-lg hover:bg-emerald-100 transition-colors duration-200"
+                              className="text-xs px-3 py-1.5 bg-surface-hover text-ink rounded-lg hover:bg-surface-hover transition-colors duration-200"
                               onClick={() => onConvertToInvoice(order)}
                               title="Convert to Invoice"
                             >
@@ -861,10 +861,10 @@ const PurchaseOrdersPage = ({ workspaceId, workspaceName, selectedTask, selected
                           )}
                           {order.statusType === 'pending' && (
                             <>
-                              {/* <button className="p-2 text-green-600 hover:bg-green-50 rounded-lg transition-colors duration-200" title="Accept">
+                              {/* <button className="p-2 text-success hover:bg-success/10 rounded-lg transition-colors duration-200" title="Accept">
                                 <Check className="w-4 h-4" />
                               </button>
-                              <button className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors duration-200" title="Reject">
+                              <button className="p-2 text-danger hover:bg-danger/10 rounded-lg transition-colors duration-200" title="Reject">
                                 <X className="w-4 h-4" />
                               </button> */}
                             </>

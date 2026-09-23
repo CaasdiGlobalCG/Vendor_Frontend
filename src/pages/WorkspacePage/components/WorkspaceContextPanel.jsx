@@ -145,49 +145,49 @@ const WorkspaceContextPanel = ({
       name: 'Invoices & Quotes', 
       desc: 'Quotations, invoices, and purchase orders', 
       icon: FileText,
-      color: 'bg-pink-50 text-pink-700 border-pink-200' 
+      color: 'bg-surface-hover text-ink border-line' 
     },
     { 
       id: 'forms', 
       name: 'Forms & Inputs', 
       desc: 'Inputs, textareas, buttons, dropdowns', 
       icon: Grid,
-      color: 'bg-yellow-50 text-yellow-700 border-yellow-200' 
+      color: 'bg-warning/10 text-warning border-warning/20' 
     },
     { 
       id: 'tables', 
       name: 'Tables & Grids', 
       desc: 'Data tables, pivot tables, calendars', 
       icon: Table,
-      color: 'bg-emerald-50 text-emerald-700 border-emerald-200' 
+      color: 'bg-surface-hover text-ink border-line' 
     },
     { 
       id: 'charts', 
       name: 'Analytics & Charts', 
       desc: 'Bar, line, pie, area, and scatter charts', 
       icon: BarChart3,
-      color: 'bg-blue-50 text-blue-700 border-blue-200' 
+      color: 'bg-info/10 text-info border-info/20' 
     },
     { 
       id: 'flowcharts', 
       name: 'Flowcharts & Logic', 
       desc: 'Process flow, decision trees, stage gates', 
       icon: GitBranch,
-      color: 'bg-indigo-50 text-indigo-700 border-indigo-200' 
+      color: 'bg-info/10 text-info border-info/20' 
     },
     { 
       id: 'task-card', 
       name: 'Task Cards', 
       desc: 'Action items, milestone cards, status', 
       icon: ClipboardCheck,
-      color: 'bg-teal-50 text-teal-700 border-teal-200' 
+      color: 'bg-surface-hover text-ink border-line' 
     },
     { 
       id: 'materials', 
       name: 'Materials & BOQ', 
       desc: 'Bill of Quantities, specs, materials', 
       icon: Package,
-      color: 'bg-orange-50 text-orange-700 border-orange-200' 
+      color: 'bg-warning/10 text-warning border-warning/20' 
     },
     { 
       id: 'cad-files', 
@@ -201,14 +201,14 @@ const WorkspaceContextPanel = ({
       name: 'Cost Calculators', 
       desc: 'Flooring, painting, concrete, electrical', 
       icon: Calculator,
-      color: 'bg-purple-50 text-purple-700 border-purple-200' 
+      color: 'bg-surface-hover text-ink border-line' 
     },
     {
       id: 'smart',
       name: 'Smart Elements',
       desc: 'AI notes, calendar events, approval boards',
       icon: Sparkles,
-      color: 'bg-violet-50 text-violet-700 border-violet-200'
+      color: 'bg-surface-hover text-ink border-line' 
     },
     ];
 
@@ -377,63 +377,63 @@ const WorkspaceContextPanel = ({
       name: 'Manage Quotations/Invoices',
       icon: FileText,
       description: 'Create and manage quotations and invoices for your projects',
-      color: 'bg-blue-100 text-blue-600'
+      color: 'bg-info/10 text-info'
     },
     {
       id: 'payments',
       name: 'Manage Payments',
       icon: CreditCard,
       description: 'Track and manage payment transactions and history',
-      color: 'bg-green-100 text-green-600'
+      color: 'bg-success/10 text-success'
     },
     {
       id: 'boq',
       name: 'Manage BOQ',
       icon: Calculator,
       description: 'Bill of Quantities management and cost estimation',
-      color: 'bg-purple-100 text-purple-600'
+      color: 'bg-surface-hover text-ink'
     },
     {
       id: 'cost-calculators',
       name: 'Cost Calculators',
       icon: Calculator,
       description: 'Open construction cost calculators and add results to canvas',
-      color: 'bg-blue-100 text-blue-600'
+      color: 'bg-info/10 text-info'
     },
     {
       id: 'procurement-rfq',
       name: 'Procurement RFQ Form',
       icon: ClipboardList,
       description: 'Create a detailed RFQ and send it directly to procurement',
-      color: 'bg-orange-100 text-orange-600'
+      color: 'bg-warning/10 text-warning'
     },
     {
       id: 'execution-work-order',
       name: 'Site Work Order',
       icon: ClipboardCheck,
       description: 'Issue executable work scope with assignee, location, and due date',
-      color: 'bg-indigo-100 text-indigo-600'
+      color: 'bg-info/10 text-info'
     },
     {
       id: 'execution-rfi',
       name: 'RFI / Clarification',
       icon: HelpCircle,
       description: 'Raise technical queries linked to drawings and execution blockers',
-      color: 'bg-cyan-100 text-cyan-700'
+      color: 'bg-info/10 text-info'
     },
     {
       id: 'execution-inspection',
       name: 'Inspection Request',
       icon: ShieldCheck,
       description: 'Create QA/QC checkpoints for execution stages and approvals',
-      color: 'bg-teal-100 text-teal-700'
+      color: 'bg-surface-hover text-ink'
     },
     {
       id: 'execution-daily-site-log',
       name: 'Daily Site Log',
       icon: CloudSun,
       description: 'Capture daily work done, labor, equipment, blockers, and weather',
-      color: 'bg-amber-100 text-amber-700'
+      color: 'bg-warning/10 text-warning'
     }
   ];
 
@@ -468,7 +468,7 @@ const WorkspaceContextPanel = ({
               <div className="flex items-center gap-2">
                 <button
                   onClick={() => setSelectedCategory(null)}
-                  className="p-1 -ml-1 text-gray-400 hover:text-gray-700 hover:bg-gray-100 rounded-md transition-colors"
+                  className="p-1 -ml-1 text-dim hover:text-ink hover:bg-surface-hover rounded-md transition-colors"
                   title="Back to all categories"
                 >
                   <ArrowLeft className="w-4 h-4" />
@@ -492,18 +492,18 @@ const WorkspaceContextPanel = ({
           <div className="ws-panel-body">
             {/* Search Input */}
             <div className="relative mb-3">
-              <Search className="w-3.5 h-3.5 text-gray-400 absolute left-2.5 top-1/2 -translate-y-1/2" />
+              <Search className="w-3.5 h-3.5 text-dim absolute left-2.5 top-1/2 -translate-y-1/2 " />
               <input
                 type="text"
                 value={elementsSearch}
                 onChange={(e) => setElementsSearch(e.target.value)}
                 placeholder="Search blocks across categories..."
-                className="w-full pl-8 pr-7 py-1.5 text-xs bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500 focus:bg-white transition-colors"
+                className="w-full pl-8 pr-7 py-1.5 text-xs bg-canvas border border-line rounded-lg focus:outline-none focus:ring-1 focus:ring-info focus:bg-surface transition-colors"
               />
               {elementsSearch && (
                 <button
                   onClick={() => setElementsSearch('')}
-                  className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                  className="absolute right-2 top-1/2 -translate-y-1/2  text-dim hover:text-dim"
                 >
                   <X className="w-3.5 h-3.5" />
                 </button>
@@ -513,11 +513,11 @@ const WorkspaceContextPanel = ({
             {/* A. If Global Search is active */}
             {searchResults ? (
               <div className="space-y-2">
-                <div className="text-[11px] text-gray-500 font-medium mb-1">
+                <div className="text-[11px] text-dim font-medium mb-1">
                   Found {searchResults.length} element{searchResults.length === 1 ? '' : 's'}:
                 </div>
                 {searchResults.length === 0 ? (
-                  <div className="text-center py-8 text-xs text-gray-400">
+                  <div className="text-center py-8 text-xs text-dim">
                     No elements found matching "{elementsSearch}"
                   </div>
                 ) : (
@@ -527,20 +527,20 @@ const WorkspaceContextPanel = ({
                       draggable
                       onDragStart={(e) => handleDragStart(e, item)}
                       onClick={() => handleDoubleClick(item)}
-                      className="p-3 bg-white border border-gray-200 hover:border-blue-400 hover:shadow-md hover:bg-blue-50/40 rounded-xl cursor-grab active:cursor-grabbing transition-all group relative"
+                      className="p-3 bg-surface border border-line hover:border-info  hover:bg-info rounded-xl cursor-grab active:cursor-grabbing transition-all group relative"
                       title="Drag to canvas or click to add"
                     >
                       <div className="flex items-start justify-between gap-2">
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-1.5 mb-1">
-                            <span className="text-xs font-semibold text-gray-900 group-hover:text-blue-600 truncate">
+                            <span className="text-xs font-semibold text-ink group-hover:text-info truncate">
                               {item.name}
                             </span>
-                            <span className="text-[10px] px-1.5 py-0.5 rounded bg-gray-100 text-gray-500 font-medium">
+                            <span className="text-[10px] px-1.5 py-0.5 rounded bg-surface-hover text-dim font-medium">
                               {item.categoryName}
                             </span>
                           </div>
-                          <p className="text-[11px] text-gray-500 line-clamp-2 leading-relaxed m-0">
+                          <p className="text-[11px] text-dim line-clamp-2 leading-relaxed m-0">
                             {item.preview}
                           </p>
                         </div>
@@ -549,7 +549,7 @@ const WorkspaceContextPanel = ({
                             e.stopPropagation();
                             handleDoubleClick(item);
                           }}
-                          className="opacity-0 group-hover:opacity-100 px-2 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded text-[10px] font-semibold transition-opacity flex-shrink-0"
+                          className="opacity-0 group-hover:opacity-100 px-2 py-1 bg-info hover:bg-info text-white rounded text-[10px] font-semibold transition-opacity flex-shrink-0"
                           title="Place on canvas"
                         >
                           + Add
@@ -562,11 +562,11 @@ const WorkspaceContextPanel = ({
             ) : selectedCategory ? (
               /* B. If Drilled into a Specific Category */
               <div className="space-y-2.5">
-                <div className="flex items-center justify-between pb-1 border-b border-gray-100 mb-2">
-                  <span className="text-[11px] font-semibold text-gray-700 uppercase tracking-wide">
+                <div className="flex items-center justify-between pb-1 border-b border-line mb-2">
+                  <span className="text-[11px] font-semibold text-ink uppercase tracking-wide">
                     Elements in {currentCategoryMeta?.name}
                   </span>
-                  <span className="text-[10px] text-gray-400">Drag to canvas</span>
+                  <span className="text-[10px] text-dim">Drag to canvas</span>
                 </div>
 
                 {currentCategoryElements.map((item) => (
@@ -575,15 +575,15 @@ const WorkspaceContextPanel = ({
                     draggable
                     onDragStart={(e) => handleDragStart(e, item)}
                     onClick={() => handleDoubleClick(item)}
-                    className="p-3 bg-white border border-gray-200 hover:border-blue-400 hover:shadow-md hover:bg-blue-50/40 rounded-xl cursor-grab active:cursor-grabbing transition-all group relative"
+                    className="p-3 bg-surface border border-line hover:border-info  hover:bg-info rounded-xl cursor-grab active:cursor-grabbing transition-all group relative"
                     title="Drag to canvas or click to add"
                   >
                     <div className="flex items-start justify-between gap-2">
                       <div className="flex-1 min-w-0">
-                        <h4 className="text-xs font-semibold text-gray-900 group-hover:text-blue-600 mb-1 truncate">
+                        <h4 className="text-xs font-semibold text-ink group-hover:text-info mb-1 truncate">
                           {item.name}
                         </h4>
-                        <p className="text-[11px] text-gray-500 line-clamp-2 leading-relaxed m-0">
+                        <p className="text-[11px] text-dim line-clamp-2 leading-relaxed m-0">
                           {item.preview}
                         </p>
                       </div>
@@ -592,7 +592,7 @@ const WorkspaceContextPanel = ({
                           e.stopPropagation();
                           handleDoubleClick(item);
                         }}
-                        className="opacity-0 group-hover:opacity-100 px-2 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded text-[10px] font-semibold transition-opacity flex-shrink-0"
+                        className="opacity-0 group-hover:opacity-100 px-2 py-1 bg-info hover:bg-info text-white rounded text-[10px] font-semibold transition-opacity flex-shrink-0"
                         title="Place on canvas"
                       >
                         + Add
@@ -603,7 +603,7 @@ const WorkspaceContextPanel = ({
 
                 <button
                   onClick={() => setSelectedCategory(null)}
-                  className="w-full mt-3 py-2 text-xs text-gray-500 hover:text-gray-800 bg-gray-50 hover:bg-gray-100 border border-gray-200 rounded-lg font-medium transition-colors flex items-center justify-center gap-1.5"
+                  className="w-full mt-3 py-2 text-xs text-dim hover:text-ink bg-canvas hover:bg-surface-hover border border-line rounded-lg font-medium transition-colors flex items-center justify-center gap-1.5"
                 >
                   <ArrowLeft className="w-3.5 h-3.5" />
                   <span>View All Categories</span>
@@ -676,18 +676,18 @@ const WorkspaceContextPanel = ({
                       <div
                         key={cat.id}
                         onClick={() => setSelectedCategory(cat.id)}
-                        className="flex items-center justify-between p-2.5 bg-white hover:bg-blue-50/60 border border-gray-200 hover:border-blue-300 rounded-lg cursor-pointer transition-all text-xs group"
+                        className="flex items-center justify-between p-2.5 bg-surface hover:bg-info border border-line hover:border-info/30 rounded-lg cursor-pointer transition-all text-xs group"
                         title={`Click to open ${cat.name} elements`}
                       >
                         <div className="flex items-center gap-2.5 min-w-0">
                           <div className={`p-1.5 rounded-md border flex-shrink-0 ${cat.color}`}>
                             <CatIcon className="w-3.5 h-3.5" />
                           </div>
-                          <span className="font-medium text-gray-800 group-hover:text-blue-600 truncate">
+                          <span className="font-medium text-ink group-hover:text-info truncate">
                             {cat.name}
                           </span>
                         </div>
-                        <div className="flex items-center gap-1.5 flex-shrink-0 text-gray-400 group-hover:text-blue-600">
+                        <div className="flex items-center gap-1.5 flex-shrink-0 text-dim group-hover:text-info">
                           <span className="text-[10.5px]">
                             {count} items
                           </span>
@@ -723,10 +723,10 @@ const WorkspaceContextPanel = ({
           <div className="ws-panel-body">
             <div className="space-y-2 mb-4">
               {[
-                { type: 'text-heading', label: 'Heading', style: 'font-semibold text-base text-gray-900' },
-                { type: 'text-subheading', label: 'Subheading', style: 'font-medium text-sm text-gray-700' },
-                { type: 'text-body', label: 'Body Text', style: 'font-normal text-xs text-gray-600' },
-                { type: 'text-note', label: 'Sticky Note / Callout', style: 'font-normal text-xs text-amber-800 italic' }
+                { type: 'text-heading', label: 'Heading', style: 'font-semibold text-base text-ink' },
+                { type: 'text-subheading', label: 'Subheading', style: 'font-medium text-sm text-ink' },
+                { type: 'text-body', label: 'Body Text', style: 'font-normal text-xs text-dim' },
+                { type: 'text-note', label: 'Sticky Note / Callout', style: 'font-normal text-xs text-warning italic' }
               ].map((item) => {
                 const elementData = {
                   type: 'text',
@@ -741,10 +741,10 @@ const WorkspaceContextPanel = ({
                     draggable
                     onDragStart={(e) => handleDragStart(e, elementData)}
                     onClick={() => handleDoubleClick(elementData)}
-                    className="p-3 bg-white border border-gray-200 hover:border-blue-300 hover:bg-blue-50/50 rounded-lg cursor-grab active:cursor-grabbing transition-all flex items-center justify-between group"
+                    className="p-3 bg-surface border border-line hover:border-info/30 hover:bg-info rounded-lg cursor-grab active:cursor-grabbing transition-all flex items-center justify-between group"
                   >
                     <span className={item.style}>{item.label}</span>
-                    <Type className="w-3.5 h-3.5 text-gray-400 group-hover:text-blue-600" />
+                    <Type className="w-3.5 h-3.5 text-dim group-hover:text-info" />
                   </div>
                 );
               })}
@@ -778,17 +778,17 @@ const WorkspaceContextPanel = ({
                   <button
                     key={tpl.id}
                     onClick={() => onTemplateSelect && onTemplateSelect(tpl.id)}
-                    className="w-full p-3 bg-white border border-gray-200 hover:border-blue-300 hover:bg-blue-50/50 rounded-lg transition-all flex items-start gap-3 text-left group"
+                    className="w-full p-3 bg-surface border border-line hover:border-info/30 hover:bg-info rounded-lg transition-all flex items-start gap-3 text-left group"
                     title={tpl.name}
                   >
                     <div className={`p-2 rounded-md flex-shrink-0 ${tpl.color}`}>
                       <TplIcon className="w-4 h-4" />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="text-xs font-semibold text-gray-800 m-0 group-hover:text-blue-600">{tpl.name}</p>
-                      <p className="text-[11px] text-gray-500 m-0 mt-0.5 leading-relaxed">{tpl.description}</p>
+                      <p className="text-xs font-semibold text-ink m-0 group-hover:text-info">{tpl.name}</p>
+                      <p className="text-[11px] text-dim m-0 mt-0.5 leading-relaxed">{tpl.description}</p>
                     </div>
-                    <ChevronRight className="w-3.5 h-3.5 text-gray-300 group-hover:text-blue-500 flex-shrink-0 mt-1" />
+                    <ChevronRight className="w-3.5 h-3.5 text-dim group-hover:text-info flex-shrink-0 mt-1" />
                   </button>
                 );
               })}
@@ -817,7 +817,7 @@ const WorkspaceContextPanel = ({
           <div className="ws-panel-body">
             <button
               onClick={onWorkflowBuilderClick}
-              className="w-full flex items-center justify-center gap-2 p-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-semibold shadow-sm transition-all mb-4"
+              className="w-full flex items-center justify-center gap-2 p-2.5 bg-info hover:bg-info text-white rounded-lg text-xs font-semibold  transition-all mb-4"
             >
               <GitBranch className="w-4 h-4" />
               <span>Launch Workflow Builder</span>
@@ -825,16 +825,16 @@ const WorkspaceContextPanel = ({
 
             <div className="ws-section-label">Workflow Steps</div>
             <div className="space-y-2">
-              <div className="p-2.5 bg-gray-50 border border-gray-200 rounded-lg text-xs text-gray-600 flex items-center gap-2">
-                <span className="w-5 h-5 rounded-full bg-blue-100 text-blue-700 font-bold flex items-center justify-center text-[10px]">1</span>
+              <div className="p-2.5 bg-canvas border border-line rounded-lg text-xs text-dim flex items-center gap-2">
+                <span className="w-5 h-5 rounded-full bg-info/10 text-info font-bold flex items-center justify-center text-[10px]">1</span>
                 <span>Vendor Submission</span>
               </div>
-              <div className="p-2.5 bg-gray-50 border border-gray-200 rounded-lg text-xs text-gray-600 flex items-center gap-2">
-                <span className="w-5 h-5 rounded-full bg-amber-100 text-amber-700 font-bold flex items-center justify-center text-[10px]">2</span>
+              <div className="p-2.5 bg-canvas border border-line rounded-lg text-xs text-dim flex items-center gap-2">
+                <span className="w-5 h-5 rounded-full bg-warning/10 text-warning font-bold flex items-center justify-center text-[10px]">2</span>
                 <span>PM Technical Review</span>
               </div>
-              <div className="p-2.5 bg-gray-50 border border-gray-200 rounded-lg text-xs text-gray-600 flex items-center gap-2">
-                <span className="w-5 h-5 rounded-full bg-emerald-100 text-emerald-700 font-bold flex items-center justify-center text-[10px]">3</span>
+              <div className="p-2.5 bg-canvas border border-line rounded-lg text-xs text-dim flex items-center gap-2">
+                <span className="w-5 h-5 rounded-full bg-surface-hover text-ink font-bold flex items-center justify-center text-[10px]">3</span>
                 <span>Client Final Approval</span>
               </div>
             </div>
@@ -866,14 +866,14 @@ const WorkspaceContextPanel = ({
                     draggable
                     onDragStart={(e) => handleDragStart(e, layoutData)}
                     onClick={() => handleDoubleClick(layoutData)}
-                    className="p-3 bg-white border border-gray-200 hover:border-blue-300 hover:bg-blue-50/50 rounded-lg cursor-grab active:cursor-grabbing transition-all flex items-start gap-3"
+                    className="p-3 bg-surface border border-line hover:border-info/30 hover:bg-info rounded-lg cursor-grab active:cursor-grabbing transition-all flex items-start gap-3"
                   >
-                    <div className="p-2 bg-gray-50 rounded-md text-gray-600">
+                    <div className="p-2 bg-canvas rounded-md text-dim">
                       <Icon className="w-4 h-4" />
                     </div>
                     <div>
-                      <p className="text-xs font-semibold text-gray-800 m-0">{pat.name}</p>
-                      <p className="text-[11px] text-gray-500 m-0 mt-0.5">{pat.desc}</p>
+                      <p className="text-xs font-semibold text-ink m-0">{pat.name}</p>
+                      <p className="text-[11px] text-dim m-0 mt-0.5">{pat.desc}</p>
                     </div>
                   </div>
                 );
@@ -934,11 +934,11 @@ const WorkspaceContextPanel = ({
                   <div
                     key={el.id}
                     onClick={() => onZoomToElement && onZoomToElement(el.id)}
-                    className="flex items-center justify-between p-2 bg-white border border-gray-200 hover:border-blue-300 rounded-lg text-xs cursor-pointer hover:bg-blue-50/40 transition-colors group"
+                    className="flex items-center justify-between p-2 bg-surface border border-line hover:border-info/30 rounded-lg text-xs cursor-pointer hover:bg-info transition-colors group"
                   >
                     <div className="flex items-center gap-2 truncate">
-                      <Square className="w-3.5 h-3.5 text-gray-400" />
-                      <span className="font-medium text-gray-700 truncate">
+                      <Square className="w-3.5 h-3.5 text-dim" />
+                      <span className="font-medium text-ink truncate">
                         {el.data?.title || el.data?.name || el.data?.label || el.type || 'Element'}
                       </span>
                     </div>
@@ -948,7 +948,7 @@ const WorkspaceContextPanel = ({
                           e.stopPropagation();
                           onDeleteElement(el.id);
                         }}
-                        className="opacity-0 group-hover:opacity-100 p-1 hover:bg-red-50 text-gray-400 hover:text-red-500 rounded transition-opacity"
+                        className="opacity-0 group-hover:opacity-100 p-1 hover:bg-danger/10 text-dim hover:text-danger rounded transition-opacity"
                         title="Delete element"
                       >
                         <Trash2 className="w-3.5 h-3.5" />
@@ -964,7 +964,7 @@ const WorkspaceContextPanel = ({
                 onSubtaskClick={onSubtaskClick}
               />
             ) : (
-              <div className="text-center py-12 text-xs text-gray-400">
+              <div className="text-center py-12 text-xs text-dim">
                 Nothing on the canvas yet.<br />Drag a block from Elements to begin.
               </div>
             )}
@@ -1012,19 +1012,19 @@ const WorkspaceContextPanel = ({
                 <button
                   key={agent.id}
                   onClick={() => onLaunchAgent?.(agent.id)}
-                  className="w-full text-left group border border-gray-200 rounded-xl p-3 hover:border-violet-300 hover:bg-violet-50/50 transition-colors"
+                  className="w-full text-left group border border-line rounded-xl p-3 hover:border-line hover:bg-cta transition-colors"
                 >
                   <div className="flex items-center gap-3">
-                    <div className="p-2 bg-violet-100 rounded-lg group-hover:bg-violet-200 transition-colors">
-                      <AgentIcon className="w-4 h-4 text-violet-600" />
+                    <div className="p-2 bg-surface-hover rounded-lg group-hover:bg-surface-hover transition-colors">
+                      <AgentIcon className="w-4 h-4 text-ink" />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <div className="text-sm font-semibold text-gray-900">{agent.name}</div>
-                      <div className="text-[11px] text-violet-600 font-medium">{agent.role}</div>
+                      <div className="text-sm font-semibold text-ink">{agent.name}</div>
+                      <div className="text-[11px] text-ink font-medium">{agent.role}</div>
                     </div>
-                    <ChevronRight className="w-4 h-4 text-gray-300 group-hover:text-violet-500 transition-colors" />
+                    <ChevronRight className="w-4 h-4 text-dim group-hover:text-ink transition-colors" />
                   </div>
-                  <p className="text-xs text-gray-500 leading-relaxed mt-2 hidden group-hover:block">
+                  <p className="text-xs text-dim leading-relaxed mt-2 hidden group-hover:block">
                     {agent.desc}
                   </p>
                 </button>

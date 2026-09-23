@@ -29,15 +29,15 @@ export default function OCRPreviewModal({
   const fieldConfidence = data?.fieldConfidence || {};
 
   const getConfidenceColor = (conf) => {
-    if (conf >= 85) return "text-green-600";
-    if (conf >= 70) return "text-yellow-600";
-    return "text-red-600";
+    if (conf >= 85) return "text-success";
+    if (conf >= 70) return "text-warning";
+    return "text-danger";
   };
 
   const getConfidenceBg = (conf) => {
-    if (conf >= 85) return "bg-green-100";
-    if (conf >= 70) return "bg-yellow-100";
-    return "bg-red-100";
+    if (conf >= 85) return "bg-success/10";
+    if (conf >= 70) return "bg-warning/10";
+    return "bg-danger/10";
   };
 
   const handleConfirm = () => {
@@ -75,11 +75,11 @@ export default function OCRPreviewModal({
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-lg shadow-xl max-w-md w-full max-h-[90vh] overflow-y-auto">
+      <div className="bg-surface rounded-lg shadow-xl max-w-md w-full max-h-[90vh] overflow-y-auto">
         {/* Header */}
-        <div className="bg-gradient-to-r from-blue-600 to-blue-700 text-white px-6 py-4">
+        <div className="bg-black text-white px-6 py-4">
           <h2 className="text-lg font-semibold">OCR Verification</h2>
-          <p className="text-sm text-blue-100 mt-1">
+          <p className="text-sm text-info mt-1">
             Please review the extracted data
           </p>
         </div>
@@ -90,21 +90,21 @@ export default function OCRPreviewModal({
           {!isEditing && (
             <div className={`p-4 rounded-lg ${getConfidenceBg(confidence)} border border-opacity-30`}>
               <div className="flex items-center justify-between">
-                <span className="text-sm font-medium text-gray-700">
+                <span className="text-sm font-medium text-ink">
                   Extraction Confidence
                 </span>
                 <span className={`text-xl font-bold ${getConfidenceColor(confidence)}`}>
                   {confidence}%
                 </span>
               </div>
-              <div className="mt-2 w-full bg-gray-300 rounded-full h-2">
+              <div className="mt-2 w-full bg-surface-hover rounded-full h-2">
                 <div
                   className={`h-2 rounded-full transition-all ${
                     confidence >= 85
-                      ? "bg-green-500"
+                      ? "bg-success"
                       : confidence >= 70
-                      ? "bg-yellow-500"
-                      : "bg-red-500"
+                      ? "bg-warning"
+                      : "bg-danger"
                   }`}
                   style={{ width: `${confidence}%` }}
                 />
@@ -114,11 +114,11 @@ export default function OCRPreviewModal({
 
           {/* Errors */}
           {errors && errors.length > 0 && (
-            <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-              <h3 className="text-sm font-semibold text-red-900 mb-2">Issues Found:</h3>
+            <div className="bg-danger/10 border border-danger/20 rounded-lg p-4">
+              <h3 className="text-sm font-semibold text-danger mb-2">Issues Found:</h3>
               <ul className="space-y-1">
                 {errors.map((error, idx) => (
-                  <li key={idx} className="text-sm text-red-700 flex items-start">
+                  <li key={idx} className="text-sm text-danger flex items-start">
                     <span className="mr-2">•</span>
                     <span>{error}</span>
                   </li>
@@ -129,11 +129,11 @@ export default function OCRPreviewModal({
 
           {/* Warnings */}
           {warnings && warnings.length > 0 && (
-            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-              <h3 className="text-sm font-semibold text-yellow-900 mb-2">Warnings:</h3>
+            <div className="bg-warning/10 border border-warning/20 rounded-lg p-4">
+              <h3 className="text-sm font-semibold text-warning mb-2">Warnings:</h3>
               <ul className="space-y-1">
                 {warnings.map((warning, idx) => (
-                  <li key={idx} className="text-sm text-yellow-700 flex items-start">
+                  <li key={idx} className="text-sm text-warning flex items-start">
                     <span className="mr-2">⚠️</span>
                     <span>{warning}</span>
                   </li>
@@ -147,7 +147,7 @@ export default function OCRPreviewModal({
             {/* Account Number */}
             <div>
               <div className="flex items-center justify-between mb-2">
-                <label className="text-sm font-semibold text-gray-900">
+                <label className="text-sm font-semibold text-ink">
                   Account Number
                 </label>
                 {!isEditing && fieldConfidence.accountNumber && (
@@ -166,11 +166,11 @@ export default function OCRPreviewModal({
                       accountNumber: e.target.value
                     })
                   }
-                  className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full border border-line rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-info"
                   placeholder="Enter account number"
                 />
               ) : (
-                <div className="bg-gray-50 border border-gray-300 rounded px-3 py-2 text-sm font-mono text-gray-900">
+                <div className="bg-canvas border border-line rounded px-3 py-2 text-sm font-mono text-ink">
                   {data?.accountNumber || "Not detected"}
                 </div>
               )}
@@ -179,7 +179,7 @@ export default function OCRPreviewModal({
             {/* Account Name */}
             <div>
               <div className="flex items-center justify-between mb-2">
-                <label className="text-sm font-semibold text-gray-900">
+                <label className="text-sm font-semibold text-ink">
                   Account Holder Name
                 </label>
                 {!isEditing && fieldConfidence.accountName && (
@@ -198,11 +198,11 @@ export default function OCRPreviewModal({
                       accountName: e.target.value
                     })
                   }
-                  className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full border border-line rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-info"
                   placeholder="Enter account holder name"
                 />
               ) : (
-                <div className="bg-gray-50 border border-gray-300 rounded px-3 py-2 text-sm text-gray-900">
+                <div className="bg-canvas border border-line rounded px-3 py-2 text-sm text-ink">
                   {data?.accountName || "Not detected"}
                 </div>
               )}
@@ -211,7 +211,7 @@ export default function OCRPreviewModal({
             {/* IFSC Code */}
             <div>
               <div className="flex items-center justify-between mb-2">
-                <label className="text-sm font-semibold text-gray-900">
+                <label className="text-sm font-semibold text-ink">
                   IFSC Code
                 </label>
                 {!isEditing && fieldConfidence.ifscCode && (
@@ -230,11 +230,11 @@ export default function OCRPreviewModal({
                       ifscCode: e.target.value.toUpperCase()
                     })
                   }
-                  className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full border border-line rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-info"
                   placeholder="Enter IFSC code (e.g., SBIN0001234)"
                 />
               ) : (
-                <div className="bg-gray-50 border border-gray-300 rounded px-3 py-2 text-sm font-mono text-gray-900">
+                <div className="bg-canvas border border-line rounded px-3 py-2 text-sm font-mono text-ink">
                   {data?.ifscCode || "Not detected"}
                 </div>
               )}
@@ -242,19 +242,19 @@ export default function OCRPreviewModal({
           </div>
 
           {/* Info Message */}
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
-            <p className="text-xs text-blue-900">
+          <div className="bg-info/10 border border-info/20 rounded-lg p-3">
+            <p className="text-xs text-info">
               ℹ️ Please verify the extracted information. You can manually correct any errors before confirming.
             </p>
           </div>
         </div>
 
         {/* Footer */}
-        <div className="border-t bg-gray-50 px-6 py-4 flex gap-3 justify-end">
+        <div className="border-t bg-canvas px-6 py-4 flex gap-3 justify-end">
           <button
             onClick={handleEditToggle}
             disabled={isLoading}
-            className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded hover:bg-gray-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            className="px-4 py-2 text-sm font-medium text-ink bg-surface border border-line rounded hover:bg-surface-hover transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {isEditing ? "Cancel Edit" : "Edit"}
           </button>
@@ -262,7 +262,7 @@ export default function OCRPreviewModal({
           <button
             onClick={onRetry}
             disabled={isLoading}
-            className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded hover:bg-gray-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            className="px-4 py-2 text-sm font-medium text-ink bg-surface border border-line rounded hover:bg-surface-hover transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
             Retry
           </button>
@@ -270,7 +270,7 @@ export default function OCRPreviewModal({
           <button
             onClick={handleConfirm}
             disabled={isLoading || (isEditing && (!editedData.accountNumber || !editedData.accountName))}
-            className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+            className="px-4 py-2 text-sm font-medium text-white bg-info rounded hover:bg-info transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
           >
             {isLoading && (
               <svg

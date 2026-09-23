@@ -95,17 +95,17 @@ class ErrorBoundary extends Component {
     if (this.state.hasError) {
       // You can render any custom fallback UI
       return (
-        <div className="p-6 bg-red-100 border border-red-300 rounded-lg">
-          <h2 className="text-lg font-semibold text-red-700 mb-2">Something went wrong!</h2>
-          <p className="text-red-600 mb-4">The application encountered an error.</p>
+        <div className="p-6 bg-danger/10 border border-danger/30 rounded-lg">
+          <h2 className="text-lg font-semibold text-danger mb-2">Something went wrong!</h2>
+          <p className="text-danger mb-4">The application encountered an error.</p>
           {this.state.error?.message ? (
-            <p className="mb-4 rounded border border-red-200 bg-white/80 px-3 py-2 text-sm text-red-700">
+            <p className="mb-4 rounded border border-danger/20 bg-white/80 px-3 py-2 text-sm text-danger">
               {this.state.error.message}
             </p>
           ) : null}
           <button 
             onClick={() => this.setState({ hasError: false })}
-            className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
+            className="px-4 py-2 bg-danger text-white rounded hover:bg-danger"
           >
             Try again
           </button>
@@ -207,7 +207,7 @@ const Layout = () => {
   }
 
   return (
-    <div className="bg-white min-h-screen ">{/* Or your default page background */}
+    <div className="bg-surface min-h-screen ">{/* Or your default page background */}
         <SessionChangeBanner />
         <div className="pt-5 px-5 pb-0">
             <Header />

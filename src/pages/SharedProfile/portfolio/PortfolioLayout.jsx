@@ -125,13 +125,13 @@ export default function PortfolioLayout({ children, companyName, accentColor = '
 
   return (
     <div
-      className="portfolio-root min-h-screen bg-gray-200 flex flex-col items-center relative"
+      className="portfolio-root min-h-screen bg-surface-hover flex flex-col items-center relative"
       style={{ '--portfolio-accent': accentColor }}
     >
       {showTOC && (
         <div className="fixed inset-0 z-50 flex">
           <div className="absolute inset-0 bg-black/50" onClick={() => setShowTOC(false)} />
-          <div className="relative bg-white w-80 max-w-[85vw] h-full shadow-2xl z-10 overflow-y-auto animate-slide-in-left">
+          <div className="relative bg-surface w-80 max-w-[85vw] h-full shadow-2xl z-10 overflow-y-auto animate-slide-in-left">
             <div className="p-6 border-b" style={{ backgroundColor: accentColor }}>
               <div className="flex items-center justify-between">
                 <h2 className="text-lg font-bold text-white">Table of Contents</h2>
@@ -147,7 +147,7 @@ export default function PortfolioLayout({ children, companyName, accentColor = '
                   key={index}
                   onClick={() => goToPage(index)}
                   className={`w-full text-left px-4 py-3 rounded-lg mb-1 flex items-center gap-3 transition-all ${
-                    currentPage === index ? 'text-white font-semibold' : 'text-gray-700 hover:bg-gray-100'
+                    currentPage === index ? 'text-white font-semibold' : 'text-ink hover:bg-surface-hover'
                   }`}
                   style={currentPage === index ? { backgroundColor: accentColor } : {}}
                 >
@@ -165,20 +165,20 @@ export default function PortfolioLayout({ children, companyName, accentColor = '
         </div>
       )}
 
-      <div className="fixed top-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-b border-gray-200 shadow-sm print:hidden">
+      <div className="fixed top-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-b border-line  print:hidden">
         <div className="max-w-7xl mx-auto px-4 h-14 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <button onClick={() => setShowTOC(true)} className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
-              <Menu size={20} className="text-gray-700" />
+            <button onClick={() => setShowTOC(true)} className="p-2 hover:bg-surface-hover rounded-lg transition-colors">
+              <Menu size={20} className="text-ink" />
             </button>
-            <div className="h-5 w-px bg-gray-300" />
-            <span className="font-bold text-gray-900 text-sm tracking-wide">{companyName}</span>
+            <div className="h-5 w-px bg-surface-hover" />
+            <span className="font-bold text-ink text-sm tracking-wide">{companyName}</span>
           </div>
           <div className="flex items-center gap-3">
             <button
               onClick={downloadPortfolio}
               disabled={isDownloading}
-              className="flex items-center gap-2 px-4 py-2 rounded-lg font-medium text-sm transition-all disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-100"
+              className="flex items-center gap-2 px-4 py-2 rounded-lg font-medium text-sm transition-all disabled:opacity-50 disabled:cursor-not-allowed hover:bg-surface-hover"
               style={{ color: accentColor }}
               title="Download portfolio as PDF"
             >
@@ -190,7 +190,7 @@ export default function PortfolioLayout({ children, companyName, accentColor = '
             </span>
           </div>
         </div>
-        <div className="h-0.5 bg-gray-200">
+        <div className="h-0.5 bg-surface-hover">
           <div
             className="h-full transition-all duration-500 ease-out"
             style={{ width: `${totalPages ? ((currentPage + 1) / totalPages) * 100 : 0}%`, backgroundColor: accentColor }}
@@ -209,7 +209,7 @@ export default function PortfolioLayout({ children, companyName, accentColor = '
           }`}
         >
           <div
-            className="a4-page bg-white shadow-2xl mx-auto overflow-hidden"
+            className="a4-page bg-surface shadow-2xl mx-auto overflow-hidden"
             style={{
               width: '100%',
               maxWidth: `${A4_WIDTH_PX}px`,
@@ -227,7 +227,7 @@ export default function PortfolioLayout({ children, companyName, accentColor = '
           <div
             key={page.key ?? index}
             data-portfolio-print-page
-            className="portfolio-print-page a4-page bg-white overflow-hidden"
+            className="portfolio-print-page a4-page bg-surface overflow-hidden"
             style={{
               width: `${A4_WIDTH_PX}px`,
               minHeight: `${A4_HEIGHT_PX}px`,
@@ -239,12 +239,12 @@ export default function PortfolioLayout({ children, companyName, accentColor = '
         ))}
       </div>
 
-      <div className="fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-t border-gray-200 print:hidden">
+      <div className="fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-t border-line print:hidden">
         <div className="max-w-5xl mx-auto px-4 h-14 flex items-center justify-between">
           <button
             onClick={prevPage}
             disabled={currentPage === 0}
-            className="flex items-center gap-2 px-4 py-2 rounded-lg font-medium text-sm transition-all disabled:opacity-30 disabled:cursor-not-allowed hover:bg-gray-100"
+            className="flex items-center gap-2 px-4 py-2 rounded-lg font-medium text-sm transition-all disabled:opacity-30 disabled:cursor-not-allowed hover:bg-surface-hover"
             style={{ color: currentPage === 0 ? '#999' : accentColor }}
           >
             <ChevronLeft size={18} /> Previous
@@ -256,7 +256,7 @@ export default function PortfolioLayout({ children, companyName, accentColor = '
                 onClick={() => goToPage(index)}
                 className="w-2.5 h-2.5 rounded-full transition-all"
                 style={{
-                  backgroundColor: currentPage === index ? accentColor : '#D1D5DB',
+                  backgroundColor: currentPage === index ? accentColor: 'rgb(var(--surface-hover))',
                   transform: currentPage === index ? 'scale(1.3)' : 'scale(1)'
                 }}
               />
@@ -265,7 +265,7 @@ export default function PortfolioLayout({ children, companyName, accentColor = '
           <button
             onClick={nextPage}
             disabled={currentPage === totalPages - 1}
-            className="flex items-center gap-2 px-4 py-2 rounded-lg font-medium text-sm transition-all disabled:opacity-30 disabled:cursor-not-allowed hover:bg-gray-100"
+            className="flex items-center gap-2 px-4 py-2 rounded-lg font-medium text-sm transition-all disabled:opacity-30 disabled:cursor-not-allowed hover:bg-surface-hover"
             style={{ color: currentPage === totalPages - 1 ? '#999' : accentColor }}
           >
             Next <ChevronRight size={18} />

@@ -850,7 +850,7 @@
 
 //     return (
 //         <>
-//             <div className="min-h-screen bg-gray-50 font-sans p-5">
+//             <div className="min-h-screen bg-canvas font-sans p-5">
 //                 {/* Header */}
 //                 <AppHeader />
 
@@ -869,17 +869,17 @@
 
 //                         {/* Project Section Column */}
 //                         <div className="lg:col-span-2">
-//                             <div className="bg-white rounded-lg shadow-md p-6 w-full">
+//                             <div className="bg-surface rounded-lg  p-6 w-full">
 //                                 {/* Project Header & Sorting */}
 //                                 <div className="flex justify-between items-center mb-6">
 //                                     <div>
-//                                         <h2 className="text-2xl font-bold text-gray-800">Projects</h2>
-//                                         <p className="text-sm text-gray-500">Recent works and collaborations</p>
+//                                         <h2 className="text-2xl font-bold text-ink">Projects</h2>
+//                                         <p className="text-sm text-dim">Recent works and collaborations</p>
 //                                     </div>
 //                                     <div className="flex gap-3">
 //                                     <button
 //                                         onClick={() => setShowAddModal(true)}
-//                                         className="bg-gradient-to-l from-[#095B49] to-[#000000] text-white px-4 py-2 rounded-md text-sm shadow"
+//                                         className="bg-cta text-cta-foreground px-4 py-2 rounded-md text-sm shadow"
 //                                     >
 //                                     + Add Project
 //                                     </button>
@@ -890,12 +890,12 @@
 //                                             id="sortOrder"
 //                                             value={sortOrder}
 //                                             onChange={handleSortChange}
-//                                             className="appearance-none bg-gray-100 border border-gray-300 px-4 py-2 pr-8 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-emerald-500 focus:border-emerald-500 cursor-pointer"
+//                                             className="appearance-none bg-surface-hover border border-line px-4 py-2 pr-8 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-ink focus:border-line cursor-pointer"
 //                                         >
 //                                             <option value="recent">Recent</option>
 //                                             <option value="oldest">Oldest</option>
 //                                         </select>
-//                                         <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-gray-500">
+//                                         <div className="absolute right-3 top-1/2 -translate-y-1/2  pointer-events-none text-dim">
 //                                             <ChevronDown size={16} />
 //                                         </div>
 //                                     </div>
@@ -904,8 +904,8 @@
 
 //                                 {showAddModal && (
 //                                     <div className="fixed inset-0 bg-black bg-opacity-30 z-50 flex items-center justify-center p-4">
-//                                         <div className="bg-white rounded-lg shadow-lg w-full max-w-3xl p-6 overflow-y-auto max-h-[90vh]">
-//                                             <h3 className="text-2xl font-bold mb-6 text-gray-800">Add New Project</h3>
+//                                         <div className="bg-surface rounded-lg shadow-lg w-full max-w-3xl p-6 overflow-y-auto max-h-[90vh]">
+//                                             <h3 className="text-2xl font-bold mb-6 text-ink">Add New Project</h3>
 
 //                                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
 //                                                 {/* Text Inputs */}
@@ -993,10 +993,10 @@
 
 //                                                 {/* Document Upload Section */}
 //                                                 <div className="w-full md:col-span-2 mt-4">
-//                                                     <label className="block text-gray-700 font-semibold mb-2">Upload Project Documents</label>
+//                                                     <label className="block text-ink font-semibold mb-2">Upload Project Documents</label>
 //                                                     <div className="flex flex-col gap-2">
 //                                                         {newProject.documents?.map((doc, index) => (
-//                                                             <div key={index} className="flex items-center gap-2 text-sm text-gray-700">
+//                                                             <div key={index} className="flex items-center gap-2 text-sm text-ink">
 //                                                                 📄 {doc.name}
 //                                                             </div>
 //                                                         ))}
@@ -1004,7 +1004,7 @@
 //                                                             <>
 //                                                                 <label
 //                                                                     htmlFor="projectDocsUpload"
-//                                                                     className="px-4 py-2 border border-dashed border-gray-400 text-gray-500 rounded-md text-sm cursor-pointer hover:border-emerald-500 hover:text-emerald-700 w-fit"
+//                                                                     className="px-4 py-2 border border-dashed border-line text-dim rounded-md text-sm cursor-pointer hover:border-line hover:text-ink w-fit"
 //                                                                 >
 //                                                                     + Upload Documents (PDF, DOCX, etc.)
 //                                                                 </label>
@@ -1031,7 +1031,7 @@
 
 //                                                 {/* Image Upload Section */}
 //                                                 <div className="w-full md:col-span-2 mt-4">
-//                                                     <label className="block text-gray-700 font-semibold mb-2">Project Images</label>
+//                                                     <label className="block text-ink font-semibold mb-2">Project Images</label>
 //                                                     <div className="flex flex-wrap gap-4">
 //                                                         {newProject.photos?.map((image, index) => (
 //                                                             <div key={`new-photo-${index}`} className="relative">
@@ -1047,7 +1047,7 @@
 //                                                                         updatedPhotos.splice(index, 1);
 //                                                                         setNewProject({ ...newProject, photos: updatedPhotos });
 //                                                                     }}
-//                                                                     className="absolute top-1 right-1 bg-white text-red-500 hover:text-red-700 rounded-full p-1 shadow"
+//                                                                     className="absolute top-1 right-1 bg-surface text-danger hover:text-danger rounded-full p-1 shadow"
 //                                                                     title="Remove"
 //                                                                 >
 //                                                                     <TrashIcon className="h-3 w-3" />
@@ -1058,7 +1058,7 @@
 //                                                             <>
 //                                                                 <label
 //                                                                     htmlFor="projectImageUpload"
-//                                                                     className="w-24 h-24 flex items-center justify-center border-2 border-dashed text-gray-400 rounded-md cursor-pointer hover:border-emerald-500"
+//                                                                     className="w-24 h-24 flex items-center justify-center border-2 border-dashed text-dim rounded-md cursor-pointer hover:border-line"
 //                                                                 >
 //                                                                     +
 //                                                                 </label>
@@ -1088,20 +1088,20 @@
 //                                             <div className="flex justify-end gap-3 mt-8">
 //                                                 <button
 //                                                     onClick={() => setShowAddModal(false)}
-//                                                     className="px-4 py-2 text-sm rounded-md border border-gray-300 text-gray-700 hover:bg-gray-100"
+//                                                     className="px-4 py-2 text-sm rounded-md border border-line text-ink hover:bg-surface-hover"
 //                                                 >
 //                                                     Cancel
 //                                                 </button>
 //                                                 <button
 //                                                     onClick={handleAddProject}
 //                                                     disabled={isAddingProject}
-//                                                     className={`px-4 py-2 text-sm rounded-md bg-gradient-to-l from-[#095B49] to-[#000000] text-white hover:opacity-90 ${
+//                                                     className={`px-4 py-2 text-sm rounded-md bg-cta text-cta-foreground hover:opacity-90 ${
 //                                                         isAddingProject ? 'opacity-70 cursor-not-allowed' : ''
 //                                                     }`}
 //                                                 >
 //                                                     {isAddingProject ? (
 //                                                         <>
-//                                                             <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white inline" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+//                                                             <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-cta-foreground inline" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
 //                                                                 <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
 //                                                                 <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
 //                                                             </svg>
@@ -1122,21 +1122,21 @@
 //                                         projects.map((project) => {
 //                                             const isExpanded = expandedProjects[project.id || project._id];
 //                                             return (
-//                                                 <div key={project.id || project._id} className="border rounded-lg overflow-hidden hover:shadow-sm transition-shadow duration-200">
+//                                                 <div key={project.id || project._id} className="border rounded-lg overflow-hidden  transition-shadow duration-200">
 //                                                     {/* Project Header (Clickable) */}
 //                                                     <div
-//                                                         className={`p-4 flex justify-between items-start cursor-pointer ${isExpanded ? 'bg-emerald-50 border-b' : 'bg-gray-50 hover:bg-gray-100'}`}
+//                                                         className={`p-4 flex justify-between items-start cursor-pointer ${isExpanded ? 'bg-surface-hover border-b' : 'bg-canvas hover:bg-surface-hover'}`}
 //                                                         onClick={() => toggleProjectExpansion(project.id || project._id)}
 //                                                         aria-expanded={isExpanded}
 //                                                         aria-controls={`project-details-${project.id || project._id}`}
 //                                                     >
 //                                                         {/* Header Content */}
 //                                                         <div>
-//                                                             <h3 className="font-bold flex items-center gap-2 text-gray-800">
+//                                                             <h3 className="font-bold flex items-center gap-2 text-ink">
 //                                                                 {project.title}
-//                                                                 {project.isNew && <span className="bg-emerald-100 text-emerald-800 text-xs px-2 py-0.5 rounded-full font-semibold">NEW</span>}
+//                                                                 {project.isNew && <span className="bg-surface-hover text-ink text-xs px-2 py-0.5 rounded-full font-semibold">NEW</span>}
 //                                                             </h3>
-//                                                             <p className={`text-sm text-gray-600 mt-1 ${isExpanded ? '' : 'line-clamp-2'}`}>
+//                                                             <p className={`text-sm text-dim mt-1 ${isExpanded ? '' : 'line-clamp-2'}`}>
 //                                                                 {project.description}
 //                                                             </p>
 //                                                         </div>
@@ -1147,13 +1147,13 @@
 //                                                                     e.stopPropagation();
 //                                                                     handleProjectEditClick(project);
 //                                                                 }}
-//                                                                 className="text-gray-500 hover:text-emerald-600 focus:outline-none"
+//                                                                 className="text-dim hover:text-ink focus:outline-none"
 //                                                                 title="Edit Project"
 //                                                             >
 //                                                                 <Edit size={18} />
 //                                                             </button>
 //                                                             <button
-//                                                                 className="text-gray-500 hover:text-gray-800 flex-shrink-0 ml-2 mt-1"
+//                                                                 className="text-dim hover:text-ink flex-shrink-0 ml-2 mt-1"
 //                                                                 aria-label={isExpanded ? 'Collapse details' : 'Expand details'}
 //                                                             >
 //                                                                 <ChevronDown size={20} className={`transform transition-transform duration-200 ${isExpanded ? 'rotate-180' : 'rotate-0'}`} />
@@ -1170,28 +1170,28 @@
 //                                                         {isExpanded && (
 //                                                             <div className="p-4 space-y-4">
 //                                                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-3">
-//                                                                     {project.client && <div> <h4 className="text-sm font-medium text-gray-500 mb-0.5">Client</h4> <p className="font-medium text-gray-800">{project.client}</p> </div>}
-//                                                                     {project.duration && <div> <h4 className="text-sm font-medium text-gray-500 mb-0.5">Project duration</h4> <p className="font-medium text-gray-800">{project.duration}</p> </div>}
-//                                                                     {project.category && <div> <h4 className="text-sm font-medium text-gray-500 mb-0.5">Work category</h4> <p className="font-medium text-gray-800">{project.category}</p> </div>}
-//                                                                     {project.team && <div> <h4 className="text-sm font-medium text-gray-500 mb-0.5">Team involved</h4> <p className="font-medium text-gray-800">{project.team}</p> </div>}
-//                                                                     {project.objective && <div className="md:col-span-2"> <h4 className="text-sm font-medium text-gray-500 mb-0.5">Objective</h4> <p className="font-medium text-gray-800">{project.objective}</p> </div>}
-//                                                                     {project.features && <div className="md:col-span-2"> <h4 className="text-sm font-medium text-gray-500 mb-0.5">Key features</h4> <p className="font-medium text-gray-800">{project.features}</p> </div>}
-//                                                                     {project.impact && <div className="md:col-span-2"> <h4 className="text-sm font-medium text-gray-500 mb-0.5">Business impact</h4> <p className="font-medium text-gray-800">{project.impact}</p> </div>}
-//                                                                     {project.deliverables && <div className="md:col-span-2"> <h4 className="text-sm font-medium text-gray-500 mb-0.5">Deliverables</h4> <p className="font-medium text-gray-800">{project.deliverables}</p> </div>}
-//                                                                     {project.compliance && <div className="md:col-span-2"> <h4 className="text-sm font-medium text-gray-500 mb-0.5">Compliance</h4> <p className="font-medium text-gray-800">{project.compliance}</p> </div>}
+//                                                                     {project.client && <div> <h4 className="text-sm font-medium text-dim mb-0.5">Client</h4> <p className="font-medium text-ink">{project.client}</p> </div>}
+//                                                                     {project.duration && <div> <h4 className="text-sm font-medium text-dim mb-0.5">Project duration</h4> <p className="font-medium text-ink">{project.duration}</p> </div>}
+//                                                                     {project.category && <div> <h4 className="text-sm font-medium text-dim mb-0.5">Work category</h4> <p className="font-medium text-ink">{project.category}</p> </div>}
+//                                                                     {project.team && <div> <h4 className="text-sm font-medium text-dim mb-0.5">Team involved</h4> <p className="font-medium text-ink">{project.team}</p> </div>}
+//                                                                     {project.objective && <div className="md:col-span-2"> <h4 className="text-sm font-medium text-dim mb-0.5">Objective</h4> <p className="font-medium text-ink">{project.objective}</p> </div>}
+//                                                                     {project.features && <div className="md:col-span-2"> <h4 className="text-sm font-medium text-dim mb-0.5">Key features</h4> <p className="font-medium text-ink">{project.features}</p> </div>}
+//                                                                     {project.impact && <div className="md:col-span-2"> <h4 className="text-sm font-medium text-dim mb-0.5">Business impact</h4> <p className="font-medium text-ink">{project.impact}</p> </div>}
+//                                                                     {project.deliverables && <div className="md:col-span-2"> <h4 className="text-sm font-medium text-dim mb-0.5">Deliverables</h4> <p className="font-medium text-ink">{project.deliverables}</p> </div>}
+//                                                                     {project.compliance && <div className="md:col-span-2"> <h4 className="text-sm font-medium text-dim mb-0.5">Compliance</h4> <p className="font-medium text-ink">{project.compliance}</p> </div>}
                                                                     
 //                                                                 </div>
 //                                                                 {/* Documents Section */}
 //                                                                 {project.documents && project.documents.length > 0 && (
 //                                                                     <div className="pt-2">
-//                                                                         <h4 className="text-sm font-medium text-gray-500 mb-1">Documents</h4>
+//                                                                         <h4 className="text-sm font-medium text-dim mb-1">Documents</h4>
 //                                                                         <div className="space-y-2">
 //                                                                             {project.documents.map(doc => (
-//                                                                                 <div key={doc.id} className="flex items-center justify-between p-2 border rounded-md bg-gray-50 hover:bg-gray-100">
-//                                                                                     <span className="text-sm text-gray-700 font-medium truncate pr-2">{doc.name}</span>
+//                                                                                 <div key={doc.id} className="flex items-center justify-between p-2 border rounded-md bg-canvas hover:bg-surface-hover">
+//                                                                                     <span className="text-sm text-ink font-medium truncate pr-2">{doc.name}</span>
 //                                                                                     <div className="flex gap-3 flex-shrink-0">
-//                                                                                         <a href={doc.url || '#'} target="_blank" rel="noopener noreferrer" className="text-gray-500 hover:text-emerald-600" title="View"> <Eye size={18} /> </a>
-//                                                                                         <a href={doc.url || '#'} download={doc.name} className="text-gray-500 hover:text-emerald-600" title="Download"> <Download size={18} /> </a>
+//                                                                                         <a href={doc.url || '#'} target="_blank" rel="noopener noreferrer" className="text-dim hover:text-ink" title="View"> <Eye size={18} /> </a>
+//                                                                                         <a href={doc.url || '#'} download={doc.name} className="text-dim hover:text-ink" title="Download"> <Download size={18} /> </a>
 //                                                                                     </div>
 //                                                                                 </div>
 //                                                                             ))}
@@ -1201,7 +1201,7 @@
 //                                                                 )}
 //                                                                 {project.photos && project.photos.length > 0 && (
 //                                                                     <div className="pt-2">
-//                                                                         <h4 className="text-sm font-medium text-gray-500 mb-2">Photos</h4>
+//                                                                         <h4 className="text-sm font-medium text-dim mb-2">Photos</h4>
 //                                                                         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2">
 //                                                                             {project.photos.slice(0, 5).map((photo, index) => (
 //                                                                                 <div key={`photo-${index}`} className="relative group">
@@ -1213,7 +1213,7 @@
 //                                                                                     <button
 //                                                                                         type="button"
 //                                                                                         onClick={() => handleRemovePhoto(index)}
-//                                                                                         className="absolute top-1 right-1 bg-white text-red-500 hover:text-red-700 rounded-full p-1 shadow group-hover:opacity-100 opacity-75"
+//                                                                                         className="absolute top-1 right-1 bg-surface text-danger hover:text-danger rounded-full p-1 shadow group-hover:opacity-100 opacity-75"
 //                                                                                         title="Remove"
 //                                                                                     >
 //                                                                                         <TrashIcon className="h-4 w-4" />
@@ -1231,13 +1231,13 @@
 //                                             );
 //                                         })
 //                                     ) : (
-//                                         <p className="text-center text-gray-500 py-4">No projects match the current criteria.</p>
+//                                         <p className="text-center text-dim py-4">No projects match the current criteria.</p>
 //                                     )}
 
 //                                     {/* More Button */}
 //                                     {initialProjectsData.length > 0 && (
 //                                         <div className="text-right pt-2">
-//                                             <button className="text-emerald-600 hover:text-emerald-800 text-sm font-medium">View More Projects...</button>
+//                                             <button className="text-ink hover:text-ink text-sm font-medium">View More Projects...</button>
 //                                         </div>
 //                                     )}
 //                                 </div>
@@ -1250,34 +1250,34 @@
 //             {/* Edit Profile Modal */}
 //             {isProfileModalOpen && (
 //                 <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 p-4 transition-opacity duration-300 ease-in-out">
-//                     <div className="bg-white rounded-lg shadow-xl p-6 w-full max-w-md max-h-[90vh] overflow-y-auto transform transition-all duration-300 ease-in-out scale-100">
+//                     <div className="bg-surface rounded-lg shadow-xl p-6 w-full max-w-md max-h-[90vh] overflow-y-auto transform transition-all duration-300 ease-in-out scale-100">
 //                         {/* Modal Header */}
 //                         <div className="flex justify-between items-center mb-4 border-b pb-2">
-//                             <h2 className="text-xl font-semibold text-gray-800">Edit Profile</h2>
-//                             <button onClick={handleProfileCloseModal} className="text-gray-400 hover:text-gray-600">
+//                             <h2 className="text-xl font-semibold text-ink">Edit Profile</h2>
+//                             <button onClick={handleProfileCloseModal} className="text-dim hover:text-dim">
 //                                 <CloseIcon size={20} />
 //                             </button>
 //                         </div>
 //                         {/* Modal Form */}
 //                         <form onSubmit={(e) => e.preventDefault()} className="space-y-4">
 //                             <div className="flex flex-col items-center space-y-3">
-//                                 <img src={imagePreview} alt="Profile Preview" className="w-32 h-32 rounded-full object-cover border-2 border-gray-300 shadow-sm" onError={(e) => { e.target.onerror = null; e.target.src = "https://via.placeholder.com/160"; }} />
-//                                 <label htmlFor="profileImage" className="cursor-pointer bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-medium px-4 py-2 rounded-md transition-colors">Change Image</label>
+//                                 <img src={imagePreview} alt="Profile Preview" className="w-32 h-32 rounded-full object-cover border-2 border-line " onError={(e) => { e.target.onerror = null; e.target.src = "https://via.placeholder.com/160"; }} />
+//                                 <label htmlFor="profileImage" className="cursor-pointer bg-surface-hover hover:bg-surface-hover text-ink text-sm font-medium px-4 py-2 rounded-md transition-colors">Change Image</label>
 //                                 <input id="profileImage" name="profileImage" type="file" accept="image/png, image/jpeg, image/gif" onChange={handleProfileFileChange} className="hidden" />
 //                             </div>
 //                             {/* Input Fields */}
-//                             <div><label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">Name</label><input type="text" id="name" name="name" value={profileFormData.name} onChange={handleProfileInputChange} className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent" required /></div>
-//                             <div><label htmlFor="companyName" className="block text-sm font-medium text-gray-700 mb-1">Company Name</label><input type="text" id="companyName" name="companyName" value={profileFormData.companyName} onChange={handleProfileInputChange} className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent" /></div>
+//                             <div><label htmlFor="name" className="block text-sm font-medium text-ink mb-1">Name</label><input type="text" id="name" name="name" value={profileFormData.name} onChange={handleProfileInputChange} className="w-full px-3 py-2 border border-line rounded-md  focus:outline-none focus:ring-2 focus:ring-ink focus:border-transparent" required /></div>
+//                             <div><label htmlFor="companyName" className="block text-sm font-medium text-ink mb-1">Company Name</label><input type="text" id="companyName" name="companyName" value={profileFormData.companyName} onChange={handleProfileInputChange} className="w-full px-3 py-2 border border-line rounded-md  focus:outline-none focus:ring-2 focus:ring-ink focus:border-transparent" /></div>
 //                             <div>
-//                                 <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-1">Phone</label>
-//                                 <div className="flex rounded-md shadow-sm">
+//                                 <label htmlFor="phone" className="block text-sm font-medium text-ink mb-1">Phone</label>
+//                                 <div className="flex rounded-md ">
 //                                     <select
 //                                         value={phoneCountryCode}
 //                                         onChange={(e) => {
 //                                             setPhoneCountryCode(e.target.value);
 //                                             setProfileFormData(prev => ({ ...prev, phone: `${e.target.value} ${phoneNumberWithoutCode}` }));
 //                                         }}
-//                                         className="px-3 py-2 border border-gray-300 rounded-l-md focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-sm"
+//                                         className="px-3 py-2 border border-line rounded-l-md focus:outline-none focus:ring-2 focus:ring-ink focus:border-transparent text-sm"
 //                                     >
 //                                         <option value="">Code</option>
 //                                         {countryCodes.map(c => (
@@ -1293,14 +1293,14 @@
 //                                             setPhoneNumberWithoutCode(e.target.value);
 //                                             setProfileFormData(prev => ({ ...prev, phone: `${phoneCountryCode} ${e.target.value}` }));
 //                                         }}
-//                                         className="flex-1 px-3 py-2 border-t border-b border-r border-gray-300 rounded-r-md shadow-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-sm"
+//                                         className="flex-1 px-3 py-2 border-t border-b border-r border-line rounded-r-md  focus:outline-none focus:ring-2 focus:ring-ink focus:border-transparent text-sm"
 //                                         placeholder="Phone number"
 //                                     />
 //                                 </div>
 //                             </div>
 //                             <div>
-//                                 <label htmlFor="location" className="block text-sm font-medium text-gray-700 mb-1">Location</label>
-//                                 <div className="flex rounded-md shadow-sm">
+//                                 <label htmlFor="location" className="block text-sm font-medium text-ink mb-1">Location</label>
+//                                 <div className="flex rounded-md ">
 //                                     <select
 //                                         value={selectedCountry}
 //                                         onChange={(e) => {
@@ -1310,7 +1310,7 @@
 //                                             setSelectedState('');
 //                                             setProfileFormData(prev => ({ ...prev, location: `${selectedState || ''}, ${newCountry}` }));
 //                                         }}
-//                                         className="px-3 py-2 border border-gray-300 rounded-l-md focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-sm"
+//                                         className="px-3 py-2 border border-line rounded-l-md focus:outline-none focus:ring-2 focus:ring-ink focus:border-transparent text-sm"
 //                                     >
 //                                         <option value="">Country</option>
 //                                         {Object.keys(countryStateData).map(country => (
@@ -1324,7 +1324,7 @@
 //                                             setSelectedState(newState);
 //                                             setProfileFormData(prev => ({ ...prev, location: `${newState}, ${selectedCountry}` }));
 //                                         }}
-//                                         className="flex-1 px-3 py-2 border-t border-b border-r border-gray-300 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-sm"
+//                                         className="flex-1 px-3 py-2 border-t border-b border-r border-line focus:outline-none focus:ring-2 focus:ring-ink focus:border-transparent text-sm"
 //                                         disabled={states.length === 0}
 //                                     >
 //                                         <option value="">State/Region</option>
@@ -1334,11 +1334,11 @@
 //                                     </select>
 //                                 </div>
 //                             </div>
-//                             <div><label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">Email</label><input type="email" id="email" name="email" value={profileFormData.email} onChange={handleProfileInputChange} className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent" required /></div>
+//                             <div><label htmlFor="email" className="block text-sm font-medium text-ink mb-1">Email</label><input type="email" id="email" name="email" value={profileFormData.email} onChange={handleProfileInputChange} className="w-full px-3 py-2 border border-line rounded-md  focus:outline-none focus:ring-2 focus:ring-ink focus:border-transparent" required /></div>
 //                             {/* Action Buttons */}
 //                             <div className="flex justify-end gap-3 pt-4 border-t mt-6">
-//                                 <button type="button" onClick={handleProfileCloseModal} className="px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-400 transition-colors">Cancel</button>
-//                                 <button type="button" onClick={handleProfileSave} className="px-4 py-2 bg-gradient-to-l from-[#095B49] to-[#000000] text-white rounded-md hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 transition-opacity">Save Changes</button>
+//                                 <button type="button" onClick={handleProfileCloseModal} className="px-4 py-2 bg-surface-hover text-ink rounded-md hover:bg-surface-hover focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-line transition-colors">Cancel</button>
+//                                 <button type="button" onClick={handleProfileSave} className="px-4 py-2 bg-cta text-cta-foreground rounded-md hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-ink transition-opacity">Save Changes</button>
 //                             </div>
 //                         </form>
 //                     </div>
@@ -1348,30 +1348,30 @@
 //             {/* Edit Project Modal */}
 //             {isProjectModalOpen && editingProject && (
 //                 <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 p-4 transition-opacity duration-300 ease-in-out">
-//                     <div className="bg-white rounded-lg shadow-xl p-6 w-full max-w-lg max-h-[90vh] overflow-y-auto transform transition-all duration-300 ease-in-out scale-100">
+//                     <div className="bg-surface rounded-lg shadow-xl p-6 w-full max-w-lg max-h-[90vh] overflow-y-auto transform transition-all duration-300 ease-in-out scale-100">
 //                         {/* Modal Header */}
 //                         <div className="flex justify-between items-center mb-4 border-b pb-2">
-//                             <h2 className="text-xl font-semibold text-gray-800">Edit Project</h2>
-//                             <button onClick={handleProjectCloseModal} className="text-gray-400 hover:text-gray-600">
+//                             <h2 className="text-xl font-semibold text-ink">Edit Project</h2>
+//                             <button onClick={handleProjectCloseModal} className="text-dim hover:text-dim">
 //                                 <CloseIcon size={20} />
 //                             </button>
 //                         </div>
 //                         {/* Modal Form */}
 //                         <form onSubmit={(e) => e.preventDefault()} className="space-y-4">
-//                             <div><label htmlFor="editTitle" className="block text-sm font-medium text-gray-700 mb-1">Title</label><input type="text" id="editTitle" name="title" value={projectFormData.title || ''} onChange={handleProjectInputChange} className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent" required /></div>
-//                             <div><label htmlFor="editDescription" className="block text-sm font-medium text-gray-700 mb-1">Description</label><textarea id="editDescription" name="description" value={projectFormData.description || ''} onChange={handleProjectInputChange} className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"></textarea></div>
-//                             <div><label htmlFor="editClient" className="block text-sm font-medium text-gray-700 mb-1">Client</label><input type="text" id="editClient" name="client" value={projectFormData.client || ''} onChange={handleProjectInputChange} className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent" /></div>
-//                             <div><label htmlFor="editDuration" className="block text-sm font-medium text-gray-700 mb-1">Duration</label><input type="text" id="editDuration" name="duration" value={projectFormData.duration || ''} onChange={handleProjectInputChange} className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent" /></div>
-//                             <div><label htmlFor="editCategory" className="block text-sm font-medium text-gray-700 mb-1">Category</label><input type="text" id="editCategory" name="category" value={projectFormData.category || ''} onChange={handleProjectInputChange} className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent" /></div>
-//                             <div><label htmlFor="editTeam" className="block text-sm font-medium text-gray-700 mb-1">Team Involved</label><input type="text" id="editTeam" name="team" value={projectFormData.team || ''} onChange={handleProjectInputChange} className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent" /></div>
-//                             <div><label htmlFor="editObjective" className="block text-sm font-medium text-gray-700 mb-1">Objective</label><textarea id="editObjective" name="objective" value={projectFormData.objective || ''} onChange={handleProjectInputChange} className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"></textarea></div>
-//                             <div><label htmlFor="editFeatures" className="block text-sm font-medium text-gray-700 mb-1">Key Features</label><textarea id="editFeatures" name="features" value={projectFormData.features || ''} onChange={handleProjectInputChange} className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"></textarea></div>
-//                             <div><label htmlFor="editImpact" className="block text-sm font-medium text-gray-700 mb-1">Business Impact</label><textarea id="editImpact" name="impact" value={projectFormData.impact || ''} onChange={handleProjectInputChange} className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"></textarea></div>
-//                             <div><label htmlFor="editDeliverables" className="block text-sm font-medium text-gray-700 mb-1">Deliverables</label><textarea id="editDeliverables" name="deliverables" value={projectFormData.deliverables || ''} onChange={handleProjectInputChange} className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"></textarea></div>
-//                             <div><label htmlFor="editCompliance" className="block text-sm font-medium text-gray-700 mb-1">Compliance</label><input type="text" id="editCompliance" name="compliance" value={projectFormData.compliance || ''} onChange={handleProjectInputChange} className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent" /></div>
-//                             {/* <div><label htmlFor="editDate" className="block text-sm font-medium text-gray-700 mb-1">Date</label><input type="date" id="editDate" name="date" value={formatDateForInput(projectFormData.date)} onChange={handleProjectInputChange} className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent" /></div> */}
+//                             <div><label htmlFor="editTitle" className="block text-sm font-medium text-ink mb-1">Title</label><input type="text" id="editTitle" name="title" value={projectFormData.title || ''} onChange={handleProjectInputChange} className="w-full px-3 py-2 border border-line rounded-md  focus:outline-none focus:ring-2 focus:ring-ink focus:border-transparent" required /></div>
+//                             <div><label htmlFor="editDescription" className="block text-sm font-medium text-ink mb-1">Description</label><textarea id="editDescription" name="description" value={projectFormData.description || ''} onChange={handleProjectInputChange} className="w-full px-3 py-2 border border-line rounded-md  focus:outline-none focus:ring-2 focus:ring-ink focus:border-transparent"></textarea></div>
+//                             <div><label htmlFor="editClient" className="block text-sm font-medium text-ink mb-1">Client</label><input type="text" id="editClient" name="client" value={projectFormData.client || ''} onChange={handleProjectInputChange} className="w-full px-3 py-2 border border-line rounded-md  focus:outline-none focus:ring-2 focus:ring-ink focus:border-transparent" /></div>
+//                             <div><label htmlFor="editDuration" className="block text-sm font-medium text-ink mb-1">Duration</label><input type="text" id="editDuration" name="duration" value={projectFormData.duration || ''} onChange={handleProjectInputChange} className="w-full px-3 py-2 border border-line rounded-md  focus:outline-none focus:ring-2 focus:ring-ink focus:border-transparent" /></div>
+//                             <div><label htmlFor="editCategory" className="block text-sm font-medium text-ink mb-1">Category</label><input type="text" id="editCategory" name="category" value={projectFormData.category || ''} onChange={handleProjectInputChange} className="w-full px-3 py-2 border border-line rounded-md  focus:outline-none focus:ring-2 focus:ring-ink focus:border-transparent" /></div>
+//                             <div><label htmlFor="editTeam" className="block text-sm font-medium text-ink mb-1">Team Involved</label><input type="text" id="editTeam" name="team" value={projectFormData.team || ''} onChange={handleProjectInputChange} className="w-full px-3 py-2 border border-line rounded-md  focus:outline-none focus:ring-2 focus:ring-ink focus:border-transparent" /></div>
+//                             <div><label htmlFor="editObjective" className="block text-sm font-medium text-ink mb-1">Objective</label><textarea id="editObjective" name="objective" value={projectFormData.objective || ''} onChange={handleProjectInputChange} className="w-full px-3 py-2 border border-line rounded-md  focus:outline-none focus:ring-2 focus:ring-ink focus:border-transparent"></textarea></div>
+//                             <div><label htmlFor="editFeatures" className="block text-sm font-medium text-ink mb-1">Key Features</label><textarea id="editFeatures" name="features" value={projectFormData.features || ''} onChange={handleProjectInputChange} className="w-full px-3 py-2 border border-line rounded-md  focus:outline-none focus:ring-2 focus:ring-ink focus:border-transparent"></textarea></div>
+//                             <div><label htmlFor="editImpact" className="block text-sm font-medium text-ink mb-1">Business Impact</label><textarea id="editImpact" name="impact" value={projectFormData.impact || ''} onChange={handleProjectInputChange} className="w-full px-3 py-2 border border-line rounded-md  focus:outline-none focus:ring-2 focus:ring-ink focus:border-transparent"></textarea></div>
+//                             <div><label htmlFor="editDeliverables" className="block text-sm font-medium text-ink mb-1">Deliverables</label><textarea id="editDeliverables" name="deliverables" value={projectFormData.deliverables || ''} onChange={handleProjectInputChange} className="w-full px-3 py-2 border border-line rounded-md  focus:outline-none focus:ring-2 focus:ring-ink focus:border-transparent"></textarea></div>
+//                             <div><label htmlFor="editCompliance" className="block text-sm font-medium text-ink mb-1">Compliance</label><input type="text" id="editCompliance" name="compliance" value={projectFormData.compliance || ''} onChange={handleProjectInputChange} className="w-full px-3 py-2 border border-line rounded-md  focus:outline-none focus:ring-2 focus:ring-ink focus:border-transparent" /></div>
+//                             {/* <div><label htmlFor="editDate" className="block text-sm font-medium text-ink mb-1">Date</label><input type="date" id="editDate" name="date" value={formatDateForInput(projectFormData.date)} onChange={handleProjectInputChange} className="w-full px-3 py-2 border border-line rounded-md  focus:outline-none focus:ring-2 focus:ring-ink focus:border-transparent" /></div> */}
 //                             <div>
-//                                 <label htmlFor="editDocument" className="block text-sm font-medium text-gray-700 mb-1">
+//                                 <label htmlFor="editDocument" className="block text-sm font-medium text-ink mb-1">
 //                                     Documents
 //                                 </label>
                                 
@@ -1379,12 +1379,12 @@
 //                                 {projectFormData.documents?.length > 0 && (
 //                                     <div className="mb-3 space-y-2">
 //                                         {projectFormData.documents.map((doc, index) => (
-//                                             <div key={index} className="flex items-center justify-between p-2 bg-gray-50 rounded">
+//                                             <div key={index} className="flex items-center justify-between p-2 bg-canvas rounded">
 //                                                 <span className="text-sm truncate">{doc.name}</span>
 //                                                 <button
 //                                                     type="button"
 //                                                     onClick={() => handleRemoveDocument(index)}
-//                                                     className="text-red-500 hover:text-red-700"
+//                                                     className="text-danger hover:text-danger"
 //                                                 >
 //                                                     <TrashIcon className="h-4 w-4" />
 //                                                 </button>
@@ -1400,19 +1400,19 @@
 //                                     name="documents"
 //                                     onChange={handleDocumentUpload}
 //                                     multiple  // Allow multiple files
-//                                     className="block w-full text-sm text-gray-500
+//                                     className="block w-full text-sm text-dim
 //                                         file:mr-4 file:py-2 file:px-4
 //                                         file:rounded-md file:border-0
 //                                         file:text-sm file:font-semibold
-//                                         file:bg-emerald-50 file:text-emerald-700
-//                                         hover:file:bg-emerald-100"
+//                                         file:bg-surface-hover file:text-ink
+//                                         hover:file:bg-surface-hover"
 //                                 />
-//                                 <p className="mt-1 text-xs text-gray-500">
+//                                 <p className="mt-1 text-xs text-dim">
 //                                     Upload multiple project documents (PDF, DOC, PPT, etc.)
 //                                 </p>
 //                             </div>
 //                             <div>
-//                                 <label htmlFor="editPhotos" className="block text-sm font-medium text-gray-700 mb-1">
+//                                 <label htmlFor="editPhotos" className="block text-sm font-medium text-ink mb-1">
 //                                     Photos
 //                                 </label>
 
@@ -1429,7 +1429,7 @@
 //                                                 <button
 //                                                     type="button"
 //                                                     onClick={() => handleRemovePhoto(index)}
-//                                                     className="absolute top-1 right-1 bg-white text-red-500 hover:text-red-700 rounded-full p-1 shadow group-hover:opacity-100 opacity-75"
+//                                                     className="absolute top-1 right-1 bg-surface text-danger hover:text-danger rounded-full p-1 shadow group-hover:opacity-100 opacity-75"
 //                                                     title="Remove"
 //                                                 >
 //                                                     <TrashIcon className="h-4 w-4" />
@@ -1446,21 +1446,21 @@
 //                                     name="photos"
 //                                     onChange={handlePhotoUpload}
 //                                     multiple  // Allow multiple files
-//                                     className="block w-full text-sm text-gray-500
+//                                     className="block w-full text-sm text-dim
 //                                         file:mr-4 file:py-2 file:px-4
 //                                         file:rounded-md file:border-0
 //                                         file:text-sm file:font-semibold
-//                                         file:bg-emerald-50 file:text-emerald-700
-//                                         hover:file:bg-emerald-100"
+//                                         file:bg-surface-hover file:text-ink
+//                                         hover:file:bg-surface-hover"
 //                                 />
-//                                 <p className="mt-1 text-xs text-gray-500">
+//                                 <p className="mt-1 text-xs text-dim">
 //                                     Upload multiple project photos
 //                                 </p>
 //                             </div>
 //                             {/* Action Buttons */}
 //                             <div className="flex justify-end gap-3 pt-4 border-t mt-6">
-//                                 <button type="button" onClick={handleProjectCloseModal} className="px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-400 transition-colors">Cancel</button>
-//                                 <button type="button" onClick={handleProjectSave} className="px-4 py-2 bg-gradient-to-l from-[#095B49] to-[#000000] text-white rounded-md hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 transition-opacity">Save Changes</button>
+//                                 <button type="button" onClick={handleProjectCloseModal} className="px-4 py-2 bg-surface-hover text-ink rounded-md hover:bg-surface-hover focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-line transition-colors">Cancel</button>
+//                                 <button type="button" onClick={handleProjectSave} className="px-4 py-2 bg-cta text-cta-foreground rounded-md hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-ink transition-opacity">Save Changes</button>
 //                             </div>
 //                         </form>
 //                     </div>
@@ -2301,7 +2301,7 @@ export default function UserProjectPage() {
 
     return (
         <>
-            <div className="min-h-screen bg-slate-50 font-sans">
+            <div className="min-h-screen bg-canvas font-sans">
                 {/* Header */}
                 <AppHeader />
 
@@ -2324,7 +2324,7 @@ export default function UserProjectPage() {
                                     <div className="flex w-full flex-col gap-3 sm:w-auto sm:flex-row sm:flex-wrap sm:justify-end">
                                         <button
                                             onClick={() => setShowAddModal(true)}
-                                            className="bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-700 hover:to-emerald-800 text-white px-6 py-2.5 rounded-md text-sm font-medium shadow-sm hover:shadow-md transition-all whitespace-nowrap"
+                                            className="bg-cta text-cta-foreground px-6 py-2.5 rounded-md text-sm font-medium hover:opacity-90 transition-opacity whitespace-nowrap"
                                         >
                                             + Add Project
                                         </button>
@@ -2335,12 +2335,12 @@ export default function UserProjectPage() {
                                                 id="sortOrder"
                                                 value={sortOrder}
                                                 onChange={handleSortChange}
-                                                className="w-full appearance-none bg-white border border-gray-200 px-4 py-2.5 pr-10 rounded-md text-sm font-medium text-gray-700 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent cursor-pointer hover:bg-gray-50 transition-colors sm:min-w-[170px]"
+                                                className="w-full appearance-none bg-surface border border-line px-4 py-2.5 pr-10 rounded-md text-sm font-medium text-ink focus:outline-none focus:ring-2 focus:ring-ink focus:border-transparent cursor-pointer hover:bg-canvas transition-colors sm:min-w-[170px]"
                                             >
                                                 <option value="recent">Recent First</option>
                                                 <option value="oldest">Oldest First</option>
                                             </select>
-                                            <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400">
+                                            <div className="absolute right-3 top-1/2 -translate-y-1/2  pointer-events-none text-dim">
                                                 <ChevronDown size={18} />
                                             </div>
                                         </div>
@@ -2349,16 +2349,16 @@ export default function UserProjectPage() {
                     >
 
                                 {showAddModal && (
-                                    <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 sm:p-6">
-                                        <div className="bg-white rounded-xl shadow-xl w-full max-w-2xl max-h-[90vh] flex flex-col overflow-hidden">
-                                            <div className="flex justify-between items-center px-6 py-4 border-b border-gray-200 flex-shrink-0 bg-white">
-                                                <h3 className="text-xl font-bold text-gray-800">Add New Project</h3>
-                                                <button onClick={() => setShowAddModal(false)} className="text-gray-400 hover:text-gray-600 transition-colors">
+                                    <div className="fixed inset-0 bg-cta backdrop-blur-sm z-50 flex items-center justify-center p-4 sm:p-6">
+                                        <div className="bg-surface rounded-xl shadow-xl w-full max-w-2xl max-h-[90vh] flex flex-col overflow-hidden">
+                                            <div className="flex justify-between items-center px-6 py-4 border-b border-line flex-shrink-0 bg-surface">
+                                                <h3 className="text-xl font-bold text-ink">Add New Project</h3>
+                                                <button onClick={() => setShowAddModal(false)} className="text-dim hover:text-dim transition-colors">
                                                     <CloseIcon size={20} />
                                                 </button>
                                             </div>
 
-                                            <div className="overflow-y-auto p-6 flex-1 bg-white">
+                                            <div className="overflow-y-auto p-6 flex-1 bg-surface">
                                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                                 {/* Text Inputs */}
                                                 <input
@@ -2445,10 +2445,10 @@ export default function UserProjectPage() {
 
                                                 {/* Document Upload Section */}
                                                 <div className="w-full md:col-span-2 mt-4">
-                                                    <label className="block text-gray-700 font-semibold mb-2">Upload Project Documents</label>
+                                                    <label className="block text-ink font-semibold mb-2">Upload Project Documents</label>
                                                     <div className="flex flex-col gap-2">
                                                         {newProject.documents?.map((doc, index) => (
-                                                            <div key={index} className="flex items-center gap-2 text-sm text-gray-700">
+                                                            <div key={index} className="flex items-center gap-2 text-sm text-ink">
                                                                 📄 {doc.name}
                                                             </div>
                                                         ))}
@@ -2456,7 +2456,7 @@ export default function UserProjectPage() {
                                                             <>
                                                                 <label
                                                                     htmlFor="projectDocsUpload"
-                                                                    className="px-4 py-2 border border-dashed border-gray-400 text-gray-500 rounded-md text-sm cursor-pointer hover:border-emerald-500 hover:text-emerald-700 w-fit"
+                                                                    className="px-4 py-2 border border-dashed border-line text-dim rounded-md text-sm cursor-pointer hover:border-line hover:text-ink w-fit"
                                                                 >
                                                                     + Upload Documents (PDF, DOCX, etc.)
                                                                 </label>
@@ -2483,7 +2483,7 @@ export default function UserProjectPage() {
 
                                                 {/* Image Upload Section */}
                                                 <div className="w-full md:col-span-2 mt-4">
-                                                    <label className="block text-gray-700 font-semibold mb-2">Project Images</label>
+                                                    <label className="block text-ink font-semibold mb-2">Project Images</label>
                                                     <div className="flex flex-wrap gap-4">
                                                         {newProject.photos?.map((image, index) => (
                                                             <div key={`new-photo-${index}`} className="relative">
@@ -2499,7 +2499,7 @@ export default function UserProjectPage() {
                                                                         updatedPhotos.splice(index, 1);
                                                                         setNewProject({ ...newProject, photos: updatedPhotos });
                                                                     }}
-                                                                    className="absolute top-1 right-1 bg-white text-red-500 hover:text-red-700 rounded-full p-1 shadow"
+                                                                    className="absolute top-1 right-1 bg-surface text-danger hover:text-danger rounded-full p-1 shadow"
                                                                     title="Remove"
                                                                 >
                                                                     <TrashIcon className="h-3 w-3" />
@@ -2510,7 +2510,7 @@ export default function UserProjectPage() {
                                                             <>
                                                                 <label
                                                                     htmlFor="projectImageUpload"
-                                                                    className="w-24 h-24 flex items-center justify-center border-2 border-dashed text-gray-400 rounded-md cursor-pointer hover:border-emerald-500"
+                                                                    className="w-24 h-24 flex items-center justify-center border-2 border-dashed text-dim rounded-md cursor-pointer hover:border-line"
                                                                 >
                                                                     +
                                                                 </label>
@@ -2539,23 +2539,23 @@ export default function UserProjectPage() {
                                             </div>
 
                                             {/* Action Buttons */}
-                                            <div className="flex justify-end gap-3 pt-6 border-t mt-6 border-gray-200 bg-white">
+                                            <div className="flex justify-end gap-3 pt-6 border-t mt-6 border-line bg-surface">
                                                 <button
                                                     onClick={() => setShowAddModal(false)}
-                                                    className="px-4 py-2 text-sm rounded-md bg-gray-200 text-gray-800 hover:bg-gray-300 focus:outline-none transition-colors"
+                                                    className="px-4 py-2 text-sm rounded-md bg-surface-hover text-ink hover:bg-surface-hover focus:outline-none transition-colors"
                                                 >
                                                     Cancel
                                                 </button>
                                                 <button
                                                     onClick={handleAddProject}
                                                     disabled={isAddingProject}
-                                                    className={`px-4 py-2 text-sm rounded-md bg-gradient-to-l from-[#095B49] to-[#000000] text-white hover:opacity-90 ${
+                                                    className={`px-4 py-2 text-sm rounded-md bg-cta text-cta-foreground hover:opacity-90 ${
                                                         isAddingProject ? 'opacity-70 cursor-not-allowed' : ''
                                                     }`}
                                                 >
                                                     {isAddingProject ? (
                                                         <>
-                                                            <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white inline" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                                            <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-cta-foreground inline" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                                                                 <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                                                                 <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                                                             </svg>
@@ -2574,43 +2574,43 @@ export default function UserProjectPage() {
                                 <div className="space-y-3 mt-6">
                                     {projectsLoading ? (
                                         <div className="flex justify-center items-center py-10">
-                                            <svg className="animate-spin h-8 w-8 text-[#095B49]" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                            <svg className="animate-spin h-8 w-8 text-ink" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                                                 <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                                                 <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                                             </svg>
                                         </div>
                                     ) : projects.length > 0 ? (
                                         projects.map((project) => (
-                                            <div key={project.id || project._id} className="bg-white border border-gray-200 rounded-lg hover:shadow-md hover:border-gray-300 transition-all duration-200 overflow-hidden">
+                                            <div key={project.id || project._id} className="bg-surface border border-line rounded-lg  hover:border-line transition-all duration-200 overflow-hidden">
                                                 {/* Card Header */}
-                                                <div className="p-4 border-b border-gray-100">
+                                                <div className="p-4 border-b border-line">
                                                     <div className="flex justify-between items-start mb-2">
                                                         <div className="flex-1">
-                                                            <h3 className="font-semibold text-gray-900 text-base">
+                                                            <h3 className="font-semibold text-ink text-base">
                                                                 {project.title}
                                                             </h3>
                                                             {project.isNew && (
-                                                                <span className="inline-block mt-2 bg-emerald-100 text-emerald-700 text-xs px-2.5 py-1 rounded-full font-medium">NEW</span>
+                                                                <span className="inline-block mt-2 bg-surface-hover text-ink text-xs px-2.5 py-1 rounded-full font-medium">NEW</span>
                                                             )}
                                                         </div>
                                                         <div className="flex gap-2 ml-4">
                                                             <button
                                                                 onClick={() => handleProjectEditClick(project)}
-                                                                className="text-gray-400 hover:text-emerald-600 p-1 hover:bg-gray-100 rounded transition-colors"
+                                                                className="text-dim hover:text-ink p-1 hover:bg-surface-hover rounded transition-colors"
                                                                 title="Edit Project"
                                                             >
                                                                 <Edit size={16} />
                                                             </button>
                                                             <button
                                                                 onClick={() => handleDeleteProject(project._id || project.id)}
-                                                                className="text-gray-400 hover:text-red-600 p-1 hover:bg-gray-100 rounded transition-colors"
+                                                                className="text-dim hover:text-danger p-1 hover:bg-surface-hover rounded transition-colors"
                                                                 title="Delete Project"
                                                             >
                                                                 <TrashIcon className="h-4 w-4" />
                                                             </button>
                                                         </div>
                                                     </div>
-                                                    <p className="text-xs text-gray-500 line-clamp-2">
+                                                    <p className="text-xs text-dim line-clamp-2">
                                                         {project.description}
                                                     </p>
                                                 </div>
@@ -2620,26 +2620,26 @@ export default function UserProjectPage() {
                                                     <div className="grid grid-cols-2 gap-3">
                                                         {project.client && (
                                                             <>
-                                                                <div className="text-xs font-medium text-gray-500 uppercase tracking-wide">Client</div>
-                                                                <div className="font-semibold text-gray-900 text-xs">{project.client}</div>
+                                                                <div className="text-xs font-medium text-dim uppercase tracking-wide">Client</div>
+                                                                <div className="font-semibold text-ink text-xs">{project.client}</div>
                                                             </>
                                                         )}
                                                         {project.duration && (
                                                             <>
-                                                                <div className="text-xs font-medium text-gray-500 uppercase tracking-wide">Duration</div>
-                                                                <div className="font-semibold text-gray-900 text-xs">{project.duration}</div>
+                                                                <div className="text-xs font-medium text-dim uppercase tracking-wide">Duration</div>
+                                                                <div className="font-semibold text-ink text-xs">{project.duration}</div>
                                                             </>
                                                         )}
                                                         {project.category && (
                                                             <>
-                                                                <div className="text-xs font-medium text-gray-500 uppercase tracking-wide">Category</div>
-                                                                <div className="font-semibold text-gray-900 text-xs">{project.category}</div>
+                                                                <div className="text-xs font-medium text-dim uppercase tracking-wide">Category</div>
+                                                                <div className="font-semibold text-ink text-xs">{project.category}</div>
                                                             </>
                                                         )}
                                                         {project.team && (
                                                             <>
-                                                                <div className="text-xs font-medium text-gray-500 uppercase tracking-wide">Team</div>
-                                                                <div className="font-semibold text-gray-900 text-xs">{project.team}</div>
+                                                                <div className="text-xs font-medium text-dim uppercase tracking-wide">Team</div>
+                                                                <div className="font-semibold text-ink text-xs">{project.team}</div>
                                                             </>
                                                         )}
                                                     </div>
@@ -2647,7 +2647,7 @@ export default function UserProjectPage() {
                                                     {/* Expandable Details */}
                                                     <button
                                                         onClick={() => toggleProjectExpansion(project.id || project._id)}
-                                                        className="w-full mt-4 pt-4 border-t border-gray-100 text-emerald-600 hover:text-emerald-700 text-sm font-medium flex items-center justify-center gap-2 transition-colors"
+                                                        className="w-full mt-4 pt-4 border-t border-line text-ink hover:text-ink text-sm font-medium flex items-center justify-center gap-2 transition-colors"
                                                     >
                                                         {expandedProjects[project.id || project._id] ? 'Show Less' : 'Show More Details'}
                                                         <ChevronDown 
@@ -2658,51 +2658,51 @@ export default function UserProjectPage() {
 
                                                     {/* Expandable Content */}
                                                     {expandedProjects[project.id || project._id] && (
-                                                        <div className="pt-4 border-t border-gray-100 space-y-4">
+                                                        <div className="pt-4 border-t border-line space-y-4">
                                                             {project.objective && (
                                                                 <div>
-                                                                    <h4 className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">Objective</h4>
-                                                                    <p className="text-sm text-gray-700">{project.objective}</p>
+                                                                    <h4 className="text-xs font-medium text-dim uppercase tracking-wide mb-1">Objective</h4>
+                                                                    <p className="text-sm text-ink">{project.objective}</p>
                                                                 </div>
                                                             )}
                                                             {project.features && (
                                                                 <div>
-                                                                    <h4 className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">Key Features</h4>
-                                                                    <p className="text-sm text-gray-700">{project.features}</p>
+                                                                    <h4 className="text-xs font-medium text-dim uppercase tracking-wide mb-1">Key Features</h4>
+                                                                    <p className="text-sm text-ink">{project.features}</p>
                                                                 </div>
                                                             )}
                                                             {project.impact && (
                                                                 <div>
-                                                                    <h4 className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">Impact</h4>
-                                                                    <p className="text-sm text-gray-700">{project.impact}</p>
+                                                                    <h4 className="text-xs font-medium text-dim uppercase tracking-wide mb-1">Impact</h4>
+                                                                    <p className="text-sm text-ink">{project.impact}</p>
                                                                 </div>
                                                             )}
                                                             {project.deliverables && (
                                                                 <div>
-                                                                    <h4 className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">Deliverables</h4>
-                                                                    <p className="text-sm text-gray-700">{project.deliverables}</p>
+                                                                    <h4 className="text-xs font-medium text-dim uppercase tracking-wide mb-1">Deliverables</h4>
+                                                                    <p className="text-sm text-ink">{project.deliverables}</p>
                                                                 </div>
                                                             )}
                                                             {project.compliance && (
                                                                 <div>
-                                                                    <h4 className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">Compliance</h4>
-                                                                    <p className="text-sm text-gray-700">{project.compliance}</p>
+                                                                    <h4 className="text-xs font-medium text-dim uppercase tracking-wide mb-1">Compliance</h4>
+                                                                    <p className="text-sm text-ink">{project.compliance}</p>
                                                                 </div>
                                                             )}
 
                                                             {/* Documents */}
                                                             {project.documents && project.documents.length > 0 && (
                                                                 <div className="pt-2">
-                                                                    <h4 className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-2">Documents</h4>
+                                                                    <h4 className="text-xs font-medium text-dim uppercase tracking-wide mb-2">Documents</h4>
                                                                     <div className="space-y-2">
                                                                         {project.documents.map(doc => (
-                                                                            <div key={doc.id} className="flex items-center justify-between p-2 bg-gray-50 rounded border border-gray-200">
-                                                                                <span className="text-xs text-gray-700 font-medium truncate pr-2">{doc.name}</span>
+                                                                            <div key={doc.id} className="flex items-center justify-between p-2 bg-canvas rounded border border-line">
+                                                                                <span className="text-xs text-ink font-medium truncate pr-2">{doc.name}</span>
                                                                                 <div className="flex gap-2 flex-shrink-0">
-                                                                                    <a href={doc.url || '#'} target="_blank" rel="noopener noreferrer" className="text-gray-500 hover:text-emerald-600" title="View">
+                                                                                    <a href={doc.url || '#'} target="_blank" rel="noopener noreferrer" className="text-dim hover:text-ink" title="View">
                                                                                         <Eye size={16} />
                                                                                     </a>
-                                                                                    <a href={doc.url || '#'} download={doc.name} className="text-gray-500 hover:text-emerald-600" title="Download">
+                                                                                    <a href={doc.url || '#'} download={doc.name} className="text-dim hover:text-ink" title="Download">
                                                                                         <Download size={16} />
                                                                                     </a>
                                                                                 </div>
@@ -2715,14 +2715,14 @@ export default function UserProjectPage() {
                                                             {/* Photos */}
                                                             {project.photos && project.photos.length > 0 && (
                                                                 <div className="pt-2">
-                                                                    <h4 className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-2">Photos</h4>
+                                                                    <h4 className="text-xs font-medium text-dim uppercase tracking-wide mb-2">Photos</h4>
                                                                     <div className="grid grid-cols-3 gap-2">
                                                                         {project.photos.slice(0, 3).map((photo, index) => (
                                                                             <div key={`photo-${index}`} className="relative group">
                                                                                 <img
                                                                                     src={getPhotoUrl(photo)}
                                                                                     alt={`Project Photo ${index + 1}`}
-                                                                                    className="w-full h-20 object-cover rounded border border-gray-200"
+                                                                                    className="w-full h-20 object-cover rounded border border-line"
                                                                                 />
                                                                                 {project.photos.length > 3 && index === 2 && (
                                                                                     <div className="absolute inset-0 bg-black bg-opacity-50 rounded flex items-center justify-center">
@@ -2741,11 +2741,11 @@ export default function UserProjectPage() {
                                         ))
                                     ) : (
                                         <div>
-                                            <div className="text-center py-12 bg-gray-50 rounded-lg border border-gray-200">
-                                                <p className="text-gray-500 text-sm mb-4">No projects yet. Start by creating your first project!</p>
+                                            <div className="text-center py-12 bg-canvas rounded-lg border border-line">
+                                                <p className="text-dim text-sm mb-4">No projects yet. Start by creating your first project!</p>
                                                 <button
                                                     onClick={() => setShowAddModal(true)}
-                                                    className="inline-flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors"
+                                                    className="inline-flex items-center gap-2 bg-cta hover:bg-cta text-cta-foreground px-4 py-2 rounded-md text-sm font-medium transition-colors"
                                                 >
                                                     <Plus size={16} />
                                                     Create Project
@@ -2760,36 +2760,36 @@ export default function UserProjectPage() {
             
             {/* Edit Profile Modal */}
             {isProfileModalOpen && (
-                <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 sm:p-6">
-                    <div className="bg-white rounded-xl shadow-xl w-full max-w-2xl max-h-[90vh] flex flex-col overflow-hidden">
+                <div className="fixed inset-0 bg-cta backdrop-blur-sm z-50 flex items-center justify-center p-4 sm:p-6">
+                    <div className="bg-surface rounded-xl shadow-xl w-full max-w-2xl max-h-[90vh] flex flex-col overflow-hidden">
                         {/* Modal Header */}
-                        <div className="flex justify-between items-center px-6 py-4 border-b border-gray-200 flex-shrink-0 bg-white">
-                            <h2 className="text-xl font-semibold text-gray-800">Edit Profile</h2>
-                            <button onClick={handleProfileCloseModal} className="text-gray-400 hover:text-gray-600 transition-colors">
+                        <div className="flex justify-between items-center px-6 py-4 border-b border-line flex-shrink-0 bg-surface">
+                            <h2 className="text-xl font-semibold text-ink">Edit Profile</h2>
+                            <button onClick={handleProfileCloseModal} className="text-dim hover:text-dim transition-colors">
                                 <CloseIcon size={20} />
                             </button>
                         </div>
                         {/* Modal Form */}
-                        <div className="overflow-y-auto p-6 flex-1 bg-white">
+                        <div className="overflow-y-auto p-6 flex-1 bg-surface">
                             <form onSubmit={(e) => e.preventDefault()} className="space-y-4">
                             <div className="flex flex-col items-center space-y-3">
-                                <img src={imagePreview} alt="Profile Preview" className="w-32 h-32 rounded-full object-cover border-2 border-gray-300 shadow-sm" onError={(e) => { e.target.onerror = null; e.target.src = "https://via.placeholder.com/160"; }} />
-                                <label htmlFor="profileImage" className="cursor-pointer bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-medium px-4 py-2 rounded-md transition-colors">Change Image</label>
+                                <img src={imagePreview} alt="Profile Preview" className="w-32 h-32 rounded-full object-cover border-2 border-line " onError={(e) => { e.target.onerror = null; e.target.src = "https://via.placeholder.com/160"; }} />
+                                <label htmlFor="profileImage" className="cursor-pointer bg-surface-hover hover:bg-surface-hover text-ink text-sm font-medium px-4 py-2 rounded-md transition-colors">Change Image</label>
                                 <input id="profileImage" name="profileImage" type="file" accept="image/png, image/jpeg, image/gif" onChange={handleProfileFileChange} className="hidden" />
                             </div>
                             {/* Input Fields */}
-                            <div><label htmlFor="companyName" className="block text-sm font-medium text-gray-700 mb-1">Company Name</label><input type="text" id="companyName" name="companyName" value={profileFormData.companyName} onChange={handleProfileInputChange} className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent" /></div>
+                            <div><label htmlFor="companyName" className="block text-sm font-medium text-ink mb-1">Company Name</label><input type="text" id="companyName" name="companyName" value={profileFormData.companyName} onChange={handleProfileInputChange} className="w-full px-3 py-2 border border-line rounded-md  focus:outline-none focus:ring-2 focus:ring-ink focus:border-transparent" /></div>
                             <div>
-                                <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-1">Phone</label>
-                                <div className="flex rounded-md shadow-sm">
+                                <label htmlFor="phone" className="block text-sm font-medium text-ink mb-1">Phone</label>
+                                <div className="flex rounded-md ">
                                     <select
                                         value={phoneCountryCode}
                                         onChange={(e) => {
                                             setPhoneCountryCode(e.target.value);
                                             setProfileFormData(prev => ({ ...prev, phone: `${e.target.value} ${phoneNumberWithoutCode}` }));
                                         }}
-                                        // REVERTED: Restored relative, focus:z-10, and bg-white
-                                        className="relative px-3 py-2 border border-gray-300 rounded-l-md focus:z-10 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-sm bg-white"
+                                        // REVERTED: Restored relative, focus:z-10, and bg-surface
+                                        className="relative px-3 py-2 border border-line rounded-l-md focus:z-10 focus:outline-none focus:ring-2 focus:ring-ink focus:border-transparent text-sm bg-surface"
                                     >
                                         <option value="">Code</option>
                                         {countryCodes.map(c => (
@@ -2805,15 +2805,15 @@ export default function UserProjectPage() {
                                             setPhoneNumberWithoutCode(e.target.value);
                                             setProfileFormData(prev => ({ ...prev, phone: `${phoneCountryCode} ${e.target.value}` }));
                                         }}
-                                        // REVERTED: Restored relative, -ml-px, border, focus:z-10, and bg-white
-                                        className="relative -ml-px flex-1 px-3 py-2 border border-gray-300 rounded-r-md focus:z-10 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-sm bg-white"
+                                        // REVERTED: Restored relative, -ml-px, border, focus:z-10, and bg-surface
+                                        className="relative -ml-px flex-1 px-3 py-2 border border-line rounded-r-md focus:z-10 focus:outline-none focus:ring-2 focus:ring-ink focus:border-transparent text-sm bg-surface"
                                         placeholder="Phone number"
                                     />
                                 </div>
                             </div>
                             <div>
-                                <label htmlFor="location" className="block text-sm font-medium text-gray-700 mb-1">Location</label>
-                                <div className="flex rounded-md shadow-sm">
+                                <label htmlFor="location" className="block text-sm font-medium text-ink mb-1">Location</label>
+                                <div className="flex rounded-md ">
                                     <select
                                         value={selectedCountry}
                                         onChange={(e) => {
@@ -2823,8 +2823,8 @@ export default function UserProjectPage() {
                                             setSelectedState('');
                                             setProfileFormData(prev => ({ ...prev, location: `${selectedState || ''}, ${newCountry}` }));
                                         }}
-                                        // REVERTED: Restored relative, focus:z-10, and bg-white
-                                        className="relative px-3 py-2 border border-gray-300 rounded-l-md focus:z-10 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-sm bg-white"
+                                        // REVERTED: Restored relative, focus:z-10, and bg-surface
+                                        className="relative px-3 py-2 border border-line rounded-l-md focus:z-10 focus:outline-none focus:ring-2 focus:ring-ink focus:border-transparent text-sm bg-surface"
                                     >
                                         <option value="">Country</option>
                                         {Object.keys(countryStateData).map(country => (
@@ -2839,8 +2839,8 @@ export default function UserProjectPage() {
                                             setProfileFormData(prev => ({ ...prev, location: `${newState}, ${selectedCountry}` }));
                                         }}
                                         disabled={states.length === 0}
-                                        // REVERTED: Restored relative, -ml-px, border, focus:z-10, rounded-r-md and bg-white
-                                        className="relative -ml-px flex-1 px-3 py-2 border border-gray-300 rounded-r-md focus:z-10 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-sm bg-white"
+                                        // REVERTED: Restored relative, -ml-px, border, focus:z-10, rounded-r-md and bg-surface
+                                        className="relative -ml-px flex-1 px-3 py-2 border border-line rounded-r-md focus:z-10 focus:outline-none focus:ring-2 focus:ring-ink focus:border-transparent text-sm bg-surface"
                                     >
                                         <option value="">State/Region</option>
                                         {states.map(state => (
@@ -2849,11 +2849,11 @@ export default function UserProjectPage() {
                                     </select>
                                 </div>
                             </div>
-                            <div><label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">Email</label><input type="email" id="email" name="email" value={profileFormData.email} onChange={handleProfileInputChange} className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent" required /></div>
+                            <div><label htmlFor="email" className="block text-sm font-medium text-ink mb-1">Email</label><input type="email" id="email" name="email" value={profileFormData.email} onChange={handleProfileInputChange} className="w-full px-3 py-2 border border-line rounded-md  focus:outline-none focus:ring-2 focus:ring-ink focus:border-transparent" required /></div>
                             {/* Action Buttons */}
-                            <div className="flex justify-end gap-3 pt-6 border-t mt-6 border-gray-200">
-                                <button type="button" onClick={handleProfileCloseModal} className="px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-400 transition-colors">Cancel</button>
-                                <button type="button" onClick={handleProfileSave} className="px-4 py-2 bg-gradient-to-l from-[#095B49] to-[#000000] text-white rounded-md hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 transition-opacity">Save Changes</button>
+                            <div className="flex justify-end gap-3 pt-6 border-t mt-6 border-line">
+                                <button type="button" onClick={handleProfileCloseModal} className="px-4 py-2 bg-surface-hover text-ink rounded-md hover:bg-surface-hover focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-line transition-colors">Cancel</button>
+                                <button type="button" onClick={handleProfileSave} className="px-4 py-2 bg-cta text-cta-foreground rounded-md hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-ink transition-opacity">Save Changes</button>
                             </div>
                         </form>
                         </div>
@@ -2863,32 +2863,32 @@ export default function UserProjectPage() {
 
             {/* Edit Project Modal */}
             {isProjectModalOpen && editingProject && (
-                <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 sm:p-6">
-                    <div className="bg-white rounded-xl shadow-xl w-full max-w-2xl max-h-[90vh] flex flex-col overflow-hidden">
+                <div className="fixed inset-0 bg-cta backdrop-blur-sm z-50 flex items-center justify-center p-4 sm:p-6">
+                    <div className="bg-surface rounded-xl shadow-xl w-full max-w-2xl max-h-[90vh] flex flex-col overflow-hidden">
                         {/* Modal Header */}
-                        <div className="flex justify-between items-center px-6 py-4 border-b border-gray-200 flex-shrink-0 bg-white">
-                            <h2 className="text-xl font-semibold text-gray-800">Edit Project</h2>
-                            <button onClick={handleProjectCloseModal} className="text-gray-400 hover:text-gray-600 transition-colors">
+                        <div className="flex justify-between items-center px-6 py-4 border-b border-line flex-shrink-0 bg-surface">
+                            <h2 className="text-xl font-semibold text-ink">Edit Project</h2>
+                            <button onClick={handleProjectCloseModal} className="text-dim hover:text-dim transition-colors">
                                 <CloseIcon size={20} />
                             </button>
                         </div>
                         {/* Modal Form */}
-                        <div className="overflow-y-auto p-6 flex-1 bg-white">
+                        <div className="overflow-y-auto p-6 flex-1 bg-surface">
                             <form onSubmit={(e) => e.preventDefault()} className="space-y-4">
-                            <div><label htmlFor="editTitle" className="block text-sm font-medium text-gray-700 mb-1">Title</label><input type="text" id="editTitle" name="title" value={projectFormData.title || ''} onChange={handleProjectInputChange} className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent" required /></div>
-                            <div><label htmlFor="editDescription" className="block text-sm font-medium text-gray-700 mb-1">Description</label><textarea id="editDescription" name="description" value={projectFormData.description || ''} onChange={handleProjectInputChange} className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"></textarea></div>
-                            <div><label htmlFor="editClient" className="block text-sm font-medium text-gray-700 mb-1">Client</label><input type="text" id="editClient" name="client" value={projectFormData.client || ''} onChange={handleProjectInputChange} className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent" /></div>
-                            <div><label htmlFor="editDuration" className="block text-sm font-medium text-gray-700 mb-1">Duration</label><input type="text" id="editDuration" name="duration" value={projectFormData.duration || ''} onChange={handleProjectInputChange} className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent" /></div>
-                            <div><label htmlFor="editCategory" className="block text-sm font-medium text-gray-700 mb-1">Category</label><input type="text" id="editCategory" name="category" value={projectFormData.category || ''} onChange={handleProjectInputChange} className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent" /></div>
-                            <div><label htmlFor="editTeam" className="block text-sm font-medium text-gray-700 mb-1">Team Involved</label><input type="text" id="editTeam" name="team" value={projectFormData.team || ''} onChange={handleProjectInputChange} className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent" /></div>
-                            <div><label htmlFor="editObjective" className="block text-sm font-medium text-gray-700 mb-1">Objective</label><textarea id="editObjective" name="objective" value={projectFormData.objective || ''} onChange={handleProjectInputChange} className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"></textarea></div>
-                            <div><label htmlFor="editFeatures" className="block text-sm font-medium text-gray-700 mb-1">Key Features</label><textarea id="editFeatures" name="features" value={projectFormData.features || ''} onChange={handleProjectInputChange} className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"></textarea></div>
-                            <div><label htmlFor="editImpact" className="block text-sm font-medium text-gray-700 mb-1">Business Impact</label><textarea id="editImpact" name="impact" value={projectFormData.impact || ''} onChange={handleProjectInputChange} className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"></textarea></div>
-                            <div><label htmlFor="editDeliverables" className="block text-sm font-medium text-gray-700 mb-1">Deliverables</label><textarea id="editDeliverables" name="deliverables" value={projectFormData.deliverables || ''} onChange={handleProjectInputChange} className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"></textarea></div>
-                            <div><label htmlFor="editCompliance" className="block text-sm font-medium text-gray-700 mb-1">Compliance</label><input type="text" id="editCompliance" name="compliance" value={projectFormData.compliance || ''} onChange={handleProjectInputChange} className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent" /></div>
-                            {/* <div><label htmlFor="editDate" className="block text-sm font-medium text-gray-700 mb-1">Date</label><input type="date" id="editDate" name="date" value={formatDateForInput(projectFormData.date)} onChange={handleProjectInputChange} className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent" /></div> */}
+                            <div><label htmlFor="editTitle" className="block text-sm font-medium text-ink mb-1">Title</label><input type="text" id="editTitle" name="title" value={projectFormData.title || ''} onChange={handleProjectInputChange} className="w-full px-3 py-2 border border-line rounded-md  focus:outline-none focus:ring-2 focus:ring-ink focus:border-transparent" required /></div>
+                            <div><label htmlFor="editDescription" className="block text-sm font-medium text-ink mb-1">Description</label><textarea id="editDescription" name="description" value={projectFormData.description || ''} onChange={handleProjectInputChange} className="w-full px-3 py-2 border border-line rounded-md  focus:outline-none focus:ring-2 focus:ring-ink focus:border-transparent"></textarea></div>
+                            <div><label htmlFor="editClient" className="block text-sm font-medium text-ink mb-1">Client</label><input type="text" id="editClient" name="client" value={projectFormData.client || ''} onChange={handleProjectInputChange} className="w-full px-3 py-2 border border-line rounded-md  focus:outline-none focus:ring-2 focus:ring-ink focus:border-transparent" /></div>
+                            <div><label htmlFor="editDuration" className="block text-sm font-medium text-ink mb-1">Duration</label><input type="text" id="editDuration" name="duration" value={projectFormData.duration || ''} onChange={handleProjectInputChange} className="w-full px-3 py-2 border border-line rounded-md  focus:outline-none focus:ring-2 focus:ring-ink focus:border-transparent" /></div>
+                            <div><label htmlFor="editCategory" className="block text-sm font-medium text-ink mb-1">Category</label><input type="text" id="editCategory" name="category" value={projectFormData.category || ''} onChange={handleProjectInputChange} className="w-full px-3 py-2 border border-line rounded-md  focus:outline-none focus:ring-2 focus:ring-ink focus:border-transparent" /></div>
+                            <div><label htmlFor="editTeam" className="block text-sm font-medium text-ink mb-1">Team Involved</label><input type="text" id="editTeam" name="team" value={projectFormData.team || ''} onChange={handleProjectInputChange} className="w-full px-3 py-2 border border-line rounded-md  focus:outline-none focus:ring-2 focus:ring-ink focus:border-transparent" /></div>
+                            <div><label htmlFor="editObjective" className="block text-sm font-medium text-ink mb-1">Objective</label><textarea id="editObjective" name="objective" value={projectFormData.objective || ''} onChange={handleProjectInputChange} className="w-full px-3 py-2 border border-line rounded-md  focus:outline-none focus:ring-2 focus:ring-ink focus:border-transparent"></textarea></div>
+                            <div><label htmlFor="editFeatures" className="block text-sm font-medium text-ink mb-1">Key Features</label><textarea id="editFeatures" name="features" value={projectFormData.features || ''} onChange={handleProjectInputChange} className="w-full px-3 py-2 border border-line rounded-md  focus:outline-none focus:ring-2 focus:ring-ink focus:border-transparent"></textarea></div>
+                            <div><label htmlFor="editImpact" className="block text-sm font-medium text-ink mb-1">Business Impact</label><textarea id="editImpact" name="impact" value={projectFormData.impact || ''} onChange={handleProjectInputChange} className="w-full px-3 py-2 border border-line rounded-md  focus:outline-none focus:ring-2 focus:ring-ink focus:border-transparent"></textarea></div>
+                            <div><label htmlFor="editDeliverables" className="block text-sm font-medium text-ink mb-1">Deliverables</label><textarea id="editDeliverables" name="deliverables" value={projectFormData.deliverables || ''} onChange={handleProjectInputChange} className="w-full px-3 py-2 border border-line rounded-md  focus:outline-none focus:ring-2 focus:ring-ink focus:border-transparent"></textarea></div>
+                            <div><label htmlFor="editCompliance" className="block text-sm font-medium text-ink mb-1">Compliance</label><input type="text" id="editCompliance" name="compliance" value={projectFormData.compliance || ''} onChange={handleProjectInputChange} className="w-full px-3 py-2 border border-line rounded-md  focus:outline-none focus:ring-2 focus:ring-ink focus:border-transparent" /></div>
+                            {/* <div><label htmlFor="editDate" className="block text-sm font-medium text-ink mb-1">Date</label><input type="date" id="editDate" name="date" value={formatDateForInput(projectFormData.date)} onChange={handleProjectInputChange} className="w-full px-3 py-2 border border-line rounded-md  focus:outline-none focus:ring-2 focus:ring-ink focus:border-transparent" /></div> */}
                             <div>
-                                <label htmlFor="editDocument" className="block text-sm font-medium text-gray-700 mb-1">
+                                <label htmlFor="editDocument" className="block text-sm font-medium text-ink mb-1">
                                     Documents
                                 </label>
                                 
@@ -2896,12 +2896,12 @@ export default function UserProjectPage() {
                                 {projectFormData.documents?.length > 0 && (
                                     <div className="mb-3 space-y-2">
                                         {projectFormData.documents.map((doc, index) => (
-                                            <div key={index} className="flex items-center justify-between p-2 bg-gray-50 rounded">
+                                            <div key={index} className="flex items-center justify-between p-2 bg-canvas rounded">
                                                 <span className="text-sm truncate">{doc.name}</span>
                                                 <button
                                                     type="button"
                                                     onClick={() => handleRemoveDocument(index)}
-                                                    className="text-red-500 hover:text-red-700"
+                                                    className="text-danger hover:text-danger"
                                                 >
                                                     <TrashIcon className="h-4 w-4" />
                                                 </button>
@@ -2917,19 +2917,19 @@ export default function UserProjectPage() {
                                     name="documents"
                                     onChange={handleDocumentUpload}
                                     multiple  // Allow multiple files
-                                    className="block w-full text-sm text-gray-500
+                                    className="block w-full text-sm text-dim
                                         file:mr-4 file:py-2 file:px-4
                                         file:rounded-md file:border-0
                                         file:text-sm file:font-semibold
-                                        file:bg-emerald-50 file:text-emerald-700
-                                        hover:file:bg-emerald-100"
+                                        file:bg-surface-hover file:text-ink
+                                        hover:file:bg-surface-hover"
                                 />
-                                <p className="mt-1 text-xs text-gray-500">
+                                <p className="mt-1 text-xs text-dim">
                                     Upload multiple project documents (PDF, DOC, PPT, etc.)
                                 </p>
                             </div>
                             <div>
-                                <label htmlFor="editPhotos" className="block text-sm font-medium text-gray-700 mb-1">
+                                <label htmlFor="editPhotos" className="block text-sm font-medium text-ink mb-1">
                                     Photos
                                 </label>
 
@@ -2946,7 +2946,7 @@ export default function UserProjectPage() {
                                                 <button
                                                     type="button"
                                                     onClick={() => handleRemovePhoto(index)}
-                                                    className="absolute top-1 right-1 bg-white text-red-500 hover:text-red-700 rounded-full p-1 shadow group-hover:opacity-100 opacity-75"
+                                                    className="absolute top-1 right-1 bg-surface text-danger hover:text-danger rounded-full p-1 shadow group-hover:opacity-100 opacity-75"
                                                     title="Remove"
                                                 >
                                                     <TrashIcon className="h-4 w-4" />
@@ -2963,21 +2963,21 @@ export default function UserProjectPage() {
                                     name="photos"
                                     onChange={handlePhotoUpload}
                                     multiple  // Allow multiple files
-                                    className="block w-full text-sm text-gray-500
+                                    className="block w-full text-sm text-dim
                                         file:mr-4 file:py-2 file:px-4
                                         file:rounded-md file:border-0
                                         file:text-sm file:font-semibold
-                                        file:bg-emerald-50 file:text-emerald-700
-                                        hover:file:bg-emerald-100"
+                                        file:bg-surface-hover file:text-ink
+                                        hover:file:bg-surface-hover"
                                 />
-                                <p className="mt-1 text-xs text-gray-500">
+                                <p className="mt-1 text-xs text-dim">
                                     Upload multiple project photos
                                 </p>
                             </div>
                             {/* Action Buttons */}
-                            <div className="flex justify-end gap-3 pt-6 border-t mt-6 border-gray-200">
-                                <button type="button" onClick={handleProjectCloseModal} className="px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-400 transition-colors">Cancel</button>
-                                <button type="button" onClick={handleProjectSave} className="px-4 py-2 bg-gradient-to-l from-[#095B49] to-[#000000] text-white rounded-md hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 transition-opacity">Save Changes</button>
+                            <div className="flex justify-end gap-3 pt-6 border-t mt-6 border-line">
+                                <button type="button" onClick={handleProjectCloseModal} className="px-4 py-2 bg-surface-hover text-ink rounded-md hover:bg-surface-hover focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-line transition-colors">Cancel</button>
+                                <button type="button" onClick={handleProjectSave} className="px-4 py-2 bg-cta text-cta-foreground rounded-md hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-ink transition-opacity">Save Changes</button>
                             </div>
                         </form>
                         </div>

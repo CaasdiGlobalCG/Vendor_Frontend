@@ -164,8 +164,8 @@ const WorkspaceTutorialModal = ({ isOpen, onClose }) => {
       )}
 
       {/* Tooltip dialog */}
-      <div className="fixed w-80 z-[10000] bg-white rounded-xl shadow-2xl border border-gray-100 overflow-hidden animate-in fade-in zoom-in-95 duration-200" style={tooltipStyle}>
-        <div className="bg-gradient-to-r from-blue-600 to-indigo-600 px-4 py-3 text-white relative">
+      <div className="fixed w-80 z-[10000] bg-surface rounded-xl shadow-2xl border border-line overflow-hidden animate-in fade-in zoom-in-95 duration-200" style={tooltipStyle}>
+        <div className="bg-black px-4 py-3 text-white relative">
           <button
             onClick={onClose}
             className="absolute top-2.5 right-2.5 p-1 rounded-full hover:bg-white/20 text-white transition-colors"
@@ -176,20 +176,20 @@ const WorkspaceTutorialModal = ({ isOpen, onClose }) => {
             <span className="text-2xl">{step.icon}</span>
             <div>
               <h4 className="font-semibold text-sm leading-tight">{step.title}</h4>
-              <p className="text-blue-100 text-[11px] mt-0.5">Step {currentStep + 1} of {tutorialSteps.length}</p>
+              <p className="text-info text-[11px] mt-0.5">Step {currentStep + 1} of {tutorialSteps.length}</p>
             </div>
           </div>
         </div>
 
-        <div className="p-4 text-xs text-gray-600 leading-relaxed">
+        <div className="p-4 text-xs text-dim leading-relaxed">
           {step.description}
         </div>
 
-        <div className="px-4 pb-3 pt-1 flex items-center justify-between border-t border-gray-100">
+        <div className="px-4 pb-3 pt-1 flex items-center justify-between border-t border-line">
           <button
             disabled={currentStep === 0}
             onClick={() => setCurrentStep(prev => prev - 1)}
-            className="flex items-center gap-1 px-2.5 py-1 text-xs font-medium text-gray-500 hover:text-gray-800 disabled:opacity-30 disabled:hover:text-gray-500"
+            className="flex items-center gap-1 px-2.5 py-1 text-xs font-medium text-dim hover:text-ink disabled:opacity-30 disabled:hover:text-dim"
           >
             <ChevronLeft className="w-3.5 h-3.5" />
             <span>Prev</span>
@@ -198,7 +198,7 @@ const WorkspaceTutorialModal = ({ isOpen, onClose }) => {
           {currentStep < tutorialSteps.length - 1 ? (
             <button
               onClick={() => setCurrentStep(prev => prev + 1)}
-              className="flex items-center gap-1 px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-semibold shadow-sm transition-colors"
+              className="flex items-center gap-1 px-3 py-1.5 bg-info hover:bg-info text-white rounded-lg text-xs font-semibold  transition-colors"
             >
               <span>Next</span>
               <ChevronRight className="w-3.5 h-3.5" />
@@ -206,7 +206,7 @@ const WorkspaceTutorialModal = ({ isOpen, onClose }) => {
           ) : (
             <button
               onClick={onClose}
-              className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-semibold shadow-sm transition-colors"
+              className="px-3 py-1.5 bg-cta hover:bg-cta text-cta-foreground rounded-lg text-xs font-semibold  transition-colors"
             >
               Finish Tour
             </button>

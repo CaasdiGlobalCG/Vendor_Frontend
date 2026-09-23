@@ -95,9 +95,9 @@ export default function PerformancePage({ salesMetrics, forecastData, accentColo
   }, [accentColor, forecast, metrics]);
 
   return (
-    <div pageTitle="Performance" className="bg-white relative overflow-hidden" style={{ minHeight: '1123px' }}>
+    <div pageTitle="Performance" className="bg-surface relative overflow-hidden" style={{ minHeight: '1123px' }}>
       {/* ===== HEADER ===== */}
-      <div className="relative bg-gray-900 overflow-hidden">
+      <div className="relative bg-cta overflow-hidden">
         <svg className="absolute inset-0 w-full h-full opacity-10" viewBox="0 0 800 160" preserveAspectRatio="none">
           <polygon points="0,160 400,0 800,160" fill={accentColor} />
         </svg>
@@ -116,16 +116,16 @@ export default function PerformancePage({ salesMetrics, forecastData, accentColo
       <div className="px-10 md:px-14 -mt-1">
         <div className="grid grid-cols-4 gap-3">
           {summaryStats.map((stat, i) => (
-            <div key={i} className="p-4 rounded-sm border border-gray-100 bg-white relative overflow-hidden">
+            <div key={i} className="p-4 rounded-sm border border-line bg-surface relative overflow-hidden">
               <div className="absolute top-0 left-0 w-full h-1"
-                style={{ backgroundColor: i === 0 ? accentColor : 'transparent' }} />
-              <p className="text-[9px] font-bold uppercase tracking-widest text-gray-400 mb-1">{stat.label}</p>
+                style={{ backgroundColor: i === 0 ? accentColor: 'transparent' }} />
+              <p className="text-[9px] font-bold uppercase tracking-widest text-dim mb-1">{stat.label}</p>
               <div className="flex items-center gap-2">
-                <span className="text-lg font-black text-gray-900">{stat.value}</span>
+                <span className="text-lg font-black text-ink">{stat.value}</span>
                 {stat.trend === 'up' ? (
-                  <ArrowUpRight size={12} className="text-green-500" />
+                  <ArrowUpRight size={12} className="text-success" />
                 ) : (
-                  <ArrowDownRight size={12} className="text-red-500" />
+                  <ArrowDownRight size={12} className="text-danger" />
                 )}
               </div>
             </div>
@@ -137,10 +137,10 @@ export default function PerformancePage({ salesMetrics, forecastData, accentColo
       <div className="px-10 md:px-14 py-6">
         <div className="grid grid-cols-5 gap-5">
           {/* Line chart */}
-          <div className="col-span-3 p-5 border border-gray-100 rounded-sm">
+          <div className="col-span-3 p-5 border border-line rounded-sm">
             <div className="flex items-center gap-2 mb-4">
               <TrendingUp size={14} style={{ color: accentColor }} />
-              <span className="text-xs font-bold text-gray-900">Growth Trend</span>
+              <span className="text-xs font-bold text-ink">Growth Trend</span>
             </div>
             <div className="h-[200px]">
               <canvas ref={lineRef} />
@@ -148,10 +148,10 @@ export default function PerformancePage({ salesMetrics, forecastData, accentColo
           </div>
 
           {/* Pie chart */}
-          <div className="col-span-2 p-5 border border-gray-100 rounded-sm">
+          <div className="col-span-2 p-5 border border-line rounded-sm">
             <div className="flex items-center gap-2 mb-4">
               <PieChart size={14} style={{ color: accentColor }} />
-              <span className="text-xs font-bold text-gray-900">Revenue Split</span>
+              <span className="text-xs font-bold text-ink">Revenue Split</span>
             </div>
             <div className="h-[200px]">
               <canvas ref={pieRef} />
@@ -163,7 +163,7 @@ export default function PerformancePage({ salesMetrics, forecastData, accentColo
       {/* ===== INSIGHT BAR ===== */}
       <div className="px-10 md:px-14">
         <div className="p-5 rounded-sm relative overflow-hidden" style={{ backgroundColor: accentColor }}>
-          <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full -translate-y-16 translate-x-16" />
+          <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full  translate-x-16" />
           <div className="flex items-center gap-4 relative z-10">
             <BarChart3 size={20} className="text-white flex-shrink-0" />
             <div>
@@ -179,7 +179,7 @@ export default function PerformancePage({ salesMetrics, forecastData, accentColo
       {/* Bottom accent */}
       <div className="absolute bottom-0 left-0 right-0 h-2 flex">
         <div className="w-24" style={{ backgroundColor: accentColor }} />
-        <div className="flex-1 bg-gray-900" />
+        <div className="flex-1 bg-cta" />
       </div>
     </div>
   );

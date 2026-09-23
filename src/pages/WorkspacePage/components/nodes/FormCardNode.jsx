@@ -42,16 +42,16 @@ const FormCardNode = ({ data, selected }) => {
   };
 
   return (
-    <div className={`bg-white rounded-lg shadow-md border-2 ${selected ? 'border-blue-500' : 'border-gray-200'} p-4 min-w-[320px]`}>
+    <div className={`bg-surface rounded-lg  border-2 ${selected ? 'border-info' : 'border-line'} p-4 min-w-[320px]`}>
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2">
-          <FileText className="w-5 h-5 text-indigo-600" />
-          <span className="font-semibold text-gray-800">{formData.title}</span>
+          <FileText className="w-5 h-5 text-info" />
+          <span className="font-semibold text-ink">{formData.title}</span>
         </div>
         <span className={`px-2 py-1 text-xs rounded-full ${
-          formData.status === 'draft' ? 'bg-gray-100 text-gray-600' :
-          formData.status === 'published' ? 'bg-green-100 text-green-700' :
-          'bg-blue-100 text-blue-700'
+          formData.status === 'draft' ? 'bg-surface-hover text-dim' :
+          formData.status === 'published' ? 'bg-success/10 text-success' :
+          'bg-info/10 text-info'
         }`}>
           {formData.status?.toUpperCase() || 'DRAFT'}
         </span>
@@ -60,31 +60,31 @@ const FormCardNode = ({ data, selected }) => {
       {isEditing ? (
         <div className="space-y-3">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Form Title</label>
+            <label className="block text-sm font-medium text-ink mb-1">Form Title</label>
             <input
               type="text"
               value={formData.title}
               onChange={(e) => setFormData({...formData, title: e.target.value})}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
+              className="w-full px-3 py-2 border border-line rounded-md text-sm"
               placeholder="Form title"
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Submit Button Text</label>
+            <label className="block text-sm font-medium text-ink mb-1">Submit Button Text</label>
             <input
               type="text"
               value={formData.submitButton}
               onChange={(e) => setFormData({...formData, submitButton: e.target.value})}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
+              className="w-full px-3 py-2 border border-line rounded-md text-sm"
               placeholder="Submit"
             />
           </div>
           <div>
             <div className="flex items-center justify-between mb-2">
-              <label className="block text-sm font-medium text-gray-700">Form Fields</label>
+              <label className="block text-sm font-medium text-ink">Form Fields</label>
               <button
                 onClick={handleAddField}
-                className="flex items-center gap-1 px-2 py-1 bg-blue-50 text-blue-700 rounded text-xs hover:bg-blue-100"
+                className="flex items-center gap-1 px-2 py-1 bg-info/10 text-info rounded text-xs hover:bg-info/10"
               >
                 <Plus className="w-3 h-3" />
                 Add Field
@@ -92,18 +92,18 @@ const FormCardNode = ({ data, selected }) => {
             </div>
             <div className="space-y-2 max-h-40 overflow-y-auto">
               {formData.fields.map((field) => (
-                <div key={field.id} className="flex items-center gap-2 p-2 bg-gray-50 rounded">
+                <div key={field.id} className="flex items-center gap-2 p-2 bg-canvas rounded">
                   <input
                     type="text"
                     value={field.label}
                     onChange={(e) => handleFieldChange(field.id, 'label', e.target.value)}
-                    className="flex-1 px-2 py-1 border border-gray-300 rounded text-sm"
+                    className="flex-1 px-2 py-1 border border-line rounded text-sm"
                     placeholder="Field label"
                   />
                   <select
                     value={field.type}
                     onChange={(e) => handleFieldChange(field.id, 'type', e.target.value)}
-                    className="px-2 py-1 border border-gray-300 rounded text-sm"
+                    className="px-2 py-1 border border-line rounded text-sm"
                   >
                     <option value="text">Text</option>
                     <option value="number">Number</option>
@@ -113,7 +113,7 @@ const FormCardNode = ({ data, selected }) => {
                   </select>
                   <button
                     onClick={() => handleRemoveField(field.id)}
-                    className="p-1 text-red-600 hover:bg-red-50 rounded"
+                    className="p-1 text-danger hover:bg-danger/10 rounded"
                   >
                     <Trash2 className="w-4 h-4" />
                   </button>
@@ -124,14 +124,14 @@ const FormCardNode = ({ data, selected }) => {
           <div className="flex gap-2">
             <button
               onClick={handleSave}
-              className="flex-1 flex items-center justify-center gap-1 px-3 py-2 bg-blue-600 text-white rounded-md text-sm hover:bg-blue-700"
+              className="flex-1 flex items-center justify-center gap-1 px-3 py-2 bg-info text-white rounded-md text-sm hover:bg-info"
             >
               <Save className="w-4 h-4" />
               Save
             </button>
             <button
               onClick={() => setIsEditing(false)}
-              className="flex-1 px-3 py-2 bg-gray-200 text-gray-700 rounded-md text-sm hover:bg-gray-300"
+              className="flex-1 px-3 py-2 bg-surface-hover text-ink rounded-md text-sm hover:bg-surface-hover"
             >
               Cancel
             </button>
@@ -142,14 +142,14 @@ const FormCardNode = ({ data, selected }) => {
           <div className="space-y-2">
             {formData.fields.map((field) => (
               <div key={field.id} className="flex flex-col">
-                <label className="text-sm font-medium text-gray-700">
+                <label className="text-sm font-medium text-ink">
                   {field.label}
-                  {field.required && <span className="text-red-500 ml-1">*</span>}
+                  {field.required && <span className="text-danger ml-1">*</span>}
                 </label>
                 <input
                   type={field.type === 'textarea' ? 'text' : field.type}
                   disabled
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm bg-gray-50"
+                  className="w-full px-3 py-2 border border-line rounded-md text-sm bg-canvas"
                   placeholder={`Enter ${field.label.toLowerCase()}`}
                 />
               </div>
@@ -157,14 +157,14 @@ const FormCardNode = ({ data, selected }) => {
           </div>
           <button
             disabled
-            className="w-full py-2 bg-blue-600 text-white rounded-md text-sm opacity-50 cursor-not-allowed"
+            className="w-full py-2 bg-info text-white rounded-md text-sm opacity-50 cursor-not-allowed"
           >
             {formData.submitButton}
           </button>
           <div className="flex gap-2 pt-2">
             <button
               onClick={() => setIsEditing(true)}
-              className="flex-1 flex items-center justify-center gap-1 px-3 py-2 bg-blue-50 text-blue-700 rounded-md text-sm hover:bg-blue-100"
+              className="flex-1 flex items-center justify-center gap-1 px-3 py-2 bg-info/10 text-info rounded-md text-sm hover:bg-info/10"
             >
               <Edit2 className="w-4 h-4" />
               Edit Form

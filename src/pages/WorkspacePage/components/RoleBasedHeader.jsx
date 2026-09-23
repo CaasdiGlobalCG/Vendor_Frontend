@@ -65,24 +65,24 @@ const RoleBasedHeader = ({ userRole, currentUser, workspace, onManagePermissions
   };
 
   return (
-    <div className="bg-white border-b border-gray-200 px-6 py-3 relative" data-role-header>
+    <div className="bg-surface border-b border-line px-6 py-3 relative" data-role-header>
       <div className="flex items-center justify-between">
         {/* Left side - Workspace info */}
         <div className="flex items-center space-x-4">
           <div>
-          <h1 className="text-base font-semibold text-gray-900 leading-tight">
+          <h1 className="text-base font-semibold text-ink leading-tight">
               {workspace?.title || 'testing project - Collaborative Workspace'}
             </h1>
             <div className="flex items-center space-x-2 mt-0.5">
-              <span className="text-[11px] text-gray-500 leading-tight">
-                Role: <span className={`font-medium ${isPM ? 'text-blue-600' : isCAS ? 'text-purple-600' : isClient ? 'text-orange-600' : 'text-green-600'}`}>
+              <span className="text-[11px] text-dim leading-tight">
+                Role: <span className={`font-medium ${isPM ? 'text-info' : isCAS ? 'text-ink' : isClient ? 'text-warning' : 'text-success'}`}>
                   {isPM ? 'PM' : isCAS ? 'CAS' : isClient ? 'Client' : 'Vendor'}
                 </span>
               </span>
               {workspace?.projectMetadata?.projectName && (
                  <>
-                 <span className="text-gray-300 text-[10px]">•</span>
-                 <span className="text-[11px] text-gray-500 leading-tight">
+                 <span className="text-dim text-[10px]">•</span>
+                 <span className="text-[11px] text-dim leading-tight">
                    Project: {workspace.projectMetadata.projectName}
                  </span>
                </>
@@ -96,17 +96,17 @@ const RoleBasedHeader = ({ userRole, currentUser, workspace, onManagePermissions
           {/* Collaboration info icon */}
           <button
             onClick={() => setShowCollabDetails(!showCollabDetails)}
-            className="p-2 hover:bg-gray-100 rounded-lg transition-colors relative"
+            className="p-2 hover:bg-surface-hover rounded-lg transition-colors relative"
             title="Collaboration Details"
           >
-            <InformationCircleIcon className="h-5 w-5 text-gray-600" />
+            <InformationCircleIcon className="h-5 w-5 text-dim" />
             {workspace?.sharedWith && workspace.sharedWith.length > 0 && (
-              <div className="absolute -top-1 -right-1 w-3 h-3 bg-green-400 rounded-full border border-white"></div>
+              <div className="absolute -top-1 -right-1 w-3 h-3 bg-success rounded-full border border-white"></div>
             )}
           </button>
 
           {/* User avatar */}
-          <div className="w-8 h-8 bg-gray-300 rounded-full flex items-center justify-center text-sm font-medium">
+          <div className="w-8 h-8 bg-surface-hover rounded-full flex items-center justify-center text-sm font-medium">
             {currentUser?.name?.charAt(0) || (isPM ? 'P' : isCAS ? 'C' : 'D')}
           </div>
         </div>
@@ -114,30 +114,30 @@ const RoleBasedHeader = ({ userRole, currentUser, workspace, onManagePermissions
 
       {/* Collaboration Details Dropdown */}
       {showCollabDetails && (
-        <div className="absolute top-full right-6 mt-1 w-80 bg-white border border-gray-200 rounded-lg shadow-lg z-50">
+        <div className="absolute top-full right-6 mt-1 w-80 bg-surface border border-line rounded-lg shadow-lg z-50">
           <div className="p-4">
             {/* Header */}
             <div className="flex items-center justify-between mb-3">
-              <h3 className="text-sm font-semibold text-gray-900">Collaboration Details</h3>
+              <h3 className="text-sm font-semibold text-ink">Collaboration Details</h3>
               <button
                 onClick={() => setShowCollabDetails(false)}
-                className="p-1 hover:bg-gray-100 rounded"
+                className="p-1 hover:bg-surface-hover rounded"
               >
-                <XMarkIcon className="h-4 w-4 text-gray-500" />
+                <XMarkIcon className="h-4 w-4 text-dim" />
               </button>
             </div>
 
             {/* User info */}
-            <div className="mb-4 p-3 bg-gray-50 rounded-lg">
+            <div className="mb-4 p-3 bg-canvas rounded-lg">
               <div className="flex items-center space-x-2">
-                <div className="w-8 h-8 bg-gray-300 rounded-full flex items-center justify-center">
+                <div className="w-8 h-8 bg-surface-hover rounded-full flex items-center justify-center">
                   {currentUser?.name?.charAt(0) || (isPM ? 'P' : isCAS ? 'C' : 'D')}
                 </div>
                 <div>
-                  <p className="text-sm font-medium text-gray-900">
+                  <p className="text-sm font-medium text-ink">
                     {currentUser?.name || (isPM ? 'Project Manager' : isCAS ? 'CAS Member' : 'Dhanush')}
                   </p>
-                  <p className="text-xs text-gray-500">
+                  <p className="text-xs text-dim">
                     {isPM ? 'Full Access' : isCAS ? 'CAS Access' : 'View'}
                   </p>
                 </div>
@@ -148,31 +148,31 @@ const RoleBasedHeader = ({ userRole, currentUser, workspace, onManagePermissions
             {isPM && (
               <div className="mb-4">
                 <div className="flex items-center justify-between mb-3">
-                  <p className="text-xs font-medium text-gray-700">
+                  <p className="text-xs font-medium text-ink">
                     Collaborators ({collaborators.length})
                   </p>
                   {loadingCollaborators && (
-                    <div className="w-4 h-4 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+                    <div className="w-4 h-4 border-2 border-info border-t-transparent rounded-full animate-spin"></div>
                   )}
                 </div>
                 
                 {collaborators.length > 0 ? (
                   <div className="space-y-3 max-h-64 overflow-y-auto">
                     {collaborators.map((collaborator) => (
-                      <div key={collaborator.vendorId} className="flex items-center justify-between p-2 bg-gray-50 rounded-lg">
+                      <div key={collaborator.vendorId} className="flex items-center justify-between p-2 bg-canvas rounded-lg">
                         <div className="flex items-center space-x-2">
                           <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-medium ${
-                            collaborator.isPM ? 'bg-blue-500 text-white' : 
-                            collaborator.isCAS ? 'bg-purple-500 text-white' : 
-                            'bg-green-500 text-white'
+                            collaborator.isPM ? 'bg-info text-white' : 
+                            collaborator.isCAS ? 'bg-cta text-cta-foreground' : 
+                            'bg-success text-cta-foreground'
                           }`}>
                             {collaborator.avatar}
                           </div>
                           <div className="min-w-0 flex-1">
-                            <p className="text-xs font-medium text-gray-900 truncate">
+                            <p className="text-xs font-medium text-ink truncate">
                               {collaborator.name}
                             </p>
-                            <p className="text-xs text-gray-500 truncate">
+                            <p className="text-xs text-dim truncate">
                               {collaborator.specialization}
                             </p>
                           </div>
@@ -181,8 +181,8 @@ const RoleBasedHeader = ({ userRole, currentUser, workspace, onManagePermissions
                         <div className="text-right">
                           <div className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
                             collaborator.status === 'active' 
-                              ? 'bg-green-100 text-green-800' 
-                              : 'bg-gray-100 text-gray-800'
+                              ? 'bg-success/10 text-success' 
+                              : 'bg-surface-hover text-ink'
                           }`}>
                             {collaborator.status === 'active' ? (
                               <CheckCircleIcon className="w-3 h-3 mr-1" />
@@ -191,7 +191,7 @@ const RoleBasedHeader = ({ userRole, currentUser, workspace, onManagePermissions
                             )}
                             {collaborator.accessLevel}
                           </div>
-                          <p className="text-xs text-gray-500 mt-1">
+                          <p className="text-xs text-dim mt-1">
                             {formatTimeAgo(collaborator.lastActivity?.timestamp)}
                           </p>
                         </div>
@@ -200,8 +200,8 @@ const RoleBasedHeader = ({ userRole, currentUser, workspace, onManagePermissions
                   </div>
                 ) : (
                   <div className="text-center py-4">
-                    <UserGroupIcon className="mx-auto h-8 w-8 text-gray-400" />
-                    <p className="text-xs text-gray-500 mt-2">No collaborators yet</p>
+                    <UserGroupIcon className="mx-auto h-8 w-8 text-dim" />
+                    <p className="text-xs text-dim mt-2">No collaborators yet</p>
                   </div>
                 )}
               </div>
@@ -210,18 +210,18 @@ const RoleBasedHeader = ({ userRole, currentUser, workspace, onManagePermissions
             {/* Vendor view - simplified collaborator info */}
             {isVendor && workspace?.sharedWith && workspace.sharedWith.length > 0 && (
               <div className="mb-4">
-                <p className="text-xs font-medium text-gray-700 mb-2">
+                <p className="text-xs font-medium text-ink mb-2">
                   Collaborative Workspace
                 </p>
-                <div className="flex items-center space-x-2 p-2 bg-gray-50 rounded-lg">
-                  <div className="w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center text-xs text-white font-medium">
+                <div className="flex items-center space-x-2 p-2 bg-canvas rounded-lg">
+                  <div className="w-6 h-6 bg-info rounded-full flex items-center justify-center text-xs text-white font-medium">
                     P
                   </div>
                   <div className="flex-1">
-                    <p className="text-xs font-medium text-gray-900">Project Manager</p>
-                    <p className="text-xs text-gray-500">Full Access</p>
+                    <p className="text-xs font-medium text-ink">Project Manager</p>
+                    <p className="text-xs text-dim">Full Access</p>
                   </div>
-                  <div className="text-xs text-gray-500">
+                  <div className="text-xs text-dim">
                     {workspace.sharedWith.length + 1} member{workspace.sharedWith.length > 0 ? 's' : ''}
                   </div>
                 </div>
@@ -231,13 +231,13 @@ const RoleBasedHeader = ({ userRole, currentUser, workspace, onManagePermissions
             {/* Status */}
             <div className="mb-4 space-y-2">
               <div className="flex items-center justify-between text-xs">
-                <span className="text-gray-500">Last updated:</span>
-                <span className="text-gray-700">8/26/2025, 4:35:33 PM</span>
+                <span className="text-dim">Last updated:</span>
+                <span className="text-ink">8/26/2025, 4:35:33 PM</span>
               </div>
               <div className="flex items-center justify-between text-xs">
-                <span className="text-gray-500">Status:</span>
-                <span className="flex items-center text-green-600">
-                  <div className="w-2 h-2 bg-green-400 rounded-full mr-1"></div>
+                <span className="text-dim">Status:</span>
+                <span className="flex items-center text-success">
+                  <div className="w-2 h-2 bg-success rounded-full mr-1"></div>
                   Live collaboration
                 </span>
               </div>
@@ -249,7 +249,7 @@ const RoleBasedHeader = ({ userRole, currentUser, workspace, onManagePermissions
               {onStartCall && (
                 <button
                   onClick={onStartCall}
-                  className="w-full flex items-center justify-center px-3 py-2 text-xs font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-md transition-colors"
+                  className="w-full flex items-center justify-center px-3 py-2 text-xs font-medium text-white bg-info hover:bg-info rounded-md transition-colors"
                   title="Start a video call with collaborators"
                 >
                   <svg className="h-4 w-4 mr-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -263,21 +263,21 @@ const RoleBasedHeader = ({ userRole, currentUser, workspace, onManagePermissions
                 <>
                   <button
                     onClick={onInviteVendors}
-                    className="w-full flex items-center justify-center px-3 py-2 text-xs font-medium text-gray-700 bg-gray-50 hover:bg-gray-100 rounded-md transition-colors"
+                    className="w-full flex items-center justify-center px-3 py-2 text-xs font-medium text-ink bg-canvas hover:bg-surface-hover rounded-md transition-colors"
                   >
                     <UserGroupIcon className="h-4 w-4 mr-2" />
                     Invite Vendors
                   </button>
                   <button
                     onClick={onInviteCAS}
-                    className="w-full flex items-center justify-center px-3 py-2 text-xs font-medium text-white bg-purple-600 hover:bg-purple-700 rounded-md transition-colors"
+                    className="w-full flex items-center justify-center px-3 py-2 text-xs font-medium text-cta-foreground bg-cta hover:bg-cta rounded-md transition-colors"
                   >
                     <UserGroupIcon className="h-4 w-4 mr-2" />
                     Invite CAS
                   </button>
                   <button
                     onClick={onManagePermissions}
-                    className="w-full flex items-center justify-center px-3 py-2 text-xs font-medium text-gray-700 bg-gray-50 hover:bg-gray-100 rounded-md transition-colors"
+                    className="w-full flex items-center justify-center px-3 py-2 text-xs font-medium text-ink bg-canvas hover:bg-surface-hover rounded-md transition-colors"
                   >
                     <ShieldCheckIcon className="h-4 w-4 mr-2" />
                     Manage Permissions
@@ -285,7 +285,7 @@ const RoleBasedHeader = ({ userRole, currentUser, workspace, onManagePermissions
                 </>
               ) : (
                 <button
-                  className="w-full flex items-center justify-center px-3 py-2 text-xs font-medium text-gray-700 bg-gray-50 hover:bg-gray-100 rounded-md transition-colors"
+                  className="w-full flex items-center justify-center px-3 py-2 text-xs font-medium text-ink bg-canvas hover:bg-surface-hover rounded-md transition-colors"
                   onClick={() => setShowShareModal(true)}
                 >
                   <ShareIcon className="h-4 w-4 mr-2" />

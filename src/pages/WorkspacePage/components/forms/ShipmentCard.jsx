@@ -79,37 +79,37 @@ const ShipmentCard = ({ data, nodeId, workspaceId, setNodes }) => {
   const getStatusIcon = (status) => {
     switch (status) {
       case 'delivered':
-        return <CheckCircle className="w-5 h-5 text-green-600" />;
+        return <CheckCircle className="w-5 h-5 text-success" />;
       case 'in-transit':
-        return <Truck className="w-5 h-5 text-blue-600" />;
+        return <Truck className="w-5 h-5 text-info" />;
       case 'delayed':
-        return <AlertCircle className="w-5 h-5 text-red-600" />;
+        return <AlertCircle className="w-5 h-5 text-danger" />;
       default:
-        return <Clock className="w-5 h-5 text-gray-600" />;
+        return <Clock className="w-5 h-5 text-dim" />;
     }
   };
 
   const getStatusColor = (status) => {
     switch (status) {
       case 'delivered':
-        return 'bg-green-50 border-green-200';
+        return 'bg-success/10 border-success/20';
       case 'in-transit':
-        return 'bg-blue-50 border-blue-200';
+        return 'bg-info/10 border-info/20';
       case 'delayed':
-        return 'bg-red-50 border-red-200';
+        return 'bg-danger/10 border-danger/20';
       default:
-        return 'bg-gray-50 border-gray-200';
+        return 'bg-canvas border-line';
     }
   };
 
   if (isEditing) {
     return (
-      <div className="w-full bg-white p-6 rounded-lg border border-gray-300">
+      <div className="w-full bg-surface p-6 rounded-lg border border-line">
         <div className="flex justify-between items-center mb-4">
           <h3 className="text-lg font-bold">Edit Shipment</h3>
           <button
             onClick={() => setIsEditing(false)}
-            className="p-2 hover:bg-gray-100 rounded-lg"
+            className="p-2 hover:bg-surface-hover rounded-lg"
           >
             <X className="w-5 h-5" />
           </button>
@@ -243,13 +243,13 @@ const ShipmentCard = ({ data, nodeId, workspaceId, setNodes }) => {
           <div className="flex gap-2 justify-end">
             <button
               onClick={() => setIsEditing(false)}
-              className="px-4 py-2 border rounded-lg hover:bg-gray-50"
+              className="px-4 py-2 border rounded-lg hover:bg-canvas"
             >
               Cancel
             </button>
             <button
               onClick={handleSave}
-              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center gap-2"
+              className="px-4 py-2 bg-info text-white rounded-lg hover:bg-info flex items-center gap-2"
             >
               <Save className="w-4 h-4" />
               Save
@@ -261,7 +261,7 @@ const ShipmentCard = ({ data, nodeId, workspaceId, setNodes }) => {
   }
 
   return (
-    <div className="w-full bg-white rounded-lg overflow-hidden">
+    <div className="w-full bg-surface rounded-lg overflow-hidden">
       {/* Header */}
       <div className={`border-2 p-4 ${getStatusColor(formData.status)}`}>
         <div className="flex items-center justify-between mb-3">
@@ -271,7 +271,7 @@ const ShipmentCard = ({ data, nodeId, workspaceId, setNodes }) => {
           </div>
           <button
             onClick={() => setIsEditing(true)}
-            className="p-2 hover:bg-gray-200 rounded-lg"
+            className="p-2 hover:bg-surface-hover rounded-lg"
           >
             <Edit2 className="w-4 h-4" />
           </button>
@@ -285,14 +285,14 @@ const ShipmentCard = ({ data, nodeId, workspaceId, setNodes }) => {
           <div className="text-sm">
             <div className="mb-2">
               <span className="font-semibold">📍 From:</span>
-              <p className="text-gray-700">{formData.origin.address}, {formData.origin.city}</p>
+              <p className="text-ink">{formData.origin.address}, {formData.origin.city}</p>
             </div>
             <div className="mb-2">
               <span className="font-semibold">→</span>
             </div>
             <div>
               <span className="font-semibold">📍 To:</span>
-              <p className="text-gray-700">{formData.destination.address}, {formData.destination.city}</p>
+              <p className="text-ink">{formData.destination.address}, {formData.destination.city}</p>
             </div>
           </div>
         </div>
@@ -300,19 +300,19 @@ const ShipmentCard = ({ data, nodeId, workspaceId, setNodes }) => {
         {/* Key Details Grid */}
         <div className="grid grid-cols-2 gap-3">
           <div className="border rounded p-2">
-            <p className="text-xs text-gray-600 font-medium">Vehicle ID</p>
+            <p className="text-xs text-dim font-medium">Vehicle ID</p>
             <p className="text-sm font-semibold">{formData.vehicleId || 'N/A'}</p>
           </div>
           <div className="border rounded p-2">
-            <p className="text-xs text-gray-600 font-medium">Carrier</p>
+            <p className="text-xs text-dim font-medium">Carrier</p>
             <p className="text-sm font-semibold">{formData.carrier || 'N/A'}</p>
           </div>
           <div className="border rounded p-2">
-            <p className="text-xs text-gray-600 font-medium">Weight</p>
+            <p className="text-xs text-dim font-medium">Weight</p>
             <p className="text-sm font-semibold">{formData.weight ? `${formData.weight} kg` : 'N/A'}</p>
           </div>
           <div className="border rounded p-2">
-            <p className="text-xs text-gray-600 font-medium">Tracking #</p>
+            <p className="text-xs text-dim font-medium">Tracking #</p>
             <p className="text-sm font-semibold">{formData.trackingNumber || 'N/A'}</p>
           </div>
         </div>
@@ -326,13 +326,13 @@ const ShipmentCard = ({ data, nodeId, workspaceId, setNodes }) => {
           <div className="space-y-2">
             {formData.eta && (
               <div className="text-sm">
-                <span className="text-gray-600">⏰ ETA: </span>
+                <span className="text-dim">⏰ ETA: </span>
                 <span className="font-medium">{new Date(formData.eta).toLocaleString()}</span>
               </div>
             )}
             {formData.actualDelivery && (
               <div className="text-sm">
-                <span className="text-gray-600">✓ Delivered: </span>
+                <span className="text-dim">✓ Delivered: </span>
                 <span className="font-medium">{new Date(formData.actualDelivery).toLocaleString()}</span>
               </div>
             )}
@@ -341,13 +341,13 @@ const ShipmentCard = ({ data, nodeId, workspaceId, setNodes }) => {
 
         {/* Status History */}
         {statusTimeline.length > 0 && (
-          <div className="border rounded-lg p-3 bg-gray-50">
+          <div className="border rounded-lg p-3 bg-canvas">
             <h4 className="font-semibold mb-2 text-sm">Status History</h4>
             <div className="space-y-1 text-xs">
               {statusTimeline.slice(-3).map((entry, idx) => (
-                <div key={idx} className="text-gray-600">
+                <div key={idx} className="text-dim">
                   <span className="font-medium capitalize">{entry.status}</span>
-                  <span className="text-gray-500"> - {new Date(entry.timestamp).toLocaleString()}</span>
+                  <span className="text-dim"> - {new Date(entry.timestamp).toLocaleString()}</span>
                 </div>
               ))}
             </div>
@@ -356,8 +356,8 @@ const ShipmentCard = ({ data, nodeId, workspaceId, setNodes }) => {
 
         {/* Notes */}
         {formData.notes && (
-          <div className="border rounded-lg p-3 bg-blue-50">
-            <p className="text-xs font-medium text-gray-600 mb-1">Notes</p>
+          <div className="border rounded-lg p-3 bg-info/10">
+            <p className="text-xs font-medium text-dim mb-1">Notes</p>
             <p className="text-sm">{formData.notes}</p>
           </div>
         )}

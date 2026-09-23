@@ -16,7 +16,7 @@ const LogisticsElementsModal = ({ isOpen, onClose, onAddToCanvas, workspaceId })
       id: 'logistics-shipment',
       name: 'Shipment Card',
       description: 'Track shipment lifecycle from origin to delivery with status updates',
-      icon: <Package className="w-6 h-6 text-blue-600" />,
+      icon: <Package className="w-6 h-6 text-info" />,
       category: 'Tracking',
       features: ['Origin/Destination tracking', 'Vehicle ID & ETA', 'Status timeline', 'Delivery confirmation']
     },
@@ -24,7 +24,7 @@ const LogisticsElementsModal = ({ isOpen, onClose, onAddToCanvas, workspaceId })
       id: 'logistics-freight-cost',
       name: 'Freight Cost Calculator',
       description: 'Calculate freight costs with fuel surcharge, tolls, and handling fees',
-      icon: <BarChart3 className="w-6 h-6 text-emerald-600" />,
+      icon: <BarChart3 className="w-6 h-6 text-ink" />,
       category: 'Costs',
       features: ['Distance-based rates', 'Fuel surcharge %', 'Toll charges', 'Auto-calculated breakdown']
     },
@@ -32,7 +32,7 @@ const LogisticsElementsModal = ({ isOpen, onClose, onAddToCanvas, workspaceId })
       id: 'logistics-route-optimization',
       name: 'Route Optimization',
       description: 'Compare multiple delivery routes by cost, time, and traffic conditions',
-      icon: <Route className="w-6 h-6 text-orange-600" />,
+      icon: <Route className="w-6 h-6 text-warning" />,
       category: 'Routing',
       features: ['Multi-route comparison', 'Traffic condition alerts', 'Cost analysis', 'Recommended route badge']
     },
@@ -40,7 +40,7 @@ const LogisticsElementsModal = ({ isOpen, onClose, onAddToCanvas, workspaceId })
       id: 'logistics-pod',
       name: 'Proof of Delivery',
       description: 'Capture delivery proof with digital signatures and photo documentation',
-      icon: <FileCheck className="w-6 h-6 text-green-600" />,
+      icon: <FileCheck className="w-6 h-6 text-success" />,
       category: 'Documentation',
       features: ['Digital signature pad', 'Multi-photo upload', 'Recipient name', 'Delivery notes']
     },
@@ -48,7 +48,7 @@ const LogisticsElementsModal = ({ isOpen, onClose, onAddToCanvas, workspaceId })
       id: 'logistics-exception-report',
       name: 'Exception & Delay Report',
       description: 'Report delivery exceptions and delays with auto-calculated penalties',
-      icon: <AlertCircle className="w-6 h-6 text-red-600" />,
+      icon: <AlertCircle className="w-6 h-6 text-danger" />,
       category: 'Issues',
       features: ['Reason code selection', 'Delay duration tracking', 'Penalty auto-calculation', 'Resolution notes']
     },
@@ -56,7 +56,7 @@ const LogisticsElementsModal = ({ isOpen, onClose, onAddToCanvas, workspaceId })
       id: 'logistics-carrier-scorecard',
       name: 'Carrier Performance Scorecard',
       description: 'Track carrier KPIs including on-time delivery, damage rate, and cost deviation',
-      icon: <Truck className="w-6 h-6 text-indigo-600" />,
+      icon: <Truck className="w-6 h-6 text-info" />,
       category: 'Analytics',
       features: ['On-time % tracking', 'Damage rate monitoring', 'Cost deviation analysis', 'Performance trends']
     }
@@ -126,19 +126,19 @@ const LogisticsElementsModal = ({ isOpen, onClose, onAddToCanvas, workspaceId })
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col">
+      <div className="bg-surface rounded-xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col">
         {/* Header */}
-        <div className="bg-gradient-to-r from-blue-600 to-indigo-600 p-6 flex items-center justify-between">
+        <div className="bg-black p-6 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <Package className="w-8 h-8 text-white" />
             <div>
               <h2 className="text-2xl font-bold text-white">Logistics Elements</h2>
-              <p className="text-blue-100 text-sm">Add logistics tracking and management components to your workspace</p>
+              <p className="text-info text-sm">Add logistics tracking and management components to your workspace</p>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="text-white hover:bg-white hover:bg-opacity-20 rounded-lg p-2 transition-colors"
+            className="text-white hover:bg-surface hover:bg-opacity-20 rounded-lg p-2 transition-colors"
           >
             <X className="w-6 h-6" />
           </button>
@@ -153,23 +153,23 @@ const LogisticsElementsModal = ({ isOpen, onClose, onAddToCanvas, workspaceId })
                 <div
                   key={element.id}
                   onClick={() => handleElementSelect(element.id)}
-                  className="group cursor-pointer border-2 border-gray-200 rounded-xl p-4 hover:border-blue-500 hover:shadow-lg transition-all duration-300 bg-white hover:bg-blue-50"
+                  className="group cursor-pointer border-2 border-line rounded-xl p-4 hover:border-info  transition-all duration-300 bg-surface hover:bg-info/10"
                 >
                   {/* Icon and Category */}
                   <div className="flex items-start justify-between mb-3">
-                    <div className="p-3 bg-gray-100 rounded-lg group-hover:bg-blue-100 transition-colors">
+                    <div className="p-3 bg-surface-hover rounded-lg group-hover:bg-info/10 transition-colors">
                       {element.icon}
                     </div>
-                    <span className="text-xs font-semibold px-2 py-1 bg-blue-100 text-blue-700 rounded-full">
+                    <span className="text-xs font-semibold px-2 py-1 bg-info/10 text-info rounded-full">
                       {element.category}
                     </span>
                   </div>
 
                   {/* Title and Description */}
-                  <h3 className="font-semibold text-gray-900 mb-1 group-hover:text-blue-600 transition-colors">
+                  <h3 className="font-semibold text-ink mb-1 group-hover:text-info transition-colors">
                     {element.name}
                   </h3>
-                  <p className="text-xs text-gray-600 mb-3 line-clamp-2">
+                  <p className="text-xs text-dim mb-3 line-clamp-2">
                     {element.description}
                   </p>
 
@@ -177,22 +177,22 @@ const LogisticsElementsModal = ({ isOpen, onClose, onAddToCanvas, workspaceId })
                   <div className="space-y-1 mb-4">
                     {element.features.slice(0, 2).map((feature, idx) => (
                       <div key={idx} className="flex items-center gap-2">
-                        <div className="w-1 h-1 bg-blue-500 rounded-full"></div>
-                        <span className="text-xs text-gray-600">{feature}</span>
+                        <div className="w-1 h-1 bg-info rounded-full"></div>
+                        <span className="text-xs text-dim">{feature}</span>
                       </div>
                     ))}
                     {element.features.length > 2 && (
-                      <span className="text-xs text-gray-400 pl-2">+ {element.features.length - 2} more features</span>
+                      <span className="text-xs text-dim pl-2">+ {element.features.length - 2} more features</span>
                     )}
                   </div>
 
                   {/* Action Hint */}
-                  <div className="flex items-center justify-between pt-3 border-t border-gray-100">
-                    <span className="text-xs text-gray-500 font-medium">Click to preview</span>
+                  <div className="flex items-center justify-between pt-3 border-t border-line">
+                    <span className="text-xs text-dim font-medium">Click to preview</span>
                     <div className="flex gap-1">
-                      <div className="w-1.5 h-1.5 bg-blue-400 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                      <div className="w-1.5 h-1.5 bg-blue-400 rounded-full opacity-0 group-hover:opacity-100 transition-opacity delay-100"></div>
-                      <div className="w-1.5 h-1.5 bg-blue-400 rounded-full opacity-0 group-hover:opacity-100 transition-opacity delay-200"></div>
+                      <div className="w-1.5 h-1.5 bg-info rounded-full opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                      <div className="w-1.5 h-1.5 bg-info rounded-full opacity-0 group-hover:opacity-100 transition-opacity delay-100"></div>
+                      <div className="w-1.5 h-1.5 bg-info rounded-full opacity-0 group-hover:opacity-100 transition-opacity delay-200"></div>
                     </div>
                   </div>
                 </div>
@@ -204,7 +204,7 @@ const LogisticsElementsModal = ({ isOpen, onClose, onAddToCanvas, workspaceId })
               {/* Back Button */}
               <button
                 onClick={handleBackToSelection}
-                className="flex items-center gap-2 text-blue-600 hover:text-blue-700 font-medium transition-colors group"
+                className="flex items-center gap-2 text-info hover:text-info font-medium transition-colors group"
               >
                 <ChevronLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
                 Back to selection
@@ -216,28 +216,28 @@ const LogisticsElementsModal = ({ isOpen, onClose, onAddToCanvas, workspaceId })
                   <div className="flex items-center gap-3 mb-4">
                     {logisticsElements.find(e => e.id === selectedElement)?.icon}
                     <div>
-                      <h3 className="text-lg font-semibold text-gray-900">
+                      <h3 className="text-lg font-semibold text-ink">
                         {logisticsElements.find(e => e.id === selectedElement)?.name}
                       </h3>
-                      <p className="text-sm text-gray-600">
+                      <p className="text-sm text-dim">
                         {logisticsElements.find(e => e.id === selectedElement)?.description}
                       </p>
                     </div>
                   </div>
 
                   {/* Preview Container */}
-                  <div className="border-2 border-gray-200 rounded-xl p-4 bg-gray-50 overflow-auto max-h-[400px]">
+                  <div className="border-2 border-line rounded-xl p-4 bg-canvas overflow-auto max-h-[400px]">
                     {getPreviewComponent(selectedElement)}
                   </div>
 
                   {/* Features List */}
-                  <div className="mt-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
-                    <h4 className="text-sm font-semibold text-gray-900 mb-3">Features included:</h4>
+                  <div className="mt-6 p-4 bg-info/10 rounded-lg border border-info/20">
+                    <h4 className="text-sm font-semibold text-ink mb-3">Features included:</h4>
                     <div className="grid grid-cols-2 gap-3">
                       {logisticsElements.find(e => e.id === selectedElement)?.features.map((feature, idx) => (
                         <div key={idx} className="flex items-center gap-2">
-                          <div className="w-2 h-2 bg-blue-600 rounded-full"></div>
-                          <span className="text-sm text-gray-700">{feature}</span>
+                          <div className="w-2 h-2 bg-info rounded-full"></div>
+                          <span className="text-sm text-ink">{feature}</span>
                         </div>
                       ))}
                     </div>
@@ -249,17 +249,17 @@ const LogisticsElementsModal = ({ isOpen, onClose, onAddToCanvas, workspaceId })
         </div>
 
         {/* Footer */}
-        <div className="border-t border-gray-200 p-6 bg-gray-50 flex gap-3 justify-end">
+        <div className="border-t border-line p-6 bg-canvas flex gap-3 justify-end">
           <button
             onClick={onClose}
-            className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-100 font-medium transition-colors"
+            className="px-4 py-2 border border-line rounded-lg text-ink hover:bg-surface-hover font-medium transition-colors"
           >
             Cancel
           </button>
           {currentStep === 'preview' && (
             <button
               onClick={handleAddToCanvas}
-              className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors shadow-md hover:shadow-lg"
+              className="px-6 py-2 bg-info hover:bg-info text-white rounded-lg font-medium transition-colors  "
             >
               Add to Canvas
             </button>

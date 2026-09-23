@@ -28,8 +28,8 @@ const StepIndicator = ({ currentStep = 1 }) => {
               <div
                 className={`w-6 h-6 rounded-full flex items-center justify-center text-xs md:text-sm font-thin flex-shrink-0 ${
                   isActive || isCompleted
-                    ? "bg-[#0F5848] text-white"
-                    : "bg-gray-200 text-gray-600"
+                    ? "bg-success text-white"
+                    : "bg-surface-hover text-dim"
                 }`}
               >
                 {isCompleted ? (
@@ -52,7 +52,7 @@ const StepIndicator = ({ currentStep = 1 }) => {
               {/* Step label */}
               <span
                 className={`text-[10px] md:text-xs font-medium leading-tight ${
-                  isActive || isCompleted ? "text-gray-900" : "text-gray-500"
+                  isActive || isCompleted ? "text-ink" : "text-dim"
                 }`}
               >
                 {step.title}
@@ -63,9 +63,9 @@ const StepIndicator = ({ currentStep = 1 }) => {
       </div>
 
       {/* Bottom progress bar - show on md and up */}
-      <div className="absolute bottom-0 left-0 right-0 h-1.5 bg-gray-200">
+      <div className="absolute bottom-0 left-0 right-0 h-1.5 bg-surface-hover">
         <div
-          className="h-full bg-gradient-to-r from-[#0F5848] to-[#21BE9C] transition-all duration-300 ease-in-out"
+          className="h-full bg-black transition-all duration-300 ease-in-out"
           style={{
             width: `${((currentStep - 1) / (steps.length - 1)) * 100}%`,
           }}

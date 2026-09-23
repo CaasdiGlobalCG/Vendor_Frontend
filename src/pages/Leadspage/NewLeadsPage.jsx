@@ -112,33 +112,33 @@ const NewLeadsPage = () => {
     return (
         <div className="p-4 sm:p-5 space-y-6">
             <div className="mb-2 flex items-center justify-between gap-3">
-                <Link to="/VendorDashboard/leads" className="flex items-center text-lg font-medium text-gray-700 hover:text-black">
+                <Link to="/VendorDashboard/leads" className="flex items-center text-lg font-medium text-ink hover:text-ink">
                     <ChevronLeftIcon className="mr-2 h-5 w-5" />
                     Back to Leads
                 </Link>
             </div>
 
-            <div className="bg-white rounded-xl shadow-sm p-4 sm:p-6">
+            <div className="bg-surface rounded-xl  p-4 sm:p-6">
                 <div className="mb-6">
-                    <h1 className="text-xl font-semibold text-gray-900">Send Leads</h1>
-                    <p className="text-sm text-gray-600 mt-1">
+                    <h1 className="text-xl font-semibold text-ink">Send Leads</h1>
+                    <p className="text-sm text-dim mt-1">
                         Submit a new lead for the team. This will be stored in a separate table (referral leads), not the PM leads list.
                     </p>
                 </div>
 
                 {error && (
-                    <div className="mb-4 p-3 rounded-lg border border-red-200 bg-red-50 text-sm text-red-700">
+                    <div className="mb-4 p-3 rounded-lg border border-danger/20 bg-danger/10 text-sm text-danger">
                         {error}
                     </div>
                 )}
 
                 <form onSubmit={handleSubmit} className="space-y-5">
                     <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Lead Type</label>
+                        <label className="block text-sm font-medium text-ink mb-1">Lead Type</label>
                         <select
                             value={leadType}
                             onChange={(e) => setLeadType(e.target.value)}
-                            className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                            className="w-full border border-line rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ink"
                         >
                             <option value="vendor">Vendor Lead</option>
                             <option value="client">Client Lead</option>
@@ -149,73 +149,73 @@ const NewLeadsPage = () => {
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Contact Name</label>
+                            <label className="block text-sm font-medium text-ink mb-1">Contact Name</label>
                             <input
                                 value={contactName}
                                 onChange={(e) => setContactName(e.target.value)}
-                                className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                                className="w-full border border-line rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ink"
                                 placeholder="e.g. John Doe"
                             />
                         </div>
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Company / Organization</label>
+                            <label className="block text-sm font-medium text-ink mb-1">Company / Organization</label>
                             <input
                                 value={companyName}
                                 onChange={(e) => setCompanyName(e.target.value)}
-                                className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                                className="w-full border border-line rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ink"
                                 placeholder="e.g. ABC Constructions"
                             />
                         </div>
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                            <label className="block text-sm font-medium text-ink mb-1">Email</label>
                             <input
                                 value={contactEmail}
                                 onChange={(e) => setContactEmail(e.target.value)}
                                 type="email"
-                                className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                                className="w-full border border-line rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ink"
                                 placeholder="e.g. john@company.com"
                             />
                         </div>
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Phone</label>
+                            <label className="block text-sm font-medium text-ink mb-1">Phone</label>
                             <input
                                 value={contactPhone}
                                 onChange={(e) => setContactPhone(e.target.value)}
-                                className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                                className="w-full border border-line rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ink"
                                 placeholder="e.g. +91 9xxxx xxxxx"
                             />
                         </div>
                         <div className="sm:col-span-2">
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Location</label>
+                            <label className="block text-sm font-medium text-ink mb-1">Location</label>
                             <input
                                 value={location}
                                 onChange={(e) => setLocation(e.target.value)}
-                                className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                                className="w-full border border-line rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ink"
                                 placeholder="e.g. Hyderabad, Telangana"
                             />
                         </div>
                     </div>
 
                     {leadType === 'project' && (
-                        <div className="border border-gray-200 rounded-lg p-4 space-y-4">
-                            <h2 className="text-sm font-semibold text-gray-900">Project Details</h2>
+                        <div className="border border-line rounded-lg p-4 space-y-4">
+                            <h2 className="text-sm font-semibold text-ink">Project Details</h2>
 
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Project Name</label>
+                                <label className="block text-sm font-medium text-ink mb-1">Project Name</label>
                                 <input
                                     value={projectName}
                                     onChange={(e) => setProjectName(e.target.value)}
-                                    className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                                    className="w-full border border-line rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ink"
                                     placeholder="e.g. Road Construction"
                                 />
                             </div>
 
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Project Description</label>
+                                <label className="block text-sm font-medium text-ink mb-1">Project Description</label>
                                 <textarea
                                     value={projectDescription}
                                     onChange={(e) => setProjectDescription(e.target.value)}
-                                    className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                                    className="w-full border border-line rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ink"
                                     rows={4}
                                     placeholder="Brief scope / requirements"
                                 />
@@ -223,20 +223,20 @@ const NewLeadsPage = () => {
 
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">Estimated Budget</label>
+                                    <label className="block text-sm font-medium text-ink mb-1">Estimated Budget</label>
                                     <input
                                         value={estimatedBudget}
                                         onChange={(e) => setEstimatedBudget(e.target.value)}
-                                        className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                                        className="w-full border border-line rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ink"
                                         placeholder="e.g. ₹10 Cr"
                                     />
                                 </div>
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">Timeline</label>
+                                    <label className="block text-sm font-medium text-ink mb-1">Timeline</label>
                                     <input
                                         value={timeline}
                                         onChange={(e) => setTimeline(e.target.value)}
-                                        className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                                        className="w-full border border-line rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ink"
                                         placeholder="e.g. 6 months"
                                     />
                                 </div>
@@ -245,11 +245,11 @@ const NewLeadsPage = () => {
                     )}
 
                     <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Notes</label>
+                        <label className="block text-sm font-medium text-ink mb-1">Notes</label>
                         <textarea
                             value={notes}
                             onChange={(e) => setNotes(e.target.value)}
-                            className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                            className="w-full border border-line rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ink"
                             rows={3}
                             placeholder="Any additional context"
                         />
@@ -258,14 +258,14 @@ const NewLeadsPage = () => {
                     <div className="flex items-center justify-end gap-3">
                         <Link
                             to="/VendorDashboard/leads"
-                            className="px-4 py-2 rounded-md border border-gray-300 text-gray-700 hover:bg-gray-50 text-sm"
+                            className="px-4 py-2 rounded-md border border-line text-ink hover:bg-canvas text-sm"
                         >
                             Cancel
                         </Link>
                         <button
                             type="submit"
                             disabled={submitting}
-                            className="px-4 py-2 rounded-md bg-emerald-600 text-white hover:bg-emerald-700 disabled:opacity-60 text-sm"
+                            className="px-4 py-2 rounded-md bg-cta text-cta-foreground hover:bg-cta disabled:opacity-60 text-sm"
                         >
                             {submitting ? 'Submitting...' : 'Submit Lead'}
                         </button>

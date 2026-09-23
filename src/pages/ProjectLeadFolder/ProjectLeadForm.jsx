@@ -315,14 +315,14 @@ const ProjectLeadForm = () => {
     };
 
     return (
-        <div className="p-6 max-w-2xl mx-auto bg-white rounded-lg shadow-md">
-            <h2 className="text-2xl font-semibold text-gray-800 mb-6">Create New Project Lead</h2>
+        <div className="p-6 max-w-2xl mx-auto bg-surface rounded-lg ">
+            <h2 className="text-2xl font-semibold text-ink mb-6">Create New Project Lead</h2>
 
-            {submitMessage && <div className="mb-4 p-3 bg-green-100 text-green-700 rounded">{submitMessage}</div>}
-            {errorMessage && <div className="mb-4 p-3 bg-red-100 text-red-700 rounded">{errorMessage}</div>}
+            {submitMessage && <div className="mb-4 p-3 bg-success/10 text-success rounded">{submitMessage}</div>}
+            {errorMessage && <div className="mb-4 p-3 bg-danger/10 text-danger rounded">{errorMessage}</div>}
             
             {/* Debug Info */}
-            <div className="mb-4 p-3 bg-gray-100 text-gray-700 rounded text-sm">
+            <div className="mb-4 p-3 bg-surface-hover text-ink rounded text-sm">
                 <p className="font-medium">Debug Information:</p>
                 <p>This form creates project leads that will be assigned to vendors.</p>
                 <p>Make sure to select a vendor from the dropdown or enter a vendor ID directly in the "Assign to Vendor" field.</p>
@@ -332,26 +332,26 @@ const ProjectLeadForm = () => {
             <form onSubmit={handleSubmit} className="space-y-5">
                 {/* Name (Required) */}
                 <div>
-                    <label htmlFor="name" className="block text-sm font-medium text-gray-700">Project Name <span className="text-red-500">*</span></label>
+                    <label htmlFor="name" className="block text-sm font-medium text-ink">Project Name <span className="text-danger">*</span></label>
                     <input
                         type="text"
                         id="name"
                         value={name}
                         onChange={(e) => setName(e.target.value)}
                         required
-                        className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-emerald-500 focus:border-emerald-500 sm:text-sm"
+                        className="mt-1 block w-full px-3 py-2 border border-line rounded-md  focus:outline-none focus:ring-ink focus:border-line sm:text-sm"
                     />
                 </div>
 
                 {/* Client ID (Required Dropdown) */}
                 <div>
-                    <label htmlFor="clientId" className="block text-sm font-medium text-gray-700">Client <span className="text-red-500">*</span></label>
+                    <label htmlFor="clientId" className="block text-sm font-medium text-ink">Client <span className="text-danger">*</span></label>
                     <select
                         id="clientId"
                         value={clientId}
                         onChange={(e) => setClientId(e.target.value)}
                         required
-                        className="mt-1 block w-full px-3 py-2 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-emerald-500 focus:border-emerald-500 sm:text-sm"
+                        className="mt-1 block w-full px-3 py-2 border border-line bg-surface rounded-md  focus:outline-none focus:ring-ink focus:border-line sm:text-sm"
                     >
                         <option value="" disabled>Select a Client</option>
                         {clients.length > 0 ? (
@@ -368,52 +368,52 @@ const ProjectLeadForm = () => {
 
                  {/* Description (Required Textarea) */}
                  <div>
-                     <label htmlFor="description" className="block text-sm font-medium text-gray-700">Description <span className="text-red-500">*</span></label>
+                     <label htmlFor="description" className="block text-sm font-medium text-ink">Description <span className="text-danger">*</span></label>
                      <textarea
                          id="description"
                          rows="3"
                          value={description}
                          onChange={(e) => setDescription(e.target.value)}
                          required
-                         className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-emerald-500 focus:border-emerald-500 sm:text-sm"
+                         className="mt-1 block w-full px-3 py-2 border border-line rounded-md  focus:outline-none focus:ring-ink focus:border-line sm:text-sm"
                      ></textarea>
                  </div>
 
                  {/* Duration (Optional) */}
                 <div>
-                    <label htmlFor="duration" className="block text-sm font-medium text-gray-700">Estimated Duration</label>
+                    <label htmlFor="duration" className="block text-sm font-medium text-ink">Estimated Duration</label>
                     <input
                         type="text"
                         id="duration"
                         placeholder='e.g., "Approx 3 Months"'
                         value={duration}
                         onChange={(e) => setDuration(e.target.value)}
-                        className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-emerald-500 focus:border-emerald-500 sm:text-sm"
+                        className="mt-1 block w-full px-3 py-2 border border-line rounded-md  focus:outline-none focus:ring-ink focus:border-line sm:text-sm"
                     />
                 </div>
 
                 {/* Budget (Optional) */}
                 <div>
-                    <label htmlFor="budget" className="block text-sm font-medium text-gray-700">Estimated Budget</label>
+                    <label htmlFor="budget" className="block text-sm font-medium text-ink">Estimated Budget</label>
                     <input
                         type="text"
                         id="budget"
                         placeholder='e.g., "2.1 cr" or "$50,000"'
                         value={budget}
                         onChange={(e) => setBudget(e.target.value)}
-                        className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-emerald-500 focus:border-emerald-500 sm:text-sm"
+                        className="mt-1 block w-full px-3 py-2 border border-line rounded-md  focus:outline-none focus:ring-ink focus:border-line sm:text-sm"
                     />
                 </div>
 
                  {/* Sent By PM ID (Required Dropdown) */}
                 <div>
-                    <label htmlFor="sentByPmId" className="block text-sm font-medium text-gray-700">Sending Project Manager <span className="text-red-500">*</span></label>
+                    <label htmlFor="sentByPmId" className="block text-sm font-medium text-ink">Sending Project Manager <span className="text-danger">*</span></label>
                     <select
                         id="sentByPmId"
                         value={sentByPmId}
                         onChange={(e) => setSentByPmId(e.target.value)}
                         required
-                        className="mt-1 block w-full px-3 py-2 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-emerald-500 focus:border-emerald-500 sm:text-sm"
+                        className="mt-1 block w-full px-3 py-2 border border-line bg-surface rounded-md  focus:outline-none focus:ring-ink focus:border-line sm:text-sm"
                     >
                          <option value="" disabled>Select the PM</option>
                          {pms.length > 0 ? (
@@ -430,24 +430,24 @@ const ProjectLeadForm = () => {
 
                 {/* Assigned Vendor ID (Searchable Dropdown) */}
                 <div>
-                    <label htmlFor="vendorSearch" className="block text-sm font-medium text-gray-700">Assign to Vendor <span className="text-red-500">*</span></label>
+                    <label htmlFor="vendorSearch" className="block text-sm font-medium text-ink">Assign to Vendor <span className="text-danger">*</span></label>
                     <input
                         type="text"
                         id="vendorSearch"
                         placeholder="Search for a vendor..."
                         value={vendorSearch}
                         onChange={handleVendorSearch}
-                        className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-emerald-500 focus:border-emerald-500 sm:text-sm"
+                        className="mt-1 block w-full px-3 py-2 border border-line rounded-md  focus:outline-none focus:ring-ink focus:border-line sm:text-sm"
                     />
                     
                     {/* Vendor dropdown list */}
                     {vendorSearch && (
-                        <div className="mt-1 max-h-60 overflow-auto border border-gray-300 rounded-md bg-white">
+                        <div className="mt-1 max-h-60 overflow-auto border border-line rounded-md bg-surface">
                             {filteredVendors.length > 0 ? (
                                 filteredVendors.map((vendor) => (
                                     <div 
                                         key={vendor.id || vendor._id} 
-                                        className="px-3 py-2 cursor-pointer hover:bg-gray-100"
+                                        className="px-3 py-2 cursor-pointer hover:bg-surface-hover"
                                         onClick={() => {
                                             // Always use vendor ID, not email
                                             setAssignedVendorId(vendor.id || vendor._id);
@@ -456,11 +456,11 @@ const ProjectLeadForm = () => {
                                         }}
                                     >
                                         <div className="font-medium">{vendor.name || vendor.displayName || vendor.email || 'Unknown Vendor'}</div>
-                                        {vendor.email && <div className="text-xs text-gray-500">{vendor.email}</div>}
+                                        {vendor.email && <div className="text-xs text-dim">{vendor.email}</div>}
                                     </div>
                                 ))
                             ) : (
-                                <div className="px-3 py-2 text-gray-500">
+                                <div className="px-3 py-2 text-dim">
                                     No vendors match your search
                                 </div>
                             )}
@@ -469,9 +469,9 @@ const ProjectLeadForm = () => {
                     
                     {/* Show selected vendor */}
                     {assignedVendorId && (
-                        <p className="mt-1 text-sm text-emerald-600">
+                        <p className="mt-1 text-sm text-ink">
                             Selected: {vendors.find(v => v.id === assignedVendorId || v._id === assignedVendorId)?.name || assignedVendorId}
-                            <span className="ml-2 text-xs text-gray-500">(Vendor ID: {assignedVendorId})</span>
+                            <span className="ml-2 text-xs text-dim">(Vendor ID: {assignedVendorId})</span>
                         </p>
                     )}
                     
@@ -484,9 +484,9 @@ const ProjectLeadForm = () => {
                     />
                     
                     {/* Direct input for vendor ID (for testing) */}
-                    <div className="mt-2 p-3 bg-blue-50 border border-blue-200 rounded-md">
-                        <p className="text-sm font-medium text-blue-800 mb-2">Manual Vendor ID Entry (for testing)</p>
-                        <p className="text-xs text-red-600 mb-2">IMPORTANT: Enter the vendor's ID, not their email address!</p>
+                    <div className="mt-2 p-3 bg-info/10 border border-info/20 rounded-md">
+                        <p className="text-sm font-medium text-info mb-2">Manual Vendor ID Entry (for testing)</p>
+                        <p className="text-xs text-danger mb-2">IMPORTANT: Enter the vendor's ID, not their email address!</p>
                         <div className="flex gap-2">
                             <input
                                 type="text"
@@ -500,7 +500,7 @@ const ProjectLeadForm = () => {
                                     }
                                     setAssignedVendorId(value);
                                 }}
-                                className="flex-1 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-emerald-500 focus:border-emerald-500 text-sm"
+                                className="flex-1 px-3 py-2 border border-line rounded-md  focus:outline-none focus:ring-ink focus:border-line text-sm"
                             />
                             <button 
                                 type="button"
@@ -509,12 +509,12 @@ const ProjectLeadForm = () => {
                                         setVendorSearch(`Vendor ID: ${assignedVendorId}`);
                                     }
                                 }}
-                                className="px-3 py-2 bg-blue-100 text-blue-700 rounded-md hover:bg-blue-200 text-sm"
+                                className="px-3 py-2 bg-info/10 text-info rounded-md hover:bg-info/20 text-sm"
                             >
                                 Use This ID
                             </button>
                         </div>
-                        <p className="text-xs text-blue-600 mt-1">
+                        <p className="text-xs text-info mt-1">
                             You can paste a vendor ID here directly if you know it.
                         </p>
                     </div>
@@ -522,22 +522,22 @@ const ProjectLeadForm = () => {
 
                  {/* BOQ File (Required File Input) */}
                 <div>
-                    <label htmlFor="boqFile" className="block text-sm font-medium text-gray-700">BOQ File <span className="text-red-500">*</span></label>
+                    <label htmlFor="boqFile" className="block text-sm font-medium text-ink">BOQ File <span className="text-danger">*</span></label>
                     <input
                         type="file"
                         id="boqFile"
                         onChange={handleFileChange}
                         required={!boqFileUrl}
-                        className="mt-1 block w-full text-sm text-gray-500
+                        className="mt-1 block w-full text-sm text-dim
                                    file:mr-4 file:py-2 file:px-4
                                    file:rounded-md file:border-0
                                    file:text-sm file:font-semibold
-                                   file:bg-emerald-50 file:text-emerald-700
-                                   hover:file:bg-emerald-100"
+                                   file:bg-surface-hover file:text-ink
+                                   hover:file:bg-surface-hover"
                     />
-                    {boqFileName && !boqFileUrl && <p className="text-sm text-gray-600 mt-1">Selected: {boqFileName}</p>}
-                    {isUploading && <p className="text-sm text-blue-600 mt-1">Uploading file...</p>}
-                     {boqFileUrl && <p className="text-sm text-green-600 mt-1">File uploaded: <a href={boqFileUrl} target="_blank" rel="noopener noreferrer" className="underline">{boqFileName || 'View File'}</a></p>}
+                    {boqFileName && !boqFileUrl && <p className="text-sm text-dim mt-1">Selected: {boqFileName}</p>}
+                    {isUploading && <p className="text-sm text-info mt-1">Uploading file...</p>}
+                     {boqFileUrl && <p className="text-sm text-success mt-1">File uploaded: <a href={boqFileUrl} target="_blank" rel="noopener noreferrer" className="underline">{boqFileName || 'View File'}</a></p>}
                  </div>
 
                 {/* Submit Button */}
@@ -545,10 +545,10 @@ const ProjectLeadForm = () => {
                     <button
                         type="submit"
                         disabled={isSubmitting || isUploading}
-                        className={`w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white transition-colors ${
+                        className={`w-full flex justify-center py-2 px-4 border border-transparent rounded-md  text-sm font-medium text-white transition-colors ${
                             (isSubmitting || isUploading)
-                                ? 'bg-gray-400 cursor-not-allowed'
-                                : 'bg-emerald-600 hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500'
+                                ? 'bg-cta cursor-not-allowed'
+                                : 'bg-cta hover:bg-cta focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-ink'
                         }`}
                     >
                         {isSubmitting ? 'Submitting Lead...' : (isUploading ? 'Waiting for Upload...' : 'Submit Project Lead')}

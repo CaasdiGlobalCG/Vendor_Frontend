@@ -21,10 +21,10 @@ const CarrierPerformanceScorecard = ({ data, nodeId, workspaceId, setNodes }) =>
   });
 
   const getPerformanceLevel = (percent) => {
-    if (percent >= 90) return { level: 'Excellent', color: 'bg-green-100 text-green-800', border: 'border-green-300' };
-    if (percent >= 75) return { level: 'Good', color: 'bg-blue-100 text-blue-800', border: 'border-blue-300' };
-    if (percent >= 60) return { level: 'Fair', color: 'bg-yellow-100 text-yellow-800', border: 'border-yellow-300' };
-    return { level: 'Poor', color: 'bg-red-100 text-red-800', border: 'border-red-300' };
+    if (percent >= 90) return { level: 'Excellent', color: 'bg-success/10 text-success', border: 'border-success/30' };
+    if (percent >= 75) return { level: 'Good', color: 'bg-info/10 text-info', border: 'border-info/30' };
+    if (percent >= 60) return { level: 'Fair', color: 'bg-warning/10 text-warning', border: 'border-warning/30' };
+    return { level: 'Poor', color: 'bg-danger/10 text-danger', border: 'border-danger/30' };
   };
 
   const getRatingStars = (rating) => {
@@ -47,19 +47,19 @@ const CarrierPerformanceScorecard = ({ data, nodeId, workspaceId, setNodes }) =>
   };
 
   return (
-    <div className="w-full bg-white rounded-lg overflow-hidden">
+    <div className="w-full bg-surface rounded-lg overflow-hidden">
       {/* Header */}
-      <div className="bg-gradient-to-r from-indigo-500 to-indigo-600 p-4">
+      <div className="bg-black p-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <BarChart3 className="w-6 h-6 text-white" />
             <div>
               <h3 className="text-lg font-bold text-white">{performanceData.carrierName}</h3>
-              <p className="text-xs text-indigo-100">Performance Scorecard</p>
+              <p className="text-xs text-info">Performance Scorecard</p>
             </div>
           </div>
           <div className="text-right">
-            <p className="text-sm text-indigo-100">Rating</p>
+            <p className="text-sm text-info">Rating</p>
             <div className="text-lg">{getRatingStars(performanceData.rating)}</div>
           </div>
         </div>
@@ -68,7 +68,7 @@ const CarrierPerformanceScorecard = ({ data, nodeId, workspaceId, setNodes }) =>
       {/* Content */}
       <div className="p-4 space-y-4">
         {/* Period Info */}
-        <div className="text-xs text-gray-600">
+        <div className="text-xs text-dim">
           <span>Period: </span>
           <span className="font-medium">
             {new Date(performanceData.performancePeriod.startDate).toLocaleDateString()} -{' '}
@@ -81,26 +81,26 @@ const CarrierPerformanceScorecard = ({ data, nodeId, workspaceId, setNodes }) =>
         {/* Key Performance Indicators */}
         <div className="grid grid-cols-3 gap-3">
           {/* On-Time Delivery */}
-          <div className={`border-2 rounded-lg p-3 ${onTimePerf.border} bg-white`}>
-            <p className="text-xs text-gray-600 font-medium mb-1">On-Time Delivery</p>
-            <p className="text-2xl font-bold text-gray-900 mb-2">
+          <div className={`border-2 rounded-lg p-3 ${onTimePerf.border} bg-surface`}>
+            <p className="text-xs text-dim font-medium mb-1">On-Time Delivery</p>
+            <p className="text-2xl font-bold text-ink mb-2">
               {performanceData.onTimeDeliveryPercent}%
             </p>
             <div className="flex items-center justify-between">
               <span className={`text-xs font-semibold px-2 py-1 rounded ${onTimePerf.color}`}>
                 {onTimePerf.level}
               </span>
-              <TrendingUp className="w-4 h-4 text-green-600" />
+              <TrendingUp className="w-4 h-4 text-success" />
             </div>
-            <p className="text-xs text-gray-500 mt-2">
+            <p className="text-xs text-dim mt-2">
               {performanceData.onTimeDeliveries}/{performanceData.totalShipments} on time
             </p>
           </div>
 
           {/* Damage Rate */}
-          <div className={`border-2 rounded-lg p-3 ${damagePerf.border} bg-white`}>
-            <p className="text-xs text-gray-600 font-medium mb-1">Damage Rate</p>
-            <p className="text-2xl font-bold text-gray-900 mb-2">
+          <div className={`border-2 rounded-lg p-3 ${damagePerf.border} bg-surface`}>
+            <p className="text-xs text-dim font-medium mb-1">Damage Rate</p>
+            <p className="text-2xl font-bold text-ink mb-2">
               {performanceData.damagePercent}%
             </p>
             <div className="flex items-center justify-between">
@@ -108,18 +108,18 @@ const CarrierPerformanceScorecard = ({ data, nodeId, workspaceId, setNodes }) =>
                 {damagePerf.level}
               </span>
               {performanceData.damagePercent > 2 && (
-                <AlertCircle className="w-4 h-4 text-red-500" />
+                <AlertCircle className="w-4 h-4 text-danger" />
               )}
             </div>
-            <p className="text-xs text-gray-500 mt-2">
+            <p className="text-xs text-dim mt-2">
               {performanceData.damageIncidents} damaged shipments
             </p>
           </div>
 
           {/* Cost Deviation */}
-          <div className={`border-2 rounded-lg p-3 ${costPerf.border} bg-white`}>
-            <p className="text-xs text-gray-600 font-medium mb-1">Cost Deviation</p>
-            <p className="text-2xl font-bold text-gray-900 mb-2">
+          <div className={`border-2 rounded-lg p-3 ${costPerf.border} bg-surface`}>
+            <p className="text-xs text-dim font-medium mb-1">Cost Deviation</p>
+            <p className="text-2xl font-bold text-ink mb-2">
               {performanceData.costDeviationPercent}%
             </p>
             <div className="flex items-center justify-between">
@@ -127,19 +127,19 @@ const CarrierPerformanceScorecard = ({ data, nodeId, workspaceId, setNodes }) =>
                 {costPerf.level}
               </span>
             </div>
-            <p className="text-xs text-gray-500 mt-2">vs budget</p>
+            <p className="text-xs text-dim mt-2">vs budget</p>
           </div>
         </div>
 
         {/* Trend Chart (Simple representation) */}
-        <div className="border rounded-lg p-3 bg-gray-50">
+        <div className="border rounded-lg p-3 bg-canvas">
           <h4 className="font-semibold text-sm mb-3">Performance Trends (Last 3 Months)</h4>
           <div className="space-y-3">
             {/* On-Time Trend */}
             <div>
               <div className="flex justify-between items-center mb-1">
-                <span className="text-xs font-medium text-gray-700">On-Time %</span>
-                <span className="text-xs text-gray-600">
+                <span className="text-xs font-medium text-ink">On-Time %</span>
+                <span className="text-xs text-dim">
                   {performanceData.trends.map(t => t.month).join(' → ')}
                 </span>
               </div>
@@ -147,10 +147,10 @@ const CarrierPerformanceScorecard = ({ data, nodeId, workspaceId, setNodes }) =>
                 {performanceData.trends.map((trend, idx) => (
                   <div key={idx} className="flex-1 flex flex-col items-center">
                     <div
-                      className="w-full bg-green-500 rounded-t"
+                      className="w-full bg-success rounded-t"
                       style={{ height: `${(trend.onTime / 100) * 100}px` }}
                     />
-                    <span className="text-xs text-gray-600 mt-1">{trend.onTime}%</span>
+                    <span className="text-xs text-dim mt-1">{trend.onTime}%</span>
                   </div>
                 ))}
               </div>
@@ -159,16 +159,16 @@ const CarrierPerformanceScorecard = ({ data, nodeId, workspaceId, setNodes }) =>
             {/* Damage Trend */}
             <div>
               <div className="flex justify-between items-center mb-1">
-                <span className="text-xs font-medium text-gray-700">Damage %</span>
+                <span className="text-xs font-medium text-ink">Damage %</span>
               </div>
               <div className="flex gap-2 items-end h-12">
                 {performanceData.trends.map((trend, idx) => (
                   <div key={idx} className="flex-1 flex flex-col items-center">
                     <div
-                      className="w-full bg-red-500 rounded-t"
+                      className="w-full bg-danger rounded-t"
                       style={{ height: `${trend.damage * 10}px` }}
                     />
-                    <span className="text-xs text-gray-600 mt-1">{trend.damage}%</span>
+                    <span className="text-xs text-dim mt-1">{trend.damage}%</span>
                   </div>
                 ))}
               </div>
@@ -177,16 +177,16 @@ const CarrierPerformanceScorecard = ({ data, nodeId, workspaceId, setNodes }) =>
             {/* Cost Deviation Trend */}
             <div>
               <div className="flex justify-between items-center mb-1">
-                <span className="text-xs font-medium text-gray-700">Cost Deviation %</span>
+                <span className="text-xs font-medium text-ink">Cost Deviation %</span>
               </div>
               <div className="flex gap-2 items-end h-12">
                 {performanceData.trends.map((trend, idx) => (
                   <div key={idx} className="flex-1 flex flex-col items-center">
                     <div
-                      className="w-full bg-orange-500 rounded-t"
+                      className="w-full bg-warning rounded-t"
                       style={{ height: `${trend.costDev * 10}px` }}
                     />
-                    <span className="text-xs text-gray-600 mt-1">{trend.costDev}%</span>
+                    <span className="text-xs text-dim mt-1">{trend.costDev}%</span>
                   </div>
                 ))}
               </div>
@@ -195,9 +195,9 @@ const CarrierPerformanceScorecard = ({ data, nodeId, workspaceId, setNodes }) =>
         </div>
 
         {/* Summary Box */}
-        <div className="border rounded-lg p-3 bg-indigo-50 border-indigo-200">
-          <p className="text-xs font-semibold text-indigo-900 mb-2">Summary</p>
-          <ul className="space-y-1 text-xs text-indigo-800">
+        <div className="border rounded-lg p-3 bg-info/10 border-info/20">
+          <p className="text-xs font-semibold text-info mb-2">Summary</p>
+          <ul className="space-y-1 text-xs text-info">
             <li>✓ Consistent performance across metrics</li>
             <li>✓ Rating: {performanceData.rating}/5.0 stars</li>
             <li>✓ Recommended for {performanceData.totalShipments > 100 ? 'Critical' : 'Standard'} shipments</li>
@@ -206,10 +206,10 @@ const CarrierPerformanceScorecard = ({ data, nodeId, workspaceId, setNodes }) =>
       </div>
 
       {/* Actions */}
-      <div className="p-4 bg-gray-50 border-t flex gap-2 justify-end">
+      <div className="p-4 bg-canvas border-t flex gap-2 justify-end">
         <button
           onClick={handleExportPDF}
-          className="flex items-center gap-2 px-3 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-sm font-medium"
+          className="flex items-center gap-2 px-3 py-2 bg-info hover:bg-info text-white rounded-lg text-sm font-medium"
         >
           <Download className="w-4 h-4" />
           Export Report

@@ -30,9 +30,9 @@ const CalendarRenderer = ({
     days.push(
       <div
         key={day}
-        className={`p-2 text-center cursor-pointer hover:bg-blue-100 ${
-          isSelected ? 'bg-blue-500 text-white' : ''
-        } ${isToday ? 'font-bold border border-blue-300' : ''}`}
+        className={`p-2 text-center cursor-pointer hover:bg-info/10 ${
+          isSelected ? 'bg-info text-white' : ''
+        } ${isToday ? 'font-bold border border-info/30' : ''}`}
         onClick={(e) => {
           e.stopPropagation();
           setSelectedDate(date);
@@ -52,17 +52,17 @@ const CalendarRenderer = ({
   return (
     <div className="w-full max-w-sm mx-auto">
       {/* Calendar Header */}
-      <div className="flex items-center justify-between mb-4 bg-gray-50 p-3 rounded-lg">
+      <div className="flex items-center justify-between mb-4 bg-canvas p-3 rounded-lg">
         <button
           onClick={(e) => {
             e.stopPropagation();
             navigateMonth(-1);
           }}
-          className="px-3 py-1 bg-gray-200 text-gray-600 rounded hover:bg-gray-300"
+          className="px-3 py-1 bg-surface-hover text-dim rounded hover:bg-surface-hover"
         >
           ←
         </button>
-        <h3 className="text-lg font-semibold text-gray-800">
+        <h3 className="text-lg font-semibold text-ink">
           {monthNames[currentMonth.getMonth()]} {currentMonth.getFullYear()}
         </h3>
         <button
@@ -70,7 +70,7 @@ const CalendarRenderer = ({
             e.stopPropagation();
             navigateMonth(1);
           }}
-          className="px-3 py-1 bg-gray-200 text-gray-600 rounded hover:bg-gray-300"
+          className="px-3 py-1 bg-surface-hover text-dim rounded hover:bg-surface-hover"
         >
           →
         </button>
@@ -79,19 +79,19 @@ const CalendarRenderer = ({
       {/* Days of week header */}
       <div className="grid grid-cols-7 gap-1 mb-2">
         {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
-          <div key={day} className="p-2 text-center font-semibold text-gray-600 text-sm">
+          <div key={day} className="p-2 text-center font-semibold text-dim text-sm">
             {day}
           </div>
         ))}
       </div>
       
       {/* Calendar grid */}
-      <div className="grid grid-cols-7 gap-1 border border-gray-300 rounded-lg p-2 bg-white">
+      <div className="grid grid-cols-7 gap-1 border border-line rounded-lg p-2 bg-surface">
         {days}
       </div>
       
       {/* Selected date display */}
-      <div className="mt-3 text-center text-sm text-gray-600">
+      <div className="mt-3 text-center text-sm text-dim">
         Selected: {selectedDate.toLocaleDateString()}
       </div>
     </div>

@@ -201,7 +201,7 @@ function PasskeyMFAVerification({ userId, userEmail, onSuccess, onCancel }) {
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-2xl p-8 max-w-md w-full mx-4 shadow-2xl">
+      <div className="bg-surface rounded-2xl p-8 max-w-md w-full mx-4 shadow-2xl">
         {showAlert && (
           <div className="mb-4">
             <Alert
@@ -213,13 +213,13 @@ function PasskeyMFAVerification({ userId, userEmail, onSuccess, onCancel }) {
         )}
 
         <div className="flex justify-between items-start mb-4">
-          <h2 className="text-2xl font-semibold text-gray-900">
+          <h2 className="text-2xl font-semibold text-ink">
             {showOTPInput ? 'Verify with OTP' : 'Verify with Passkey'}
           </h2>
           <button
             aria-label="Close"
             onClick={onCancel}
-            className="ml-4 text-gray-400 hover:text-gray-700 text-2xl font-bold focus:outline-none"
+            className="ml-4 text-dim hover:text-ink text-2xl font-bold focus:outline-none"
             style={{ lineHeight: 1 }}
           >
             &times;
@@ -228,17 +228,17 @@ function PasskeyMFAVerification({ userId, userEmail, onSuccess, onCancel }) {
 
         {!showOTPInput ? (
           <>
-            <p className="text-gray-600 mb-6">
+            <p className="text-dim mb-6">
               Please verify your identity using your passkey. Use your biometric or security key to continue.
             </p>
 
             {loading && (
               <div className="flex flex-col items-center justify-center py-8">
-                <Loader className="w-8 h-8 text-emerald-600 animate-spin mb-4" />
-                <p className="text-sm text-gray-600">
+                <Loader className="w-8 h-8 text-ink animate-spin mb-4" />
+                <p className="text-sm text-dim">
                   Waiting for passkey verification...
                 </p>
-                <p className="text-xs text-gray-500 mt-2">
+                <p className="text-xs text-dim mt-2">
                   Check your device for biometric or security key prompt
                 </p>
               </div>
@@ -248,7 +248,7 @@ function PasskeyMFAVerification({ userId, userEmail, onSuccess, onCancel }) {
               <div className="space-y-3">
                 <button
                   onClick={verifyWithPasskey}
-                  className="w-full bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg px-6 py-3 transition duration-200 font-medium"
+                  className="w-full bg-cta hover:bg-cta text-cta-foreground rounded-lg px-6 py-3 transition duration-200 font-medium"
                 >
                   Verify with Passkey
                 </button>
@@ -256,7 +256,7 @@ function PasskeyMFAVerification({ userId, userEmail, onSuccess, onCancel }) {
                 <button
                   onClick={sendOTP}
                   disabled={otpSent}
-                  className="w-full text-emerald-600 hover:text-emerald-500 text-sm font-medium hover:underline disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-full text-ink hover:text-ink text-sm font-medium hover:underline disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {otpSent ? 'OTP Sent' : 'Error signing in?'}
                 </button>
@@ -270,12 +270,12 @@ function PasskeyMFAVerification({ userId, userEmail, onSuccess, onCancel }) {
         ) : (
           <>
             <div className="text-center mb-6">
-              <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <svg className="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div className="w-16 h-16 bg-info/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                <svg className="w-8 h-8 text-info" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                 </svg>
               </div>
-              <p className="text-gray-600 mb-4">
+              <p className="text-dim mb-4">
                 Enter the 6-digit code sent to your email
               </p>
               <input
@@ -283,7 +283,7 @@ function PasskeyMFAVerification({ userId, userEmail, onSuccess, onCancel }) {
                 value={otp}
                 onChange={(e) => setOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
                 placeholder="000000"
-                className="w-full text-center text-2xl font-mono tracking-widest border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full text-center text-2xl font-mono tracking-widest border border-line rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-info focus:border-transparent"
                 maxLength={6}
               />
             </div>
@@ -293,21 +293,21 @@ function PasskeyMFAVerification({ userId, userEmail, onSuccess, onCancel }) {
                 <button
                   onClick={verifyOTP}
                   disabled={otp.length !== 6}
-                  className="w-full bg-blue-600 hover:bg-blue-500 disabled:bg-gray-300 disabled:cursor-not-allowed text-white rounded-lg px-6 py-3 transition duration-200 font-medium"
+                  className="w-full bg-info hover:bg-info disabled:bg-surface-hover disabled:cursor-not-allowed text-white rounded-lg px-6 py-3 transition duration-200 font-medium"
                 >
                   Verify OTP
                 </button>
 
                 <button
                   onClick={() => setShowOTPInput(false)}
-                  className="w-full text-emerald-600 hover:text-emerald-500 text-sm font-medium hover:underline"
+                  className="w-full text-ink hover:text-ink text-sm font-medium hover:underline"
                 >
                   Back to Passkey
                 </button>
 
                 <button
                   onClick={onCancel}
-                  className="w-full border border-gray-200 text-gray-700 rounded-lg px-6 py-3 hover:bg-gray-50 transition duration-200"
+                  className="w-full border border-line text-ink rounded-lg px-6 py-3 hover:bg-canvas transition duration-200"
                 >
                   Cancel
                 </button>

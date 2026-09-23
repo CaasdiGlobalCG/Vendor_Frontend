@@ -244,9 +244,9 @@ export default function Form5() {
   };
 
   return (
-    <div className="flex min-h-screen bg-white">
+    <div className="flex min-h-screen bg-surface">
       {showSaveIndicator && (
-        <div className="fixed top-5 right-5 bg-green-600 text-white py-2 px-4 rounded shadow z-50">
+        <div className="fixed top-5 right-5 bg-success text-white py-2 px-4 rounded shadow z-50">
           Changes saved successfully!
         </div>
       )}
@@ -260,8 +260,8 @@ export default function Form5() {
         <StepIndicator currentStep={5} />
 
         {/* Form Content */}
-        <div className="w-full max-w-4xl mx-auto px-4 pb-10 bg-white md:px-0">
-          <h1 className="text-2xl font-bold text-gray-900 mb-8">
+        <div className="w-full max-w-4xl mx-auto px-4 pb-10 bg-surface md:px-0">
+          <h1 className="text-2xl font-bold text-ink mb-8">
             Compliance and Certifications
           </h1>
 
@@ -274,8 +274,8 @@ export default function Form5() {
             <div className="space-y-6">
               <div className="flex flex-col md:flex-row items-start gap-6">
                 <div className="w-full md:w-1/3">
-                  <label className="text-sm font-semibold text-gray-900 block mb-1">Certifications</label>
-                  <p className="text-xs text-gray-500">Do you have necessary certifications/licenses?</p>
+                  <label className="text-sm font-semibold text-ink block mb-1">Certifications</label>
+                  <p className="text-xs text-dim">Do you have necessary certifications/licenses?</p>
                 </div>
                 <div className="w-full md:w-2/3">
                   <div className="flex gap-8">
@@ -295,20 +295,20 @@ export default function Form5() {
               {formData.hasCertifications && (
                 <div className="flex flex-col md:flex-row items-start gap-6">
                   <div className="w-full md:w-1/3">
-                    <label className="text-sm font-semibold text-gray-900 block mb-1">Certificate Upload</label>
-                    <p className="text-xs text-gray-500">provide certification document</p>
+                    <label className="text-sm font-semibold text-ink block mb-1">Certificate Upload</label>
+                    <p className="text-xs text-dim">provide certification document</p>
                   </div>
                   <div className="w-full md:w-2/3">
-                    <div onClick={() => !formData.certificateUpload && document.getElementById("certificateUpload").click()} className="cursor-pointer border border-gray-300 rounded px-3 py-2 text-sm hover:border-emerald-500 transition-colors">
+                    <div onClick={() => !formData.certificateUpload && document.getElementById("certificateUpload").click()} className="cursor-pointer border border-line rounded px-3 py-2 text-sm hover:border-line transition-colors">
                       <input type="file" name="certificateUpload" id="certificateUpload" onChange={handleInputChange} style={{ display: "none" }} />
                       {formData.certificateUpload ? (
                         <div>
                           <div className="text-sm">{formData.certificateUpload.name}</div>
-                          <div className="text-xs text-green-600">{formData.certificateUpload.uploading ? "Uploading..." : "Uploaded"}</div>
-                          <button type="button" onClick={(e) => { e.stopPropagation(); handleDeleteFile("certificateUpload"); }} className="text-red-500 text-sm mt-1">Delete</button>
+                          <div className="text-xs text-success">{formData.certificateUpload.uploading ? "Uploading..." : "Uploaded"}</div>
+                          <button type="button" onClick={(e) => { e.stopPropagation(); handleDeleteFile("certificateUpload"); }} className="text-danger text-sm mt-1">Delete</button>
                         </div>
                       ) : (
-                        <div className="text-sm text-gray-500">Click to upload certificate</div>
+                        <div className="text-sm text-dim">Click to upload certificate</div>
                       )}
                     </div>
                   </div>
@@ -318,20 +318,20 @@ export default function Form5() {
               {/* Upload Document */}
               <div className="flex flex-col md:flex-row items-start gap-6">
                 <div className="w-full md:w-1/3">
-                  <label className="text-sm font-semibold text-gray-900 block mb-1">Upload Document</label>
-                  <p className="text-xs text-gray-500">provide document</p>
+                  <label className="text-sm font-semibold text-ink block mb-1">Upload Document</label>
+                  <p className="text-xs text-dim">provide document</p>
                 </div>
                 <div className="w-full md:w-2/3">
-                  <div onClick={() => !formData.uploadDocument && document.getElementById("uploadDocument").click()} className="cursor-pointer border border-gray-300 rounded px-3 py-2 text-sm hover:border-emerald-500 transition-colors">
+                  <div onClick={() => !formData.uploadDocument && document.getElementById("uploadDocument").click()} className="cursor-pointer border border-line rounded px-3 py-2 text-sm hover:border-line transition-colors">
                     <input type="file" name="uploadDocument" id="uploadDocument" onChange={handleInputChange} style={{ display: "none" }} />
                     {formData.uploadDocument ? (
                       <div>
                         <div className="text-sm">{formData.uploadDocument.name}</div>
-                        <div className="text-xs text-green-600">{formData.uploadDocument.uploading ? "Uploading..." : "Uploaded"}</div>
-                        <button type="button" onClick={(e) => { e.stopPropagation(); handleDeleteFile("uploadDocument"); }} className="text-red-500 text-sm mt-1">Delete</button>
+                        <div className="text-xs text-success">{formData.uploadDocument.uploading ? "Uploading..." : "Uploaded"}</div>
+                        <button type="button" onClick={(e) => { e.stopPropagation(); handleDeleteFile("uploadDocument"); }} className="text-danger text-sm mt-1">Delete</button>
                       </div>
                     ) : (
-                      <div className="text-sm text-gray-500">Click to upload document</div>
+                      <div className="text-sm text-dim">Click to upload document</div>
                     )}
                   </div>
                 </div>
@@ -340,20 +340,20 @@ export default function Form5() {
               {/* ISO Certificate */}
               <div className="flex flex-col md:flex-row items-start gap-6">
                 <div className="w-full md:w-1/3">
-                  <label className="text-sm font-semibold text-gray-900 block mb-1">ISO Certificate</label>
-                  <p className="text-xs text-gray-500">provide ISO certificate</p>
+                  <label className="text-sm font-semibold text-ink block mb-1">ISO Certificate</label>
+                  <p className="text-xs text-dim">provide ISO certificate</p>
                 </div>
                 <div className="w-full md:w-2/3">
-                  <div onClick={() => !formData.isoCertificate && document.getElementById("isoCertificate").click()} className="cursor-pointer border border-gray-300 rounded px-3 py-2 text-sm hover:border-emerald-500 transition-colors">
+                  <div onClick={() => !formData.isoCertificate && document.getElementById("isoCertificate").click()} className="cursor-pointer border border-line rounded px-3 py-2 text-sm hover:border-line transition-colors">
                     <input type="file" name="isoCertificate" id="isoCertificate" onChange={handleInputChange} style={{ display: "none" }} />
                     {formData.isoCertificate ? (
                       <div>
                         <div className="text-sm">{formData.isoCertificate.name}</div>
-                        <div className="text-xs text-green-600">{formData.isoCertificate.uploading ? "Uploading..." : "Uploaded"}</div>
-                        <button type="button" onClick={(e) => { e.stopPropagation(); handleDeleteFile("isoCertificate"); }} className="text-red-500 text-sm mt-1">Delete</button>
+                        <div className="text-xs text-success">{formData.isoCertificate.uploading ? "Uploading..." : "Uploaded"}</div>
+                        <button type="button" onClick={(e) => { e.stopPropagation(); handleDeleteFile("isoCertificate"); }} className="text-danger text-sm mt-1">Delete</button>
                       </div>
                     ) : (
-                      <div className="text-sm text-gray-500">Click to upload ISO Certificate</div>
+                      <div className="text-sm text-dim">Click to upload ISO Certificate</div>
                     )}
                   </div>
                 </div>
@@ -361,29 +361,29 @@ export default function Form5() {
 
               {/* Manufacturer-Specific Compliance Documents */}
               {isMFG && (
-                <div className="space-y-6 border-t border-gray-100 pt-6">
+                <div className="space-y-6 border-t border-line pt-6">
                   <div>
-                    <h3 className="text-sm font-semibold text-gray-900 mb-1">Factory & Regulatory Compliance</h3>
-                    <p className="text-xs text-gray-500">Required for manufacturing / production facilities</p>
+                    <h3 className="text-sm font-semibold text-ink mb-1">Factory & Regulatory Compliance</h3>
+                    <p className="text-xs text-dim">Required for manufacturing / production facilities</p>
                   </div>
 
                   {[{ name: "factoryLicence", label: "Factory Licence", hint: "Factory Act registration / licence (PDF)" }, { name: "pcbConsent", label: "PCB Consent to Operate", hint: "Pollution Control Board consent for factory with emissions (PDF)" }, { name: "esicEpfCompliance", label: "ESIC & EPF Compliance", hint: "Employee social security and provident fund registration (PDF)" }, { name: "fireSafetyNoc", label: "Fire & Safety NOC", hint: "Fire NOC from local authority (PDF)" }, { name: "statutoryCompliance", label: "Statutory Compliance Certificate", hint: "Factory Act / Shops & Establishment Act compliance (PDF)" }].map((field) => (
                     <div key={field.name} className="flex flex-col md:flex-row items-start gap-6">
                       <div className="w-full md:w-1/3">
-                        <label className="text-sm font-semibold text-gray-900 block mb-1">{field.label}</label>
-                        <p className="text-xs text-gray-500">{field.hint}</p>
+                        <label className="text-sm font-semibold text-ink block mb-1">{field.label}</label>
+                        <p className="text-xs text-dim">{field.hint}</p>
                       </div>
                       <div className="w-full md:w-2/3">
-                        <div onClick={() => !formData[field.name] && document.getElementById(field.name).click()} className="cursor-pointer border border-gray-300 rounded px-3 py-2 text-sm hover:border-emerald-500 transition-colors">
+                        <div onClick={() => !formData[field.name] && document.getElementById(field.name).click()} className="cursor-pointer border border-line rounded px-3 py-2 text-sm hover:border-line transition-colors">
                           <input type="file" name={field.name} id={field.name} accept=".pdf,.jpg,.png" onChange={handleInputChange} style={{ display: "none" }} />
                           {formData[field.name] ? (
                             <div>
                               <div className="text-sm">{formData[field.name].name}</div>
-                              <div className="text-xs text-green-600">{formData[field.name].uploading ? "Uploading..." : "Uploaded"}</div>
-                              <button type="button" onClick={(e) => { e.stopPropagation(); handleDeleteFile(field.name); }} className="text-red-500 text-sm mt-1">Delete</button>
+                              <div className="text-xs text-success">{formData[field.name].uploading ? "Uploading..." : "Uploaded"}</div>
+                              <button type="button" onClick={(e) => { e.stopPropagation(); handleDeleteFile(field.name); }} className="text-danger text-sm mt-1">Delete</button>
                             </div>
                           ) : (
-                            <div className="text-sm text-gray-500">Click to upload {field.label.toLowerCase()}</div>
+                            <div className="text-sm text-dim">Click to upload {field.label.toLowerCase()}</div>
                           )}
                         </div>
                       </div>
@@ -394,29 +394,29 @@ export default function Form5() {
 
               {/* Service Provider-Specific Compliance Documents */}
               {isSP && (
-                <div className="space-y-6 border-t border-gray-100 pt-6">
+                <div className="space-y-6 border-t border-line pt-6">
                   <div>
-                    <h3 className="text-sm font-semibold text-gray-900 mb-1">Professional & Liability Compliance</h3>
-                    <p className="text-xs text-gray-500">Required for service-based vendors</p>
+                    <h3 className="text-sm font-semibold text-ink mb-1">Professional & Liability Compliance</h3>
+                    <p className="text-xs text-dim">Required for service-based vendors</p>
                   </div>
 
                   {[{ name: "professionalIndemnity", label: "Professional Indemnity Insurance", hint: "PI insurance policy document (PDF)" }, { name: "cyberLiabilityInsurance", label: "Cyber Liability Insurance", hint: "Required for IT / data services vendors (PDF)" }, { name: "dataProtectionCompliance", label: "Data Protection Compliance", hint: "GDPR / IT Act / PDPB compliance certificate or policy (PDF)" }].map((field) => (
                     <div key={field.name} className="flex flex-col md:flex-row items-start gap-6">
                       <div className="w-full md:w-1/3">
-                        <label className="text-sm font-semibold text-gray-900 block mb-1">{field.label}</label>
-                        <p className="text-xs text-gray-500">{field.hint}</p>
+                        <label className="text-sm font-semibold text-ink block mb-1">{field.label}</label>
+                        <p className="text-xs text-dim">{field.hint}</p>
                       </div>
                       <div className="w-full md:w-2/3">
-                        <div onClick={() => !formData[field.name] && document.getElementById(field.name).click()} className="cursor-pointer border border-gray-300 rounded px-3 py-2 text-sm hover:border-emerald-500 transition-colors">
+                        <div onClick={() => !formData[field.name] && document.getElementById(field.name).click()} className="cursor-pointer border border-line rounded px-3 py-2 text-sm hover:border-line transition-colors">
                           <input type="file" name={field.name} id={field.name} accept=".pdf,.jpg,.png" onChange={handleInputChange} style={{ display: "none" }} />
                           {formData[field.name] ? (
                             <div>
                               <div className="text-sm">{formData[field.name].name}</div>
-                              <div className="text-xs text-green-600">{formData[field.name].uploading ? "Uploading..." : "Uploaded"}</div>
-                              <button type="button" onClick={(e) => { e.stopPropagation(); handleDeleteFile(field.name); }} className="text-red-500 text-sm mt-1">Delete</button>
+                              <div className="text-xs text-success">{formData[field.name].uploading ? "Uploading..." : "Uploaded"}</div>
+                              <button type="button" onClick={(e) => { e.stopPropagation(); handleDeleteFile(field.name); }} className="text-danger text-sm mt-1">Delete</button>
                             </div>
                           ) : (
-                            <div className="text-sm text-gray-500">Click to upload {field.label.toLowerCase()}</div>
+                            <div className="text-sm text-dim">Click to upload {field.label.toLowerCase()}</div>
                           )}
                         </div>
                       </div>
@@ -428,8 +428,8 @@ export default function Form5() {
               {/* Health and Safety Standards - Always visible */}
               <div className="flex flex-col md:flex-row items-start gap-6">
                 <div className="w-full md:w-1/3">
-                  <label className="text-sm font-semibold text-gray-900 block mb-1">Health and Safety Standards</label>
-                  <p className="text-xs text-gray-500">provide health and safety standards</p>
+                  <label className="text-sm font-semibold text-ink block mb-1">Health and Safety Standards</label>
+                  <p className="text-xs text-dim">provide health and safety standards</p>
                 </div>
                 <div className="w-full md:w-2/3">
                   <textarea
@@ -438,7 +438,7 @@ export default function Form5() {
                     value={formData.healthSafetyStandards}
                     onChange={handleInputChange}
                     placeholder="Health and safety standards you take"
-                    className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent resize-none"
+                    className="w-full border border-line rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ink focus:border-transparent resize-none"
                     rows={4}
                   />
                 </div>
@@ -452,14 +452,14 @@ export default function Form5() {
               <button
                 type="button"
                 onClick={handlePrevious}
-                className="px-8 py-3 text-gray-600 hover:text-gray-800 transition-colors"
+                className="px-8 py-3 text-dim hover:text-ink transition-colors"
               >
                 Back
               </button>
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className="text-white px-8 py-3 rounded-lg font-medium shadow-md bg-gradient-to-r from-[#0F5848] to-[#21BE9C] hover:from-[#0F5848]/90 hover:to-[#21BE9C]/90 focus:outline-none focus:ring-2 focus:ring-emerald-500 disabled:opacity-60 disabled:cursor-not-allowed"
+                className="text-white px-8 py-3 rounded-lg font-medium bg-black hover:from-black/90 hover:to-black/90 focus:outline-none focus:ring-2 focus:ring-ink disabled:opacity-60 disabled:cursor-not-allowed"
               >
                 {isSubmitting ? "Please wait..." : "Next"}
               </button>

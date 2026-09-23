@@ -118,18 +118,18 @@ const TextPanel = ({ isOpen, onClose, selectedTextElement, onUpdateTextElement }
   // If no text element is selected, show activation mode
   if (!selectedTextElement) {
     return (
-      <div className="fixed right-0 top-0 w-96 h-full bg-white shadow-2xl border-l border-gray-200 z-40 flex flex-col">
-        <div className="flex-shrink-0 p-6 border-b border-gray-200">
+      <div className="fixed right-0 top-0 w-96 h-full bg-surface shadow-2xl border-l border-line z-40 flex flex-col">
+        <div className="flex-shrink-0 p-6 border-b border-line">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-2">
-              <Type className="w-5 h-5 text-blue-600" />
-              <h3 className="text-xl font-semibold text-gray-900">Text Tool</h3>
+              <Type className="w-5 h-5 text-info" />
+              <h3 className="text-xl font-semibold text-ink">Text Tool</h3>
             </div>
             <button
               onClick={onClose}
-              className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+              className="p-2 hover:bg-surface-hover rounded-lg transition-colors"
             >
-              <X className="w-5 h-5 text-gray-500" />
+              <X className="w-5 h-5 text-dim" />
             </button>
           </div>
         </div>
@@ -137,13 +137,13 @@ const TextPanel = ({ isOpen, onClose, selectedTextElement, onUpdateTextElement }
         <div className="flex-1 flex items-center justify-center p-6">
           <div className="text-center space-y-4">
             <div className="flex justify-center">
-              <div className="p-4 bg-blue-100 rounded-full">
-                <Type className="w-8 h-8 text-blue-600" />
+              <div className="p-4 bg-info/10 rounded-full">
+                <Type className="w-8 h-8 text-info" />
               </div>
             </div>
             <div>
-              <h4 className="text-lg font-semibold text-gray-900 mb-2">Add Text</h4>
-              <p className="text-sm text-gray-600 mb-4">
+              <h4 className="text-lg font-semibold text-ink mb-2">Add Text</h4>
+              <p className="text-sm text-dim mb-4">
                 Click the button below to activate text mode. Click on the canvas to add a text box, then type directly.
               </p>
             </div>
@@ -151,8 +151,8 @@ const TextPanel = ({ isOpen, onClose, selectedTextElement, onUpdateTextElement }
               onClick={handleActivateTextMode}
               className={`w-full p-3 rounded-lg transition-all font-medium ${
                 isTextMode 
-                  ? 'bg-green-600 hover:bg-green-700 text-white' 
-                  : 'bg-blue-600 hover:bg-blue-700 text-white'
+                  ? 'bg-success hover:bg-success text-white' 
+                  : 'bg-info hover:bg-info text-white'
               }`}
             >
               {isTextMode ? '✓ Text Mode Active - Click on canvas' : 'Activate Text Mode'}
@@ -160,7 +160,7 @@ const TextPanel = ({ isOpen, onClose, selectedTextElement, onUpdateTextElement }
             {isTextMode && (
               <button
                 onClick={handleDeactivateTextMode}
-                className="w-full p-2 mt-2 border border-red-300 rounded-lg text-red-600 hover:bg-red-50 transition-all text-sm font-medium"
+                className="w-full p-2 mt-2 border border-danger/30 rounded-lg text-danger hover:bg-danger/10 transition-all text-sm font-medium"
               >
                 ✕ Exit Text Mode
               </button>
@@ -173,28 +173,28 @@ const TextPanel = ({ isOpen, onClose, selectedTextElement, onUpdateTextElement }
 
   // If text element is selected, show formatting options
   return (
-    <div className="fixed right-0 top-0 w-96 h-full bg-white shadow-2xl border-l border-gray-200 z-40 flex flex-col overflow-hidden">
-      <div className="flex-shrink-0 p-6 border-b border-gray-200">
+    <div className="fixed right-0 top-0 w-96 h-full bg-surface shadow-2xl border-l border-line z-40 flex flex-col overflow-hidden">
+      <div className="flex-shrink-0 p-6 border-b border-line">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-2">
-            <Type className="w-5 h-5 text-blue-600" />
-            <h3 className="text-xl font-semibold text-gray-900">Text Formatting</h3>
+            <Type className="w-5 h-5 text-info" />
+            <h3 className="text-xl font-semibold text-ink">Text Formatting</h3>
           </div>
           <button
             onClick={onClose}
-            className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+            className="p-2 hover:bg-surface-hover rounded-lg transition-colors"
           >
-            <X className="w-5 h-5 text-gray-500" />
+            <X className="w-5 h-5 text-dim" />
           </button>
         </div>
       </div>
 
       <div className="flex-1 overflow-y-auto">
         {/* Font Selection */}
-        <div className="p-4 border-b border-gray-100">
+        <div className="p-4 border-b border-line">
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs font-medium text-gray-700 mb-1">Font</label>
+              <label className="block text-xs font-medium text-ink mb-1">Font</label>
               <div className="relative">
                 <select 
                   value={selectedFont}
@@ -202,7 +202,7 @@ const TextPanel = ({ isOpen, onClose, selectedTextElement, onUpdateTextElement }
                     setSelectedFont(e.target.value);
                     updateTextProperty('fontFamily', e.target.value);
                   }}
-                  className="w-full p-2 border border-gray-200 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 appearance-none bg-white"
+                  className="w-full p-2 border border-line rounded text-sm focus:outline-none focus:ring-2 focus:ring-info appearance-none bg-surface"
                 >
                   {fonts.map(font => (
                     <option key={font} value={font} style={{ fontFamily: font }}>
@@ -210,12 +210,12 @@ const TextPanel = ({ isOpen, onClose, selectedTextElement, onUpdateTextElement }
                     </option>
                   ))}
                 </select>
-                <ChevronDown className="w-4 h-4 text-gray-400 absolute right-2 top-1/2 transform -translate-y-1/2 pointer-events-none" />
+                <ChevronDown className="w-4 h-4 text-dim absolute right-2 top-1/2 -translate-y-1/2 transform  pointer-events-none" />
               </div>
             </div>
 
             <div>
-              <label className="block text-xs font-medium text-gray-700 mb-1">Size</label>
+              <label className="block text-xs font-medium text-ink mb-1">Size</label>
               <div className="relative">
                 <select 
                   value={selectedSize}
@@ -223,28 +223,28 @@ const TextPanel = ({ isOpen, onClose, selectedTextElement, onUpdateTextElement }
                     setSelectedSize(e.target.value);
                     updateTextProperty('fontSize', e.target.value);
                   }}
-                  className="w-full p-2 border border-gray-200 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 appearance-none bg-white"
+                  className="w-full p-2 border border-line rounded text-sm focus:outline-none focus:ring-2 focus:ring-info appearance-none bg-surface"
                 >
                   {sizes.map(size => (
                     <option key={size} value={size}>{size}pt</option>
                   ))}
                 </select>
-                <ChevronDown className="w-4 h-4 text-gray-400 absolute right-2 top-1/2 transform -translate-y-1/2 pointer-events-none" />
+                <ChevronDown className="w-4 h-4 text-dim absolute right-2 top-1/2 -translate-y-1/2 transform  pointer-events-none" />
               </div>
             </div>
           </div>
         </div>
 
         {/* Text Style Buttons */}
-        <div className="p-4 border-b border-gray-100">
-          <label className="block text-xs font-medium text-gray-700 mb-2">Style</label>
+        <div className="p-4 border-b border-line">
+          <label className="block text-xs font-medium text-ink mb-2">Style</label>
           <div className="flex flex-wrap gap-1">
             <button
               onClick={() => toggleFormat('bold')}
               className={`p-2 rounded border transition-colors ${
                 activeFormats.has('bold') 
-                  ? 'bg-blue-100 border-blue-300 text-blue-700' 
-                  : 'bg-white border-gray-200 text-gray-600 hover:bg-gray-50'
+                  ? 'bg-info/10 border-info/30 text-info' 
+                  : 'bg-surface border-line text-dim hover:bg-canvas'
               }`}
             >
               <Bold className="w-4 h-4" />
@@ -253,8 +253,8 @@ const TextPanel = ({ isOpen, onClose, selectedTextElement, onUpdateTextElement }
               onClick={() => toggleFormat('italic')}
               className={`p-2 rounded border transition-colors ${
                 activeFormats.has('italic') 
-                  ? 'bg-blue-100 border-blue-300 text-blue-700' 
-                  : 'bg-white border-gray-200 text-gray-600 hover:bg-gray-50'
+                  ? 'bg-info/10 border-info/30 text-info' 
+                  : 'bg-surface border-line text-dim hover:bg-canvas'
               }`}
             >
               <Italic className="w-4 h-4" />
@@ -263,8 +263,8 @@ const TextPanel = ({ isOpen, onClose, selectedTextElement, onUpdateTextElement }
               onClick={() => toggleFormat('underline')}
               className={`p-2 rounded border transition-colors ${
                 activeFormats.has('underline') 
-                  ? 'bg-blue-100 border-blue-300 text-blue-700' 
-                  : 'bg-white border-gray-200 text-gray-600 hover:bg-gray-50'
+                  ? 'bg-info/10 border-info/30 text-info' 
+                  : 'bg-surface border-line text-dim hover:bg-canvas'
               }`}
             >
               <Underline className="w-4 h-4" />
@@ -273,8 +273,8 @@ const TextPanel = ({ isOpen, onClose, selectedTextElement, onUpdateTextElement }
               onClick={() => toggleFormat('strikethrough')}
               className={`p-2 rounded border transition-colors ${
                 activeFormats.has('strikethrough') 
-                  ? 'bg-blue-100 border-blue-300 text-blue-700' 
-                  : 'bg-white border-gray-200 text-gray-600 hover:bg-gray-50'
+                  ? 'bg-info/10 border-info/30 text-info' 
+                  : 'bg-surface border-line text-dim hover:bg-canvas'
               }`}
             >
               <Strikethrough className="w-4 h-4" />
@@ -283,8 +283,8 @@ const TextPanel = ({ isOpen, onClose, selectedTextElement, onUpdateTextElement }
         </div>
 
         {/* Text Color */}
-        <div className="p-4 border-b border-gray-100">
-          <label className="block text-xs font-medium text-gray-700 mb-2">Text Color</label>
+        <div className="p-4 border-b border-line">
+          <label className="block text-xs font-medium text-ink mb-2">Text Color</label>
           <div className="grid grid-cols-10 gap-1">
             {textColors.map(color => (
               <button
@@ -294,7 +294,7 @@ const TextPanel = ({ isOpen, onClose, selectedTextElement, onUpdateTextElement }
                   updateTextProperty('color', color);
                 }}
                 className={`w-6 h-6 rounded border-2 transition-all ${
-                  textColor === color ? 'border-blue-500 scale-110' : 'border-gray-200 hover:border-gray-300'
+                  textColor === color ? 'border-info scale-110' : 'border-line hover:border-line'
                 }`}
                 style={{ backgroundColor: color }}
                 title={color}
@@ -304,8 +304,8 @@ const TextPanel = ({ isOpen, onClose, selectedTextElement, onUpdateTextElement }
         </div>
 
         {/* Background Color */}
-        <div className="p-4 border-b border-gray-100">
-          <label className="block text-xs font-medium text-gray-700 mb-2">Background</label>
+        <div className="p-4 border-b border-line">
+          <label className="block text-xs font-medium text-ink mb-2">Background</label>
           <div className="grid grid-cols-10 gap-1">
             {backgroundColors.map(color => (
               <button
@@ -315,7 +315,7 @@ const TextPanel = ({ isOpen, onClose, selectedTextElement, onUpdateTextElement }
                   updateTextProperty('backgroundColor', color);
                 }}
                 className={`w-6 h-6 rounded border-2 transition-all ${
-                  backgroundColor === color ? 'border-blue-500 scale-110' : 'border-gray-200 hover:border-gray-300'
+                  backgroundColor === color ? 'border-info scale-110' : 'border-line hover:border-line'
                 }`}
                 style={{ backgroundColor: color }}
                 title={color}
@@ -325,15 +325,15 @@ const TextPanel = ({ isOpen, onClose, selectedTextElement, onUpdateTextElement }
         </div>
 
         {/* Alignment */}
-        <div className="p-4 border-b border-gray-100">
-          <label className="block text-xs font-medium text-gray-700 mb-2">Alignment</label>
+        <div className="p-4 border-b border-line">
+          <label className="block text-xs font-medium text-ink mb-2">Alignment</label>
           <div className="flex gap-1">
             <button
               onClick={() => toggleFormat('align-left')}
               className={`p-2 rounded border transition-colors ${
                 activeFormats.has('align-left') 
-                  ? 'bg-blue-100 border-blue-300 text-blue-700' 
-                  : 'bg-white border-gray-200 text-gray-600 hover:bg-gray-50'
+                  ? 'bg-info/10 border-info/30 text-info' 
+                  : 'bg-surface border-line text-dim hover:bg-canvas'
               }`}
             >
               <AlignLeft className="w-4 h-4" />
@@ -342,8 +342,8 @@ const TextPanel = ({ isOpen, onClose, selectedTextElement, onUpdateTextElement }
               onClick={() => toggleFormat('align-center')}
               className={`p-2 rounded border transition-colors ${
                 activeFormats.has('align-center') 
-                  ? 'bg-blue-100 border-blue-300 text-blue-700' 
-                  : 'bg-white border-gray-200 text-gray-600 hover:bg-gray-50'
+                  ? 'bg-info/10 border-info/30 text-info' 
+                  : 'bg-surface border-line text-dim hover:bg-canvas'
               }`}
             >
               <AlignCenter className="w-4 h-4" />
@@ -352,8 +352,8 @@ const TextPanel = ({ isOpen, onClose, selectedTextElement, onUpdateTextElement }
               onClick={() => toggleFormat('align-right')}
               className={`p-2 rounded border transition-colors ${
                 activeFormats.has('align-right') 
-                  ? 'bg-blue-100 border-blue-300 text-blue-700' 
-                  : 'bg-white border-gray-200 text-gray-600 hover:bg-gray-50'
+                  ? 'bg-info/10 border-info/30 text-info' 
+                  : 'bg-surface border-line text-dim hover:bg-canvas'
               }`}
             >
               <AlignRight className="w-4 h-4" />
@@ -362,8 +362,8 @@ const TextPanel = ({ isOpen, onClose, selectedTextElement, onUpdateTextElement }
               onClick={() => toggleFormat('align-justify')}
               className={`p-2 rounded border transition-colors ${
                 activeFormats.has('align-justify') 
-                  ? 'bg-blue-100 border-blue-300 text-blue-700' 
-                  : 'bg-white border-gray-200 text-gray-600 hover:bg-gray-50'
+                  ? 'bg-info/10 border-info/30 text-info' 
+                  : 'bg-surface border-line text-dim hover:bg-canvas'
               }`}
             >
               <AlignJustify className="w-4 h-4" />
@@ -372,9 +372,9 @@ const TextPanel = ({ isOpen, onClose, selectedTextElement, onUpdateTextElement }
         </div>
 
         <div className="p-4">
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-3">
-            <h4 className="text-sm font-medium text-blue-800 mb-2">💡 How it works:</h4>
-            <p className="text-xs text-blue-700">
+          <div className="bg-info/10 border border-info/20 rounded-lg p-3 mb-3">
+            <h4 className="text-sm font-medium text-info mb-2">💡 How it works:</h4>
+            <p className="text-xs text-info">
               Click on text on the canvas to select it, then use these formatting options to style it instantly.
             </p>
           </div>
@@ -382,7 +382,7 @@ const TextPanel = ({ isOpen, onClose, selectedTextElement, onUpdateTextElement }
           {!isTextMode && (
             <button
               onClick={handleActivateTextMode}
-              className="w-full p-2 mb-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-all text-sm font-medium"
+              className="w-full p-2 mb-2 bg-info hover:bg-info text-white rounded-lg transition-all text-sm font-medium"
             >
               + Activate Text Mode
             </button>
@@ -391,7 +391,7 @@ const TextPanel = ({ isOpen, onClose, selectedTextElement, onUpdateTextElement }
           {isTextMode && (
             <button
               onClick={handleDeactivateTextMode}
-              className="w-full p-2 border border-red-300 rounded-lg text-red-600 hover:bg-red-50 transition-all text-sm font-medium"
+              className="w-full p-2 border border-danger/30 rounded-lg text-danger hover:bg-danger/10 transition-all text-sm font-medium"
             >
               ✕ Exit Text Mode
             </button>

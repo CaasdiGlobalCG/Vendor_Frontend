@@ -103,31 +103,31 @@ const SubscriptionsPage = () => {
     switch (status.toLowerCase()) {
       case 'active':
         return {
-          bg: 'bg-gradient-to-r from-green-50 to-emerald-50',
-          text: 'text-green-700',
-          border: 'border-green-200',
-          dot: 'bg-green-500'
+          bg: 'bg-black',
+          text: 'text-success',
+          border: 'border-success/20',
+          dot: 'bg-success'
         };
       case 'paused':
         return {
-          bg: 'bg-gradient-to-r from-yellow-50 to-amber-50',
-          text: 'text-yellow-700',
-          border: 'border-yellow-200',
-          dot: 'bg-yellow-500'
+          bg: 'bg-black',
+          text: 'text-warning',
+          border: 'border-warning/20',
+          dot: 'bg-warning'
         };
       case 'cancelled':
         return {
-          bg: 'bg-gradient-to-r from-red-50 to-pink-50',
-          text: 'text-red-700',
-          border: 'border-red-200',
-          dot: 'bg-red-500'
+          bg: 'bg-black',
+          text: 'text-danger',
+          border: 'border-danger/20',
+          dot: 'bg-danger'
         };
       default:
         return {
-          bg: 'bg-gradient-to-r from-gray-50 to-slate-50',
-          text: 'text-gray-600',
-          border: 'border-gray-200',
-          dot: 'bg-gray-400'
+          bg: 'bg-gradient-to-r from-surface-hover to-surface-hover',
+          text: 'text-dim',
+          border: 'border-line',
+          dot: 'bg-cta'
         };
     }
   };
@@ -139,10 +139,10 @@ const SubscriptionsPage = () => {
   // Loading state for authentication
   if (!currentUser?.vendorId) {
     return (
-      <div className="min-h-full bg-gradient-to-br from-gray-50 via-slate-50 to-stone-50 flex items-center justify-center">
+      <div className="min-h-full bg-gradient-to-br from-surface-hover via-surface-hover to-surface-hover flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-slate-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading user authentication...</p>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-line mx-auto mb-4"></div>
+          <p className="text-dim">Loading user authentication...</p>
         </div>
       </div>
     );
@@ -151,10 +151,10 @@ const SubscriptionsPage = () => {
   // Loading state for data fetching
   if (loading) {
     return (
-      <div className="min-h-full bg-gradient-to-br from-gray-50 via-slate-50 to-stone-50 flex items-center justify-center">
+      <div className="min-h-full bg-gradient-to-br from-surface-hover via-surface-hover to-surface-hover flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-slate-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading subscriptions...</p>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-line mx-auto mb-4"></div>
+          <p className="text-dim">Loading subscriptions...</p>
         </div>
       </div>
     );
@@ -163,16 +163,16 @@ const SubscriptionsPage = () => {
   // Error state
   if (error) {
     return (
-      <div className="min-h-full bg-gradient-to-br from-gray-50 via-slate-50 to-stone-50 flex items-center justify-center">
+      <div className="min-h-full bg-gradient-to-br from-surface-hover via-surface-hover to-surface-hover flex items-center justify-center">
         <div className="text-center">
-          <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
-            <span className="text-red-600 text-2xl">⚠️</span>
+          <div className="w-16 h-16 bg-danger/10 rounded-full flex items-center justify-center mx-auto mb-4">
+            <span className="text-danger text-2xl">⚠️</span>
           </div>
-          <h3 className="text-lg font-semibold text-gray-900 mb-2">Error Loading Subscriptions</h3>
-          <p className="text-gray-500 mb-4">{error}</p>
+          <h3 className="text-lg font-semibold text-ink mb-2">Error Loading Subscriptions</h3>
+          <p className="text-dim mb-4">{error}</p>
           <button 
             onClick={() => window.location.reload()} 
-            className="bg-gradient-to-r from-slate-600 to-gray-700 text-white px-6 py-3 rounded-xl hover:from-slate-700 hover:to-gray-800 transition-all duration-300"
+            className="bg-surface text-white px-6 py-3 rounded-xl hover:from-surface hover:to-surface transition-all duration-300"
           >
             Try Again
           </button>
@@ -211,10 +211,10 @@ const SubscriptionsPage = () => {
   }
 
   return (
-    <div className="min-h-full bg-gradient-to-br from-gray-50 via-slate-50 to-stone-50">
+    <div className="min-h-full bg-gradient-to-br from-surface-hover via-surface-hover to-surface-hover">
       {/* Preview Modal */}
       {showPreviewModal && (
-        <div className="fixed inset-0 z-50 flex flex-col bg-white">
+        <div className="fixed inset-0 z-50 flex flex-col bg-surface">
           <SubscriptionsPreviewPanel 
             subscriptions={subscriptionsData} 
             selectedSubscriptionId={previewSubscriptionId} 
@@ -226,18 +226,18 @@ const SubscriptionsPage = () => {
 
       {/* Beautiful Header with Stats */}
       <div className="relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-r from-slate-600/3 via-gray-600/3 to-stone-600/3"></div>
+        <div className="absolute inset-0 bg-surface"></div>
         <div className="relative px-8 py-8">
           <div className="flex items-center justify-between mb-8">
             <div>
-              <h1 className="text-3xl font-bold bg-gradient-to-r from-slate-800 via-gray-700 to-stone-700 bg-clip-text text-transparent">
+              <h1 className="text-3xl font-bold ">
                 Subscriptions Dashboard
               </h1>
-              <p className="text-gray-600 mt-2">Manage recurring billing and subscriptions</p>
+              <p className="text-dim mt-2">Manage recurring billing and subscriptions</p>
             </div>
             <button 
               onClick={() => setShowNewSubscription(true)}
-              className="bg-gradient-to-r from-slate-700 to-gray-700 text-white px-6 py-3 rounded-xl hover:from-slate-800 hover:to-gray-800 transition-all duration-300 flex items-center space-x-2 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
+              className="bg-surface text-white px-6 py-3 rounded-xl hover:from-surface hover:to-surface transition-all duration-300 flex items-center space-x-2 shadow-lg hover:shadow-xl transform "
             >
               <Plus className="w-5 h-5" />
               <span className="font-medium">Create Subscription</span>
@@ -246,50 +246,50 @@ const SubscriptionsPage = () => {
 
           {/* Stats Cards */}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-            <div className="bg-white border border-gray-200 rounded-lg p-6 shadow-sm hover:shadow-md transition-shadow">
+            <div className="bg-surface border border-line rounded-lg p-6   transition-shadow">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-gray-600 mb-1">Total Subscriptions</p>
-                  <p className="text-2xl font-bold text-gray-900">{stats.totalSubscriptions || subscriptionsData.length}</p>
+                  <p className="text-sm font-medium text-dim mb-1">Total Subscriptions</p>
+                  <p className="text-2xl font-bold text-ink">{stats.totalSubscriptions || subscriptionsData.length}</p>
                 </div>
-                <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
-                  <Calendar className="w-6 h-6 text-blue-600" />
+                <div className="w-12 h-12 bg-info/10 rounded-lg flex items-center justify-center">
+                  <Calendar className="w-6 h-6 text-info" />
                 </div>
               </div>
             </div>
             
-            <div className="bg-white border border-gray-200 rounded-lg p-6 shadow-sm hover:shadow-md transition-shadow">
+            <div className="bg-surface border border-line rounded-lg p-6   transition-shadow">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-gray-600 mb-1">Active</p>
-                  <p className="text-2xl font-bold text-gray-900">{stats.activeSubscriptions || subscriptionsData.filter(s => s.status.toLowerCase() === 'active').length}</p>
+                  <p className="text-sm font-medium text-dim mb-1">Active</p>
+                  <p className="text-2xl font-bold text-ink">{stats.activeSubscriptions || subscriptionsData.filter(s => s.status.toLowerCase() === 'active').length}</p>
                 </div>
-                <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
-                  <Play className="w-6 h-6 text-green-600" />
+                <div className="w-12 h-12 bg-success/10 rounded-lg flex items-center justify-center">
+                  <Play className="w-6 h-6 text-success" />
                 </div>
               </div>
             </div>
             
-            <div className="bg-white border border-gray-200 rounded-lg p-6 shadow-sm hover:shadow-md transition-shadow">
+            <div className="bg-surface border border-line rounded-lg p-6   transition-shadow">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-gray-600 mb-1">Monthly Revenue</p>
-                  <p className="text-2xl font-bold text-gray-900">₹{totalMonthlyRevenue.toLocaleString('en-IN', { maximumFractionDigits: 0 })}</p>
+                  <p className="text-sm font-medium text-dim mb-1">Monthly Revenue</p>
+                  <p className="text-2xl font-bold text-ink">₹{totalMonthlyRevenue.toLocaleString('en-IN', { maximumFractionDigits: 0 })}</p>
                 </div>
-                <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
-                  <DollarSign className="w-6 h-6 text-green-600" />
+                <div className="w-12 h-12 bg-success/10 rounded-lg flex items-center justify-center">
+                  <DollarSign className="w-6 h-6 text-success" />
                 </div>
               </div>
             </div>
 
-            <div className="bg-white border border-gray-200 rounded-lg p-6 shadow-sm hover:shadow-md transition-shadow">
+            <div className="bg-surface border border-line rounded-lg p-6   transition-shadow">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-gray-600 mb-1">Annual Revenue</p>
-                  <p className="text-2xl font-bold text-gray-900">₹{(stats.totalAnnualRevenue || 0).toLocaleString('en-IN', { maximumFractionDigits: 0 })}</p>
+                  <p className="text-sm font-medium text-dim mb-1">Annual Revenue</p>
+                  <p className="text-2xl font-bold text-ink">₹{(stats.totalAnnualRevenue || 0).toLocaleString('en-IN', { maximumFractionDigits: 0 })}</p>
                 </div>
-                <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
-                  <TrendingUp className="w-6 h-6 text-purple-600" />
+                <div className="w-12 h-12 bg-surface-hover rounded-lg flex items-center justify-center">
+                  <TrendingUp className="w-6 h-6 text-ink" />
                 </div>
               </div>
             </div>
@@ -298,19 +298,19 @@ const SubscriptionsPage = () => {
           {/* Search and Filter */}
           <div className="flex gap-4 mb-8">
             <div className="flex-1 relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 transform  text-dim w-5 h-5" />
               <input
                 type="text"
                 placeholder="Search subscriptions..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-10 pr-4 py-3 bg-white border border-gray-300 rounded-lg focus:ring-2 focus:ring-slate-500 focus:border-transparent text-sm"
+                className="w-full pl-10 pr-4 py-3 bg-surface border border-line rounded-lg focus:ring-2 focus:ring-line focus:border-transparent text-sm"
               />
             </div>
             <select
               value={selectedStatus}
               onChange={(e) => setSelectedStatus(e.target.value)}
-              className="px-4 py-3 bg-white border border-gray-300 rounded-lg focus:ring-2 focus:ring-slate-500 focus:border-transparent text-sm"
+              className="px-4 py-3 bg-surface border border-line rounded-lg focus:ring-2 focus:ring-line focus:border-transparent text-sm"
             >
               <option value="all">All Status</option>
               <option value="active">Active</option>
@@ -323,23 +323,23 @@ const SubscriptionsPage = () => {
 
       {/* Subscriptions Table */}
       <div className="px-8 py-8">
-        <div className="bg-white border border-gray-200 rounded-lg overflow-hidden shadow-sm">
+        <div className="bg-surface border border-line rounded-lg overflow-hidden ">
           <table className="w-full">
-            <thead className="bg-gray-50 border-b border-gray-200">
+            <thead className="bg-canvas border-b border-line">
               <tr>
-                <th className="text-left py-4 px-6 text-xs font-semibold text-gray-600 uppercase tracking-wider">Subscription</th>
-                <th className="text-left py-4 px-6 text-xs font-semibold text-gray-600 uppercase tracking-wider">Customer</th>
-                <th className="text-left py-4 px-6 text-xs font-semibold text-gray-600 uppercase tracking-wider">Billing Cycle</th>
-                <th className="text-right py-4 px-6 text-xs font-semibold text-gray-600 uppercase tracking-wider">Amount</th>
-                <th className="text-center py-4 px-6 text-xs font-semibold text-gray-600 uppercase tracking-wider">Next Billing</th>
-                <th className="text-center py-4 px-6 text-xs font-semibold text-gray-600 uppercase tracking-wider">Status</th>
-                <th className="text-center py-4 px-6 text-xs font-semibold text-gray-600 uppercase tracking-wider">Actions</th>
+                <th className="text-left py-4 px-6 text-xs font-semibold text-dim uppercase tracking-wider">Subscription</th>
+                <th className="text-left py-4 px-6 text-xs font-semibold text-dim uppercase tracking-wider">Customer</th>
+                <th className="text-left py-4 px-6 text-xs font-semibold text-dim uppercase tracking-wider">Billing Cycle</th>
+                <th className="text-right py-4 px-6 text-xs font-semibold text-dim uppercase tracking-wider">Amount</th>
+                <th className="text-center py-4 px-6 text-xs font-semibold text-dim uppercase tracking-wider">Next Billing</th>
+                <th className="text-center py-4 px-6 text-xs font-semibold text-dim uppercase tracking-wider">Status</th>
+                <th className="text-center py-4 px-6 text-xs font-semibold text-dim uppercase tracking-wider">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-200">
+            <tbody className="divide-y divide-line">
               {filteredSubscriptions.length === 0 ? (
                 <tr>
-                  <td colSpan="7" className="py-12 text-center text-gray-500">
+                  <td colSpan="7" className="py-12 text-center text-dim">
                     No subscriptions found
                   </td>
                 </tr>
@@ -347,22 +347,22 @@ const SubscriptionsPage = () => {
                 filteredSubscriptions.map((subscription) => {
                   const statusConfig = getStatusConfig(subscription.status);
                   return (
-                    <tr key={subscription.id} className="hover:bg-gray-50 transition-colors">
+                    <tr key={subscription.id} className="hover:bg-canvas transition-colors">
                       <td className="py-4 px-6">
-                        <div className="font-semibold text-gray-900">{subscription.customSubscriptionId || subscription.id}</div>
-                        <div className="text-xs text-gray-500">{subscription.startDate}</div>
+                        <div className="font-semibold text-ink">{subscription.customSubscriptionId || subscription.id}</div>
+                        <div className="text-xs text-dim">{subscription.startDate}</div>
                       </td>
                       <td className="py-4 px-6">
-                        <div className="text-sm text-gray-700">{subscription.customer}</div>
+                        <div className="text-sm text-ink">{subscription.customer}</div>
                       </td>
                       <td className="py-4 px-6">
-                        <div className="text-sm font-medium text-gray-700">{subscription.billingCycle}</div>
+                        <div className="text-sm font-medium text-ink">{subscription.billingCycle}</div>
                       </td>
                       <td className="py-4 px-6 text-right">
-                        <div className="text-lg font-bold text-gray-900">{subscription.amount}</div>
+                        <div className="text-lg font-bold text-ink">{subscription.amount}</div>
                       </td>
                       <td className="py-4 px-6 text-center">
-                        <div className="text-sm text-gray-700">{subscription.nextBillingDate}</div>
+                        <div className="text-sm text-ink">{subscription.nextBillingDate}</div>
                       </td>
                       <td className="py-4 px-6 text-center">
                         <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium border ${statusConfig.bg} ${statusConfig.text} ${statusConfig.border}`}>
@@ -374,31 +374,31 @@ const SubscriptionsPage = () => {
                         <div className="flex items-center justify-center space-x-1">
                           <button 
                             onClick={() => { setPreviewSubscriptionId(subscription.id); setShowPreviewModal(true); }}
-                            className="p-2 text-gray-400 hover:text-slate-600 hover:bg-slate-50 rounded-xl transition-all duration-200 hover:scale-105" 
+                            className="p-2 text-dim hover:text-dim hover:bg-canvas rounded-xl transition-all duration-200 hover:scale-105" 
                             title="View"
                           >
                             <Eye className="w-4 h-4" />
                           </button>
                           <button 
                             onClick={() => handleEditSubscription(subscription)}
-                            className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-50 rounded-xl transition-all duration-200 hover:scale-105" 
+                            className="p-2 text-dim hover:text-dim hover:bg-canvas rounded-xl transition-all duration-200 hover:scale-105" 
                             title="Edit"
                           >
                             <Edit className="w-4 h-4" />
                           </button>
-                          <button className="p-2 text-gray-400 hover:text-yellow-600 hover:bg-yellow-50 rounded-xl transition-all duration-200 hover:scale-105" title="Pause">
+                          <button className="p-2 text-dim hover:text-warning hover:bg-warning/10 rounded-xl transition-all duration-200 hover:scale-105" title="Pause">
                             <Pause className="w-4 h-4" />
                           </button>
                           <div className="relative group">
-                            <button className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-50 rounded-lg transition-colors duration-200">
+                            <button className="p-2 text-dim hover:text-dim hover:bg-canvas rounded-lg transition-colors duration-200">
                               <MoreHorizontal className="w-4 h-4" />
                             </button>
-                            <div className="absolute right-0 top-10 w-36 bg-white border border-gray-200 rounded-lg shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-10">
-                              <button className="w-full text-left px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 rounded-t-lg transition-colors flex items-center space-x-2">
+                            <div className="absolute right-0 top-10 w-36 bg-surface border border-line rounded-lg shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-10">
+                              <button className="w-full text-left px-4 py-3 text-sm text-ink hover:bg-canvas rounded-t-lg transition-colors flex items-center space-x-2">
                                 <Copy className="w-4 h-4" />
                                 <span>Duplicate</span>
                               </button>
-                              <button className="w-full text-left px-4 py-3 text-sm text-red-600 hover:bg-red-50 rounded-b-lg flex items-center space-x-2 transition-colors">
+                              <button className="w-full text-left px-4 py-3 text-sm text-danger hover:bg-danger/10 rounded-b-lg flex items-center space-x-2 transition-colors">
                                 <Trash2 className="w-4 h-4" />
                                 <span>Delete</span>
                               </button>

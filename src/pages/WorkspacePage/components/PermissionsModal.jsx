@@ -25,42 +25,42 @@ const PermissionsModal = ({ isOpen, onClose, workspace, onUpdatePermissions }) =
       name: 'Edit Canvas',
       description: 'Add, modify, and delete elements on the workspace',
       icon: PencilIcon,
-      color: 'text-blue-600'
+      color: 'text-info'
     },
     {
       key: 'canComment',
       name: 'Comment',
       description: 'Add comments and participate in discussions',
       icon: UserGroupIcon,
-      color: 'text-green-600'
+      color: 'text-success'
     },
     {
       key: 'canViewFiles',
       name: 'View Files',
       description: 'Access and download uploaded files',
       icon: EyeIcon,
-      color: 'text-purple-600'
+      color: 'text-ink'
     },
     {
       key: 'canCreateTasks',
       name: 'Create Tasks',
       description: 'Create new tasks and subtasks',
       icon: PlusIcon,
-      color: 'text-orange-600'
+      color: 'text-warning'
     },
     {
       key: 'canAssignTasks',
       name: 'Assign Tasks',
       description: 'Assign tasks to team members',
       icon: UserGroupIcon,
-      color: 'text-indigo-600'
+      color: 'text-info'
     },
     {
       key: 'canUpdateTaskStatus',
       name: 'Update Task Status',
       description: 'Change task status and mark as complete',
       icon: CheckIcon,
-      color: 'text-green-600'
+      color: 'text-success'
     }
   ];
 
@@ -177,21 +177,21 @@ const PermissionsModal = ({ isOpen, onClose, workspace, onUpdatePermissions }) =
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] overflow-hidden">
+      <div className="bg-surface rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] overflow-hidden">
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-gray-200">
+        <div className="flex items-center justify-between p-6 border-b border-line">
           <div className="flex items-center space-x-3">
-            <ShieldCheckIcon className="h-6 w-6 text-blue-600" />
+            <ShieldCheckIcon className="h-6 w-6 text-info" />
             <div>
-              <h2 className="text-lg font-semibold text-gray-900">Manage Permissions</h2>
-              <p className="text-sm text-gray-500">Control what collaborators can do in this workspace</p>
+              <h2 className="text-lg font-semibold text-ink">Manage Permissions</h2>
+              <p className="text-sm text-dim">Control what collaborators can do in this workspace</p>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+            className="p-2 hover:bg-surface-hover rounded-lg transition-colors"
           >
-            <XMarkIcon className="h-5 w-5 text-gray-500" />
+            <XMarkIcon className="h-5 w-5 text-dim" />
           </button>
         </div>
 
@@ -199,8 +199,8 @@ const PermissionsModal = ({ isOpen, onClose, workspace, onUpdatePermissions }) =
         <div className="p-6 overflow-y-auto max-h-[calc(90vh-140px)]">
           {loading ? (
             <div className="flex items-center justify-center py-12">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-              <span className="ml-3 text-gray-600">Loading collaborators...</span>
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-info"></div>
+              <span className="ml-3 text-dim">Loading collaborators...</span>
             </div>
           ) : (
             <>
@@ -208,12 +208,12 @@ const PermissionsModal = ({ isOpen, onClose, workspace, onUpdatePermissions }) =
               <div className="overflow-x-auto">
                 <table className="w-full border-collapse">
                   <thead>
-                    <tr className="border-b border-gray-200">
-                      <th className="text-left py-3 px-4 font-medium text-gray-900 min-w-[200px]">
+                    <tr className="border-b border-line">
+                      <th className="text-left py-3 px-4 font-medium text-ink min-w-[200px]">
                         Collaborator
                       </th>
                       {permissionTypes.map((permission) => (
-                        <th key={permission.key} className="text-center py-3 px-2 font-medium text-gray-900 min-w-[120px]">
+                        <th key={permission.key} className="text-center py-3 px-2 font-medium text-ink min-w-[120px]">
                           <div className="flex flex-col items-center space-y-1">
                             <permission.icon className={`h-4 w-4 ${permission.color}`} />
                             <span className="text-xs">{permission.name}</span>
@@ -224,27 +224,27 @@ const PermissionsModal = ({ isOpen, onClose, workspace, onUpdatePermissions }) =
                   </thead>
                   <tbody>
                     {collaborators.map((collaborator) => (
-                      <tr key={collaborator.vendorId} className="border-b border-gray-100 hover:bg-gray-50">
+                      <tr key={collaborator.vendorId} className="border-b border-line hover:bg-canvas">
                         <td className="py-4 px-4">
                           <div className="flex items-center space-x-3">
                             <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-medium ${
-                              collaborator.isPM ? 'bg-blue-500 text-white' : 
-                              collaborator.isCAS ? 'bg-purple-500 text-white' : 
-                              'bg-green-500 text-white'
+                              collaborator.isPM ? 'bg-info text-white' : 
+                              collaborator.isCAS ? 'bg-cta text-cta-foreground' : 
+                              'bg-success text-cta-foreground'
                             }`}>
                               {collaborator.avatar}
                             </div>
                             <div>
-                              <p className="font-medium text-gray-900">{collaborator.name}</p>
-                              <p className="text-sm text-gray-500">{collaborator.specialization}</p>
+                              <p className="font-medium text-ink">{collaborator.name}</p>
+                              <p className="text-sm text-dim">{collaborator.specialization}</p>
                               {collaborator.isPM && (
-                                <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800 mt-1">
+                                <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-info/10 text-info mt-1">
                                   <LockClosedIcon className="h-3 w-3 mr-1" />
                                   Owner
                                 </span>
                               )}
                               {collaborator.isCAS && (
-                                <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800 mt-1">
+                                <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-surface-hover text-ink mt-1">
                                   <ShieldCheckIcon className="h-3 w-3 mr-1" />
                                   CAS Unit
                                 </span>
@@ -257,7 +257,7 @@ const PermissionsModal = ({ isOpen, onClose, workspace, onUpdatePermissions }) =
                             {collaborator.isPM ? (
                               // PM always has all permissions (locked)
                               <div className="flex justify-center">
-                                <CheckIcon className="h-5 w-5 text-green-600" />
+                                <CheckIcon className="h-5 w-5 text-success" />
                               </div>
                             ) : collaborator.isCAS ? (
                               // CAS permissions (toggleable with purple styling)
@@ -265,8 +265,8 @@ const PermissionsModal = ({ isOpen, onClose, workspace, onUpdatePermissions }) =
                                 onClick={() => togglePermission(collaborator.vendorId, permission.key)}
                                 className={`w-8 h-8 rounded-lg border-2 flex items-center justify-center transition-colors ${
                                   permissions[collaborator.vendorId]?.[permission.key]
-                                    ? 'bg-purple-100 border-purple-500 text-purple-600'
-                                    : 'bg-gray-50 border-gray-300 text-gray-400 hover:border-gray-400'
+                                    ? 'bg-surface-hover border-line text-ink'
+                                    : 'bg-canvas border-line text-dim hover:border-line'
                                 }`}
                               >
                                 {permissions[collaborator.vendorId]?.[permission.key] && (
@@ -279,8 +279,8 @@ const PermissionsModal = ({ isOpen, onClose, workspace, onUpdatePermissions }) =
                                 onClick={() => togglePermission(collaborator.vendorId, permission.key)}
                                 className={`w-8 h-8 rounded-lg border-2 flex items-center justify-center transition-colors ${
                                   permissions[collaborator.vendorId]?.[permission.key]
-                                    ? 'bg-green-100 border-green-500 text-green-600'
-                                    : 'bg-gray-50 border-gray-300 text-gray-400 hover:border-gray-400'
+                                    ? 'bg-success/10 border-success text-success'
+                                    : 'bg-canvas border-line text-dim hover:border-line'
                                 }`}
                               >
                                 {permissions[collaborator.vendorId]?.[permission.key] && (
@@ -298,14 +298,14 @@ const PermissionsModal = ({ isOpen, onClose, workspace, onUpdatePermissions }) =
 
               {/* Permission Descriptions */}
               <div className="mt-8">
-                <h3 className="text-sm font-medium text-gray-900 mb-4">Permission Details</h3>
+                <h3 className="text-sm font-medium text-ink mb-4">Permission Details</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {permissionTypes.map((permission) => (
-                    <div key={permission.key} className="flex items-start space-x-3 p-3 bg-gray-50 rounded-lg">
+                    <div key={permission.key} className="flex items-start space-x-3 p-3 bg-canvas rounded-lg">
                       <permission.icon className={`h-5 w-5 ${permission.color} mt-0.5`} />
                       <div>
-                        <p className="font-medium text-gray-900 text-sm">{permission.name}</p>
-                        <p className="text-xs text-gray-600">{permission.description}</p>
+                        <p className="font-medium text-ink text-sm">{permission.name}</p>
+                        <p className="text-xs text-dim">{permission.description}</p>
                       </div>
                     </div>
                   ))}
@@ -316,17 +316,17 @@ const PermissionsModal = ({ isOpen, onClose, workspace, onUpdatePermissions }) =
         </div>
 
         {/* Footer */}
-        <div className="flex items-center justify-end space-x-3 p-6 border-t border-gray-200 bg-gray-50">
+        <div className="flex items-center justify-end space-x-3 p-6 border-t border-line bg-canvas">
           <button
             onClick={onClose}
-            className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 transition-colors"
+            className="px-4 py-2 text-sm font-medium text-ink bg-surface border border-line rounded-md hover:bg-canvas transition-colors"
           >
             Cancel
           </button>
           <button
             onClick={handleSavePermissions}
             disabled={saving || loading}
-            className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            className="px-4 py-2 text-sm font-medium text-white bg-info rounded-md hover:bg-info disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
             {saving ? (
               <>

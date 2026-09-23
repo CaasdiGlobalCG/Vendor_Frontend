@@ -52,28 +52,28 @@ function AccessDeniedScreen({ code, message }) {
   if (isError) {
     title = 'Access Verification Failed';
     description = message || 'We could not verify your access at this time. Please try again later.';
-    iconBg = 'bg-amber-100';
-    iconColor = 'text-amber-600';
+    iconBg = 'bg-warning/10';
+    iconColor = 'text-warning';
   } else if (isNoOrg) {
     title = 'No Organization Access';
     description = message || 'You are not currently a member of any organization. You may have been removed, or your invitation may have expired.';
-    iconBg = 'bg-amber-100';
-    iconColor = 'text-amber-600';
+    iconBg = 'bg-warning/10';
+    iconColor = 'text-warning';
   } else if (isSuspended) {
     title = 'Account Suspended';
     description = message || 'Your account has been temporarily suspended by an administrator.';
-    iconBg = 'bg-red-100';
-    iconColor = 'text-red-600';
+    iconBg = 'bg-danger/10';
+    iconColor = 'text-danger';
   } else {
     title = 'Access Revoked';
     description = message || 'Your access to this organization has been revoked.';
-    iconBg = 'bg-red-100';
-    iconColor = 'text-red-600';
+    iconBg = 'bg-danger/10';
+    iconColor = 'text-danger';
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-teal-50 flex items-center justify-center px-4 py-8">
-      <div className="max-w-xl w-full rounded-2xl border border-gray-200 bg-white p-8 shadow-lg text-center">
+    <div className="min-h-screen bg-gradient-to-br from-surface-hover via-surface to-black flex items-center justify-center px-4 py-8">
+      <div className="max-w-xl w-full rounded-2xl border border-line bg-surface p-8 shadow-lg text-center">
         {/* Icon */}
         <div className={`mx-auto w-16 h-16 rounded-full ${iconBg} flex items-center justify-center mb-4`}>
           {isNoOrg || isError ? (
@@ -87,12 +87,12 @@ function AccessDeniedScreen({ code, message }) {
           )}
         </div>
 
-        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-gray-500">Account Access</p>
-        <h1 className="mt-2 text-2xl font-bold text-gray-900">{title}</h1>
-        <p className="mt-3 text-gray-600">{description}</p>
+        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-dim">Account Access</p>
+        <h1 className="mt-2 text-2xl font-bold text-ink">{title}</h1>
+        <p className="mt-3 text-dim">{description}</p>
 
-        <div className="mt-6 bg-gray-50 border border-gray-200 rounded-xl p-4 text-left">
-          <p className="text-sm text-gray-600 leading-relaxed">
+        <div className="mt-6 bg-canvas border border-line rounded-xl p-4 text-left">
+          <p className="text-sm text-dim leading-relaxed">
             {isError
               ? 'This is usually temporary. Please try refreshing the page or signing in again. If the issue persists, contact your administrator.'
               : isNoOrg
@@ -103,7 +103,7 @@ function AccessDeniedScreen({ code, message }) {
 
         <button
           onClick={handleReturnToLogin}
-          className="mt-7 w-full px-4 py-2.5 bg-teal-600 text-white font-medium rounded-lg hover:bg-teal-700 transition-colors"
+          className="mt-7 w-full px-4 py-2.5 bg-cta text-cta-foreground font-medium rounded-lg hover:bg-cta transition-colors"
         >
           Return to Login
         </button>

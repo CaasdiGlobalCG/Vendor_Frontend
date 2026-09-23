@@ -33,34 +33,34 @@ const TablePreviewModal = ({ isOpen, onClose, tableData, tableName, tableType })
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-xl shadow-2xl max-w-6xl w-full max-h-[90vh] overflow-hidden">
+      <div className="bg-surface rounded-xl shadow-2xl max-w-6xl w-full max-h-[90vh] overflow-hidden">
         {/* Modal Header */}
-        <div className="flex items-center justify-between p-6 border-b border-gray-200 bg-gradient-to-r from-blue-50 to-indigo-50">
+        <div className="flex items-center justify-between p-6 border-b border-line bg-black">
           <div className="flex items-center space-x-3">
-            <div className="p-2 bg-blue-100 rounded-lg">
-              <Eye className="w-5 h-5 text-blue-600" />
+            <div className="p-2 bg-info/10 rounded-lg">
+              <Eye className="w-5 h-5 text-info" />
             </div>
             <div>
-              <h2 className="text-2xl font-bold text-gray-900">{tableName}</h2>
-              <p className="text-gray-600 mt-1">
+              <h2 className="text-2xl font-bold text-ink">{tableName}</h2>
+              <p className="text-dim mt-1">
                 {tableType?.replace('-', ' ').replace(/\b\w/g, l => l.toUpperCase())} • {filteredData.length} rows
               </p>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+            className="p-2 hover:bg-surface-hover rounded-lg transition-colors"
           >
-            <X className="w-6 h-6 text-gray-500" />
+            <X className="w-6 h-6 text-dim" />
           </button>
         </div>
 
         {/* Search and Controls */}
-        <div className="p-6 border-b border-gray-200 bg-gray-50">
+        <div className="p-6 border-b border-line bg-canvas">
           <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
             {/* Search */}
             <div className="relative flex-1 max-w-md">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 transform  text-dim w-4 h-4" />
               <input
                 type="text"
                 placeholder="Search table data..."
@@ -69,17 +69,17 @@ const TablePreviewModal = ({ isOpen, onClose, tableData, tableName, tableType })
                   setSearchTerm(e.target.value);
                   setCurrentPage(1); // Reset to first page when searching
                 }}
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className="w-full pl-10 pr-4 py-2 border border-line rounded-lg focus:outline-none focus:ring-2 focus:ring-info focus:border-info"
               />
             </div>
 
             {/* Items per page */}
             <div className="flex items-center space-x-2">
-              <span className="text-sm text-gray-600">Show:</span>
+              <span className="text-sm text-dim">Show:</span>
               <select
                 value={itemsPerPage}
                 onChange={(e) => handleItemsPerPageChange(Number(e.target.value))}
-                className="border border-gray-300 rounded-md px-3 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="border border-line rounded-md px-3 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-info"
               >
                 <option value={5}>5</option>
                 <option value={10}>10</option>
@@ -87,12 +87,12 @@ const TablePreviewModal = ({ isOpen, onClose, tableData, tableName, tableType })
                 <option value={50}>50</option>
                 <option value={100}>100</option>
               </select>
-              <span className="text-sm text-gray-600">per page</span>
+              <span className="text-sm text-dim">per page</span>
             </div>
           </div>
 
           {/* Results info */}
-          <div className="mt-3 text-sm text-gray-600">
+          <div className="mt-3 text-sm text-dim">
             {searchTerm ? (
               <span>
                 Showing {filteredData.length} of {data.length} rows matching "{searchTerm}"
@@ -106,8 +106,8 @@ const TablePreviewModal = ({ isOpen, onClose, tableData, tableName, tableType })
         {/* Table Content */}
         <div className="flex-1 overflow-auto max-h-[50vh]">
           {filteredData.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-12 text-gray-500">
-              <Search className="w-12 h-12 mb-4 text-gray-300" />
+            <div className="flex flex-col items-center justify-center py-12 text-dim">
+              <Search className="w-12 h-12 mb-4 text-dim" />
               <h3 className="text-lg font-medium mb-2">No data found</h3>
               <p className="text-sm">
                 {searchTerm ? 'Try adjusting your search terms' : 'This table appears to be empty'}
@@ -115,28 +115,28 @@ const TablePreviewModal = ({ isOpen, onClose, tableData, tableName, tableType })
             </div>
           ) : (
             <table className="min-w-full">
-              <thead className="bg-gray-100 sticky top-0">
+              <thead className="bg-surface-hover sticky top-0">
                 <tr>
                   {columns.map((column, index) => (
                     <th
                       key={index}
-                      className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b border-gray-200"
+                      className="px-6 py-4 text-left text-xs font-medium text-dim uppercase tracking-wider border-b border-line"
                     >
                       {column}
                     </th>
                   ))}
                 </tr>
               </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
+              <tbody className="bg-surface divide-y divide-line">
                 {paginatedData.map((row, rowIndex) => (
                   <tr
                     key={row.id || rowIndex}
-                    className="hover:bg-gray-50 transition-colors"
+                    className="hover:bg-canvas transition-colors"
                   >
                     {columns.map((column, colIndex) => (
                       <td
                         key={colIndex}
-                        className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 border-b border-gray-100"
+                        className="px-6 py-4 whitespace-nowrap text-sm text-ink border-b border-line"
                       >
                         {row[column] || '-'}
                       </td>
@@ -150,9 +150,9 @@ const TablePreviewModal = ({ isOpen, onClose, tableData, tableName, tableType })
 
         {/* Pagination */}
         {filteredData.length > 0 && totalPages > 1 && (
-          <div className="px-6 py-4 border-t border-gray-200 bg-gray-50">
+          <div className="px-6 py-4 border-t border-line bg-canvas">
             <div className="flex items-center justify-between">
-              <div className="text-sm text-gray-600">
+              <div className="text-sm text-dim">
                 Showing {startIndex + 1} to {Math.min(startIndex + itemsPerPage, filteredData.length)} of {filteredData.length} results
               </div>
               
@@ -160,7 +160,7 @@ const TablePreviewModal = ({ isOpen, onClose, tableData, tableName, tableType })
                 <button
                   onClick={() => handlePageChange(currentPage - 1)}
                   disabled={currentPage === 1}
-                  className="p-2 rounded-md border border-gray-300 bg-white text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  className="p-2 rounded-md border border-line bg-surface text-dim hover:bg-canvas disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                 >
                   <ChevronLeft className="w-4 h-4" />
                 </button>
@@ -184,8 +184,8 @@ const TablePreviewModal = ({ isOpen, onClose, tableData, tableName, tableType })
                         onClick={() => handlePageChange(pageNum)}
                         className={`px-3 py-1 rounded-md text-sm font-medium transition-colors ${
                           currentPage === pageNum
-                            ? 'bg-blue-600 text-white'
-                            : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
+                            ? 'bg-info text-white'
+                            : 'bg-surface text-ink border border-line hover:bg-canvas'
                         }`}
                       >
                         {pageNum}
@@ -197,7 +197,7 @@ const TablePreviewModal = ({ isOpen, onClose, tableData, tableName, tableType })
                 <button
                   onClick={() => handlePageChange(currentPage + 1)}
                   disabled={currentPage === totalPages}
-                  className="p-2 rounded-md border border-gray-300 bg-white text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  className="p-2 rounded-md border border-line bg-surface text-dim hover:bg-canvas disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                 >
                   <ChevronRight className="w-4 h-4" />
                 </button>
@@ -207,11 +207,11 @@ const TablePreviewModal = ({ isOpen, onClose, tableData, tableName, tableType })
         )}
 
         {/* Modal Footer */}
-        <div className="px-6 py-4 border-t border-gray-200 bg-gray-50">
+        <div className="px-6 py-4 border-t border-line bg-canvas">
           <div className="flex justify-end">
             <button
               onClick={onClose}
-              className="px-6 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
+              className="px-6 py-2 bg-cta text-cta-foreground rounded-lg hover:bg-cta transition-colors"
             >
               Close Preview
             </button>

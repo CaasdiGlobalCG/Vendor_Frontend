@@ -14,7 +14,7 @@ export default function OverviewValuesPage({ visionAndMission, coreValues, uniqu
   const valueIcons = [Heart, Star, Lightbulb, Sparkles, Eye, Compass];
 
   return (
-    <div pageTitle="Vision & Values" className="bg-white relative overflow-hidden" style={{ minHeight: '1123px' }}>
+    <div pageTitle="Vision & Values" className="bg-surface relative overflow-hidden" style={{ minHeight: '1123px' }}>
       {/* ===== PAGE HEADER ===== */}
       <div className="flex items-start">
         {/* Accent left bar */}
@@ -33,15 +33,15 @@ export default function OverviewValuesPage({ visionAndMission, coreValues, uniqu
 
         <div className="flex-1 relative">
           {/* Page number */}
-          <div className="absolute top-6 right-8 text-gray-300 text-[10px] font-bold">04</div>
+          <div className="absolute top-6 right-8 text-dim text-[10px] font-bold">04</div>
 
           {/* Header */}
           <div className="px-10 pt-10 pb-6">
             <div className="flex items-center gap-3 mb-2">
               <div className="w-10 h-[3px]" style={{ backgroundColor: accentColor }} />
-              <span className="text-[10px] font-bold uppercase tracking-[0.3em] text-gray-400">Our Foundation</span>
+              <span className="text-[10px] font-bold uppercase tracking-[0.3em] text-dim">Our Foundation</span>
             </div>
-            <h2 className="text-3xl font-black text-gray-900 tracking-tight">
+            <h2 className="text-3xl font-black text-ink tracking-tight">
               Vision & <span className="italic font-light">Core Values</span>
             </h2>
           </div>
@@ -50,7 +50,7 @@ export default function OverviewValuesPage({ visionAndMission, coreValues, uniqu
           <div className="px-10 pb-6">
             <div className="grid grid-cols-2 gap-5">
               {/* Vision card */}
-              <div className="relative bg-gray-900 rounded-sm p-6 overflow-hidden">
+              <div className="relative bg-cta rounded-sm p-6 overflow-hidden">
                 <div className="absolute top-0 right-0 w-20 h-20 rounded-full opacity-10"
                   style={{ backgroundColor: accentColor, transform: 'translate(30%, -30%)' }} />
                 <div className="w-10 h-10 rounded-sm flex items-center justify-center mb-4"
@@ -64,14 +64,14 @@ export default function OverviewValuesPage({ visionAndMission, coreValues, uniqu
               </div>
 
               {/* Mission card */}
-              <div className="relative border-2 border-gray-100 rounded-sm p-6 overflow-hidden">
+              <div className="relative border-2 border-line rounded-sm p-6 overflow-hidden">
                 <div className="absolute bottom-0 left-0 w-16 h-16 rounded-full opacity-10"
                   style={{ backgroundColor: accentColor, transform: 'translate(-30%, 30%)' }} />
-                <div className="w-10 h-10 rounded-sm flex items-center justify-center mb-4 bg-gray-900">
-                  <Compass size={16} className="text-white" />
+                <div className="w-10 h-10 rounded-sm flex items-center justify-center mb-4 bg-cta">
+                  <Compass size={16} className="text-cta-foreground" />
                 </div>
-                <p className="text-gray-400 text-[10px] font-bold uppercase tracking-widest mb-2">Our Mission</p>
-                <p className="text-gray-600 text-xs leading-relaxed">
+                <p className="text-dim text-[10px] font-bold uppercase tracking-widest mb-2">Our Mission</p>
+                <p className="text-dim text-xs leading-relaxed">
                   {mission || 'Delivering excellence through innovation and integrity.'}
                 </p>
               </div>
@@ -85,20 +85,20 @@ export default function OverviewValuesPage({ visionAndMission, coreValues, uniqu
                 <div className="w-6 h-6 rounded-sm flex items-center justify-center" style={{ backgroundColor: accentColor }}>
                   <Heart size={10} className="text-white" />
                 </div>
-                <p className="text-sm font-bold text-gray-900">Core Values</p>
+                <p className="text-sm font-bold text-ink">Core Values</p>
               </div>
               <div className="grid grid-cols-3 gap-3">
                 {values.slice(0, 6).map((value, i) => {
                   const Icon = valueIcons[i % valueIcons.length];
                   return (
-                    <div key={i} className="relative p-4 rounded-sm border border-gray-100 text-center group hover:border-transparent transition-colors"
+                    <div key={i} className="relative p-4 rounded-sm border border-line text-center group hover:border-transparent transition-colors"
                       style={{ '--hover-bg': accentColor }}>
-                      <span className="absolute top-2 left-2 text-[9px] font-bold text-gray-200">{String(i + 1).padStart(2, '0')}</span>
-                      <div className="w-8 h-8 mx-auto mb-2 rounded-full flex items-center justify-center bg-gray-50"
+                      <span className="absolute top-2 left-2 text-[9px] font-bold text-dim">{String(i + 1).padStart(2, '0')}</span>
+                      <div className="w-8 h-8 mx-auto mb-2 rounded-full flex items-center justify-center bg-canvas"
                         style={{ border: `1px solid ${accentColor}20` }}>
                         <Icon size={12} style={{ color: accentColor }} />
                       </div>
-                      <p className="text-xs font-bold text-gray-800">{typeof value === 'string' ? value : value?.name || value?.title || 'Value'}</p>
+                      <p className="text-xs font-bold text-ink">{typeof value === 'string' ? value : value?.name || value?.title || 'Value'}</p>
                     </div>
                   );
                 })}
@@ -114,15 +114,15 @@ export default function OverviewValuesPage({ visionAndMission, coreValues, uniqu
                 <div className="absolute top-0 left-0 w-1 h-full" style={{ backgroundColor: accentColor }} />
                 <div className="flex items-center gap-2 mb-3">
                   <Sparkles size={14} style={{ color: accentColor }} />
-                  <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400">Unique Selling Proposition</p>
+                  <p className="text-[10px] font-bold uppercase tracking-widest text-dim">Unique Selling Proposition</p>
                 </div>
-                <p className="text-gray-700 text-xs leading-relaxed pl-1">
+                <p className="text-ink text-xs leading-relaxed pl-1">
                   {usp || 'What sets us apart is our unwavering commitment to quality and innovation.'}
                 </p>
               </div>
 
               {/* Social Impact */}
-              <div className="col-span-2 relative bg-gray-900 p-6 rounded-sm overflow-hidden">
+              <div className="col-span-2 relative bg-cta p-6 rounded-sm overflow-hidden">
                 <svg className="absolute bottom-0 right-0 w-24 h-24 opacity-10" viewBox="0 0 100 100">
                   <circle cx="80" cy="80" r="40" fill={accentColor} />
                 </svg>

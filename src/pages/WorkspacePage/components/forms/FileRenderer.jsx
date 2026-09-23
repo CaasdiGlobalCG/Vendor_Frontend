@@ -9,7 +9,7 @@ const FileRenderer = ({ data }) => {
   
   if (!fileData) {
     return (
-      <div className="w-full p-4 text-center text-gray-500 border-2 border-dashed border-gray-300 rounded-lg">
+      <div className="w-full p-4 text-center text-dim border-2 border-dashed border-line rounded-lg">
         <File className="w-8 h-8 mx-auto mb-2" />
         <p className="text-sm">No file data available</p>
       </div>
@@ -36,13 +36,13 @@ const FileRenderer = ({ data }) => {
     const extension = fileName?.split('.').pop()?.toLowerCase();
     
     if (['jpg', 'jpeg', 'png', 'gif', 'bmp', 'svg', 'webp'].includes(extension)) {
-      return 'bg-green-100 border-green-300 text-green-800';
+      return 'bg-success/10 border-success/30 text-success';
     } else if (['xlsx', 'xls', 'csv', 'ods'].includes(extension)) {
-      return 'bg-emerald-100 border-emerald-300 text-emerald-800';
+      return 'bg-surface-hover border-line text-ink';
     } else if (['pdf', 'doc', 'docx', 'txt', 'rtf', 'odt'].includes(extension)) {
-      return 'bg-blue-100 border-blue-300 text-blue-800';
+      return 'bg-info/10 border-info/30 text-info';
     } else {
-      return 'bg-gray-100 border-gray-300 text-gray-800';
+      return 'bg-surface-hover border-line text-ink';
     }
   };
 
@@ -100,28 +100,28 @@ const FileRenderer = ({ data }) => {
                 e.stopPropagation();
                 downloadFile();
               }}
-              className="p-2 bg-white rounded-full hover:bg-gray-100 transition-colors shadow-lg"
+              className="p-2 bg-surface rounded-full hover:bg-surface-hover transition-colors shadow-lg"
               title="Download"
             >
-              <Download className="w-5 h-5 text-gray-700" />
+              <Download className="w-5 h-5 text-ink" />
             </button>
             <button
               onClick={(e) => {
                 e.stopPropagation();
                 openFile();
               }}
-              className="p-2 bg-white rounded-full hover:bg-gray-100 transition-colors shadow-lg"
+              className="p-2 bg-surface rounded-full hover:bg-surface-hover transition-colors shadow-lg"
               title="Open in new tab"
             >
-              <ExternalLink className="w-5 h-5 text-gray-700" />
+              <ExternalLink className="w-5 h-5 text-ink" />
             </button>
           </div>
         </div>
 
         {/* File Info Badge */}
         <div className="absolute top-2 left-2 bg-white/90 px-2 py-1 rounded text-xs max-w-[calc(100%-1rem)]">
-          <p className="font-medium truncate text-gray-900">{fileData.name}</p>
-          <p className="text-gray-600">{formatFileSize(fileData.size)}</p>
+          <p className="font-medium truncate text-ink">{fileData.name}</p>
+          <p className="text-dim">{formatFileSize(fileData.size)}</p>
         </div>
       </div>
     );
@@ -155,7 +155,7 @@ const FileRenderer = ({ data }) => {
               e.stopPropagation();
               setShowPreview(true);
             }}
-            className="flex items-center space-x-1 px-3 py-1 bg-white bg-opacity-75 hover:bg-opacity-100 rounded transition-colors text-xs border"
+            className="flex items-center space-x-1 px-3 py-1 bg-surface bg-opacity-75 hover:bg-opacity-100 rounded transition-colors text-xs border"
           >
             <Eye className="w-3 h-3" />
             <span>Preview</span>
@@ -165,7 +165,7 @@ const FileRenderer = ({ data }) => {
               e.stopPropagation();
               downloadFile();
             }}
-            className="flex items-center space-x-1 px-3 py-1 bg-white bg-opacity-75 hover:bg-opacity-100 rounded transition-colors text-xs border"
+            className="flex items-center space-x-1 px-3 py-1 bg-surface bg-opacity-75 hover:bg-opacity-100 rounded transition-colors text-xs border"
           >
             <Download className="w-3 h-3" />
             <span>Download</span>
@@ -175,7 +175,7 @@ const FileRenderer = ({ data }) => {
               e.stopPropagation();
               openFile();
             }}
-            className="flex items-center space-x-1 px-3 py-1 bg-white bg-opacity-75 hover:bg-opacity-100 rounded transition-colors text-xs border"
+            className="flex items-center space-x-1 px-3 py-1 bg-surface bg-opacity-75 hover:bg-opacity-100 rounded transition-colors text-xs border"
           >
             <ExternalLink className="w-3 h-3" />
             <span>Open</span>
@@ -184,7 +184,7 @@ const FileRenderer = ({ data }) => {
 
         {/* File Type Badge */}
         <div className="absolute top-2 right-2">
-          <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-white bg-opacity-75 border">
+          <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-surface bg-opacity-75 border">
             File
           </span>
         </div>
@@ -193,19 +193,19 @@ const FileRenderer = ({ data }) => {
       {/* File Preview Modal */}
       {showPreview && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-xl shadow-2xl max-w-4xl max-h-[90vh] overflow-hidden">
+          <div className="bg-surface rounded-xl shadow-2xl max-w-4xl max-h-[90vh] overflow-hidden">
             {/* Modal Header */}
-            <div className="flex items-center justify-between p-4 border-b border-gray-200">
+            <div className="flex items-center justify-between p-4 border-b border-line">
               <div className="flex items-center space-x-3">
                 <FileIcon className="w-6 h-6" />
                 <div>
-                  <h3 className="font-medium text-gray-900">{fileData.name}</h3>
-                  <p className="text-sm text-gray-600">{formatFileSize(fileData.size)}</p>
+                  <h3 className="font-medium text-ink">{fileData.name}</h3>
+                  <p className="text-sm text-dim">{formatFileSize(fileData.size)}</p>
                 </div>
               </div>
               <button
                 onClick={() => setShowPreview(false)}
-                className="text-gray-400 hover:text-gray-600 transition-colors"
+                className="text-dim hover:text-dim transition-colors"
               >
                 <X className="w-6 h-6" />
               </button>
@@ -214,19 +214,19 @@ const FileRenderer = ({ data }) => {
             {/* Modal Content */}
             <div className="p-4 max-h-[70vh] overflow-auto">
               <div className="text-center py-12">
-                <FileIcon className="w-16 h-16 mx-auto mb-4 text-gray-400" />
-                <p className="text-gray-600 mb-4">Preview not available for this file type</p>
+                <FileIcon className="w-16 h-16 mx-auto mb-4 text-dim" />
+                <p className="text-dim mb-4">Preview not available for this file type</p>
                 <div className="flex items-center justify-center space-x-3">
                   <button
                     onClick={downloadFile}
-                    className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                    className="flex items-center space-x-2 px-4 py-2 bg-info text-white rounded-lg hover:bg-info transition-colors"
                   >
                     <Download className="w-4 h-4" />
                     <span>Download File</span>
                   </button>
                   <button
                     onClick={openFile}
-                    className="flex items-center space-x-2 px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
+                    className="flex items-center space-x-2 px-4 py-2 bg-cta text-cta-foreground rounded-lg hover:bg-cta transition-colors"
                   >
                     <ExternalLink className="w-4 h-4" />
                     <span>Open in New Tab</span>

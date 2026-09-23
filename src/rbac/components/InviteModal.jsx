@@ -171,47 +171,47 @@ export function InviteModal({ roles, onSubmit, onClose }) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-      <div className="bg-white rounded-xl shadow-xl w-full max-w-3xl mx-4 max-h-[90vh] flex flex-col">
+      <div className="bg-surface rounded-xl shadow-xl w-full max-w-3xl mx-4 max-h-[90vh] flex flex-col">
         {/* Header */}
-        <div className="flex items-start justify-between gap-4 p-5 border-b border-teal-100 bg-gradient-to-r from-teal-50 to-cyan-50">
+        <div className="flex items-start justify-between gap-4 p-5 border-b border-line bg-black">
           <div>
-            <p className="text-[11px] font-semibold tracking-wide uppercase text-teal-700">Team Access</p>
-            <h3 className="text-lg font-semibold text-gray-900">Invite Team Member</h3>
-            <p className="text-sm text-gray-600 mt-1">
+            <p className="text-[11px] font-semibold tracking-wide uppercase text-ink">Team Access</p>
+            <h3 className="text-lg font-semibold text-ink">Invite Team Member</h3>
+            <p className="text-sm text-dim mt-1">
               Assign an existing role or create a custom role in one flow.
             </p>
           </div>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-600 text-xl leading-none">&times;</button>
+          <button onClick={onClose} className="text-dim hover:text-dim text-xl leading-none">&times;</button>
         </div>
 
         {/* Body */}
         <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-5 space-y-4">
-          {error && <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">{error}</div>}
+          {error && <div className="p-3 bg-danger/10 border border-danger/20 rounded-lg text-sm text-danger">{error}</div>}
 
-          <div className="rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-xs text-gray-600">
+          <div className="rounded-lg border border-line bg-canvas px-3 py-2 text-xs text-dim">
             Steps: add recipient email, choose how to assign a role, then optionally tune permissions before sending.
           </div>
 
           {/* Email */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Email Address *</label>
+            <label className="block text-sm font-medium text-ink mb-1">Email Address *</label>
             <input type="email" required value={email} onChange={(e) => setEmail(e.target.value)}
               placeholder="colleague@company.com"
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-teal-500 focus:border-teal-500" />
+              className="w-full px-3 py-2 border border-line rounded-lg text-sm focus:ring-2 focus:ring-ink focus:border-line" />
           </div>
 
           {/* ── Role Mode Toggle ── */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Role *</label>
-            <div className="flex rounded-lg border border-gray-200 overflow-hidden mb-3">
+            <label className="block text-sm font-medium text-ink mb-2">Role *</label>
+            <div className="flex rounded-lg border border-line overflow-hidden mb-3">
               <button type="button" onClick={() => handleModeSwitch('select')}
                 className={`flex-1 px-3 py-2 text-sm font-medium transition-colors ${
-                  roleMode === 'select' ? 'bg-teal-600 text-white' : 'bg-gray-50 text-gray-600 hover:bg-gray-100'
+                  roleMode === 'select' ? 'bg-cta text-cta-foreground' : 'bg-canvas text-dim hover:bg-surface-hover'
                 }`}>Select Existing Role</button>
               {canCreateRoles && (
               <button type="button" onClick={() => handleModeSwitch('create')}
                 className={`flex-1 px-3 py-2 text-sm font-medium transition-colors ${
-                  roleMode === 'create' ? 'bg-teal-600 text-white' : 'bg-gray-50 text-gray-600 hover:bg-gray-100'
+                  roleMode === 'create' ? 'bg-cta text-cta-foreground' : 'bg-canvas text-dim hover:bg-surface-hover'
                 }`}>+ Create New Role</button>
               )}
             </div>
@@ -220,12 +220,12 @@ export function InviteModal({ roles, onSubmit, onClose }) {
             {roleMode === 'select' && (
               <>
                 {assignableRoles.length === 0 && (
-                  <div className="mb-3 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800">
+                  <div className="mb-3 rounded-lg border border-warning/20 bg-warning/10 px-3 py-2 text-xs text-warning">
                     You currently cannot assign any role. Contact a higher-level admin to grant assignment access.
                   </div>
                 )}
                 <select required value={roleId} onChange={(e) => handleRoleChange(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-teal-500 focus:border-teal-500">
+                  className="w-full px-3 py-2 border border-line rounded-lg text-sm focus:ring-2 focus:ring-ink focus:border-line">
                   <option value="">Select a role...</option>
                   {assignableRoles.map((r) => (
                     <option key={r.roleId} value={r.roleId}>{r.roleName}{r.description ? ` — ${r.description}` : ''}</option>
@@ -236,37 +236,37 @@ export function InviteModal({ roles, onSubmit, onClose }) {
                 {roleId && (
                   <div className="mt-3">
                     <div className="flex items-center justify-between mb-2">
-                      <label className="text-sm font-medium text-gray-700">
+                      <label className="text-sm font-medium text-ink">
                         Permissions
                         {existingOverrides && (
-                          <span className="ml-2 inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-amber-100 text-amber-700 border border-amber-200">Customized</span>
+                          <span className="ml-2 inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-warning/10 text-warning border border-warning/20">Customized</span>
                         )}
                       </label>
                       <div className="flex items-center gap-2">
                         {existingOverrides && (
                           <button type="button" onClick={() => setCurrentPermissions([...rolePermissions])}
-                            className="text-xs text-gray-500 hover:text-gray-700">Reset to default</button>
+                            className="text-xs text-dim hover:text-ink">Reset to default</button>
                         )}
                         <button type="button" onClick={() => setShowPermissions(!showPermissions)}
-                          className="text-xs text-teal-600 hover:text-teal-700 font-medium">
+                          className="text-xs text-ink hover:text-ink font-medium">
                           {showPermissions ? 'Hide' : 'Show & Customize'}
                         </button>
                       </div>
                     </div>
                     {loadingPerms ? (
-                      <div className="p-4 text-center text-sm text-gray-500">
-                        <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-teal-600 mx-auto mb-2" />Loading permissions...
+                      <div className="p-4 text-center text-sm text-dim">
+                        <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-line mx-auto mb-2" />Loading permissions...
                       </div>
                     ) : showPermissions && (
-                      <div className="border border-gray-200 rounded-lg overflow-hidden">
+                      <div className="border border-line rounded-lg overflow-hidden">
                         <EditablePermissionMatrix permissions={currentPermissions} onChange={setCurrentPermissions}
                           editable={true} compact={true} disabled={submitting} />
                       </div>
                     )}
                     {!showPermissions && !loadingPerms && (
-                      <p className="text-xs text-gray-500">
+                      <p className="text-xs text-dim">
                         {rolePermissions.length} permissions from the selected role.{' '}
-                        <button type="button" onClick={() => setShowPermissions(true)} className="text-teal-600 hover:underline">Click to customize</button>
+                        <button type="button" onClick={() => setShowPermissions(true)} className="text-ink hover:underline">Click to customize</button>
                       </p>
                     )}
                   </div>
@@ -277,22 +277,22 @@ export function InviteModal({ roles, onSubmit, onClose }) {
             {/* ====== CREATE NEW ROLE MODE ====== */}
             {roleMode === 'create' && (
               <div className="space-y-3">
-                <div className="rounded-lg border border-teal-200 bg-teal-50 px-3 py-2 text-xs text-teal-800">
+                <div className="rounded-lg border border-line bg-surface-hover px-3 py-2 text-xs text-ink">
                   New roles are reusable for future invitations. Role level controls hierarchy and assignment authority.
                 </div>
 
                 {/* Name + Hierarchy row */}
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="block text-xs font-medium text-gray-600 mb-1">Role Name *</label>
+                    <label className="block text-xs font-medium text-dim mb-1">Role Name *</label>
                     <input type="text" value={newRoleName} onChange={(e) => setNewRoleName(e.target.value)}
                       placeholder="e.g., Sales Lead"
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-teal-500 focus:border-teal-500" />
+                      className="w-full px-3 py-2 border border-line rounded-lg text-sm focus:ring-2 focus:ring-ink focus:border-line" />
                   </div>
                   <div>
-                    <label className="block text-xs font-medium text-gray-600 mb-1">Hierarchy Level *</label>
+                    <label className="block text-xs font-medium text-dim mb-1">Hierarchy Level *</label>
                     <select value={newRoleLevel} onChange={(e) => setNewRoleLevel(Number(e.target.value))}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-teal-500 focus:border-teal-500">
+                      className="w-full px-3 py-2 border border-line rounded-lg text-sm focus:ring-2 focus:ring-ink focus:border-line">
                       {HIERARCHY_OPTIONS.map((h) => (
                         <option key={h.value} value={h.value}>{h.label} (Level {h.value})</option>
                       ))}
@@ -302,17 +302,17 @@ export function InviteModal({ roles, onSubmit, onClose }) {
 
                 {/* Description */}
                 <div>
-                  <label className="block text-xs font-medium text-gray-600 mb-1">Description</label>
+                  <label className="block text-xs font-medium text-dim mb-1">Description</label>
                   <input type="text" value={newRoleDescription} onChange={(e) => setNewRoleDescription(e.target.value)}
                     placeholder="Brief description of this role"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-teal-500 focus:border-teal-500" />
+                    className="w-full px-3 py-2 border border-line rounded-lg text-sm focus:ring-2 focus:ring-ink focus:border-line" />
                 </div>
 
                 {/* Copy permissions from */}
                 <div>
-                  <label className="block text-xs font-medium text-gray-600 mb-1">Copy Permissions From</label>
+                  <label className="block text-xs font-medium text-dim mb-1">Copy Permissions From</label>
                   <select value={copyFromRoleId} onChange={(e) => handleCopyFrom(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-teal-500 focus:border-teal-500">
+                    className="w-full px-3 py-2 border border-line rounded-lg text-sm focus:ring-2 focus:ring-ink focus:border-line">
                     <option value="">Start from scratch</option>
                     {roles.map((r) => (
                       <option key={r.roleId} value={r.roleId}>{r.roleName}{r.isSystem ? ' (system)' : ''}</option>
@@ -323,19 +323,19 @@ export function InviteModal({ roles, onSubmit, onClose }) {
                 {/* Role permission matrix */}
                 <div>
                   <div className="flex items-center justify-between mb-2">
-                    <label className="text-sm font-medium text-gray-700">Role Permissions</label>
+                    <label className="text-sm font-medium text-ink">Role Permissions</label>
                     {copyFromRoleId && (
-                      <span className="text-xs text-gray-500">
+                      <span className="text-xs text-dim">
                         Copied from {roles.find(r => r.roleId === copyFromRoleId)?.roleName || 'source'} — customize below
                       </span>
                     )}
                   </div>
                   {loadingCopy ? (
-                    <div className="p-4 text-center text-sm text-gray-500">
-                      <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-teal-600 mx-auto mb-2" />Loading permissions...
+                    <div className="p-4 text-center text-sm text-dim">
+                      <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-line mx-auto mb-2" />Loading permissions...
                     </div>
                   ) : (
-                    <div className="border border-gray-200 rounded-lg overflow-hidden">
+                    <div className="border border-line rounded-lg overflow-hidden">
                       <EditablePermissionMatrix permissions={newRolePermissions}
                         onChange={(perms) => {
                           setNewRolePermissions(perms);
@@ -348,32 +348,32 @@ export function InviteModal({ roles, onSubmit, onClose }) {
 
                 {/* Per-member override toggle */}
                 {newRolePermissions.length > 0 && (
-                  <div className="border-t border-gray-100 pt-3">
+                  <div className="border-t border-line pt-3">
                     <div className="flex items-center justify-between">
                       <div>
-                        <p className="text-sm font-medium text-gray-700">
+                        <p className="text-sm font-medium text-ink">
                           Member-specific adjustments
                           {newRoleOverrides && (
-                            <span className="ml-2 inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-amber-100 text-amber-700 border border-amber-200">Customized</span>
+                            <span className="ml-2 inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-warning/10 text-warning border border-warning/20">Customized</span>
                           )}
                         </p>
-                        <p className="text-xs text-gray-500">Tweak permissions for this member only (won't change the saved role)</p>
+                        <p className="text-xs text-dim">Tweak permissions for this member only (won't change the saved role)</p>
                       </div>
                       <button type="button" onClick={() => {
                         const next = !showMemberOverride;
                         setShowMemberOverride(next);
                         if (next) setMemberPermissions([...newRolePermissions]);
-                      }} className="text-xs text-teal-600 hover:text-teal-700 font-medium">
+                      }} className="text-xs text-ink hover:text-ink font-medium">
                         {showMemberOverride ? 'Disable' : 'Enable'}
                       </button>
                     </div>
                     {showMemberOverride && (
-                      <div className="mt-2 border border-amber-200 rounded-lg overflow-hidden bg-amber-50/30">
-                        <div className="px-3 py-1.5 bg-amber-50 border-b border-amber-200 flex items-center justify-between">
-                          <span className="text-xs font-medium text-amber-700">Member Override (differs from saved role)</span>
+                      <div className="mt-2 border border-warning/20 rounded-lg overflow-hidden bg-warning">
+                        <div className="px-3 py-1.5 bg-warning/10 border-b border-warning/20 flex items-center justify-between">
+                          <span className="text-xs font-medium text-warning">Member Override (differs from saved role)</span>
                           {newRoleOverrides && (
                             <button type="button" onClick={() => setMemberPermissions([...newRolePermissions])}
-                              className="text-xs text-amber-600 hover:text-amber-800">Reset</button>
+                              className="text-xs text-warning hover:text-warning">Reset</button>
                           )}
                         </div>
                         <EditablePermissionMatrix permissions={memberPermissions} onChange={setMemberPermissions}
@@ -383,8 +383,8 @@ export function InviteModal({ roles, onSubmit, onClose }) {
                   </div>
                 )}
 
-                <div className="bg-teal-50 border border-teal-200 rounded-lg p-3">
-                  <p className="text-xs text-teal-700">
+                <div className="bg-surface-hover border border-line rounded-lg p-3">
+                  <p className="text-xs text-ink">
                     <strong>Note:</strong> This role will be saved and available for future invitations in the Roles tab.
                   </p>
                 </div>
@@ -393,8 +393,8 @@ export function InviteModal({ roles, onSubmit, onClose }) {
           </div>
 
           {/* ── Platform Access Info ── */}
-          <div className="bg-blue-50 border border-blue-200 rounded-lg px-4 py-3">
-            <p className="text-xs text-blue-700">
+          <div className="bg-info/10 border border-info/20 rounded-lg px-4 py-3">
+            <p className="text-xs text-info">
               <span className="font-medium">Platform access</span> is automatically determined by the
               permissions assigned to this member's role. No manual platform selection is needed.
             </p>
@@ -402,17 +402,17 @@ export function InviteModal({ roles, onSubmit, onClose }) {
 
           {/* Message */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Message (optional)</label>
+            <label className="block text-sm font-medium text-ink mb-1">Message (optional)</label>
             <textarea value={message} onChange={(e) => setMessage(e.target.value)} placeholder="Welcome to the team!"
-              rows={2} className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-teal-500 focus:border-teal-500 resize-none" />
+              rows={2} className="w-full px-3 py-2 border border-line rounded-lg text-sm focus:ring-2 focus:ring-ink focus:border-line resize-none" />
           </div>
         </form>
 
         {/* Footer */}
-        <div className="flex justify-end gap-3 p-5 border-t border-gray-200">
-          <button type="button" onClick={onClose} className="px-4 py-2 text-sm text-gray-600 hover:text-gray-800 border border-gray-200 rounded-lg">Cancel</button>
+        <div className="flex justify-end gap-3 p-5 border-t border-line">
+          <button type="button" onClick={onClose} className="px-4 py-2 text-sm text-dim hover:text-ink border border-line rounded-lg">Cancel</button>
           <button onClick={handleSubmit} disabled={isDisabled}
-            className="px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white text-sm font-medium rounded-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2">
+            className="px-4 py-2 bg-cta hover:bg-cta text-cta-foreground text-sm font-medium rounded-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2">
             {submitting ? (
               <><div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white" />
                 {roleMode === 'create' ? 'Creating Role & Sending...' : 'Sending...'}</>

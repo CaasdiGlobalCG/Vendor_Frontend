@@ -2,6 +2,7 @@ import React, { useState, useEffect, useContext } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { ArrowPathIcon, MagnifyingGlassIcon } from '@heroicons/react/24/outline';
 import ProjectCard from '../../components/ProjectPage/ProjectCard';
+import { PageHero, heroActionClass } from '../../components/ui';
 import { VendorContext } from '../../context/VendorContext';
 import { useRBAC } from '../../rbac/context/RBACContext';
 import { usePermission } from '../../rbac/hooks/usePermission';
@@ -241,43 +242,29 @@ const ProjectsPage = () => {
 
     return (
         <div className="mx-auto w-full max-w-[1600px] space-y-6 px-3 py-6 sm:px-5 lg:px-8 xl:px-10">
-            <div className="rounded-2xl border border-emerald-200/20 bg-gradient-to-r from-[#095B49] via-[#0A5F4B] to-[#000000] px-6 py-6 shadow-[0_16px_40px_rgba(6,95,70,0.22)]">
-                <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
-                    <div>
-                        <p className="text-xs uppercase tracking-[0.18em] text-emerald-100/90">Delivery Overview</p>
-                        <h1 className="mt-1 text-2xl font-semibold text-white font-['Poppins']">Projects List</h1>
-                        <p className="mt-2 max-w-3xl text-sm text-emerald-50/95">
-                            Review active engagements, workspace readiness, and ownership details in one place.
-                        </p>
-                        <div className="mt-4 flex flex-wrap gap-2">
-                            <span className="inline-flex items-center rounded-full border border-emerald-300/20 bg-black/20 px-2.5 py-1 text-xs font-medium text-emerald-50 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]">
-                                {projects.length} total
-                            </span>
-                            <span className="inline-flex items-center rounded-full border border-emerald-300/20 bg-black/20 px-2.5 py-1 text-xs font-medium text-emerald-50 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]">
-                                {displayedProjects.length} visible
-                            </span>
-                            <span className="inline-flex items-center rounded-full border border-emerald-300/20 bg-black/20 px-2.5 py-1 text-xs font-medium text-emerald-50 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]">
-                                {filterCounts.Pending || 0} pending
-                            </span>
-                        </div>
-                    </div>
-
-                    <div className="flex flex-wrap items-center gap-2">
-                        <span className="rounded-lg border border-emerald-300/20 bg-black/25 px-3 py-2 text-xs font-medium text-emerald-50 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]">
+            <PageHero
+                eyebrow="Delivery Overview"
+                title="Projects List"
+                description="Review active engagements, workspace readiness, and ownership details in one place."
+                chips={[
+                    `${projects.length} total`,
+                    `${displayedProjects.length} visible`,
+                    `${filterCounts.Pending || 0} pending`,
+                ]}
+                actions={(
+                    <>
+                        <span className="rounded-lg border border-white/20 bg-white/10 px-3 py-2 text-xs font-medium text-white/80">
                             Updated {formatDate(new Date())}
                         </span>
-                        <Link
-                            to="/VendorDashboard/leads"
-                            className="inline-flex items-center gap-1.5 rounded-lg border border-emerald-300/20 bg-black/30 px-3 py-2 text-sm font-medium text-emerald-50 transition-colors hover:bg-black/40 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]"
-                        >
+                        <Link to="/VendorDashboard/leads" className={heroActionClass}>
                             Leads
                             <ArrowPathIcon className="h-4 w-4" />
                         </Link>
-                    </div>
-                </div>
-            </div>
+                    </>
+                )}
+            />
 
-            <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
+            <div className="rounded-xl border border-line bg-surface p-4 ">
                 <div className="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
                     <div className="relative w-full xl:max-w-sm">
                         <input
@@ -285,9 +272,9 @@ const ProjectsPage = () => {
                             value={projectSearch}
                             onChange={(e) => setProjectSearch(e.target.value)}
                             placeholder="Search by project, manager, or ID"
-                            className="h-10 w-full rounded-lg border border-gray-300 bg-white pl-10 pr-3 text-sm text-gray-700 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-100"
+                            className="h-10 w-full rounded-lg border border-line bg-surface pl-10 pr-3 text-sm text-ink focus:border-line focus:outline-none focus:ring-2 focus:ring-ink"
                         />
-                        <MagnifyingGlassIcon className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+                        <MagnifyingGlassIcon className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4  text-dim" />
                     </div>
 
                     <div className="flex flex-wrap items-center gap-2">
@@ -297,13 +284,13 @@ const ProjectsPage = () => {
                                 onClick={() => setActiveFilter(filter)}
                                 className={`inline-flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
                                     activeFilter === filter
-                                        ? 'border border-emerald-200 bg-emerald-50 text-emerald-700'
-                                        : 'border border-gray-200 bg-gray-50 text-gray-600 hover:bg-gray-100'
+                                        ? 'border border-line bg-surface-hover text-ink'
+                                        : 'border border-line bg-canvas text-dim hover:bg-surface-hover'
                                 }`}
                             >
                                 {filter}
                                 <span className={`rounded-full px-1.5 py-0.5 text-[11px] ${
-                                    activeFilter === filter ? 'bg-white text-emerald-700' : 'bg-white text-gray-500'
+                                    activeFilter === filter ? 'bg-surface text-ink' : 'bg-surface text-dim'
                                 }`}>
                                     {filterCounts[filter] || 0}
                                 </span>
@@ -317,20 +304,20 @@ const ProjectsPage = () => {
                 {accessFeedback ? (
                     <div className={`rounded-lg border px-3 py-2 text-sm ${
                         accessFeedback.toLowerCase().includes('success')
-                            ? 'border-green-200 bg-green-50 text-green-700'
-                            : 'border-red-200 bg-red-50 text-red-700'
+                            ? 'border-success/20 bg-success/10 text-success'
+                            : 'border-danger/20 bg-danger/10 text-danger'
                     }`}>
                         {accessFeedback}
                     </div>
                 ) : null}
 
                 {loading ? (
-                    <div className="rounded-xl border border-gray-200 bg-white py-10 text-center shadow-sm">
-                        <ArrowPathIcon className="mx-auto h-8 w-8 animate-spin text-emerald-600" />
-                        <p className="mt-2 text-sm text-gray-500">Loading projects...</p>
+                    <div className="rounded-xl border border-line bg-surface py-10 text-center ">
+                        <ArrowPathIcon className="mx-auto h-8 w-8 animate-spin text-ink" />
+                        <p className="mt-2 text-sm text-dim">Loading projects...</p>
                     </div>
                 ) : error ? (
-                    <div className="rounded-xl border border-red-200 bg-red-50 py-10 text-center text-red-700">
+                    <div className="rounded-xl border border-danger/20 bg-danger/10 py-10 text-center text-danger">
                         {error}
                     </div>
                 ) : displayedProjects.length > 0 ? (
@@ -346,18 +333,18 @@ const ProjectsPage = () => {
                         ))}
                     </div>
                 ) : hasProjectScopeRestriction ? (
-                    <div className="rounded-xl border border-gray-200 bg-white py-12 text-center text-sm text-gray-500 shadow-sm">
+                    <div className="rounded-xl border border-line bg-surface py-12 text-center text-sm text-dim ">
                         You do not have access to any projects.
                     </div>
                 ) : (
-                    <div className="rounded-xl border border-gray-200 bg-white py-12 text-center shadow-sm">
-                        <p className="text-sm text-gray-600">No projects found matching the current filter.</p>
+                    <div className="rounded-xl border border-line bg-surface py-12 text-center ">
+                        <p className="text-sm text-dim">No projects found matching the current filter.</p>
                         <button
                             onClick={() => {
                                 setActiveFilter('All');
                                 setProjectSearch('');
                             }}
-                            className="mt-2 text-xs font-medium text-emerald-700 hover:text-emerald-800"
+                            className="mt-2 text-xs font-medium text-ink hover:text-ink"
                         >
                             Clear filters
                         </button>

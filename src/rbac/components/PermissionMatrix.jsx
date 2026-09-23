@@ -12,9 +12,9 @@ import { ACTION_LABELS, getModulesByCategory } from '../constants/modules';
 
 /** Colour config for category header badges */
 const CATEGORY_COLORS = {
-  core:   { bg: 'bg-blue-50',   text: 'text-blue-700',   border: 'border-blue-200' },
-  sales:  { bg: 'bg-purple-50', text: 'text-purple-700', border: 'border-purple-200' },
-  system: { bg: 'bg-gray-50',   text: 'text-gray-600',   border: 'border-gray-200' },
+  core:   { bg: 'bg-info/10',   text: 'text-info',   border: 'border-info/20' },
+  sales:  { bg: 'bg-surface-hover', text: 'text-ink', border: 'border-line' },
+  system: { bg: 'bg-canvas',   text: 'text-dim',   border: 'border-line' },
 };
 
 /**
@@ -35,23 +35,23 @@ export function PermissionMatrix({ moduleConfig } = {}) {
 
   return (
     <div className="overflow-x-auto">
-      <table className="min-w-full divide-y divide-gray-200">
-        <thead className="bg-gray-50">
+      <table className="min-w-full divide-y divide-line">
+        <thead className="bg-canvas">
           <tr>
-            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+            <th className="px-4 py-3 text-left text-xs font-medium text-dim uppercase tracking-wider">
               Module
             </th>
             {actions.map(action => (
               <th
                 key={action}
-                className="px-3 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider"
+                className="px-3 py-3 text-center text-xs font-medium text-dim uppercase tracking-wider"
               >
                 {ACTION_LABELS[action]}
               </th>
             ))}
           </tr>
         </thead>
-        <tbody className="bg-white divide-y divide-gray-100">
+        <tbody className="bg-surface divide-y divide-line">
           {groups.map(({ categoryKey, category, modules }) => (
             <React.Fragment key={categoryKey}>
               {/* ── Category Header Row ── */}
@@ -60,13 +60,13 @@ export function PermissionMatrix({ moduleConfig } = {}) {
                   <div className="flex items-center gap-2">
                     <span
                       className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold border
-                        ${CATEGORY_COLORS[categoryKey]?.bg || 'bg-gray-50'}
-                        ${CATEGORY_COLORS[categoryKey]?.text || 'text-gray-600'}
-                        ${CATEGORY_COLORS[categoryKey]?.border || 'border-gray-200'}`}
+                        ${CATEGORY_COLORS[categoryKey]?.bg || 'bg-canvas'}
+                        ${CATEGORY_COLORS[categoryKey]?.text || 'text-dim'}
+                        ${CATEGORY_COLORS[categoryKey]?.border || 'border-line'}`}
                     >
                       {category.label}
                     </span>
-                    <span className="text-xs text-gray-400">{category.description}</span>
+                    <span className="text-xs text-dim">{category.description}</span>
                   </div>
                 </td>
               </tr>
@@ -77,8 +77,8 @@ export function PermissionMatrix({ moduleConfig } = {}) {
                 const hasManage = isSuperAdmin || modulePerms.includes('manage');
 
                 return (
-                  <tr key={code} className="hover:bg-gray-50 transition-colors">
-                    <td className="px-4 py-2.5 text-sm font-medium text-gray-900 pl-8">
+                  <tr key={code} className="hover:bg-canvas transition-colors">
+                    <td className="px-4 py-2.5 text-sm font-medium text-ink pl-8">
                       {config.label}
                     </td>
                     {actions.map(action => {
@@ -86,11 +86,11 @@ export function PermissionMatrix({ moduleConfig } = {}) {
                       return (
                         <td key={action} className="px-3 py-2.5 text-center">
                           {hasAccess ? (
-                            <span className="inline-flex w-6 h-6 items-center justify-center rounded-full bg-emerald-100 text-emerald-600 text-xs font-bold">
+                            <span className="inline-flex w-6 h-6 items-center justify-center rounded-full bg-surface-hover text-ink text-xs font-bold">
                               ✓
                             </span>
                           ) : (
-                            <span className="inline-flex w-6 h-6 items-center justify-center rounded-full bg-gray-100 text-gray-400 text-xs">
+                            <span className="inline-flex w-6 h-6 items-center justify-center rounded-full bg-surface-hover text-dim text-xs">
                               —
                             </span>
                           )}

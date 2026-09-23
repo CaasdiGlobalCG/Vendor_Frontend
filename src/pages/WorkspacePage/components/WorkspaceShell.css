@@ -7,32 +7,32 @@
 
 :root {
   /* Bars: Pure crisp white theme */
-  --ws-bar-bg: #ffffff;
-  --ws-bar-bg-subtle: #f9fafb;
-  --ws-bar-bg-hover: #f3f4f6;
-  --ws-bar-bg-active: #e5e7eb;
-  --ws-bar-border: #e5e7eb;
-  --ws-bar-border-subtle: #f1f5f9;
+  --ws-bar-bg: rgb(var(--surface-card));
+  --ws-bar-bg-subtle: rgb(var(--canvas-bg));
+  --ws-bar-bg-hover: rgb(var(--surface-hover));
+  --ws-bar-bg-active: rgb(var(--border-subtle));
+  --ws-bar-border: rgb(var(--border-subtle));
+  --ws-bar-border-subtle: rgb(var(--surface-hover));
   
   /* Text colors on white bars */
-  --ws-text-main: #111827;
-  --ws-text-body: #374151;
-  --ws-text-muted: #6b7280;
-  --ws-text-faint: #9ca3af;
+  --ws-text-main: rgb(var(--text-primary));
+  --ws-text-body: rgb(var(--text-primary));
+  --ws-text-muted: rgb(var(--text-muted));
+  --ws-text-faint: rgb(var(--text-muted));
   
   /* Accent colors */
-  --ws-accent: #2563eb;
-  --ws-accent-hover: #1d4ed8;
-  --ws-accent-soft: #eff6ff;
-  --ws-accent-border: #bfdbfe;
+  --ws-accent: rgb(var(--status-info));
+  --ws-accent-hover: rgb(var(--status-info));
+  --ws-accent-soft: rgb(var(--status-info) / 0.1);
+  --ws-accent-border: rgb(var(--status-info) / 0.3);
   
   /* Canvas theme colors */
-  --ws-canvas-slate: #f8fafc;
-  --ws-canvas-slate-grid: #cbd5e1;
-  --ws-canvas-white: #ffffff;
-  --ws-canvas-white-grid: #e2e8f0;
-  --ws-canvas-blueprint: #f0f4f8;
-  --ws-canvas-blueprint-grid: #94a3b8;
+  --ws-canvas-slate: rgb(var(--canvas-bg));
+  --ws-canvas-slate-grid: rgb(var(--border-subtle));
+  --ws-canvas-white: rgb(var(--surface-card));
+  --ws-canvas-white-grid: rgb(var(--border-subtle));
+  --ws-canvas-blueprint: rgb(var(--canvas-bg));
+  --ws-canvas-blueprint-grid: rgb(var(--text-muted));
   
   --ws-radius-s: 6px;
   --ws-radius-m: 10px;
@@ -87,13 +87,13 @@
   width: 30px;
   height: 30px;
   border-radius: 8px;
-  background: #1e293b;
+  background: rgb(var(--status-info));
   display: flex;
   align-items: center;
   justify-content: center;
   font-weight: 700;
   font-size: 13px;
-  color: #ffffff;
+  color: rgb(var(--text-muted));
   flex-shrink: 0;
   letter-spacing: 0.5px;
   overflow: hidden;
@@ -135,7 +135,7 @@
 }
 
 .ws-role-pill {
-  border: 1px solid #d1d5db;
+  border: 1px solid rgb(var(--border-subtle));
   padding: 1px 7px;
   border-radius: 20px;
   font-size: 10px;
@@ -158,8 +158,8 @@
   min-width: 170px;
 }
 .ws-search-box:hover {
-  background: #ffffff;
-  border-color: #cbd5e1;
+  background: rgb(var(--surface-card));
+  border-color: rgb(var(--status-info) / 0.1);
   box-shadow: 0 1px 2px rgba(0,0,0,0.05);
 }
 .ws-search-box kbd {
@@ -167,7 +167,7 @@
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
   font-size: 10px;
   color: var(--ws-text-faint);
-  background: #ffffff;
+  background: rgb(var(--surface-card));
   border: 1px solid var(--ws-bar-border);
   border-radius: 4px;
   padding: 1px 5px;
@@ -179,7 +179,7 @@
   gap: 6px;
   background: rgba(16, 185, 129, 0.08);
   border: 1px solid rgba(16, 185, 129, 0.25);
-  color: #059669;
+  color: rgb(var(--text-primary));
   padding: 4px 10px 4px 8px;
   border-radius: 20px;
   font-size: 11.5px;
@@ -189,7 +189,7 @@
   width: 6px;
   height: 6px;
   border-radius: 50%;
-  background: #10b981;
+  background: rgb(var(--cta-action));
   box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.6);
   animation: wsPulse 2s infinite;
 }
@@ -207,14 +207,14 @@
   width: 28px;
   height: 28px;
   border-radius: 50%;
-  border: 2px solid #ffffff;
+  border: 2px solid rgb(var(--border-subtle));
   margin-left: -8px;
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 11px;
   font-weight: 600;
-  color: #ffffff;
+  color: rgb(var(--text-muted));
   box-shadow: 0 1px 2px rgba(0,0,0,0.08);
 }
 .ws-avatar:first-child {
@@ -247,8 +247,8 @@
 }
 
 .ws-btn-primary {
-  background: #111827;
-  color: #ffffff;
+  background: rgb(var(--status-info));
+  color: rgb(var(--text-muted));
   border: none;
   padding: 7px 14px;
   border-radius: var(--ws-radius-s);
@@ -262,7 +262,7 @@
   box-shadow: 0 1px 2px rgba(0,0,0,0.05);
 }
 .ws-btn-primary:hover {
-  background: #1f2937;
+  background: rgb(var(--status-info));
   transform: translateY(-0.5px);
   box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
@@ -341,11 +341,11 @@
   background: var(--ws-bar-bg-hover);
 }
 .ws-dock-agent {
-  color: #7c3aed;
+  color: rgb(var(--text-primary));
 }
 .ws-dock-agent:hover {
-  background: #f5f3ff;
-  color: #6d28d9;
+  background: rgb(var(--status-info) / 0.1);
+  color: rgb(var(--text-primary));
 }
 .ws-dock-item.active {
   color: var(--ws-accent);
@@ -412,7 +412,7 @@
   width: 6px;
 }
 .ws-panel-body::-webkit-scrollbar-thumb {
-  background: #e2e8f0;
+  background: rgb(var(--status-info) / 0.1);
   border-radius: 3px;
 }
 
@@ -436,7 +436,7 @@
   margin-bottom: 12px;
 }
 .ws-chip {
-  background: #ffffff;
+  background: rgb(var(--surface-card));
   border: 1px solid var(--ws-bar-border);
   border-radius: var(--ws-radius-m);
   padding: 10px 8px 8px;
@@ -496,7 +496,7 @@
   border-radius: var(--ws-radius-m);
   overflow: hidden;
   cursor: grab;
-  background: #ffffff;
+  background: rgb(var(--surface-card));
   transition: all 0.15s ease;
   box-shadow: 0 1px 2px rgba(0,0,0,0.02);
 }
@@ -510,7 +510,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #ffffff;
+  color: rgb(var(--text-muted));
   font-size: 13px;
   font-weight: 700;
   letter-spacing: 0.5px;
@@ -570,7 +570,7 @@
   z-index: 5;
 }
 .ws-drop-frame {
-  border: 1.5px dashed #cbd5e1;
+  border: 1.5px dashed rgb(var(--status-info) / 0.1);
   border-radius: var(--ws-radius-l);
   padding: 40px 28px 32px;
   background: rgba(255, 255, 255, 0.85);
@@ -588,7 +588,7 @@
   width: 44px;
   height: 44px;
   margin: 0 auto 16px;
-  color: #94a3b8;
+  color: rgb(var(--status-info));
 }
 .ws-drop-title {
   font-size: 18px;
@@ -606,8 +606,8 @@
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  background: #111827;
-  color: #ffffff;
+  background: rgb(var(--status-info));
+  color: rgb(var(--text-muted));
   border: none;
   padding: 9px 18px;
   border-radius: var(--ws-radius-s);
@@ -618,7 +618,7 @@
   transition: all 0.15s ease;
 }
 .ws-drop-cta:hover {
-  background: #1f2937;
+  background: rgb(var(--status-info));
   transform: translateY(-1px);
   box-shadow: 0 4px 8px rgba(0,0,0,0.12);
 }
@@ -686,7 +686,7 @@
 }
 
 .ws-leave-link {
-  color: #dc2626;
+  color: rgb(var(--status-danger));
   cursor: pointer;
   font-weight: 500;
   transition: color 0.15s ease;
@@ -694,5 +694,5 @@
 }
 .ws-leave-link:hover {
   text-decoration: underline;
-  color: #b91c1c;
+  color: rgb(var(--status-danger));
 }

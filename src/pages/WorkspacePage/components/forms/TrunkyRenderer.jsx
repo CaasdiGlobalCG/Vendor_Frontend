@@ -130,13 +130,13 @@ const TrunkyRenderer = ({ data }) => {
 
   if (loading) {
     return (
-      <div className="w-full max-w-md mx-auto bg-white rounded-xl shadow-lg border border-gray-200 p-6">
+      <div className="w-full max-w-md mx-auto bg-surface rounded-xl shadow-lg border border-line p-6">
         <div className="animate-pulse">
-          <div className="h-4 bg-gray-200 rounded w-3/4 mb-4"></div>
-          <div className="h-3 bg-gray-200 rounded w-1/2 mb-6"></div>
+          <div className="h-4 bg-surface-hover rounded w-3/4 mb-4"></div>
+          <div className="h-3 bg-surface-hover rounded w-1/2 mb-6"></div>
           <div className="space-y-3">
-            <div className="h-8 bg-gray-200 rounded"></div>
-            <div className="h-8 bg-gray-200 rounded"></div>
+            <div className="h-8 bg-surface-hover rounded"></div>
+            <div className="h-8 bg-surface-hover rounded"></div>
           </div>
         </div>
       </div>
@@ -145,11 +145,11 @@ const TrunkyRenderer = ({ data }) => {
 
   if (error) {
     return (
-      <div className="w-full max-w-md mx-auto bg-white rounded-xl shadow-lg border border-red-200 p-6">
+      <div className="w-full max-w-md mx-auto bg-surface rounded-xl shadow-lg border border-danger/20 p-6">
         <div className="text-center">
-          <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-4" />
-          <h3 className="text-lg font-semibold text-red-700 mb-2">Error Loading Data</h3>
-          <p className="text-red-600 text-sm">{error}</p>
+          <AlertCircle className="w-12 h-12 text-danger mx-auto mb-4" />
+          <h3 className="text-lg font-semibold text-danger mb-2">Error Loading Data</h3>
+          <p className="text-danger text-sm">{error}</p>
         </div>
       </div>
     );
@@ -157,11 +157,11 @@ const TrunkyRenderer = ({ data }) => {
 
   if (!trunkyData?.task) {
     return (
-      <div className="w-full max-w-md mx-auto bg-white rounded-xl shadow-lg border border-gray-200 p-6">
+      <div className="w-full max-w-md mx-auto bg-surface rounded-xl shadow-lg border border-line p-6">
         <div className="text-center">
-          <AlertCircle className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-          <h3 className="text-lg font-semibold text-gray-700 mb-2">No Trunky Data Found</h3>
-          <p className="text-gray-600 text-sm">No tasks or test cases available to display.</p>
+          <AlertCircle className="w-12 h-12 text-dim mx-auto mb-4" />
+          <h3 className="text-lg font-semibold text-ink mb-2">No Trunky Data Found</h3>
+          <p className="text-dim text-sm">No tasks or test cases available to display.</p>
         </div>
       </div>
     );
@@ -175,7 +175,7 @@ const TrunkyRenderer = ({ data }) => {
       {/* Task Selector Modal */}
       {showTaskSelector && availableTasks.length > 0 && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-xl p-6 max-w-md w-full mx-4">
+          <div className="bg-surface rounded-xl p-6 max-w-md w-full mx-4">
             <h3 className="text-lg font-semibold mb-4">Select Trunky Task</h3>
             <div className="space-y-2 max-h-60 overflow-y-auto">
               {availableTasks.map((task) => (
@@ -184,13 +184,13 @@ const TrunkyRenderer = ({ data }) => {
                   onClick={() => handleTaskChange(task.id)}
                   className={`w-full text-left p-3 rounded-lg border transition-colors ${
                     selectedTaskId === task.id
-                      ? 'border-blue-300 bg-blue-50'
-                      : 'border-gray-200 hover:border-gray-300'
+                      ? 'border-info/30 bg-info/10'
+                      : 'border-line hover:border-line'
                   }`}
                 >
                   <div className="font-medium">{task.name}</div>
-                  <div className="text-sm text-gray-600">{task.phase}</div>
-                  <div className="text-xs text-gray-500 mt-1">
+                  <div className="text-sm text-dim">{task.phase}</div>
+                  <div className="text-xs text-dim mt-1">
                     {task.testCases?.length || 0} test cases
                   </div>
                 </button>
@@ -198,7 +198,7 @@ const TrunkyRenderer = ({ data }) => {
             </div>
             <button
               onClick={() => setShowTaskSelector(false)}
-              className="mt-4 w-full px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-colors"
+              className="mt-4 w-full px-4 py-2 bg-surface-hover hover:bg-surface-hover text-ink rounded-lg transition-colors"
             >
               Cancel
             </button>
@@ -207,34 +207,34 @@ const TrunkyRenderer = ({ data }) => {
       )}
 
       {/* Main Task Card */}
-      <div className="bg-white rounded-xl shadow-lg border border-gray-200 p-6 relative">
+      <div className="bg-surface rounded-xl shadow-lg border border-line p-6 relative">
         {/* Status Indicator and Settings */}
         <div className="absolute top-4 right-4 flex items-center space-x-2">
           {availableTasks.length > 1 && (
             <button
               onClick={() => setShowTaskSelector(true)}
-              className="w-6 h-6 bg-gray-100 hover:bg-gray-200 rounded-full flex items-center justify-center transition-colors"
+              className="w-6 h-6 bg-surface-hover hover:bg-surface-hover rounded-full flex items-center justify-center transition-colors"
               title="Change Task"
             >
-              <Settings className="w-3 h-3 text-gray-600" />
+              <Settings className="w-3 h-3 text-dim" />
             </button>
           )}
-          <div className="w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center">
+          <div className="w-6 h-6 bg-info rounded-full flex items-center justify-center">
             <Clock className="w-3 h-3 text-white" />
           </div>
         </div>
 
         {/* Task Header */}
         <div className="mb-4">
-          <h3 className="text-lg font-semibold text-gray-900 mb-1">{task.name}</h3>
-          <p className="text-sm text-gray-600">{task.phase}</p>
+          <h3 className="text-lg font-semibold text-ink mb-1">{task.name}</h3>
+          <p className="text-sm text-dim">{task.phase}</p>
         </div>
 
         {/* Completed Steps */}
         <div className="mb-4">
           <div className="flex flex-wrap gap-2 mb-3">
             {task.completedSteps.map((step, index) => (
-              <div key={index} className="flex items-center space-x-1 bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm">
+              <div key={index} className="flex items-center space-x-1 bg-success/10 text-success px-3 py-1 rounded-full text-sm">
                 <CheckCircle className="w-3 h-3" />
                 <span>{step}</span>
               </div>
@@ -242,14 +242,14 @@ const TrunkyRenderer = ({ data }) => {
           </div>
           
           {/* Test Cases Link */}
-          <div className="inline-flex items-center space-x-1 bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm">
+          <div className="inline-flex items-center space-x-1 bg-info/10 text-info px-3 py-1 rounded-full text-sm">
             <span>test cases({task.testCases?.length || 0})</span>
           </div>
         </div>
 
         {/* Resource Summary */}
-        <div className="border-t border-gray-100 pt-4">
-          <div className="flex items-center justify-between text-sm text-gray-600">
+        <div className="border-t border-line pt-4">
+          <div className="flex items-center justify-between text-sm text-dim">
             <div className="flex items-center space-x-1">
               <Users className="w-4 h-4" />
               <span>{task.humanResources} human</span>
@@ -267,24 +267,24 @@ const TrunkyRenderer = ({ data }) => {
         <div className="space-y-3">
           {/* Connecting Line */}
           <div className="flex justify-center">
-            <div className="w-px h-8 bg-gray-300 border-l-2 border-dashed border-gray-300"></div>
+            <div className="w-px h-8 bg-surface-hover border-l-2 border-dashed border-line"></div>
           </div>
 
           {/* Test Cases */}
           {task.testCases.map((testCase, index) => (
             <div key={testCase.id}>
-              <div className={`bg-white rounded-xl shadow-md border-2 p-4 transition-all duration-200 hover:shadow-lg ${
+              <div className={`bg-surface rounded-xl  border-2 p-4 transition-all duration-200  ${
                 testCase.status === 'active' 
-                  ? 'border-blue-300 bg-blue-50' 
-                  : 'border-gray-200 hover:border-gray-300'
+                  ? 'border-info/30 bg-info/10' 
+                  : 'border-line hover:border-line'
               }`}>
                 <div className="text-center">
-                  <h4 className="font-medium text-gray-900 mb-1">{testCase.name}</h4>
-                  <div className="flex items-center justify-center space-x-2 text-xs text-gray-600">
+                  <h4 className="font-medium text-ink mb-1">{testCase.name}</h4>
+                  <div className="flex items-center justify-center space-x-2 text-xs text-dim">
                     <span className={`px-2 py-1 rounded-full ${
                       testCase.status === 'active' 
-                        ? 'bg-blue-100 text-blue-800' 
-                        : 'bg-gray-100 text-gray-600'
+                        ? 'bg-info/10 text-info' 
+                        : 'bg-surface-hover text-dim'
                     }`}>
                       {testCase.status}
                     </span>
@@ -296,7 +296,7 @@ const TrunkyRenderer = ({ data }) => {
               {/* Connecting Line between test cases */}
               {index < task.testCases.length - 1 && (
                 <div className="flex justify-center py-2">
-                  <div className="w-px h-6 bg-gray-300 border-l-2 border-dashed border-gray-300"></div>
+                  <div className="w-px h-6 bg-surface-hover border-l-2 border-dashed border-line"></div>
                 </div>
               )}
             </div>
@@ -306,15 +306,15 @@ const TrunkyRenderer = ({ data }) => {
         <div className="space-y-3">
           {/* Connecting Line */}
           <div className="flex justify-center">
-            <div className="w-px h-8 bg-gray-300 border-l-2 border-dashed border-gray-300"></div>
+            <div className="w-px h-8 bg-surface-hover border-l-2 border-dashed border-line"></div>
           </div>
 
           {/* No Test Cases Message */}
-          <div className="bg-white rounded-xl shadow-md border border-gray-200 p-6">
+          <div className="bg-surface rounded-xl  border border-line p-6">
             <div className="text-center">
-              <AlertCircle className="w-8 h-8 text-gray-400 mx-auto mb-3" />
-              <h4 className="font-medium text-gray-700 mb-1">No Test Cases Found</h4>
-              <p className="text-sm text-gray-500">No test cases have been created for this task yet.</p>
+              <AlertCircle className="w-8 h-8 text-dim mx-auto mb-3" />
+              <h4 className="font-medium text-ink mb-1">No Test Cases Found</h4>
+              <p className="text-sm text-dim">No test cases have been created for this task yet.</p>
             </div>
           </div>
         </div>

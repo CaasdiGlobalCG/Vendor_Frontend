@@ -689,16 +689,16 @@ const WorkspacePage = () => {
 
   // Helper function to get status color
   const getStatusColor = (status = '') => {
-    if (!status) return 'bg-gray-100 text-gray-800';
+    if (!status) return 'bg-surface-hover text-ink';
     const statusLower = status.toLowerCase();
     if (statusLower.includes('paid') || statusLower.includes('approved')) {
-      return 'bg-green-100 text-green-800';
+      return 'bg-success/10 text-success';
     } else if (statusLower.includes('pending') || statusLower.includes('draft')) {
-      return 'bg-yellow-100 text-yellow-800';
+      return 'bg-warning/10 text-warning';
     } else if (statusLower.includes('rejected') || statusLower.includes('overdue')) {
-      return 'bg-red-100 text-red-800';
+      return 'bg-danger/10 text-danger';
     }
-    return 'bg-gray-100 text-gray-800';
+    return 'bg-surface-hover text-ink';
   };
 
   // Transform API data to match the expected format for elementOptions
@@ -776,8 +776,8 @@ const WorkspacePage = () => {
           name: 'Smart Note', 
           type: 'smart-note', 
           preview: 'AI-powered sticky note with smart actions',
-          icon: <StickyNote className="w-4 h-4 mr-2 text-yellow-600" />,
-          color: 'bg-yellow-100 border-yellow-200 text-yellow-800 hover:bg-yellow-200',
+          icon: <StickyNote className="w-4 h-4 mr-2 text-warning" />,
+          color: 'bg-warning/10 border-warning/20 text-warning hover:bg-warning/20',
           nodeType: 'smartNote',
           data: { label: 'Smart Note' }
         },
@@ -786,8 +786,8 @@ const WorkspacePage = () => {
           name: 'Calendar Event', 
           type: 'calendar-event', 
           preview: 'Schedule meetings and send invites',
-          icon: <Calendar className="w-4 h-4 mr-2 text-blue-600" />,
-          color: 'bg-blue-50 border-blue-200 text-blue-800 hover:bg-blue-100',
+          icon: <Calendar className="w-4 h-4 mr-2 text-info" />,
+          color: 'bg-info/10 border-info/20 text-info hover:bg-info/10',
           nodeType: 'calendarNode',
           data: { label: 'Calendar Event' }
         },
@@ -796,8 +796,8 @@ const WorkspacePage = () => {
           name: 'Approval Board', 
           type: 'approval-board', 
           preview: 'Track and manage approval workflows',
-          icon: <ClipboardCheck className="w-4 h-4 mr-2 text-green-600" />,
-          color: 'bg-green-50 border-green-200 text-green-800 hover:bg-green-100',
+          icon: <ClipboardCheck className="w-4 h-4 mr-2 text-success" />,
+          color: 'bg-success/10 border-success/20 text-success hover:bg-success/10',
           nodeType: 'approvalBoard',
           data: { label: 'Approval Board' }
         },
@@ -806,8 +806,8 @@ const WorkspacePage = () => {
           name: 'AI Helper', 
           type: 'ai-helper', 
           preview: 'Summarize, suggest next steps, or generate flows with AI',
-          icon: <Sparkles className="w-4 h-4 mr-2 text-purple-600" />,
-          color: 'bg-purple-50 border-purple-200 text-purple-800 hover:bg-purple-100',
+          icon: <Sparkles className="w-4 h-4 mr-2 text-ink" />,
+          color: 'bg-surface-hover border-line text-ink hover:bg-surface-hover',
           nodeType: 'aiHelper',
           data: { label: 'AI Helper' }
         }
@@ -1509,42 +1509,42 @@ const WorkspacePage = () => {
       id: 1,
       name: 'Interior work',
       type: 'folder',
-      color: 'bg-green-500',
+      color: 'bg-success',
       items: [
-        { id: 101, name: 'Internal Interior', type: 'file', color: 'bg-blue-500', status: 'active' },
-        { id: 102, name: 'Checkout', type: 'file', color: 'bg-blue-500', status: 'pending' }
+        { id: 101, name: 'Internal Interior', type: 'file', color: 'bg-info', status: 'active' },
+        { id: 102, name: 'Checkout', type: 'file', color: 'bg-info', status: 'pending' }
       ]
     },
     {
       id: 2,
       name: 'Marketing',
       type: 'folder',
-      color: 'bg-green-500',
+      color: 'bg-success',
       items: [
-        { id: 201, name: 'Brand Guidelines', type: 'file', color: 'bg-blue-500', status: 'completed' },
-        { id: 202, name: 'Social Media', type: 'file', color: 'bg-blue-500', status: 'in-progress' }
+        { id: 201, name: 'Brand Guidelines', type: 'file', color: 'bg-info', status: 'completed' },
+        { id: 202, name: 'Social Media', type: 'file', color: 'bg-info', status: 'in-progress' }
       ]
     },
     {
       id: 3,
       name: 'Inventory',
       type: 'folder',
-      color: 'bg-purple-500',
+      color: 'bg-cta',
       items: [
-        { id: 301, name: 'Stock Count', type: 'file', color: 'bg-blue-500', status: 'pending' },
-        { id: 302, name: 'Warehouse Layout', type: 'file', color: 'bg-blue-500', status: 'draft' }
+        { id: 301, name: 'Stock Count', type: 'file', color: 'bg-info', status: 'pending' },
+        { id: 302, name: 'Warehouse Layout', type: 'file', color: 'bg-info', status: 'draft' }
       ]
     }
   ];
 
   // Element categories and options for the elements panel
   const elementCategories = [
-    { id: 'forms', name: 'Forms', icon: 'Grid', color: 'bg-yellow-100 text-yellow-800' },
-    { id: 'tables', name: 'Tables', icon: 'Table', color: 'bg-gray-100 text-gray-800' },
-    { id: 'charts', name: 'Charts', icon: 'BarChart3', color: 'bg-blue-100 text-blue-800' },
-    { id: 'icons', name: 'Icons', icon: 'Square', color: 'bg-purple-100 text-purple-800' },
-    { id: 'list', name: 'List', icon: 'List', color: 'bg-green-100 text-green-800' },
-    { id: 'other', name: 'other elements', icon: 'Grid', color: 'bg-gray-100 text-gray-800' }
+    { id: 'forms', name: 'Forms', icon: 'Grid', color: 'bg-warning/10 text-warning' },
+    { id: 'tables', name: 'Tables', icon: 'Table', color: 'bg-surface-hover text-ink' },
+    { id: 'charts', name: 'Charts', icon: 'BarChart3', color: 'bg-info/10 text-info' },
+    { id: 'icons', name: 'Icons', icon: 'Square', color: 'bg-surface-hover text-ink' },
+    { id: 'list', name: 'List', icon: 'List', color: 'bg-success/10 text-success' },
+    { id: 'other', name: 'other elements', icon: 'Grid', color: 'bg-surface-hover text-ink' }
   ];
 
   // Removed duplicate elementOptions declaration
@@ -2122,9 +2122,9 @@ const WorkspacePage = () => {
   };
 
   const recentActivities = [
-    { id: 1, type: 'completed', user: 'Bob Johnson', action: 'Completed task Create wireframes for app', time: '10 mins ago', icon: 'CheckCircle', color: 'text-green-500' },
-    { id: 2, type: 'deadline', user: 'System', action: 'Task approaching deadline Finalize project proposal', time: '1 hour ago', icon: 'AlertTriangle', color: 'text-red-500' },
-    { id: 3, type: 'completed', user: 'Bob Johnson', action: 'Completed task Create wireframes for app', time: '2 hours ago', icon: 'FileText', color: 'text-blue-500' }
+    { id: 1, type: 'completed', user: 'Bob Johnson', action: 'Completed task Create wireframes for app', time: '10 mins ago', icon: 'CheckCircle', color: 'text-success' },
+    { id: 2, type: 'deadline', user: 'System', action: 'Task approaching deadline Finalize project proposal', time: '1 hour ago', icon: 'AlertTriangle', color: 'text-danger' },
+    { id: 3, type: 'completed', user: 'Bob Johnson', action: 'Completed task Create wireframes for app', time: '2 hours ago', icon: 'FileText', color: 'text-info' }
   ];
 
   const messages = [
@@ -2275,11 +2275,11 @@ const WorkspacePage = () => {
   // Show loading state
   if (workspaceLoading) {
     return (
-      <div className="flex items-center justify-center h-screen bg-gray-50">
+      <div className="flex items-center justify-center h-screen bg-canvas">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <h2 className="text-xl font-semibold text-gray-900 mb-2">Loading Workspace</h2>
-          <p className="text-gray-600">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-info mx-auto mb-4"></div>
+          <h2 className="text-xl font-semibold text-ink mb-2">Loading Workspace</h2>
+          <p className="text-dim">
             {leadDetails?.name ? `Loading workspace for "${leadDetails.name}"` : 'Preparing your collaborative workspace...'}
           </p>
         </div>
@@ -2290,18 +2290,18 @@ const WorkspacePage = () => {
   // Show error state
   if (workspaceError) {
     return (
-      <div className="flex items-center justify-center h-screen bg-gray-50">
+      <div className="flex items-center justify-center h-screen bg-canvas">
         <div className="text-center max-w-md">
-          <div className="text-red-500 mb-4">
+          <div className="text-danger mb-4">
             <svg className="h-16 w-16 mx-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
           </div>
-          <h2 className="text-xl font-semibold text-gray-900 mb-2">Workspace Error</h2>
-          <p className="text-gray-600 mb-4">{workspaceError}</p>
+          <h2 className="text-xl font-semibold text-ink mb-2">Workspace Error</h2>
+          <p className="text-dim mb-4">{workspaceError}</p>
           <button
             onClick={() => navigate(-1)}
-            className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors"
+            className="bg-info text-white px-4 py-2 rounded-md hover:bg-info transition-colors"
           >
             Go Back
           </button>
@@ -2417,17 +2417,17 @@ const WorkspacePage = () => {
         <div className="ws-body">
           {/* Mobile panel toggle buttons — fixed bottom bar */}
           {isMobile && (
-            <div className="fixed bottom-0 left-0 right-0 z-40 bg-white border-t border-gray-200 flex items-center justify-around px-4 py-2 safe-area-pb">
+            <div className="fixed bottom-0 left-0 right-0 z-40 bg-surface border-t border-line flex items-center justify-around px-4 py-2 safe-area-pb">
               <button
                 onClick={() => { setMobileLeftOpen(p => !p); setMobileRightOpen(false); }}
-                className={`flex items-center space-x-1 px-3 py-2 rounded-lg text-xs font-medium transition-colors ${mobileLeftOpen ? 'bg-blue-100 text-blue-700' : 'text-gray-600 hover:bg-gray-100'}`}
+                className={`flex items-center space-x-1 px-3 py-2 rounded-lg text-xs font-medium transition-colors ${mobileLeftOpen ? 'bg-info/10 text-info' : 'text-dim hover:bg-surface-hover'}`}
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h7" /></svg>
                 <span>Tasks</span>
               </button>
               <button
                 onClick={() => { setMobileRightOpen(p => !p); setMobileLeftOpen(false); }}
-                className={`flex items-center space-x-1 px-3 py-2 rounded-lg text-xs font-medium transition-colors ${mobileRightOpen ? 'bg-blue-100 text-blue-700' : 'text-gray-600 hover:bg-gray-100'}`}
+                className={`flex items-center space-x-1 px-3 py-2 rounded-lg text-xs font-medium transition-colors ${mobileRightOpen ? 'bg-info/10 text-info' : 'text-dim hover:bg-surface-hover'}`}
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
                 <span>Activity</span>
@@ -2772,7 +2772,7 @@ const WorkspacePage = () => {
 
       {/* Invoice Tool Full Screen */}
       {showInvoiceTool && (
-        <div className="fixed inset-0 z-50 bg-white">
+        <div className="fixed inset-0 z-50 bg-surface">
           <InvoiceToolReplica 
             onClose={() => navigate(location.pathname.replace('/invoices', ''))}
             workspaceId={workspaceId}

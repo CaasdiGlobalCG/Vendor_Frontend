@@ -102,29 +102,29 @@ const PMLogin = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-black flex items-center justify-center p-4">
       <div className="max-w-md w-full space-y-8">
         {/* Header */}
         <div className="text-center">
-          <h2 className="mt-6 text-3xl font-extrabold text-gray-900">
+          <h2 className="mt-6 text-3xl font-extrabold text-ink">
             Project Manager Login
           </h2>
-          <p className="mt-2 text-sm text-gray-600">
+          <p className="mt-2 text-sm text-dim">
             Access your collaborative project dashboard
           </p>
         </div>
 
         {/* Login Form */}
-        <form className="mt-8 space-y-6 bg-white p-8 rounded-xl shadow-lg" onSubmit={handleSubmit}>
+        <form className="mt-8 space-y-6 bg-surface p-8 rounded-xl shadow-lg" onSubmit={handleSubmit}>
           {error && (
-            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
+            <div className="bg-danger/10 border border-danger/20 text-danger px-4 py-3 rounded-lg">
               {error}
             </div>
           )}
 
           <div className="space-y-4">
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700">
+              <label htmlFor="email" className="block text-sm font-medium text-ink">
                 Email Address
               </label>
               <input
@@ -134,13 +134,13 @@ const PMLogin = () => {
                 required
                 value={credentials.email}
                 onChange={(e) => setCredentials({...credentials, email: e.target.value})}
-                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                className="mt-1 block w-full px-3 py-2 border border-line rounded-md  focus:outline-none focus:ring-info focus:border-info"
                 placeholder="Enter your PM email"
               />
             </div>
 
             <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700">
+              <label htmlFor="password" className="block text-sm font-medium text-ink">
                 Password
               </label>
               <input
@@ -150,7 +150,7 @@ const PMLogin = () => {
                 required
                 value={credentials.password}
                 onChange={(e) => setCredentials({...credentials, password: e.target.value})}
-                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                className="mt-1 block w-full px-3 py-2 border border-line rounded-md  focus:outline-none focus:ring-info focus:border-info"
                 placeholder="Enter your password"
               />
             </div>
@@ -159,25 +159,25 @@ const PMLogin = () => {
           <button
             type="submit"
             disabled={loading}
-            className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
+            className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md  text-sm font-medium text-white bg-info hover:bg-info focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-info disabled:opacity-50"
           >
             {loading ? 'Signing in...' : 'Sign in as PM'}
           </button>
         </form>
 
         {/* Quick Login Options */}
-        <div className="bg-white p-6 rounded-xl shadow-lg">
-          <h3 className="text-lg font-medium text-gray-900 mb-4">Quick Login (Testing)</h3>
+        <div className="bg-surface p-6 rounded-xl shadow-lg">
+          <h3 className="text-lg font-medium text-ink mb-4">Quick Login (Testing)</h3>
           <div className="space-y-3">
             {samplePMs.map((pm) => (
               <button
                 key={pm.id}
                 onClick={() => handleQuickLogin(pm)}
-                className="w-full text-left p-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+                className="w-full text-left p-3 border border-line rounded-lg hover:bg-canvas transition-colors"
               >
-                <div className="font-medium text-gray-900">{pm.name}</div>
-                <div className="text-sm text-gray-600">{pm.email}</div>
-                <div className="text-xs text-gray-500">{pm.company} • {pm.specialization}</div>
+                <div className="font-medium text-ink">{pm.name}</div>
+                <div className="text-sm text-dim">{pm.email}</div>
+                <div className="text-xs text-dim">{pm.company} • {pm.specialization}</div>
               </button>
             ))}
           </div>
@@ -187,7 +187,7 @@ const PMLogin = () => {
         <div className="text-center">
           <button
             onClick={() => navigate('/login')}
-            className="text-sm text-blue-600 hover:text-blue-800"
+            className="text-sm text-info hover:text-info"
           >
             ← Back to Vendor Login
           </button>

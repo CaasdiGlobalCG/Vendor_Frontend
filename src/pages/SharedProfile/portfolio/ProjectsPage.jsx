@@ -10,30 +10,30 @@ export default function ProjectsPage({ projects, accentColor = '#F5A623' }) {
   const projectList = Array.isArray(projects) ? projects : [];
 
   return (
-    <div pageTitle="Our Projects" className="bg-white relative overflow-hidden" style={{ minHeight: '1123px' }}>
+    <div pageTitle="Our Projects" className="bg-surface relative overflow-hidden" style={{ minHeight: '1123px' }}>
       {/* ===== HEADER ===== */}
       <div className="px-10 md:px-14 pt-10 pb-6 flex items-start gap-8">
         <div className="flex-1">
           <div className="flex items-center gap-3 mb-2">
             <div className="w-10 h-[3px]" style={{ backgroundColor: accentColor }} />
-            <span className="text-[10px] font-bold uppercase tracking-[0.3em] text-gray-400">Case Studies</span>
+            <span className="text-[10px] font-bold uppercase tracking-[0.3em] text-dim">Case Studies</span>
           </div>
-          <h2 className="text-4xl font-black text-gray-900 tracking-tight">
+          <h2 className="text-4xl font-black text-ink tracking-tight">
             Featured <span className="italic font-light" style={{ color: accentColor }}>Projects</span>
           </h2>
-          <p className="text-gray-500 text-xs mt-2 leading-relaxed max-w-lg">
+          <p className="text-dim text-xs mt-2 leading-relaxed max-w-lg">
             A selection of our most impactful work, showcasing our expertise and commitment to excellence.
           </p>
         </div>
         {/* Stats */}
         <div className="text-right flex-shrink-0">
           <div className="text-4xl font-black" style={{ color: accentColor }}>{projectList.length}</div>
-          <p className="text-[9px] text-gray-400 font-bold uppercase tracking-wider">Projects</p>
+          <p className="text-[9px] text-dim font-bold uppercase tracking-wider">Projects</p>
         </div>
       </div>
 
       {/* Divider */}
-      <div className="mx-10 md:mx-14 h-[2px] bg-gray-100 mb-6 relative">
+      <div className="mx-10 md:mx-14 h-[2px] bg-surface-hover mb-6 relative">
         <div className="absolute left-0 top-0 h-full w-20" style={{ backgroundColor: accentColor }} />
       </div>
 
@@ -53,35 +53,35 @@ export default function ProjectsPage({ projects, accentColor = '#F5A623' }) {
               const isFirst = i === 0;
 
               return (
-                <div key={i} className="relative rounded-sm overflow-hidden border border-gray-100"
-                  style={{ borderLeftWidth: '3px', borderLeftColor: isFirst ? accentColor : '#e5e5e5' }}>
+                <div key={i} className="relative rounded-sm overflow-hidden border border-line"
+                  style={{ borderLeftWidth: '3px', borderLeftColor: isFirst ? accentColor: 'rgb(var(--surface-hover))' }}>
                   {/* Card header */}
-                  <div className="flex items-center gap-4 p-5 cursor-pointer hover:bg-gray-50 transition-colors"
+                  <div className="flex items-center gap-4 p-5 cursor-pointer hover:bg-canvas transition-colors"
                     onClick={() => setExpandedIdx(isExpanded ? null : i)}>
                     {/* Number badge */}
                     <div className="w-10 h-10 rounded-sm flex items-center justify-center flex-shrink-0 text-sm font-black"
                       style={{
-                        backgroundColor: isFirst ? accentColor : '#1a1a1a',
+                        backgroundColor: isFirst ? accentColor: 'rgb(var(--text-ink))',
                         color: 'white'
                       }}>
                       {String(i + 1).padStart(2, '0')}
                     </div>
 
                     <div className="flex-1 min-w-0">
-                      <h4 className="font-bold text-sm text-gray-900 truncate">{name}</h4>
+                      <h4 className="font-bold text-sm text-ink truncate">{name}</h4>
                       <div className="flex items-center gap-3 mt-1 flex-wrap">
                         {client && (
-                          <span className="flex items-center gap-1 text-[9px] text-gray-400">
+                          <span className="flex items-center gap-1 text-[9px] text-dim">
                             <Users size={8} /> {client}
                           </span>
                         )}
                         {location && (
-                          <span className="flex items-center gap-1 text-[9px] text-gray-400">
+                          <span className="flex items-center gap-1 text-[9px] text-dim">
                             <MapPin size={8} /> {location}
                           </span>
                         )}
                         {duration && (
-                          <span className="flex items-center gap-1 text-[9px] text-gray-400">
+                          <span className="flex items-center gap-1 text-[9px] text-dim">
                             <Calendar size={8} /> {duration}
                           </span>
                         )}
@@ -109,7 +109,7 @@ export default function ProjectsPage({ projects, accentColor = '#F5A623' }) {
                     )}
 
                     {desc && (
-                      <button className="w-7 h-7 rounded-full bg-gray-100 flex items-center justify-center flex-shrink-0">
+                      <button className="w-7 h-7 rounded-full bg-surface-hover flex items-center justify-center flex-shrink-0">
                         {isExpanded ? <ChevronUp size={12} /> : <ChevronDown size={12} />}
                       </button>
                     )}
@@ -117,8 +117,8 @@ export default function ProjectsPage({ projects, accentColor = '#F5A623' }) {
 
                   {/* Expanded detail */}
                   {isExpanded && desc && (
-                    <div className="px-5 pb-5 pt-0 border-t border-gray-100">
-                      <p className="text-gray-600 text-xs leading-relaxed mt-3">{desc}</p>
+                    <div className="px-5 pb-5 pt-0 border-t border-line">
+                      <p className="text-dim text-xs leading-relaxed mt-3">{desc}</p>
                     </div>
                   )}
                 </div>
@@ -126,15 +126,15 @@ export default function ProjectsPage({ projects, accentColor = '#F5A623' }) {
             })}
           </div>
         ) : (
-          <div className="text-center py-20 bg-gray-50 rounded-sm">
-            <FolderOpen size={32} className="mx-auto mb-3 text-gray-300" />
-            <p className="text-gray-400 text-sm">Projects will appear here</p>
+          <div className="text-center py-20 bg-canvas rounded-sm">
+            <FolderOpen size={32} className="mx-auto mb-3 text-dim" />
+            <p className="text-dim text-sm">Projects will appear here</p>
           </div>
         )}
 
         {projectList.length > 5 && (
           <div className="mt-4 text-center">
-            <span className="text-[10px] font-bold uppercase tracking-widest text-gray-400">
+            <span className="text-[10px] font-bold uppercase tracking-widest text-dim">
               + {projectList.length - 5} more projects
             </span>
           </div>
@@ -142,7 +142,7 @@ export default function ProjectsPage({ projects, accentColor = '#F5A623' }) {
       </div>
 
       {/* Bottom accent */}
-      <div className="absolute bottom-0 left-0 right-0 h-2 bg-gray-900">
+      <div className="absolute bottom-0 left-0 right-0 h-2 bg-cta">
         <div className="h-full w-16" style={{ backgroundColor: accentColor }} />
       </div>
     </div>

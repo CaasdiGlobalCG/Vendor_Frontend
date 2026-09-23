@@ -67,17 +67,17 @@ export function InviteMemberModal({
       onClick={handleClose}
     >
       <div
-        className="bg-white rounded-xl shadow-xl w-full max-w-md mx-4 p-6"
+        className="bg-surface rounded-xl shadow-xl w-full max-w-md mx-4 p-6"
         onClick={e => e.stopPropagation()}
       >
         {/* Header */}
         <div className="flex items-center justify-between mb-5">
-          <h3 className="text-lg font-semibold text-gray-900">
+          <h3 className="text-lg font-semibold text-ink">
             Invite Team Member
           </h3>
           <button
             onClick={handleClose}
-            className="text-gray-400 hover:text-gray-600 transition-colors"
+            className="text-dim hover:text-dim transition-colors"
             aria-label="Close modal"
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -90,7 +90,7 @@ export function InviteMemberModal({
         <form onSubmit={handleSubmit} className="space-y-4">
           {/* Email input */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-ink mb-1">
               Email Address
             </label>
             <input
@@ -99,24 +99,24 @@ export function InviteMemberModal({
               onChange={e => setEmail(e.target.value)}
               placeholder="colleague@company.com"
               disabled={isLoading}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg
-                         focus:ring-2 focus:ring-teal-500 focus:border-teal-500
-                         text-sm disabled:bg-gray-50 disabled:text-gray-400"
+              className="w-full px-3 py-2 border border-line rounded-lg
+                         focus:ring-2 focus:ring-ink focus:border-line
+                         text-sm disabled:bg-canvas disabled:text-dim"
             />
           </div>
 
           {/* Role selector */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-ink mb-1">
               Role
             </label>
             <select
               value={selectedRole}
               onChange={e => setSelectedRole(e.target.value)}
               disabled={isLoading}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg
-                         focus:ring-2 focus:ring-teal-500 focus:border-teal-500
-                         text-sm disabled:bg-gray-50"
+              className="w-full px-3 py-2 border border-line rounded-lg
+                         focus:ring-2 focus:ring-ink focus:border-line
+                         text-sm disabled:bg-canvas"
             >
               <option value="">Select a role...</option>
               {roles
@@ -131,7 +131,7 @@ export function InviteMemberModal({
 
           {/* Error message */}
           {error && (
-            <p className="text-sm text-red-600 bg-red-50 px-3 py-2 rounded-lg">
+            <p className="text-sm text-danger bg-danger/10 px-3 py-2 rounded-lg">
               {error}
             </p>
           )}
@@ -142,16 +142,16 @@ export function InviteMemberModal({
               type="button"
               onClick={handleClose}
               disabled={isLoading}
-              className="px-4 py-2 text-sm text-gray-700 bg-gray-100 rounded-lg
-                         hover:bg-gray-200 disabled:opacity-50 transition-colors"
+              className="px-4 py-2 text-sm text-ink bg-surface-hover rounded-lg
+                         hover:bg-surface-hover disabled:opacity-50 transition-colors"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={isLoading}
-              className="px-4 py-2 text-sm text-white bg-teal-600 rounded-lg
-                         hover:bg-teal-700 disabled:opacity-50 transition-colors"
+              className="px-4 py-2 text-sm text-cta-foreground bg-cta rounded-lg
+                         hover:bg-cta disabled:opacity-50 transition-colors"
             >
               {isLoading ? 'Sending...' : 'Send Invite'}
             </button>

@@ -101,9 +101,9 @@ const ProofOfDeliveryBlock = ({ data, nodeId, workspaceId, setNodes }) => {
   };
 
   return (
-    <div className="w-full bg-white rounded-lg overflow-hidden">
+    <div className="w-full bg-surface rounded-lg overflow-hidden">
       {/* Header */}
-      <div className="bg-gradient-to-r from-green-500 to-green-600 p-4">
+      <div className="bg-black p-4">
         <div className="flex items-center gap-2">
           <CheckCircle className="w-6 h-6 text-white" />
           <h3 className="text-lg font-bold text-white">Proof of Delivery (POD)</h3>
@@ -114,7 +114,7 @@ const ProofOfDeliveryBlock = ({ data, nodeId, workspaceId, setNodes }) => {
       <div className="p-4 space-y-4">
         {/* Recipient Info */}
         <div>
-          <label className="text-sm font-medium text-gray-700">Recipient Name</label>
+          <label className="text-sm font-medium text-ink">Recipient Name</label>
           <input
             type="text"
             name="recipientName"
@@ -126,9 +126,9 @@ const ProofOfDeliveryBlock = ({ data, nodeId, workspaceId, setNodes }) => {
         </div>
 
         {/* Signature Pad */}
-        <div className="border rounded-lg p-3 bg-gray-50">
+        <div className="border rounded-lg p-3 bg-canvas">
           <h4 className="font-semibold mb-2 text-sm">📝 Signature</h4>
-          <div className="border-2 border-dashed border-gray-300 rounded bg-white mb-2">
+          <div className="border-2 border-dashed border-line rounded bg-surface mb-2">
             <canvas
               ref={canvasRef}
               width={480}
@@ -137,25 +137,25 @@ const ProofOfDeliveryBlock = ({ data, nodeId, workspaceId, setNodes }) => {
               onMouseMove={draw}
               onMouseUp={stopDrawing}
               onMouseLeave={stopDrawing}
-              className="w-full cursor-crosshair bg-white rounded"
+              className="w-full cursor-crosshair bg-surface rounded"
             />
           </div>
           <div className="flex gap-2">
             <button
               onClick={saveSignature}
-              className="flex-1 px-3 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg text-sm font-medium"
+              className="flex-1 px-3 py-2 bg-success hover:bg-success text-white rounded-lg text-sm font-medium"
             >
               Save Signature
             </button>
             <button
               onClick={clearSignature}
-              className="px-3 py-2 border border-red-300 text-red-600 rounded-lg text-sm font-medium hover:bg-red-50"
+              className="px-3 py-2 border border-danger/30 text-danger rounded-lg text-sm font-medium hover:bg-danger/10"
             >
               Clear
             </button>
           </div>
           {signatureData && (
-            <div className="mt-2 p-2 bg-green-50 border border-green-200 rounded text-xs text-green-700 flex items-center gap-2">
+            <div className="mt-2 p-2 bg-success/10 border border-success/20 rounded text-xs text-success flex items-center gap-2">
               <CheckCircle className="w-4 h-4" />
               Signature captured
             </div>
@@ -163,12 +163,12 @@ const ProofOfDeliveryBlock = ({ data, nodeId, workspaceId, setNodes }) => {
         </div>
 
         {/* Photo Upload */}
-        <div className="border rounded-lg p-3 bg-gray-50">
+        <div className="border rounded-lg p-3 bg-canvas">
           <h4 className="font-semibold mb-2 text-sm">📸 Photos</h4>
-          <label className="flex items-center justify-center px-4 py-6 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:border-blue-400 hover:bg-blue-50 transition-colors">
+          <label className="flex items-center justify-center px-4 py-6 border-2 border-dashed border-line rounded-lg cursor-pointer hover:border-info hover:bg-info/10 transition-colors">
             <div className="text-center">
-              <Camera className="mx-auto h-8 w-8 text-gray-400" />
-              <p className="text-sm text-gray-600">Click to upload photos</p>
+              <Camera className="mx-auto h-8 w-8 text-dim" />
+              <p className="text-sm text-dim">Click to upload photos</p>
             </div>
             <input
               type="file"
@@ -187,15 +187,15 @@ const ProofOfDeliveryBlock = ({ data, nodeId, workspaceId, setNodes }) => {
                   <img
                     src={photo.url}
                     alt="POD"
-                    className="w-full h-24 object-cover rounded border border-gray-200"
+                    className="w-full h-24 object-cover rounded border border-line"
                   />
                   <button
                     onClick={() => removePhoto(photo.id)}
-                    className="absolute top-1 right-1 p-1 bg-red-500 text-white rounded opacity-0 group-hover:opacity-100 transition-opacity"
+                    className="absolute top-1 right-1 p-1 bg-danger text-white rounded opacity-0 group-hover:opacity-100 transition-opacity"
                   >
                     <Trash2 className="w-4 h-4" />
                   </button>
-                  <p className="text-xs text-gray-500 mt-1">
+                  <p className="text-xs text-dim mt-1">
                     {new Date(photo.timestamp).toLocaleString()}
                   </p>
                 </div>
@@ -206,7 +206,7 @@ const ProofOfDeliveryBlock = ({ data, nodeId, workspaceId, setNodes }) => {
 
         {/* Delivery Notes */}
         <div>
-          <label className="text-sm font-medium text-gray-700">Delivery Notes</label>
+          <label className="text-sm font-medium text-ink">Delivery Notes</label>
           <textarea
             name="deliveryNotes"
             placeholder="Add any additional delivery notes or comments"
@@ -218,19 +218,19 @@ const ProofOfDeliveryBlock = ({ data, nodeId, workspaceId, setNodes }) => {
 
         {/* Timestamp */}
         <div>
-          <p className="text-xs text-gray-600 font-medium">Delivery Time</p>
-          <p className="text-sm font-semibold text-gray-900 mt-1">
+          <p className="text-xs text-dim font-medium">Delivery Time</p>
+          <p className="text-sm font-semibold text-ink mt-1">
             {new Date(formData.timestamp).toLocaleString()}
           </p>
         </div>
 
         {/* Status Summary */}
-        <div className="border rounded-lg p-3 bg-green-50 border-green-200">
+        <div className="border rounded-lg p-3 bg-success/10 border-success/20">
           <div className="flex items-start gap-2">
-            <CheckCircle className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
+            <CheckCircle className="w-5 h-5 text-success flex-shrink-0 mt-0.5" />
             <div>
-              <p className="text-sm font-semibold text-green-900">Delivery Confirmation</p>
-              <div className="mt-1 space-y-1 text-xs text-green-800">
+              <p className="text-sm font-semibold text-success">Delivery Confirmation</p>
+              <div className="mt-1 space-y-1 text-xs text-success">
                 <p>✓ Signature: {signatureData ? 'Captured' : 'Pending'}</p>
                 <p>✓ Photos: {photos.length > 0 ? `${photos.length} captured` : 'No photos'}</p>
                 <p>✓ Recipient: {formData.recipientName || 'Not provided'}</p>
@@ -241,10 +241,10 @@ const ProofOfDeliveryBlock = ({ data, nodeId, workspaceId, setNodes }) => {
       </div>
 
       {/* Actions */}
-      <div className="p-4 bg-gray-50 border-t flex gap-2 justify-end">
+      <div className="p-4 bg-canvas border-t flex gap-2 justify-end">
         <button
           onClick={handleSave}
-          className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg text-sm font-medium"
+          className="px-4 py-2 bg-success hover:bg-success text-white rounded-lg text-sm font-medium"
         >
           Save POD
         </button>

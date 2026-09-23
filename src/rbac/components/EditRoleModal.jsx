@@ -95,54 +95,54 @@ export function EditRoleModal({ roleId, onClose, onUpdated, onError }) {
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/40"
       onClick={(e) => { if (e.target === e.currentTarget) onClose?.(); }}
     >
-      <div className="bg-white rounded-xl shadow-xl w-full max-w-3xl mx-4 max-h-[90vh] flex flex-col">
+      <div className="bg-surface rounded-xl shadow-xl w-full max-w-3xl mx-4 max-h-[90vh] flex flex-col">
         {/* Header */}
-        <div className="flex items-center justify-between p-5 border-b border-gray-200">
+        <div className="flex items-center justify-between p-5 border-b border-line">
           <div>
-            <h3 className="text-lg font-medium text-gray-900">
+            <h3 className="text-lg font-medium text-ink">
               {loading ? 'Loading Role...' : `Edit Role: ${role?.roleName}`}
             </h3>
             {role && (
-              <p className="text-xs text-gray-500 mt-0.5">
+              <p className="text-xs text-dim mt-0.5">
                 {isSystem ? 'System role — name cannot be changed' : 'Custom role'}
                 {' · '}Level {role.level} ({HIERARCHY_LABELS[role.level] || 'Custom'})
               </p>
             )}
           </div>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-600 text-xl leading-none">&times;</button>
+          <button onClick={onClose} className="text-dim hover:text-dim text-xl leading-none">&times;</button>
         </div>
 
         {/* Body */}
         {loading ? (
           <div className="p-8 text-center">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-teal-500 mx-auto mb-3" />
-            <p className="text-sm text-gray-500">Loading role details...</p>
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-line mx-auto mb-3" />
+            <p className="text-sm text-dim">Loading role details...</p>
           </div>
         ) : (
           <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-5 space-y-4">
             {isSuperAdmin && (
-              <div className="p-3 bg-amber-50 border border-amber-200 rounded-lg text-sm text-amber-700">
+              <div className="p-3 bg-warning/10 border border-warning/20 rounded-lg text-sm text-warning">
                 Super Admin permissions cannot be modified — this role always has full access.
               </div>
             )}
 
             {/* Role Name */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Role Name</label>
+              <label className="block text-sm font-medium text-ink mb-1">Role Name</label>
               <input
                 type="text"
                 value={roleName}
                 onChange={(e) => setRoleName(e.target.value)}
                 disabled={isSystem}
                 maxLength={50}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-teal-500 focus:border-teal-500
-                           disabled:bg-gray-50 disabled:text-gray-500"
+                className="w-full px-3 py-2 border border-line rounded-lg text-sm focus:ring-2 focus:ring-ink focus:border-line
+                           disabled:bg-canvas disabled:text-dim"
               />
             </div>
 
             {/* Description */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
+              <label className="block text-sm font-medium text-ink mb-1">Description</label>
               <input
                 type="text"
                 value={description}
@@ -150,16 +150,16 @@ export function EditRoleModal({ roleId, onClose, onUpdated, onError }) {
                 disabled={isSuperAdmin}
                 maxLength={200}
                 placeholder="Brief role description"
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-teal-500 focus:border-teal-500
-                           disabled:bg-gray-50 disabled:text-gray-500"
+                className="w-full px-3 py-2 border border-line rounded-lg text-sm focus:ring-2 focus:ring-ink focus:border-line
+                           disabled:bg-canvas disabled:text-dim"
               />
             </div>
 
             {/* Permission Matrix */}
             {!isSuperAdmin && (
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Permissions</label>
-                <div className="border border-gray-200 rounded-lg overflow-hidden">
+                <label className="block text-sm font-medium text-ink mb-2">Permissions</label>
+                <div className="border border-line rounded-lg overflow-hidden">
                   <EditablePermissionMatrix
                     permissions={permissions}
                     onChange={setPermissions}
@@ -174,15 +174,15 @@ export function EditRoleModal({ roleId, onClose, onUpdated, onError }) {
         )}
 
         {/* Footer */}
-        <div className="flex justify-end gap-3 p-5 border-t border-gray-200">
-          <button type="button" onClick={onClose} className="px-4 py-2 text-sm text-gray-600 hover:text-gray-800">
+        <div className="flex justify-end gap-3 p-5 border-t border-line">
+          <button type="button" onClick={onClose} className="px-4 py-2 text-sm text-dim hover:text-ink">
             Cancel
           </button>
           {!loading && !isSuperAdmin && (
             <button
               onClick={handleSubmit}
               disabled={saving}
-              className="px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white text-sm font-medium rounded-lg
+              className="px-4 py-2 bg-cta hover:bg-cta text-cta-foreground text-sm font-medium rounded-lg
                          disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
             >
               {saving ? (

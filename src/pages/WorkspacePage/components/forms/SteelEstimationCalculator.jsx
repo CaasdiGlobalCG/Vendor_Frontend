@@ -551,13 +551,13 @@ const SteelEstimationCalculator = ({ data, nodeId, workspaceId, setNodes }) => {
 
   const ConfigModal = () => (
     <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center">
-      <div className="bg-white rounded-lg shadow-2xl w-full max-w-3xl max-h-[92vh] overflow-y-auto">
-        <div className="sticky top-0 bg-white border-b border-gray-200 p-4 flex justify-between items-center">
+      <div className="bg-surface rounded-lg shadow-2xl w-full max-w-3xl max-h-[92vh] overflow-y-auto">
+        <div className="sticky top-0 bg-surface border-b border-line p-4 flex justify-between items-center">
           <div>
-            <h3 className="text-xl font-bold text-gray-900">Structural Steel Estimation</h3>
-            <p className="text-sm text-gray-600 mt-1">Professional COQ estimator for contractors</p>
+            <h3 className="text-xl font-bold text-ink">Structural Steel Estimation</h3>
+            <p className="text-sm text-dim mt-1">Professional COQ estimator for contractors</p>
           </div>
-          <button onClick={() => setShowConfigModal(false)} className="text-gray-400 hover:text-gray-600">
+          <button onClick={() => setShowConfigModal(false)} className="text-dim hover:text-dim">
             <X size={24} />
           </button>
         </div>
@@ -565,7 +565,7 @@ const SteelEstimationCalculator = ({ data, nodeId, workspaceId, setNodes }) => {
         <div className="p-6 space-y-4">
           {/* Calculation Mode Selector */}
           <div className="space-y-2">
-            <label className="block text-sm font-bold text-gray-900">Calculation Mode</label>
+            <label className="block text-sm font-bold text-ink">Calculation Mode</label>
             <div className="grid grid-cols-2 gap-2">
               {[
                 { id: 'area', label: '📐 Quick Area Method' },
@@ -577,8 +577,8 @@ const SteelEstimationCalculator = ({ data, nodeId, workspaceId, setNodes }) => {
                   onClick={() => setCalculationMode(mode.id)}
                   className={`p-3 rounded-lg border-2 transition-all text-left font-medium text-sm ${
                     calculationMode === mode.id
-                      ? 'border-blue-600 bg-blue-50'
-                      : 'border-gray-200 bg-white hover:border-blue-400'
+                      ? 'border-info bg-info/10'
+                      : 'border-line bg-surface hover:border-info'
                   }`}
                 >
                   {mode.label}
@@ -589,27 +589,27 @@ const SteelEstimationCalculator = ({ data, nodeId, workspaceId, setNodes }) => {
 
           {/* Quick Area Method */}
           {calculationMode === 'area' && (
-            <div className="border-t border-gray-200 pt-4 space-y-4">
+            <div className="border-t border-line pt-4 space-y-4">
               <div className="grid grid-cols-3 gap-3">
                 <div>
-                  <label htmlFor="areaLength" className="block text-xs font-medium text-gray-700">Length (m)</label>
-                  <input id="areaLength" type="number" value={areaLength} onChange={(e) => setAreaLength(e.target.value)} className="w-full px-2 py-2 border border-gray-300 rounded text-sm" step="0.1" />
+                  <label htmlFor="areaLength" className="block text-xs font-medium text-ink">Length (m)</label>
+                  <input id="areaLength" type="number" value={areaLength} onChange={(e) => setAreaLength(e.target.value)} className="w-full px-2 py-2 border border-line rounded text-sm" step="0.1" />
                 </div>
                 <div>
-                  <label htmlFor="areaWidth" className="block text-xs font-medium text-gray-700">Width (m)</label>
-                  <input id="areaWidth" type="number" value={areaWidth} onChange={(e) => setAreaWidth(e.target.value)} className="w-full px-2 py-2 border border-gray-300 rounded text-sm" step="0.1" />
+                  <label htmlFor="areaWidth" className="block text-xs font-medium text-ink">Width (m)</label>
+                  <input id="areaWidth" type="number" value={areaWidth} onChange={(e) => setAreaWidth(e.target.value)} className="w-full px-2 py-2 border border-line rounded text-sm" step="0.1" />
                 </div>
                 <div>
-                  <label htmlFor="floors" className="block text-xs font-medium text-gray-700">Floors</label>
-                  <input id="floors" type="number" value={floors} onChange={(e) => setFloors(e.target.value)} className="w-full px-2 py-2 border border-gray-300 rounded text-sm" step="1" />
+                  <label htmlFor="floors" className="block text-xs font-medium text-ink">Floors</label>
+                  <input id="floors" type="number" value={floors} onChange={(e) => setFloors(e.target.value)} className="w-full px-2 py-2 border border-line rounded text-sm" step="1" />
                 </div>
               </div>
 
               <div>
-                <label className="block text-xs font-medium text-gray-700 mb-2">Building Type</label>
+                <label className="block text-xs font-medium text-ink mb-2">Building Type</label>
                 <div className="grid grid-cols-2 gap-2">
                   {Object.entries(STEEL_FACTORS).map(([type, factor]) => (
-                    <button key={type} onClick={() => setBuildingType(type)} className={`p-2 rounded border-2 text-xs font-medium capitalize ${buildingType === type ? 'border-blue-600 bg-blue-50' : 'border-gray-200'}`}>
+                    <button key={type} onClick={() => setBuildingType(type)} className={`p-2 rounded border-2 text-xs font-medium capitalize ${buildingType === type ? 'border-info bg-info/10' : 'border-line'}`}>
                       {type} ({factor} kg/m²)
                     </button>
                   ))}
@@ -620,11 +620,11 @@ const SteelEstimationCalculator = ({ data, nodeId, workspaceId, setNodes }) => {
 
           {/* Element-wise Method - Slabs */}
           {calculationMode === 'element' && (
-            <div className="border-t border-gray-200 pt-4 space-y-4">
+            <div className="border-t border-line pt-4 space-y-4">
               <div>
-                <label className="block text-sm font-bold text-gray-900 mb-2">Slabs</label>
+                <label className="block text-sm font-bold text-ink mb-2">Slabs</label>
                 {slabs.map((slab, idx) => (
-                  <div key={idx} className="grid grid-cols-3 gap-2 mb-2 p-2 bg-gray-50 rounded">
+                  <div key={idx} className="grid grid-cols-3 gap-2 mb-2 p-2 bg-canvas rounded">
                     <input type="number" value={slab.length} onChange={(e) => { const newSlabs = [...slabs]; newSlabs[idx].length = e.target.value; setSlabs(newSlabs); }} placeholder="Length" className="px-2 py-1 border text-xs rounded" step="0.1" />
                     <input type="number" value={slab.width} onChange={(e) => { const newSlabs = [...slabs]; newSlabs[idx].width = e.target.value; setSlabs(newSlabs); }} placeholder="Width" className="px-2 py-1 border text-xs rounded" step="0.1" />
                     <input type="number" value={slab.thickness} onChange={(e) => { const newSlabs = [...slabs]; newSlabs[idx].thickness = e.target.value; setSlabs(newSlabs); }} placeholder="Thickness" className="px-2 py-1 border text-xs rounded" step="0.1" />
@@ -633,9 +633,9 @@ const SteelEstimationCalculator = ({ data, nodeId, workspaceId, setNodes }) => {
               </div>
 
               <div>
-                <label className="block text-sm font-bold text-gray-900 mb-2">Beams</label>
+                <label className="block text-sm font-bold text-ink mb-2">Beams</label>
                 {beams.map((beam, idx) => (
-                  <div key={idx} className="grid grid-cols-4 gap-2 mb-2 p-2 bg-gray-50 rounded">
+                  <div key={idx} className="grid grid-cols-4 gap-2 mb-2 p-2 bg-canvas rounded">
                     <input type="number" value={beam.length} onChange={(e) => { const newBeams = [...beams]; newBeams[idx].length = e.target.value; setBeams(newBeams); }} placeholder="Length" className="px-2 py-1 border text-xs rounded" step="0.1" />
                     <input type="number" value={beam.width} onChange={(e) => { const newBeams = [...beams]; newBeams[idx].width = e.target.value; setBeams(newBeams); }} placeholder="Width" className="px-2 py-1 border text-xs rounded" step="0.1" />
                     <input type="number" value={beam.depth} onChange={(e) => { const newBeams = [...beams]; newBeams[idx].depth = e.target.value; setBeams(newBeams); }} placeholder="Depth" className="px-2 py-1 border text-xs rounded" step="0.1" />
@@ -647,18 +647,18 @@ const SteelEstimationCalculator = ({ data, nodeId, workspaceId, setNodes }) => {
           )}
 
           {/* Common Advanced Options */}
-          <div className="border-t border-gray-200 pt-4 grid grid-cols-3 gap-3">
+          <div className="border-t border-line pt-4 grid grid-cols-3 gap-3">
             <div>
-              <label htmlFor="wastagePercent" className="block text-xs font-medium text-gray-700">Wastage (%)</label>
-              <input id="wastagePercent" type="number" value={wastagePercent} onChange={(e) => setWastagePercent(e.target.value)} className="w-full px-2 py-2 border border-gray-300 rounded text-sm" step="0.1" />
+              <label htmlFor="wastagePercent" className="block text-xs font-medium text-ink">Wastage (%)</label>
+              <input id="wastagePercent" type="number" value={wastagePercent} onChange={(e) => setWastagePercent(e.target.value)} className="w-full px-2 py-2 border border-line rounded text-sm" step="0.1" />
             </div>
             <div>
-              <label htmlFor="steelRate" className="block text-xs font-medium text-gray-700">Steel Rate (₹/kg)</label>
-              <input id="steelRate" type="number" value={steelRate} onChange={(e) => setSteelRate(e.target.value)} className="w-full px-2 py-2 border border-gray-300 rounded text-sm" />
+              <label htmlFor="steelRate" className="block text-xs font-medium text-ink">Steel Rate (₹/kg)</label>
+              <input id="steelRate" type="number" value={steelRate} onChange={(e) => setSteelRate(e.target.value)} className="w-full px-2 py-2 border border-line rounded text-sm" />
             </div>
             <div>
-              <label htmlFor="seismic" className="block text-xs font-medium text-gray-700">Seismic Zone</label>
-              <select id="seismic" value={seismicZone} onChange={(e) => setSeismicZone(e.target.value)} className="w-full px-2 py-2 border border-gray-300 rounded text-sm">
+              <label htmlFor="seismic" className="block text-xs font-medium text-ink">Seismic Zone</label>
+              <select id="seismic" value={seismicZone} onChange={(e) => setSeismicZone(e.target.value)} className="w-full px-2 py-2 border border-line rounded text-sm">
                 {Object.keys(SEISMIC_FACTORS).map(z => <option key={z} value={z}>{z.toUpperCase()}</option>)}
               </select>
             </div>
@@ -666,19 +666,19 @@ const SteelEstimationCalculator = ({ data, nodeId, workspaceId, setNodes }) => {
 
           {/* Validation Errors */}
           {validationErrors.length > 0 && (
-            <div className="bg-red-50 border-l-4 border-red-400 p-3 rounded">
-              <ul className="list-disc list-inside text-xs text-red-800 space-y-1">
+            <div className="bg-danger/10 border-l-4 border-danger p-3 rounded">
+              <ul className="list-disc list-inside text-xs text-danger space-y-1">
                 {validationErrors.map((err, i) => <li key={i}>{err}</li>)}
               </ul>
             </div>
           )}
 
           {/* Action Buttons */}
-          <div className="grid grid-cols-2 gap-3 pt-4 border-t border-gray-200">
-            <button onClick={() => setShowConfigModal(false)} className="bg-gray-200 hover:bg-gray-300 text-gray-900 font-bold py-2 rounded-lg text-sm">
+          <div className="grid grid-cols-2 gap-3 pt-4 border-t border-line">
+            <button onClick={() => setShowConfigModal(false)} className="bg-surface-hover hover:bg-surface-hover text-ink font-bold py-2 rounded-lg text-sm">
               Cancel
             </button>
-            <button onClick={runCalculation} className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 rounded-lg text-sm">
+            <button onClick={runCalculation} className="bg-info hover:bg-info text-white font-bold py-2 rounded-lg text-sm">
               Calculate & Estimate
             </button>
           </div>
@@ -689,10 +689,10 @@ const SteelEstimationCalculator = ({ data, nodeId, workspaceId, setNodes }) => {
 
   const DetailsModal = () => (
     <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center">
-      <div className="bg-white rounded-lg shadow-2xl w-full max-w-3xl max-h-[92vh] overflow-y-auto">
-        <div className="sticky top-0 bg-white border-b border-gray-200 p-4 flex justify-between items-center">
-          <h3 className="text-xl font-bold text-gray-900">Professional Estimation Breakdown</h3>
-          <button onClick={() => setShowDetailsModal(false)} className="text-gray-400 hover:text-gray-600">
+      <div className="bg-surface rounded-lg shadow-2xl w-full max-w-3xl max-h-[92vh] overflow-y-auto">
+        <div className="sticky top-0 bg-surface border-b border-line p-4 flex justify-between items-center">
+          <h3 className="text-xl font-bold text-ink">Professional Estimation Breakdown</h3>
+          <button onClick={() => setShowDetailsModal(false)} className="text-dim hover:text-dim">
             <X size={24} />
           </button>
         </div>
@@ -700,16 +700,16 @@ const SteelEstimationCalculator = ({ data, nodeId, workspaceId, setNodes }) => {
         {results && (
           <div className="p-6 space-y-4">
             {/* Main Summary */}
-            <div className="bg-blue-50 border-2 border-blue-200 rounded-lg p-4">
-              <p className="text-sm text-gray-600">Total Steel Required</p>
-              <p className="text-4xl font-bold text-blue-600">{results.totalSteel.toLocaleString()} kg</p>
-              <p className="text-sm text-gray-600 mt-1">≈ {results.steelTons} tons | Mode: {results.mode.toUpperCase()} | Wastage: {results.wastagePercent}%</p>
+            <div className="bg-info/10 border-2 border-info/20 rounded-lg p-4">
+              <p className="text-sm text-dim">Total Steel Required</p>
+              <p className="text-4xl font-bold text-info">{results.totalSteel.toLocaleString()} kg</p>
+              <p className="text-sm text-dim mt-1">≈ {results.steelTons} tons | Mode: {results.mode.toUpperCase()} | Wastage: {results.wastagePercent}%</p>
             </div>
 
             {/* Structural Summary */}
             {results.mode === 'element' && (
-              <div className="border border-gray-200 rounded-lg overflow-hidden">
-                <div className="bg-gray-50 p-3 border-b font-bold text-sm">Structural Element Summary</div>
+              <div className="border border-line rounded-lg overflow-hidden">
+                <div className="bg-canvas p-3 border-b font-bold text-sm">Structural Element Summary</div>
                 <div className="p-4 space-y-2 text-sm">
                   <div className="flex justify-between"><span>Slab Steel</span><span className="font-bold">{results.slabSteel} kg</span></div>
                   <div className="flex justify-between"><span>Beam Steel</span><span className="font-bold">{results.beamSteel} kg</span></div>
@@ -721,30 +721,30 @@ const SteelEstimationCalculator = ({ data, nodeId, workspaceId, setNodes }) => {
             )}
 
             {/* Cost Breakdown */}
-            <div className="border border-gray-200 rounded-lg overflow-hidden">
-              <div className="bg-gray-50 p-3 border-b font-bold text-sm">Cost Breakdown (₹)</div>
+            <div className="border border-line rounded-lg overflow-hidden">
+              <div className="bg-canvas p-3 border-b font-bold text-sm">Cost Breakdown (₹)</div>
               <div className="p-4 space-y-2 text-sm">
                 <div className="flex justify-between"><span>Material Cost</span><span>₹{results.costs.materialCost.toLocaleString()}</span></div>
                 <div className="flex justify-between"><span>Labour Cost</span><span>₹{results.costs.labourCost.toLocaleString()}</span></div>
                 <div className="flex justify-between"><span>Fabrication Cost</span><span>₹{results.costs.fabricationCost.toLocaleString()}</span></div>
-                <div className="flex justify-between pt-2 border-t font-bold text-lg"><span>Total Estimated Cost</span><span className="text-green-600">₹{results.costs.totalCost.toLocaleString()}</span></div>
+                <div className="flex justify-between pt-2 border-t font-bold text-lg"><span>Total Estimated Cost</span><span className="text-success">₹{results.costs.totalCost.toLocaleString()}</span></div>
               </div>
             </div>
 
             {/* Optimization Report */}
-            <div className="border border-gray-200 rounded-lg overflow-hidden">
-              <div className="bg-gray-50 p-3 border-b font-bold text-sm">12m Bar Optimization Report</div>
+            <div className="border border-line rounded-lg overflow-hidden">
+              <div className="bg-canvas p-3 border-b font-bold text-sm">12m Bar Optimization Report</div>
               <div className="p-4 space-y-2 text-sm">
-                <div className="flex justify-between"><span>Bars Required</span><span className="font-bold text-blue-600">{results.optimization?.barsRequired || 0}</span></div>
+                <div className="flex justify-between"><span>Bars Required</span><span className="font-bold text-info">{results.optimization?.barsRequired || 0}</span></div>
                 <div className="flex justify-between"><span>Total Supplied Length</span><span className="font-bold">{(results.optimization?.totalSuppliedLength || 0).toLocaleString()} mm</span></div>
                 <div className="flex justify-between"><span>Total Used Length</span><span className="font-bold">{(results.optimization?.totalUsedLength || 0).toLocaleString()} mm</span></div>
-                <div className="flex justify-between"><span>Total Scrap Volume</span><span className="font-bold text-orange-600">{(results.optimization?.totalScrapLength || 0).toLocaleString()} mm</span></div>
-                <div className="flex justify-between pt-2 border-t"><span>Scrap Percentage</span><span className="font-bold text-orange-600">{results.optimization?.scrapPercent || 0}%</span></div>
-                <div className="flex justify-between"><span>Utilization Efficiency</span><span className="font-bold text-green-600">{results.optimization?.utilizationPercent || 0}%</span></div>
+                <div className="flex justify-between"><span>Total Scrap Volume</span><span className="font-bold text-warning">{(results.optimization?.totalScrapLength || 0).toLocaleString()} mm</span></div>
+                <div className="flex justify-between pt-2 border-t"><span>Scrap Percentage</span><span className="font-bold text-warning">{results.optimization?.scrapPercent || 0}%</span></div>
+                <div className="flex justify-between"><span>Utilization Efficiency</span><span className="font-bold text-success">{results.optimization?.utilizationPercent || 0}%</span></div>
               </div>
             </div>
 
-            <button onClick={() => setShowDetailsModal(false)} className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 rounded-lg text-sm">
+            <button onClick={() => setShowDetailsModal(false)} className="w-full bg-info hover:bg-info text-white font-bold py-2 rounded-lg text-sm">
               Close
             </button>
           </div>
@@ -755,53 +755,53 @@ const SteelEstimationCalculator = ({ data, nodeId, workspaceId, setNodes }) => {
 
   // ==================== MAIN RENDER ====================
   return (
-    <div className="w-full bg-white rounded-lg shadow-lg p-6">
+    <div className="w-full bg-surface rounded-lg shadow-lg p-6">
       {!results ? (
         <div className="space-y-4">
           <div>
-            <h3 className="text-lg font-bold text-gray-900">Professional Structural Steel</h3>
-            <p className="text-xs text-gray-600 mt-1">Contractor-grade BOQ estimation system</p>
+            <h3 className="text-lg font-bold text-ink">Professional Structural Steel</h3>
+            <p className="text-xs text-dim mt-1">Contractor-grade BOQ estimation system</p>
           </div>
-          <button onClick={() => setShowConfigModal(true)} className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg transition-colors text-sm">
+          <button onClick={() => setShowConfigModal(true)} className="w-full bg-info hover:bg-info text-white font-bold py-3 px-4 rounded-lg transition-colors text-sm">
             Start Estimation
           </button>
         </div>
       ) : (
         <div className="space-y-4">
           <div className="grid grid-cols-2 gap-3">
-            <div className="bg-blue-50 border-2 border-blue-200 p-4 rounded-lg">
-              <p className="text-xs text-gray-600">Total Steel</p>
-              <p className="text-2xl font-bold text-blue-600">{results.totalSteel.toLocaleString()}</p>
-              <p className="text-xs text-gray-600">kg ({results.steelTons} tons)</p>
-              <button onClick={() => setShowDetailsModal(true)} className="mt-2 text-blue-600 hover:text-blue-800 flex items-center gap-1 text-xs">
+            <div className="bg-info/10 border-2 border-info/20 p-4 rounded-lg">
+              <p className="text-xs text-dim">Total Steel</p>
+              <p className="text-2xl font-bold text-info">{results.totalSteel.toLocaleString()}</p>
+              <p className="text-xs text-dim">kg ({results.steelTons} tons)</p>
+              <button onClick={() => setShowDetailsModal(true)} className="mt-2 text-info hover:text-info flex items-center gap-1 text-xs">
                 <Info size={14} /> Details
               </button>
             </div>
 
-            <div className="bg-green-50 border-2 border-green-200 p-4 rounded-lg">
-              <p className="text-xs text-gray-600">Total Cost</p>
-              <p className="text-2xl font-bold text-green-600">₹{results.costs.totalCost.toLocaleString()}</p>
-              <p className="text-xs text-gray-600">Material + Labour</p>
+            <div className="bg-success/10 border-2 border-success/20 p-4 rounded-lg">
+              <p className="text-xs text-dim">Total Cost</p>
+              <p className="text-2xl font-bold text-success">₹{results.costs.totalCost.toLocaleString()}</p>
+              <p className="text-xs text-dim">Material + Labour</p>
             </div>
 
-            <div className="bg-purple-50 border-2 border-purple-200 p-4 rounded-lg">
-              <p className="text-xs text-gray-600">Bars Required (12m)</p>
-              <p className="text-2xl font-bold text-purple-600">{results.optimization?.barsRequired || 0}</p>
-              <p className="text-xs text-gray-600">Scrap: {results.optimization?.scrapPercent || 0}%</p>
+            <div className="bg-surface-hover border-2 border-line p-4 rounded-lg">
+              <p className="text-xs text-dim">Bars Required (12m)</p>
+              <p className="text-2xl font-bold text-ink">{results.optimization?.barsRequired || 0}</p>
+              <p className="text-xs text-dim">Scrap: {results.optimization?.scrapPercent || 0}%</p>
             </div>
 
-            <div className="bg-orange-50 border-2 border-orange-200 p-4 rounded-lg">
-              <p className="text-xs text-gray-600">Bar Efficiency</p>
-              <p className="text-2xl font-bold text-orange-600">{results.optimization?.utilizationPercent || 0}%</p>
-              <p className="text-xs text-gray-600">Utilization</p>
+            <div className="bg-warning/10 border-2 border-warning/20 p-4 rounded-lg">
+              <p className="text-xs text-dim">Bar Efficiency</p>
+              <p className="text-2xl font-bold text-warning">{results.optimization?.utilizationPercent || 0}%</p>
+              <p className="text-xs text-dim">Utilization</p>
             </div>
           </div>
 
           <div className="grid grid-cols-2 gap-2 pt-2">
-            <button onClick={handleReset} className="bg-gray-200 hover:bg-gray-300 text-gray-900 font-bold py-2 rounded-lg transition-colors flex items-center justify-center gap-2 text-sm">
+            <button onClick={handleReset} className="bg-surface-hover hover:bg-surface-hover text-ink font-bold py-2 rounded-lg transition-colors flex items-center justify-center gap-2 text-sm">
               <RotateCcw size={16} /> Reset
             </button>
-            <button onClick={() => setShowConfigModal(true)} className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 rounded-lg transition-colors text-sm">
+            <button onClick={() => setShowConfigModal(true)} className="bg-info hover:bg-info text-white font-bold py-2 rounded-lg transition-colors text-sm">
               Edit Estimation
             </button>
           </div>

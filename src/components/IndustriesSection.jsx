@@ -118,14 +118,14 @@ const IndustriesSection = ({ scrollY }) => {
   return (
     <section 
       id="industries-section" 
-      className="w-full min-h-screen flex items-center justify-center p-12 px-4 bg-white relative transition-transform duration-500 ease-in-out"
+      className="w-full min-h-screen flex items-center justify-center p-12 px-4 bg-surface relative transition-transform duration-500 ease-in-out"
       style={{ transform: `translateY(${scrollY * 0.05}px)` }}
     >
       <div className="w-full max-w-[1440px] flex flex-col items-center">
-        <h2 className={`text-6xl font-medium mb-16 text-center transition-all duration-1000 ease-out text-black ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-[30px]'}`}>
-          <span className="bg-gradient-to-r from-[#21be9c] to-[#0f5848] bg-clip-text text-transparent">Industries </span>
+        <h2 className={`text-6xl font-medium mb-16 text-center transition-all duration-1000 ease-out text-ink ${isVisible ? 'opacity-100 ' : 'opacity-0 px]'}`}>
+          <span className=" text-ink">Industries </span>
           We Serve <br />
-          <div className="text-base h-[10%] opacity-100 translate-y-0 italic text-black/70">
+          <div className="text-base h-[10%] opacity-100  italic text-ink/70">
             <q>Like water, we adapt—flowing seamlessly into every industry's needs.</q>
           </div>
         </h2>
@@ -134,10 +134,10 @@ const IndustriesSection = ({ scrollY }) => {
           <Slider ref={sliderRef} {...settings} className="w-full">
             {industriesData.map((industry) => (
               <div key={industry.id} className="p-4">
-                <div className="w-full h-[320px] bg-white rounded-[30px] shadow-[0_4px_23.3px_0_rgba(0,0,0,0.25)] p-8 flex flex-col justify-between relative transition-all duration-300 ease-in-out hover:-translate-y-[5px]">
+                <div className="w-full h-[320px] bg-surface rounded-[30px] p-8 flex flex-col justify-between relative transition-all duration-300 ease-in-out px]">
                   <div className="flex flex-col gap-4">
-                    <h3 className="text-2xl font-medium text-black leading-normal">{industry.title}</h3>
-                    <p className="text-xl text-black opacity-40 font-light leading-normal">{industry.description}</p>
+                    <h3 className="text-2xl font-medium text-ink leading-normal">{industry.title}</h3>
+                    <p className="text-xl text-ink opacity-40 font-light leading-normal">{industry.description}</p>
                   </div>
                   <div className="flex justify-end items-center">
                     <button 
@@ -177,23 +177,23 @@ const IndustriesSection = ({ scrollY }) => {
 
       {modalOpen && (
         <div className="fixed top-0 left-0 w-screen h-screen bg-black/50 flex items-center justify-center z-[1000]">
-          <div className="bg-white p-8 rounded-[20px] max-w-[600px] min-w-[300px] w-[90vw] max-h-[80vh] overflow-y-auto text-left shadow-[0_5px_15px_rgba(0,0,0,0.3)] relative animate-modalFadeIn">
+          <div className="bg-surface p-8 rounded-[20px] max-w-[600px] min-w-[300px] w-[90vw] max-h-[80vh] overflow-y-auto text-left relative animate-modalFadeIn">
             <button 
-              className="absolute top-4 right-4 border-none bg-black text-white w-8 h-8 rounded-full text-xl cursor-pointer flex items-center justify-center hover:bg-gray-700 transition-colors"
+              className="absolute top-4 right-4 border-none bg-black text-cta-foreground w-8 h-8 rounded-full text-xl cursor-pointer flex items-center justify-center hover:bg-cta transition-colors"
               onClick={() => setModalOpen(false)}
             >
               ×
             </button>
-            <h2 className="text-2xl font-bold text-black mb-2">{selectedIndustry.title}</h2>
-            <p className="text-base text-gray-600 mb-4 italic">{selectedIndustry.description}</p>
-            <p className="text-base text-black mb-6">{selectedIndustry.details}</p>
+            <h2 className="text-2xl font-bold text-ink mb-2">{selectedIndustry.title}</h2>
+            <p className="text-base text-dim mb-4 italic">{selectedIndustry.description}</p>
+            <p className="text-base text-ink mb-6">{selectedIndustry.details}</p>
             
-            <h3 className="text-lg font-semibold text-[#21be9c] mb-3">Key Services</h3>
+            <h3 className="text-lg font-semibold text-success mb-3">Key Services</h3>
             <div className="flex flex-wrap gap-2">
               {selectedIndustry.services?.map((service, index) => (
                 <span 
                   key={index} 
-                  className="bg-[#21be9c]/10 text-[#0f5848] px-4 py-2 rounded-full text-sm font-medium"
+                  className="bg-success/10 text-success px-4 py-2 rounded-full text-sm font-medium"
                 >
                   {service}
                 </span>
@@ -201,7 +201,7 @@ const IndustriesSection = ({ scrollY }) => {
             </div>
             
             <button 
-              className="mt-6 w-full bg-black text-white py-3 px-6 rounded-full font-semibold hover:bg-gray-800 transition-colors"
+              className="mt-6 w-full bg-black text-cta-foreground py-3 px-6 rounded-full font-semibold hover:bg-cta transition-colors"
               onClick={() => setModalOpen(false)}
             >
               Get Started

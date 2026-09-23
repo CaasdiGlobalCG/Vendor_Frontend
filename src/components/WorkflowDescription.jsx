@@ -32,7 +32,7 @@ const WorkflowDescription = ({ text, position }) => {
 
   const baseContainerClasses = [
     'transition-all duration-600 ease-out',
-    isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-[20px]',
+    isVisible ? 'opacity-100 ' : 'opacity-0 px]',
     
     // --- MOBILE & TABLET FIRST (<lg) ---
     // Full width, centered text, appropriate margins below the box.

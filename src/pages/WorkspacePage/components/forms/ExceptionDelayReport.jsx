@@ -82,9 +82,9 @@ const ExceptionDelayReport = ({ data, nodeId, workspaceId, setNodes }) => {
   const penalty = calculatePenalty();
 
   return (
-    <div className="w-full bg-white rounded-lg overflow-hidden">
+    <div className="w-full bg-surface rounded-lg overflow-hidden">
       {/* Header */}
-      <div className="bg-gradient-to-r from-red-500 to-red-600 p-4">
+      <div className="bg-black p-4">
         <div className="flex items-center gap-2">
           <AlertTriangle className="w-6 h-6 text-white" />
           <h3 className="text-lg font-bold text-white">Exception & Delay Report</h3>
@@ -95,7 +95,7 @@ const ExceptionDelayReport = ({ data, nodeId, workspaceId, setNodes }) => {
       <div className="p-4 space-y-4">
         {/* Reason Code */}
         <div>
-          <label className="text-sm font-medium text-gray-700">Reason Code *</label>
+          <label className="text-sm font-medium text-ink">Reason Code *</label>
           <select
             name="reasonCode"
             value={formData.reasonCode}
@@ -111,7 +111,7 @@ const ExceptionDelayReport = ({ data, nodeId, workspaceId, setNodes }) => {
 
         {/* Description */}
         <div>
-          <label className="text-sm font-medium text-gray-700">Description</label>
+          <label className="text-sm font-medium text-ink">Description</label>
           <textarea
             name="description"
             placeholder="Describe the issue in detail"
@@ -124,7 +124,7 @@ const ExceptionDelayReport = ({ data, nodeId, workspaceId, setNodes }) => {
         {/* Delay Duration */}
         <div className="grid grid-cols-2 gap-3">
           <div>
-            <label className="text-sm font-medium text-gray-700">Delay Duration *</label>
+            <label className="text-sm font-medium text-ink">Delay Duration *</label>
             <input
               type="number"
               name="delayDuration"
@@ -137,7 +137,7 @@ const ExceptionDelayReport = ({ data, nodeId, workspaceId, setNodes }) => {
             />
           </div>
           <div>
-            <label className="text-sm font-medium text-gray-700">Unit</label>
+            <label className="text-sm font-medium text-ink">Unit</label>
             <select
               name="delayUnit"
               value={formData.delayUnit}
@@ -152,12 +152,12 @@ const ExceptionDelayReport = ({ data, nodeId, workspaceId, setNodes }) => {
         </div>
 
         {/* Penalty Calculation */}
-        <div className="border rounded-lg p-4 bg-red-50 border-red-200">
+        <div className="border rounded-lg p-4 bg-danger/10 border-danger/20">
           <div className="flex items-start gap-3">
-            <TrendingDown className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
+            <TrendingDown className="w-5 h-5 text-danger flex-shrink-0 mt-0.5" />
             <div className="flex-1">
-              <h4 className="font-semibold text-red-900 mb-2">Penalty Calculation</h4>
-              <div className="space-y-1 text-sm text-red-800">
+              <h4 className="font-semibold text-danger mb-2">Penalty Calculation</h4>
+              <div className="space-y-1 text-sm text-danger">
                 <p>
                   <span className="font-medium">Reason:</span>{' '}
                   {formData.reasonCode || 'Not selected'}
@@ -171,9 +171,9 @@ const ExceptionDelayReport = ({ data, nodeId, workspaceId, setNodes }) => {
                   {formData.delayDuration || 0} {formData.delayUnit}
                 </p>
               </div>
-              <div className="mt-3 pt-3 border-t border-red-300 flex items-center justify-between">
-                <span className="font-bold text-red-900">Auto-Calculated Penalty:</span>
-                <span className="text-2xl font-bold text-red-600">₹{penalty}</span>
+              <div className="mt-3 pt-3 border-t border-danger/30 flex items-center justify-between">
+                <span className="font-bold text-danger">Auto-Calculated Penalty:</span>
+                <span className="text-2xl font-bold text-danger">₹{penalty}</span>
               </div>
             </div>
           </div>
@@ -181,7 +181,7 @@ const ExceptionDelayReport = ({ data, nodeId, workspaceId, setNodes }) => {
 
         {/* Resolution */}
         <div>
-          <label className="text-sm font-medium text-gray-700">Resolution / Notes</label>
+          <label className="text-sm font-medium text-ink">Resolution / Notes</label>
           <textarea
             name="resolution"
             placeholder="How was this issue resolved?"
@@ -192,9 +192,9 @@ const ExceptionDelayReport = ({ data, nodeId, workspaceId, setNodes }) => {
         </div>
 
         {/* Status Summary */}
-        <div className="border rounded-lg p-3 bg-yellow-50 border-yellow-200">
-          <p className="text-xs font-semibold text-yellow-900 mb-2">Report Status</p>
-          <div className="space-y-1 text-xs text-yellow-800">
+        <div className="border rounded-lg p-3 bg-warning/10 border-warning/20">
+          <p className="text-xs font-semibold text-warning mb-2">Report Status</p>
+          <div className="space-y-1 text-xs text-warning">
             <p>
               ✓ Reason: {formData.reasonCode ? '✓ Provided' : '⊘ Required'}
             </p>
@@ -207,10 +207,10 @@ const ExceptionDelayReport = ({ data, nodeId, workspaceId, setNodes }) => {
       </div>
 
       {/* Actions */}
-      <div className="p-4 bg-gray-50 border-t flex gap-2 justify-end">
+      <div className="p-4 bg-canvas border-t flex gap-2 justify-end">
         <button
           onClick={handleSave}
-          className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg text-sm font-medium"
+          className="px-4 py-2 bg-danger hover:bg-danger text-white rounded-lg text-sm font-medium"
           disabled={!formData.reasonCode || !formData.delayDuration}
         >
           Submit Report

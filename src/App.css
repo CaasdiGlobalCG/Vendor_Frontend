@@ -1,17 +1,4 @@
-@import 'tailwindcss/base';
-@import 'tailwindcss/components';
-@import 'tailwindcss/utilities';
-
-@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&display=swap');
-
-body {
-  font-family: 'Montserrat', sans-serif;
-  background-color: #EEF2F1;
-}
-
-h1, h2, h3, h4, h5, h6 {
-  font-family: 'Montserrat', sans-serif;
-}
+/* Tailwind directives live in main.css — do not re-import here. */
 
 /* AI Prompt Panel custom scrollbar */
 .ai-prompt-messages-scroll::-webkit-scrollbar {
@@ -21,9 +8,9 @@ h1, h2, h3, h4, h5, h6 {
   background: transparent;
 }
 .ai-prompt-messages-scroll::-webkit-scrollbar-thumb {
-  background: rgba(0, 0, 0, 0.12);
+  background: rgb(var(--text-muted) / 0.3);
   border-radius: 100px;
 }
 .ai-prompt-messages-scroll::-webkit-scrollbar-thumb:hover {
-  background: rgba(0, 0, 0, 0.2);
+  background: rgb(var(--text-muted) / 0.5);
 }

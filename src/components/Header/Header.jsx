@@ -15,7 +15,8 @@ import { redirectToSalesWithHandoff } from '../../utils/handoffToSales';
 import GlobalSearchOverlay from "./GlobalSearchOverlay";
 import AiPromptPanel from "./AiPromptPanel";
 import AuthSkeletonScreen from "../loading/AuthSkeletonScreen";
-import operonLogo from "../../assets/operon-symbol-white.png";
+import operonLogo from "../../assets/operon-symbol-black.png";
+import { ThemeToggle } from "../ui/theme-toggle";
 /**
  * Header
  *
@@ -209,23 +210,13 @@ export const Header = () => {
     setIsMobileMenuOpen(false);
   };
   
-  // Helper function for NavLink classes
-  const getNavLinkClass = ({ isActive }) => {
-    if (isOnDashboard) {
-      return `rounded-full px-3 py-2 transition-colors ${isActive ? 'bg-white/12 text-white font-semibold' : 'text-white/65 hover:bg-white/10 hover:text-white'}`;
-    }
+  // NavLink classes — underline tabs; active = ink text + hairline underline
+  const getNavLinkClass = ({ isActive }) =>
+    `relative px-3 py-2 text-sm transition-colors duration-150 ${isActive ? 'text-ink font-medium after:absolute after:inset-x-2 after:-bottom-[13px] after:h-[2px] after:bg-ink' : 'text-dim hover:text-ink'}`;
 
-    return `hover:text-emerald-200 transition-colors ${isActive ? 'opacity-100 font-semibold' : 'opacity-50'}`;
-  };
-  
-  // Helper function for Mobile NavLink classes
-  const getMobileNavLinkClass = ({ isActive }) => {
-    if (isOnDashboard) {
-      return `rounded-xl px-3 py-2 ${isActive ? 'bg-white/12 text-white font-semibold' : 'text-white/70 hover:bg-white/10'}`;
-    }
-
-    return `hover:opacity-75 ${isActive ? 'opacity-100 font-semibold' : 'opacity-50'}`;
-  };
+  // Mobile NavLink classes — same token logic, larger tap area
+  const getMobileNavLinkClass = ({ isActive }) =>
+    `rounded-lg px-3 py-2 transition-colors duration-150 ${isActive ? 'bg-surface-hover text-ink font-medium' : 'text-dim hover:bg-surface-hover hover:text-ink'}`;
   
   // Helper function to get appropriate greeting based on time of day
   const getGreeting = () => {
@@ -240,13 +231,13 @@ export const Header = () => {
     return (
       <div 
         ref={notificationDropdownRef}
-        className="absolute right-0 mt-2 w-80 bg-white rounded-lg shadow-xl border border-gray-200 z-50"
+        className="absolute right-0 mt-2 w-80 bg-surface rounded-lg shadow-pop border border-line z-50"
       >
-        <div className="px-4 border-b border-gray-200">
+        <div className="px-4 border-b border-line">
           <div className="flex justify-between items-center">
-            <h3 className="text-sm font-semibold text-gray-800">Notifications</h3>
+            <h3 className="text-sm font-semibold text-ink">Notifications</h3>
             {unreadCount > 0 && (
-              <span className="inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none bg-red-100 text-red-800 rounded-full">
+              <span className="inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none bg-danger/10 text-danger rounded-full">
                 {unreadCount} unread
               </span>
             )}
@@ -255,20 +246,20 @@ export const Header = () => {
         
         <div className="max-h-96 overflow-y-auto pt-0">
           {notifications.length > 0 ? (
-            <ul className="divide-y divide-gray-100">
+            <ul className="divide-y divide-line">
               {[...notifications.filter(n => !n.isRead), ...notifications.filter(n => n.isRead)]
                 .slice(0, 5)
                 .map((notification) => {
                   const itemContent = (
                     <div className="flex gap-3">
                       <div className="flex-shrink-0">
-                        <div className={`w-10 h-10 rounded-full flex items-center justify-center font-semibold text-[11px] ${notification.iconBackgroundClass || (notification.isPending ? 'bg-red-100' : 'bg-blue-100')} ${notification.iconTextClass || (notification.isPending ? 'text-red-700' : 'text-blue-700')}`}>
+                        <div className={`w-10 h-10 rounded-full flex items-center justify-center font-semibold text-[11px] ${notification.iconBackgroundClass || (notification.isPending ? 'bg-danger/10' : 'bg-info/10')} ${notification.iconTextClass || (notification.isPending ? 'text-danger' : 'text-info')}`}>
                           {notification.iconSymbol || 'N'}
                         </div>
                       </div>
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2">
-                          <p className={`text-xs font-medium ${notification.isPending ? 'text-red-800' : 'text-gray-800'}`}>
+                          <p className={`text-xs font-medium ${notification.isPending ? 'text-danger' : 'text-ink'}`}>
                             {notification.title}
                           </p>
                           {notification.badge && (
@@ -280,15 +271,15 @@ export const Header = () => {
                             </span>
                           )}
                         </div>
-                        <p className="mt-1 text-xs text-gray-600 truncate">
+                        <p className="mt-1 text-xs text-dim truncate">
                           {notification.message}
                         </p>
                         <div className="mt-2 flex items-center gap-2">
-                          <span className="inline-flex items-center text-xs text-gray-500">
+                          <span className="inline-flex items-center text-xs text-dim">
                             {notification.time}
                           </span>
                           {notification.primaryActionLabel && notification.link && (
-                            <span className="inline-flex items-center rounded bg-emerald-50 px-2 py-0.5 text-[10px] font-medium text-emerald-700">
+                            <span className="inline-flex items-center rounded bg-brand/10 px-2 py-0.5 text-[10px] font-medium text-brand">
                               {notification.primaryActionLabel}
                             </span>
                           )}
@@ -305,7 +296,7 @@ export const Header = () => {
                   };
 
                   return (
-                    <li key={notification.id} className={`p-4 hover:bg-gray-50 ${notification.isPending ? 'bg-red-50' : ''}`}>
+                    <li key={notification.id} className={`p-4 hover:bg-surface-hover ${notification.isPending ? 'bg-danger/5' : ''}`}>
                       {notification.link ? (
                         <Link to={notification.link} onClick={handleOpen} className="block">
                           {itemContent}
@@ -320,18 +311,18 @@ export const Header = () => {
                 })}
             </ul>
           ) : (
-            <div className="py-6 text-center text-gray-500">
+            <div className="py-6 text-center text-dim">
               <p>No notifications</p>
             </div>
           )}
         </div>
         
         {notifications.length > 0 && (
-          <div className="px-4 py-3 bg-gray-50 text-right border-t border-gray-200">
+          <div className="px-4 py-3 bg-surface-hover text-right border-t border-line">
             <Link
               to="/VendorDashboard/notifications"
               onClick={() => setShowNotificationDropdown(false)}
-              className="text-emerald-600 hover:text-emerald-800 text-xs font-medium"
+              className="text-brand hover:opacity-80 text-xs font-medium"
             >
               View all notifications
             </Link>
@@ -347,13 +338,13 @@ export const Header = () => {
       <button 
         onClick={toggleNotificationDropdown}
         aria-label="Notifications" 
-        className={`relative rounded-full p-1 transition-colors ${isOnDashboard ? 'text-white hover:bg-white/10' : 'text-white hover:bg-white/20'}`}
+        className="relative inline-flex h-8 w-8 items-center justify-center rounded-md text-dim transition-colors hover:bg-surface-hover hover:text-ink"
       >
-        <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
         </svg>
         {unreadCount > 0 && (
-          <span className={`absolute top-0 right-0 flex h-5 w-5 items-center justify-center rounded-full bg-amber-400 text-xs font-bold text-black ${isOnDashboard ? 'ring-2 ring-[#0b2f28]' : 'ring-2 ring-gray-900'}`}>
+          <span className="absolute right-0.5 top-0.5 flex h-3.5 min-w-3.5 items-center justify-center rounded-full bg-danger px-1 text-[9px] font-bold leading-none text-white ring-1 ring-surface">
             {unreadCount > 9 ? '9+' : unreadCount}
           </span>
         )}
@@ -654,129 +645,91 @@ export const Header = () => {
   };
 
   return (
-    <header className={`${isOnDashboard ? '[background:linear-gradient(90deg,rgba(9,91,73,1)_0%,rgba(0,0,0,1)_100%)] rounded-[24px] border border-white/10 p-4 shadow-[0_16px_45px_rgba(15,23,42,0.18)]' : '[background:linear-gradient(90deg,rgba(9,91,73,1)_0%,rgba(0,0,0,1)_100%)] rounded-[20px] p-4 lg:p-[18px] shadow-2xl'} relative flex flex-col justify-between ${isOnDashboard ? 'min-h-[96px] lg:min-h-[132px]' : 'min-h-[80px] lg:h-auto'}`}>
-      {/* --- Mobile / Tablet Top Section --- */}
-      <div className="flex flex-col gap-4 lg:hidden">
-        <div className="flex items-center justify-between gap-4">
-          <NavLink to="/VendorDashboard" className="flex-shrink-0" aria-label="Homepage">
-            <img src={operonLogo} alt="Operon" className="h-8 w-auto" />
-          </NavLink>
-
-          <button
-            className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-white/5 text-white transition hover:bg-white/10"
-            onClick={toggleMobileMenu}
-            aria-label={isMobileMenuOpen ? "Close menu" : "Open menu"}
-            aria-expanded={isMobileMenuOpen}
-          >
-            {isMobileMenuOpen ? (
-              <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
-            ) : (
-              <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16m-7 6h7" /></svg>
-            )}
-          </button>
-        </div>
-
-        <div className="relative w-full">
-          <input
-            type="text"
-            placeholder="Search here"
-            className="h-11 w-full rounded-full border border-white/15 bg-white/[0.08] py-[7px] pl-10 pr-10 text-sm text-white placeholder:text-white/50 focus:ring-1 focus:ring-white/25 cursor-pointer"
-            aria-label="Search"
-            readOnly
-            onClick={handleOpenSearch}
-          />
-          <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-white/50">
-            <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="m21 21-4.35-4.35m1.85-5.15a7 7 0 11-14 0 7 7 0 0114 0z" />
-            </svg>
-          </span>
-          <button
-            type="button"
-            onClick={handleOpenSearch}
-            className="absolute right-3 top-1/2 -translate-y-1/2 text-white/55 hover:text-white"
-            aria-label="Open search"
-          >
-            <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="m21 21-4.35-4.35m1.85-5.15a7 7 0 11-14 0 7 7 0 0114 0z" />
-            </svg>
-          </button>
-        </div>
-      </div>
-
-      {/* --- Desktop Top Section --- */}
-      <div className="relative hidden justify-between items-start gap-4 lg:flex"> {/* Changed items-center to items-start for mobile alignment */}
-
-        {/* Logo (Stays Top-Left) */}
+    <header className="relative flex flex-col rounded-lg border border-line bg-surface">
+      {/* --- Mobile / Tablet Top Section — single compact row --- */}
+      <div className="flex items-center gap-3 px-4 py-3 lg:hidden">
         <NavLink to="/VendorDashboard" className="flex-shrink-0" aria-label="Homepage">
-          <img src={operonLogo} alt="Operon" className="h-9 w-auto" />
+          <img src={operonLogo} alt="Operon" className="h-7 w-auto" />
         </NavLink>
 
-        {/* Desktop Navigation (Hidden on Mobile) */}
-        <nav className={`hidden lg:flex flex-shrink-0 text-base font-normal font-['Poppins'] ${isOnDashboard ? 'items-center gap-1 rounded-full border border-white/10 bg-white/5 px-2 py-1 text-white backdrop-blur-sm' : 'space-x-[30px] text-white'}`}> {/* Added flex-shrink-0 */}
-          <PermissionGate module="dashboard" action="view" lockedFallback={<LockedNavItem label="Dashboard" className="rounded-full px-3 py-2 text-white/65" />}>
+        <button
+          type="button"
+          onClick={handleOpenSearch}
+          className="flex h-9 min-w-0 flex-1 items-center gap-2 rounded-md border border-line bg-canvas px-3 text-[13px] text-dim"
+          aria-label="Open search"
+        >
+          <svg className="h-4 w-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="m21 21-4.35-4.35m1.85-5.15a7 7 0 11-14 0 7 7 0 0114 0z" />
+          </svg>
+          <span className="truncate">Search</span>
+        </button>
+
+        <button
+          className="inline-flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-md border border-line text-dim transition hover:bg-surface-hover hover:text-ink"
+          onClick={toggleMobileMenu}
+          aria-label={isMobileMenuOpen ? "Close menu" : "Open menu"}
+          aria-expanded={isMobileMenuOpen}
+        >
+          {isMobileMenuOpen ? (
+            <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+          ) : (
+            <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16m-7 6h7" /></svg>
+          )}
+        </button>
+      </div>
+
+      {/* --- Desktop Top Section — single 56px row --- */}
+      <div className="relative hidden h-14 items-center gap-5 px-4 lg:flex">
+
+        {/* Logo */}
+        <NavLink to="/VendorDashboard" className="flex-shrink-0" aria-label="Homepage">
+          <img src={operonLogo} alt="Operon" className="h-7 w-auto" />
+        </NavLink>
+
+        {/* Desktop Navigation — underline tabs */}
+        <nav className="flex h-full items-center gap-0.5 self-stretch text-sm font-sans" aria-label="Primary">
+          <PermissionGate module="dashboard" action="view" lockedFallback={<LockedNavItem label="Dashboard" className="px-3 py-2 text-dim" />}>
             <NavLink to="/VendorDashboard" className={getNavLinkClass} end>Dashboard</NavLink>
           </PermissionGate>
-          <PermissionGate module="projects" action="view" lockedFallback={<LockedNavItem label="Projects" className="rounded-full px-3 py-2 text-white/65" />}>
+          <PermissionGate module="projects" action="view" lockedFallback={<LockedNavItem label="Projects" className="px-3 py-2 text-dim" />}>
             <NavLink to="/VendorDashboard/projects" className={getNavLinkClass}>Projects</NavLink>
           </PermissionGate>
-          <PermissionGate module="leads" action="view" lockedFallback={<LockedNavItem label="Leads" className="rounded-full px-3 py-2 text-white/65" />}>
+          <PermissionGate module="leads" action="view" lockedFallback={<LockedNavItem label="Leads" className="px-3 py-2 text-dim" />}>
             <NavLink to="/VendorDashboard/leads" className={getNavLinkClass}>Leads</NavLink>
           </PermissionGate>
-          <PermissionGate module="workspace" action="view" lockedFallback={<LockedNavItem label="Workspace" className="rounded-full px-3 py-2 text-white/65" />}>
+          <PermissionGate module="workspace" action="view" lockedFallback={<LockedNavItem label="Workspace" className="px-3 py-2 text-dim" />}>
             <button 
               onClick={() => navigate('/VendorDashboard/workspace')}
-              className={isOnDashboard ? 'rounded-full px-3 py-2 text-white/65 transition-colors hover:bg-white/10 hover:text-white' : 'hover:text-emerald-200 transition-colors opacity-50 hover:opacity-100'}
+              className="px-3 py-2 text-sm text-dim transition-colors duration-150 hover:text-ink"
             >
               Workspace
             </button>
           </PermissionGate>
-          <PermissionGate module="user_management" action="view" lockedFallback={<LockedNavItem label="Team" className="rounded-full px-3 py-2 text-white/65" />}>
+          <PermissionGate module="user_management" action="view" lockedFallback={<LockedNavItem label="Team" className="px-3 py-2 text-dim" />}>
             <NavLink to="/VendorDashboard/team" className={getNavLinkClass}>Team</NavLink>
           </PermissionGate>
           <NavLink to="/VendorDashboard/finance-detail" className={getNavLinkClass}>Revenue</NavLink>
-          {/* <NavLink to="/pricing" className={getNavLinkClass}>Pricing</NavLink> */}
         </nav>
-        {/* --- Desktop --- Right Controls (Hidden on Mobile) --- */}
-        <div className="hidden lg:flex items-center justify-end gap-2 sm:gap-3 flex-shrink-0"> {/* Added flex-shrink-0 */}
-          {/* Search Bar */}
-          <div className="relative">
-            <input
-              type="text"
-              placeholder="Search here"
-              className={`${isOnDashboard ? 'w-[290px] h-10 rounded-full border border-white/15 bg-white/[0.08] py-[7px] pl-10 pr-10 text-sm text-white placeholder:text-white/50 shadow-sm focus:ring-1 focus:ring-white/20' : 'w-[254px] h-9 rounded-xl border border-white/10 bg-white/10 py-[7px] pl-10 pr-10 text-sm text-white placeholder:text-white/50 focus:ring-1 focus:ring-white/50'} cursor-pointer`}
-              aria-label="Search"
-              readOnly
-              onClick={handleOpenSearch}
-            />
-            <span className={`pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 ${isOnDashboard ? 'text-white/50' : 'text-white/50'}`}>
-              <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="m21 21-4.35-4.35m1.85-5.15a7 7 0 11-14 0 7 7 0 0114 0z" />
-              </svg>
-            </span>
-            <button
-              type="button"
-              onClick={handleOpenSearch}
-              className={`absolute right-3 top-1/2 transform -translate-y-1/2 ${isOnDashboard ? 'text-white/55 hover:text-white' : 'w-4 h-4 text-white/50'}`}
-              aria-label="Open search"
-            >
-              {isOnDashboard ? (
-                <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="m21 21-4.35-4.35m1.85-5.15a7 7 0 11-14 0 7 7 0 0114 0z" />
-                </svg>
-              ) : (
-                <img
-                  src="https://c.animaapp.com/VmmSqCQF/img/tabler-search.svg"
-                  alt="Search"
-                  className="w-4 h-4 pointer-events-none"
-                />
-              )}
-            </button>
-          </div>
-          {/* Icons Container */}
-          <div className="flex items-center space-x-1 sm:space-x-2">
+        {/* --- Desktop --- Right Controls --- */}
+        <div className="ml-auto flex items-center gap-2 flex-shrink-0">
+          {/* Search trigger — ⌘K */}
+          <button
+            type="button"
+            onClick={handleOpenSearch}
+            className="flex h-8 w-52 items-center gap-2 rounded-md border border-line bg-canvas px-2.5 text-[13px] text-dim transition-colors hover:text-ink"
+            aria-label="Open search"
+          >
+            <svg className="h-3.5 w-3.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="m21 21-4.35-4.35m1.85-5.15a7 7 0 11-14 0 7 7 0 0114 0z" />
+            </svg>
+            <span className="truncate">Search…</span>
+            <kbd className="ml-auto rounded border border-line bg-surface px-1.5 py-0.5 text-[10px] font-medium leading-none text-dim">⌘K</kbd>
+          </button>
+          {/* Icons Container — uniform 32px ghost buttons */}
+          <div className="flex items-center">
              {notificationButton}
-             <button aria-label="Messages" className={`p-1 rounded-full ${isOnDashboard ? 'text-white hover:bg-white/10' : 'text-white hover:bg-white/20'}`}>
-               <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+             <button aria-label="Messages" className="inline-flex h-8 w-8 items-center justify-center rounded-md text-dim transition-colors hover:bg-surface-hover hover:text-ink">
+               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
                </svg>
              </button>
@@ -793,26 +746,28 @@ export const Header = () => {
                  }
                }}
                aria-label="Profile" 
-               className={`p-1 rounded-full ${isOnDashboard ? 'text-white hover:bg-white/10' : 'text-white hover:bg-white/20'}`}
+               className="inline-flex h-8 w-8 items-center justify-center rounded-md text-dim transition-colors hover:bg-surface-hover hover:text-ink"
              > 
                {vendorData?.profileImage?.url ? (
                  <img
                    src={vendorData.profileImage.url}
                    alt="Profile"
-                   className="w-6 h-6 sm:w-7 sm:h-7 rounded-full object-cover ring-2 ring-white/30"
+                   className="h-6 w-6 rounded-full object-cover ring-1 ring-line"
                  />
                ) : (
-                 <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-full bg-gradient-to-br from-emerald-500 to-emerald-700 flex items-center justify-center text-white text-[10px] sm:text-xs font-bold ring-2 ring-white/30">
+                 <div className="flex h-6 w-6 items-center justify-center rounded-full bg-ink text-[10px] font-bold text-paper ring-1 ring-line">
                    {(currentUser?.name || currentUser?.email || 'V').charAt(0).toUpperCase()}
                  </div>
                )}
              </button>
+             {/* Theme switcher - flips .dark on <html>, all tokens invert at once */}
+             <ThemeToggle className="h-8 w-8 rounded-md" />
              <button 
                onClick={() => navigate('/settings')}
-               className="p-1 text-white hover:bg-white/20 rounded-full"
+               className="inline-flex h-8 w-8 items-center justify-center rounded-md text-dim transition-colors hover:bg-surface-hover hover:text-ink"
                aria-label="Settings"
              >
-               <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                </svg>
@@ -829,18 +784,18 @@ export const Header = () => {
                  // Force a complete page reload to clear any state
                  window.location.href = "/login";
                }} 
-               className={`p-1 rounded-full ${isOnDashboard ? 'text-white hover:bg-white/10' : 'text-white hover:bg-white/20'}`}
+               className="inline-flex h-8 w-8 items-center justify-center rounded-md text-dim transition-colors hover:bg-surface-hover hover:text-ink"
                aria-label="Logout"
              >
-               <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
                </svg>
              </button>
           </div>
-          {/* Desktop Toggle — only shown if user has client platform access */}
+          {/* Desktop Toggle — slim monochrome switch */}
           {canAccessClient && (
           <div
-             className={`w-[76px] h-[24px] rounded-[18px] cursor-pointer relative ${isVendor ? 'bg-gradient-to-r from-[#0F766E] via-[#14B8A6] to-[#22C55E]' : 'bg-gradient-to-r from-[#1D4ED8] via-[#2563EB] to-[#38BDF8]'}`}
+             className="relative h-[22px] w-[62px] cursor-pointer rounded-full bg-surface-hover ring-1 ring-line"
              onClick={async () => {
                const next = !isVendor;
                setIsVendor(next);
@@ -877,13 +832,14 @@ export const Header = () => {
              }}
              role="button" aria-label="Toggle Vendor/Client mode" tabIndex={0}
            >
-             {isVendor ? (
-               <span className="text-white text-[8px] font-medium absolute right-[8%] top-1/2 -translate-y-1/2">Vendor</span>
-             ) : (
-               <span className="text-white text-[8px] font-medium absolute left-[9%] top-1/2 -translate-y-1/2">Client</span>
-             )}
+             <span className={`absolute top-1/2 -translate-y-1/2 text-[9px] font-medium text-dim ${isVendor ? 'right-2' : 'left-2'}`}>
+               {isVendor ? 'Client' : 'Vendor'}
+             </span>
              <div
-               className={`absolute top-1/2 -translate-y-1/2 w-[24px] h-[19px] bg-white rounded-full transition-all duration-200 ease-in-out ${ isVendor ? 'left-[6%]' : 'left-[66%]' }`} />
+               className={`absolute top-1/2 flex h-[16px] w-[26px] -translate-y-1/2 items-center justify-center rounded-full bg-ink transition-all duration-200 ${isVendor ? 'left-1' : 'left-[33px]'}`}
+             >
+               <span className="text-[7px] font-semibold text-paper">{isVendor ? 'V' : 'C'}</span>
+             </div>
           </div>
           )}
         </div>
@@ -892,8 +848,8 @@ export const Header = () => {
       {/* Mobile Menu Dropdown (Appears below header when toggled) */}
       {/* Positioned relative to the main header */}
       {isMobileMenuOpen && (
-        <div className={`absolute right-4 top-[72px] z-50 w-[min(18rem,calc(100%-2rem))] rounded-2xl shadow-lg lg:hidden ${isOnDashboard ? 'border border-white/10 bg-[#0b2f28]/95 backdrop-blur-sm' : 'bg-gray-900 bg-opacity-95'}`}>
-          <nav className={`flex flex-col space-y-4 p-4 text-base font-medium font-['Poppins'] ${isOnDashboard ? 'text-white' : 'text-white'}`}>
+        <div className="absolute right-4 top-[56px] z-50 w-[min(18rem,calc(100%-2rem))] rounded-lg border border-line bg-surface shadow-pop lg:hidden">
+          <nav className="flex flex-col space-y-2 p-4 text-base font-medium font-sans text-ink">
             <PermissionGate module="dashboard" action="view">
               <NavLink to="/VendorDashboard" className={getMobileNavLinkClass} onClick={closeMobileMenu} end>Dashboard</NavLink>
             </PermissionGate>
@@ -920,22 +876,22 @@ export const Header = () => {
           <div className="mb-4 mt-2 flex items-center justify-between px-4">
             {canAccessClient && (
               <div
-                className={`w-[76px] h-[24px] rounded-[18px] cursor-pointer relative ${isVendor ? 'bg-gradient-to-r from-[#0F766E] via-[#14B8A6] to-[#22C55E]' : 'bg-gradient-to-r from-[#1D4ED8] via-[#2563EB] to-[#38BDF8]'}`}
+                className="relative h-[22px] w-[62px] cursor-pointer rounded-full bg-surface-hover ring-1 ring-line"
                 onClick={() => setIsVendor(!isVendor)}
                 role="button" aria-label="Toggle Vendor/Client mode" tabIndex={0}
               >
-                {isVendor ? (
-                  <span className="text-white text-[8px] font-medium absolute right-[8%] top-1/2 -translate-y-1/2">Vendor</span>
-                ) : (
-                  <span className="text-white text-[8px] font-medium absolute left-[9%] top-1/2 -translate-y-1/2">Client</span>
-                )}
-                <div className={`absolute top-1/2 -translate-y-1/2 w-[24px] h-[19px] bg-white rounded-full transition-all duration-200 ease-in-out ${ isVendor ? 'left-[6%]' : 'left-[66%]' }`} />
+                <span className={`absolute top-1/2 -translate-y-1/2 text-[9px] font-medium text-dim ${isVendor ? 'right-2' : 'left-2'}`}>
+                  {isVendor ? 'Client' : 'Vendor'}
+                </span>
+                <div className={`absolute top-1/2 flex h-[16px] w-[26px] -translate-y-1/2 items-center justify-center rounded-full bg-ink transition-all duration-200 ${isVendor ? 'left-1' : 'left-[33px]'}`}>
+                  <span className="text-[7px] font-semibold text-paper">{isVendor ? 'V' : 'C'}</span>
+                </div>
               </div>
             )}
 
             <div className="flex items-center space-x-2 sm:space-x-3">
               {notificationButton}
-              <button aria-label="Messages" className="p-1 text-white hover:bg-white/20 rounded-full">
+              <button aria-label="Messages" className="p-1 text-dim hover:text-ink hover:bg-surface-hover rounded-full transition-colors duration-150">
                 <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
                 </svg>
@@ -951,12 +907,14 @@ export const Header = () => {
                   }
                 }}
                 aria-label="Profile"
-                className="p-1 text-white hover:bg-white/20 rounded-full"
+                className="p-1 text-dim hover:text-ink hover:bg-surface-hover rounded-full transition-colors duration-150"
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                 </svg>
               </button>
+              {/* Theme switcher (mobile menu) */}
+              <ThemeToggle className="h-8 w-8 rounded-full" />
               <button
                 onClick={() => {
                   console.log("Mobile logout button clicked");
@@ -965,7 +923,7 @@ export const Header = () => {
                   localStorage.clear();
                   window.location.href = "/login";
                 }}
-                className="p-1 text-white hover:bg-white/20 rounded-full"
+                className="p-1 text-dim hover:text-ink hover:bg-surface-hover rounded-full transition-colors duration-150"
                 aria-label="Logout"
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
@@ -980,22 +938,21 @@ export const Header = () => {
       {/* --- Bottom Section (Conditional Rendering for Dashboard) --- */}
       {/* Only render this div if isOnDashboard is true */}
       {isOnDashboard && (
-        <div className="mt-4 flex flex-col gap-4 border-t border-white/10 pt-4 xl:flex-row xl:items-center xl:justify-between">
+        <div className="flex flex-col gap-3 border-t border-line px-4 py-3 xl:flex-row xl:items-center xl:justify-between">
           {/* Greeting */}
-          <div className="min-w-0 text-white">
-            <h2 className="text-xl font-semibold leading-tight font-['Montserrat'] sm:text-lg lg:text-2xl">
+          <div className="min-w-0 text-ink">
+            <h2 className="text-sm font-medium leading-tight font-sans tracking-tight lg:text-base">
               {getGreeting()},{" "}
               {vendorData?.vendorDetails?.firstName || vendorData?.vendorDetails?.lastName || vendorData?.vendorDetails?.vendorId ||
                 vendorData?.vendorDetails?.id ||
                 currentUser?.vendorId ||
-                "Vendor"}{" "}
-              😎
+                "Vendor"}
             </h2>
           </div>
           {/* Bottom Right Buttons */}
-          <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-start xl:justify-end">
+          <div className="flex min-w-0 flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center sm:justify-start xl:justify-end">
             {/* Date Section */}
-            <div className="w-fit max-w-full shrink-0 rounded-full border border-white/10 bg-white/5 px-3 py-2 text-[13px] text-white shadow-sm sm:text-sm">
+            <div className="w-fit max-w-full shrink-0 rounded-md border border-line bg-canvas px-2.5 py-1.5 text-xs text-dim">
               <DateYearFunction />
             </div>
             {/* Wrapper for B2B and Prompt buttons */}
@@ -1007,7 +964,7 @@ export const Header = () => {
                 </div>
               )}
               <button
-                className="flex min-h-[44px] w-full max-w-full items-center justify-center whitespace-nowrap rounded-full border border-white/10 bg-white/5 px-3 text-[13px] font-semibold font-['Montserrat'] text-white shadow-sm transition hover:bg-white/10 sm:min-h-[36px] sm:w-auto sm:px-4 sm:text-sm"
+                className="flex h-9 w-full max-w-full items-center justify-center whitespace-nowrap rounded-md border border-line bg-surface px-3 text-[13px] font-medium font-sans text-ink transition-colors duration-150 hover:bg-surface-hover sm:w-auto"
                 onClick={async () => {
                   let idToken = '';
                   try {
@@ -1038,7 +995,7 @@ export const Header = () => {
               {/* B2B button — only if user has sales platform access */}
               {canAccessSales && (
               <button
-                className="flex min-h-[44px] w-full max-w-full items-center justify-center whitespace-nowrap rounded-full border border-white/10 bg-white/5 px-3 text-[13px] font-semibold font-['Montserrat'] text-white shadow-sm transition hover:bg-white/10 sm:min-h-[36px] sm:w-auto sm:px-4 sm:text-sm"
+                className="flex h-9 w-full max-w-full items-center justify-center whitespace-nowrap rounded-md border border-line bg-surface px-3 text-[13px] font-medium font-sans text-ink transition-colors duration-150 hover:bg-surface-hover sm:w-auto"
                 onClick={async () => {
                   if (!config.SALES_URL) {
                     console.error('SALES_URL is not configured');
@@ -1066,7 +1023,7 @@ export const Header = () => {
               {/* Tender button — only if user has sales platform access */}
               {canAccessSales && (
               <button
-                className="flex min-h-[44px] w-full max-w-full items-center justify-center whitespace-nowrap rounded-full border border-white/10 bg-white/5 px-3 text-[13px] font-semibold font-['Montserrat'] text-white shadow-sm transition hover:bg-white/10 sm:min-h-[36px] sm:w-auto sm:px-4 sm:text-sm"
+                className="flex h-9 w-full max-w-full items-center justify-center whitespace-nowrap rounded-md border border-line bg-surface px-3 text-[13px] font-medium font-sans text-ink transition-colors duration-150 hover:bg-surface-hover sm:w-auto"
                 onClick={async () => {
                   if (!config.SALES_URL) {
                     console.error('SALES_URL is not configured');
@@ -1091,7 +1048,7 @@ export const Header = () => {
               </button>
               )}
               <button
-                className="flex min-h-[44px] w-full max-w-full items-center justify-center whitespace-nowrap rounded-full border border-white/10 bg-white/5 px-3 text-[13px] font-semibold font-['Montserrat'] text-white shadow-sm transition hover:bg-white/10 sm:min-h-[36px] sm:w-auto sm:px-4 sm:text-sm"
+                className="flex h-9 w-full max-w-full items-center justify-center whitespace-nowrap rounded-md border border-line bg-surface px-3 text-[13px] font-medium font-sans text-ink transition-colors duration-150 hover:bg-surface-hover sm:w-auto"
                 onClick={() => setIsAiPromptOpen(true)}
               >
                 Prompt <img src="https://c.animaapp.com/VmmSqCQF/img/vector.svg" alt="Prompt" className="ml-2 w-3 h-3 lg:w-4 lg:h-4" />

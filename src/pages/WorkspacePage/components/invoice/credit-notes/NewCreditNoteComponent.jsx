@@ -63,11 +63,11 @@ const CustomerSearchModal = ({ open, onClose, onSelect }) => {
   if (!open) return null;
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-30">
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-6 relative animate-fadeIn">
-        <button onClick={onClose} className="absolute top-4 right-4 text-gray-400 hover:text-gray-700 text-2xl">×</button>
-        <h2 className="text-xl font-bold mb-4 text-gray-800">Search Customers</h2>
+      <div className="bg-surface rounded-2xl shadow-2xl w-full max-w-md p-6 relative animate-fadeIn">
+        <button onClick={onClose} className="absolute top-4 right-4 text-dim hover:text-ink text-2xl">×</button>
+        <h2 className="text-xl font-bold mb-4 text-ink">Search Customers</h2>
         <input
-          className="w-full border rounded px-4 py-2 mb-4 focus:outline-none focus:ring-2 focus:ring-blue-200"
+          className="w-full border rounded px-4 py-2 mb-4 focus:outline-none focus:ring-2 focus:ring-info/20"
           placeholder="Type a customer name..."
           value={search}
           onChange={e => setSearch(e.target.value)}
@@ -75,14 +75,14 @@ const CustomerSearchModal = ({ open, onClose, onSelect }) => {
         />
         <div className="max-h-60 overflow-y-auto">
           {loading ? (
-            <div className="text-center text-gray-500 py-8">Loading...</div>
+            <div className="text-center text-dim py-8">Loading...</div>
           ) : filtered.length === 0 ? (
-            <div className="text-center text-gray-400 py-8">No customers found</div>
+            <div className="text-center text-dim py-8">No customers found</div>
           ) : (
             filtered.map((customer) => (
               <div
                 key={customer.customerId}
-                className="px-4 py-3 hover:bg-blue-50 cursor-pointer rounded"
+                className="px-4 py-3 hover:bg-info/10 cursor-pointer rounded"
                 onClick={() => { onSelect(customer); onClose(); }}
               >
                 {customer.name || customer.displayName || customer.companyName || customer.company}
@@ -221,14 +221,14 @@ const CustomerDropdown = ({ value, onChange }) => {
   return (
     <div className="relative w-full font-poppins">
       <div
-        className="border-2 border-cg rounded-lg px-6 py-4 flex items-center cursor-pointer text-lg bg-white"
+        className="border-2 border-cg rounded-lg px-6 py-4 flex items-center cursor-pointer text-lg bg-surface"
         onClick={handleDropdownClick}
       >
         {value ? value.name || value.displayName || value.companyName || value.company : 'Select or add a customer'}
         <span className="ml-auto flex items-center gap-2">
           <button
             type="button"
-            className="p-1 rounded hover:bg-blue-50 text-blue-600 focus:outline-none"
+            className="p-1 rounded hover:bg-info/10 text-info focus:outline-none"
             onClick={(e) => {
               e.stopPropagation();
               setShowSearchModal(true);
@@ -240,23 +240,23 @@ const CustomerDropdown = ({ value, onChange }) => {
         </span>
       </div>
       {open && (
-        <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg z-50 max-h-60 overflow-y-auto">
+        <div className="absolute top-full left-0 right-0 mt-1 bg-surface border border-line rounded-lg shadow-lg z-50 max-h-60 overflow-y-auto">
           {loading ? (
-            <div className="p-4 text-center text-gray-500">Loading...</div>
+            <div className="p-4 text-center text-dim">Loading...</div>
           ) : !Array.isArray(customers) || customers.length === 0 ? (
-            <div className="p-4 text-center text-gray-500">No customers found</div>
+            <div className="p-4 text-center text-dim">No customers found</div>
           ) : (
             customers.map((customer) => (
               <div
                 key={customer.customerId}
-                className="px-4 py-3 hover:bg-blue-50 cursor-pointer border-b border-gray-100 last:border-b-0"
+                className="px-4 py-3 hover:bg-info/10 cursor-pointer border-b border-line last:border-b-0"
                 onClick={() => {
                   onChange(customer);
                   setOpen(false);
                 }}
               >
                 <div className="font-medium">{customer.name || customer.displayName || customer.companyName || customer.company}</div>
-                <div className="text-sm text-gray-500">{customer.email}</div>
+                <div className="text-sm text-dim">{customer.email}</div>
               </div>
             ))
           )}
@@ -284,15 +284,15 @@ const QuoteNumberConfigModal = ({ open, onClose, config, onSave }) => {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-30 transition-all duration-300 animate-fadeIn">
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg p-0 relative animate-fadeInUp" style={{overflow: 'hidden'}}>
+      <div className="bg-surface rounded-2xl shadow-2xl w-full max-w-lg p-0 relative animate-fadeInUp" style={{overflow: 'hidden'}}>
         {/* Gradient Header */}
-        <div style={{background: 'linear-gradient(120deg, #0d6b5c 0%, #000 100%)'}} className="px-6 py-4 flex items-center justify-between">
+        <div style={{background: 'linear-gradient(120deg, rgb(var(--text-ink)) 0%, rgb(var(--text-ink)) 100%)'}} className="px-6 py-4 flex items-center justify-between">
           <h2 className="text-xl font-bold text-white">Configure Quote Number Preferences</h2>
           <button onClick={onClose} className="text-white hover:bg-white/20 rounded-full p-1 transition"><span className="text-2xl">×</span></button>
         </div>
         
         <div className="p-6">
-          <p className="text-gray-600 mb-6">
+          <p className="text-dim mb-6">
             Your quote numbers are set on auto-generate mode to save your time. Are you sure about changing this setting?
           </p>
           
@@ -307,27 +307,27 @@ const QuoteNumberConfigModal = ({ open, onClose, config, onSave }) => {
                 className="mt-1"
               />
               <div className="flex-1">
-                <label htmlFor="autoGenerate" className="block text-sm font-medium text-gray-700">
+                <label htmlFor="autoGenerate" className="block text-sm font-medium text-ink">
                   Continue auto-generating quote numbers
                 </label>
                 <div className="mt-2 grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-xs font-medium text-gray-600 mb-1">Prefix</label>
+                    <label className="block text-xs font-medium text-dim mb-1">Prefix</label>
                     <input
                       type="text"
                       value={localConfig.prefix}
                       onChange={(e) => setLocalConfig({...localConfig, prefix: e.target.value})}
-                      className="w-full p-2 border border-gray-300 rounded text-sm"
+                      className="w-full p-2 border border-line rounded text-sm"
                       disabled={!localConfig.autoGenerate}
                     />
                   </div>
                   <div>
-                    <label className="block text-xs font-medium text-gray-600 mb-1">Next Number</label>
+                    <label className="block text-xs font-medium text-dim mb-1">Next Number</label>
                     <input
                       type="text"
                       value={localConfig.nextNumber}
                       onChange={(e) => setLocalConfig({...localConfig, nextNumber: e.target.value})}
-                      className="w-full p-2 border border-gray-300 rounded text-sm"
+                      className="w-full p-2 border border-line rounded text-sm"
                       disabled={!localConfig.autoGenerate}
                     />
                   </div>
@@ -344,7 +344,7 @@ const QuoteNumberConfigModal = ({ open, onClose, config, onSave }) => {
                 onChange={() => setLocalConfig({...localConfig, autoGenerate: false})}
                 className="mt-1"
               />
-              <label htmlFor="manualEntry" className="block text-sm font-medium text-gray-700">
+              <label htmlFor="manualEntry" className="block text-sm font-medium text-ink">
                 Enter quote numbers manually
               </label>
             </div>
@@ -352,16 +352,16 @@ const QuoteNumberConfigModal = ({ open, onClose, config, onSave }) => {
         </div>
         
         {/* Footer */}
-        <div className="px-6 py-4 border-t border-gray-200 flex justify-end space-x-3">
+        <div className="px-6 py-4 border-t border-line flex justify-end space-x-3">
           <button
             onClick={onClose}
-            className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition"
+            className="px-4 py-2 border border-line rounded-lg text-ink hover:bg-canvas transition"
           >
             Cancel
           </button>
           <button
             onClick={handleSave}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
+            className="px-4 py-2 bg-info text-white rounded-lg hover:bg-info transition"
           >
             Save
           </button>
@@ -388,15 +388,15 @@ const ReferenceNumberConfigModal = ({ open, onClose, config, onSave }) => {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-30 transition-all duration-300 animate-fadeIn">
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg p-0 relative animate-fadeInUp" style={{overflow: 'hidden'}}>
+      <div className="bg-surface rounded-2xl shadow-2xl w-full max-w-lg p-0 relative animate-fadeInUp" style={{overflow: 'hidden'}}>
         {/* Gradient Header */}
-        <div style={{background: 'linear-gradient(120deg, #0d6b5c 0%, #000 100%)'}} className="px-6 py-4 flex items-center justify-between">
+        <div style={{background: 'linear-gradient(120deg, rgb(var(--text-ink)) 0%, rgb(var(--text-ink)) 100%)'}} className="px-6 py-4 flex items-center justify-between">
           <h2 className="text-xl font-bold text-white">Configure Reference Number Preferences</h2>
           <button onClick={onClose} className="text-white hover:bg-white/20 rounded-full p-1 transition"><span className="text-2xl">×</span></button>
         </div>
         
         <div className="p-6">
-          <p className="text-gray-600 mb-6">
+          <p className="text-dim mb-6">
             Your reference numbers are set on auto-generate mode to save your time. Are you sure about changing this setting?
           </p>
           
@@ -411,27 +411,27 @@ const ReferenceNumberConfigModal = ({ open, onClose, config, onSave }) => {
                 className="mt-1"
               />
               <div className="flex-1">
-                <label htmlFor="autoGenerateRef" className="block text-sm font-medium text-gray-700">
+                <label htmlFor="autoGenerateRef" className="block text-sm font-medium text-ink">
                   Continue auto-generating reference numbers
                 </label>
                 <div className="mt-2 grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-xs font-medium text-gray-600 mb-1">Prefix</label>
+                    <label className="block text-xs font-medium text-dim mb-1">Prefix</label>
                     <input
                       type="text"
                       value={localConfig.prefix}
                       onChange={(e) => setLocalConfig({...localConfig, prefix: e.target.value})}
-                      className="w-full p-2 border border-gray-300 rounded text-sm"
+                      className="w-full p-2 border border-line rounded text-sm"
                       disabled={!localConfig.autoGenerate}
                     />
                   </div>
                   <div>
-                    <label className="block text-xs font-medium text-gray-600 mb-1">Next Number</label>
+                    <label className="block text-xs font-medium text-dim mb-1">Next Number</label>
                     <input
                       type="text"
                       value={localConfig.nextNumber}
                       onChange={(e) => setLocalConfig({...localConfig, nextNumber: e.target.value})}
-                      className="w-full p-2 border border-gray-300 rounded text-sm"
+                      className="w-full p-2 border border-line rounded text-sm"
                       disabled={!localConfig.autoGenerate}
                     />
                   </div>
@@ -448,7 +448,7 @@ const ReferenceNumberConfigModal = ({ open, onClose, config, onSave }) => {
                 onChange={() => setLocalConfig({...localConfig, autoGenerate: false})}
                 className="mt-1"
               />
-              <label htmlFor="manualEntryRef" className="block text-sm font-medium text-gray-700">
+              <label htmlFor="manualEntryRef" className="block text-sm font-medium text-ink">
                 Enter reference numbers manually
               </label>
             </div>
@@ -456,16 +456,16 @@ const ReferenceNumberConfigModal = ({ open, onClose, config, onSave }) => {
         </div>
         
         {/* Footer */}
-        <div className="px-6 py-4 border-t border-gray-200 flex justify-end space-x-3">
+        <div className="px-6 py-4 border-t border-line flex justify-end space-x-3">
           <button
             onClick={onClose}
-            className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition"
+            className="px-4 py-2 border border-line rounded-lg text-ink hover:bg-canvas transition"
           >
             Cancel
           </button>
           <button
             onClick={handleSave}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
+            className="px-4 py-2 bg-info text-white rounded-lg hover:bg-info transition"
           >
             Save
           </button>
@@ -519,12 +519,12 @@ const ItemSelectionModal = ({ open, onClose, onSelect }) => {
   
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-30">
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl p-6 relative animate-fadeIn max-h-[80vh] overflow-hidden">
-        <button onClick={onClose} className="absolute top-4 right-4 text-gray-400 hover:text-gray-700 text-2xl">×</button>
-        <h2 className="text-xl font-bold mb-4 text-gray-800">Select Item</h2>
+      <div className="bg-surface rounded-2xl shadow-2xl w-full max-w-2xl p-6 relative animate-fadeIn max-h-[80vh] overflow-hidden">
+        <button onClick={onClose} className="absolute top-4 right-4 text-dim hover:text-ink text-2xl">×</button>
+        <h2 className="text-xl font-bold mb-4 text-ink">Select Item</h2>
         
         <input
-          className="w-full border rounded px-4 py-2 mb-4 focus:outline-none focus:ring-2 focus:ring-blue-200"
+          className="w-full border rounded px-4 py-2 mb-4 focus:outline-none focus:ring-2 focus:ring-info/20"
           placeholder="Search items..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
@@ -537,27 +537,27 @@ const ItemSelectionModal = ({ open, onClose, onSelect }) => {
               Loading items...
             </div>
           ) : filtered.length === 0 ? (
-            <div className="text-center py-8 text-gray-500">
+            <div className="text-center py-8 text-dim">
               {search ? 'No items found matching your search.' : 'No items available.'}
             </div>
           ) : (
             filtered.map((item, index) => (
               <div
                 key={item.id || item.itemId || index}
-                className="px-4 py-3 hover:bg-blue-50 cursor-pointer rounded border-b border-gray-100 last:border-b-0"
+                className="px-4 py-3 hover:bg-info/10 cursor-pointer rounded border-b border-line last:border-b-0"
                 onClick={() => { onSelect(item); onClose(); }}
               >
                 <div className="flex justify-between items-start">
                   <div className="flex-1">
-                    <div className="font-medium text-gray-900">
+                    <div className="font-medium text-ink">
                       {item.name || item.itemName || 'Unnamed Item'}
                     </div>
                     {item.description && (
-                      <div className="text-sm text-gray-600 mt-1">
+                      <div className="text-sm text-dim mt-1">
                         {item.description}
                       </div>
                     )}
-                    <div className="flex gap-4 mt-2 text-xs text-gray-500">
+                    <div className="flex gap-4 mt-2 text-xs text-dim">
                       {item.hsn && <span>HSN: {item.hsn}</span>}
                       {item.unit && <span>Unit: {item.unit}</span>}
                       {item.category && <span>Category: {item.category}</span>}
@@ -565,12 +565,12 @@ const ItemSelectionModal = ({ open, onClose, onSelect }) => {
                   </div>
                   <div className="text-right ml-4">
                     {item.rate && (
-                      <div className="font-semibold text-green-600">
+                      <div className="font-semibold text-success">
                         ₹{parseFloat(item.rate).toLocaleString()}
                       </div>
                     )}
                     {item.sellingPrice && item.sellingPrice !== item.rate && (
-                      <div className="text-sm text-gray-500">
+                      <div className="text-sm text-dim">
                         Selling: ₹{parseFloat(item.sellingPrice).toLocaleString()}
                       </div>
                     )}
@@ -1769,16 +1769,16 @@ const NewCreditNoteComponentInner = ({ onBack, onCreditNoteCreated, projectId, i
     };
 
     return (
-        <div className="flex flex-col md:flex-row bg-gray-100 min-h-screen font-poppins">
+        <div className="flex flex-col md:flex-row bg-surface-hover min-h-screen font-poppins">
             {/* Loading Screen */}
             {isLoading && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-white bg-opacity-95 backdrop-blur-sm">
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-surface bg-opacity-95 backdrop-blur-sm">
                     <div className="text-center">
                         <div className="relative mb-8">
                             <div className="w-24 h-24 mx-auto rounded-2xl shadow-2xl flex items-center justify-center"
-                                 style={{ background: 'linear-gradient(135deg, #0d6b5c 0%, #000 100%)' }}>
-                                <div className="w-16 h-16 bg-white rounded-xl flex items-center justify-center">
-                                    <div className="w-8 h-8 bg-gradient-to-r from-[#0d6b5c] to-black rounded-lg flex items-center justify-center">
+                                 style={{ background: 'linear-gradient(135deg, rgb(var(--text-ink)) 0%, rgb(var(--text-ink)) 100%)' }}>
+                                <div className="w-16 h-16 bg-surface rounded-xl flex items-center justify-center">
+                                    <div className="w-8 h-8 bg-black rounded-lg flex items-center justify-center">
                                         <svg className="w-5 h-5 text-white animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                                         </svg>
@@ -1788,10 +1788,10 @@ const NewCreditNoteComponentInner = ({ onBack, onCreditNoteCreated, projectId, i
                         </div>
                         
                         <div className="space-y-4">
-                            <h2 className="text-2xl font-bold bg-gradient-to-r from-[#0d6b5c] to-black bg-clip-text text-transparent">
+                            <h2 className="text-2xl font-bold ">
                                 Processing Credit Note
                             </h2>
-                            <p className="text-gray-600 text-lg">
+                            <p className="text-dim text-lg">
                                 Please wait while we save your credit note...
                             </p>
                         </div>
@@ -1802,35 +1802,35 @@ const NewCreditNoteComponentInner = ({ onBack, onCreditNoteCreated, projectId, i
             {/* Main Credit Note Form */}
             <div className="flex-1 p-8 flex flex-col min-h-full">
                 <header className="flex justify-between items-center mb-6">
-                    <h1 className="text-2xl font-bold text-gray-800">{initialData ? (duplicateMode ? 'Duplicate Credit Note' : 'Edit Credit Note') : 'New Credit Note'}</h1>
+                    <h1 className="text-2xl font-bold text-ink">{initialData ? (duplicateMode ? 'Duplicate Credit Note' : 'Edit Credit Note') : 'New Credit Note'}</h1>
                     <div className="flex items-center">
-                         <button onClick={onBack} className="p-2 text-gray-500 hover:bg-gray-200 rounded-full">
+                         <button onClick={onBack} className="p-2 text-dim hover:bg-surface-hover rounded-full">
                             <X size={20} />
                         </button>
                     </div>
                 </header>
 
-                <div className="bg-white p-8 rounded-lg shadow-sm">
+                <div className="bg-surface p-8 rounded-lg ">
                     {message && (
-                      <div className={`mb-4 p-3 rounded text-center font-medium ${message.type === 'success' ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'}`}>{message.text}</div>
+                      <div className={`mb-4 p-3 rounded text-center font-medium ${message.type === 'success' ? 'bg-success/10 text-success' : 'bg-danger/10 text-danger'}`}>{message.text}</div>
                     )}
                     
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
                         <div className="col-span-2 space-y-6">
                              <div>
-                                <label className="block mb-2 text-lg font-medium text-gray-700 font-poppins">Customer Name*</label>
+                                <label className="block mb-2 text-lg font-medium text-ink font-poppins">Customer Name*</label>
                                 <CustomerDropdown value={selectedCustomer} onChange={setSelectedCustomer} />
                                 
                                 {/* Customer Details Section */}
                                 {selectedCustomer && (
-                                    <div className="mt-4 p-4 bg-gray-50 rounded-lg border">
+                                    <div className="mt-4 p-4 bg-canvas rounded-lg border">
                                         <div className="flex justify-between items-start mb-3">
-                                            <h3 className="text-sm font-semibold text-gray-700">Customer Details</h3>
+                                            <h3 className="text-sm font-semibold text-ink">Customer Details</h3>
                                             {!editingCustomerDetails ? (
                                                 <button
                                                     type="button"
                                                     onClick={handleEditCustomerDetails}
-                                                    className="text-blue-600 hover:text-blue-800 text-sm flex items-center gap-1"
+                                                    className="text-info hover:text-info text-sm flex items-center gap-1"
                                                 >
                                                     <Edit2 size={14} />
                                                     Edit
@@ -1840,7 +1840,7 @@ const NewCreditNoteComponentInner = ({ onBack, onCreditNoteCreated, projectId, i
                                                     <button
                                                         type="button"
                                                         onClick={handleSaveCustomerDetails}
-                                                        className="text-green-600 hover:text-green-800 text-sm flex items-center gap-1"
+                                                        className="text-success hover:text-success text-sm flex items-center gap-1"
                                                     >
                                                         <Check size={14} />
                                                         Save
@@ -1848,7 +1848,7 @@ const NewCreditNoteComponentInner = ({ onBack, onCreditNoteCreated, projectId, i
                                                     <button
                                                         type="button"
                                                         onClick={handleCancelEditCustomerDetails}
-                                                        className="text-red-600 hover:text-red-800 text-sm flex items-center gap-1"
+                                                        className="text-danger hover:text-danger text-sm flex items-center gap-1"
                                                     >
                                                         <X size={14} />
                                                         Cancel
@@ -1860,9 +1860,9 @@ const NewCreditNoteComponentInner = ({ onBack, onCreditNoteCreated, projectId, i
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                             {/* Billing Address */}
                                             <div>
-                                                <label className="block text-xs font-medium text-gray-600 mb-1">Billing Address</label>
+                                                <label className="block text-xs font-medium text-dim mb-1">Billing Address</label>
                                                 {!editingCustomerDetails ? (
-                                                    <div className="text-sm text-gray-800 bg-white p-2 rounded border min-h-[60px]">
+                                                    <div className="text-sm text-ink bg-surface p-2 rounded border min-h-[60px]">
                                                         {selectedCustomer.billingAddress}
                                                     </div>
                                                 ) : (
@@ -1872,7 +1872,7 @@ const NewCreditNoteComponentInner = ({ onBack, onCreditNoteCreated, projectId, i
                                                             ...editableCustomerDetails,
                                                             billingAddress: e.target.value
                                                         })}
-                                                        className="w-full text-sm p-2 border border-gray-300 rounded resize-none"
+                                                        className="w-full text-sm p-2 border border-line rounded resize-none"
                                                         rows="3"
                                                         placeholder="Enter billing address..."
                                                         autoComplete="off"
@@ -1885,9 +1885,9 @@ const NewCreditNoteComponentInner = ({ onBack, onCreditNoteCreated, projectId, i
                                             
                                             {/* Shipping Address */}
                                             <div>
-                                                <label className="block text-xs font-medium text-gray-600 mb-1">Shipping Address</label>
+                                                <label className="block text-xs font-medium text-dim mb-1">Shipping Address</label>
                                                 {!editingCustomerDetails ? (
-                                                    <div className="text-sm text-gray-800 bg-white p-2 rounded border min-h-[60px]">
+                                                    <div className="text-sm text-ink bg-surface p-2 rounded border min-h-[60px]">
                                                         {selectedCustomer.shippingAddress}
                                                     </div>
                                                 ) : (
@@ -1897,7 +1897,7 @@ const NewCreditNoteComponentInner = ({ onBack, onCreditNoteCreated, projectId, i
                                                             ...editableCustomerDetails,
                                                             shippingAddress: e.target.value
                                                         })}
-                                                        className="w-full text-sm p-2 border border-gray-300 rounded resize-none"
+                                                        className="w-full text-sm p-2 border border-line rounded resize-none"
                                                         rows="3"
                                                         placeholder="Enter shipping address..."
                                                         autoComplete="off"
@@ -1912,14 +1912,14 @@ const NewCreditNoteComponentInner = ({ onBack, onCreditNoteCreated, projectId, i
                                         {/* Contact Information */}
                                         <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
                                             <div>
-                                                <label className="block text-xs font-medium text-gray-600 mb-1">Email</label>
-                                                <div className="text-sm text-gray-800 bg-white p-2 rounded border">
+                                                <label className="block text-xs font-medium text-dim mb-1">Email</label>
+                                                <div className="text-sm text-ink bg-surface p-2 rounded border">
                                                     {selectedCustomer.email || 'No email provided'}
                                                 </div>
                                             </div>
                                             <div>
-                                                <label className="block text-xs font-medium text-gray-600 mb-1">Phone</label>
-                                                <div className="text-sm text-gray-800 bg-white p-2 rounded border">
+                                                <label className="block text-xs font-medium text-dim mb-1">Phone</label>
+                                                <div className="text-sm text-ink bg-surface p-2 rounded border">
                                                     {selectedCustomer.phone || selectedCustomer.mobile || 'No phone provided'}
                                                 </div>
                                             </div>
@@ -1928,9 +1928,9 @@ const NewCreditNoteComponentInner = ({ onBack, onCreditNoteCreated, projectId, i
                                         {/* GSTIN and Customer Type */}
                                         <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
                                             <div>
-                                                <label className="block text-xs font-medium text-gray-600 mb-1">GSTIN</label>
+                                                <label className="block text-xs font-medium text-dim mb-1">GSTIN</label>
                                                 {!editingCustomerDetails ? (
-                                                    <div className="text-sm text-gray-800 bg-white p-2 rounded border">
+                                                    <div className="text-sm text-ink bg-surface p-2 rounded border">
                                                         {selectedCustomer.gstin || selectedCustomer.gstNumber || 'No GSTIN provided'}
                                                     </div>
                                                 ) : (
@@ -1941,14 +1941,14 @@ const NewCreditNoteComponentInner = ({ onBack, onCreditNoteCreated, projectId, i
                                                             ...editableCustomerDetails,
                                                             gstin: e.target.value
                                                         })}
-                                                        className="w-full text-sm p-2 border border-gray-300 rounded"
+                                                        className="w-full text-sm p-2 border border-line rounded"
                                                         placeholder="Enter GSTIN..."
                                                     />
                                                 )}
                                             </div>
                                             <div>
-                                                <label className="block text-xs font-medium text-gray-600 mb-1">Customer Type</label>
-                                                <div className="text-sm text-gray-800 bg-white p-2 rounded border">
+                                                <label className="block text-xs font-medium text-dim mb-1">Customer Type</label>
+                                                <div className="text-sm text-ink bg-surface p-2 rounded border">
                                                     {selectedCustomer.customerType || selectedCustomer.type || 'Not specified'}
                                                 </div>
                                             </div>
@@ -1959,21 +1959,21 @@ const NewCreditNoteComponentInner = ({ onBack, onCreditNoteCreated, projectId, i
                             
                             <div className="flex flex-col space-y-4">
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">Credit Note #</label>
+                                    <label className="block text-sm font-medium text-ink mb-1">Credit Note #</label>
                                     <div className="flex items-center">
-                                        <span className="text-gray-900 font-medium">{customQuoteNumber}</span>
+                                        <span className="text-ink font-medium">{customQuoteNumber}</span>
                                         <div className="relative">
                                             <button
                                                 type="button"
                                                 onClick={() => setShowQuoteNumberModal(true)}
                                                 onMouseEnter={() => setShowTooltip(true)}
                                                 onMouseLeave={() => setShowTooltip(false)}
-                                                className="ml-2 text-blue-600 hover:text-blue-800"
+                                                className="ml-2 text-info hover:text-info"
                                                 title="Configure number format"
                                             >
                                             <Settings size={16} />
                                                 {showTooltip && (
-                                                    <div className="absolute bottom-full right-0 mb-2 px-3 py-2 bg-gray-900 text-white text-sm rounded-lg whitespace-nowrap z-50">
+                                                    <div className="absolute bottom-full right-0 mb-2 px-3 py-2 bg-cta text-cta-foreground text-sm rounded-lg whitespace-nowrap z-50">
                                                         Click here to enable or disable auto-generation of Credit Note numbers.
                                                         <div className="absolute top-full right-2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-gray-900"></div>
                                                     </div>
@@ -1983,9 +1983,9 @@ const NewCreditNoteComponentInner = ({ onBack, onCreditNoteCreated, projectId, i
                                     </div>
                                 </div>
                                  <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                                    <label className="block text-sm font-medium text-ink mb-1">
                                         Reference#*
-                                        <span className="ml-2 text-xs text-green-600 bg-green-50 px-2 py-1 rounded">Auto: +1</span>
+                                        <span className="ml-2 text-xs text-success bg-success/10 px-2 py-1 rounded">Auto: +1</span>
                                     </label>
                                     <div className="relative">
                                         <input 
@@ -1993,35 +1993,35 @@ const NewCreditNoteComponentInner = ({ onBack, onCreditNoteCreated, projectId, i
                                             value={customReferenceNumber}
                                             onChange={(e) => handleReferenceNumberChange(e.target.value)}
                                             readOnly={referenceConfig.autoGenerate}
-                                            className={`p-2 border border-gray-300 rounded-md w-full pr-10 ${
-                                                referenceConfig.autoGenerate ? 'bg-gray-50 cursor-not-allowed' : ''
+                                            className={`p-2 border border-line rounded-md w-full pr-10 ${
+                                                referenceConfig.autoGenerate ? 'bg-canvas cursor-not-allowed' : ''
                                             }`}
                                             title={referenceConfig.autoGenerate ? "Auto-generated (click settings to change)" : "Manual entry"}
                                         />
-                                        <div className="absolute right-2 top-1/2 transform -translate-y-1/2">
+                                        <div className="absolute right-2 top-1/2 -translate-y-1/2 transform ">
                                             <div className="relative">
                                                 <button
                                                     type="button"
                                                     onClick={() => setShowReferenceModal(true)}
                                                     onMouseEnter={() => setShowReferenceTooltip(true)}
                                                     onMouseLeave={() => setShowReferenceTooltip(false)}
-                                                    className="text-gray-400 hover:text-gray-600 transition-colors"
+                                                    className="text-dim hover:text-dim transition-colors"
                                                 >
                                                     <Settings size={16} />
                                                 </button>
                                                 {showReferenceTooltip && (
-                                                    <div className="absolute bottom-full right-0 mb-2 px-2 py-1 text-xs text-white bg-gray-800 rounded whitespace-nowrap z-10">
+                                                    <div className="absolute bottom-full right-0 mb-2 px-2 py-1 text-xs text-cta-foreground bg-cta rounded whitespace-nowrap z-10">
                                                         Configure reference number
                                                     </div>
                                                 )}
                                             </div>
                                         </div>
                                     </div>
-                                    <p className="text-xs text-gray-500 mt-1">Automatically increments with each new credit note (editable)</p>
+                                    <p className="text-xs text-dim mt-1">Automatically increments with each new credit note (editable)</p>
                                 </div>
                                 
                                 <div className="mt-4">
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                                    <label className="block text-sm font-medium text-ink mb-1">
                                         Reference Quote ID
                                     </label>
                                     <div className="relative">
@@ -2032,22 +2032,22 @@ const NewCreditNoteComponentInner = ({ onBack, onCreditNoteCreated, projectId, i
                                                 onChange={(e) => setReferenceQuoteId(e.target.value)}
                                                 onFocus={() => setShowQuoteDropdown(true)}
                                                 onBlur={() => setTimeout(() => setShowQuoteDropdown(false), 200)}
-                                                className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-200 focus:border-blue-500 pr-10"
+                                                className="w-full p-2 border border-line rounded-md focus:ring-2 focus:ring-info/20 focus:border-info pr-10"
                                                 placeholder="Click to select a quote"
                                             />
                                             <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
-                                                <ChevronDown size={16} className="text-gray-400" />
+                                                <ChevronDown size={16} className="text-dim" />
                                             </div>
                                         </div>
                                         {showQuoteDropdown && (
-                                            <div className="absolute z-10 w-full mt-1 bg-white border border-gray-200 rounded-md shadow-lg max-h-60 overflow-auto">
+                                            <div className="absolute z-10 w-full mt-1 bg-surface border border-line rounded-md shadow-lg max-h-60 overflow-auto">
                                                 {availableQuotes.length > 0 ? (
                                                     availableQuotes.map((quote) => {
                                                         const displayId = quote.customQuoteId || quote.quoteNumber || quote.quotationId || quote.id;
                                                         return (
                                                             <div
                                                                 key={quote.id}
-                                                                className="px-4 py-2 hover:bg-gray-100 cursor-pointer text-sm"
+                                                                className="px-4 py-2 hover:bg-surface-hover cursor-pointer text-sm"
                                                                 onMouseDown={async (e) => {
                                                                     e.preventDefault();
                                                                     setReferenceQuoteId(displayId);
@@ -2074,12 +2074,12 @@ const NewCreditNoteComponentInner = ({ onBack, onCreditNoteCreated, projectId, i
                                                         );
                                                     })
                                                 ) : (
-                                                    <div className="px-4 py-2 text-sm text-gray-500">No quotes found for this customer</div>
+                                                    <div className="px-4 py-2 text-sm text-dim">No quotes found for this customer</div>
                                                 )}
                                             </div>
                                         )}
                                     </div>
-                                    <p className="mt-1 text-xs text-gray-500">Select the quote this credit note is related to (optional)</p>
+                                    <p className="mt-1 text-xs text-dim">Select the quote this credit note is related to (optional)</p>
                                     
                                     {/* Fetch quotes button if not already loaded */}
                                     {!showQuoteDropdown && availableQuotes.length === 0 && (
@@ -2092,7 +2092,7 @@ const NewCreditNoteComponentInner = ({ onBack, onCreditNoteCreated, projectId, i
                                                     fetchQuotes(selectedCustomer.id);
                                                 }
                                             }}
-                                            className="mt-2 text-xs text-blue-600 hover:text-blue-800 flex items-center"
+                                            className="mt-2 text-xs text-info hover:text-info flex items-center"
                                         >
                                             <Search size={12} className="mr-1" /> Load available quotes
                                         </button>
@@ -2102,27 +2102,27 @@ const NewCreditNoteComponentInner = ({ onBack, onCreditNoteCreated, projectId, i
                             
                              <div className="grid grid-cols-2 gap-6">
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">Credit Note Date*</label>
+                                    <label className="block text-sm font-medium text-ink mb-1">Credit Note Date*</label>
                                     <input 
                                         type="date" 
                                         value={quoteDate}
                                         onChange={(e) => handleQuoteDateChange(e.target.value)}
-                                        className="p-2 border border-gray-300 rounded-md w-full" 
+                                        className="p-2 border border-line rounded-md w-full" 
                                     />
                                 </div>
                                  <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                                    <label className="block text-sm font-medium text-ink mb-1">
                                         Expiry Date
-                                        <span className="ml-2 text-xs text-blue-600 bg-blue-50 px-2 py-1 rounded">Auto: +7 days</span>
+                                        <span className="ml-2 text-xs text-info bg-info/10 px-2 py-1 rounded">Auto: +7 days</span>
                                     </label>
                                     <input 
                                         type="date" 
                                         value={expiryDate}
                                         onChange={(e) => setExpiryDate(e.target.value)}
-                                        className="p-2 border border-gray-300 rounded-md w-full" 
+                                        className="p-2 border border-line rounded-md w-full" 
                                         title="Automatically set to 1 week from invoice date (you can change this)"
                                     />
-                                    <p className="text-xs text-gray-500 mt-1">Automatically set to 1 week from invoice date (editable)</p>
+                                    <p className="text-xs text-dim mt-1">Automatically set to 1 week from invoice date (editable)</p>
                                 </div>
                             </div>
                         </div>
@@ -2131,42 +2131,42 @@ const NewCreditNoteComponentInner = ({ onBack, onCreditNoteCreated, projectId, i
                     {/* Item Table */}
                     <div className="mt-8">
                         <div className="mb-4">
-                            <h3 className="text-lg font-semibold text-gray-800">Item Table</h3>
+                            <h3 className="text-lg font-semibold text-ink">Item Table</h3>
                         </div>
-                        <div className="overflow-x-auto rounded-xl shadow border border-gray-200">
+                        <div className="overflow-x-auto rounded-xl shadow border border-line">
                             <table className="w-full">
-                                <thead className="bg-gray-50">
+                                <thead className="bg-canvas">
                                     <tr>
-                                        <th className="p-3 text-left text-xs font-semibold text-gray-600 uppercase">ITEM DETAILS</th>
-                                        <th className="p-3 text-left text-xs font-semibold text-gray-600 uppercase w-48">DESCRIPTION</th>
-                                        <th className="p-3 text-left text-xs font-semibold text-gray-600 uppercase w-24">QUANTITY</th>
-                                        <th className="p-3 text-left text-xs font-semibold text-gray-600 uppercase w-32">RATE</th>
-                                        <th className="p-3 text-left text-xs font-semibold text-gray-600 uppercase w-32">AMOUNT</th>
-                                        <th className="p-3 text-left text-xs font-semibold text-gray-600 uppercase w-20">HSN</th>
+                                        <th className="p-3 text-left text-xs font-semibold text-dim uppercase">ITEM DETAILS</th>
+                                        <th className="p-3 text-left text-xs font-semibold text-dim uppercase w-48">DESCRIPTION</th>
+                                        <th className="p-3 text-left text-xs font-semibold text-dim uppercase w-24">QUANTITY</th>
+                                        <th className="p-3 text-left text-xs font-semibold text-dim uppercase w-32">RATE</th>
+                                        <th className="p-3 text-left text-xs font-semibold text-dim uppercase w-32">AMOUNT</th>
+                                        <th className="p-3 text-left text-xs font-semibold text-dim uppercase w-20">HSN</th>
                                         {isIntraState ? (
                                           <>
-                                            <th className="p-3 text-left text-xs font-semibold text-gray-600 uppercase w-24">CGST (%)</th>
-                                            <th className="p-3 text-left text-xs font-semibold text-gray-600 uppercase w-24">SGST (%)</th>
+                                            <th className="p-3 text-left text-xs font-semibold text-dim uppercase w-24">CGST (%)</th>
+                                            <th className="p-3 text-left text-xs font-semibold text-dim uppercase w-24">SGST (%)</th>
                                           </>
                                         ) : (
-                                          <th className="p-3 text-left text-xs font-semibold text-gray-600 uppercase w-24">IGST (%)</th>
+                                          <th className="p-3 text-left text-xs font-semibold text-dim uppercase w-24">IGST (%)</th>
                                         )}
-                                        <th className="p-3 text-left text-xs font-semibold text-gray-600 uppercase w-32">TOTAL</th>
+                                        <th className="p-3 text-left text-xs font-semibold text-dim uppercase w-32">TOTAL</th>
                                         <th className="p-3"></th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     {items.map((item, index) => (
-                                        <tr key={index} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
+                                        <tr key={index} className={index % 2 === 0 ? 'bg-surface' : 'bg-canvas'}>
                                             <td className="p-2 border-t">
                                                 <div 
-                                                    className="p-2 border border-gray-200 rounded w-full cursor-pointer hover:bg-blue-50 hover:border-blue-300 transition-colors flex items-center justify-between"
+                                                    className="p-2 border border-line rounded w-full cursor-pointer hover:bg-info/10 hover:border-info/30 transition-colors flex items-center justify-between"
                                                     onClick={() => handleOpenItemModal(index)}
                                                 >
-                                                    <span className={item.selectedItem?.name ? 'text-gray-900' : 'text-gray-400'}>
+                                                    <span className={item.selectedItem?.name ? 'text-ink' : 'text-dim'}>
                                                         {item.selectedItem?.name || 'Click to select item...'}
                                                     </span>
-                                                    <Search size={16} className="text-gray-400" />
+                                                    <Search size={16} className="text-dim" />
                                                 </div>
                                             </td>
                                             <td className="p-2 border-t">
@@ -2174,7 +2174,7 @@ const NewCreditNoteComponentInner = ({ onBack, onCreditNoteCreated, projectId, i
                                                     type="text"
                                                     value={item.description || ''}
                                                     onChange={e => handleItemChange(index, 'description', e.target.value)}
-                                                    className="p-2 border border-gray-200 rounded w-full focus:ring-2 focus:ring-blue-200"
+                                                    className="p-2 border border-line rounded w-full focus:ring-2 focus:ring-info/20"
                                                     placeholder="Add description..."
                                                 />
                                             </td>
@@ -2184,7 +2184,7 @@ const NewCreditNoteComponentInner = ({ onBack, onCreditNoteCreated, projectId, i
                                                     min="0"
                                                     value={item.quantity === 0 || item.quantity === '' ? '' : item.quantity}
                                                     onChange={e => handleItemChange(index, 'quantity', e.target.value)}
-                                                    className="p-2 border border-gray-200 rounded w-full text-right focus:ring-2 focus:ring-blue-200"
+                                                    className="p-2 border border-line rounded w-full text-right focus:ring-2 focus:ring-info/20"
                                                 />
                                             </td>
                                             <td className="p-2 border-t">
@@ -2193,7 +2193,7 @@ const NewCreditNoteComponentInner = ({ onBack, onCreditNoteCreated, projectId, i
                                                     min="0"
                                                     value={item.rate === 0 || item.rate === '' ? '' : item.rate}
                                                     onChange={e => handleItemChange(index, 'rate', e.target.value)}
-                                                    className="p-2 border border-gray-200 rounded w-full text-right focus:ring-2 focus:ring-blue-200"
+                                                    className="p-2 border border-line rounded w-full text-right focus:ring-2 focus:ring-info/20"
                                                 />
                                             </td>
                                             <td className="p-2 border-t font-semibold text-right">
@@ -2204,24 +2204,24 @@ const NewCreditNoteComponentInner = ({ onBack, onCreditNoteCreated, projectId, i
                                                     type="text"
                                                     value={item.hsn || ''}
                                                     onChange={e => handleItemChange(index, 'hsn', e.target.value)}
-                                                    className="p-2 border border-gray-200 rounded w-full text-center focus:ring-2 focus:ring-blue-200"
+                                                    className="p-2 border border-line rounded w-full text-center focus:ring-2 focus:ring-info/20"
                                                 />
                                             </td>
                                             {isIntraState ? (
                                               <>
                                                 <td className="p-2 border-t">
                                                   <input type="number" value={item.cgstRate} onChange={e => handleItemChange(index, 'cgstRate', e.target.value)} className="p-2 border rounded w-full text-right" />
-                                                  <div className="text-xs text-gray-500 text-right">Amt: {item.cgstAmount.toFixed(2)}</div>
+                                                  <div className="text-xs text-dim text-right">Amt: {item.cgstAmount.toFixed(2)}</div>
                                                 </td>
                                                 <td className="p-2 border-t">
                                                   <input type="number" value={item.sgstRate} onChange={e => handleItemChange(index, 'sgstRate', e.target.value)} className="p-2 border rounded w-full text-right" />
-                                                  <div className="text-xs text-gray-500 text-right">Amt: {item.sgstAmount.toFixed(2)}</div>
+                                                  <div className="text-xs text-dim text-right">Amt: {item.sgstAmount.toFixed(2)}</div>
                                                 </td>
                                               </>
                                             ) : (
                                               <td className="p-2 border-t">
                                                 <input type="number" value={item.igstRate} onChange={e => handleItemChange(index, 'igstRate', e.target.value)} className="p-2 border rounded w-full text-right" />
-                                                <div className="text-xs text-gray-500 text-right">Amt: {item.igstAmount.toFixed(2)}</div>
+                                                <div className="text-xs text-dim text-right">Amt: {item.igstAmount.toFixed(2)}</div>
                                               </td>
                                             )}
                                             <td className="p-2 border-t font-semibold text-right">
@@ -2234,7 +2234,7 @@ const NewCreditNoteComponentInner = ({ onBack, onCreditNoteCreated, projectId, i
                                                         newItems.splice(index, 1);
                                                         setItems(newItems);
                                                     }}
-                                                    className="text-gray-400 hover:text-red-500 transition"
+                                                    className="text-dim hover:text-danger transition"
                                                     title="Remove"
                                                 >
                                                     <Trash2 size={16} />
@@ -2253,7 +2253,7 @@ const NewCreditNoteComponentInner = ({ onBack, onCreditNoteCreated, projectId, i
                         </div>
                         
                         <div className="mt-4 flex space-x-4">
-                            <button onClick={handleAddItem} className="flex items-center text-sm font-semibold text-blue-600 hover:text-blue-700">
+                            <button onClick={handleAddItem} className="flex items-center text-sm font-semibold text-info hover:text-info">
                                 <Plus size={16} className="mr-1.5" /> Add New Row
                             </button>
                         </div>
@@ -2276,9 +2276,9 @@ const NewCreditNoteComponentInner = ({ onBack, onCreditNoteCreated, projectId, i
                                               max="100"
                                               value={discount === 0 || discount === '' ? '' : discount}
                                               onChange={e => setDiscount(e.target.value)}
-                                              className="w-20 p-2 border border-gray-300 rounded-md text-right focus:ring-2 focus:ring-blue-200"
+                                              className="w-20 p-2 border border-line rounded-md text-right focus:ring-2 focus:ring-info/20"
                                             />
-                                            <span className="text-gray-500">%</span>
+                                            <span className="text-dim">%</span>
                                             <span>{discountValue.toFixed(2)}</span>
                                         </div>
                                     </div>
@@ -2313,7 +2313,7 @@ const NewCreditNoteComponentInner = ({ onBack, onCreditNoteCreated, projectId, i
                                 </>
                             )}
                             <div className="text-right mt-2">
-                                 <button onClick={() => setShowTotalSummary(!showTotalSummary)} className="text-sm text-blue-600 font-semibold flex items-center">
+                                 <button onClick={() => setShowTotalSummary(!showTotalSummary)} className="text-sm text-info font-semibold flex items-center">
                                      {showTotalSummary ? 'Hide Total Summary' : 'Show Total Summary'}
                                     <ChevronDown size={16} className={`ml-1 transform transition-transform ${showTotalSummary ? 'rotate-180' : ''}`} />
                                 </button>
@@ -2323,22 +2323,22 @@ const NewCreditNoteComponentInner = ({ onBack, onCreditNoteCreated, projectId, i
 
                      <div className="mt-12 grid grid-cols-1 md:grid-cols-2 gap-12">
                          <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Customer Notes</label>
+                            <label className="block text-sm font-medium text-ink mb-1">Customer Notes</label>
                             <textarea 
                                 rows="3" 
                                 value={customerNotes}
                                 onChange={(e) => setCustomerNotes(e.target.value)}
-                                className="p-2 border border-gray-300 rounded-md w-full"
+                                className="p-2 border border-line rounded-md w-full"
                             />
                          </div>
                           <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Terms & Conditions</label>
+                                <label className="block text-sm font-medium text-ink mb-1">Terms & Conditions</label>
                                 <textarea 
                                     rows="3" 
                                     value={termsAndConditions}
                                     onChange={(e) => setTermsAndConditions(e.target.value)}
                                     placeholder="Enter the terms and conditions of your business to be displayed in your transaction" 
-                                    className="p-2 border border-gray-300 rounded-md w-full"
+                                    className="p-2 border border-line rounded-md w-full"
                                 />
                             </div>
                      </div>
@@ -2348,8 +2348,8 @@ const NewCreditNoteComponentInner = ({ onBack, onCreditNoteCreated, projectId, i
                     <div className="mt-8 flex justify-end space-x-4">
                         <button
                             onClick={handleSaveQuote}
-                            className="text-white font-semibold py-2 px-6 rounded-lg shadow-sm transition"
-                            style={{ background: 'linear-gradient(120deg, #0d6b5c 0%, #000 100%)' }}
+                            className="text-white font-semibold py-2 px-6 rounded-lg  transition"
+                            style={{ background: 'linear-gradient(120deg, rgb(var(--text-ink)) 0%, rgb(var(--text-ink)) 100%)' }}
                             disabled={saving}
                         >
                             Save as Draft

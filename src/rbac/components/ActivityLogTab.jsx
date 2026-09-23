@@ -24,13 +24,13 @@ const ACTION_LABELS = {
 
 // ── Action icon colors for visual distinction ──
 const ACTION_COLORS = {
-  MEMBER_INVITED:  'bg-blue-100 text-blue-600',
-  ROLE_CHANGED:    'bg-amber-100 text-amber-600',
-  MEMBER_REMOVED:  'bg-red-100 text-red-600',
-  ROLE_CREATED:    'bg-green-100 text-green-600',
-  ROLE_UPDATED:    'bg-indigo-100 text-indigo-600',
-  ROLE_DELETED:    'bg-red-100 text-red-600',
-  INVITE_ACCEPTED: 'bg-teal-100 text-teal-600',
+  MEMBER_INVITED:  'bg-info/10 text-info',
+  ROLE_CHANGED:    'bg-warning/10 text-warning',
+  MEMBER_REMOVED:  'bg-danger/10 text-danger',
+  ROLE_CREATED:    'bg-success/10 text-success',
+  ROLE_UPDATED:    'bg-info/10 text-info',
+  ROLE_DELETED:    'bg-danger/10 text-danger',
+  INVITE_ACCEPTED: 'bg-surface-hover text-ink',
 };
 
 const ACTION_OPTIONS = [
@@ -123,23 +123,23 @@ export default function ActivityLogTab({ members = [] }) {
 
   // ── Render ──
   return (
-    <div className="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
+    <div className="bg-surface border border-line rounded-xl  overflow-hidden">
       {/* Header + Filters */}
-      <div className="px-6 py-4 border-b border-gray-200 bg-gradient-to-r from-teal-50/60 to-cyan-50/40">
+      <div className="px-6 py-4 border-b border-line bg-black">
         <div className="flex items-start justify-between flex-wrap gap-3">
           <div>
-            <h2 className="text-lg font-semibold text-gray-900">Activity Log</h2>
-            <p className="text-xs text-gray-500 mt-0.5">
+            <h2 className="text-lg font-semibold text-ink">Activity Log</h2>
+            <p className="text-xs text-dim mt-0.5">
               {isSuperAdmin
                 ? 'All activity across your organisation'
                 : 'Your recent activity'}
             </p>
             <div className="mt-2 flex items-center gap-2 flex-wrap">
-              <span className="inline-flex items-center rounded-full border border-teal-200 bg-teal-100/70 px-2 py-0.5 text-[11px] font-medium text-teal-800">
+              <span className="inline-flex items-center rounded-full border border-line bg-cta px-2 py-0.5 text-[11px] font-medium text-ink">
                 {logs.length} loaded
               </span>
               {activeFilterCount > 0 && (
-                <span className="inline-flex items-center rounded-full border border-amber-200 bg-amber-100/70 px-2 py-0.5 text-[11px] font-medium text-amber-800">
+                <span className="inline-flex items-center rounded-full border border-warning/20 bg-warning px-2 py-0.5 text-[11px] font-medium text-warning">
                   {activeFilterCount} active filter{activeFilterCount > 1 ? 's' : ''}
                 </span>
               )}
@@ -151,7 +151,7 @@ export default function ActivityLogTab({ members = [] }) {
             <select
               value={actionFilter}
               onChange={(e) => setActionFilter(e.target.value)}
-              className="text-xs border border-gray-300 rounded-lg px-2.5 py-1.5 bg-white min-w-[140px]"
+              className="text-xs border border-line rounded-lg px-2.5 py-1.5 bg-surface min-w-[140px]"
             >
               <option value="">All actions</option>
               {ACTION_OPTIONS.map((a) => (
@@ -164,7 +164,7 @@ export default function ActivityLogTab({ members = [] }) {
               <select
                 value={userFilter}
                 onChange={(e) => setUserFilter(e.target.value)}
-                className="text-xs border border-gray-300 rounded-lg px-2.5 py-1.5 bg-white max-w-[220px]"
+                className="text-xs border border-line rounded-lg px-2.5 py-1.5 bg-surface max-w-[220px]"
               >
                 <option value="">All members</option>
                 {members.map((m) => (
@@ -180,7 +180,7 @@ export default function ActivityLogTab({ members = [] }) {
               type="date"
               value={dateFilter}
               onChange={(e) => setDateFilter(e.target.value)}
-              className="text-[11px] border border-gray-300 rounded-lg px-2.5 py-1.5 bg-white"
+              className="text-[11px] border border-line rounded-lg px-2.5 py-1.5 bg-surface"
             />
 
             {activeFilterCount > 0 && (
@@ -190,7 +190,7 @@ export default function ActivityLogTab({ members = [] }) {
                   setUserFilter('');
                   setDateFilter('');
                 }}
-                className="text-[11px] text-gray-600 hover:text-gray-800 font-medium px-2 py-1 border border-gray-300 rounded-lg bg-white"
+                className="text-[11px] text-dim hover:text-ink font-medium px-2 py-1 border border-line rounded-lg bg-surface"
               >
                 Clear filters
               </button>
@@ -200,7 +200,7 @@ export default function ActivityLogTab({ members = [] }) {
             <button
               onClick={fetchLogs}
               disabled={loading}
-              className="text-[11px] text-teal-700 hover:text-teal-800 font-semibold disabled:opacity-50 px-2 py-1 border border-teal-200 rounded-lg bg-white"
+              className="text-[11px] text-ink hover:text-ink font-semibold disabled:opacity-50 px-2 py-1 border border-line rounded-lg bg-surface"
             >
               Refresh
             </button>
@@ -211,15 +211,15 @@ export default function ActivityLogTab({ members = [] }) {
       {/* Content — Table */}
       {loading && (
         <div className="flex items-center justify-center py-12">
-          <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-teal-500" />
-          <span className="ml-3 text-sm text-gray-500">Loading activity...</span>
+          <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-line" />
+          <span className="ml-3 text-sm text-dim">Loading activity...</span>
         </div>
       )}
 
       {error && (
         <div className="px-6 py-8 text-center">
-          <p className="text-sm text-red-600">{error}</p>
-          <button onClick={fetchLogs} className="mt-2 text-xs text-teal-600 hover:text-teal-700 font-medium">
+          <p className="text-sm text-danger">{error}</p>
+          <button onClick={fetchLogs} className="mt-2 text-xs text-ink hover:text-ink font-medium">
             Retry
           </button>
         </div>
@@ -227,12 +227,12 @@ export default function ActivityLogTab({ members = [] }) {
 
       {!loading && !error && logs.length === 0 && (
         <div className="px-6 py-12 text-center">
-          <svg className="mx-auto h-10 w-10 text-gray-300 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg className="mx-auto h-10 w-10 text-dim mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5}
               d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
           </svg>
-          <p className="text-sm text-gray-500">No activity logs found</p>
-          <p className="text-xs text-gray-400 mt-1">Activity will appear here when team actions occur</p>
+          <p className="text-sm text-dim">No activity logs found</p>
+          <p className="text-xs text-dim mt-1">Activity will appear here when team actions occur</p>
         </div>
       )}
 
@@ -245,16 +245,16 @@ export default function ActivityLogTab({ members = [] }) {
         return filtered.length > 0 ? (
           <div className="overflow-x-auto">
             <table className="w-full text-left">
-              <thead className="bg-gray-50 border-b border-gray-200 sticky top-0 z-10">
+              <thead className="bg-canvas border-b border-line sticky top-0 z-10">
                 <tr>
-                  <th className="px-3 py-2 text-[10px] font-semibold text-gray-500 uppercase tracking-wider w-[40px]">#</th>
-                  <th className="px-3 py-2 text-[10px] font-semibold text-gray-500 uppercase tracking-wider">Initiated By</th>
-                  <th className="px-3 py-2 text-[10px] font-semibold text-gray-500 uppercase tracking-wider">Action</th>
-                  <th className="px-3 py-2 text-[10px] font-semibold text-gray-500 uppercase tracking-wider">Details</th>
-                  <th className="px-3 py-2 text-[10px] font-semibold text-gray-500 uppercase tracking-wider text-right">When</th>
+                  <th className="px-3 py-2 text-[10px] font-semibold text-dim uppercase tracking-wider w-[40px]">#</th>
+                  <th className="px-3 py-2 text-[10px] font-semibold text-dim uppercase tracking-wider">Initiated By</th>
+                  <th className="px-3 py-2 text-[10px] font-semibold text-dim uppercase tracking-wider">Action</th>
+                  <th className="px-3 py-2 text-[10px] font-semibold text-dim uppercase tracking-wider">Details</th>
+                  <th className="px-3 py-2 text-[10px] font-semibold text-dim uppercase tracking-wider text-right">When</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-50">
+              <tbody className="divide-y divide-line">
                 {filtered.map((log, idx) => (
                   <LogRow
                     key={log.eventId}
@@ -270,10 +270,10 @@ export default function ActivityLogTab({ members = [] }) {
           </div>
         ) : (
           <div className="px-6 py-8 text-center">
-            <p className="text-xs text-gray-500">No logs match the selected date</p>
+            <p className="text-xs text-dim">No logs match the selected date</p>
             <button
               onClick={() => setDateFilter('')}
-              className="mt-2 text-xs font-medium text-teal-700 hover:text-teal-800"
+              className="mt-2 text-xs font-medium text-ink hover:text-ink"
             >
               Clear date filter
             </button>
@@ -283,11 +283,11 @@ export default function ActivityLogTab({ members = [] }) {
 
       {/* Load More */}
       {hasMore && !loading && (
-        <div className="px-6 py-3 border-t border-gray-200 text-center">
+        <div className="px-6 py-3 border-t border-line text-center">
           <button
             onClick={loadMore}
             disabled={loadingMore}
-            className="text-xs text-teal-600 hover:text-teal-700 font-medium disabled:opacity-50"
+            className="text-xs text-ink hover:text-ink font-medium disabled:opacity-50"
           >
             {loadingMore ? 'Loading...' : 'Load more'}
           </button>
@@ -304,7 +304,7 @@ export default function ActivityLogTab({ members = [] }) {
 /** Single audit log table row — compact professional style */
 function LogRow({ log, index, emailMap, isSelected, onSelect }) {
   const label = ACTION_LABELS[log.action] || log.action;
-  const colorClass = ACTION_COLORS[log.action] || 'bg-gray-100 text-gray-600';
+  const colorClass = ACTION_COLORS[log.action] || 'bg-surface-hover text-dim';
   // Prefer backend-enriched email, fallback to emailMap, then raw userId
   const actorEmail = log.actorEmail || emailMap[log.userId] || log.userId;
   const actorName = log.actorName || null;
@@ -322,18 +322,18 @@ function LogRow({ log, index, emailMap, isSelected, onSelect }) {
   return (
     <>
       <tr
-        className={`hover:bg-gray-50/60 transition-colors cursor-pointer ${isEven ? 'bg-gray-50/30' : ''} ${isSelected ? 'bg-teal-50/40' : ''}`}
+        className={`hover:bg-canvas transition-colors cursor-pointer ${isEven ? 'bg-canvas' : ''} ${isSelected ? 'bg-cta' : ''}`}
         onClick={onSelect}
       >
-        <td className="px-3 py-1.5 text-[10px] text-gray-400 font-mono">{index}</td>
+        <td className="px-3 py-1.5 text-[10px] text-dim font-mono">{index}</td>
 
         {/* Initiated By */}
         <td className="px-3 py-1.5">
-          <span className="text-[11px] text-gray-800 font-medium truncate block max-w-[180px]" title={actorEmail}>
+          <span className="text-[11px] text-ink font-medium truncate block max-w-[180px]" title={actorEmail}>
             {actorEmail}
           </span>
           {actorName && (
-            <span className="text-[10px] text-gray-500 truncate block max-w-[180px]" title={actorName}>
+            <span className="text-[10px] text-dim truncate block max-w-[180px]" title={actorName}>
               {actorName}
             </span>
           )}
@@ -351,26 +351,26 @@ function LogRow({ log, index, emailMap, isSelected, onSelect }) {
           {detailParts.length > 0 ? (
             <div className="flex flex-wrap gap-1">
               {detailParts.map((part, i) => (
-                <span key={i} className="text-[10px] bg-gray-100 text-gray-700 px-1.5 py-0.5 rounded">
+                <span key={i} className="text-[10px] bg-surface-hover text-ink px-1.5 py-0.5 rounded">
                   {part}
                 </span>
               ))}
             </div>
           ) : (
-            <span className="text-[10px] text-gray-400">—</span>
+            <span className="text-[10px] text-dim">—</span>
           )}
         </td>
 
         {/* Timestamp */}
         <td className="px-3 py-1.5 text-right whitespace-nowrap">
-          <p className="text-[10px] text-gray-600">{formatTimestamp(log.timestamp)}</p>
-          <p className="text-[9px] text-gray-400">{timeAgo(log.timestamp)}</p>
+          <p className="text-[10px] text-dim">{formatTimestamp(log.timestamp)}</p>
+          <p className="text-[9px] text-dim">{timeAgo(log.timestamp)}</p>
         </td>
       </tr>
 
       {/* ── Expandable detail panel ── */}
       {isSelected && (
-        <tr className="bg-gray-50/80">
+        <tr className="bg-canvas">
           <td colSpan={5} className="px-4 py-3">
             <LogDetailPanel log={log} actorEmail={actorEmail} actorName={actorName} label={label} />
           </td>
@@ -391,34 +391,34 @@ function LogDetailPanel({ log, actorEmail, actorName, label }) {
     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-[11px]">
       {/* Left — Actor info */}
       <div className="space-y-1.5">
-        <p className="font-semibold text-gray-700">Event Initiated By</p>
-        <div className="bg-white rounded-lg border border-gray-200 p-2.5 space-y-1">
-          <p className="text-gray-800"><span className="text-gray-500">Email:</span> {actorEmail}</p>
-          {actorName && <p className="text-gray-800"><span className="text-gray-500">Name:</span> {actorName}</p>}
-          <p className="text-gray-800"><span className="text-gray-500">User ID:</span> <span className="font-mono text-[10px]">{log.userId}</span></p>
+        <p className="font-semibold text-ink">Event Initiated By</p>
+        <div className="bg-surface rounded-lg border border-line p-2.5 space-y-1">
+          <p className="text-ink"><span className="text-dim">Email:</span> {actorEmail}</p>
+          {actorName && <p className="text-ink"><span className="text-dim">Name:</span> {actorName}</p>}
+          <p className="text-ink"><span className="text-dim">User ID:</span> <span className="font-mono text-[10px]">{log.userId}</span></p>
         </div>
       </div>
 
       {/* Right — Event details */}
       <div className="space-y-1.5">
-        <p className="font-semibold text-gray-700">Event Details</p>
-        <div className="bg-white rounded-lg border border-gray-200 p-2.5 space-y-1">
-          <p className="text-gray-800"><span className="text-gray-500">Action:</span> {label}</p>
-          <p className="text-gray-800"><span className="text-gray-500">When:</span> {formatTimestamp(log.timestamp)}</p>
-          {details.targetEmail && <p className="text-gray-800"><span className="text-gray-500">Target member:</span> {details.targetEmail}</p>}
-          {details.email && !details.targetEmail && <p className="text-gray-800"><span className="text-gray-500">Member:</span> {details.email}</p>}
-          {details.roleName && <p className="text-gray-800"><span className="text-gray-500">Role:</span> {details.roleName}</p>}
+        <p className="font-semibold text-ink">Event Details</p>
+        <div className="bg-surface rounded-lg border border-line p-2.5 space-y-1">
+          <p className="text-ink"><span className="text-dim">Action:</span> {label}</p>
+          <p className="text-ink"><span className="text-dim">When:</span> {formatTimestamp(log.timestamp)}</p>
+          {details.targetEmail && <p className="text-ink"><span className="text-dim">Target member:</span> {details.targetEmail}</p>}
+          {details.email && !details.targetEmail && <p className="text-ink"><span className="text-dim">Member:</span> {details.email}</p>}
+          {details.roleName && <p className="text-ink"><span className="text-dim">Role:</span> {details.roleName}</p>}
           {details.oldRoleName && details.newRoleName && (
-            <p className="text-gray-800"><span className="text-gray-500">Role change:</span> {details.oldRoleName} → {details.newRoleName}</p>
+            <p className="text-ink"><span className="text-dim">Role change:</span> {details.oldRoleName} → {details.newRoleName}</p>
           )}
-          {details.reason && <p className="text-gray-800"><span className="text-gray-500">Reason:</span> {details.reason}</p>}
-          {details.displayName && <p className="text-gray-800"><span className="text-gray-500">Display name:</span> {details.displayName}</p>}
+          {details.reason && <p className="text-ink"><span className="text-dim">Reason:</span> {details.reason}</p>}
+          {details.displayName && <p className="text-ink"><span className="text-dim">Display name:</span> {details.displayName}</p>}
         </div>
       </div>
 
       {/* Full-width description */}
       <div className="sm:col-span-2">
-        <p className="text-gray-600 bg-white border border-gray-200 rounded-lg p-2.5 italic">
+        <p className="text-dim bg-surface border border-line rounded-lg p-2.5 italic">
           {description}
         </p>
       </div>

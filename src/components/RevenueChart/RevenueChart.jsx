@@ -35,16 +35,6 @@ ChartJS.register(
   Filler // Register Filler
 );
 
-// --- Color Palette ---
-const CHART_COLORS = [
-  "#0f766e",
-  "#10b981",
-  "#84cc16",
-  "#f59e0b",
-  "#0f172a",
-  "#94a3b8",
-];
-
 // Helper to format currency
 const formatCurrency = (value) => {
    // Handle potential non-numeric input gracefully
@@ -195,74 +185,70 @@ export const RevenueChart = ({ data: fullData, totalRevenue, totalExpenses, netP
   ];
 
   return (
-    <div className="rounded-[30px] border border-slate-200/80 bg-white p-4 shadow-[0_20px_60px_rgba(15,23,42,0.06)] sm:p-5">
-      <div className="mb-5 rounded-[26px] border border-emerald-100 bg-[linear-gradient(135deg,#f8fffc_0%,#effbf5_50%,#ffffff_100%)] p-4 sm:p-5">
+    <div className="rounded-lg border border-line bg-surface p-4 sm:p-5">
+      {/* Ink panel — the page's one sanctioned dark surface (brand ratio: 15% ink) */}
+      <div className="mb-4 rounded-md bg-black p-4 text-white sm:p-5">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
           <div className="max-w-xl">
-            <p className="text-xs font-medium text-emerald-700">Financial overview</p>
-            <h2 className="mt-1 text-xl font-semibold tracking-tight text-slate-900">Revenue & Expenses</h2>
-            <p className="mt-2 text-[13px] leading-5 text-slate-500">
+            <p className="text-[11px] font-medium uppercase tracking-[0.16em] text-white/55">Financial overview</p>
+            <h2 className="mt-1 text-xl font-semibold tracking-tight text-white">Revenue & Expenses</h2>
+            <p className="mt-2 text-[13px] leading-5 text-white/70">
               Review your financial summary for the selected time period.
             </p>
           </div>
 
-          {/* <div className="inline-flex w-fit items-center gap-2 rounded-full border border-emerald-100 bg-white px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.16em] text-emerald-700 shadow-sm">
-            <CircleDollarSign size={14} />
-            Financial snapshot
-          </div> */}
-
           <button
             onClick={() => navigate('/VendorDashboard/finance-detail')}
-            className="inline-flex items-center gap-2 rounded-full border border-emerald-200 bg-emerald-50 px-4 py-2 text-xs font-semibold text-emerald-700 shadow-sm transition hover:bg-emerald-100 hover:border-emerald-300"
+            className="inline-flex items-center gap-2 rounded-md border border-white/15 bg-white/10 px-4 py-2 text-xs font-semibold text-white transition hover:bg-white/15"
           >
             View Details
             <ArrowRight size={14} />
           </button>
         </div>
 
-        <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-3">
-          <div className="min-w-0 rounded-[22px] border border-slate-200 bg-white p-4 shadow-sm">
-            <div className="flex items-center gap-2 text-slate-500">
+        <div className="mt-4 grid grid-cols-1 gap-px overflow-hidden rounded-md border border-white/15 bg-white/15 sm:grid-cols-3">
+          <div className="min-w-0 bg-black p-4">
+            <div className="flex items-center gap-2 text-white/55">
               <CircleDollarSign size={15} />
-              <p className="text-[11px] font-semibold uppercase tracking-[0.18em]">Total Revenue</p>
+              <p className="text-[10px] font-semibold uppercase tracking-[0.16em]">Total Revenue</p>
             </div>
-            <p className="mt-3 overflow-hidden text-ellipsis whitespace-nowrap text-[1.1rem] font-semibold tracking-[-0.03em] text-emerald-700 sm:text-[1.5rem]">{formatCurrency(displayRevenue)}</p>
+            <p className="tnum mt-3 overflow-hidden text-ellipsis whitespace-nowrap text-[1.1rem] font-semibold tracking-[-0.03em] text-white sm:text-[1.5rem]">{formatCurrency(displayRevenue)}</p>
           </div>
 
-          <div className="min-w-0 rounded-[22px] border border-slate-200 bg-white p-4 shadow-sm">
-            <div className="flex items-center gap-2 text-slate-500">
+          <div className="min-w-0 bg-black p-4">
+            <div className="flex items-center gap-2 text-white/55">
               <BarChart3 size={15} />
-              <p className="text-[11px] font-semibold uppercase tracking-[0.18em]">Total Expenses</p>
+              <p className="text-[10px] font-semibold uppercase tracking-[0.16em]">Total Expenses</p>
             </div>
-            <p className="mt-3 overflow-hidden text-ellipsis whitespace-nowrap text-[1.1rem] font-semibold tracking-[-0.03em] text-rose-700 sm:text-[1.5rem]">{formatCurrency(displayExpenses)}</p>
+            <p className="tnum mt-3 overflow-hidden text-ellipsis whitespace-nowrap text-[1.1rem] font-semibold tracking-[-0.03em] text-danger sm:text-[1.5rem]">{formatCurrency(displayExpenses)}</p>
           </div>
 
-          <div className="min-w-0 rounded-[22px] border border-slate-200 bg-white p-4 shadow-sm">
-            <div className="flex items-center gap-2 text-slate-500">
+          <div className="min-w-0 bg-black p-4">
+            <div className="flex items-center gap-2 text-white/55">
               <TrendingUp size={15} />
-              <p className="text-[11px] font-semibold uppercase tracking-[0.18em]">Net Profit</p>
+              <p className="text-[10px] font-semibold uppercase tracking-[0.16em]">Net Profit</p>
             </div>
-            <p className="mt-3 overflow-hidden text-ellipsis whitespace-nowrap text-[1.1rem] font-semibold tracking-[-0.03em] text-slate-900 sm:text-[1.5rem]">{formatCurrency(displayNetProfit)}</p>
+            <p className="tnum mt-3 overflow-hidden text-ellipsis whitespace-nowrap text-[1.1rem] font-semibold tracking-[-0.03em] text-success sm:text-[1.5rem]">{formatCurrency(displayNetProfit)}</p>
           </div>
         </div>
       </div>
 
-      <div className="rounded-[24px] border border-slate-200 bg-slate-50 p-4">
+      <div className="rounded-md border border-line bg-canvas p-4">
         <div className="mb-3 flex flex-col gap-1">
-          <p className="text-[13px] font-medium text-slate-700">Time period</p>
-          <p className="text-xs text-slate-500">Select the time window for this financial summary.</p>
+          <p className="text-[13px] font-medium text-ink">Time period</p>
+          <p className="text-xs text-dim">Select the time window for this financial summary.</p>
         </div>
 
         <div className="space-y-3 sm:hidden">
           <div>
-            <p className="mb-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400">Timeframe</p>
+            <p className="mb-2 text-[11px] font-semibold uppercase tracking-[0.16em] text-dim">Timeframe</p>
             <div className="grid grid-cols-3 gap-2">
               {timeframeOptions.map((option) => (
                 <button
                   key={option.value}
                   type="button"
                   onClick={() => setTimeframe(option.value)}
-                  className={`rounded-2xl px-3 py-2 text-xs font-semibold transition ${timeframe === option.value ? 'bg-emerald-600 text-white shadow-sm' : 'bg-white text-slate-600 border border-slate-200 hover:border-emerald-200 hover:text-emerald-700'}`}
+                  className={`rounded-md px-3 py-2 text-xs font-semibold transition ${timeframe === option.value ? 'bg-cta text-cta-foreground ' : 'bg-surface text-dim border border-line hover:border-line hover:text-ink'}`}
                 >
                   {option.label}
                 </button>
@@ -277,7 +263,7 @@ export const RevenueChart = ({ data: fullData, totalRevenue, totalExpenses, netP
                value={timeframe}
                onChange={(e) => setTimeframe(e.target.value)}
                aria-label="Select time frame"
-               className="appearance-none rounded-full border border-slate-200 bg-white px-4 py-2 pr-9 text-xs font-medium text-slate-700 shadow-sm transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100 w-full"
+               className="appearance-none rounded-md border border-line bg-surface px-4 py-2 pr-9 text-xs font-medium text-ink  transition focus:border-line focus:ring-2 focus:ring-ink w-full"
              >
                <option value="3m">3 Months</option>
                <option value="6m">6 Months</option>
@@ -285,7 +271,7 @@ export const RevenueChart = ({ data: fullData, totalRevenue, totalExpenses, netP
                <option value="5y">5 Years</option>
                <option value="all">Overall</option>
              </select>
-             <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-slate-500">
+             <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-dim">
                <svg className="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/></svg>
              </div>
            </div>

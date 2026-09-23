@@ -136,12 +136,12 @@ function PasskeySetup({ userId, email, onSuccess, onCancel }) {
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-2xl p-8 max-w-md w-full mx-4 shadow-2xl">
+      <div className="bg-surface rounded-2xl p-8 max-w-md w-full mx-4 shadow-2xl">
         <div className="flex justify-between items-center mb-6">
-          <h2 className="text-2xl font-semibold text-gray-900">Set Up Passkey</h2>
+          <h2 className="text-2xl font-semibold text-ink">Set Up Passkey</h2>
           <button
             onClick={onCancel}
-            className="text-gray-400 hover:text-gray-600 transition"
+            className="text-dim hover:text-dim transition"
             aria-label="Close"
           >
             <X size={24} />
@@ -160,15 +160,15 @@ function PasskeySetup({ userId, email, onSuccess, onCancel }) {
 
         {step === 'info' && (
           <>
-            <p className="text-gray-600 mb-6">
+            <p className="text-dim mb-6">
               A passkey is a secure and convenient way to log in. You can use your face, fingerprint, or security key.
             </p>
 
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
-              <p className="text-sm text-blue-800">
+            <div className="bg-info/10 border border-info/20 rounded-lg p-4 mb-6">
+              <p className="text-sm text-info">
                 <strong>Benefits:</strong>
               </p>
-              <ul className="text-sm text-blue-700 mt-2 space-y-1 ml-4">
+              <ul className="text-sm text-info mt-2 space-y-1 ml-4">
                 <li>✓ Faster login</li>
                 <li>✓ More secure than passwords</li>
                 <li>✓ Works across your devices</li>
@@ -176,7 +176,7 @@ function PasskeySetup({ userId, email, onSuccess, onCancel }) {
             </div>
 
             <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-ink mb-2">
                 Passkey Name (Optional)
               </label>
               <input
@@ -184,21 +184,21 @@ function PasskeySetup({ userId, email, onSuccess, onCancel }) {
                 placeholder="e.g., My iPhone, My Laptop"
                 value={passkeyName}
                 onChange={(e) => setPasskeyName(e.target.value)}
-                className="w-full bg-gray-50 text-gray-900 placeholder-gray-500 border border-gray-200 rounded-md px-4 py-2 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                className="w-full bg-canvas text-ink placeholder-dim border border-line rounded-md px-4 py-2 focus:outline-none focus:ring-2 focus:ring-ink"
               />
             </div>
 
             <div className="space-y-3">
               <button
                 onClick={startPasskeyRegistration}
-                className="w-full bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg px-6 py-3 transition duration-200 font-medium"
+                className="w-full bg-cta hover:bg-cta text-cta-foreground rounded-lg px-6 py-3 transition duration-200 font-medium"
               >
                 Create Passkey
               </button>
               
               <button
                 onClick={onCancel}
-                className="w-full border border-gray-200 text-gray-700 rounded-lg px-6 py-3 hover:bg-gray-50 transition duration-200"
+                className="w-full border border-line text-ink rounded-lg px-6 py-3 hover:bg-canvas transition duration-200"
               >
                 Skip for Now
               </button>
@@ -208,11 +208,11 @@ function PasskeySetup({ userId, email, onSuccess, onCancel }) {
 
         {step === 'registering' && (
           <div className="flex flex-col items-center justify-center py-8">
-            <Loader className="w-8 h-8 text-emerald-600 animate-spin mb-4" />
-            <p className="text-sm text-gray-600 text-center">
+            <Loader className="w-8 h-8 text-ink animate-spin mb-4" />
+            <p className="text-sm text-dim text-center">
               Creating your passkey...
             </p>
-            <p className="text-xs text-gray-500 mt-2 text-center">
+            <p className="text-xs text-dim mt-2 text-center">
               Look for biometric or security key prompts on your device
             </p>
           </div>
@@ -220,13 +220,13 @@ function PasskeySetup({ userId, email, onSuccess, onCancel }) {
 
         {step === 'success' && (
           <div className="flex flex-col items-center justify-center py-8">
-            <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mb-4">
-              <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div className="w-12 h-12 bg-success/10 rounded-full flex items-center justify-center mb-4">
+              <svg className="w-6 h-6 text-success" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
               </svg>
             </div>
-            <p className="text-lg font-semibold text-gray-900 mb-2">Success!</p>
-            <p className="text-sm text-gray-600 text-center">
+            <p className="text-lg font-semibold text-ink mb-2">Success!</p>
+            <p className="text-sm text-dim text-center">
               Your passkey has been set up. You can now log in using it.
             </p>
           </div>

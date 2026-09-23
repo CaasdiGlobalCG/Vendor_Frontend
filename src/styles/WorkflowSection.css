@@ -8,7 +8,7 @@
     "Source Han Sans CN", sans-serif;
   --primary-font: Poppins, var(--default-font-family);
   --secondary-font: Inter, var(--default-font-family);
-  --primary-gradient: linear-gradient(90deg, #b9258f, #1bf6c6);
+  --primary-gradient: linear-gradient(90deg, #737373, #404040);
   --text-color: #ffffff;
   --bg-color: #000000;
   --opacity-text: 0.4;
@@ -115,7 +115,7 @@ body {
 /* Rectangle Styles with Increased Specificity */
 .workflow-section .rectangle {
  
-background: #000000;
+background: rgb(var(--cta-action));
 border-radius: 0 50px 50px 0;
 padding: 1.5rem 2rem;
 border: 3px solid rgba(255, 255, 255, 0.15);
@@ -143,7 +143,7 @@ transform: translateX(0) !important;
 }
 
 .step-title {
-  color: #ffffff;
+  color: rgb(var(--text-muted));
   font-family: Poppins, var(--default-font-family);
   font-size: 1.35rem;
   font-weight: 400;
@@ -241,7 +241,7 @@ transform: translateX(0) !important;
 /* Lock final state */
 .workflow-section .rectangle,
 .workflow-section .rectangle.right {
-  border-color: #21be9c;
+  border-color: rgb(var(--border-subtle));
 }
  
 
@@ -262,7 +262,7 @@ transform: translateX(0) !important;
   width: 0;
   height: 3px;
   /* border-top: 3px solid rgba(255, 255, 255, 0.5); */
-  background-image: linear-gradient(90deg, rgba(33,190,156,0) 0%, #21BE9C 100%);
+  background-image: linear-gradient(90deg, rgba(33,190,156,0) 0%, rgb(var(--cta-action)) 100%);
   position: relative;
   transition: border-color 0.5s ease-in-out;
   animation: drawHorizontal 1.5s ease-out forwards;
@@ -272,7 +272,7 @@ transform: translateX(0) !important;
   width: 0;
   height: 3px;
   /* border-top: 3px solid rgba(255, 255, 255, 0.5); */
-  background-image: linear-gradient(90deg, #21BE9C 0%, rgba(33,190,156,0) 100%);
+  background-image: linear-gradient(90deg, rgb(var(--cta-action)) 0%, rgba(33,190,156,0) 100%);
   position: relative;
   transition: border-color 0.5s ease-in-out;
   left: 16%;
@@ -283,7 +283,7 @@ transform: translateX(0) !important;
   height: 200%;
   width: 4px;
   /* border-left: 3px solid rgba(255, 255, 255, 0.5); */
-  background-image: linear-gradient(180deg, #21BE9C 0%, rgba(33,190,156,0) 100%);
+  background-image: linear-gradient(180deg, rgb(var(--cta-action)) 0%, rgba(33,190,156,0) 100%);
   position: absolute;
   right: 0;
   top: 49%;
@@ -523,7 +523,7 @@ transform: translateX(0) !important;
 }
 
 .description-text {
-  color: #ffffff;
+  color: rgb(var(--text-muted));
   font-family: Poppins, var(--default-font-family);
   font-size: clamp(0.875rem, 1.5vw, 1.25rem);
   font-weight: 500;

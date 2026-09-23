@@ -361,10 +361,10 @@ const LayoutConfigModal = ({ isOpen, onClose, onConfirm, layoutType, layoutData 
         return (
           <div className="space-y-4">
             <div className="flex items-center justify-between">
-              <h4 className="font-medium text-gray-900">Frame Content Items</h4>
+              <h4 className="font-medium text-ink">Frame Content Items</h4>
               <button
                 onClick={addFrameItem}
-                className="flex items-center space-x-1 px-3 py-1 text-sm bg-blue-50 hover:bg-blue-100 text-blue-700 rounded transition-colors"
+                className="flex items-center space-x-1 px-3 py-1 text-sm bg-info/10 hover:bg-info/10 text-info rounded transition-colors"
               >
                 <Plus className="w-4 h-4" />
                 <span>Add Item</span>
@@ -373,18 +373,18 @@ const LayoutConfigModal = ({ isOpen, onClose, onConfirm, layoutType, layoutData 
             
             <div className="space-y-2 max-h-48 overflow-y-auto">
               {frameItems.map((item, index) => (
-                <div key={item.id} className="flex items-center space-x-2 p-2 bg-gray-50 rounded border">
-                  <span className="text-sm font-medium text-gray-600 w-8">{index + 1}.</span>
+                <div key={item.id} className="flex items-center space-x-2 p-2 bg-canvas rounded border">
+                  <span className="text-sm font-medium text-dim w-8">{index + 1}.</span>
                   <input
                     type="text"
                     value={item.content}
                     onChange={(e) => updateFrameItem(item.id, e.target.value)}
-                    className="flex-1 px-2 py-1 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    className="flex-1 px-2 py-1 text-sm border border-line rounded focus:ring-2 focus:ring-info focus:border-info"
                     placeholder="Content description"
                   />
                   <button
                     onClick={() => removeFrameItem(item.id)}
-                    className="text-red-500 hover:text-red-700 transition-colors"
+                    className="text-danger hover:text-danger transition-colors"
                     disabled={frameItems.length === 1}
                   >
                     <Minus className="w-4 h-4" />
@@ -399,10 +399,10 @@ const LayoutConfigModal = ({ isOpen, onClose, onConfirm, layoutType, layoutData 
         return (
           <div className="space-y-4">
             <div className="flex items-center justify-between">
-              <h4 className="font-medium text-gray-900">Row Configuration</h4>
+              <h4 className="font-medium text-ink">Row Configuration</h4>
               <button
                 onClick={addRow}
-                className="flex items-center space-x-1 px-3 py-1 text-sm bg-blue-50 hover:bg-blue-100 text-blue-700 rounded transition-colors"
+                className="flex items-center space-x-1 px-3 py-1 text-sm bg-info/10 hover:bg-info/10 text-info rounded transition-colors"
               >
                 <Plus className="w-4 h-4" />
                 <span>Add Row</span>
@@ -411,19 +411,19 @@ const LayoutConfigModal = ({ isOpen, onClose, onConfirm, layoutType, layoutData 
             
             <div className="space-y-2 max-h-48 overflow-y-auto">
               {rows.map((row, index) => (
-                <div key={row.id} className="flex items-center space-x-2 p-2 bg-gray-50 rounded border">
-                  <span className="text-sm font-medium text-gray-600 w-8">{index + 1}.</span>
+                <div key={row.id} className="flex items-center space-x-2 p-2 bg-canvas rounded border">
+                  <span className="text-sm font-medium text-dim w-8">{index + 1}.</span>
                   <input
                     type="text"
                     value={row.content}
                     onChange={(e) => updateRow(row.id, 'content', e.target.value)}
-                    className="flex-1 px-2 py-1 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    className="flex-1 px-2 py-1 text-sm border border-line rounded focus:ring-2 focus:ring-info focus:border-info"
                     placeholder="Row content"
                   />
                   <button
                     onClick={() => toggleRowVisibility(row.id)}
                     className={`p-1 rounded transition-colors ${
-                      row.visible ? 'text-green-600 hover:text-green-800' : 'text-gray-400 hover:text-gray-600'
+                      row.visible ? 'text-success hover:text-success' : 'text-dim hover:text-dim'
                     }`}
                     title={row.visible ? 'Hide row' : 'Show row'}
                   >
@@ -431,7 +431,7 @@ const LayoutConfigModal = ({ isOpen, onClose, onConfirm, layoutType, layoutData 
                   </button>
                   <button
                     onClick={() => removeRow(row.id)}
-                    className="text-red-500 hover:text-red-700 transition-colors"
+                    className="text-danger hover:text-danger transition-colors"
                     disabled={rows.length === 1}
                   >
                     <Minus className="w-4 h-4" />
@@ -446,10 +446,10 @@ const LayoutConfigModal = ({ isOpen, onClose, onConfirm, layoutType, layoutData 
         return (
           <div className="space-y-4">
             <div className="flex items-center justify-between">
-              <h4 className="font-medium text-gray-900">Column Configuration</h4>
+              <h4 className="font-medium text-ink">Column Configuration</h4>
               <button
                 onClick={addColumn}
-                className="flex items-center space-x-1 px-3 py-1 text-sm bg-blue-50 hover:bg-blue-100 text-blue-700 rounded transition-colors"
+                className="flex items-center space-x-1 px-3 py-1 text-sm bg-info/10 hover:bg-info/10 text-info rounded transition-colors"
               >
                 <Plus className="w-4 h-4" />
                 <span>Add Column</span>
@@ -458,20 +458,20 @@ const LayoutConfigModal = ({ isOpen, onClose, onConfirm, layoutType, layoutData 
             
             <div className="space-y-2 max-h-48 overflow-y-auto">
               {columns.map((col, index) => (
-                <div key={col.id} className="flex items-center space-x-2 p-2 bg-gray-50 rounded border">
-                  <span className="text-sm font-medium text-gray-600 w-8">{index + 1}.</span>
+                <div key={col.id} className="flex items-center space-x-2 p-2 bg-canvas rounded border">
+                  <span className="text-sm font-medium text-dim w-8">{index + 1}.</span>
                   <input
                     type="text"
                     value={col.content}
                     onChange={(e) => updateColumn(col.id, 'content', e.target.value)}
-                    className="flex-1 px-2 py-1 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    className="flex-1 px-2 py-1 text-sm border border-line rounded focus:ring-2 focus:ring-info focus:border-info"
                     placeholder="Column content"
                   />
-                  <span className="text-xs text-gray-500 w-12">{col.width}</span>
+                  <span className="text-xs text-dim w-12">{col.width}</span>
                   <button
                     onClick={() => toggleColumnVisibility(col.id)}
                     className={`p-1 rounded transition-colors ${
-                      col.visible ? 'text-green-600 hover:text-green-800' : 'text-gray-400 hover:text-gray-600'
+                      col.visible ? 'text-success hover:text-success' : 'text-dim hover:text-dim'
                     }`}
                     title={col.visible ? 'Hide column' : 'Show column'}
                   >
@@ -479,7 +479,7 @@ const LayoutConfigModal = ({ isOpen, onClose, onConfirm, layoutType, layoutData 
                   </button>
                   <button
                     onClick={() => removeColumn(col.id)}
-                    className="text-red-500 hover:text-red-700 transition-colors"
+                    className="text-danger hover:text-danger transition-colors"
                     disabled={columns.length === 1}
                   >
                     <Minus className="w-4 h-4" />
@@ -495,10 +495,10 @@ const LayoutConfigModal = ({ isOpen, onClose, onConfirm, layoutType, layoutData 
         return (
           <div className="space-y-4">
             <div className="flex items-center justify-between">
-              <h4 className="font-medium text-gray-900">Grid Items</h4>
+              <h4 className="font-medium text-ink">Grid Items</h4>
               <button
                 onClick={addGridItem}
-                className="flex items-center space-x-1 px-3 py-1 text-sm bg-blue-50 hover:bg-blue-100 text-blue-700 rounded transition-colors"
+                className="flex items-center space-x-1 px-3 py-1 text-sm bg-info/10 hover:bg-info/10 text-info rounded transition-colors"
               >
                 <Plus className="w-4 h-4" />
                 <span>Add Item</span>
@@ -507,19 +507,19 @@ const LayoutConfigModal = ({ isOpen, onClose, onConfirm, layoutType, layoutData 
             
             <div className="space-y-2 max-h-48 overflow-y-auto">
               {gridItems.map((item, index) => (
-                <div key={item.id} className="flex items-center space-x-2 p-2 bg-gray-50 rounded border">
-                  <span className="text-sm font-medium text-gray-600 w-8">{index + 1}.</span>
+                <div key={item.id} className="flex items-center space-x-2 p-2 bg-canvas rounded border">
+                  <span className="text-sm font-medium text-dim w-8">{index + 1}.</span>
                   <input
                     type="text"
                     value={item.content}
                     onChange={(e) => updateGridItem(item.id, 'content', e.target.value)}
-                    className="flex-1 px-2 py-1 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    className="flex-1 px-2 py-1 text-sm border border-line rounded focus:ring-2 focus:ring-info focus:border-info"
                     placeholder="Grid item content"
                   />
                   <button
                     onClick={() => toggleGridItemVisibility(item.id)}
                     className={`p-1 rounded transition-colors ${
-                      item.visible ? 'text-green-600 hover:text-green-800' : 'text-gray-400 hover:text-gray-600'
+                      item.visible ? 'text-success hover:text-success' : 'text-dim hover:text-dim'
                     }`}
                     title={item.visible ? 'Hide item' : 'Show item'}
                   >
@@ -527,7 +527,7 @@ const LayoutConfigModal = ({ isOpen, onClose, onConfirm, layoutType, layoutData 
                   </button>
                   <button
                     onClick={() => removeGridItem(item.id)}
-                    className="text-red-500 hover:text-red-700 transition-colors"
+                    className="text-danger hover:text-danger transition-colors"
                     disabled={gridItems.length === 1}
                   >
                     <Minus className="w-4 h-4" />
@@ -544,10 +544,10 @@ const LayoutConfigModal = ({ isOpen, onClose, onConfirm, layoutType, layoutData 
         return (
           <div className="space-y-4">
             <div className="flex items-center justify-between">
-              <h4 className="font-medium text-gray-900">Image Configuration</h4>
+              <h4 className="font-medium text-ink">Image Configuration</h4>
               <button
                 onClick={addImage}
-                className="flex items-center space-x-1 px-3 py-1 text-sm bg-blue-50 hover:bg-blue-100 text-blue-700 rounded transition-colors"
+                className="flex items-center space-x-1 px-3 py-1 text-sm bg-info/10 hover:bg-info/10 text-info rounded transition-colors"
               >
                 <Plus className="w-4 h-4" />
                 <span>Add Image</span>
@@ -556,12 +556,12 @@ const LayoutConfigModal = ({ isOpen, onClose, onConfirm, layoutType, layoutData 
             
             <div className="space-y-3 max-h-48 overflow-y-auto">
               {images.map((img, index) => (
-                <div key={img.id} className="p-3 bg-gray-50 rounded border">
+                <div key={img.id} className="p-3 bg-canvas rounded border">
                   <div className="flex items-center justify-between mb-2">
-                    <span className="text-sm font-medium text-gray-600">Image {index + 1}</span>
+                    <span className="text-sm font-medium text-dim">Image {index + 1}</span>
                     <button
                       onClick={() => removeImage(img.id)}
-                      className="text-red-500 hover:text-red-700 transition-colors"
+                      className="text-danger hover:text-danger transition-colors"
                       disabled={images.length === 1}
                     >
                       <Minus className="w-4 h-4" />
@@ -572,21 +572,21 @@ const LayoutConfigModal = ({ isOpen, onClose, onConfirm, layoutType, layoutData 
                       type="text"
                       value={img.alt}
                       onChange={(e) => updateImage(img.id, 'alt', e.target.value)}
-                      className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      className="w-full px-2 py-1 text-sm border border-line rounded focus:ring-2 focus:ring-info focus:border-info"
                       placeholder="Image alt text"
                     />
                     <input
                       type="text"
                       value={img.caption}
                       onChange={(e) => updateImage(img.id, 'caption', e.target.value)}
-                      className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      className="w-full px-2 py-1 text-sm border border-line rounded focus:ring-2 focus:ring-info focus:border-info"
                       placeholder="Image caption"
                     />
                     <input
                       type="text"
                       value={img.url}
                       onChange={(e) => updateImage(img.id, 'url', e.target.value)}
-                      className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      className="w-full px-2 py-1 text-sm border border-line rounded focus:ring-2 focus:ring-info focus:border-info"
                       placeholder="Image URL (optional)"
                     />
                   </div>
@@ -605,23 +605,23 @@ const LayoutConfigModal = ({ isOpen, onClose, onConfirm, layoutType, layoutData 
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-hidden">
+      <div className="bg-surface rounded-xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-hidden">
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-gray-200">
+        <div className="flex items-center justify-between p-6 border-b border-line">
           <div className="flex items-center space-x-3">
-            <div className="p-2 bg-blue-100 rounded-lg">
+            <div className="p-2 bg-info/10 rounded-lg">
               {getLayoutIcon(layoutType)}
             </div>
             <div>
-              <h2 className="text-xl font-semibold text-gray-900">Configure Layout</h2>
-              <p className="text-sm text-gray-500">Set up your {layoutType} layout</p>
+              <h2 className="text-xl font-semibold text-ink">Configure Layout</h2>
+              <p className="text-sm text-dim">Set up your {layoutType} layout</p>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+            className="p-2 hover:bg-surface-hover rounded-lg transition-colors"
           >
-            <X className="w-5 h-5 text-gray-500" />
+            <X className="w-5 h-5 text-dim" />
           </button>
         </div>
 
@@ -630,29 +630,29 @@ const LayoutConfigModal = ({ isOpen, onClose, onConfirm, layoutType, layoutData 
           <div className="space-y-6">
             {/* Basic Configuration */}
             <div className="space-y-4">
-              <h3 className="text-lg font-medium text-gray-900">Basic Information</h3>
+              <h3 className="text-lg font-medium text-ink">Basic Information</h3>
               
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-ink mb-2">
                   Layout Title
                 </label>
                 <input
                   type="text"
                   value={layoutTitle}
                   onChange={(e) => setLayoutTitle(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  className="w-full px-3 py-2 border border-line rounded-lg focus:ring-2 focus:ring-info focus:border-info"
                   placeholder="Enter layout title"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-ink mb-2">
                   Description
                 </label>
                 <textarea
                   value={layoutDescription}
                   onChange={(e) => setLayoutDescription(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  className="w-full px-3 py-2 border border-line rounded-lg focus:ring-2 focus:ring-info focus:border-info"
                   rows="2"
                   placeholder="Brief description of the layout purpose"
                 />
@@ -661,14 +661,14 @@ const LayoutConfigModal = ({ isOpen, onClose, onConfirm, layoutType, layoutData 
 
             {/* Layout-specific Configuration */}
             <div>
-              <h3 className="text-lg font-medium text-gray-900 mb-4">Layout Configuration</h3>
+              <h3 className="text-lg font-medium text-ink mb-4">Layout Configuration</h3>
               {renderLayoutSpecificConfig()}
             </div>
 
             {/* Preview */}
-            <div className="bg-gray-50 rounded-lg p-4">
-              <h4 className="text-sm font-medium text-gray-700 mb-2">Preview</h4>
-              <div className="text-sm text-gray-600">
+            <div className="bg-canvas rounded-lg p-4">
+              <h4 className="text-sm font-medium text-ink mb-2">Preview</h4>
+              <div className="text-sm text-dim">
                 <p><strong>Title:</strong> {layoutTitle || 'Untitled Layout'}</p>
                 <p><strong>Type:</strong> {layoutType}</p>
                 <p><strong>Items:</strong> {
@@ -684,23 +684,23 @@ const LayoutConfigModal = ({ isOpen, onClose, onConfirm, layoutType, layoutData 
         </div>
 
         {/* Footer */}
-        <div className="flex items-center justify-between p-6 border-t border-gray-200 bg-gray-50">
+        <div className="flex items-center justify-between p-6 border-t border-line bg-canvas">
           <button
             onClick={handleUseDefault}
-            className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+            className="px-4 py-2 text-sm font-medium text-ink bg-surface border border-line rounded-lg hover:bg-canvas transition-colors"
           >
             Use Default
           </button>
           <div className="flex items-center space-x-3">
             <button
               onClick={onClose}
-              className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+              className="px-4 py-2 text-sm font-medium text-ink bg-surface border border-line rounded-lg hover:bg-canvas transition-colors"
             >
               Cancel
             </button>
             <button
               onClick={handleConfirm}
-              className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors"
+              className="px-4 py-2 text-sm font-medium text-white bg-info rounded-lg hover:bg-info transition-colors"
             >
               Create Layout
             </button>

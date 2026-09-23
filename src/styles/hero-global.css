@@ -16,7 +16,7 @@ body {
   font-family: Poppins, var(--default-font-family);
   overflow-x: hidden;
   overflow-y: auto;
-  background-color: #000000;
+  background-color: rgb(var(--cta-action));
 }
 
 input,

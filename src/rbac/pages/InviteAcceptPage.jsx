@@ -140,11 +140,11 @@ export default function InviteAcceptPage() {
   // Loading state
   if (phase === 'loading') {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-teal-50 to-white flex items-center justify-center p-4">
-        <div className="bg-white rounded-2xl shadow-lg p-8 max-w-md w-full text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-4 border-teal-200 border-t-teal-600 mx-auto mb-4" />
-          <h2 className="text-lg font-semibold text-gray-700">Validating your invitation...</h2>
-          <p className="text-sm text-gray-500 mt-2">This will only take a moment.</p>
+      <div className="min-h-screen bg-surface flex items-center justify-center p-4">
+        <div className="bg-surface rounded-2xl shadow-lg p-8 max-w-md w-full text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-4 border-line border-t-teal-600 mx-auto mb-4" />
+          <h2 className="text-lg font-semibold text-ink">Validating your invitation...</h2>
+          <p className="text-sm text-dim mt-2">This will only take a moment.</p>
         </div>
       </div>
     );
@@ -153,18 +153,18 @@ export default function InviteAcceptPage() {
   // Error state
   if (phase === 'error') {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-red-50 to-white flex items-center justify-center p-4">
-        <div className="bg-white rounded-2xl shadow-lg p-8 max-w-md w-full text-center">
-          <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
-            <svg className="w-8 h-8 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+      <div className="min-h-screen bg-surface flex items-center justify-center p-4">
+        <div className="bg-surface rounded-2xl shadow-lg p-8 max-w-md w-full text-center">
+          <div className="w-16 h-16 bg-danger/10 rounded-full flex items-center justify-center mx-auto mb-4">
+            <svg className="w-8 h-8 text-danger" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
             </svg>
           </div>
-          <h2 className="text-xl font-semibold text-gray-800 mb-2">Invitation Error</h2>
-          <p className="text-gray-600 mb-6">{error}</p>
+          <h2 className="text-xl font-semibold text-ink mb-2">Invitation Error</h2>
+          <p className="text-dim mb-6">{error}</p>
           <Link
             to="/login"
-            className="inline-block px-6 py-2.5 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition-colors font-medium"
+            className="inline-block px-6 py-2.5 bg-cta text-cta-foreground rounded-lg hover:bg-cta transition-colors font-medium"
           >
             Go to Login
           </Link>
@@ -176,24 +176,24 @@ export default function InviteAcceptPage() {
   // Success state
   if (phase === 'success') {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-teal-50 to-white flex items-center justify-center p-4">
-        <div className="bg-white rounded-2xl shadow-lg p-8 max-w-md w-full text-center">
-          <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-            <svg className="w-8 h-8 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+      <div className="min-h-screen bg-surface flex items-center justify-center p-4">
+        <div className="bg-surface rounded-2xl shadow-lg p-8 max-w-md w-full text-center">
+          <div className="w-16 h-16 bg-success/10 rounded-full flex items-center justify-center mx-auto mb-4">
+            <svg className="w-8 h-8 text-success" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
             </svg>
           </div>
-          <h2 className="text-2xl font-bold text-gray-800 mb-2">Welcome to the team!</h2>
-          <p className="text-gray-600 mb-2">
-            You've been added to <strong className="text-teal-700">{invite?.orgName}</strong> as{' '}
-            <strong className="text-teal-700">{invite?.roleName}</strong>.
+          <h2 className="text-2xl font-bold text-ink mb-2">Welcome to the team!</h2>
+          <p className="text-dim mb-2">
+            You've been added to <strong className="text-ink">{invite?.orgName}</strong> as{' '}
+            <strong className="text-ink">{invite?.roleName}</strong>.
           </p>
-          <p className="text-sm text-gray-500 mb-6">
+          <p className="text-sm text-dim mb-6">
             Your account is ready. You can now log in with your email and the password you just set.
           </p>
           <button
             onClick={() => navigate('/login')}
-            className="w-full px-6 py-3 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition-colors font-semibold text-lg"
+            className="w-full px-6 py-3 bg-cta text-cta-foreground rounded-lg hover:bg-cta transition-colors font-semibold text-lg"
           >
             Log In Now
           </button>
@@ -204,33 +204,33 @@ export default function InviteAcceptPage() {
 
   // ── Form state (primary) ──
   return (
-    <div className="min-h-screen bg-gradient-to-br from-teal-50 via-white to-teal-50 flex items-center justify-center p-4">
-      <div className="bg-white rounded-2xl shadow-xl max-w-lg w-full overflow-hidden">
+    <div className="min-h-screen bg-gradient-to-br from-black via-surface to-black flex items-center justify-center p-4">
+      <div className="bg-surface rounded-2xl shadow-xl max-w-lg w-full overflow-hidden">
 
         {/* Header */}
-        <div className="bg-gradient-to-r from-teal-600 to-teal-700 px-8 py-6 text-white">
+        <div className="bg-black px-8 py-6 text-white">
           <h1 className="text-2xl font-bold mb-1">Welcome to Caasdi</h1>
-          <p className="text-teal-100 text-sm">Set up your account to get started</p>
+          <p className="text-ink text-sm">Set up your account to get started</p>
         </div>
 
         {/* Invitation info */}
         <div className="px-8 pt-6">
-          <div className="bg-teal-50 border border-teal-200 rounded-xl p-4">
+          <div className="bg-surface-hover border border-line rounded-xl p-4">
             <div className="flex items-center gap-3">
-              <div className="w-12 h-12 bg-teal-600 rounded-full flex items-center justify-center text-white font-bold text-lg flex-shrink-0">
+              <div className="w-12 h-12 bg-cta rounded-full flex items-center justify-center text-cta-foreground font-bold text-lg flex-shrink-0">
                 {invite?.roleName?.charAt(0)?.toUpperCase() || 'M'}
               </div>
               <div>
-                <p className="text-sm text-teal-600 font-medium">You're joining</p>
-                <p className="font-semibold text-gray-800 text-lg">{invite?.orgName}</p>
-                <p className="text-sm text-gray-600">
-                  as <span className="font-medium text-teal-700">{invite?.roleName}</span>
+                <p className="text-sm text-ink font-medium">You're joining</p>
+                <p className="font-semibold text-ink text-lg">{invite?.orgName}</p>
+                <p className="text-sm text-dim">
+                  as <span className="font-medium text-ink">{invite?.roleName}</span>
                 </p>
               </div>
             </div>
-            <div className="mt-3 pt-3 border-t border-teal-200">
-              <p className="text-xs text-gray-500">
-                Account email: <span className="font-medium text-gray-700">{invite?.email}</span>
+            <div className="mt-3 pt-3 border-t border-line">
+              <p className="text-xs text-dim">
+                Account email: <span className="font-medium text-ink">{invite?.email}</span>
               </p>
             </div>
           </div>
@@ -241,7 +241,7 @@ export default function InviteAcceptPage() {
 
           {/* Display Name */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1.5">
+            <label className="block text-sm font-medium text-ink mb-1.5">
               Full Name
             </label>
             <input
@@ -249,7 +249,7 @@ export default function InviteAcceptPage() {
               value={displayName}
               onChange={(e) => setDisplayName(e.target.value)}
               placeholder="Enter your full name"
-              className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500 outline-none transition-all"
+              className="w-full px-4 py-2.5 border border-line rounded-lg focus:ring-2 focus:ring-ink focus:border-line outline-none transition-all"
               required
               autoFocus
             />
@@ -257,7 +257,7 @@ export default function InviteAcceptPage() {
 
           {/* Password */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1.5">
+            <label className="block text-sm font-medium text-ink mb-1.5">
               Password
             </label>
             <div className="relative">
@@ -266,13 +266,13 @@ export default function InviteAcceptPage() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="Create a strong password"
-                className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500 outline-none transition-all pr-12"
+                className="w-full px-4 py-2.5 border border-line rounded-lg focus:ring-2 focus:ring-ink focus:border-line outline-none transition-all pr-12"
                 required
               />
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+                className="absolute right-3 top-1/2 -translate-y-1/2  text-dim hover:text-dim transition-colors"
                 tabIndex={-1}
               >
                 {showPassword ? (
@@ -302,7 +302,7 @@ export default function InviteAcceptPage() {
 
           {/* Confirm Password */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1.5">
+            <label className="block text-sm font-medium text-ink mb-1.5">
               Confirm Password
             </label>
             <input
@@ -310,23 +310,23 @@ export default function InviteAcceptPage() {
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
               placeholder="Confirm your password"
-              className={`w-full px-4 py-2.5 border rounded-lg focus:ring-2 focus:ring-teal-500 outline-none transition-all ${
+              className={`w-full px-4 py-2.5 border rounded-lg focus:ring-2 focus:ring-ink outline-none transition-all ${
                 confirmPassword.length > 0
                   ? passwordsMatch
-                    ? 'border-green-400 focus:border-green-500'
-                    : 'border-red-400 focus:border-red-500'
-                  : 'border-gray-300 focus:border-teal-500'
+                    ? 'border-success focus:border-success'
+                    : 'border-danger focus:border-danger'
+                  : 'border-line focus:border-line'
               }`}
               required
             />
             {confirmPassword.length > 0 && !passwordsMatch && (
-              <p className="mt-1 text-xs text-red-500">Passwords do not match</p>
+              <p className="mt-1 text-xs text-danger">Passwords do not match</p>
             )}
           </div>
 
           {/* Form error */}
           {formError && (
-            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">
+            <div className="bg-danger/10 border border-danger/20 text-danger px-4 py-3 rounded-lg text-sm">
               {formError}
             </div>
           )}
@@ -335,7 +335,7 @@ export default function InviteAcceptPage() {
           <button
             type="submit"
             disabled={submitting || !allRulesPassed || !passwordsMatch || displayName.trim().length < 2}
-            className="w-full py-3 bg-teal-600 text-white rounded-lg font-semibold text-lg hover:bg-teal-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
+            className="w-full py-3 bg-cta text-cta-foreground rounded-lg font-semibold text-lg hover:bg-cta disabled:bg-surface-hover disabled:cursor-not-allowed transition-colors"
           >
             {submitting ? (
               <span className="flex items-center justify-center gap-2">
@@ -350,9 +350,9 @@ export default function InviteAcceptPage() {
             )}
           </button>
 
-          <p className="text-center text-xs text-gray-400">
+          <p className="text-center text-xs text-dim">
             Already have an account?{' '}
-            <Link to="/login" className="text-teal-600 hover:underline">
+            <Link to="/login" className="text-ink hover:underline">
               Log in instead
             </Link>
           </p>
@@ -367,7 +367,7 @@ export default function InviteAcceptPage() {
  */
 function PasswordRule({ passed, text }) {
   return (
-    <div className={`flex items-center gap-1.5 text-xs ${passed ? 'text-green-600' : 'text-gray-400'}`}>
+    <div className={`flex items-center gap-1.5 text-xs ${passed ? 'text-success' : 'text-dim'}`}>
       {passed ? (
         <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20">
           <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />

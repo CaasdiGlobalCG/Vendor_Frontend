@@ -100,7 +100,7 @@ export default function GoogleOAuthCallback() {
 
   if (error) {
     return (
-      <div className="p-6 text-center text-red-600">
+      <div className="p-6 text-center text-danger">
         <h2>Error during Google login</h2>
         <p>{error}</p>
       </div>

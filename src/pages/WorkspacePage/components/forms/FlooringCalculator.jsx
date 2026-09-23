@@ -174,13 +174,13 @@ const FlooringCalculator = ({ data, nodeId, workspaceId, setNodes }) => {
 
   const ConfigModal = () => (
     <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center">
-      <div className="bg-white rounded-lg shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-        <div className="sticky top-0 bg-white border-b border-gray-200 p-4 flex justify-between items-center">
+      <div className="bg-surface rounded-lg shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+        <div className="sticky top-0 bg-surface border-b border-line p-4 flex justify-between items-center">
           <div>
-            <h3 className="text-xl font-bold text-gray-900">Configure Flooring Calculation</h3>
-            <p className="text-sm text-gray-600 mt-1">Enter area, tile dimensions & settings</p>
+            <h3 className="text-xl font-bold text-ink">Configure Flooring Calculation</h3>
+            <p className="text-sm text-dim mt-1">Enter area, tile dimensions & settings</p>
           </div>
-          <button onClick={() => setShowConfigModal(false)} className="text-gray-400 hover:text-gray-600">
+          <button onClick={() => setShowConfigModal(false)} className="text-dim hover:text-dim">
             <X size={24} />
           </button>
         </div>
@@ -188,7 +188,7 @@ const FlooringCalculator = ({ data, nodeId, workspaceId, setNodes }) => {
         <div className="p-6 space-y-4">
           {/* Unit Selection */}
           <div className="space-y-2">
-            <label className="block text-sm font-medium text-gray-700">Unit</label>
+            <label className="block text-sm font-medium text-ink">Unit</label>
             <div className="flex gap-2">
               {['meter', 'feet'].map(u => (
                 <button
@@ -196,8 +196,8 @@ const FlooringCalculator = ({ data, nodeId, workspaceId, setNodes }) => {
                   onClick={() => setUnit(u)}
                   className={`flex-1 py-2 px-3 rounded-lg font-medium transition-all text-sm ${
                     unit === u
-                      ? 'bg-blue-600 text-white'
-                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                      ? 'bg-info text-white'
+                      : 'bg-surface-hover text-ink hover:bg-surface-hover'
                   }`}
                 >
                   {u === 'meter' ? 'Meter' : 'Feet'}
@@ -207,11 +207,11 @@ const FlooringCalculator = ({ data, nodeId, workspaceId, setNodes }) => {
           </div>
 
           {/* Area Dimensions */}
-          <div className="border-t border-gray-200 pt-4">
-            <p className="text-sm font-medium text-gray-700 mb-3">Area Dimensions ({unit})</p>
+          <div className="border-t border-line pt-4">
+            <p className="text-sm font-medium text-ink mb-3">Area Dimensions ({unit})</p>
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label htmlFor="areaLength" className="block text-xs font-medium text-gray-700">Length</label>
+                <label htmlFor="areaLength" className="block text-xs font-medium text-ink">Length</label>
                 <input
                   id="areaLength"
                   name="areaLength"
@@ -219,13 +219,13 @@ const FlooringCalculator = ({ data, nodeId, workspaceId, setNodes }) => {
                   value={areaLength}
                   onChange={(e) => setAreaLength(e.target.value)}
                   placeholder="Length"
-                  className="w-full px-2 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-2 py-2 border border-line rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-info"
                   step="0.01"
                   autoComplete="off"
                 />
               </div>
               <div>
-                <label htmlFor="areaWidth" className="block text-xs font-medium text-gray-700">Width</label>
+                <label htmlFor="areaWidth" className="block text-xs font-medium text-ink">Width</label>
                 <input
                   id="areaWidth"
                   name="areaWidth"
@@ -233,7 +233,7 @@ const FlooringCalculator = ({ data, nodeId, workspaceId, setNodes }) => {
                   value={areaWidth}
                   onChange={(e) => setAreaWidth(e.target.value)}
                   placeholder="Width"
-                  className="w-full px-2 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-2 py-2 border border-line rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-info"
                   step="0.01"
                   autoComplete="off"
                 />
@@ -242,11 +242,11 @@ const FlooringCalculator = ({ data, nodeId, workspaceId, setNodes }) => {
           </div>
 
           {/* Tile Dimensions */}
-          <div className="border-t border-gray-200 pt-4">
-            <p className="text-sm font-medium text-gray-700 mb-3">Tile Dimensions ({unit})</p>
+          <div className="border-t border-line pt-4">
+            <p className="text-sm font-medium text-ink mb-3">Tile Dimensions ({unit})</p>
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label htmlFor="tileLength" className="block text-xs font-medium text-gray-700">Tile Length</label>
+                <label htmlFor="tileLength" className="block text-xs font-medium text-ink">Tile Length</label>
                 <input
                   id="tileLength"
                   name="tileLength"
@@ -254,13 +254,13 @@ const FlooringCalculator = ({ data, nodeId, workspaceId, setNodes }) => {
                   value={tileLength}
                   onChange={(e) => setTileLength(e.target.value)}
                   placeholder="Tile length"
-                  className="w-full px-2 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-2 py-2 border border-line rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-info"
                   step="0.01"
                   autoComplete="off"
                 />
               </div>
               <div>
-                <label htmlFor="tileWidth" className="block text-xs font-medium text-gray-700">Tile Width</label>
+                <label htmlFor="tileWidth" className="block text-xs font-medium text-ink">Tile Width</label>
                 <input
                   id="tileWidth"
                   name="tileWidth"
@@ -268,7 +268,7 @@ const FlooringCalculator = ({ data, nodeId, workspaceId, setNodes }) => {
                   value={tileWidth}
                   onChange={(e) => setTileWidth(e.target.value)}
                   placeholder="Tile width"
-                  className="w-full px-2 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-2 py-2 border border-line rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-info"
                   step="0.01"
                   autoComplete="off"
                 />
@@ -277,80 +277,80 @@ const FlooringCalculator = ({ data, nodeId, workspaceId, setNodes }) => {
           </div>
 
           {/* Wastage & Boxes */}
-          <div className="border-t border-gray-200 pt-4 grid grid-cols-2 gap-4">
+          <div className="border-t border-line pt-4 grid grid-cols-2 gap-4">
             <div>
-              <label htmlFor="wastagePercent" className="block text-xs font-medium text-gray-700 mb-2">Wastage (%)</label>
+              <label htmlFor="wastagePercent" className="block text-xs font-medium text-ink mb-2">Wastage (%)</label>
               <input
                 id="wastagePercent"
                 name="wastagePercent"
                 type="number"
                 value={wastagePercent}
                 onChange={(e) => setWastagePercent(e.target.value)}
-                className="w-full px-2 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-2 py-2 border border-line rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-info"
                 step="0.1"
                 autoComplete="off"
               />
-              <p className="text-xs text-gray-600 mt-1">Default: {WASTAGE_DEFAULT}%</p>
+              <p className="text-xs text-dim mt-1">Default: {WASTAGE_DEFAULT}%</p>
             </div>
 
             <div>
-              <label htmlFor="tilesPerBox" className="block text-xs font-medium text-gray-700 mb-2">Tiles per Box</label>
+              <label htmlFor="tilesPerBox" className="block text-xs font-medium text-ink mb-2">Tiles per Box</label>
               <input
                 id="tilesPerBox"
                 name="tilesPerBox"
                 type="number"
                 value={tilesPerBox}
                 onChange={(e) => setTilesPerBox(e.target.value)}
-                className="w-full px-2 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-2 py-2 border border-line rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-info"
                 autoComplete="off"
               />
-              <p className="text-xs text-gray-600 mt-1">Default: {TILES_PER_BOX_DEFAULT}</p>
+              <p className="text-xs text-dim mt-1">Default: {TILES_PER_BOX_DEFAULT}</p>
             </div>
           </div>
 
           {/* Advanced Settings */}
-          <div className="border-t border-gray-200 pt-4">
-            <p className="text-sm font-medium text-gray-700 mb-3">Advanced Settings</p>
+          <div className="border-t border-line pt-4">
+            <p className="text-sm font-medium text-ink mb-3">Advanced Settings</p>
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label htmlFor="mortarThickness" className="block text-xs font-medium text-gray-700">Mortar Thickness (mm)</label>
+                <label htmlFor="mortarThickness" className="block text-xs font-medium text-ink">Mortar Thickness (mm)</label>
                 <input
                   id="mortarThickness"
                   name="mortarThickness"
                   type="number"
                   value={mortarThickness}
                   onChange={(e) => setMortarThickness(e.target.value)}
-                  className="w-full px-2 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-2 py-2 border border-line rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-info"
                   step="1"
                   autoComplete="off"
                 />
-                <p className="text-xs text-gray-600 mt-1">Default: 20mm</p>
+                <p className="text-xs text-dim mt-1">Default: 20mm</p>
               </div>
 
               <div>
-                <label htmlFor="tileThickness" className="block text-xs font-medium text-gray-700">Tile Thickness (mm)</label>
+                <label htmlFor="tileThickness" className="block text-xs font-medium text-ink">Tile Thickness (mm)</label>
                 <input
                   id="tileThickness"
                   name="tileThickness"
                   type="number"
                   value={tileThickness}
                   onChange={(e) => setTileThickness(e.target.value)}
-                  className="w-full px-2 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-2 py-2 border border-line rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-info"
                   step="0.1"
                   autoComplete="off"
                 />
-                <p className="text-xs text-gray-600 mt-1">For reference only</p>
+                <p className="text-xs text-dim mt-1">For reference only</p>
               </div>
             </div>
           </div>
 
           {/* Validation Errors */}
           {validationErrors.length > 0 && (
-            <div className="bg-red-50 border-l-4 border-red-400 p-3 rounded">
-              <p className="font-bold text-red-900 text-sm mb-1 flex items-center gap-2">
+            <div className="bg-danger/10 border-l-4 border-danger p-3 rounded">
+              <p className="font-bold text-danger text-sm mb-1 flex items-center gap-2">
                 <AlertCircle size={16} /> Validation Errors
               </p>
-              <ul className="list-disc list-inside text-xs text-red-800 space-y-1">
+              <ul className="list-disc list-inside text-xs text-danger space-y-1">
                 {validationErrors.map((err, i) => (
                   <li key={i}>{err}</li>
                 ))}
@@ -359,16 +359,16 @@ const FlooringCalculator = ({ data, nodeId, workspaceId, setNodes }) => {
           )}
 
           {/* Action Buttons */}
-          <div className="grid grid-cols-2 gap-3 pt-4 border-t border-gray-200">
+          <div className="grid grid-cols-2 gap-3 pt-4 border-t border-line">
             <button
               onClick={() => setShowConfigModal(false)}
-              className="bg-gray-200 hover:bg-gray-300 text-gray-900 font-bold py-2 px-4 rounded-lg transition-colors text-sm"
+              className="bg-surface-hover hover:bg-surface-hover text-ink font-bold py-2 px-4 rounded-lg transition-colors text-sm"
             >
               Cancel
             </button>
             <button
               onClick={runCalculation}
-              className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg transition-colors text-sm"
+              className="bg-info hover:bg-info text-white font-bold py-2 px-4 rounded-lg transition-colors text-sm"
             >
               Calculate
             </button>
@@ -380,10 +380,10 @@ const FlooringCalculator = ({ data, nodeId, workspaceId, setNodes }) => {
 
   const DetailsModal = () => (
     <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center">
-      <div className="bg-white rounded-lg shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-        <div className="sticky top-0 bg-white border-b border-gray-200 p-4 flex justify-between items-center">
-          <h3 className="text-xl font-bold text-gray-900">Complete Breakdown</h3>
-          <button onClick={() => setShowDetailsModal(false)} className="text-gray-400 hover:text-gray-600">
+      <div className="bg-surface rounded-lg shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+        <div className="sticky top-0 bg-surface border-b border-line p-4 flex justify-between items-center">
+          <h3 className="text-xl font-bold text-ink">Complete Breakdown</h3>
+          <button onClick={() => setShowDetailsModal(false)} className="text-dim hover:text-dim">
             <X size={24} />
           </button>
         </div>
@@ -391,15 +391,15 @@ const FlooringCalculator = ({ data, nodeId, workspaceId, setNodes }) => {
         {results && (
           <div className="p-6 space-y-4">
             {/* Area Summary */}
-            <div className="bg-blue-50 border-2 border-blue-200 rounded-lg p-4">
-              <p className="text-sm text-gray-600">Total Coverage Area</p>
-              <p className="text-3xl font-bold text-blue-600">{results.totalArea}</p>
-              <p className="text-xs text-gray-600 mt-1">m²</p>
+            <div className="bg-info/10 border-2 border-info/20 rounded-lg p-4">
+              <p className="text-sm text-dim">Total Coverage Area</p>
+              <p className="text-3xl font-bold text-info">{results.totalArea}</p>
+              <p className="text-xs text-dim mt-1">m²</p>
             </div>
 
             {/* Tiles Breakdown */}
-            <div className="border border-gray-200 rounded-lg overflow-hidden">
-              <div className="bg-gray-50 p-3 border-b font-bold text-sm text-gray-900">Tiles Required</div>
+            <div className="border border-line rounded-lg overflow-hidden">
+              <div className="bg-canvas p-3 border-b font-bold text-sm text-ink">Tiles Required</div>
               <div className="p-4 space-y-2 text-sm">
                 <div className="flex justify-between">
                   <span>Tile Area</span>
@@ -413,21 +413,21 @@ const FlooringCalculator = ({ data, nodeId, workspaceId, setNodes }) => {
                   <span>Wastage</span>
                   <span className="font-bold">{results.wastagePercent}%</span>
                 </div>
-                <div className="flex justify-between pt-2 border-t font-bold text-blue-600">
+                <div className="flex justify-between pt-2 border-t font-bold text-info">
                   <span>Tiles (with wastage)</span>
                   <span>{results.tilesRequired}</span>
                 </div>
                 <div className="flex justify-between pt-2 border-t font-bold">
                   <span>Boxes Required</span>
-                  <span className="text-green-600">{results.boxesRequired}</span>
+                  <span className="text-success">{results.boxesRequired}</span>
                 </div>
-                <p className="text-xs text-gray-600 mt-2">({results.tilesPerBox} tiles per box)</p>
+                <p className="text-xs text-dim mt-2">({results.tilesPerBox} tiles per box)</p>
               </div>
             </div>
 
             {/* Cement & Sand Breakdown */}
-            <div className="border border-gray-200 rounded-lg overflow-hidden">
-              <div className="bg-gray-50 p-3 border-b font-bold text-sm text-gray-900">Mortar & Materials</div>
+            <div className="border border-line rounded-lg overflow-hidden">
+              <div className="bg-canvas p-3 border-b font-bold text-sm text-ink">Mortar & Materials</div>
               <div className="p-4 space-y-2 text-sm">
                 <div className="flex justify-between">
                   <span>Mortar Thickness</span>
@@ -445,22 +445,22 @@ const FlooringCalculator = ({ data, nodeId, workspaceId, setNodes }) => {
                   <span>Cement Volume (1 part)</span>
                   <span className="font-bold">{results.cementVolume} m³</span>
                 </div>
-                <div className="flex justify-between pt-2 border-t font-bold text-blue-600">
+                <div className="flex justify-between pt-2 border-t font-bold text-info">
                   <span>Cement Bags (50 kg)</span>
                   <span>{results.cementBags} bags</span>
                 </div>
-                <div className="flex justify-between pt-2 border-t font-bold text-green-600">
+                <div className="flex justify-between pt-2 border-t font-bold text-success">
                   <span>Sand Required (4 parts)</span>
                   <span>{results.sandRequired} m³</span>
                 </div>
-                <p className="text-xs text-gray-600 mt-2">Mix Ratio: 1 Cement : 4 Sand</p>
+                <p className="text-xs text-dim mt-2">Mix Ratio: 1 Cement : 4 Sand</p>
               </div>
             </div>
 
             {/* Summary Box */}
-            <div className="bg-amber-50 border-2 border-amber-200 rounded-lg p-4">
-              <p className="font-bold text-amber-900 mb-3">Installation Summary</p>
-              <div className="space-y-1 text-sm text-amber-900">
+            <div className="bg-warning/10 border-2 border-warning/20 rounded-lg p-4">
+              <p className="font-bold text-warning mb-3">Installation Summary</p>
+              <div className="space-y-1 text-sm text-warning">
                 <p>✓ {results.tilesRequired} tiles ({results.boxesRequired} boxes)</p>
                 <p>✓ {results.cementBags} cement bags</p>
                 <p>✓ {results.sandRequired} m³ sand</p>
@@ -470,7 +470,7 @@ const FlooringCalculator = ({ data, nodeId, workspaceId, setNodes }) => {
 
             <button
               onClick={() => setShowDetailsModal(false)}
-              className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 rounded-lg text-sm"
+              className="w-full bg-info hover:bg-info text-white font-bold py-2 rounded-lg text-sm"
             >
               Close
             </button>
@@ -482,16 +482,16 @@ const FlooringCalculator = ({ data, nodeId, workspaceId, setNodes }) => {
 
   // ==================== MAIN RENDER ====================
   return (
-    <div className="w-full bg-white rounded-lg shadow-lg p-6">
+    <div className="w-full bg-surface rounded-lg shadow-lg p-6">
       {!results ? (
         <div className="space-y-4">
           <div>
-            <h3 className="text-xl font-bold text-gray-900">Flooring Calculator</h3>
-            <p className="text-sm text-gray-600 mt-1">Estimate tiles, boxes, cement & sand</p>
+            <h3 className="text-xl font-bold text-ink">Flooring Calculator</h3>
+            <p className="text-sm text-dim mt-1">Estimate tiles, boxes, cement & sand</p>
           </div>
           <button
             onClick={() => setShowConfigModal(true)}
-            className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg transition-colors text-sm"
+            className="w-full bg-info hover:bg-info text-white font-bold py-3 px-4 rounded-lg transition-colors text-sm"
           >
             Configure & Calculate
           </button>
@@ -500,40 +500,40 @@ const FlooringCalculator = ({ data, nodeId, workspaceId, setNodes }) => {
         <div className="space-y-4">
           {/* Compact Result Grid */}
           <div className="grid grid-cols-2 gap-3">
-            <div className="bg-blue-50 border-2 border-blue-200 p-4 rounded-lg">
-              <p className="text-xs text-gray-600 mb-1">Total Area</p>
-              <p className="text-2xl font-bold text-blue-600">{results.totalArea}</p>
-              <p className="text-xs text-gray-600">m²</p>
+            <div className="bg-info/10 border-2 border-info/20 p-4 rounded-lg">
+              <p className="text-xs text-dim mb-1">Total Area</p>
+              <p className="text-2xl font-bold text-info">{results.totalArea}</p>
+              <p className="text-xs text-dim">m²</p>
               <button
                 onClick={() => setShowDetailsModal(true)}
-                className="mt-2 text-blue-600 hover:text-blue-800 flex items-center gap-1 text-xs"
+                className="mt-2 text-info hover:text-info flex items-center gap-1 text-xs"
               >
                 <Info size={14} /> Details
               </button>
             </div>
 
-            <div className="bg-gray-50 border-2 border-gray-200 p-4 rounded-lg">
-              <p className="text-xs text-gray-600 mb-1">Tiles Required</p>
-              <p className="text-2xl font-bold text-gray-900">{results.tilesRequired}</p>
-              <p className="text-xs text-gray-600">({results.wastagePercent}% wastage)</p>
+            <div className="bg-canvas border-2 border-line p-4 rounded-lg">
+              <p className="text-xs text-dim mb-1">Tiles Required</p>
+              <p className="text-2xl font-bold text-ink">{results.tilesRequired}</p>
+              <p className="text-xs text-dim">({results.wastagePercent}% wastage)</p>
             </div>
 
-            <div className="bg-gray-50 border-2 border-gray-200 p-4 rounded-lg">
-              <p className="text-xs text-gray-600 mb-1">Tile Boxes</p>
-              <p className="text-2xl font-bold text-gray-900">{results.boxesRequired}</p>
-              <p className="text-xs text-gray-600">×{results.tilesPerBox} tiles</p>
+            <div className="bg-canvas border-2 border-line p-4 rounded-lg">
+              <p className="text-xs text-dim mb-1">Tile Boxes</p>
+              <p className="text-2xl font-bold text-ink">{results.boxesRequired}</p>
+              <p className="text-xs text-dim">×{results.tilesPerBox} tiles</p>
             </div>
 
-            <div className="bg-gray-50 border-2 border-gray-200 p-4 rounded-lg">
-              <p className="text-xs text-gray-600 mb-1">Cement Bags</p>
-              <p className="text-2xl font-bold text-gray-900">{results.cementBags}</p>
-              <p className="text-xs text-gray-600">(50 kg each)</p>
+            <div className="bg-canvas border-2 border-line p-4 rounded-lg">
+              <p className="text-xs text-dim mb-1">Cement Bags</p>
+              <p className="text-2xl font-bold text-ink">{results.cementBags}</p>
+              <p className="text-xs text-dim">(50 kg each)</p>
             </div>
 
-            <div className="bg-green-50 border-2 border-green-200 p-4 rounded-lg col-span-2">
-              <p className="text-xs text-gray-600 mb-1">Sand Required</p>
-              <p className="text-3xl font-bold text-green-600">{results.sandRequired}</p>
-              <p className="text-xs text-gray-600">m³ (for bedding)</p>
+            <div className="bg-success/10 border-2 border-success/20 p-4 rounded-lg col-span-2">
+              <p className="text-xs text-dim mb-1">Sand Required</p>
+              <p className="text-3xl font-bold text-success">{results.sandRequired}</p>
+              <p className="text-xs text-dim">m³ (for bedding)</p>
             </div>
           </div>
 
@@ -541,13 +541,13 @@ const FlooringCalculator = ({ data, nodeId, workspaceId, setNodes }) => {
           <div className="grid grid-cols-2 gap-2 pt-2">
             <button
               onClick={handleReset}
-              className="bg-gray-200 hover:bg-gray-300 text-gray-900 font-bold py-2 px-4 rounded-lg transition-colors flex items-center justify-center gap-2 text-sm"
+              className="bg-surface-hover hover:bg-surface-hover text-ink font-bold py-2 px-4 rounded-lg transition-colors flex items-center justify-center gap-2 text-sm"
             >
               <RotateCcw size={16} /> Reset
             </button>
             <button
               onClick={() => setShowConfigModal(true)}
-              className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg transition-colors text-sm"
+              className="bg-info hover:bg-info text-white font-bold py-2 px-4 rounded-lg transition-colors text-sm"
             >
               Edit
             </button>

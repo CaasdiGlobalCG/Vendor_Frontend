@@ -24,15 +24,16 @@ import {
 import { Bar, Line, Doughnut } from "react-chartjs-2";
 
 // --- Color Palette ---
+// Monochrome gray scale — readable on both light and dark card surfaces.
 const CHART_COLORS = [
-  "#0f766e",
-  "#1e40af",
-  "#7c3aed",
-  "#be123c",
-  "#047857",
-  "#b45309",
-  "#1e3a8a",
-  "#9d174d",
+  "#525252",
+  "#8a8a8a",
+  "#b5b5b5",
+  "#404040",
+  "#737373",
+  "#a3a3a3",
+  "#2e2e2e",
+  "#c4c4c4",
 ];
 
 const formatCurrency = (value) => {
@@ -441,13 +442,13 @@ export default function RevenueDetailPage() {
 
     const sources = [];
     if (workspaceInvoiceRevenue > 0) {
-      sources.push({ label: 'Workspace Invoices', value: workspaceInvoiceRevenue, color: '#0f766e' });
+      sources.push({ label: 'Workspace Invoices', value: workspaceInvoiceRevenue, color: '#525252' });
     }
     if (workspaceQuoteRevenue > 0) {
-      sources.push({ label: 'Workspace Quotes', value: workspaceQuoteRevenue, color: '#10b981' });
+      sources.push({ label: 'Workspace Quotes', value: workspaceQuoteRevenue, color: '#8a8a8a' });
     }
     if (salesRevenue > 0) {
-      sources.push({ label: 'Sales (RFQ Responses)', value: salesRevenue, color: '#84cc16' });
+      sources.push({ label: 'Sales (RFQ Responses)', value: salesRevenue, color: '#b5b5b5' });
     }
     return sources;
   }, [filteredWorkspaceInvoices, filteredWorkspaceQuotes, filteredSalesQuotations]);
@@ -531,15 +532,15 @@ export default function RevenueDetailPage() {
         {
           label: "Revenue",
           data: filteredMonthlyData.map((d) => d.totalRevenue),
-          backgroundColor: "#0f766e",
-          borderColor: "#0f766e",
+          backgroundColor: "#404040",
+          borderColor: "#404040",
           borderRadius: 4,
         },
         {
           label: "Expenses",
           data: filteredMonthlyData.map((d) => d.totalExpenses),
-          backgroundColor: "#f97316",
-          borderColor: "#f97316",
+          backgroundColor: "#8a8a8a",
+          borderColor: "#8a8a8a",
           borderRadius: 4,
         },
       ],
@@ -552,13 +553,13 @@ export default function RevenueDetailPage() {
     scales: {
       x: {
         grid: { display: false },
-        ticks: { color: "#64748b", font: { size: 11 } },
+        ticks: { color: "#8a8a8a", font: { size: 11 } },
       },
       y: {
         display: true,
-        grid: { color: "#f1f5f9" },
+        grid: { color: "rgba(128,128,128,0.18)" },
         ticks: {
-          color: "#64748b",
+          color: "#8a8a8a",
           font: { size: 11 },
           callback: (value) => `₹${(value / 100000).toFixed(1)}L`,
         },
@@ -575,11 +576,11 @@ export default function RevenueDetailPage() {
           data: filteredMonthlyData.map((d) => d.totalRevenue),
           fill: true,
           backgroundColor: "rgba(15, 118, 110, 0.08)",
-          borderColor: "#0f766e",
+          borderColor: "#404040",
           borderWidth: 2.5,
           tension: 0.4,
-          pointBackgroundColor: "#ffffff",
-          pointBorderColor: "#0f766e",
+          pointBackgroundColor: "#a3a3a3",
+          pointBorderColor: "#404040",
           pointBorderWidth: 2,
           pointRadius: 4,
           pointHoverRadius: 6,
@@ -588,7 +589,7 @@ export default function RevenueDetailPage() {
           label: "Profit Trend",
           data: filteredMonthlyData.map((d) => d.netProfit),
           fill: false,
-          borderColor: "#10b981",
+          borderColor: "#737373",
           borderWidth: 2,
           borderDash: [5, 5],
           tension: 0.4,
@@ -605,13 +606,13 @@ export default function RevenueDetailPage() {
     scales: {
       x: {
         grid: { display: false },
-        ticks: { color: "#64748b", font: { size: 11 } },
+        ticks: { color: "#8a8a8a", font: { size: 11 } },
       },
       y: {
         display: true,
-        grid: { color: "#f1f5f9" },
+        grid: { color: "rgba(128,128,128,0.18)" },
         ticks: {
-          color: "#64748b",
+          color: "#8a8a8a",
           font: { size: 11 },
           callback: (value) => `₹${(value / 100000).toFixed(1)}L`,
         },
@@ -630,12 +631,12 @@ export default function RevenueDetailPage() {
             const margin = d.totalRevenue > 0 ? ((d.netProfit / d.totalRevenue) * 100) : 0;
             return margin.toFixed(1);
           }),
-          borderColor: "#8b5cf6",
+          borderColor: "#525252",
           backgroundColor: "rgba(139, 92, 246, 0.1)",
           fill: true,
           tension: 0.4,
-          pointBackgroundColor: "#ffffff",
-          pointBorderColor: "#8b5cf6",
+          pointBackgroundColor: "#a3a3a3",
+          pointBorderColor: "#525252",
           pointBorderWidth: 2,
           pointRadius: 4,
           pointHoverRadius: 6,
@@ -650,13 +651,13 @@ export default function RevenueDetailPage() {
     scales: {
       x: {
         grid: { display: false },
-        ticks: { color: "#64748b", font: { size: 11 } },
+        ticks: { color: "#8a8a8a", font: { size: 11 } },
       },
       y: {
         display: true,
-        grid: { color: "#f1f5f9" },
+        grid: { color: "rgba(128,128,128,0.18)" },
         ticks: {
-          color: "#64748b",
+          color: "#8a8a8a",
           font: { size: 11 },
           callback: (value) => `${value}%`,
         },
@@ -680,16 +681,16 @@ export default function RevenueDetailPage() {
       sources.push({ label: 'B2B Debit Notes', value: debitNotesTotal, color: '#dc2626' });
     }
     if (ordersTotal > 0) {
-      sources.push({ label: 'B2B Orders', value: ordersTotal, color: '#ea580c' });
+      sources.push({ label: 'B2B Orders', value: ordersTotal, color: '#525252' });
     }
 
     return sources;
   }, [filteredB2bDebitNotes, filteredB2bOrders]);
 
   const revenueColorMap = {
-    'Workspace Invoices': '#0f766e',
-    'Workspace Quotes': '#1d4ed8',
-    'Sales (RFQ Responses)': '#047857',
+    'Workspace Invoices': '#404040',
+    'Workspace Quotes': '#737373',
+    'Sales (RFQ Responses)': '#a3a3a3',
   };
 
   const sourceDoughnutData = useMemo(
@@ -747,8 +748,8 @@ export default function RevenueDetailPage() {
     return (
       <div className="flex min-h-[400px] items-center justify-center">
         <div className="flex flex-col items-center gap-3">
-          <Loader2 className="h-8 w-8 animate-spin text-emerald-600" />
-          <p className="text-sm text-slate-500">Loading financial data...</p>
+          <Loader2 className="h-8 w-8 animate-spin text-ink" />
+          <p className="text-sm text-dim">Loading financial data...</p>
         </div>
       </div>
     );
@@ -758,13 +759,13 @@ export default function RevenueDetailPage() {
   if (error) {
     return (
       <div className="flex min-h-[400px] items-center justify-center">
-        <div className="flex flex-col items-center gap-3 rounded-xl border border-rose-200 bg-rose-50 p-6">
-          <AlertCircle className="h-8 w-8 text-rose-600" />
-          <p className="text-sm font-medium text-rose-900">Failed to load financial data</p>
-          <p className="text-xs text-rose-700">{error}</p>
+        <div className="flex flex-col items-center gap-3 rounded-xl border border-danger/20 bg-danger/10 p-6">
+          <AlertCircle className="h-8 w-8 text-danger" />
+          <p className="text-sm font-medium text-danger">Failed to load financial data</p>
+          <p className="text-xs text-danger">{error}</p>
           <button
             onClick={() => window.location.reload()}
-            className="rounded-lg bg-rose-600 px-4 py-2 text-sm font-medium text-white hover:bg-rose-700"
+            className="rounded-lg bg-danger px-4 py-2 text-sm font-medium text-white hover:bg-danger"
           >
             Retry
           </button>
@@ -778,11 +779,11 @@ export default function RevenueDetailPage() {
       {/* Page Header */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <p className="text-xs font-medium text-emerald-700">Revenue analytics</p>
-          <h1 className="mt-1 text-2xl font-semibold tracking-tight text-slate-900">
+          <p className="text-xs font-medium text-ink">Revenue analytics</p>
+          <h1 className="mt-1 text-2xl font-semibold tracking-tight text-ink">
             Financial overview — detailed view
           </h1>
-          <p className="mt-1 text-[13px] text-slate-500">
+          <p className="mt-1 text-[13px] text-dim">
             Comprehensive breakdown of revenue streams, expenses, and profitability trends.
           </p>
         </div>
@@ -792,7 +793,7 @@ export default function RevenueDetailPage() {
             <button
               type="button"
               onClick={() => setShowDateFilterDropdown(!showDateFilterDropdown)}
-              className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 shadow-sm transition hover:bg-slate-50"
+              className="inline-flex items-center gap-2 rounded-xl border border-line bg-surface px-4 py-2.5 text-sm font-medium text-ink  transition hover:bg-canvas"
             >
               <Calendar size={16} />
               {dateRange === 'all' && 'All time'}
@@ -803,56 +804,56 @@ export default function RevenueDetailPage() {
               <ChevronDown size={14} />
             </button>
             {showDateFilterDropdown && (
-              <div className="absolute right-0 z-10 mt-2 w-56 rounded-xl border border-slate-200 bg-white shadow-xl">
+              <div className="absolute right-0 z-10 mt-2 w-56 rounded-xl border border-line bg-surface shadow-xl">
                 <div className="p-2">
                   <button
                     type="button"
                     onClick={() => { setDateRange('all'); setShowDateFilterDropdown(false); }}
-                    className="w-full rounded-lg px-3 py-2 text-left text-sm font-medium text-slate-700 transition hover:bg-slate-50"
+                    className="w-full rounded-lg px-3 py-2 text-left text-sm font-medium text-ink transition hover:bg-canvas"
                   >
                     All time
                   </button>
                   <button
                     type="button"
                     onClick={() => { setDateRange('30days'); setShowDateFilterDropdown(false); }}
-                    className="w-full rounded-lg px-3 py-2 text-left text-sm font-medium text-slate-700 transition hover:bg-slate-50"
+                    className="w-full rounded-lg px-3 py-2 text-left text-sm font-medium text-ink transition hover:bg-canvas"
                   >
                     Last 30 days
                   </button>
                   <button
                     type="button"
                     onClick={() => { setDateRange('90days'); setShowDateFilterDropdown(false); }}
-                    className="w-full rounded-lg px-3 py-2 text-left text-sm font-medium text-slate-700 transition hover:bg-slate-50"
+                    className="w-full rounded-lg px-3 py-2 text-left text-sm font-medium text-ink transition hover:bg-canvas"
                   >
                     Last 90 days
                   </button>
                   <button
                     type="button"
                     onClick={() => { setDateRange('quarter'); setShowDateFilterDropdown(false); }}
-                    className="w-full rounded-lg px-3 py-2 text-left text-sm font-medium text-slate-700 transition hover:bg-slate-50"
+                    className="w-full rounded-lg px-3 py-2 text-left text-sm font-medium text-ink transition hover:bg-canvas"
                   >
                     Last quarter
                   </button>
-                  <div className="my-2 border-t border-slate-200" />
+                  <div className="my-2 border-t border-line" />
                   <div className="px-3 py-2">
-                    <p className="mb-2 text-xs font-medium text-slate-500">Custom range</p>
+                    <p className="mb-2 text-xs font-medium text-dim">Custom range</p>
                     <div className="space-y-2">
                       <input
                         type="date"
                         value={customStartDate}
                         onChange={(e) => setCustomStartDate(e.target.value)}
-                        className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-700 focus:border-emerald-500 focus:outline-none"
+                        className="w-full rounded-lg border border-line px-3 py-2 text-sm text-ink focus:border-line focus:outline-none"
                       />
                       <input
                         type="date"
                         value={customEndDate}
                         onChange={(e) => setCustomEndDate(e.target.value)}
-                        className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-700 focus:border-emerald-500 focus:outline-none"
+                        className="w-full rounded-lg border border-line px-3 py-2 text-sm text-ink focus:border-line focus:outline-none"
                       />
                       <button
                         type="button"
                         onClick={() => { setDateRange('custom'); setShowDateFilterDropdown(false); }}
-                        className="w-full rounded-lg bg-emerald-600 px-3 py-2 text-sm font-medium text-white transition hover:bg-emerald-700"
+                        className="w-full rounded-lg bg-cta px-3 py-2 text-sm font-medium text-cta-foreground transition hover:bg-cta"
                       >
                         Apply
                       </button>
@@ -864,7 +865,7 @@ export default function RevenueDetailPage() {
           </div>
           <button
             onClick={() => navigate("/VendorDashboard")}
-            className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 shadow-sm transition hover:bg-slate-50"
+            className="inline-flex items-center gap-2 rounded-xl border border-line bg-surface px-4 py-2.5 text-sm font-medium text-ink  transition hover:bg-canvas"
           >
             <ArrowLeft size={16} />
             Back to dashboard
@@ -872,7 +873,7 @@ export default function RevenueDetailPage() {
           <button
             onClick={() => setShowExportModal(true)}
             disabled={exporting}
-            className="hidden sm:inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 shadow-sm transition hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="hidden sm:inline-flex items-center gap-2 rounded-xl border border-line bg-surface px-4 py-2.5 text-sm font-medium text-ink  transition hover:bg-canvas disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <Download size={16} />
             {exporting ? 'Exporting...' : 'Export report'}
@@ -885,16 +886,16 @@ export default function RevenueDetailPage() {
         <button
           type="button"
           onClick={() => setSelectedKpi('totalRevenue')}
-          className="rounded-[22px] border border-slate-200 bg-white p-5 text-left shadow-sm transition hover:border-emerald-300 hover:shadow-md"
+          className="rounded-[22px] border border-line bg-surface p-5 text-left  transition hover:border-line "
         >
-          <div className="flex items-center gap-2 text-slate-500">
+          <div className="flex items-center gap-2 text-dim">
             <CircleDollarSign size={15} />
             <p className="text-[11px] font-semibold uppercase tracking-[0.18em]">Total revenue</p>
           </div>
-          <p className="mt-3 text-[1.4rem] font-semibold tracking-[-0.03em] text-slate-900">
+          <p className="mt-3 text-[1.4rem] font-semibold tracking-[-0.03em] text-ink">
             {formatCurrency(filteredTotalRevenue)}
           </p>
-          <div className="mt-2 inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-1 text-xs font-medium text-emerald-700">
+          <div className="mt-2 inline-flex items-center gap-1 rounded-full bg-surface-hover px-2 py-1 text-xs font-medium text-ink">
             <ArrowUpRight size={12} />
             +{filteredRevenueGrowth}%
           </div>
@@ -903,16 +904,16 @@ export default function RevenueDetailPage() {
         <button
           type="button"
           onClick={() => setSelectedKpi('netProfit')}
-          className="rounded-[22px] border border-slate-200 bg-white p-5 text-left shadow-sm transition hover:border-emerald-300 hover:shadow-md"
+          className="rounded-[22px] border border-line bg-surface p-5 text-left  transition hover:border-line "
         >
-          <div className="flex items-center gap-2 text-slate-500">
+          <div className="flex items-center gap-2 text-dim">
             <TrendingUp size={15} />
             <p className="text-[11px] font-semibold uppercase tracking-[0.18em]">Net profit</p>
           </div>
-          <p className="mt-3 text-[1.4rem] font-semibold tracking-[-0.03em] text-slate-900">
+          <p className="mt-3 text-[1.4rem] font-semibold tracking-[-0.03em] text-ink">
             {formatCurrency(filteredNetProfit)}
           </p>
-          <div className="mt-2 inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-1 text-xs font-medium text-emerald-700">
+          <div className="mt-2 inline-flex items-center gap-1 rounded-full bg-surface-hover px-2 py-1 text-xs font-medium text-ink">
             <ArrowUpRight size={12} />
             {filteredProfitMargin}%
           </div>
@@ -921,29 +922,29 @@ export default function RevenueDetailPage() {
         <button
           type="button"
           onClick={() => setSelectedKpi('totalExpenses')}
-          className="rounded-[22px] border border-slate-200 bg-white p-5 text-left shadow-sm transition hover:border-amber-300 hover:shadow-md"
+          className="rounded-[22px] border border-line bg-surface p-5 text-left  transition hover:border-warning/30 "
         >
-          <div className="flex items-center gap-2 text-slate-500">
+          <div className="flex items-center gap-2 text-dim">
             <BarChart3 size={15} />
             <p className="text-[11px] font-semibold uppercase tracking-[0.18em]">Total expenses</p>
           </div>
-          <p className="mt-3 text-[1.4rem] font-semibold tracking-[-0.03em] text-slate-900">
+          <p className="mt-3 text-[1.4rem] font-semibold tracking-[-0.03em] text-ink">
             {formatCurrency(filteredTotalExpenses)}
           </p>
-          <div className="mt-2 inline-flex items-center gap-1 rounded-full bg-amber-50 px-2 py-1 text-xs font-medium text-amber-700">
+          <div className="mt-2 inline-flex items-center gap-1 rounded-full bg-warning/10 px-2 py-1 text-xs font-medium text-warning">
             <ArrowUpRight size={12} />
             +{filteredExpenseGrowth}%
           </div>
         </button>
 
-        <div className="rounded-[22px] border border-slate-200 bg-white p-5 shadow-sm">
-          <div className="flex items-center gap-2 text-slate-500">
+        <div className="rounded-[22px] border border-line bg-surface p-5 ">
+          <div className="flex items-center gap-2 text-dim">
             <BarChart3 size={15} />
             <p className="text-[11px] font-semibold uppercase tracking-[0.18em]">Active streams</p>
           </div>
-          <p className="mt-3 text-[1.4rem] font-semibold tracking-[-0.03em] text-slate-900">{filteredActiveStreams}</p>
-          <div className="mt-2 inline-flex items-center gap-1 rounded-full bg-sky-50 px-2 py-1 text-xs font-medium text-sky-700">
-            <span className="text-slate-600">Revenue sources</span>
+          <p className="mt-3 text-[1.4rem] font-semibold tracking-[-0.03em] text-ink">{filteredActiveStreams}</p>
+          <div className="mt-2 inline-flex items-center gap-1 rounded-full bg-info/10 px-2 py-1 text-xs font-medium text-info">
+            <span className="text-dim">Revenue sources</span>
           </div>
         </div>
       </div>
@@ -951,10 +952,10 @@ export default function RevenueDetailPage() {
       {/* Charts Grid */}
       <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
         {/* Revenue vs Expenses */}
-        <div className="rounded-[24px] border border-slate-200 bg-white p-5 shadow-sm">
+        <div className="rounded-[24px] border border-line bg-surface p-5 ">
           <div className="mb-4">
-            <h3 className="text-sm font-semibold text-slate-900">Revenue vs Expenses</h3>
-            <p className="text-xs text-slate-500">Monthly comparison for the current fiscal year</p>
+            <h3 className="text-sm font-semibold text-ink">Revenue vs Expenses</h3>
+            <p className="text-xs text-dim">Monthly comparison for the current fiscal year</p>
           </div>
           <div className="h-[280px] w-full">
             <Bar data={revenueExpenseChartData} options={revenueExpenseChartOptions} />
@@ -962,10 +963,10 @@ export default function RevenueDetailPage() {
         </div>
 
         {/* Trend Line */}
-        <div className="rounded-[24px] border border-slate-200 bg-white p-5 shadow-sm">
+        <div className="rounded-[24px] border border-line bg-surface p-5 ">
           <div className="mb-4">
-            <h3 className="text-sm font-semibold text-slate-900">Revenue & Profit Trend</h3>
-            <p className="text-xs text-slate-500">Trailing 12-month performance curve</p>
+            <h3 className="text-sm font-semibold text-ink">Revenue & Profit Trend</h3>
+            <p className="text-xs text-dim">Trailing 12-month performance curve</p>
           </div>
           <div className="h-[280px] w-full">
             <Line data={trendLineData} options={trendLineOptions} />
@@ -976,10 +977,10 @@ export default function RevenueDetailPage() {
       {/* Additional Charts Row */}
       <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
         {/* Profit Margin Trend */}
-        <div className="rounded-[24px] border border-slate-200 bg-white p-5 shadow-sm">
+        <div className="rounded-[24px] border border-line bg-surface p-5 ">
           <div className="mb-4">
-            <h3 className="text-sm font-semibold text-slate-900">Profit Margin Trend</h3>
-            <p className="text-xs text-slate-500">Monthly profit margin percentage over time</p>
+            <h3 className="text-sm font-semibold text-ink">Profit Margin Trend</h3>
+            <p className="text-xs text-dim">Monthly profit margin percentage over time</p>
           </div>
           <div className="h-[280px] w-full">
             <Line data={profitMarginTrendData} options={profitMarginTrendOptions} />
@@ -987,10 +988,10 @@ export default function RevenueDetailPage() {
         </div>
 
         {/* Expense Breakdown */}
-        <div className="rounded-[24px] border border-slate-200 bg-white p-5 shadow-sm">
+        <div className="rounded-[24px] border border-line bg-surface p-5 ">
           <div className="mb-4">
-            <h3 className="text-sm font-semibold text-slate-900">Expense Breakdown</h3>
-            <p className="text-xs text-slate-500">Distribution of expenses by source</p>
+            <h3 className="text-sm font-semibold text-ink">Expense Breakdown</h3>
+            <p className="text-xs text-dim">Distribution of expenses by source</p>
           </div>
           <div className="h-[280px] w-full">
             <Doughnut data={sourceDoughnutData} options={sourceDoughnutOptions} />
@@ -1001,19 +1002,19 @@ export default function RevenueDetailPage() {
       {/* Bottom Row */}
       <div className="grid grid-cols-1 gap-5 lg:grid-cols-3">
         {/* Revenue by Source */}
-        <div className="rounded-[24px] border border-slate-200 bg-white p-5 shadow-sm">
+        <div className="rounded-[24px] border border-line bg-surface p-5 ">
           <div className="mb-4 flex items-center justify-between">
             <div>
-              <h3 className="text-sm font-semibold text-slate-900">Financial breakdown</h3>
-              <p className="text-xs text-slate-500">Click a source to view detailed breakdown</p>
+              <h3 className="text-sm font-semibold text-ink">Financial breakdown</h3>
+              <p className="text-xs text-dim">Click a source to view detailed breakdown</p>
             </div>
-            <div className="inline-flex rounded-lg border border-slate-200 bg-slate-50 p-1">
+            <div className="inline-flex rounded-lg border border-line bg-canvas p-1">
               <button
                 onClick={() => setViewMode('revenue')}
                 className={`px-3 py-1.5 text-xs font-medium rounded-md transition ${
                   viewMode === 'revenue'
-                    ? 'bg-white text-emerald-700 shadow-sm'
-                    : 'text-slate-600 hover:text-slate-900'
+                    ? 'bg-surface text-ink '
+                    : 'text-dim hover:text-ink'
                 }`}
               >
                 Revenue
@@ -1022,8 +1023,8 @@ export default function RevenueDetailPage() {
                 onClick={() => setViewMode('expense')}
                 className={`px-3 py-1.5 text-xs font-medium rounded-md transition ${
                   viewMode === 'expense'
-                    ? 'bg-white text-rose-700 shadow-sm'
-                    : 'text-slate-600 hover:text-slate-900'
+                    ? 'bg-surface text-danger '
+                    : 'text-dim hover:text-ink'
                 }`}
               >
                 Expense
@@ -1045,7 +1046,7 @@ export default function RevenueDetailPage() {
                   key={idx}
                   onClick={() => isClickable && setSelectedSource(item.label)}
                   disabled={!isClickable}
-                  className={`flex w-full items-center justify-between text-sm transition hover:bg-slate-50 rounded-lg px-2 py-1 ${
+                  className={`flex w-full items-center justify-between text-sm transition hover:bg-canvas rounded-lg px-2 py-1 ${
                     isClickable ? 'cursor-pointer' : 'cursor-not-allowed opacity-50'
                   }`}
                 >
@@ -1054,9 +1055,9 @@ export default function RevenueDetailPage() {
                       className="h-2.5 w-2.5 rounded-full"
                       style={{ backgroundColor: item.color }}
                     />
-                    <span className="text-slate-600">{item.label}</span>
+                    <span className="text-dim">{item.label}</span>
                   </div>
-                  <span className="font-medium text-slate-900">{pct}%</span>
+                  <span className="font-medium text-ink">{pct}%</span>
                 </button>
               );
             })}
@@ -1064,33 +1065,33 @@ export default function RevenueDetailPage() {
         </div>
 
         {/* Recent Transactions */}
-        <div className="rounded-[24px] border border-slate-200 bg-white p-5 shadow-sm lg:col-span-2">
+        <div className="rounded-[24px] border border-line bg-surface p-5  lg:col-span-2">
           <div className="mb-4 flex items-center justify-between">
             <div>
-              <h3 className="text-sm font-semibold text-slate-900">Recent transactions</h3>
-              <p className="text-xs text-slate-500">Latest income and expense entries</p>
+              <h3 className="text-sm font-semibold text-ink">Recent transactions</h3>
+              <p className="text-xs text-dim">Latest income and expense entries</p>
             </div>
             <button
               onClick={() => setShowAllTransactionsModal(true)}
-              className="rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-600 transition hover:bg-slate-50"
+              className="rounded-lg border border-line px-3 py-1.5 text-xs font-medium text-dim transition hover:bg-canvas"
             >
               View all
             </button>
           </div>
-          <div className="divide-y divide-slate-100">
+          <div className="divide-y divide-line">
             {filteredPreviewTransactionsByFilter.length > 0 ? (
               filteredPreviewTransactionsByFilter.map((tx) => (
                 <button
                   key={tx.id}
                   onClick={() => setSelectedTransaction(tx)}
-                  className="flex w-full items-center justify-between py-3 transition hover:bg-slate-50 rounded-lg px-2"
+                  className="flex w-full items-center justify-between py-3 transition hover:bg-canvas rounded-lg px-2"
                 >
                   <div className="flex items-start gap-3">
                     <div
                       className={`mt-0.5 rounded-lg p-2 ${
                         tx.type === "income"
-                          ? "bg-emerald-50 text-emerald-600"
-                          : "bg-rose-50 text-rose-600"
+                          ? "bg-surface-hover text-ink"
+                          : "bg-danger/10 text-danger"
                       }`}
                     >
                       {tx.type === "income" ? (
@@ -1100,8 +1101,8 @@ export default function RevenueDetailPage() {
                       )}
                     </div>
                     <div>
-                      <p className="text-sm font-medium text-slate-900">{tx.description}</p>
-                      <div className="mt-1 flex items-center gap-2 text-xs text-slate-500">
+                      <p className="text-sm font-medium text-ink">{tx.description}</p>
+                      <div className="mt-1 flex items-center gap-2 text-xs text-dim">
                         <span className="inline-flex items-center gap-1">
                           <Calendar size={12} />
                           {formatDate(tx.date)}
@@ -1116,7 +1117,7 @@ export default function RevenueDetailPage() {
                   <div className="text-right">
                     <p
                       className={`text-sm font-semibold ${
-                        tx.type === "income" ? "text-emerald-700" : "text-rose-700"
+                        tx.type === "income" ? "text-ink" : "text-danger"
                       }`}
                     >
                       {tx.type === "income" ? "+" : ""}
@@ -1125,8 +1126,8 @@ export default function RevenueDetailPage() {
                     <span
                       className={`mt-1 inline-block rounded-full px-2 py-0.5 text-[10px] font-medium uppercase tracking-wider ${
                         tx.status === "completed"
-                          ? "bg-emerald-50 text-emerald-700"
-                          : "bg-amber-50 text-amber-700"
+                          ? "bg-surface-hover text-ink"
+                          : "bg-warning/10 text-warning"
                       }`}
                     >
                       {tx.status}
@@ -1136,7 +1137,7 @@ export default function RevenueDetailPage() {
               ))
             ) : (
               <div className="py-8 text-center">
-                <p className="text-sm text-slate-500">No transactions yet</p>
+                <p className="text-sm text-dim">No transactions yet</p>
               </div>
             )}
           </div>
@@ -1146,19 +1147,19 @@ export default function RevenueDetailPage() {
       {/* KPI Detail Modal */}
       {selectedKpi && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-          <div className="w-full max-w-4xl max-h-[90vh] rounded-2xl bg-white shadow-2xl overflow-hidden flex flex-col">
-            <div className="flex items-center justify-between border-b border-slate-200 p-6">
+          <div className="w-full max-w-4xl max-h-[90vh] rounded-2xl bg-surface shadow-2xl overflow-hidden flex flex-col">
+            <div className="flex items-center justify-between border-b border-line p-6">
               <div>
-                <h3 className="text-lg font-semibold text-slate-900">
+                <h3 className="text-lg font-semibold text-ink">
                   {selectedKpi === 'totalRevenue' && 'Total Revenue Details'}
                   {selectedKpi === 'netProfit' && 'Net Profit Details'}
                   {selectedKpi === 'totalExpenses' && 'Total Expenses Details'}
                 </h3>
-                <p className="text-sm text-slate-500">Detailed contribution breakdown</p>
+                <p className="text-sm text-dim">Detailed contribution breakdown</p>
               </div>
               <button
                 onClick={() => setSelectedKpi(null)}
-                className="rounded-lg p-1 text-slate-400 transition hover:bg-slate-100 hover:text-slate-600"
+                className="rounded-lg p-1 text-dim transition hover:bg-surface-hover hover:text-dim"
               >
                 <X size={20} />
               </button>
@@ -1171,11 +1172,11 @@ export default function RevenueDetailPage() {
               ].map((item) => {
                 const share = filteredTotalRevenue > 0 ? ((item.value / filteredTotalRevenue) * 100).toFixed(1) : '0.0';
                 return (
-                  <div key={item.label} className="flex items-center justify-between rounded-lg border border-slate-200 p-4">
-                    <p className="font-medium text-slate-900">{item.label}</p>
+                  <div key={item.label} className="flex items-center justify-between rounded-lg border border-line p-4">
+                    <p className="font-medium text-ink">{item.label}</p>
                     <div className="text-right">
-                      <p className="font-semibold text-emerald-700">{formatCurrency(item.value)}</p>
-                      <p className="text-xs text-slate-500">{share}% of total revenue</p>
+                      <p className="font-semibold text-ink">{formatCurrency(item.value)}</p>
+                      <p className="text-xs text-dim">{share}% of total revenue</p>
                     </div>
                   </div>
                 );
@@ -1187,11 +1188,11 @@ export default function RevenueDetailPage() {
               ].map((item) => {
                 const share = filteredTotalExpenses > 0 ? ((item.value / filteredTotalExpenses) * 100).toFixed(1) : '0.0';
                 return (
-                  <div key={item.label} className="flex items-center justify-between rounded-lg border border-slate-200 p-4">
-                    <p className="font-medium text-slate-900">{item.label}</p>
+                  <div key={item.label} className="flex items-center justify-between rounded-lg border border-line p-4">
+                    <p className="font-medium text-ink">{item.label}</p>
                     <div className="text-right">
-                      <p className="font-semibold text-rose-700">{formatCurrency(item.value)}</p>
-                      <p className="text-xs text-slate-500">{share}% of total expenses</p>
+                      <p className="font-semibold text-danger">{formatCurrency(item.value)}</p>
+                      <p className="text-xs text-dim">{share}% of total expenses</p>
                     </div>
                   </div>
                 );
@@ -1199,17 +1200,17 @@ export default function RevenueDetailPage() {
 
               {selectedKpi === 'netProfit' && (
                 <div className="space-y-3">
-                  <div className="flex items-center justify-between rounded-lg border border-slate-200 p-4">
-                    <p className="font-medium text-slate-900">Total Revenue</p>
-                    <p className="font-semibold text-emerald-700">{formatCurrency(filteredTotalRevenue)}</p>
+                  <div className="flex items-center justify-between rounded-lg border border-line p-4">
+                    <p className="font-medium text-ink">Total Revenue</p>
+                    <p className="font-semibold text-ink">{formatCurrency(filteredTotalRevenue)}</p>
                   </div>
-                  <div className="flex items-center justify-between rounded-lg border border-slate-200 p-4">
-                    <p className="font-medium text-slate-900">Total Expenses</p>
-                    <p className="font-semibold text-rose-700">{formatCurrency(filteredTotalExpenses)}</p>
+                  <div className="flex items-center justify-between rounded-lg border border-line p-4">
+                    <p className="font-medium text-ink">Total Expenses</p>
+                    <p className="font-semibold text-danger">{formatCurrency(filteredTotalExpenses)}</p>
                   </div>
-                  <div className="flex items-center justify-between rounded-lg border border-slate-200 bg-emerald-50 p-4">
-                    <p className="font-semibold text-slate-900">Net Profit</p>
-                    <p className="font-bold text-emerald-700">{formatCurrency(filteredNetProfit)}</p>
+                  <div className="flex items-center justify-between rounded-lg border border-line bg-surface-hover p-4">
+                    <p className="font-semibold text-ink">Net Profit</p>
+                    <p className="font-bold text-ink">{formatCurrency(filteredNetProfit)}</p>
                   </div>
                 </div>
               )}
@@ -1221,26 +1222,26 @@ export default function RevenueDetailPage() {
       {/* View All Transactions Modal */}
       {showAllTransactionsModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-          <div className="w-full max-w-5xl max-h-[90vh] rounded-2xl bg-white shadow-2xl overflow-hidden flex flex-col">
-            <div className="flex items-center justify-between border-b border-slate-200 p-6">
+          <div className="w-full max-w-5xl max-h-[90vh] rounded-2xl bg-surface shadow-2xl overflow-hidden flex flex-col">
+            <div className="flex items-center justify-between border-b border-line p-6">
               <div>
-                <h3 className="text-lg font-semibold text-slate-900">All Transactions</h3>
-                <p className="text-sm text-slate-500">Complete income and expense history</p>
+                <h3 className="text-lg font-semibold text-ink">All Transactions</h3>
+                <p className="text-sm text-dim">Complete income and expense history</p>
               </div>
               <button
                 onClick={() => setShowAllTransactionsModal(false)}
-                className="rounded-lg p-1 text-slate-400 transition hover:bg-slate-100 hover:text-slate-600"
+                className="rounded-lg p-1 text-dim transition hover:bg-surface-hover hover:text-dim"
               >
                 <X size={20} />
               </button>
             </div>
             {/* Filter Controls */}
-            <div className="border-b border-slate-200 p-4 bg-slate-50">
+            <div className="border-b border-line p-4 bg-canvas">
               <div className="flex flex-wrap gap-3">
                 <select
                   value={transactionFilters.type}
                   onChange={(e) => setTransactionFilters({ ...transactionFilters, type: e.target.value })}
-                  className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700 focus:border-emerald-500 focus:outline-none"
+                  className="rounded-lg border border-line bg-surface px-3 py-2 text-sm text-ink focus:border-line focus:outline-none"
                 >
                   <option value="all">All Types</option>
                   <option value="income">Income</option>
@@ -1249,7 +1250,7 @@ export default function RevenueDetailPage() {
                 <select
                   value={transactionFilters.source}
                   onChange={(e) => setTransactionFilters({ ...transactionFilters, source: e.target.value })}
-                  className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700 focus:border-emerald-500 focus:outline-none"
+                  className="rounded-lg border border-line bg-surface px-3 py-2 text-sm text-ink focus:border-line focus:outline-none"
                 >
                   <option value="all">All Sources</option>
                   <option value="Workspace Invoices">Workspace Invoices</option>
@@ -1261,7 +1262,7 @@ export default function RevenueDetailPage() {
                 <select
                   value={transactionFilters.status}
                   onChange={(e) => setTransactionFilters({ ...transactionFilters, status: e.target.value })}
-                  className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700 focus:border-emerald-500 focus:outline-none"
+                  className="rounded-lg border border-line bg-surface px-3 py-2 text-sm text-ink focus:border-line focus:outline-none"
                 >
                   <option value="all">All Status</option>
                   <option value="completed">Completed</option>
@@ -1269,38 +1270,38 @@ export default function RevenueDetailPage() {
                 </select>
                 <button
                   onClick={() => setTransactionFilters({ type: 'all', source: 'all', status: 'all' })}
-                  className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-100 transition"
+                  className="rounded-lg border border-line bg-surface px-3 py-2 text-sm font-medium text-ink hover:bg-surface-hover transition"
                 >
                   Clear filters
                 </button>
               </div>
             </div>
-            <div className="flex-1 overflow-y-auto p-6 divide-y divide-slate-100">
+            <div className="flex-1 overflow-y-auto p-6 divide-y divide-line">
               {filteredTransactionsByFilter.length > 0 ? (
                 filteredTransactionsByFilter.map((tx) => (
                   <button
                     key={`${tx.id}-${tx.date}`}
                     onClick={() => setSelectedTransaction(tx)}
-                    className="flex w-full items-center justify-between py-3 transition hover:bg-slate-50 rounded-lg px-2"
+                    className="flex w-full items-center justify-between py-3 transition hover:bg-canvas rounded-lg px-2"
                   >
                     <div className="flex items-start gap-3">
-                      <div className={`mt-0.5 rounded-lg p-2 ${tx.type === 'income' ? 'bg-emerald-50 text-emerald-600' : 'bg-rose-50 text-rose-600'}`}>
+                      <div className={`mt-0.5 rounded-lg p-2 ${tx.type === 'income' ? 'bg-surface-hover text-ink' : 'bg-danger/10 text-danger'}`}>
                         {tx.type === 'income' ? <ArrowUpRight size={14} /> : <ArrowDownRight size={14} />}
                       </div>
                       <div>
-                        <p className="text-sm font-medium text-slate-900">{tx.description}</p>
-                        <div className="mt-1 flex items-center gap-2 text-xs text-slate-500">
+                        <p className="text-sm font-medium text-ink">{tx.description}</p>
+                        <div className="mt-1 flex items-center gap-2 text-xs text-dim">
                           <span className="inline-flex items-center gap-1"><Calendar size={12} />{formatDate(tx.date)}</span>
                           <span className="inline-flex items-center gap-1"><FileText size={12} />{tx.id}</span>
-                          <span className="rounded-full bg-slate-100 px-2 py-0.5 uppercase tracking-wide">{tx.source}</span>
+                          <span className="rounded-full bg-surface-hover px-2 py-0.5 uppercase tracking-wide">{tx.source}</span>
                         </div>
                       </div>
                     </div>
                     <div className="text-right">
-                      <p className={`text-sm font-semibold ${tx.type === 'income' ? 'text-emerald-700' : 'text-rose-700'}`}>
+                      <p className={`text-sm font-semibold ${tx.type === 'income' ? 'text-ink' : 'text-danger'}`}>
                         {tx.type === 'income' ? '+' : ''}{formatCurrency(tx.amount)}
                       </p>
-                      <span className={`mt-1 inline-block rounded-full px-2 py-0.5 text-[10px] font-medium uppercase tracking-wider ${tx.status === 'completed' ? 'bg-emerald-50 text-emerald-700' : 'bg-amber-50 text-amber-700'}`}>
+                      <span className={`mt-1 inline-block rounded-full px-2 py-0.5 text-[10px] font-medium uppercase tracking-wider ${tx.status === 'completed' ? 'bg-surface-hover text-ink' : 'bg-warning/10 text-warning'}`}>
                         {tx.status}
                       </span>
                     </div>
@@ -1308,7 +1309,7 @@ export default function RevenueDetailPage() {
                 ))
               ) : (
                 <div className="py-8 text-center">
-                  <p className="text-sm text-slate-500">No transactions yet</p>
+                  <p className="text-sm text-dim">No transactions yet</p>
                 </div>
               )}
             </div>
@@ -1319,15 +1320,15 @@ export default function RevenueDetailPage() {
       {/* Revenue Source Detail Modal */}
       {selectedSource && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-          <div className="w-full max-w-4xl max-h-[90vh] rounded-2xl bg-white shadow-2xl overflow-hidden flex flex-col">
-            <div className="flex items-center justify-between border-b border-slate-200 p-6">
+          <div className="w-full max-w-4xl max-h-[90vh] rounded-2xl bg-surface shadow-2xl overflow-hidden flex flex-col">
+            <div className="flex items-center justify-between border-b border-line p-6">
               <div>
-                <h3 className="text-lg font-semibold text-slate-900">{selectedSource} - Detailed Breakdown</h3>
-                <p className="text-sm text-slate-500">Individual items and their contribution to total</p>
+                <h3 className="text-lg font-semibold text-ink">{selectedSource} - Detailed Breakdown</h3>
+                <p className="text-sm text-dim">Individual items and their contribution to total</p>
               </div>
               <button
                 onClick={() => setSelectedSource(null)}
-                className="rounded-lg p-1 text-slate-400 transition hover:bg-slate-100 hover:text-slate-600"
+                className="rounded-lg p-1 text-dim transition hover:bg-surface-hover hover:text-dim"
               >
                 <X size={20} />
               </button>
@@ -1341,20 +1342,20 @@ export default function RevenueDetailPage() {
                       const amount = typeof inv.total === 'string' ? parseFloat(inv.total.replace(/,/g, '')) : inv.total;
                       const share = totalWorkspaceRevenue > 0 ? ((amount / totalWorkspaceRevenue) * 100).toFixed(1) : 0;
                       return (
-                        <div key={idx} className="flex items-center justify-between rounded-lg border border-slate-200 p-4">
+                        <div key={idx} className="flex items-center justify-between rounded-lg border border-line p-4">
                           <div>
-                            <p className="font-medium text-slate-900">{inv.projectName || inv.customerName || 'Invoice'}</p>
-                            <p className="text-xs text-slate-500">ID: {inv.invoiceId || inv.customInvoiceId || 'N/A'}</p>
+                            <p className="font-medium text-ink">{inv.projectName || inv.customerName || 'Invoice'}</p>
+                            <p className="text-xs text-dim">ID: {inv.invoiceId || inv.customInvoiceId || 'N/A'}</p>
                           </div>
                           <div className="text-right">
-                            <p className="font-semibold text-emerald-700">{formatCurrency(amount)}</p>
-                            <p className="text-xs text-slate-500">{share}% of total</p>
+                            <p className="font-semibold text-ink">{formatCurrency(amount)}</p>
+                            <p className="text-xs text-dim">{share}% of total</p>
                           </div>
                         </div>
                       );
                     })
                   ) : (
-                    <p className="text-center text-slate-500">No workspace invoices found</p>
+                    <p className="text-center text-dim">No workspace invoices found</p>
                   )}
                 </div>
               )}
@@ -1366,20 +1367,20 @@ export default function RevenueDetailPage() {
                       const amount = typeof quote.total === 'string' ? parseFloat(quote.total.replace(/,/g, '')) : quote.total;
                       const share = totalWorkspaceQuoteValue > 0 ? ((amount / totalWorkspaceQuoteValue) * 100).toFixed(1) : 0;
                       return (
-                        <div key={idx} className="flex items-center justify-between rounded-lg border border-slate-200 p-4">
+                        <div key={idx} className="flex items-center justify-between rounded-lg border border-line p-4">
                           <div>
-                            <p className="font-medium text-slate-900">{quote.customerName || quote.projectName || 'Quote'}</p>
-                            <p className="text-xs text-slate-500">ID: {quote.quotationId || quote.customQuoteId || 'N/A'}</p>
+                            <p className="font-medium text-ink">{quote.customerName || quote.projectName || 'Quote'}</p>
+                            <p className="text-xs text-dim">ID: {quote.quotationId || quote.customQuoteId || 'N/A'}</p>
                           </div>
                           <div className="text-right">
-                            <p className="font-semibold text-emerald-700">{formatCurrency(amount)}</p>
-                            <p className="text-xs text-slate-500">{share}% of total</p>
+                            <p className="font-semibold text-ink">{formatCurrency(amount)}</p>
+                            <p className="text-xs text-dim">{share}% of total</p>
                           </div>
                         </div>
                       );
                     })
                   ) : (
-                    <p className="text-center text-slate-500">No workspace quotes found</p>
+                    <p className="text-center text-dim">No workspace quotes found</p>
                   )}
                 </div>
               )}
@@ -1393,20 +1394,20 @@ export default function RevenueDetailPage() {
                       const amount = (qty || 0) * (rate || 0);
                       const share = totalSalesRevenue > 0 ? ((amount / totalSalesRevenue) * 100).toFixed(1) : 0;
                       return (
-                        <div key={idx} className="flex items-center justify-between rounded-lg border border-slate-200 p-4">
+                        <div key={idx} className="flex items-center justify-between rounded-lg border border-line p-4">
                           <div>
-                            <p className="font-medium text-slate-900">{quote.productName || quote.item || 'Sales Quote'}</p>
-                            <p className="text-xs text-slate-500">ID: {quote.quotationId || 'N/A'}</p>
+                            <p className="font-medium text-ink">{quote.productName || quote.item || 'Sales Quote'}</p>
+                            <p className="text-xs text-dim">ID: {quote.quotationId || 'N/A'}</p>
                           </div>
                           <div className="text-right">
-                            <p className="font-semibold text-emerald-700">{formatCurrency(amount)}</p>
-                            <p className="text-xs text-slate-500">{share}% of total</p>
+                            <p className="font-semibold text-ink">{formatCurrency(amount)}</p>
+                            <p className="text-xs text-dim">{share}% of total</p>
                           </div>
                         </div>
                       );
                     })
                   ) : (
-                    <p className="text-center text-slate-500">No sales quotations found</p>
+                    <p className="text-center text-dim">No sales quotations found</p>
                   )}
                 </div>
               )}
@@ -1423,20 +1424,20 @@ export default function RevenueDetailPage() {
                       }, 0);
                       const share = totalDebitNotes > 0 ? ((amount / totalDebitNotes) * 100).toFixed(1) : 0;
                       return (
-                        <div key={idx} className="flex items-center justify-between rounded-lg border border-slate-200 p-4">
+                        <div key={idx} className="flex items-center justify-between rounded-lg border border-line p-4">
                           <div>
-                            <p className="font-medium text-slate-900">Debit Note - {note.orderId || note.debitNoteId || 'N/A'}</p>
-                            <p className="text-xs text-slate-500">ID: {note.debitNoteId || 'N/A'}</p>
+                            <p className="font-medium text-ink">Debit Note - {note.orderId || note.debitNoteId || 'N/A'}</p>
+                            <p className="text-xs text-dim">ID: {note.debitNoteId || 'N/A'}</p>
                           </div>
                           <div className="text-right">
-                            <p className="font-semibold text-rose-700">-{formatCurrency(amount)}</p>
-                            <p className="text-xs text-slate-500">{share}% of total</p>
+                            <p className="font-semibold text-danger">-{formatCurrency(amount)}</p>
+                            <p className="text-xs text-dim">{share}% of total</p>
                           </div>
                         </div>
                       );
                     })
                   ) : (
-                    <p className="text-center text-slate-500">No debit notes found</p>
+                    <p className="text-center text-dim">No debit notes found</p>
                   )}
                 </div>
               )}
@@ -1451,20 +1452,20 @@ export default function RevenueDetailPage() {
                       }, 0);
                       const share = totalOrders > 0 ? ((amount / totalOrders) * 100).toFixed(1) : 0;
                       return (
-                        <div key={idx} className="flex items-center justify-between rounded-lg border border-slate-200 p-4">
+                        <div key={idx} className="flex items-center justify-between rounded-lg border border-line p-4">
                           <div>
-                            <p className="font-medium text-slate-900">{order.productName || 'Order'}</p>
-                            <p className="text-xs text-slate-500">ID: {order.orderId || 'N/A'}</p>
+                            <p className="font-medium text-ink">{order.productName || 'Order'}</p>
+                            <p className="text-xs text-dim">ID: {order.orderId || 'N/A'}</p>
                           </div>
                           <div className="text-right">
-                            <p className="font-semibold text-rose-700">-{formatCurrency(amount)}</p>
-                            <p className="text-xs text-slate-500">{share}% of total</p>
+                            <p className="font-semibold text-danger">-{formatCurrency(amount)}</p>
+                            <p className="text-xs text-dim">{share}% of total</p>
                           </div>
                         </div>
                       );
                     })
                   ) : (
-                    <p className="text-center text-slate-500">No vendor orders found</p>
+                    <p className="text-center text-dim">No vendor orders found</p>
                   )}
                 </div>
               )}
@@ -1476,40 +1477,40 @@ export default function RevenueDetailPage() {
       {/* Export Modal */}
       {showExportModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-          <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl">
+          <div className="w-full max-w-md rounded-2xl bg-surface p-6 shadow-2xl">
             <div className="mb-4 flex items-center justify-between">
-              <h3 className="text-lg font-semibold text-slate-900">Export Report</h3>
+              <h3 className="text-lg font-semibold text-ink">Export Report</h3>
               <button
                 onClick={() => setShowExportModal(false)}
-                className="rounded-lg p-1 text-slate-400 transition hover:bg-slate-100 hover:text-slate-600"
+                className="rounded-lg p-1 text-dim transition hover:bg-surface-hover hover:text-dim"
               >
                 <X size={20} />
               </button>
             </div>
-            <p className="mb-6 text-sm text-slate-600">
+            <p className="mb-6 text-sm text-dim">
               Choose the format for your financial overview report:
             </p>
             <div className="grid grid-cols-2 gap-4">
               <button
                 onClick={handleExportPDF}
                 disabled={exporting}
-                className="flex flex-col items-center gap-3 rounded-xl border-2 border-slate-200 bg-white p-6 transition hover:border-emerald-500 hover:bg-emerald-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex flex-col items-center gap-3 rounded-xl border-2 border-line bg-surface p-6 transition hover:border-line hover:bg-surface-hover disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                <FileText size={32} className="text-emerald-600" />
+                <FileText size={32} className="text-ink" />
                 <div className="text-center">
-                  <p className="font-semibold text-slate-900">PDF</p>
-                  <p className="text-xs text-slate-500">Printable format</p>
+                  <p className="font-semibold text-ink">PDF</p>
+                  <p className="text-xs text-dim">Printable format</p>
                 </div>
               </button>
               <button
                 onClick={handleExportExcel}
                 disabled={exporting}
-                className="flex flex-col items-center gap-3 rounded-xl border-2 border-slate-200 bg-white p-6 transition hover:border-emerald-500 hover:bg-emerald-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex flex-col items-center gap-3 rounded-xl border-2 border-line bg-surface p-6 transition hover:border-line hover:bg-surface-hover disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                <FileSpreadsheet size={32} className="text-emerald-600" />
+                <FileSpreadsheet size={32} className="text-ink" />
                 <div className="text-center">
-                  <p className="font-semibold text-slate-900">Excel</p>
-                  <p className="text-xs text-slate-500">Spreadsheet format</p>
+                  <p className="font-semibold text-ink">Excel</p>
+                  <p className="text-xs text-dim">Spreadsheet format</p>
                 </div>
               </button>
             </div>
@@ -1520,98 +1521,98 @@ export default function RevenueDetailPage() {
       {/* Transaction Detail Modal */}
       {selectedTransaction && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-          <div className="w-full max-w-2xl max-h-[90vh] rounded-2xl bg-white shadow-2xl overflow-hidden flex flex-col">
-            <div className="flex items-center justify-between border-b border-slate-200 p-6">
+          <div className="w-full max-w-2xl max-h-[90vh] rounded-2xl bg-surface shadow-2xl overflow-hidden flex flex-col">
+            <div className="flex items-center justify-between border-b border-line p-6">
               <div>
-                <h3 className="text-lg font-semibold text-slate-900">Transaction Details</h3>
-                <p className="text-sm text-slate-500">Complete transaction information</p>
+                <h3 className="text-lg font-semibold text-ink">Transaction Details</h3>
+                <p className="text-sm text-dim">Complete transaction information</p>
               </div>
               <button
                 onClick={() => setSelectedTransaction(null)}
-                className="rounded-lg p-1 text-slate-400 transition hover:bg-slate-100 hover:text-slate-600"
+                className="rounded-lg p-1 text-dim transition hover:bg-surface-hover hover:text-dim"
               >
                 <X size={20} />
               </button>
             </div>
             <div className="flex-1 overflow-y-auto p-6 space-y-4">
-              <div className="rounded-lg border border-slate-200 p-4">
+              <div className="rounded-lg border border-line p-4">
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center gap-3">
-                    <div className={`rounded-lg p-2 ${selectedTransaction.type === 'income' ? 'bg-emerald-50 text-emerald-600' : 'bg-rose-50 text-rose-600'}`}>
+                    <div className={`rounded-lg p-2 ${selectedTransaction.type === 'income' ? 'bg-surface-hover text-ink' : 'bg-danger/10 text-danger'}`}>
                       {selectedTransaction.type === 'income' ? <ArrowUpRight size={20} /> : <ArrowDownRight size={20} />}
                     </div>
                     <div>
-                      <p className="text-sm font-medium text-slate-900">{selectedTransaction.description}</p>
-                      <p className="text-xs text-slate-500">{selectedTransaction.source}</p>
+                      <p className="text-sm font-medium text-ink">{selectedTransaction.description}</p>
+                      <p className="text-xs text-dim">{selectedTransaction.source}</p>
                     </div>
                   </div>
                   <div className="text-right">
-                    <p className={`text-lg font-semibold ${selectedTransaction.type === 'income' ? 'text-emerald-700' : 'text-rose-700'}`}>
+                    <p className={`text-lg font-semibold ${selectedTransaction.type === 'income' ? 'text-ink' : 'text-danger'}`}>
                       {selectedTransaction.type === 'income' ? '+' : ''}{formatCurrency(selectedTransaction.amount)}
                     </p>
                   </div>
                 </div>
                 <div className="grid grid-cols-2 gap-4 mt-4">
                   <div>
-                    <p className="text-xs text-slate-500 mb-1">Transaction ID</p>
-                    <p className="text-sm font-medium text-slate-900">{selectedTransaction.id}</p>
+                    <p className="text-xs text-dim mb-1">Transaction ID</p>
+                    <p className="text-sm font-medium text-ink">{selectedTransaction.id}</p>
                   </div>
                   <div>
-                    <p className="text-xs text-slate-500 mb-1">Date</p>
-                    <p className="text-sm font-medium text-slate-900">{formatDate(selectedTransaction.date)}</p>
+                    <p className="text-xs text-dim mb-1">Date</p>
+                    <p className="text-sm font-medium text-ink">{formatDate(selectedTransaction.date)}</p>
                   </div>
                   <div>
-                    <p className="text-xs text-slate-500 mb-1">Status</p>
+                    <p className="text-xs text-dim mb-1">Status</p>
                     <span className={`inline-block rounded-full px-3 py-1 text-xs font-medium uppercase tracking-wider ${
-                      selectedTransaction.status === 'completed' ? 'bg-emerald-50 text-emerald-700' : 'bg-amber-50 text-amber-700'
+                      selectedTransaction.status === 'completed' ? 'bg-surface-hover text-ink' : 'bg-warning/10 text-warning'
                     }`}>
                       {selectedTransaction.status}
                     </span>
                   </div>
                   <div>
-                    <p className="text-xs text-slate-500 mb-1">Type</p>
-                    <p className="text-sm font-medium text-slate-900 capitalize">{selectedTransaction.type}</p>
+                    <p className="text-xs text-dim mb-1">Type</p>
+                    <p className="text-sm font-medium text-ink capitalize">{selectedTransaction.type}</p>
                   </div>
                 </div>
               </div>
-              <div className="rounded-lg border border-slate-200 p-4">
-                <h4 className="text-sm font-semibold text-slate-900 mb-3">Additional Information</h4>
+              <div className="rounded-lg border border-line p-4">
+                <h4 className="text-sm font-semibold text-ink mb-3">Additional Information</h4>
                 <div className="space-y-2 text-sm">
                   <div className="flex justify-between">
-                    <span className="text-slate-500">Source Category</span>
-                    <span className="font-medium text-slate-900">{selectedTransaction.source}</span>
+                    <span className="text-dim">Source Category</span>
+                    <span className="font-medium text-ink">{selectedTransaction.source}</span>
                   </div>
                   {selectedTransaction.source === 'Workspace Invoices' && (
                     <>
                       <div className="flex justify-between">
-                        <span className="text-slate-500">Invoice Type</span>
-                        <span className="font-medium text-slate-900">Workspace Invoice</span>
+                        <span className="text-dim">Invoice Type</span>
+                        <span className="font-medium text-ink">Workspace Invoice</span>
                       </div>
                       <div className="flex justify-between">
-                        <span className="text-slate-500">Category</span>
-                        <span className="font-medium text-slate-900">Revenue</span>
+                        <span className="text-dim">Category</span>
+                        <span className="font-medium text-ink">Revenue</span>
                       </div>
                     </>
                   )}
                   {selectedTransaction.source === 'B2B Orders' && (
                     <>
                       <div className="flex justify-between">
-                        <span className="text-slate-500">Order Type</span>
-                        <span className="font-medium text-slate-900">Vendor Purchase</span>
+                        <span className="text-dim">Order Type</span>
+                        <span className="font-medium text-ink">Vendor Purchase</span>
                       </div>
                       <div className="flex justify-between">
-                        <span className="text-slate-500">Category</span>
-                        <span className="font-medium text-slate-900">Expense</span>
+                        <span className="text-dim">Category</span>
+                        <span className="font-medium text-ink">Expense</span>
                       </div>
                     </>
                   )}
                 </div>
               </div>
             </div>
-            <div className="border-t border-slate-200 p-6">
+            <div className="border-t border-line p-6">
               <button
                 onClick={() => setSelectedTransaction(null)}
-                className="w-full rounded-lg bg-slate-100 px-4 py-2.5 text-sm font-medium text-slate-700 transition hover:bg-slate-200"
+                className="w-full rounded-lg bg-surface-hover px-4 py-2.5 text-sm font-medium text-ink transition hover:bg-surface-hover"
               >
                 Close
               </button>

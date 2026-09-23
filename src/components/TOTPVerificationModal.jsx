@@ -108,10 +108,10 @@ function TOTPVerificationModal({ userEmail, onSuccess, onCancel }) {
   if (verified) {
     return (
       <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-        <div className="bg-white rounded-lg shadow-lg p-8 max-w-md w-full mx-4 text-center">
-          <CheckCircle2 className="w-16 h-16 text-green-500 mx-auto mb-4" />
-          <h3 className="text-xl font-semibold text-gray-900 mb-2">Verified!</h3>
-          <p className="text-gray-600">Your account is now verified.</p>
+        <div className="bg-surface rounded-lg shadow-lg p-8 max-w-md w-full mx-4 text-center">
+          <CheckCircle2 className="w-16 h-16 text-success mx-auto mb-4" />
+          <h3 className="text-xl font-semibold text-ink mb-2">Verified!</h3>
+          <p className="text-dim">Your account is now verified.</p>
         </div>
       </div>
     );
@@ -119,10 +119,10 @@ function TOTPVerificationModal({ userEmail, onSuccess, onCancel }) {
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-lg shadow-lg p-8 max-w-md w-full">
+      <div className="bg-surface rounded-lg shadow-lg p-8 max-w-md w-full">
         <div className="flex items-center gap-3 mb-6">
-          <Lock className="w-6 h-6 text-emerald-600" />
-          <h2 className="text-2xl font-semibold text-gray-900">Two-Factor Authentication</h2>
+          <Lock className="w-6 h-6 text-ink" />
+          <h2 className="text-2xl font-semibold text-ink">Two-Factor Authentication</h2>
         </div>
 
         {showAlert && (
@@ -135,7 +135,7 @@ function TOTPVerificationModal({ userEmail, onSuccess, onCancel }) {
           </div>
         )}
 
-        <p className="text-gray-600 mb-6">
+        <p className="text-dim mb-6">
           {useBackupCode 
             ? 'Enter one of your backup codes to continue'
             : 'Enter the 6-digit code from your authenticator app'
@@ -151,7 +151,7 @@ function TOTPVerificationModal({ userEmail, onSuccess, onCancel }) {
               maxLength="6"
               value={totpCode}
               onChange={handleInputChange}
-              className="w-full text-center text-2xl tracking-widest border-2 border-gray-300 rounded-lg px-4 py-3 mb-4 focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200"
+              className="w-full text-center text-2xl tracking-widest border-2 border-line rounded-lg px-4 py-3 mb-4 focus:outline-none focus:border-line focus:ring-2 focus:ring-ink"
               disabled={loading}
               required
             />
@@ -161,7 +161,7 @@ function TOTPVerificationModal({ userEmail, onSuccess, onCancel }) {
               placeholder="Enter backup code"
               value={backupCode}
               onChange={handleInputChange}
-              className="w-full border-2 border-gray-300 rounded-lg px-4 py-2 mb-4 focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200"
+              className="w-full border-2 border-line rounded-lg px-4 py-2 mb-4 focus:outline-none focus:border-line focus:ring-2 focus:ring-ink"
               disabled={loading}
               required
             />
@@ -170,7 +170,7 @@ function TOTPVerificationModal({ userEmail, onSuccess, onCancel }) {
           <button
             type="submit"
             disabled={loading || (useBackupCode ? !backupCode : totpCode.length !== 6)}
-            className="w-full bg-emerald-600 text-white font-semibold py-2 rounded-lg hover:bg-emerald-700 transition disabled:opacity-50 disabled:cursor-not-allowed mb-3"
+            className="w-full bg-cta text-cta-foreground font-semibold py-2 rounded-lg hover:bg-cta transition disabled:opacity-50 disabled:cursor-not-allowed mb-3"
           >
             {loading ? 'Verifying...' : 'Verify'}
           </button>
@@ -183,7 +183,7 @@ function TOTPVerificationModal({ userEmail, onSuccess, onCancel }) {
               setBackupCode('');
               setError('');
             }}
-            className="w-full text-emerald-600 hover:text-emerald-700 text-sm font-medium py-2 transition"
+            className="w-full text-ink hover:text-ink text-sm font-medium py-2 transition"
             disabled={loading}
           >
             {useBackupCode ? 'Use authenticator code instead' : 'Use backup code instead'}
@@ -193,12 +193,12 @@ function TOTPVerificationModal({ userEmail, onSuccess, onCancel }) {
         <button
           onClick={onCancel}
           disabled={loading}
-          className="w-full text-gray-600 hover:text-gray-700 text-sm py-2 mt-2 transition disabled:opacity-50"
+          className="w-full text-dim hover:text-ink text-sm py-2 mt-2 transition disabled:opacity-50"
         >
           Cancel
         </button>
 
-        <div className="mt-6 p-3 bg-blue-50 border border-blue-200 rounded-lg text-sm text-blue-700">
+        <div className="mt-6 p-3 bg-info/10 border border-info/20 rounded-lg text-sm text-info">
           <p>Don't have access to your authenticator? Use a backup code to sign in.</p>
         </div>
       </div>

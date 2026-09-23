@@ -6,7 +6,7 @@
  */
 export default function TableOfContentsPage({ sections, accentColor = '#F5A623', tagline, profileImage, contactName }) {
   return (
-    <div pageTitle="Table of Contents" className="flex bg-white" style={{ minHeight: '1123px' }}>
+    <div pageTitle="Table of Contents" className="flex bg-surface" style={{ minHeight: '1123px' }}>
       {/* ===== LEFT HALF — INDEX ===== */}
       <div className="w-[48%] p-10 md:p-14 flex flex-col">
         {/* Header */}
@@ -15,16 +15,16 @@ export default function TableOfContentsPage({ sections, accentColor = '#F5A623',
             <div className="w-10 h-[3px]" style={{ backgroundColor: accentColor }} />
             <div className="w-3 h-[3px]" style={{ backgroundColor: accentColor }} />
           </div>
-          <h2 className="text-4xl font-black text-gray-900 tracking-tight">Index</h2>
+          <h2 className="text-4xl font-black text-ink tracking-tight">Index</h2>
         </div>
 
         {/* TOC Items */}
         <div className="flex-1">
           {sections.map((section, i) => (
-            <div key={i} className="flex items-center py-3 border-b border-gray-100 group">
-              <span className="text-gray-800 text-sm font-medium flex-1">{section.title}</span>
+            <div key={i} className="flex items-center py-3 border-b border-line group">
+              <span className="text-ink text-sm font-medium flex-1">{section.title}</span>
               <div className="flex-shrink-0 flex items-center gap-2 ml-4">
-                <div className="w-16 border-b border-dotted border-gray-300" />
+                <div className="w-16 border-b border-dotted border-line" />
                 <span className="text-sm font-black w-6 text-right" style={{ color: accentColor }}>
                   {String(section.pageNumber).padStart(2, '0')}
                 </span>
@@ -34,10 +34,10 @@ export default function TableOfContentsPage({ sections, accentColor = '#F5A623',
         </div>
 
         {/* Bottom quote */}
-        <div className="mt-10 pt-6 border-t border-gray-200">
+        <div className="mt-10 pt-6 border-t border-line">
           <div className="flex gap-3">
             <div className="text-3xl font-serif leading-none" style={{ color: accentColor }}>"</div>
-            <p className="text-gray-500 text-xs italic leading-relaxed">
+            <p className="text-dim text-xs italic leading-relaxed">
               {tagline || 'Guided by vision, inspired by possibility.'}
             </p>
           </div>
@@ -46,7 +46,7 @@ export default function TableOfContentsPage({ sections, accentColor = '#F5A623',
 
       {/* ===== CENTER DIVIDER ===== */}
       <div className="w-[4%] flex items-center justify-center">
-        <div className="w-px h-[70%] bg-gray-200" />
+        <div className="w-px h-[70%] bg-surface-hover" />
       </div>
 
       {/* ===== RIGHT HALF — WELCOME MESSAGE ===== */}
@@ -59,10 +59,10 @@ export default function TableOfContentsPage({ sections, accentColor = '#F5A623',
           {/* Section Label */}
           <div className="flex items-center gap-3 mb-8">
             <div className="w-8 h-[3px] bg-black" />
-            <span className="text-[10px] font-bold uppercase tracking-[0.3em] text-gray-400">Welcome</span>
+            <span className="text-[10px] font-bold uppercase tracking-[0.3em] text-dim">Welcome</span>
           </div>
 
-          <h3 className="text-3xl font-black text-gray-900 mb-8 leading-tight">
+          <h3 className="text-3xl font-black text-ink mb-8 leading-tight">
             Welcome<br />
             <span style={{ color: accentColor }}>Message</span>
           </h3>
@@ -81,7 +81,7 @@ export default function TableOfContentsPage({ sections, accentColor = '#F5A623',
                 </div>
               </div>
             ) : (
-              <div className="w-full h-56 bg-gray-100 rounded-sm flex items-center justify-center relative overflow-hidden">
+              <div className="w-full h-56 bg-surface-hover rounded-sm flex items-center justify-center relative overflow-hidden">
                 {/* Abstract pattern fill */}
                 <svg className="absolute inset-0 w-full h-full opacity-5" viewBox="0 0 100 100">
                   <circle cx="20" cy="20" r="15" fill="currentColor" />
@@ -102,7 +102,7 @@ export default function TableOfContentsPage({ sections, accentColor = '#F5A623',
           </div>
 
           {/* Welcome text */}
-          <p className="text-gray-600 text-xs leading-relaxed italic border-l-3 pl-4"
+          <p className="text-dim text-xs leading-relaxed italic border-l-3 pl-4"
             style={{ borderLeftWidth: '3px', borderLeftColor: accentColor }}>
             "We turn aspirations into accomplishments through strategic planning and dedicated execution."
           </p>
@@ -112,7 +112,7 @@ export default function TableOfContentsPage({ sections, accentColor = '#F5A623',
             <div className="flex gap-1">
               {[...Array(5)].map((_, i) => (
                 <div key={i} className="w-2 h-2" style={{
-                  backgroundColor: i < 2 ? accentColor : '#e5e7eb',
+                  backgroundColor: i < 2 ? accentColor: 'rgb(var(--surface-hover))',
                 }} />
               ))}
             </div>

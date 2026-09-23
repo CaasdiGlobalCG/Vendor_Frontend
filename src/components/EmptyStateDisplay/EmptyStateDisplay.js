@@ -14,7 +14,7 @@ const EmptyStateDisplay = ({
     const navigate = useNavigate();
 
     const IconComponent = type === 'error' ? ExclamationTriangleIcon : ArchiveBoxXMarkIcon;
-    const iconColor = type === 'error' ? 'text-red-500' : 'text-emerald-600'; // Adjust colors as needed
+    const iconColor = type === 'error' ? 'text-danger' : 'text-ink'; // Adjust colors as needed
 
     const handleGoBack = () => {
         navigate(goBackPath);
@@ -29,7 +29,7 @@ const EmptyStateDisplay = ({
             />
 
             {/* Message */}
-            <p className="text-base sm:text-lg font-medium text-gray-700 mb-8">
+            <p className="text-base sm:text-lg font-medium text-ink mb-8">
                 {message || 'Oops..! Something went wrong.'}
             </p>
 
@@ -38,7 +38,7 @@ const EmptyStateDisplay = ({
                 {showGoBackButton && (
                     <button
                         onClick={handleGoBack}
-                        className="w-full sm:w-auto px-6 py-2.5 border border-emerald-600 text-emerald-700 bg-white rounded-md text-sm font-medium hover:bg-emerald-50 transition-colors focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2"
+                        className="w-full sm:w-auto px-6 py-2.5 border border-line text-ink bg-surface rounded-md text-sm font-medium hover:bg-surface-hover transition-colors focus:outline-none focus:ring-2 focus:ring-ink focus:ring-offset-2"
                     >
                         Go back
                     </button>
@@ -46,7 +46,7 @@ const EmptyStateDisplay = ({
                 {showRequestButton && (
                     <button
                         onClick={onRequestClick}
-                        className="w-full sm:w-auto px-6 py-2.5 bg-gradient-to-r from-emerald-500 to-teal-600 text-white rounded-md text-sm font-medium shadow-sm hover:from-emerald-600 hover:to-teal-700 transition-colors focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2"
+                        className="w-full sm:w-auto px-6 py-2.5 bg-black text-white rounded-md text-sm font-medium hover:from-black hover:to-black transition-colors focus:outline-none focus:ring-2 focus:ring-ink focus:ring-offset-2"
                     >
                         Request {/* Or change text based on context */}
                     </button>

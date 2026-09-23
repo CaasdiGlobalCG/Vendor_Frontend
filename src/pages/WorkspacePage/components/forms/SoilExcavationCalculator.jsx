@@ -222,13 +222,13 @@ const SoilExcavationCalculator = ({ data, nodeId, workspaceId, setNodes }) => {
 
   const ConfigModal = () => (
     <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center">
-      <div className="bg-white rounded-lg shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-        <div className="sticky top-0 bg-white border-b border-gray-200 p-4 flex justify-between items-center">
+      <div className="bg-surface rounded-lg shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+        <div className="sticky top-0 bg-surface border-b border-line p-4 flex justify-between items-center">
           <div>
-            <h3 className="text-xl font-bold text-gray-900">Configure Soil Excavation</h3>
-            <p className="text-sm text-gray-600 mt-1">Enter excavation type, dimensions & settings</p>
+            <h3 className="text-xl font-bold text-ink">Configure Soil Excavation</h3>
+            <p className="text-sm text-dim mt-1">Enter excavation type, dimensions & settings</p>
           </div>
-          <button onClick={() => setShowConfigModal(false)} className="text-gray-400 hover:text-gray-600">
+          <button onClick={() => setShowConfigModal(false)} className="text-dim hover:text-dim">
             <X size={24} />
           </button>
         </div>
@@ -236,7 +236,7 @@ const SoilExcavationCalculator = ({ data, nodeId, workspaceId, setNodes }) => {
         <div className="p-6 space-y-4">
           {/* Unit Selection */}
           <div className="space-y-2">
-            <label className="block text-sm font-medium text-gray-700">Unit</label>
+            <label className="block text-sm font-medium text-ink">Unit</label>
             <div className="flex gap-2">
               {['meter', 'feet'].map(u => (
                 <button
@@ -244,8 +244,8 @@ const SoilExcavationCalculator = ({ data, nodeId, workspaceId, setNodes }) => {
                   onClick={() => setUnit(u)}
                   className={`flex-1 py-2 px-3 rounded-lg font-medium transition-all text-sm ${
                     unit === u
-                      ? 'bg-blue-600 text-white'
-                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                      ? 'bg-info text-white'
+                      : 'bg-surface-hover text-ink hover:bg-surface-hover'
                   }`}
                 >
                   {u === 'meter' ? 'Meter' : 'Feet'}
@@ -255,8 +255,8 @@ const SoilExcavationCalculator = ({ data, nodeId, workspaceId, setNodes }) => {
           </div>
 
           {/* Excavation Type */}
-          <div className="border-t border-gray-200 pt-4">
-            <label className="block text-sm font-medium text-gray-700 mb-2">Excavation Type</label>
+          <div className="border-t border-line pt-4">
+            <label className="block text-sm font-medium text-ink mb-2">Excavation Type</label>
             <div className="grid grid-cols-3 gap-2">
               {[
                 { id: 'rectangular', label: 'Rectangular Pit' },
@@ -268,8 +268,8 @@ const SoilExcavationCalculator = ({ data, nodeId, workspaceId, setNodes }) => {
                   onClick={() => setExcavationType(type.id)}
                   className={`p-2 rounded-lg border-2 transition-all text-sm font-medium ${
                     excavationType === type.id
-                      ? 'border-blue-600 bg-blue-50 text-blue-900'
-                      : 'border-gray-200 bg-white text-gray-700 hover:border-blue-400'
+                      ? 'border-info bg-info/10 text-info'
+                      : 'border-line bg-surface text-ink hover:border-info'
                   }`}
                 >
                   {type.label}
@@ -279,43 +279,43 @@ const SoilExcavationCalculator = ({ data, nodeId, workspaceId, setNodes }) => {
           </div>
 
           {/* Dimensions */}
-          <div className="border-t border-gray-200 pt-4">
-            <p className="text-sm font-medium text-gray-700 mb-3">Dimensions ({unit})</p>
+          <div className="border-t border-line pt-4">
+            <p className="text-sm font-medium text-ink mb-3">Dimensions ({unit})</p>
             
             {(excavationType === 'rectangular' || excavationType === 'trench') && (
               <div className="grid grid-cols-3 gap-2">
                 <div>
-                  <label htmlFor="length" className="block text-xs font-medium text-gray-700">Length</label>
+                  <label htmlFor="length" className="block text-xs font-medium text-ink">Length</label>
                   <input
                     id="length"
                     type="number"
                     value={length}
                     onChange={(e) => setLength(e.target.value)}
-                    className="w-full px-2 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-2 py-2 border border-line rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-info"
                     step="0.01"
                     autoComplete="off"
                   />
                 </div>
                 <div>
-                  <label htmlFor="width" className="block text-xs font-medium text-gray-700">Width</label>
+                  <label htmlFor="width" className="block text-xs font-medium text-ink">Width</label>
                   <input
                     id="width"
                     type="number"
                     value={width}
                     onChange={(e) => setWidth(e.target.value)}
-                    className="w-full px-2 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-2 py-2 border border-line rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-info"
                     step="0.01"
                     autoComplete="off"
                   />
                 </div>
                 <div>
-                  <label htmlFor="depth" className="block text-xs font-medium text-gray-700">Depth</label>
+                  <label htmlFor="depth" className="block text-xs font-medium text-ink">Depth</label>
                   <input
                     id="depth"
                     type="number"
                     value={depth}
                     onChange={(e) => setDepth(e.target.value)}
-                    className="w-full px-2 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-2 py-2 border border-line rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-info"
                     step="0.01"
                     autoComplete="off"
                   />
@@ -326,25 +326,25 @@ const SoilExcavationCalculator = ({ data, nodeId, workspaceId, setNodes }) => {
             {excavationType === 'circular' && (
               <div className="grid grid-cols-2 gap-2">
                 <div>
-                  <label htmlFor="diameter" className="block text-xs font-medium text-gray-700">Diameter</label>
+                  <label htmlFor="diameter" className="block text-xs font-medium text-ink">Diameter</label>
                   <input
                     id="diameter"
                     type="number"
                     value={diameter}
                     onChange={(e) => setDiameter(e.target.value)}
-                    className="w-full px-2 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-2 py-2 border border-line rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-info"
                     step="0.01"
                     autoComplete="off"
                   />
                 </div>
                 <div>
-                  <label htmlFor="depthCirc" className="block text-xs font-medium text-gray-700">Depth</label>
+                  <label htmlFor="depthCirc" className="block text-xs font-medium text-ink">Depth</label>
                   <input
                     id="depthCirc"
                     type="number"
                     value={depth}
                     onChange={(e) => setDepth(e.target.value)}
-                    className="w-full px-2 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-2 py-2 border border-line rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-info"
                     step="0.01"
                     autoComplete="off"
                   />
@@ -354,8 +354,8 @@ const SoilExcavationCalculator = ({ data, nodeId, workspaceId, setNodes }) => {
           </div>
 
           {/* Soil Type */}
-          <div className="border-t border-gray-200 pt-4">
-            <label className="block text-sm font-medium text-gray-700 mb-2">Soil Type</label>
+          <div className="border-t border-line pt-4">
+            <label className="block text-sm font-medium text-ink mb-2">Soil Type</label>
             <div className="grid grid-cols-2 gap-2">
               {[
                 { id: 'loose', label: 'Loose (10% swell)' },
@@ -368,8 +368,8 @@ const SoilExcavationCalculator = ({ data, nodeId, workspaceId, setNodes }) => {
                   onClick={() => setSoilType(soil.id)}
                   className={`p-2 rounded-lg border-2 transition-all text-sm ${
                     soilType === soil.id
-                      ? 'border-blue-600 bg-blue-50 text-blue-900'
-                      : 'border-gray-200 bg-white text-gray-700 hover:border-blue-400'
+                      ? 'border-info bg-info/10 text-info'
+                      : 'border-line bg-surface text-ink hover:border-info'
                   }`}
                 >
                   <p className="font-semibold">{soil.label}</p>
@@ -379,27 +379,27 @@ const SoilExcavationCalculator = ({ data, nodeId, workspaceId, setNodes }) => {
           </div>
 
           {/* Safety & Over-excavation */}
-          <div className="border-t border-gray-200 pt-4 grid grid-cols-2 gap-3">
+          <div className="border-t border-line pt-4 grid grid-cols-2 gap-3">
             <div>
-              <label htmlFor="safetyMargin" className="block text-xs font-medium text-gray-700 mb-2">Safety Margin (%)</label>
+              <label htmlFor="safetyMargin" className="block text-xs font-medium text-ink mb-2">Safety Margin (%)</label>
               <input
                 id="safetyMargin"
                 type="number"
                 value={safetyMargin}
                 onChange={(e) => setSafetyMargin(e.target.value)}
-                className="w-full px-2 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-2 py-2 border border-line rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-info"
                 step="0.1"
                 autoComplete="off"
               />
             </div>
             <div>
-              <label htmlFor="overExcavation" className="block text-xs font-medium text-gray-700 mb-2">Over-excavation (%)</label>
+              <label htmlFor="overExcavation" className="block text-xs font-medium text-ink mb-2">Over-excavation (%)</label>
               <input
                 id="overExcavation"
                 type="number"
                 value={overExcavation}
                 onChange={(e) => setOverExcavation(e.target.value)}
-                className="w-full px-2 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-2 py-2 border border-line rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-info"
                 step="0.1"
                 autoComplete="off"
               />
@@ -407,50 +407,50 @@ const SoilExcavationCalculator = ({ data, nodeId, workspaceId, setNodes }) => {
           </div>
 
           {/* Cost Rates */}
-          <div className="border-t border-gray-200 pt-4">
-            <p className="text-sm font-medium text-gray-700 mb-2">Cost Rates (₹/unit)</p>
+          <div className="border-t border-line pt-4">
+            <p className="text-sm font-medium text-ink mb-2">Cost Rates (₹/unit)</p>
             <div className="grid grid-cols-2 gap-2">
               <div>
-                <label htmlFor="excavationRate" className="block text-xs font-medium text-gray-700">Excavation (₹/m³)</label>
+                <label htmlFor="excavationRate" className="block text-xs font-medium text-ink">Excavation (₹/m³)</label>
                 <input
                   id="excavationRate"
                   type="number"
                   value={excavationRate}
                   onChange={(e) => setExcavationRate(e.target.value)}
-                  className="w-full px-2 py-1 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-2 py-1 border border-line rounded text-sm focus:outline-none focus:ring-2 focus:ring-info"
                   autoComplete="off"
                 />
               </div>
               <div>
-                <label htmlFor="loadingRate" className="block text-xs font-medium text-gray-700">Loading (₹/m³)</label>
+                <label htmlFor="loadingRate" className="block text-xs font-medium text-ink">Loading (₹/m³)</label>
                 <input
                   id="loadingRate"
                   type="number"
                   value={loadingRate}
                   onChange={(e) => setLoadingRate(e.target.value)}
-                  className="w-full px-2 py-1 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-2 py-1 border border-line rounded text-sm focus:outline-none focus:ring-2 focus:ring-info"
                   autoComplete="off"
                 />
               </div>
               <div>
-                <label htmlFor="transportationRate" className="block text-xs font-medium text-gray-700">Transportation (₹/trip)</label>
+                <label htmlFor="transportationRate" className="block text-xs font-medium text-ink">Transportation (₹/trip)</label>
                 <input
                   id="transportationRate"
                   type="number"
                   value={transportationRate}
                   onChange={(e) => setTransportationRate(e.target.value)}
-                  className="w-full px-2 py-1 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-2 py-1 border border-line rounded text-sm focus:outline-none focus:ring-2 focus:ring-info"
                   autoComplete="off"
                 />
               </div>
               <div>
-                <label htmlFor="dumpingFee" className="block text-xs font-medium text-gray-700">Dumping Fee (₹/m³)</label>
+                <label htmlFor="dumpingFee" className="block text-xs font-medium text-ink">Dumping Fee (₹/m³)</label>
                 <input
                   id="dumpingFee"
                   type="number"
                   value={dumpingFee}
                   onChange={(e) => setDumpingFee(e.target.value)}
-                  className="w-full px-2 py-1 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-2 py-1 border border-line rounded text-sm focus:outline-none focus:ring-2 focus:ring-info"
                   autoComplete="off"
                 />
               </div>
@@ -459,11 +459,11 @@ const SoilExcavationCalculator = ({ data, nodeId, workspaceId, setNodes }) => {
 
           {/* Validation Errors */}
           {validationErrors.length > 0 && (
-            <div className="bg-red-50 border-l-4 border-red-400 p-3 rounded">
-              <p className="font-bold text-red-900 text-sm mb-1 flex items-center gap-2">
+            <div className="bg-danger/10 border-l-4 border-danger p-3 rounded">
+              <p className="font-bold text-danger text-sm mb-1 flex items-center gap-2">
                 <AlertCircle size={16} /> Validation Errors
               </p>
-              <ul className="list-disc list-inside text-xs text-red-800 space-y-1">
+              <ul className="list-disc list-inside text-xs text-danger space-y-1">
                 {validationErrors.map((err, i) => (
                   <li key={i}>{err}</li>
                 ))}
@@ -472,16 +472,16 @@ const SoilExcavationCalculator = ({ data, nodeId, workspaceId, setNodes }) => {
           )}
 
           {/* Action Buttons */}
-          <div className="grid grid-cols-2 gap-3 pt-4 border-t border-gray-200">
+          <div className="grid grid-cols-2 gap-3 pt-4 border-t border-line">
             <button
               onClick={() => setShowConfigModal(false)}
-              className="bg-gray-200 hover:bg-gray-300 text-gray-900 font-bold py-2 px-4 rounded-lg transition-colors text-sm"
+              className="bg-surface-hover hover:bg-surface-hover text-ink font-bold py-2 px-4 rounded-lg transition-colors text-sm"
             >
               Cancel
             </button>
             <button
               onClick={runCalculation}
-              className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg transition-colors text-sm"
+              className="bg-info hover:bg-info text-white font-bold py-2 px-4 rounded-lg transition-colors text-sm"
             >
               Calculate
             </button>
@@ -493,10 +493,10 @@ const SoilExcavationCalculator = ({ data, nodeId, workspaceId, setNodes }) => {
 
   const DetailsModal = () => (
     <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center">
-      <div className="bg-white rounded-lg shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-        <div className="sticky top-0 bg-white border-b border-gray-200 p-4 flex justify-between items-center">
-          <h3 className="text-xl font-bold text-gray-900">Complete Breakdown</h3>
-          <button onClick={() => setShowDetailsModal(false)} className="text-gray-400 hover:text-gray-600">
+      <div className="bg-surface rounded-lg shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+        <div className="sticky top-0 bg-surface border-b border-line p-4 flex justify-between items-center">
+          <h3 className="text-xl font-bold text-ink">Complete Breakdown</h3>
+          <button onClick={() => setShowDetailsModal(false)} className="text-dim hover:text-dim">
             <X size={24} />
           </button>
         </div>
@@ -504,15 +504,15 @@ const SoilExcavationCalculator = ({ data, nodeId, workspaceId, setNodes }) => {
         {results && (
           <div className="p-6 space-y-4">
             {/* Volume Summary */}
-            <div className="bg-blue-50 border-2 border-blue-200 rounded-lg p-4">
-              <p className="text-sm text-gray-600">Total Excavation Volume</p>
-              <p className="text-3xl font-bold text-blue-600">{results.adjustedVolume}</p>
-              <p className="text-xs text-gray-600 mt-1">m³ ({results.excavationType})</p>
+            <div className="bg-info/10 border-2 border-info/20 rounded-lg p-4">
+              <p className="text-sm text-dim">Total Excavation Volume</p>
+              <p className="text-3xl font-bold text-info">{results.adjustedVolume}</p>
+              <p className="text-xs text-dim mt-1">m³ ({results.excavationType})</p>
             </div>
 
             {/* Volume Breakdown */}
-            <div className="border border-gray-200 rounded-lg overflow-hidden">
-              <div className="bg-gray-50 p-3 border-b font-bold text-sm text-gray-900">Volume Analysis</div>
+            <div className="border border-line rounded-lg overflow-hidden">
+              <div className="bg-canvas p-3 border-b font-bold text-sm text-ink">Volume Analysis</div>
               <div className="p-4 space-y-2 text-sm">
                 <div className="flex justify-between">
                   <span>Base Volume</span>
@@ -526,11 +526,11 @@ const SoilExcavationCalculator = ({ data, nodeId, workspaceId, setNodes }) => {
                   <span>Over-excavation ({results.overExcavation}%)</span>
                   <span className="font-bold">{parseFloat((results.baseVolume * results.overExcavation / 100).toFixed(2))} m³</span>
                 </div>
-                <div className="flex justify-between pt-2 border-t font-bold text-blue-600">
+                <div className="flex justify-between pt-2 border-t font-bold text-info">
                   <span>Adjusted Volume</span>
                   <span>{results.adjustedVolume} m³</span>
                 </div>
-                <div className="flex justify-between pt-2 border-t text-orange-600 font-bold">
+                <div className="flex justify-between pt-2 border-t text-warning font-bold">
                   <span>Loose Volume (swell +{results.swellFactor}%)</span>
                   <span>{results.looseVolume} m³</span>
                 </div>
@@ -538,27 +538,27 @@ const SoilExcavationCalculator = ({ data, nodeId, workspaceId, setNodes }) => {
             </div>
 
             {/* Vehicle Loads */}
-            <div className="border border-gray-200 rounded-lg overflow-hidden">
-              <div className="bg-gray-50 p-3 border-b font-bold text-sm text-gray-900">Vehicle Loads Required</div>
+            <div className="border border-line rounded-lg overflow-hidden">
+              <div className="bg-canvas p-3 border-b font-bold text-sm text-ink">Vehicle Loads Required</div>
               <div className="p-4 space-y-2 text-sm">
                 <div className="flex justify-between">
                   <span>Tractor Trolley (3 m³)</span>
-                  <span className="font-bold text-blue-600">{results.tractorLoads} loads</span>
+                  <span className="font-bold text-info">{results.tractorLoads} loads</span>
                 </div>
                 <div className="flex justify-between">
                   <span>6-Wheeler Truck (6 m³)</span>
-                  <span className="font-bold text-green-600">{results.sixWheelerLoads} loads</span>
+                  <span className="font-bold text-success">{results.sixWheelerLoads} loads</span>
                 </div>
                 <div className="flex justify-between">
                   <span>10-Wheeler Truck (10 m³)</span>
-                  <span className="font-bold text-purple-600">{results.tenWheelerLoads} loads</span>
+                  <span className="font-bold text-ink">{results.tenWheelerLoads} loads</span>
                 </div>
               </div>
             </div>
 
             {/* Weight & Soil Info */}
-            <div className="border border-gray-200 rounded-lg overflow-hidden">
-              <div className="bg-gray-50 p-3 border-b font-bold text-sm text-gray-900">Soil Properties</div>
+            <div className="border border-line rounded-lg overflow-hidden">
+              <div className="bg-canvas p-3 border-b font-bold text-sm text-ink">Soil Properties</div>
               <div className="p-4 space-y-2 text-sm">
                 <div className="flex justify-between">
                   <span>Soil Type</span>
@@ -572,7 +572,7 @@ const SoilExcavationCalculator = ({ data, nodeId, workspaceId, setNodes }) => {
                   <span>Soil Density</span>
                   <span className="font-bold">{SOIL_DENSITY[results.soilType]} kg/m³</span>
                 </div>
-                <div className="flex justify-between pt-2 border-t font-bold text-green-600">
+                <div className="flex justify-between pt-2 border-t font-bold text-success">
                   <span>Total Soil Weight</span>
                   <span>{results.soilWeight} tons</span>
                 </div>
@@ -580,8 +580,8 @@ const SoilExcavationCalculator = ({ data, nodeId, workspaceId, setNodes }) => {
             </div>
 
             {/* Cost Breakdown */}
-            <div className="border border-gray-200 rounded-lg overflow-hidden">
-              <div className="bg-gray-50 p-3 border-b font-bold text-sm text-gray-900">Cost Breakdown</div>
+            <div className="border border-line rounded-lg overflow-hidden">
+              <div className="bg-canvas p-3 border-b font-bold text-sm text-ink">Cost Breakdown</div>
               <div className="p-4 space-y-2 text-sm">
                 <div className="flex justify-between">
                   <span>Excavation Cost</span>
@@ -601,12 +601,12 @@ const SoilExcavationCalculator = ({ data, nodeId, workspaceId, setNodes }) => {
                 </div>
                 <div className="flex justify-between pt-2 border-t font-bold text-lg">
                   <span>Total Earthwork Cost</span>
-                  <span className="text-green-600">₹{results.costs.totalCost.toLocaleString()}</span>
+                  <span className="text-success">₹{results.costs.totalCost.toLocaleString()}</span>
                 </div>
               </div>
             </div>
 
-            <button onClick={() => setShowDetailsModal(false)} className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 rounded-lg text-sm">
+            <button onClick={() => setShowDetailsModal(false)} className="w-full bg-info hover:bg-info text-white font-bold py-2 rounded-lg text-sm">
               Close
             </button>
           </div>
@@ -617,16 +617,16 @@ const SoilExcavationCalculator = ({ data, nodeId, workspaceId, setNodes }) => {
 
   // ==================== MAIN RENDER ====================
   return (
-    <div className="w-full bg-white rounded-lg shadow-lg p-6">
+    <div className="w-full bg-surface rounded-lg shadow-lg p-6">
       {!results ? (
         <div className="space-y-4">
           <div>
-            <h3 className="text-xl font-bold text-gray-900">Soil Excavation Calculator</h3>
-            <p className="text-sm text-gray-600 mt-1">Estimate volume, loads & costs</p>
+            <h3 className="text-xl font-bold text-ink">Soil Excavation Calculator</h3>
+            <p className="text-sm text-dim mt-1">Estimate volume, loads & costs</p>
           </div>
           <button
             onClick={() => setShowConfigModal(true)}
-            className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg transition-colors text-sm"
+            className="w-full bg-info hover:bg-info text-white font-bold py-3 px-4 rounded-lg transition-colors text-sm"
           >
             Configure & Calculate
           </button>
@@ -635,39 +635,39 @@ const SoilExcavationCalculator = ({ data, nodeId, workspaceId, setNodes }) => {
         <div className="space-y-4">
           {/* Compact Result Grid */}
           <div className="grid grid-cols-2 gap-3">
-            <div className="bg-blue-50 border-2 border-blue-200 p-4 rounded-lg">
-              <p className="text-xs text-gray-600 mb-1">Excavation Volume</p>
-              <p className="text-2xl font-bold text-blue-600">{results.adjustedVolume}</p>
-              <p className="text-xs text-gray-600">m³</p>
+            <div className="bg-info/10 border-2 border-info/20 p-4 rounded-lg">
+              <p className="text-xs text-dim mb-1">Excavation Volume</p>
+              <p className="text-2xl font-bold text-info">{results.adjustedVolume}</p>
+              <p className="text-xs text-dim">m³</p>
               <button
                 onClick={() => setShowDetailsModal(true)}
-                className="mt-2 text-blue-600 hover:text-blue-800 flex items-center gap-1 text-xs"
+                className="mt-2 text-info hover:text-info flex items-center gap-1 text-xs"
               >
                 <Info size={14} /> Details
               </button>
             </div>
 
-            <div className="bg-gray-50 border-2 border-gray-200 p-4 rounded-lg">
-              <p className="text-xs text-gray-600 mb-1">Loose Volume</p>
-              <p className="text-2xl font-bold text-gray-900">{results.looseVolume}</p>
-              <p className="text-xs text-gray-600">(+{results.swellFactor}%)</p>
+            <div className="bg-canvas border-2 border-line p-4 rounded-lg">
+              <p className="text-xs text-dim mb-1">Loose Volume</p>
+              <p className="text-2xl font-bold text-ink">{results.looseVolume}</p>
+              <p className="text-xs text-dim">(+{results.swellFactor}%)</p>
             </div>
 
-            <div className="bg-gray-50 border-2 border-gray-200 p-4 rounded-lg">
-              <p className="text-xs text-gray-600 mb-1">Soil Weight</p>
-              <p className="text-2xl font-bold text-gray-900">{results.soilWeight}</p>
-              <p className="text-xs text-gray-600">tons</p>
+            <div className="bg-canvas border-2 border-line p-4 rounded-lg">
+              <p className="text-xs text-dim mb-1">Soil Weight</p>
+              <p className="text-2xl font-bold text-ink">{results.soilWeight}</p>
+              <p className="text-xs text-dim">tons</p>
             </div>
 
-            <div className="bg-purple-50 border-2 border-purple-200 p-4 rounded-lg">
-              <p className="text-xs text-gray-600 mb-1">Total Vehicle Loads</p>
-              <p className="text-2xl font-bold text-purple-600">{results.tractorLoads + results.sixWheelerLoads + results.tenWheelerLoads}</p>
-              <p className="text-xs text-gray-600">all types</p>
+            <div className="bg-surface-hover border-2 border-line p-4 rounded-lg">
+              <p className="text-xs text-dim mb-1">Total Vehicle Loads</p>
+              <p className="text-2xl font-bold text-ink">{results.tractorLoads + results.sixWheelerLoads + results.tenWheelerLoads}</p>
+              <p className="text-xs text-dim">all types</p>
             </div>
 
-            <div className="bg-green-50 border-2 border-green-200 p-4 rounded-lg col-span-2">
-              <p className="text-xs text-gray-600 mb-1">Total Earthwork Cost</p>
-              <p className="text-3xl font-bold text-green-600">₹{results.costs.totalCost.toLocaleString()}</p>
+            <div className="bg-success/10 border-2 border-success/20 p-4 rounded-lg col-span-2">
+              <p className="text-xs text-dim mb-1">Total Earthwork Cost</p>
+              <p className="text-3xl font-bold text-success">₹{results.costs.totalCost.toLocaleString()}</p>
             </div>
           </div>
 
@@ -675,13 +675,13 @@ const SoilExcavationCalculator = ({ data, nodeId, workspaceId, setNodes }) => {
           <div className="grid grid-cols-2 gap-2 pt-2">
             <button
               onClick={handleReset}
-              className="bg-gray-200 hover:bg-gray-300 text-gray-900 font-bold py-2 px-4 rounded-lg transition-colors flex items-center justify-center gap-2 text-sm"
+              className="bg-surface-hover hover:bg-surface-hover text-ink font-bold py-2 px-4 rounded-lg transition-colors flex items-center justify-center gap-2 text-sm"
             >
               <RotateCcw size={16} /> Reset
             </button>
             <button
               onClick={() => setShowConfigModal(true)}
-              className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg transition-colors text-sm"
+              className="bg-info hover:bg-info text-white font-bold py-2 px-4 rounded-lg transition-colors text-sm"
             >
               Edit
             </button>

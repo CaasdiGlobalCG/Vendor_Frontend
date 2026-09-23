@@ -17,11 +17,11 @@ import { VendorContext } from '../../../../../context/VendorContext.jsx';
 import invoiceFetch from '../utils/invoiceFetch';
 
 const STAGE_CONFIG = {
-  procurement_request: { label: 'Procurement Request', color: 'bg-gray-100 text-gray-700', icon: FileText },
-  rfq_sent: { label: 'RFQ Sent to Vendors', color: 'bg-blue-100 text-blue-700', icon: Send },
-  vendor_quotes_received: { label: 'Vendor Quotes Received', color: 'bg-indigo-100 text-indigo-700', icon: Users },
-  final_quotation_created: { label: 'Final Quotation Created', color: 'bg-yellow-100 text-yellow-700', icon: FileText },
-  commissioned: { label: 'Final Quotation Received', color: 'bg-orange-100 text-orange-700', icon: CheckCircle },
+  procurement_request: { label: 'Procurement Request', color: 'bg-surface-hover text-ink', icon: FileText },
+  rfq_sent: { label: 'RFQ Sent to Vendors', color: 'bg-info/10 text-info', icon: Send },
+  vendor_quotes_received: { label: 'Vendor Quotes Received', color: 'bg-info/10 text-info', icon: Users },
+  final_quotation_created: { label: 'Final Quotation Created', color: 'bg-warning/10 text-warning', icon: FileText },
+  commissioned: { label: 'Final Quotation Received', color: 'bg-warning/10 text-warning', icon: CheckCircle },
 };
 
 const PIPELINE_STEPS = [
@@ -195,12 +195,12 @@ const OrdersPage = ({ workspaceId, selectedTask, selectedSubtask, onRaisePOFromO
           return (
             <React.Fragment key={step}>
               {idx > 0 && (
-                <div className={`h-0.5 w-4 ${isCompleted ? 'bg-teal-500' : 'bg-gray-200'}`} />
+                <div className={`h-0.5 w-4 ${isCompleted ? 'bg-cta' : 'bg-surface-hover'}`} />
               )}
               <div
                 className={`flex items-center justify-center w-6 h-6 rounded-full text-xs
-                  ${isCurrent ? 'bg-teal-600 text-white ring-2 ring-teal-300' :
-                    isCompleted ? 'bg-teal-500 text-white' : 'bg-gray-200 text-gray-400'}`}
+                  ${isCurrent ? 'bg-cta text-cta-foreground ring-2 ring-ink' :
+                    isCompleted ? 'bg-cta text-cta-foreground' : 'bg-surface-hover text-dim'}`}
                 title={config.label}
               >
                 <Icon size={12} />
@@ -215,8 +215,8 @@ const OrdersPage = ({ workspaceId, selectedTask, selectedSubtask, onRaisePOFromO
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-teal-600" />
-        <span className="ml-3 text-gray-500">Loading orders...</span>
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-line" />
+        <span className="ml-3 text-dim">Loading orders...</span>
       </div>
     );
   }
@@ -226,8 +226,8 @@ const OrdersPage = ({ workspaceId, selectedTask, selectedSubtask, onRaisePOFromO
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h2 className="text-xl font-semibold text-gray-800">Orders</h2>
-          <p className="text-sm text-gray-500 mt-1">
+          <h2 className="text-xl font-semibold text-ink">Orders</h2>
+          <p className="text-sm text-dim mt-1">
             Workspace: {workspaceId?.substring(0, 8)}...
             {selectedTask?.name && ` | Task: ${selectedTask.name}`}
             {selectedSubtask?.name && ` | Subtask: ${selectedSubtask.name}`}
@@ -235,7 +235,7 @@ const OrdersPage = ({ workspaceId, selectedTask, selectedSubtask, onRaisePOFromO
         </div>
         <button
           onClick={fetchOrders}
-          className="flex items-center gap-2 px-3 py-2 text-sm border border-gray-300 rounded-lg hover:bg-gray-50"
+          className="flex items-center gap-2 px-3 py-2 text-sm border border-line rounded-lg hover:bg-canvas"
         >
           <RefreshCw size={14} /> Refresh
         </button>
@@ -244,44 +244,44 @@ const OrdersPage = ({ workspaceId, selectedTask, selectedSubtask, onRaisePOFromO
       {/* Stats */}
       <div className="grid grid-cols-5 gap-4 mb-6">
         {[
-          { label: 'Total', value: stats.total, icon: Package, color: 'text-gray-600' },
-          { label: 'RFQ Sent', value: stats.rfqSent, icon: Send, color: 'text-blue-600' },
-          { label: 'Quotes Received', value: stats.quotesReceived, icon: Users, color: 'text-indigo-600' },
-          { label: 'Final Quotation', value: stats.finalCreated, icon: FileText, color: 'text-yellow-600' },
-          { label: 'Final Quotation Received', value: stats.finalQuotationReceived, icon: CheckCircle, color: 'text-orange-600' },
+          { label: 'Total', value: stats.total, icon: Package, color: 'text-dim' },
+          { label: 'RFQ Sent', value: stats.rfqSent, icon: Send, color: 'text-info' },
+          { label: 'Quotes Received', value: stats.quotesReceived, icon: Users, color: 'text-info' },
+          { label: 'Final Quotation', value: stats.finalCreated, icon: FileText, color: 'text-warning' },
+          { label: 'Final Quotation Received', value: stats.finalQuotationReceived, icon: CheckCircle, color: 'text-warning' },
         ].map(({ label, value, icon: Icon, color }) => (
-          <div key={label} className="bg-white border rounded-lg p-4">
+          <div key={label} className="bg-surface border rounded-lg p-4">
             <div className="flex items-center justify-between">
-              <span className="text-2xl font-bold text-gray-800">{value}</span>
+              <span className="text-2xl font-bold text-ink">{value}</span>
               <Icon size={18} className={color} />
             </div>
-            <p className="text-xs text-gray-500 mt-1">{label}</p>
+            <p className="text-xs text-dim mt-1">{label}</p>
           </div>
         ))}
       </div>
 
       {/* Search */}
       <div className="relative mb-4">
-        <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+        <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2  text-dim" />
         <input
           type="text"
           placeholder="Search by material, request ID, or status..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
-          className="w-full pl-10 pr-4 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-teal-500"
+          className="w-full pl-10 pr-4 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-ink"
         />
       </div>
 
       {error && (
-        <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg flex items-center gap-2 text-sm text-red-700">
+        <div className="mb-4 p-3 bg-danger/10 border border-danger/20 rounded-lg flex items-center gap-2 text-sm text-danger">
           <AlertCircle size={16} /> {error}
         </div>
       )}
 
       {/* Orders List */}
       {filteredOrders.length === 0 ? (
-        <div className="text-center py-12 text-gray-500">
-          <Package size={48} className="mx-auto mb-3 text-gray-300" />
+        <div className="text-center py-12 text-dim">
+          <Package size={48} className="mx-auto mb-3 text-dim" />
           <p className="text-lg font-medium">No orders found</p>
           <p className="text-sm mt-1">Orders from workspace materials will appear here once created.</p>
         </div>
@@ -302,26 +302,26 @@ const OrdersPage = ({ workspaceId, selectedTask, selectedSubtask, onRaisePOFromO
               null;
 
             return (
-              <div key={order.requestId} className="bg-white border rounded-lg overflow-hidden">
+              <div key={order.requestId} className="bg-surface border rounded-lg overflow-hidden">
                 {/* Order Header */}
                 <div
-                  className="p-4 cursor-pointer hover:bg-gray-50 transition-colors"
+                  className="p-4 cursor-pointer hover:bg-canvas transition-colors"
                   onClick={() => setExpandedOrder(isExpanded ? null : order.requestId)}
                 >
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
                       <div className="flex items-center gap-3">
-                        <h3 className="font-medium text-gray-800">{order.item || 'Unknown Material'}</h3>
+                        <h3 className="font-medium text-ink">{order.item || 'Unknown Material'}</h3>
                         <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${stageConfig.color}`}>
                           {stageConfig.label}
                         </span>
                         {invoiceReady && (
-                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-emerald-100 text-emerald-700">
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-surface-hover text-ink">
                             <BadgePercent size={12} /> Invoice Ready
                           </span>
                         )}
                       </div>
-                      <div className="flex items-center gap-4 mt-1 text-xs text-gray-500">
+                      <div className="flex items-center gap-4 mt-1 text-xs text-dim">
                         <span>{order.requestId}</span>
                         <span>Qty: {order.quantity || '-'}</span>
                         <span>Priority: {order.priority || 'medium'}</span>
@@ -331,14 +331,14 @@ const OrdersPage = ({ workspaceId, selectedTask, selectedSubtask, onRaisePOFromO
                       </div>
                       {renderPipelineProgress(pipeline.stage)}
                     </div>
-                    <div className="flex items-center gap-2 text-gray-400">
+                    <div className="flex items-center gap-2 text-dim">
                       {invoiceReady && invoiceUrl && (
                         <a
                           href={invoiceUrl}
                           target="_blank"
                           rel="noreferrer"
                           onClick={(event) => event.stopPropagation()}
-                          className="px-3 py-1.5 text-xs font-medium rounded-lg bg-emerald-600 text-white hover:bg-emerald-700 transition-colors"
+                          className="px-3 py-1.5 text-xs font-medium rounded-lg bg-cta text-cta-foreground hover:bg-cta transition-colors"
                           title="View Invoice"
                         >
                           View Invoice
@@ -351,7 +351,7 @@ const OrdersPage = ({ workspaceId, selectedTask, selectedSubtask, onRaisePOFromO
                             event.stopPropagation();
                             onRaisePOFromOrder(buildPoSourceFromOrder(order));
                           }}
-                          className="px-3 py-1.5 text-xs font-medium rounded-lg bg-teal-600 text-white hover:bg-teal-700 transition-colors"
+                          className="px-3 py-1.5 text-xs font-medium rounded-lg bg-cta text-cta-foreground hover:bg-cta transition-colors"
                           title="Raise Purchase Order"
                         >
                           Raise PO
@@ -364,14 +364,14 @@ const OrdersPage = ({ workspaceId, selectedTask, selectedSubtask, onRaisePOFromO
 
                 {/* Expanded Details */}
                 {isExpanded && (
-                  <div className="border-t bg-gray-50 p-4">
+                  <div className="border-t bg-canvas p-4">
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                       {/* Procurement Request */}
-                      <div className="bg-white rounded-lg p-3 border">
-                        <div className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
+                      <div className="bg-surface rounded-lg p-3 border">
+                        <div className="flex items-center gap-2 text-sm font-medium text-ink mb-2">
                           <FileText size={14} /> Procurement Request
                         </div>
-                        <div className="text-xs space-y-1 text-gray-600">
+                        <div className="text-xs space-y-1 text-dim">
                           <p>Status: <span className="font-medium">{order.status}</span></p>
                           <p>Amount: {order.amount ? `₹${Number(order.amount).toLocaleString()}` : '-'}</p>
                           <p>Requested By: {order.requestedBy || '-'}</p>
@@ -380,14 +380,14 @@ const OrdersPage = ({ workspaceId, selectedTask, selectedSubtask, onRaisePOFromO
                       </div>
 
                       {/* RFQs Sent */}
-                      <div className="bg-white rounded-lg p-3 border">
-                        <div className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
+                      <div className="bg-surface rounded-lg p-3 border">
+                        <div className="flex items-center gap-2 text-sm font-medium text-ink mb-2">
                           <Send size={14} /> RFQs Sent ({pipeline.rfqsSent || 0})
                         </div>
                         {(pipeline.sentRfqs || []).length > 0 ? (
-                          <div className="text-xs space-y-2 text-gray-600">
+                          <div className="text-xs space-y-2 text-dim">
                             {pipeline.sentRfqs.map(rfq => (
-                              <div key={rfq.sentRfqId} className="border-l-2 border-blue-300 pl-2">
+                              <div key={rfq.sentRfqId} className="border-l-2 border-info/30 pl-2">
                                 <p className="font-medium">To {(rfq.vendorIds || []).length} vendor(s)</p>
                                 <p>Status: {rfq.status}</p>
                                 <p>{new Date(rfq.createdAt).toLocaleDateString()}</p>
@@ -395,19 +395,19 @@ const OrdersPage = ({ workspaceId, selectedTask, selectedSubtask, onRaisePOFromO
                             ))}
                           </div>
                         ) : (
-                          <p className="text-xs text-gray-400">No RFQs sent yet</p>
+                          <p className="text-xs text-dim">No RFQs sent yet</p>
                         )}
                       </div>
 
                       {/* Vendor Quotations */}
-                      <div className="bg-white rounded-lg p-3 border">
-                        <div className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
+                      <div className="bg-surface rounded-lg p-3 border">
+                        <div className="flex items-center gap-2 text-sm font-medium text-ink mb-2">
                           <Users size={14} /> Vendor Quotes ({pipeline.vendorQuotesReceived || 0})
                         </div>
                         {(pipeline.vendorQuotations || []).length > 0 ? (
-                          <div className="text-xs space-y-2 text-gray-600 max-h-32 overflow-y-auto">
+                          <div className="text-xs space-y-2 text-dim max-h-32 overflow-y-auto">
                             {pipeline.vendorQuotations.map(vq => (
-                              <div key={vq.quotationId} className="border-l-2 border-indigo-300 pl-2">
+                              <div key={vq.quotationId} className="border-l-2 border-info/30 pl-2">
                                 <p className="font-medium">{vq.item || 'Quotation'}</p>
                                 <p>Rate: ₹{vq.rate || '-'} | Qty: {vq.quantity || '-'}</p>
                                 <p>Status: {vq.status || 'submitted'}</p>
@@ -415,19 +415,19 @@ const OrdersPage = ({ workspaceId, selectedTask, selectedSubtask, onRaisePOFromO
                             ))}
                           </div>
                         ) : (
-                          <p className="text-xs text-gray-400">No quotes received yet</p>
+                          <p className="text-xs text-dim">No quotes received yet</p>
                         )}
                       </div>
 
                       {/* Final Quotation & Commission */}
-                      <div className="bg-white rounded-lg p-3 border">
-                        <div className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
+                      <div className="bg-surface rounded-lg p-3 border">
+                        <div className="flex items-center gap-2 text-sm font-medium text-ink mb-2">
                           <CheckCircle size={14} /> Final Quotation
                         </div>
                         {(pipeline.finalQuotations || []).length > 0 ? (
-                          <div className="text-xs space-y-2 text-gray-600">
+                          <div className="text-xs space-y-2 text-dim">
                             {pipeline.finalQuotations.map(fq => (
-                              <div key={fq.quotationsId} className="border-l-2 border-green-300 pl-2">
+                              <div key={fq.quotationsId} className="border-l-2 border-success/30 pl-2">
                                 <p className="font-medium">{fq.productName}</p>
                                 <p>Amount: ₹{Number(fq.amount).toLocaleString()}</p>
                                 <p>Status: {pipeline.stage === 'commissioned' ? 'Final Quotation Received' : (fq.status || 'Pending')}</p>
@@ -436,7 +436,7 @@ const OrdersPage = ({ workspaceId, selectedTask, selectedSubtask, onRaisePOFromO
                                     href={fq.pdfUrl || fq.commissionedQuotationUrl || fq.commissionedPdfUrl}
                                     target="_blank"
                                     rel="noreferrer"
-                                    className="mt-1 inline-flex items-center gap-1 text-teal-700 hover:text-teal-900 font-medium"
+                                    className="mt-1 inline-flex items-center gap-1 text-ink hover:text-ink font-medium"
                                   >
                                     <ExternalLink size={12} /> View Final Quotation PDF
                                   </a>
@@ -445,7 +445,7 @@ const OrdersPage = ({ workspaceId, selectedTask, selectedSubtask, onRaisePOFromO
                             ))}
                             {(pipeline.commissionRecords || []).length > 0 && (
                               <div className="mt-2 pt-2 border-t">
-                                <p className="font-medium text-orange-700">Final Quotation Received</p>
+                                <p className="font-medium text-warning">Final Quotation Received</p>
                                 {pipeline.commissionRecords.map(cr => (
                                   <div key={cr.commissionRecordId} className="mt-1">
                                     {cr.pdfUrl && (
@@ -453,7 +453,7 @@ const OrdersPage = ({ workspaceId, selectedTask, selectedSubtask, onRaisePOFromO
                                         href={cr.pdfUrl}
                                         target="_blank"
                                         rel="noreferrer"
-                                        className="mt-1 inline-flex items-center gap-1 text-teal-700 hover:text-teal-900 font-medium"
+                                        className="mt-1 inline-flex items-center gap-1 text-ink hover:text-ink font-medium"
                                       >
                                         <ExternalLink size={12} /> View Final Quotation PDF
                                       </a>
@@ -463,7 +463,7 @@ const OrdersPage = ({ workspaceId, selectedTask, selectedSubtask, onRaisePOFromO
                                         href={cr.commissionedInvoicePdfUrl || cr.invoicePdfUrl || pipeline.invoicePdfUrl}
                                         target="_blank"
                                         rel="noreferrer"
-                                        className="mt-1 inline-flex items-center gap-1 text-emerald-700 hover:text-emerald-900 font-medium"
+                                        className="mt-1 inline-flex items-center gap-1 text-ink hover:text-ink font-medium"
                                       >
                                         <ExternalLink size={12} /> Invoice Ready - View Invoice PDF
                                       </a>
@@ -474,7 +474,7 @@ const OrdersPage = ({ workspaceId, selectedTask, selectedSubtask, onRaisePOFromO
                             )}
                           </div>
                         ) : (
-                          <p className="text-xs text-gray-400">Not yet created</p>
+                          <p className="text-xs text-dim">Not yet created</p>
                         )}
                       </div>
                     </div>

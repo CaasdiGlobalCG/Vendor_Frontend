@@ -106,18 +106,18 @@ export default function ResourceMemberAccessModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/45 p-4">
-      <div className="w-full max-w-3xl rounded-xl bg-white shadow-2xl border border-gray-200 overflow-hidden">
-        <div className="flex items-start justify-between px-5 py-4 border-b border-gray-200">
+      <div className="w-full max-w-3xl rounded-xl bg-surface shadow-2xl border border-line overflow-hidden">
+        <div className="flex items-start justify-between px-5 py-4 border-b border-line">
           <div>
-            <h3 className="text-lg font-semibold text-gray-900">{title}</h3>
-            <p className="text-sm text-gray-500 mt-1">
+            <h3 className="text-lg font-semibold text-ink">{title}</h3>
+            <p className="text-sm text-dim mt-1">
               {resourceLabel || resourceId}
             </p>
           </div>
           <button
             type="button"
             onClick={onClose}
-            className="text-gray-400 hover:text-gray-600 text-xl leading-none"
+            className="text-dim hover:text-dim text-xl leading-none"
             aria-label="Close"
           >
             &times;
@@ -126,7 +126,7 @@ export default function ResourceMemberAccessModal({
 
         <div className="px-5 py-4 space-y-3 max-h-[65vh] overflow-y-auto">
           {error && (
-            <div className="rounded-lg border border-red-200 bg-red-50 text-red-700 px-3 py-2 text-sm">
+            <div className="rounded-lg border border-danger/20 bg-danger/10 text-danger px-3 py-2 text-sm">
               {error}
             </div>
           )}
@@ -136,47 +136,47 @@ export default function ResourceMemberAccessModal({
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder="Search by email or role"
-              className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
+              className="w-full rounded-lg border border-line px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ink focus:border-line"
             />
-            <span className="text-xs text-gray-600 whitespace-nowrap">
+            <span className="text-xs text-dim whitespace-nowrap">
               Selected: {selectedCount}
             </span>
           </div>
 
           {loading ? (
-            <div className="text-sm text-gray-500 py-8 text-center">Loading members...</div>
+            <div className="text-sm text-dim py-8 text-center">Loading members...</div>
           ) : filteredMembers.length === 0 ? (
-            <div className="text-sm text-gray-500 py-8 text-center">No members found.</div>
+            <div className="text-sm text-dim py-8 text-center">No members found.</div>
           ) : (
-            <div className="border border-gray-200 rounded-lg overflow-hidden">
+            <div className="border border-line rounded-lg overflow-hidden">
               <table className="w-full text-sm">
-                <thead className="bg-gray-50 text-gray-500 text-xs uppercase">
+                <thead className="bg-canvas text-dim text-xs uppercase">
                   <tr>
                     <th className="px-4 py-2 text-left font-medium">Access</th>
                     <th className="px-4 py-2 text-left font-medium">Email</th>
                     <th className="px-4 py-2 text-left font-medium">Role</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-gray-100">
+                <tbody className="divide-y divide-line">
                   {filteredMembers.map((member) => {
                     const checked = selectedIds.has(member.userId);
                     const disabled = member.roleId === 'super_admin' || member.roleId === 'admin';
                     return (
-                      <tr key={member.userId} className="hover:bg-gray-50">
+                      <tr key={member.userId} className="hover:bg-canvas">
                         <td className="px-4 py-2">
                           <input
                             type="checkbox"
                             checked={checked}
                             disabled={disabled}
                             onChange={() => toggleMember(member.userId)}
-                            className="h-4 w-4 rounded border-gray-300 text-teal-600 focus:ring-teal-500"
+                            className="h-4 w-4 rounded border-line text-ink focus:ring-ink"
                           />
                         </td>
-                        <td className="px-4 py-2 text-gray-800">{member.email || '—'}</td>
-                        <td className="px-4 py-2 text-gray-600">
+                        <td className="px-4 py-2 text-ink">{member.email || '—'}</td>
+                        <td className="px-4 py-2 text-dim">
                           {member.roleName || member.roleId || '—'}
                           {disabled ? (
-                            <span className="ml-2 text-[10px] px-1.5 py-0.5 rounded bg-indigo-50 text-indigo-700 border border-indigo-200">
+                            <span className="ml-2 text-[10px] px-1.5 py-0.5 rounded bg-info/10 text-info border border-info/20">
                               Auto full access
                             </span>
                           ) : null}
@@ -190,11 +190,11 @@ export default function ResourceMemberAccessModal({
           )}
         </div>
 
-        <div className="flex items-center justify-end gap-2 px-5 py-4 border-t border-gray-200 bg-gray-50">
+        <div className="flex items-center justify-end gap-2 px-5 py-4 border-t border-line bg-canvas">
           <button
             type="button"
             onClick={onClose}
-            className="px-4 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-100 text-sm"
+            className="px-4 py-2 rounded-lg border border-line text-ink hover:bg-surface-hover text-sm"
             disabled={saving}
           >
             Cancel
@@ -202,7 +202,7 @@ export default function ResourceMemberAccessModal({
           <button
             type="button"
             onClick={handleSave}
-            className="px-4 py-2 rounded-lg bg-teal-600 text-white hover:bg-teal-700 text-sm disabled:opacity-60"
+            className="px-4 py-2 rounded-lg bg-cta text-cta-foreground hover:bg-cta text-sm disabled:opacity-60"
             disabled={saving || loading}
           >
             {saving ? 'Saving...' : 'Save Access'}

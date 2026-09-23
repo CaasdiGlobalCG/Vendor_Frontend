@@ -39,11 +39,11 @@ const CustomerSearchModal = ({ open, onClose, onSelect }) => {
   if (!open) return null;
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-30">
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-6 relative animate-fadeIn">
-        <button onClick={onClose} className="absolute top-4 right-4 text-gray-400 hover:text-gray-700 text-2xl">×</button>
-        <h2 className="text-xl font-bold mb-4 text-gray-800">Search Customers</h2>
+      <div className="bg-surface rounded-2xl shadow-2xl w-full max-w-md p-6 relative animate-fadeIn">
+        <button onClick={onClose} className="absolute top-4 right-4 text-dim hover:text-ink text-2xl">×</button>
+        <h2 className="text-xl font-bold mb-4 text-ink">Search Customers</h2>
         <input
-          className="w-full border rounded px-4 py-2 mb-4 focus:outline-none focus:ring-2 focus:ring-blue-200"
+          className="w-full border rounded px-4 py-2 mb-4 focus:outline-none focus:ring-2 focus:ring-info/20"
           placeholder="Type a customer name..."
           value={search}
           onChange={e => setSearch(e.target.value)}
@@ -51,14 +51,14 @@ const CustomerSearchModal = ({ open, onClose, onSelect }) => {
         />
         <div className="max-h-60 overflow-y-auto">
           {loading ? (
-            <div className="text-center text-gray-500 py-8">Loading...</div>
+            <div className="text-center text-dim py-8">Loading...</div>
           ) : filtered.length === 0 ? (
-            <div className="text-center text-gray-400 py-8">No customers found</div>
+            <div className="text-center text-dim py-8">No customers found</div>
           ) : (
             filtered.map((customer) => (
               <div
                 key={customer.customerId}
-                className="px-4 py-3 hover:bg-blue-50 cursor-pointer rounded"
+                className="px-4 py-3 hover:bg-info/10 cursor-pointer rounded"
                 onClick={() => { onSelect(customer); onClose(); }}
               >
                 {customer.displayName || customer.companyName}
@@ -104,14 +104,14 @@ const CustomerDropdown = ({ value, onChange }) => {
   return (
     <div className="relative w-full font-poppins">
       <div
-        className="border-2 border-cg rounded-lg px-6 py-4 flex items-center cursor-pointer text-lg bg-white"
+        className="border-2 border-cg rounded-lg px-6 py-4 flex items-center cursor-pointer text-lg bg-surface"
         onClick={handleDropdownClick}
       >
         {value ? value.displayName || value.companyName : 'Select or add a customer'}
         <span className="ml-auto flex items-center gap-2">
           <button
             type="button"
-            className="p-1 rounded hover:bg-blue-50 text-blue-600 focus:outline-none"
+            className="p-1 rounded hover:bg-info/10 text-info focus:outline-none"
             onClick={(e) => {
               e.stopPropagation();
               setShowSearchModal(true);
@@ -123,23 +123,23 @@ const CustomerDropdown = ({ value, onChange }) => {
         </span>
       </div>
       {open && (
-        <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg z-50 max-h-60 overflow-y-auto">
+        <div className="absolute top-full left-0 right-0 mt-1 bg-surface border border-line rounded-lg shadow-lg z-50 max-h-60 overflow-y-auto">
           {loading ? (
-            <div className="p-4 text-center text-gray-500">Loading...</div>
+            <div className="p-4 text-center text-dim">Loading...</div>
           ) : !Array.isArray(customers) || customers.length === 0 ? (
-            <div className="p-4 text-center text-gray-500">No customers found</div>
+            <div className="p-4 text-center text-dim">No customers found</div>
           ) : (
             customers.map((customer) => (
               <div
                 key={customer.customerId}
-                className="px-4 py-3 hover:bg-blue-50 cursor-pointer border-b border-gray-100 last:border-b-0"
+                className="px-4 py-3 hover:bg-info/10 cursor-pointer border-b border-line last:border-b-0"
                 onClick={() => {
                   onChange(customer);
                   setOpen(false);
                 }}
               >
                 <div className="font-medium">{customer.displayName || customer.companyName}</div>
-                <div className="text-sm text-gray-500">{customer.email}</div>
+                <div className="text-sm text-dim">{customer.email}</div>
               </div>
             ))
           )}
@@ -167,15 +167,15 @@ const QuoteNumberConfigModal = ({ open, onClose, config, onSave }) => {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-30 transition-all duration-300 animate-fadeIn">
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg p-0 relative animate-fadeInUp" style={{overflow: 'hidden'}}>
+      <div className="bg-surface rounded-2xl shadow-2xl w-full max-w-lg p-0 relative animate-fadeInUp" style={{overflow: 'hidden'}}>
         {/* Gradient Header */}
-        <div style={{background: 'linear-gradient(120deg, #0d6b5c 0%, #000 100%)'}} className="px-6 py-4 flex items-center justify-between">
+        <div style={{background: 'linear-gradient(120deg, rgb(var(--text-ink)) 0%, rgb(var(--text-ink)) 100%)'}} className="px-6 py-4 flex items-center justify-between">
           <h2 className="text-xl font-bold text-white">Configure Quote Number Preferences</h2>
           <button onClick={onClose} className="text-white hover:bg-white/20 rounded-full p-1 transition"><span className="text-2xl">×</span></button>
         </div>
         
         <div className="p-6">
-          <p className="text-gray-600 mb-6">
+          <p className="text-dim mb-6">
             Your quote numbers are set on auto-generate mode to save your time. Are you sure about changing this setting?
           </p>
           
@@ -190,27 +190,27 @@ const QuoteNumberConfigModal = ({ open, onClose, config, onSave }) => {
                 className="mt-1"
               />
               <div className="flex-1">
-                <label htmlFor="autoGenerate" className="block text-sm font-medium text-gray-700">
+                <label htmlFor="autoGenerate" className="block text-sm font-medium text-ink">
                   Continue auto-generating quote numbers
                 </label>
                 <div className="mt-2 grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-xs font-medium text-gray-600 mb-1">Prefix</label>
+                    <label className="block text-xs font-medium text-dim mb-1">Prefix</label>
                     <input
                       type="text"
                       value={localConfig.prefix}
                       onChange={(e) => setLocalConfig({...localConfig, prefix: e.target.value})}
-                      className="w-full p-2 border border-gray-300 rounded text-sm"
+                      className="w-full p-2 border border-line rounded text-sm"
                       disabled={!localConfig.autoGenerate}
                     />
                   </div>
                   <div>
-                    <label className="block text-xs font-medium text-gray-600 mb-1">Next Number</label>
+                    <label className="block text-xs font-medium text-dim mb-1">Next Number</label>
                     <input
                       type="text"
                       value={localConfig.nextNumber}
                       onChange={(e) => setLocalConfig({...localConfig, nextNumber: e.target.value})}
-                      className="w-full p-2 border border-gray-300 rounded text-sm"
+                      className="w-full p-2 border border-line rounded text-sm"
                       disabled={!localConfig.autoGenerate}
                     />
                   </div>
@@ -227,7 +227,7 @@ const QuoteNumberConfigModal = ({ open, onClose, config, onSave }) => {
                 onChange={() => setLocalConfig({...localConfig, autoGenerate: false})}
                 className="mt-1"
               />
-              <label htmlFor="manualEntry" className="block text-sm font-medium text-gray-700">
+              <label htmlFor="manualEntry" className="block text-sm font-medium text-ink">
                 Enter quote numbers manually
               </label>
             </div>
@@ -235,16 +235,16 @@ const QuoteNumberConfigModal = ({ open, onClose, config, onSave }) => {
         </div>
         
         {/* Footer */}
-        <div className="px-6 py-4 border-t border-gray-200 flex justify-end space-x-3">
+        <div className="px-6 py-4 border-t border-line flex justify-end space-x-3">
           <button
             onClick={onClose}
-            className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition"
+            className="px-4 py-2 border border-line rounded-lg text-ink hover:bg-canvas transition"
           >
             Cancel
           </button>
           <button
             onClick={handleSave}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
+            className="px-4 py-2 bg-info text-white rounded-lg hover:bg-info transition"
           >
             Save
           </button>
@@ -1154,17 +1154,17 @@ const NewQuote = ({ onBack, projectId, initialData, duplicateMode = false }) => 
     };
 
     return (
-        <div className="flex flex-col md:flex-row bg-gray-100 min-h-screen font-poppins">
+        <div className="flex flex-col md:flex-row bg-surface-hover min-h-screen font-poppins">
             {/* Loading Screen */}
             {isLoading && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-white bg-opacity-95 backdrop-blur-sm">
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-surface bg-opacity-95 backdrop-blur-sm">
                     <div className="text-center">
                         {/* Animated Logo */}
                         <div className="relative mb-8">
                             <div className="w-24 h-24 mx-auto rounded-2xl shadow-2xl flex items-center justify-center"
-                                 style={{ background: 'linear-gradient(135deg, #0d6b5c 0%, #000 100%)' }}>
-                                <div className="w-16 h-16 bg-white rounded-xl flex items-center justify-center">
-                                    <div className="w-8 h-8 bg-gradient-to-r from-[#0d6b5c] to-black rounded-lg flex items-center justify-center">
+                                 style={{ background: 'linear-gradient(135deg, rgb(var(--text-ink)) 0%, rgb(var(--text-ink)) 100%)' }}>
+                                <div className="w-16 h-16 bg-surface rounded-xl flex items-center justify-center">
+                                    <div className="w-8 h-8 bg-black rounded-lg flex items-center justify-center">
                                         <svg className="w-5 h-5 text-white animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                                         </svg>
@@ -1174,7 +1174,7 @@ const NewQuote = ({ onBack, projectId, initialData, duplicateMode = false }) => 
                             
                             {/* Animated Rings */}
                             <div className="absolute inset-0 -m-4">
-                                <div className="w-32 h-32 border-4 border-[#0d6b5c] border-opacity-20 rounded-full animate-ping"></div>
+                                <div className="w-32 h-32 border-4 border-line border-opacity-20 rounded-full animate-ping"></div>
                             </div>
                             <div className="absolute inset-0 -m-2">
                                 <div className="w-28 h-28 border-4 border-black border-opacity-20 rounded-full animate-ping" style={{ animationDelay: '0.5s' }}></div>
@@ -1183,25 +1183,25 @@ const NewQuote = ({ onBack, projectId, initialData, duplicateMode = false }) => 
                         
                         {/* Loading Text */}
                         <div className="space-y-4">
-                            <h2 className="text-2xl font-bold bg-gradient-to-r from-[#0d6b5c] to-black bg-clip-text text-transparent">
+                            <h2 className="text-2xl font-bold ">
                                 Processing Quote
                             </h2>
-                            <p className="text-gray-600 text-lg">
+                            <p className="text-dim text-lg">
                                 Please wait while we save your quote...
                             </p>
                             
                             {/* Animated Dots */}
                             <div className="flex justify-center space-x-2 mt-6">
-                                <div className="w-3 h-3 bg-[#0d6b5c] rounded-full animate-bounce"></div>
+                                <div className="w-3 h-3 bg-cta rounded-full animate-bounce"></div>
                                 <div className="w-3 h-3 bg-black rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
-                                <div className="w-3 h-3 bg-[#0d6b5c] rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+                                <div className="w-3 h-3 bg-cta rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
                             </div>
                         </div>
                         
                         {/* Progress Bar */}
                         <div className="mt-8 w-64 mx-auto">
-                            <div className="bg-gray-200 rounded-full h-2 overflow-hidden">
-                                <div className="h-2 bg-gradient-to-r from-[#0d6b5c] to-black rounded-full animate-pulse" style={{ width: '60%' }}></div>
+                            <div className="bg-surface-hover rounded-full h-2 overflow-hidden">
+                                <div className="h-2 bg-black rounded-full animate-pulse" style={{ width: '60%' }}></div>
                             </div>
                         </div>
                     </div>
@@ -1211,29 +1211,29 @@ const NewQuote = ({ onBack, projectId, initialData, duplicateMode = false }) => 
             {/* Main Quote Form */}
             <div className="flex-1 p-8 flex flex-col min-h-full">
                 <header className="flex justify-between items-center mb-6">
-                    <h1 className="text-2xl font-bold text-gray-800">{initialData ? (duplicateMode ? 'Duplicate Quote' : 'Edit Quote') : 'New Quote'}</h1>
+                    <h1 className="text-2xl font-bold text-ink">{initialData ? (duplicateMode ? 'Duplicate Quote' : 'Edit Quote') : 'New Quote'}</h1>
                     <div className="flex items-center">
-                         <button onClick={onBack} className="p-2 text-gray-500 hover:bg-gray-200 rounded-full">
+                         <button onClick={onBack} className="p-2 text-dim hover:bg-surface-hover rounded-full">
                             <X size={20} />
                         </button>
                     </div>
                 </header>
 
-                <div className="bg-white p-8 rounded-lg shadow-sm">
+                <div className="bg-surface p-8 rounded-lg ">
                     {message && (
-                      <div className={`mb-4 p-3 rounded text-center font-medium ${message.type === 'success' ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'}`}>{message.text}</div>
+                      <div className={`mb-4 p-3 rounded text-center font-medium ${message.type === 'success' ? 'bg-success/10 text-success' : 'bg-danger/10 text-danger'}`}>{message.text}</div>
                     )}
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
                         {/* Column 1 */}
                         <div className="col-span-2 space-y-6">
                              <div>
-                                <label className="block mb-2 text-lg font-medium text-gray-700 font-poppins">Customer Name*</label>
+                                <label className="block mb-2 text-lg font-medium text-ink font-poppins">Customer Name*</label>
                                 <div className="flex items-center gap-2">
                                   <CustomerDropdown value={selectedCustomer} onChange={setSelectedCustomer} />
                                   {selectedCustomer && (
                                     <button
                                       type="button"
-                                      className="ml-2 px-4 py-2 rounded bg-[#3b3b5c] text-white font-semibold text-sm hover:bg-[#23233a] transition"
+                                      className="ml-2 px-4 py-2 rounded bg-info text-white font-semibold text-sm hover:bg-info transition"
                                       onClick={() => setShowCustomerDetailsPanel(true)}
                                     >
                                       {selectedCustomer.displayName || selectedCustomer.companyName || 'View Details'}'s Details
@@ -1244,17 +1244,17 @@ const NewQuote = ({ onBack, projectId, initialData, duplicateMode = false }) => 
                                 {selectedCustomer && (
                                     <div className="mt-4">
                                         {addressLoading ? (
-                                            <div className="flex items-center gap-2 text-blue-600 text-sm"><Loader2 className="animate-spin" size={18} /> Loading address...</div>
+                                            <div className="flex items-center gap-2 text-info text-sm"><Loader2 className="animate-spin" size={18} /> Loading address...</div>
                                         ) : customerDetails && (
                                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                                 {/* Billing Address */}
-                                                <div className="bg-gray-50 rounded-lg p-4 border">
+                                                <div className="bg-canvas rounded-lg p-4 border">
                                                     <div className="flex items-center justify-between mb-2">
-                                                        <span className="font-semibold text-gray-700">Billing Address</span>
+                                                        <span className="font-semibold text-ink">Billing Address</span>
                                                         {customerDetails.address?.billing?.street1 ? (
-                                                            <button className="text-blue-600 flex items-center gap-1 text-xs" onClick={() => setAddressEditMode('billing')}><Edit2 size={14}/> Edit</button>
+                                                            <button className="text-info flex items-center gap-1 text-xs" onClick={() => setAddressEditMode('billing')}><Edit2 size={14}/> Edit</button>
                                                         ) : (
-                                                            <button className="text-blue-600 flex items-center gap-1 text-xs" onClick={() => setAddressEditMode('billing')}><PlusCircle size={14}/> Add</button>
+                                                            <button className="text-info flex items-center gap-1 text-xs" onClick={() => setAddressEditMode('billing')}><PlusCircle size={14}/> Add</button>
                                                         )}
                                                     </div>
                                                     {addressEditMode === 'billing' ? (
@@ -1268,29 +1268,29 @@ const NewQuote = ({ onBack, projectId, initialData, duplicateMode = false }) => 
                                                             <input className="w-full p-2 border rounded" name="phone" placeholder="Phone" value={addressForm.billing.phone} onChange={e => handleAddressInput('billing', e)} />
                                                             <input className="w-full p-2 border rounded" name="fax" placeholder="Fax" value={addressForm.billing.fax} onChange={e => handleAddressInput('billing', e)} />
                                                             <div className="flex gap-2 mt-2">
-                                                                <button type="submit" className="bg-blue-600 text-white px-4 py-1 rounded flex items-center gap-1" disabled={addressSaving}><Save size={14}/>{addressSaving ? 'Saving...' : 'Save'}</button>
-                                                                <button type="button" className="bg-gray-200 px-4 py-1 rounded flex items-center gap-1" onClick={() => setAddressEditMode(null)}><X size={14}/>Cancel</button>
+                                                                <button type="submit" className="bg-info text-white px-4 py-1 rounded flex items-center gap-1" disabled={addressSaving}><Save size={14}/>{addressSaving ? 'Saving...' : 'Save'}</button>
+                                                                <button type="button" className="bg-surface-hover px-4 py-1 rounded flex items-center gap-1" onClick={() => setAddressEditMode(null)}><X size={14}/>Cancel</button>
                                                             </div>
-                                                            {addressMessage && <div className={`text-xs mt-1 ${addressMessage.type === 'success' ? 'text-green-600' : 'text-red-600'}`}>{addressMessage.text}</div>}
+                                                            {addressMessage && <div className={`text-xs mt-1 ${addressMessage.type === 'success' ? 'text-success' : 'text-danger'}`}>{addressMessage.text}</div>}
                                                         </form>
                                                     ) : customerDetails.address?.billing?.street1 ? (
-                                                        <div className="text-sm text-gray-700 whitespace-pre-line">
+                                                        <div className="text-sm text-ink whitespace-pre-line">
                                                             {customerDetails.address.billing.street1}{customerDetails.address.billing.street2 && (', ' + customerDetails.address.billing.street2)}<br/>
                                                             {customerDetails.address.billing.city}, {customerDetails.address.billing.state} {customerDetails.address.billing.pinCode}<br/>
                                                             {customerDetails.address.billing.country}
                                                         </div>
                                                     ) : (
-                                                        <div className="text-xs text-gray-400">No billing address.</div>
+                                                        <div className="text-xs text-dim">No billing address.</div>
                                                     )}
                                                 </div>
                                                 {/* Shipping Address */}
-                                                <div className="bg-gray-50 rounded-lg p-4 border">
+                                                <div className="bg-canvas rounded-lg p-4 border">
                                                     <div className="flex items-center justify-between mb-2">
-                                                        <span className="font-semibold text-gray-700">Shipping Address</span>
+                                                        <span className="font-semibold text-ink">Shipping Address</span>
                                                         {customerDetails.address?.shipping?.street1 ? (
-                                                            <button className="text-blue-600 flex items-center gap-1 text-xs" onClick={() => setAddressEditMode('shipping')}><Edit2 size={14}/> Edit</button>
+                                                            <button className="text-info flex items-center gap-1 text-xs" onClick={() => setAddressEditMode('shipping')}><Edit2 size={14}/> Edit</button>
                                                         ) : (
-                                                            <button className="text-blue-600 flex items-center gap-1 text-xs" onClick={() => setAddressEditMode('shipping')}><PlusCircle size={14}/> Add</button>
+                                                            <button className="text-info flex items-center gap-1 text-xs" onClick={() => setAddressEditMode('shipping')}><PlusCircle size={14}/> Add</button>
                                                         )}
                                                     </div>
                                                     {addressEditMode === 'shipping' ? (
@@ -1304,25 +1304,25 @@ const NewQuote = ({ onBack, projectId, initialData, duplicateMode = false }) => 
                                                             <input className="w-full p-2 border rounded" name="phone" placeholder="Phone" value={addressForm.shipping.phone} onChange={e => handleAddressInput('shipping', e)} />
                                                             <input className="w-full p-2 border rounded" name="fax" placeholder="Fax" value={addressForm.shipping.fax} onChange={e => handleAddressInput('shipping', e)} />
                                                             <div className="flex gap-2 mt-2">
-                                                                <button type="submit" className="bg-blue-600 text-white px-4 py-1 rounded flex items-center gap-1" disabled={addressSaving}><Save size={14}/>{addressSaving ? 'Saving...' : 'Save'}</button>
-                                                                <button type="button" className="bg-gray-200 px-4 py-1 rounded flex items-center gap-1" onClick={() => setAddressEditMode(null)}><X size={14}/>Cancel</button>
+                                                                <button type="submit" className="bg-info text-white px-4 py-1 rounded flex items-center gap-1" disabled={addressSaving}><Save size={14}/>{addressSaving ? 'Saving...' : 'Save'}</button>
+                                                                <button type="button" className="bg-surface-hover px-4 py-1 rounded flex items-center gap-1" onClick={() => setAddressEditMode(null)}><X size={14}/>Cancel</button>
                                                             </div>
-                                                            {addressMessage && <div className={`text-xs mt-1 ${addressMessage.type === 'success' ? 'text-green-600' : 'text-red-600'}`}>{addressMessage.text}</div>}
+                                                            {addressMessage && <div className={`text-xs mt-1 ${addressMessage.type === 'success' ? 'text-success' : 'text-danger'}`}>{addressMessage.text}</div>}
                                                         </form>
                                                     ) : customerDetails.address?.shipping?.street1 ? (
-                                                        <div className="text-sm text-gray-700 whitespace-pre-line">
+                                                        <div className="text-sm text-ink whitespace-pre-line">
                                                             {customerDetails.address.shipping.street1}{customerDetails.address.shipping.street2 && (', ' + customerDetails.address.shipping.street2)}<br/>
                                                             {customerDetails.address.shipping.city}, {customerDetails.address.shipping.state} {customerDetails.address.shipping.pinCode}<br/>
                                                             {customerDetails.address.shipping.country}
                                                         </div>
                                                     ) : (
-                                                        <div className="text-xs text-gray-400">No shipping address.</div>
+                                                        <div className="text-xs text-dim">No shipping address.</div>
                                                     )}
                                                 </div>
                                                 
                                                 {customerDetails.gstin && (
                                                   <div className="col-span-2 flex items-center gap-2 text-sm">
-                                                    <span className="font-semibold text-gray-700">GSTIN:</span>
+                                                    <span className="font-semibold text-ink">GSTIN:</span>
                                                     {addressEditMode === 'gstin' ? (
                                                       <form className="flex items-center gap-2" onSubmit={e => { e.preventDefault(); handleGstinSave(); }}>
                                                         <input
@@ -1332,16 +1332,16 @@ const NewQuote = ({ onBack, projectId, initialData, duplicateMode = false }) => 
                                                           placeholder="Enter GSTIN"
                                                           style={{ width: '180px' }}
                                                         />
-                                                        <button type="submit" className="text-blue-600 flex items-center gap-1 text-xs" disabled={gstinSaving}><Save size={14}/>{gstinSaving ? 'Saving...' : 'Save'}</button>
-                                                        <button type="button" className="text-gray-400 flex items-center gap-1 text-xs" onClick={() => setAddressEditMode(null)}><X size={14}/>Cancel</button>
+                                                        <button type="submit" className="text-info flex items-center gap-1 text-xs" disabled={gstinSaving}><Save size={14}/>{gstinSaving ? 'Saving...' : 'Save'}</button>
+                                                        <button type="button" className="text-dim flex items-center gap-1 text-xs" onClick={() => setAddressEditMode(null)}><X size={14}/>Cancel</button>
                                                       </form>
                                                     ) : (
                                                       <>
-                                                        <span className="text-gray-800">{customerDetails.gstin}</span>
-                                                        <button className="text-blue-600 flex items-center gap-1 text-xs" onClick={() => { setAddressEditMode('gstin'); setGstinForm(customerDetails.gstin); }}><Edit2 size={14}/> Edit</button>
+                                                        <span className="text-ink">{customerDetails.gstin}</span>
+                                                        <button className="text-info flex items-center gap-1 text-xs" onClick={() => { setAddressEditMode('gstin'); setGstinForm(customerDetails.gstin); }}><Edit2 size={14}/> Edit</button>
                                                       </>
                                                     )}
-                                                    {gstinMessage && <span className={`ml-2 text-xs ${gstinMessage.type === 'success' ? 'text-green-600' : 'text-red-600'}`}>{gstinMessage.text}</span>}
+                                                    {gstinMessage && <span className={`ml-2 text-xs ${gstinMessage.type === 'success' ? 'text-success' : 'text-danger'}`}>{gstinMessage.text}</span>}
                                                   </div>
                                                 )}
                                             </div>
@@ -1351,25 +1351,25 @@ const NewQuote = ({ onBack, projectId, initialData, duplicateMode = false }) => 
                             </div>
                             <div className="grid grid-cols-2 gap-6">
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">Quote#*</label>
+                                    <label className="block text-sm font-medium text-ink mb-1">Quote#*</label>
                                     <div className="relative">
                                         <input 
                                             type="text" 
                                             value={customQuoteNumber}
                                             onChange={(e) => handleQuoteNumberChange(e.target.value)}
                                             readOnly={quoteNumberConfig.autoGenerate}
-                                            className={`p-2 border border-gray-300 rounded-md w-full ${quoteNumberConfig.autoGenerate ? 'bg-gray-50' : 'bg-white'}`}
+                                            className={`p-2 border border-line rounded-md w-full ${quoteNumberConfig.autoGenerate ? 'bg-canvas' : 'bg-surface'}`}
                                         />
                                         <button
                                             type="button"
                                             onClick={() => setShowQuoteNumberModal(true)}
                                             onMouseEnter={() => setShowTooltip(true)}
                                             onMouseLeave={() => setShowTooltip(false)}
-                                            className="absolute right-2 top-1/2 transform -translate-y-1/2 p-1 text-gray-400 hover:text-blue-600 transition-colors"
+                                            className="absolute right-2 top-1/2 -translate-y-1/2 transform  p-1 text-dim hover:text-info transition-colors"
                                         >
                                             <Settings size={16} />
                                             {showTooltip && (
-                                                <div className="absolute bottom-full right-0 mb-2 px-3 py-2 bg-gray-900 text-white text-sm rounded-lg whitespace-nowrap z-50">
+                                                <div className="absolute bottom-full right-0 mb-2 px-3 py-2 bg-cta text-cta-foreground text-sm rounded-lg whitespace-nowrap z-50">
                                                     Click here to enable or disable auto-generation of Quote numbers.
                                                     <div className="absolute top-full right-2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-gray-900"></div>
                                                 </div>
@@ -1378,35 +1378,35 @@ const NewQuote = ({ onBack, projectId, initialData, duplicateMode = false }) => 
                                     </div>
                                 </div>
                                  <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">Reference#</label>
-                                    <input type="text" className="p-2 border border-gray-300 rounded-md w-full" />
+                                    <label className="block text-sm font-medium text-ink mb-1">Reference#</label>
+                                    <input type="text" className="p-2 border border-line rounded-md w-full" />
                                 </div>
                             </div>
                              <div className="grid grid-cols-2 gap-6">
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">Quote Date*</label>
+                                    <label className="block text-sm font-medium text-ink mb-1">Quote Date*</label>
                                     <input 
                                         type="date" 
                                         value={quoteDate}
                                         onChange={(e) => setQuoteDate(e.target.value)}
-                                        className="p-2 border border-gray-300 rounded-md w-full" 
+                                        className="p-2 border border-line rounded-md w-full" 
                                     />
                                 </div>
                                  <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">Expiry Date</label>
+                                    <label className="block text-sm font-medium text-ink mb-1">Expiry Date</label>
                                     <input 
                                         type="date" 
                                         value={expiryDate}
                                         onChange={(e) => setExpiryDate(e.target.value)}
-                                        className="p-2 border border-gray-300 rounded-md w-full" 
+                                        className="p-2 border border-line rounded-md w-full" 
                                     />
                                 </div>
                             </div>
                              <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Subject</label>
+                                <label className="block text-sm font-medium text-ink mb-1">Subject</label>
                                  <div className="flex items-center">
-                                    <input type="text" placeholder="Let your customer know what this Quote is for" className="p-2 border border-gray-300 rounded-md w-full" />
-                                    <Info size={16} className="ml-2 text-gray-400" />
+                                    <input type="text" placeholder="Let your customer know what this Quote is for" className="p-2 border border-line rounded-md w-full" />
+                                    <Info size={16} className="ml-2 text-dim" />
                                 </div>
                             </div>
                         </div>
@@ -1415,54 +1415,54 @@ const NewQuote = ({ onBack, projectId, initialData, duplicateMode = false }) => 
                     {/* Item Table */}
                     <div className="mt-8">
                         <div className="mb-4">
-                            <h3 className="text-lg font-semibold text-gray-800">Item Table</h3>
+                            <h3 className="text-lg font-semibold text-ink">Item Table</h3>
                         </div>
-                        <div className="overflow-x-auto rounded-xl shadow border border-gray-200">
+                        <div className="overflow-x-auto rounded-xl shadow border border-line">
                             <table className="w-full">
-                                <thead className="bg-gray-50">
+                                <thead className="bg-canvas">
                                     <tr>
-                                        <th className="p-3 text-left text-xs font-semibold text-gray-600 uppercase">ITEM DETAILS</th>
-                                        <th className="p-3 text-left text-xs font-semibold text-gray-600 uppercase w-48">DESCRIPTION</th>
-                                        <th className="p-3 text-left text-xs font-semibold text-gray-600 uppercase w-24">QUANTITY</th>
-                                        <th className="p-3 text-left text-xs font-semibold text-gray-600 uppercase w-32">RATE</th>
-                                        <th className="p-3 text-left text-xs font-semibold text-gray-600 uppercase w-28">RATE/SQFT</th>
-                                        <th className="p-3 text-left text-xs font-semibold text-gray-600 uppercase w-28">MEASUREMENTS</th>
-                                        <th className="p-3 text-left text-xs font-semibold text-gray-600 uppercase w-32">AMOUNT</th>
-                                        <th className="p-3 text-left text-xs font-semibold text-gray-600 uppercase w-20">HSN</th>
+                                        <th className="p-3 text-left text-xs font-semibold text-dim uppercase">ITEM DETAILS</th>
+                                        <th className="p-3 text-left text-xs font-semibold text-dim uppercase w-48">DESCRIPTION</th>
+                                        <th className="p-3 text-left text-xs font-semibold text-dim uppercase w-24">QUANTITY</th>
+                                        <th className="p-3 text-left text-xs font-semibold text-dim uppercase w-32">RATE</th>
+                                        <th className="p-3 text-left text-xs font-semibold text-dim uppercase w-28">RATE/SQFT</th>
+                                        <th className="p-3 text-left text-xs font-semibold text-dim uppercase w-28">MEASUREMENTS</th>
+                                        <th className="p-3 text-left text-xs font-semibold text-dim uppercase w-32">AMOUNT</th>
+                                        <th className="p-3 text-left text-xs font-semibold text-dim uppercase w-20">HSN</th>
                                         {isIntraState ? (
                                           <>
-                                            <th className="p-3 text-left text-xs font-semibold text-gray-600 uppercase w-24">CGST (%)</th>
-                                            <th className="p-3 text-left text-xs font-semibold text-gray-600 uppercase w-24">SGST (%)</th>
+                                            <th className="p-3 text-left text-xs font-semibold text-dim uppercase w-24">CGST (%)</th>
+                                            <th className="p-3 text-left text-xs font-semibold text-dim uppercase w-24">SGST (%)</th>
                                           </>
                                         ) : (
-                                          <th className="p-3 text-left text-xs font-semibold text-gray-600 uppercase w-24">IGST (%)</th>
+                                          <th className="p-3 text-left text-xs font-semibold text-dim uppercase w-24">IGST (%)</th>
                                         )}
-                                        <th className="p-3 text-left text-xs font-semibold text-gray-600 uppercase w-32">TOTAL</th>
+                                        <th className="p-3 text-left text-xs font-semibold text-dim uppercase w-32">TOTAL</th>
                                         <th className="p-3"></th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     {items.map((item, index) => (
-                                        <tr key={index} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
+                                        <tr key={index} className={index % 2 === 0 ? 'bg-surface' : 'bg-canvas'}>
                                             <td className="p-2 border-t">
                                                 <button
                                                     onClick={() => handleOpenItemModal(index)}
-                                                    className="w-full p-3 border border-gray-300 rounded-lg text-left hover:border-blue-500 hover:bg-blue-50 transition-colors focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                                    className="w-full p-3 border border-line rounded-lg text-left hover:border-info hover:bg-info/10 transition-colors focus:ring-2 focus:ring-info focus:border-info"
                                                 >
                                                     {item.selectedItem ? (
                                                         <div className="flex items-center justify-between">
                                                             <div>
-                                                                <div className="font-medium text-gray-900 text-sm">
+                                                                <div className="font-medium text-ink text-sm">
                                                                     {item.selectedItem.name}
                                                                 </div>
-                                                                <div className="text-xs text-gray-500">
+                                                                <div className="text-xs text-dim">
                                                                     ₹{item.selectedItem.price} {item.selectedItem.unit && `/ ${item.selectedItem.unit}`}
                                                                 </div>
                                                             </div>
-                                                            <ChevronDown size={16} className="text-gray-400" />
+                                                            <ChevronDown size={16} className="text-dim" />
                                                         </div>
                                                     ) : (
-                                                        <div className="flex items-center justify-between text-gray-500">
+                                                        <div className="flex items-center justify-between text-dim">
                                                             <span className="text-sm">Click to select an item</span>
                                                             <ChevronDown size={16} />
                                                         </div>
@@ -1475,7 +1475,7 @@ const NewQuote = ({ onBack, projectId, initialData, duplicateMode = false }) => 
                                                         type="text"
                                                         value={item.description || ''}
                                                         onChange={e => handleItemChange(index, 'description', e.target.value)}
-                                                        className="p-2 border border-gray-200 rounded w-full focus:ring-2 focus:ring-blue-200"
+                                                        className="p-2 border border-line rounded w-full focus:ring-2 focus:ring-info/20"
                                                         placeholder="Add description..."
                                                     />
                                                 ) : (
@@ -1489,7 +1489,7 @@ const NewQuote = ({ onBack, projectId, initialData, duplicateMode = false }) => 
                                                                 if (inputs[index]) inputs[index].focus();
                                                             }, 0);
                                                         }}
-                                                        className="flex items-center gap-2 text-blue-600 hover:text-blue-800 p-2 rounded border border-dashed border-blue-300 hover:border-blue-500 w-full justify-center"
+                                                        className="flex items-center gap-2 text-info hover:text-info p-2 rounded border border-dashed border-info/30 hover:border-info w-full justify-center"
                                                         title="Add description"
                                                     >
                                                         <Plus size={16} />
@@ -1503,7 +1503,7 @@ const NewQuote = ({ onBack, projectId, initialData, duplicateMode = false }) => 
                                                     min="0"
                                                     value={item.quantity === 0 || item.quantity === '' ? '' : item.quantity}
                                                     onChange={e => handleItemChange(index, 'quantity', e.target.value)}
-                                                    className="p-2 border border-gray-200 rounded w-full text-right focus:ring-2 focus:ring-blue-200"
+                                                    className="p-2 border border-line rounded w-full text-right focus:ring-2 focus:ring-info/20"
                                                 />
                                             </td>
                                             <td className="p-2 border-t">
@@ -1513,12 +1513,12 @@ const NewQuote = ({ onBack, projectId, initialData, duplicateMode = false }) => 
                                                         min="0"
                                                         value={item.rate === 0 || item.rate === '' ? '' : item.rate}
                                                         onChange={e => handleRateCalculation(index, 'rate', e.target.value)}
-                                                        className={`p-2 border border-gray-200 rounded w-full text-right focus:ring-2 focus:ring-blue-200 ${
-                                                            item._calculatedField === 'rate' ? 'bg-green-50 border-green-300' : ''
+                                                        className={`p-2 border border-line rounded w-full text-right focus:ring-2 focus:ring-info/20 ${
+                                                            item._calculatedField === 'rate' ? 'bg-success/10 border-success/30' : ''
                                                         }`}
                                                     />
                                                     {item._calculatedField === 'rate' && (
-                                                        <span className="absolute -top-2 -right-2 text-xs bg-green-500 text-white px-1 rounded-full" title="Auto-calculated">
+                                                        <span className="absolute -top-2 -right-2 text-xs bg-success text-white px-1 rounded-full" title="Auto-calculated">
                                                             ✓
                                                         </span>
                                                     )}
@@ -1531,13 +1531,13 @@ const NewQuote = ({ onBack, projectId, initialData, duplicateMode = false }) => 
                                                         min="0"
                                                         value={item.ratePerSqft === 0 || item.ratePerSqft === '' ? '' : item.ratePerSqft}
                                                         onChange={e => handleRateCalculation(index, 'ratePerSqft', e.target.value)}
-                                                        className={`p-2 border border-gray-200 rounded w-full text-right focus:ring-2 focus:ring-blue-200 ${
-                                                            item._calculatedField === 'ratePerSqft' ? 'bg-green-50 border-green-300' : ''
+                                                        className={`p-2 border border-line rounded w-full text-right focus:ring-2 focus:ring-info/20 ${
+                                                            item._calculatedField === 'ratePerSqft' ? 'bg-success/10 border-success/30' : ''
                                                         }`}
                                                         placeholder="0.00"
                                                     />
                                                     {item._calculatedField === 'ratePerSqft' && (
-                                                        <span className="absolute -top-2 -right-2 text-xs bg-green-500 text-white px-1 rounded-full" title="Auto-calculated">
+                                                        <span className="absolute -top-2 -right-2 text-xs bg-success text-white px-1 rounded-full" title="Auto-calculated">
                                                             ✓
                                                         </span>
                                                     )}
@@ -1549,7 +1549,7 @@ const NewQuote = ({ onBack, projectId, initialData, duplicateMode = false }) => 
                                                         type="text"
                                                         value={item.measurements || ''}
                                                         onChange={e => handleRateCalculation(index, 'measurements', e.target.value)}
-                                                        className="p-2 border border-gray-200 rounded w-full text-center focus:ring-2 focus:ring-blue-200"
+                                                        className="p-2 border border-line rounded w-full text-center focus:ring-2 focus:ring-info/20"
                                                         placeholder="e.g., 10x5 m (unit required)"
                                                         title="Enter measurements with units (mm, cm, m, in, ft, yd, etc.) - units are required"
                                                     />
@@ -1557,7 +1557,7 @@ const NewQuote = ({ onBack, projectId, initialData, duplicateMode = false }) => 
                                                         <button
                                                             type="button"
                                                             onClick={() => handleConvertToFeet(index)}
-                                                            className="absolute -bottom-6 left-1/2 transform -translate-x-1/2 text-xs bg-blue-500 text-white px-2 py-1 rounded hover:bg-blue-600 transition-colors whitespace-nowrap"
+                                                            className="absolute -bottom-6 left-1/2 transform -translate-x-1/2 text-xs bg-info text-white px-2 py-1 rounded hover:bg-info transition-colors whitespace-nowrap"
                                                             title={`Convert "${item.measurements}" to feet`}
                                                         >
                                                             Convert to ft
@@ -1569,23 +1569,23 @@ const NewQuote = ({ onBack, projectId, initialData, duplicateMode = false }) => 
                                                 {item.amount?.toFixed(2) || '0.00'}
                                             </td>
                                             <td className="p-2 border-t text-center">
-                                                <span className="text-sm text-gray-600">{item.hsn || '-'}</span>
+                                                <span className="text-sm text-dim">{item.hsn || '-'}</span>
                                             </td>
                                             {isIntraState ? (
                                               <>
                                                 <td className="p-2 border-t">
                                                   <input type="number" value={item.cgstRate} onChange={e => handleItemChange(index, 'cgstRate', e.target.value)} className="p-2 border rounded w-full text-right" />
-                                                  <div className="text-xs text-gray-500 text-right">Amt: {item.cgstAmount.toFixed(2)}</div>
+                                                  <div className="text-xs text-dim text-right">Amt: {item.cgstAmount.toFixed(2)}</div>
                                                 </td>
                                                 <td className="p-2 border-t">
                                                   <input type="number" value={item.sgstRate} onChange={e => handleItemChange(index, 'sgstRate', e.target.value)} className="p-2 border rounded w-full text-right" />
-                                                  <div className="text-xs text-gray-500 text-right">Amt: {item.sgstAmount.toFixed(2)}</div>
+                                                  <div className="text-xs text-dim text-right">Amt: {item.sgstAmount.toFixed(2)}</div>
                                                 </td>
                                               </>
                                             ) : (
                                               <td className="p-2 border-t">
                                                 <input type="number" value={item.igstRate} onChange={e => handleItemChange(index, 'igstRate', e.target.value)} className="p-2 border rounded w-full text-right" />
-                                                <div className="text-xs text-gray-500 text-right">Amt: {item.igstAmount.toFixed(2)}</div>
+                                                <div className="text-xs text-dim text-right">Amt: {item.igstAmount.toFixed(2)}</div>
                                               </td>
                                             )}
                                             <td className="p-2 border-t font-semibold text-right">
@@ -1598,7 +1598,7 @@ const NewQuote = ({ onBack, projectId, initialData, duplicateMode = false }) => 
                                                         newItems.splice(index, 1);
                                                         setItems(newItems);
                                                     }}
-                                                    className="text-gray-400 hover:text-red-500 transition"
+                                                    className="text-dim hover:text-danger transition"
                                                     title="Remove"
                                                 >
                                                     <Trash2 size={16} />
@@ -1611,12 +1611,12 @@ const NewQuote = ({ onBack, projectId, initialData, duplicateMode = false }) => 
                             
                             {/* Rate Calculation Feedback */}
                             {items.some(item => item._calculation) && (
-                                <div className="mt-2 p-3 bg-blue-50 border border-blue-200 rounded">
-                                    <h4 className="text-sm font-semibold text-blue-800 mb-2">Rate Calculations:</h4>
+                                <div className="mt-2 p-3 bg-info/10 border border-info/20 rounded">
+                                    <h4 className="text-sm font-semibold text-info mb-2">Rate Calculations:</h4>
                                     {items.map((item, index) => (
                                         item._calculation && (
                                             <div key={index} className={`text-xs mb-1 ${
-                                                item._isConsistent === false ? 'text-red-600' : 'text-blue-700'
+                                                item._isConsistent === false ? 'text-danger' : 'text-info'
                                             }`}>
                                                 <span className="font-medium">Item {index + 1}:</span> {item._calculation}
                                             </div>
@@ -1631,12 +1631,12 @@ const NewQuote = ({ onBack, projectId, initialData, duplicateMode = false }) => 
                             </div>
                         </div>
                         <div className="mt-4 flex space-x-4">
-                            <button onClick={handleAddItem} className="flex items-center text-sm font-semibold text-blue-600 hover:text-blue-700">
+                            <button onClick={handleAddItem} className="flex items-center text-sm font-semibold text-info hover:text-info">
                                 <Plus size={16} className="mr-1.5" /> Add New Row
                             </button>
                             <button 
                                 onClick={() => setShowBulkItemsModal(true)}
-                                className="flex items-center text-sm font-semibold text-blue-600 hover:text-blue-700"
+                                className="flex items-center text-sm font-semibold text-info hover:text-info"
                             >
                                 <Plus size={16} className="mr-1.5" /> Add items in Bulk
                             </button>
@@ -1660,9 +1660,9 @@ const NewQuote = ({ onBack, projectId, initialData, duplicateMode = false }) => 
                                               max="100"
                                               value={discount === 0 || discount === '' ? '' : discount}
                                               onChange={e => setDiscount(e.target.value)}
-                                              className="w-20 p-2 border border-gray-300 rounded-md text-right focus:ring-2 focus:ring-blue-200"
+                                              className="w-20 p-2 border border-line rounded-md text-right focus:ring-2 focus:ring-info/20"
                                             />
-                                            <span className="text-gray-500">%</span>
+                                            <span className="text-dim">%</span>
                                             <span>{discountValue.toFixed(2)}</span>
                                         </div>
                                     </div>
@@ -1677,7 +1677,7 @@ const NewQuote = ({ onBack, projectId, initialData, duplicateMode = false }) => 
                                                         value="tds"
                                                         checked={tdsType === 'tds'}
                                                         onChange={(e) => handleTdsTypeChange('tds')}
-                                                        className="w-4 h-4 text-blue-600"
+                                                        className="w-4 h-4 text-info"
                                                     />
                                                     TDS
                                                 </label>
@@ -1688,14 +1688,14 @@ const NewQuote = ({ onBack, projectId, initialData, duplicateMode = false }) => 
                                                         value="tcs"
                                                         checked={tdsType === 'tcs'}
                                                         onChange={(e) => handleTdsTypeChange('tcs')}
-                                                        className="w-4 h-4 text-blue-600"
+                                                        className="w-4 h-4 text-info"
                                                     />
                                                     TCS
                                                 </label>
                                                 {tdsType && (
                                                     <button
                                                         onClick={() => handleTdsTypeChange('')}
-                                                        className="text-xs text-red-600 hover:text-red-800 ml-2"
+                                                        className="text-xs text-danger hover:text-danger ml-2"
                                                         title="Clear TDS/TCS"
                                                     >
                                                         ✕
@@ -1710,17 +1710,17 @@ const NewQuote = ({ onBack, projectId, initialData, duplicateMode = false }) => 
                                                         max="100"
                                                         value={tdsValue === 0 || tdsValue === '' ? '' : tdsValue}
                                                         onChange={e => setTdsValue(e.target.value)}
-                                                        className="w-20 p-2 border border-gray-300 rounded-md text-right focus:ring-2 focus:ring-blue-200"
+                                                        className="w-20 p-2 border border-line rounded-md text-right focus:ring-2 focus:ring-info/20"
                                                         placeholder="%"
                                                     />
-                                                    <span className="text-gray-500">%</span>
+                                                    <span className="text-dim">%</span>
                                                     <span>{tdsAmount.toFixed(2)}</span>
                                                 </>
                                             )}
                                         </div>
                                     </div>
                                     {tdsType && tdsValue && (
-                                        <div className="flex justify-between items-center text-sm text-gray-600">
+                                        <div className="flex justify-between items-center text-sm text-dim">
                                             <span>Total {tdsType.toUpperCase()}</span>
                                             <span>-₹{tdsAmount.toFixed(2)}</span>
                                         </div>
@@ -1755,7 +1755,7 @@ const NewQuote = ({ onBack, projectId, initialData, duplicateMode = false }) => 
                                 </>
                             )}
                             <div className="text-right mt-2">
-                                 <button onClick={() => setShowTotalSummary(!showTotalSummary)} className="text-sm text-blue-600 font-semibold flex items-center">
+                                 <button onClick={() => setShowTotalSummary(!showTotalSummary)} className="text-sm text-info font-semibold flex items-center">
                                      {showTotalSummary ? 'Hide Total Summary' : 'Show Total Summary'}
                                     <ChevronDown size={16} className={`ml-1 transform transition-transform ${showTotalSummary ? 'rotate-180' : ''}`} />
                                 </button>
@@ -1767,14 +1767,14 @@ const NewQuote = ({ onBack, projectId, initialData, duplicateMode = false }) => 
                     {selectedCustomer && grandTotal > 0 && (
                         <div className="mt-8">
                             <div className="flex items-center justify-between mb-4">
-                                <h3 className="text-lg font-semibold text-gray-900">Smart Pricing</h3>
+                                <h3 className="text-lg font-semibold text-ink">Smart Pricing</h3>
                                 <button
                                     onClick={() => {
                                         console.log('🧠 [AI-BUTTON] AI Brain button clicked!');
                                         console.log(`📊 [AI-BUTTON] Current state: ${showPricingRecommendations ? 'HIDING' : 'SHOWING'} recommendations`);
                                         setShowPricingRecommendations(!showPricingRecommendations);
                                     }}
-                                    className="group relative w-12 h-12 rounded-full bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 hover:from-indigo-600 hover:via-purple-600 hover:to-pink-600 transition-all duration-300 shadow-lg hover:shadow-2xl transform hover:scale-110 active:scale-95"
+                                    className="group relative w-12 h-12 rounded-full bg-black hover:from-black hover:via-black hover:to-black transition-all duration-300 shadow-lg hover:shadow-2xl transform hover:scale-110 active:scale-95"
                                     title={showPricingRecommendations ? 'Hide AI Recommendations' : 'Show AI Recommendations'}
                                 >
                                     {/* Rotating AI Brain Icon */}
@@ -1788,16 +1788,16 @@ const NewQuote = ({ onBack, projectId, initialData, duplicateMode = false }) => 
                                     {/* Pulsing Ring Animation */}
                                     <div className="absolute inset-0 rounded-full">
                                         <div className="absolute inset-0 rounded-full bg-white/30 animate-ping opacity-75"></div>
-                                        <div className="absolute inset-0 rounded-full bg-gradient-to-br from-white/20 to-transparent animate-pulse"></div>
+                                        <div className="absolute inset-0 rounded-full bg-gradient-to-br from-surface/20 to-transparent animate-pulse"></div>
                                     </div>
                                     
                                     {/* AI Badge */}
-                                    <div className="absolute -top-1 -right-1 w-5 h-5 bg-gradient-to-br from-emerald-400 to-green-500 rounded-full flex items-center justify-center shadow-lg">
+                                    <div className="absolute -top-1 -right-1 w-5 h-5 bg-black rounded-full flex items-center justify-center shadow-lg">
                                         <span className="text-[10px] font-bold text-white">AI</span>
                                     </div>
                                     
                                     {/* Glow Effect */}
-                                    <div className="absolute inset-0 rounded-full bg-gradient-to-br from-indigo-400/50 via-purple-400/50 to-pink-400/50 blur-md opacity-0 group-hover:opacity-100 transition-opacity duration-300 -z-10"></div>
+                                    <div className="absolute inset-0 rounded-full bg-black blur-md opacity-0 group-hover:opacity-100 transition-opacity duration-300 -z-10"></div>
                                 </button>
                             </div>
                             
@@ -1821,22 +1821,22 @@ const NewQuote = ({ onBack, projectId, initialData, duplicateMode = false }) => 
                     )}
                      <div className="mt-12 grid grid-cols-1 md:grid-cols-2 gap-12">
                          <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Customer Notes</label>
+                            <label className="block text-sm font-medium text-ink mb-1">Customer Notes</label>
                             <textarea 
                                 rows="3" 
                                 value={customerNotes}
                                 onChange={(e) => setCustomerNotes(e.target.value)}
-                                className="p-2 border border-gray-300 rounded-md w-full"
+                                className="p-2 border border-line rounded-md w-full"
                             />
                          </div>
                           <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Terms & Conditions</label>
+                                <label className="block text-sm font-medium text-ink mb-1">Terms & Conditions</label>
                                 <textarea 
                                     rows="3" 
                                     value={termsAndConditions}
                                     onChange={(e) => setTermsAndConditions(e.target.value)}
                                     placeholder="Enter the terms and conditions of your business to be displayed in your transaction" 
-                                    className="p-2 border border-gray-300 rounded-md w-full"
+                                    className="p-2 border border-line rounded-md w-full"
                                 />
                             </div>
                      </div>
@@ -1846,8 +1846,8 @@ const NewQuote = ({ onBack, projectId, initialData, duplicateMode = false }) => 
                     <div className="mt-8 flex justify-end space-x-4">
                         <button
                             onClick={handleSaveQuote}
-                            className="text-white font-semibold py-2 px-6 rounded-lg shadow-sm transition"
-                            style={{ background: 'linear-gradient(120deg, #0d6b5c 0%, #000 100%)' }}
+                            className="text-white font-semibold py-2 px-6 rounded-lg  transition"
+                            style={{ background: 'linear-gradient(120deg, rgb(var(--text-ink)) 0%, rgb(var(--text-ink)) 100%)' }}
                             onMouseDown={e => e.currentTarget.classList.add('scale-95')}
                             onMouseUp={e => e.currentTarget.classList.remove('scale-95')}
                             onMouseLeave={e => e.currentTarget.classList.remove('scale-95')}
@@ -1857,8 +1857,8 @@ const NewQuote = ({ onBack, projectId, initialData, duplicateMode = false }) => 
                         </button>
                         <button
                             onClick={handleSaveAndSend}
-                            className="text-white font-semibold py-2 px-6 rounded-lg shadow-sm transition"
-                            style={{ background: 'linear-gradient(120deg, #0d6b5c 0%, #000 100%)' }}
+                            className="text-white font-semibold py-2 px-6 rounded-lg  transition"
+                            style={{ background: 'linear-gradient(120deg, rgb(var(--text-ink)) 0%, rgb(var(--text-ink)) 100%)' }}
                             onMouseDown={e => e.currentTarget.classList.add('scale-95')}
                             onMouseUp={e => e.currentTarget.classList.remove('scale-95')}
                             onMouseLeave={e => e.currentTarget.classList.remove('scale-95')}
@@ -1872,9 +1872,9 @@ const NewQuote = ({ onBack, projectId, initialData, duplicateMode = false }) => 
             </div>
             {/* Customer Details Panel (right side) */}
             {showCustomerDetailsPanel && selectedCustomer && (
-                <div className="w-full md:w-[420px] p-4 md:p-8 bg-gray-50 border-l border-gray-200 flex-shrink-0 flex flex-col min-h-full md:sticky md:top-0 relative">
+                <div className="w-full md:w-[420px] p-4 md:p-8 bg-canvas border-l border-line flex-shrink-0 flex flex-col min-h-full md:sticky md:top-0 relative">
                     <button
-                        className="absolute top-4 right-4 text-gray-400 hover:text-gray-700 text-2xl"
+                        className="absolute top-4 right-4 text-dim hover:text-ink text-2xl"
                         onClick={() => setShowCustomerDetailsPanel(false)}
                         title="Close"
                     >

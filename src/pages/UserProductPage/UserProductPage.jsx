@@ -1111,8 +1111,8 @@ const [editProductData, setEditProductData] = useState(null);
     }
 
     return (
-      <div className="flex items-center justify-between border-t border-gray-100 px-6 py-4">
-        <p className="text-sm text-gray-500">
+      <div className="flex items-center justify-between border-t border-line px-6 py-4">
+        <p className="text-sm text-dim">
           Page {currentPage} of {totalPages}
         </p>
         <div className="flex items-center gap-2">
@@ -1120,7 +1120,7 @@ const [editProductData, setEditProductData] = useState(null);
             type="button"
             onClick={() => onPageChange(Math.max(1, currentPage - 1))}
             disabled={currentPage === 1}
-            className="rounded-md border border-gray-200 px-3 py-2 text-sm font-medium text-gray-600 transition-colors hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
+            className="rounded-md border border-line px-3 py-2 text-sm font-medium text-dim transition-colors hover:bg-canvas disabled:cursor-not-allowed disabled:opacity-50"
           >
             Previous
           </button>
@@ -1128,7 +1128,7 @@ const [editProductData, setEditProductData] = useState(null);
             type="button"
             onClick={() => onPageChange(Math.min(totalPages, currentPage + 1))}
             disabled={currentPage === totalPages}
-            className="rounded-md border border-gray-200 px-3 py-2 text-sm font-medium text-gray-600 transition-colors hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
+            className="rounded-md border border-line px-3 py-2 text-sm font-medium text-dim transition-colors hover:bg-canvas disabled:cursor-not-allowed disabled:opacity-50"
           >
             Next
           </button>
@@ -1610,7 +1610,7 @@ const [editProductData, setEditProductData] = useState(null);
   const [isAddingService, setIsAddingService] = useState(false);
 
   return (
-    <div className="min-h-screen bg-slate-50 font-sans w-full pb-24">
+    <div className="min-h-screen bg-canvas font-sans w-full pb-24">
       <AppHeader />
       
       <div className="mx-auto mt-3 flex w-full max-w-[1400px] flex-col gap-5 px-3 py-5 sm:mt-4 sm:gap-6 sm:px-4 sm:py-8 md:px-6 lg:flex-row lg:items-start lg:px-8">
@@ -1630,17 +1630,17 @@ const [editProductData, setEditProductData] = useState(null);
             bodyClassName="p-0"
           >
             <Tabs defaultValue="products" value={activeTab} onValueChange={setActiveTab} className="w-full">
-              <div className="border-b border-slate-200 px-4 py-4 sm:px-6">
-                <TabsList className="grid h-auto w-full grid-cols-2 rounded-2xl bg-slate-100 p-1 sm:w-fit">
+              <div className="border-b border-line px-4 py-4 sm:px-6">
+                <TabsList className="grid h-auto w-full grid-cols-2 rounded-2xl bg-surface-hover p-1 sm:w-fit">
                   <TabsTrigger
                     value="products"
-                    className="rounded-xl px-4 py-2.5 text-sm font-medium text-slate-600 transition-all data-[state=active]:bg-white data-[state=active]:text-emerald-700 data-[state=active]:shadow-sm sm:px-6"
+                    className="rounded-xl px-4 py-2.5 text-sm font-medium text-dim transition-all data-[state=active]:bg-surface data-[state=active]:text-ink data-[state=active]: sm:px-6"
                   >
                     Products
                   </TabsTrigger>
                   <TabsTrigger
                     value="services"
-                    className="rounded-xl px-4 py-2.5 text-sm font-medium text-slate-600 transition-all data-[state=active]:bg-white data-[state=active]:text-emerald-700 data-[state=active]:shadow-sm sm:px-6"
+                    className="rounded-xl px-4 py-2.5 text-sm font-medium text-dim transition-all data-[state=active]:bg-surface data-[state=active]:text-ink data-[state=active]: sm:px-6"
                   >
                     Services
                   </TabsTrigger>
@@ -1649,19 +1649,19 @@ const [editProductData, setEditProductData] = useState(null);
 
               {/* Products Tab Content */}
               <TabsContent value="products" className="p-0 m-0">
-                <div className="flex flex-col gap-4 border-b border-gray-100 p-4 sm:p-6 md:flex-row">
+                <div className="flex flex-col gap-4 border-b border-line p-4 sm:p-6 md:flex-row">
                   <div className="relative flex-1">
-                    <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                    <Search className="absolute left-3 top-3 h-4 w-4 text-dim" />
                     <Input
                       placeholder="Search products..."
-                      className="pl-10 pr-4 py-2.5 w-full border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-sm"
+                      className="pl-10 pr-4 py-2.5 w-full border border-line rounded-md focus:outline-none focus:ring-2 focus:ring-ink focus:border-transparent text-sm"
                       value={productSearchQuery}
                       onChange={(e) => setProductSearchQuery(e.target.value)}
                     />
                   </div>
                   <Button
                     variant="primary"
-                    className="bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-700 hover:to-emerald-800 text-white px-6 py-2.5 rounded-md font-medium text-sm shadow-sm hover:shadow-md transition-all md:w-auto"
+                    className="bg-black hover:from-black hover:to-black text-white px-6 py-2.5 rounded-md font-medium text-sm transition-all md:w-auto"
                     onClick={async () => {
                       if (!config.SALES_URL) {
                         console.error('SALES_URL is not configured');
@@ -1685,18 +1685,18 @@ const [editProductData, setEditProductData] = useState(null);
                 <div className="space-y-3 p-6">
                   {paginatedProducts.map((product) => (
                     <div key={product.id}>
-                      <div className="border border-gray-200 rounded-lg p-4 hover:shadow-md hover:border-gray-300 transition-all duration-200 bg-white">
+                      <div className="border border-line rounded-lg p-4  hover:border-line transition-all duration-200 bg-surface">
                         {/* Header Row */}
                         <div className="flex justify-between items-start">
                           <div className="flex-1">
                             <div className="flex items-center gap-2">
-                              <h3 className="text-base font-semibold text-gray-900">{product.name}</h3>
+                              <h3 className="text-base font-semibold text-ink">{product.name}</h3>
                               <svg
                                 xmlns="http://www.w3.org/2000/svg"
                                 width="16"
                                 height="16"
                                 fill="currentColor"
-                                className="text-emerald-600 cursor-pointer hover:text-emerald-700 transition-colors"
+                                className="text-ink cursor-pointer hover:text-ink transition-colors"
                                 viewBox="0 0 16 16"
                                 onClick={(e) => {
                                   e.stopPropagation();
@@ -1716,14 +1716,14 @@ const [editProductData, setEditProductData] = useState(null);
                                   width="16" 
                                   height="16" 
                                   fill="currentColor" 
-                                  className="text-blue-500" 
+                                  className="text-info" 
                                   viewBox="0 0 16 16"
                                 >
                                   <path d="M10.97 4.97a.75.75 0 0 1 1.07 1.05l-3.99 4.99a.75.75 0 0 1-1.08.02L4.324 8.384a.75.75 0 1 1 1.06-1.06l2.094 2.093 3.473-4.425a.267.267 0 0 1 .02-.022z"/>
                                 </svg>
                               )}
                             </div>
-                            <p className="text-xs text-gray-500 mt-1">{product.category}</p>
+                            <p className="text-xs text-dim mt-1">{product.category}</p>
                           </div>
 
                           {/* Expand / Collapse Icon */}
@@ -1732,72 +1732,72 @@ const [editProductData, setEditProductData] = useState(null);
                             onClick={() => handleProductArrowClick(product.id)}
                           >
                             {expandedProductId === product.id ? (
-                              <ChevronUp className="h-5 w-5 text-gray-400 hover:text-gray-600 transition-colors" />
+                              <ChevronUp className="h-5 w-5 text-dim hover:text-dim transition-colors" />
                             ) : (
-                              <ChevronDown className="h-5 w-5 text-gray-400 hover:text-gray-600 transition-colors" />
+                              <ChevronDown className="h-5 w-5 text-dim hover:text-dim transition-colors" />
                             )}
                           </div>
                         </div>
 
                         {/* Expanded Content */}
                         {expandedProductId === product.id && (
-                          <div className="mt-4 pt-4 border-t border-gray-100 transition-all duration-300 ease-in-out">
+                          <div className="mt-4 pt-4 border-t border-line transition-all duration-300 ease-in-out">
                             {/* Info Grid */}
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
-                              <div className="text-gray-600">Product name</div>
-                              <div className="font-semibold text-gray-900">{product.name}</div>
-                              <div className="text-gray-600">Product type</div>
-                              <div className="font-semibold text-gray-900">{product.category}</div>
-                              <div className="text-gray-600">Key features</div>
-                              <div className="font-semibold text-gray-900">{product.keyFeatures}</div>
-                              <div className="text-gray-600">Target Customers / Users</div>
-                              <div className="font-semibold text-gray-900">{product.targetCustomers}</div>
-                              <div className="text-gray-600">Usage/Application Areas</div>
-                              <div className="font-semibold text-gray-900">{product.usageAreas}</div>
-                              <div className="text-gray-600">Available Sizes / Variants</div>
-                              <div className="font-semibold text-gray-900">{product.availableSizes}</div>
-                              <div className="text-gray-600">Packaging / Delivery</div>
-                              <div className="font-semibold text-gray-900">{product.packagingDelivery}</div>
-                              <div className="text-gray-600">Certifications / Quality Standards</div>
-                              <div className="font-semibold text-gray-900">{product.certifications}</div>
-                              <div className="text-gray-600">Support / Installation Services</div>
-                              <div className="font-semibold text-gray-900">{product.supportServices}</div>
-                              <div className="text-gray-600">Catalog Demo</div>
+                              <div className="text-dim">Product name</div>
+                              <div className="font-semibold text-ink">{product.name}</div>
+                              <div className="text-dim">Product type</div>
+                              <div className="font-semibold text-ink">{product.category}</div>
+                              <div className="text-dim">Key features</div>
+                              <div className="font-semibold text-ink">{product.keyFeatures}</div>
+                              <div className="text-dim">Target Customers / Users</div>
+                              <div className="font-semibold text-ink">{product.targetCustomers}</div>
+                              <div className="text-dim">Usage/Application Areas</div>
+                              <div className="font-semibold text-ink">{product.usageAreas}</div>
+                              <div className="text-dim">Available Sizes / Variants</div>
+                              <div className="font-semibold text-ink">{product.availableSizes}</div>
+                              <div className="text-dim">Packaging / Delivery</div>
+                              <div className="font-semibold text-ink">{product.packagingDelivery}</div>
+                              <div className="text-dim">Certifications / Quality Standards</div>
+                              <div className="font-semibold text-ink">{product.certifications}</div>
+                              <div className="text-dim">Support / Installation Services</div>
+                              <div className="font-semibold text-ink">{product.supportServices}</div>
+                              <div className="text-dim">Catalog Demo</div>
                               <div>
                                 {product.catalogDemo ? (
                                   <a
                                     href={product.catalogDemo}
-                                    className="text-emerald-600 hover:text-emerald-700 underline"
+                                    className="text-ink hover:text-ink underline"
                                     target="_blank"
                                     rel="noopener noreferrer"
                                   >
                                     View
                                   </a>
                                 ) : (
-                                  <span className="text-gray-400 text-xs">Not provided</span>
+                                  <span className="text-dim text-xs">Not provided</span>
                                 )}
                               </div>
                               
                               {/* Custom fields if any */}
                               {product.customFields && product.customFields.map((field, index) => (
                                 <React.Fragment key={index}>
-                                  <div className="text-gray-600">{field.label}</div>
-                                  <div className="font-semibold text-gray-900">{field.value}</div>
+                                  <div className="text-dim">{field.label}</div>
+                                  <div className="font-semibold text-ink">{field.value}</div>
                                 </React.Fragment>
                               ))}
                             </div>
 
                             {/* Images */}
                             {product.images && product.images.length > 0 && (
-                              <div className="mt-6 pt-6 border-t border-gray-100">
-                                <p className="text-xs font-semibold text-gray-600 mb-3 uppercase tracking-wide">Images</p>
+                              <div className="mt-6 pt-6 border-t border-line">
+                                <p className="text-xs font-semibold text-dim mb-3 uppercase tracking-wide">Images</p>
                                 <div className="flex flex-wrap gap-3">
                                   {product.images.map((image, index) => (
                                     <img
                                       key={index}
                                       src={(typeof image === 'string' ? image : image?.url) || "https://via.placeholder.com/120"}
                                       alt={`Product ${index + 1}`}
-                                      className="w-24 h-24 object-cover rounded-md border border-gray-200 hover:border-emerald-500 transition-colors"
+                                      className="w-24 h-24 object-cover rounded-md border border-line hover:border-line transition-colors"
                                     />
                                   ))}
                                 </div>
@@ -1805,13 +1805,13 @@ const [editProductData, setEditProductData] = useState(null);
                             )}
                             
                             {/* Delete button */}
-                            <div className="mt-6 pt-6 border-t border-gray-100 flex justify-end">
+                            <div className="mt-6 pt-6 border-t border-line flex justify-end">
                               <button
                                 onClick={(e) => {
                                   e.stopPropagation();
                                   handleDeleteProduct(product.id);
                                 }}
-                                className="px-4 py-2 text-xs font-medium bg-red-50 hover:bg-red-100 text-red-600 rounded-md transition-colors"
+                                className="px-4 py-2 text-xs font-medium bg-danger/10 hover:bg-danger/10 text-danger rounded-md transition-colors"
                               >
                                 Delete Product
                               </button>
@@ -1830,19 +1830,19 @@ const [editProductData, setEditProductData] = useState(null);
 
               {/* Services Tab Content */}
               <TabsContent value="services" className="p-0 m-0">
-                <div className="p-6 flex flex-col md:flex-row gap-4 border-b border-gray-100">
+                <div className="p-6 flex flex-col md:flex-row gap-4 border-b border-line">
                   <div className="relative flex-1">
-                    <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                    <Search className="absolute left-3 top-3 h-4 w-4 text-dim" />
                     <Input
                       placeholder="Search services..."
-                      className="pl-10 pr-4 py-2.5 w-full border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-sm"
+                      className="pl-10 pr-4 py-2.5 w-full border border-line rounded-md focus:outline-none focus:ring-2 focus:ring-ink focus:border-transparent text-sm"
                       value={serviceSearchQuery}
                       onChange={(e) => setServiceSearchQuery(e.target.value)}
                     />
                   </div>
                   <Button
                     size="sm"
-                    className="bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-700 hover:to-emerald-800 text-white px-6 py-2.5 rounded-md font-medium text-sm shadow-sm hover:shadow-md transition-all"
+                    className="bg-black hover:from-black hover:to-black text-white px-6 py-2.5 rounded-md font-medium text-sm transition-all"
                     onClick={() => setShowAddServiceForm(true)}
                   >
                     <Plus className="h-4 w-4 mr-2" /> Add Service
@@ -1851,18 +1851,18 @@ const [editProductData, setEditProductData] = useState(null);
                 <div className="space-y-3 p-6">
                   {paginatedServices.map((service) => (
                     <div key={service.id}>
-                      <div className="border border-gray-200 rounded-lg p-4 hover:shadow-md hover:border-gray-300 transition-all duration-200 bg-white">
+                      <div className="border border-line rounded-lg p-4  hover:border-line transition-all duration-200 bg-surface">
                         {/* Header: Name, Edit, Dropdown */}
                         <div className="flex justify-between items-start">
                           <div className="flex-1">
                             <div className="flex items-center gap-2">
-                              <h3 className="text-base font-semibold text-gray-900">{service.name}</h3>
+                              <h3 className="text-base font-semibold text-ink">{service.name}</h3>
                               <svg
                                 xmlns="http://www.w3.org/2000/svg"
                                 width="16"
                                 height="16"
                                 fill="currentColor"
-                                className="text-emerald-600 cursor-pointer hover:text-emerald-700 transition-colors"
+                                className="text-ink cursor-pointer hover:text-ink transition-colors"
                                 viewBox="0 0 16 16"
                                 onClick={(e) => {
                                   e.stopPropagation();
@@ -1892,7 +1892,7 @@ const [editProductData, setEditProductData] = useState(null);
                                 />
                               </svg>
                             </div>
-                            <p className="text-sm text-gray-500">
+                            <p className="text-sm text-dim">
                               {service.description ? service.description.substring(0, 50) + "..." : "No description"}
                             </p>
                           </div>
@@ -1904,9 +1904,9 @@ const [editProductData, setEditProductData] = useState(null);
                             }
                           >
                             {expandedServiceId === service.id ? (
-                              <ChevronUp className="h-5 w-5 text-gray-400" />
+                              <ChevronUp className="h-5 w-5 text-dim" />
                             ) : (
-                              <ChevronDown className="h-5 w-5 text-gray-400" />
+                              <ChevronDown className="h-5 w-5 text-dim" />
                             )}
                           </div>
                         </div>
@@ -1914,26 +1914,26 @@ const [editProductData, setEditProductData] = useState(null);
                         {/* Expanded Section */}
                         {expandedServiceId === service.id && (
                           <div className="mt-6 transition-all duration-500 ease-in-out">
-                            <h2 className="text-lg font-semibold text-gray-800 mb-4">Service Details</h2>
-                            <div className="grid grid-cols-2 gap-y-4 gap-x-8 text-sm text-gray-700">
+                            <h2 className="text-lg font-semibold text-ink mb-4">Service Details</h2>
+                            <div className="grid grid-cols-2 gap-y-4 gap-x-8 text-sm text-ink">
                               <div>Service Type</div>
-                              <div className="font-semibold text-black">{service.serviceType || "Not specified"}</div>
+                              <div className="font-semibold text-ink">{service.serviceType || "Not specified"}</div>
                               <div>Description / Scope of Work</div>
-                              <div className="font-semibold text-black">{service.description || "Not specified"}</div>
+                              <div className="font-semibold text-ink">{service.description || "Not specified"}</div>
                               <div>Industries / Clients Served</div>
-                              <div className="font-semibold text-black">{service.industries || "Not specified"}</div>
+                              <div className="font-semibold text-ink">{service.industries || "Not specified"}</div>
                               <div>Project Size / Budget Range</div>
-                              <div className="font-semibold text-black">{service.budgetRange || "Not specified"}</div>
+                              <div className="font-semibold text-ink">{service.budgetRange || "Not specified"}</div>
                               <div>Delivery Method</div>
-                              <div className="font-semibold text-black">{service.deliveryMethod || "Not specified"}</div>
+                              <div className="font-semibold text-ink">{service.deliveryMethod || "Not specified"}</div>
                               <div>Tools / Materials Used</div>
-                              <div className="font-semibold text-black">{service.materials || "Not specified"}</div>
+                              <div className="font-semibold text-ink">{service.materials || "Not specified"}</div>
                               <div>Packages / Pricing Models</div>
-                              <div className="font-semibold text-black">{service.pricing || "Not specified"}</div>
+                              <div className="font-semibold text-ink">{service.pricing || "Not specified"}</div>
                               <div>Compliance & Standards Followed</div>
-                              <div className="font-semibold text-black">{service.compliance || "Not specified"}</div>
+                              <div className="font-semibold text-ink">{service.compliance || "Not specified"}</div>
                               <div>Success Stories / Case Studies</div>
-                              <div className="font-semibold text-black">{service.caseStudies || "Not specified"}</div>
+                              <div className="font-semibold text-ink">{service.caseStudies || "Not specified"}</div>
                               
                               {/* Delete button */}
                               <div className="mt-6 col-span-2 flex justify-end">
@@ -1942,7 +1942,7 @@ const [editProductData, setEditProductData] = useState(null);
                                     e.stopPropagation();
                                     handleDeleteService(service.id);
                                   }}
-                                  className="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded"
+                                  className="px-4 py-2 bg-danger hover:bg-danger text-white rounded"
                                 >
                                   Delete Service
                                 </button>
@@ -1978,35 +1978,35 @@ const [editProductData, setEditProductData] = useState(null);
       
       {/* Edit Profile Modal */}
       {isProfileModalOpen && (
-                <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 sm:p-6">
-                    <div className="bg-white rounded-xl shadow-xl w-full max-w-2xl max-h-[90vh] flex flex-col overflow-hidden">
+                <div className="fixed inset-0 bg-cta backdrop-blur-sm z-50 flex items-center justify-center p-4 sm:p-6">
+                    <div className="bg-surface rounded-xl shadow-xl w-full max-w-2xl max-h-[90vh] flex flex-col overflow-hidden">
                         {/* Modal Header */}
-                        <div className="flex justify-between items-center px-6 py-4 border-b border-gray-200 flex-shrink-0 bg-white">
-                            <h2 className="text-xl font-semibold text-gray-800">Edit Profile</h2>
-                            <button onClick={handleProfileCloseModal} className="text-gray-400 hover:text-gray-600 transition-colors">
+                        <div className="flex justify-between items-center px-6 py-4 border-b border-line flex-shrink-0 bg-surface">
+                            <h2 className="text-xl font-semibold text-ink">Edit Profile</h2>
+                            <button onClick={handleProfileCloseModal} className="text-dim hover:text-dim transition-colors">
                                 <CloseIcon size={20} />
                             </button>
                         </div>
                         {/* Modal Form */}
-                        <div className="overflow-y-auto p-6 flex-1 bg-white">
+                        <div className="overflow-y-auto p-6 flex-1 bg-surface">
                             <form onSubmit={(e) => e.preventDefault()} className="space-y-4">
                             <div className="flex flex-col items-center space-y-3">
-                                <img src={imagePreview} alt="Profile Preview" className="w-32 h-32 rounded-full object-cover border-2 border-gray-300 shadow-sm" onError={(e) => { e.target.onerror = null; e.target.src = "https://via.placeholder.com/160"; }} />
-                                <label htmlFor="profileImage" className="cursor-pointer bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-medium px-4 py-2 rounded-md transition-colors">Change Image</label>
+                                <img src={imagePreview} alt="Profile Preview" className="w-32 h-32 rounded-full object-cover border-2 border-line " onError={(e) => { e.target.onerror = null; e.target.src = "https://via.placeholder.com/160"; }} />
+                                <label htmlFor="profileImage" className="cursor-pointer bg-surface-hover hover:bg-surface-hover text-ink text-sm font-medium px-4 py-2 rounded-md transition-colors">Change Image</label>
                                 <input id="profileImage" name="profileImage" type="file" accept="image/png, image/jpeg, image/gif" onChange={handleProfileFileChange} className="hidden" />
                             </div>
                             {/* Input Fields */}
-                            <div><label htmlFor="companyName" className="block text-sm font-medium text-gray-700 mb-1">Company Name</label><input type="text" id="companyName" name="companyName" value={profileFormData.companyName} onChange={handleProfileInputChange} className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent" /></div>
+                            <div><label htmlFor="companyName" className="block text-sm font-medium text-ink mb-1">Company Name</label><input type="text" id="companyName" name="companyName" value={profileFormData.companyName} onChange={handleProfileInputChange} className="w-full px-3 py-2 border border-line rounded-md  focus:outline-none focus:ring-2 focus:ring-ink focus:border-transparent" /></div>
                             <div>
-                                <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-1">Phone</label>
-                                <div className="flex rounded-md shadow-sm">
+                                <label htmlFor="phone" className="block text-sm font-medium text-ink mb-1">Phone</label>
+                                <div className="flex rounded-md ">
                                     <select
                                         value={phoneCountryCode}
                                         onChange={(e) => {
                                             setPhoneCountryCode(e.target.value);
                                             setProfileFormData(prev => ({ ...prev, phone: `${e.target.value} ${phoneNumberWithoutCode}` }));
                                         }}
-                                        className="relative px-3 py-2 border border-gray-300 rounded-l-md focus:z-10 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-sm bg-white"
+                                        className="relative px-3 py-2 border border-line rounded-l-md focus:z-10 focus:outline-none focus:ring-2 focus:ring-ink focus:border-transparent text-sm bg-surface"
                                     >
                                         <option value="">Code</option>
                                         {countryCodes.map(c => (
@@ -2022,14 +2022,14 @@ const [editProductData, setEditProductData] = useState(null);
                                             setPhoneNumberWithoutCode(e.target.value);
                                             setProfileFormData(prev => ({ ...prev, phone: `${phoneCountryCode} ${e.target.value}` }));
                                         }}
-                                        className="relative -ml-px flex-1 px-3 py-2 border border-gray-300 rounded-r-md focus:z-10 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-sm bg-white"
+                                        className="relative -ml-px flex-1 px-3 py-2 border border-line rounded-r-md focus:z-10 focus:outline-none focus:ring-2 focus:ring-ink focus:border-transparent text-sm bg-surface"
                                         placeholder="Phone number"
                                     />
                                 </div>
                             </div>
                             <div>
-                                <label htmlFor="location" className="block text-sm font-medium text-gray-700 mb-1">Location</label>
-                                <div className="flex rounded-md shadow-sm">
+                                <label htmlFor="location" className="block text-sm font-medium text-ink mb-1">Location</label>
+                                <div className="flex rounded-md ">
                                     <select
                                         value={selectedCountry}
                                         onChange={(e) => {
@@ -2039,7 +2039,7 @@ const [editProductData, setEditProductData] = useState(null);
                                             setSelectedState('');
                                             setProfileFormData(prev => ({ ...prev, location: `${selectedState || ''}, ${newCountry}` }));
                                         }}
-                                        className="relative px-3 py-2 border border-gray-300 rounded-l-md focus:z-10 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-sm bg-white"
+                                        className="relative px-3 py-2 border border-line rounded-l-md focus:z-10 focus:outline-none focus:ring-2 focus:ring-ink focus:border-transparent text-sm bg-surface"
                                     >
                                         <option value="">Country</option>
                                         {Object.keys(countryStateData).map(country => (
@@ -2053,7 +2053,7 @@ const [editProductData, setEditProductData] = useState(null);
                                             setSelectedState(newState);
                                             setProfileFormData(prev => ({ ...prev, location: `${newState}, ${selectedCountry}` }));
                                         }}
-                                        className="relative -ml-px flex-1 px-3 py-2 border border-gray-300 rounded-r-md focus:z-10 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-sm bg-white"
+                                        className="relative -ml-px flex-1 px-3 py-2 border border-line rounded-r-md focus:z-10 focus:outline-none focus:ring-2 focus:ring-ink focus:border-transparent text-sm bg-surface"
                                         disabled={states.length === 0}
                                     >
                                         <option value="">State/Region</option>
@@ -2063,11 +2063,11 @@ const [editProductData, setEditProductData] = useState(null);
                                     </select>
                                 </div>
                             </div>
-                            <div><label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">Email</label><input type="email" id="email" name="email" value={profileFormData.email} onChange={handleProfileInputChange} className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent" required /></div>
+                            <div><label htmlFor="email" className="block text-sm font-medium text-ink mb-1">Email</label><input type="email" id="email" name="email" value={profileFormData.email} onChange={handleProfileInputChange} className="w-full px-3 py-2 border border-line rounded-md  focus:outline-none focus:ring-2 focus:ring-ink focus:border-transparent" required /></div>
                             {/* Action Buttons */}
-                            <div className="flex justify-end gap-3 pt-6 border-t mt-6 border-gray-200">
-                                <button type="button" onClick={handleProfileCloseModal} className="px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-400 transition-colors">Cancel</button>
-                                <button type="button" onClick={handleProfileSave} className="px-4 py-2 bg-gradient-to-l from-[#095B49] to-[#000000] text-white rounded-md hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 transition-opacity">Save Changes</button>
+                            <div className="flex justify-end gap-3 pt-6 border-t mt-6 border-line">
+                                <button type="button" onClick={handleProfileCloseModal} className="px-4 py-2 bg-surface-hover text-ink rounded-md hover:bg-surface-hover focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-line transition-colors">Cancel</button>
+                                <button type="button" onClick={handleProfileSave} className="px-4 py-2 bg-black text-white rounded-md hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-ink transition-opacity">Save Changes</button>
                             </div>
                         </form>
                         </div>
@@ -2077,21 +2077,21 @@ const [editProductData, setEditProductData] = useState(null);
 
       {/* Add product form modal */}
       {showAddProductForm && (
-        <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 sm:p-6">
-          <div className="bg-white rounded-xl shadow-xl w-full max-w-2xl max-h-[90vh] flex flex-col overflow-hidden">
-            <div className="flex justify-between items-center px-6 py-4 border-b border-gray-200 flex-shrink-0 bg-white">
-                <h2 className="text-xl font-semibold text-gray-800">
+        <div className="fixed inset-0 bg-cta backdrop-blur-sm z-50 flex items-center justify-center p-4 sm:p-6">
+          <div className="bg-surface rounded-xl shadow-xl w-full max-w-2xl max-h-[90vh] flex flex-col overflow-hidden">
+            <div className="flex justify-between items-center px-6 py-4 border-b border-line flex-shrink-0 bg-surface">
+                <h2 className="text-xl font-semibold text-ink">
                   Add New Product
                 </h2>
                 <button
                   onClick={handleCloseProductAddForm}
-                  className="text-gray-400 hover:text-gray-600 transition-colors"
+                  className="text-dim hover:text-dim transition-colors"
                 >
                   <X size={20} />
                 </button>
             </div>
             
-            <div className="overflow-y-auto flex-1 p-6 bg-white">
+            <div className="overflow-y-auto flex-1 p-6 bg-surface">
             <div className="pb-1rem">
               {/* Add your form inputs and dynamic fields here */}
             </div>
@@ -2109,7 +2109,7 @@ const [editProductData, setEditProductData] = useState(null);
                 { label: "Catalog demo", name: "catalogDemo" },
               ].map(({ label, name }) => (
                 <div key={name} className="flex items-start gap-4">
-                  <label htmlFor={name} className="w-1/3 text-gray-600 pt-2">
+                  <label htmlFor={name} className="w-1/3 text-dim pt-2">
                     {label}
                   </label>
                   <input
@@ -2118,7 +2118,7 @@ const [editProductData, setEditProductData] = useState(null);
                     name={name}
                     value={newProduct[name] || ""}
                     onChange={handleProductInputChange}
-                    className="flex-1 border border-gray-300 rounded-md px-3 py-2 bg-gray-50"
+                    className="flex-1 border border-line rounded-md px-3 py-2 bg-canvas"
                   />
                 </div>
               ))}
@@ -2131,28 +2131,28 @@ const [editProductData, setEditProductData] = useState(null);
                     placeholder="Add details"
                     value={field.label}
                     onChange={(e) => handleCustomFieldChange(index, "label", e.target.value)}
-                    className="w-1/3 border border-gray-300 rounded-md px-3 py-2 bg-gray-50"
+                    className="w-1/3 border border-line rounded-md px-3 py-2 bg-canvas"
                   />
                   <input
                     type="text"
                     placeholder=""
                     value={field.value}
                     onChange={(e) => handleCustomFieldChange(index, "value", e.target.value)}
-                    className="flex-1 border border-gray-300 rounded-md px-3 py-2 bg-gray-50"
+                    className="flex-1 border border-line rounded-md px-3 py-2 bg-canvas"
                   />
                   <button
                     onClick={() => handleRemoveCustomField(index)}
-                    className="text-red-500 hover:text-red-700 text-lg pt-2"
+                    className="text-danger hover:text-danger text-lg pt-2"
                   >
                     −
                   </button>
                 </div>
               ))}
             </div>
-            <div className="sticky bottom-0 right-0 flex justify-end bg-white py-2 z-10">
+            <div className="sticky bottom-0 right-0 flex justify-end bg-surface py-2 z-10">
               <button
                 onClick={handleAddCustomField}
-                className="mb-4 text-sm font-medium text-emerald-700 hover:underline"
+                className="mb-4 text-sm font-medium text-ink hover:underline"
               >
                 + Add Field
               </button>
@@ -2160,7 +2160,7 @@ const [editProductData, setEditProductData] = useState(null);
 
             {/* Product Images Upload */}
             <div className="mt-8">
-              <label className="block text-gray-600 mb-2">Product Images</label>
+              <label className="block text-dim mb-2">Product Images</label>
               <div className="flex flex-wrap gap-4">
                 {productImages.map((image, index) => (
                   <img
@@ -2172,7 +2172,7 @@ const [editProductData, setEditProductData] = useState(null);
                 ))}
                 <label
                   htmlFor="productImageUpload"
-                  className="w-24 h-24 flex items-center justify-center border-2 border-dashed text-gray-400 rounded-md cursor-pointer hover:border-emerald-500"
+                  className="w-24 h-24 flex items-center justify-center border-2 border-dashed text-dim rounded-md cursor-pointer hover:border-line"
                 >
                   +
                 </label>
@@ -2187,17 +2187,17 @@ const [editProductData, setEditProductData] = useState(null);
             </div>
 
             {/* Form Actions */}
-            <div className="flex justify-end gap-3 pt-6 border-t mt-6 border-gray-200 bg-white">
+            <div className="flex justify-end gap-3 pt-6 border-t mt-6 border-line bg-surface">
               <button
                 onClick={handleCloseProductAddForm}
-                className="px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-400 transition-colors"
+                className="px-4 py-2 bg-surface-hover text-ink rounded-md hover:bg-surface-hover focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-line transition-colors"
               >
                 Cancel
               </button>
               <button
                 onClick={handleAddProduct}
                 disabled={isAddingProduct}
-                className={`bg-gradient-to-l from-[#095B49] to-[#000000] text-white font-medium px-4 py-2 rounded-md hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 transition-opacity ${
+                className={`bg-gradient-to-l from-black to-black text-white font-medium px-4 py-2 rounded-md hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-ink transition-opacity ${
                   isAddingProduct ? 'opacity-70 cursor-not-allowed' : ''
                 }`}
               >
@@ -2221,21 +2221,21 @@ const [editProductData, setEditProductData] = useState(null);
 
       {/* Add service modal */}
       {showAddServiceForm && (
-        <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 sm:p-6">
-          <div className="bg-white rounded-xl shadow-xl w-full max-w-2xl max-h-[90vh] flex flex-col overflow-hidden">
-            <div className="flex justify-between items-center px-6 py-4 border-b border-gray-200 flex-shrink-0 bg-white">
-                <h2 className="text-xl font-semibold text-gray-800">
+        <div className="fixed inset-0 bg-cta backdrop-blur-sm z-50 flex items-center justify-center p-4 sm:p-6">
+          <div className="bg-surface rounded-xl shadow-xl w-full max-w-2xl max-h-[90vh] flex flex-col overflow-hidden">
+            <div className="flex justify-between items-center px-6 py-4 border-b border-line flex-shrink-0 bg-surface">
+                <h2 className="text-xl font-semibold text-ink">
                   Add New Service
                 </h2>
                 <button
                   onClick={handleCloseServiceAddForm}
-                  className="text-gray-400 hover:text-gray-600 transition-colors"
+                  className="text-dim hover:text-dim transition-colors"
                 >
                   <X size={20} />
                 </button>
             </div>
             
-            <div className="overflow-y-auto flex-1 p-6 bg-white">
+            <div className="overflow-y-auto flex-1 p-6 bg-surface">
             <div className="pb-1rem">
               {/* Add your form inputs and dynamic fields here */}
             </div>
@@ -2254,7 +2254,7 @@ const [editProductData, setEditProductData] = useState(null);
                 { label: "Success Stories / Case Studies", name: "caseStudies", type: "text" },
               ].map(({ label, name, type }) => (
                 <div key={name} className="flex items-start gap-4">
-                  <label htmlFor={name} className="w-1/3 text-gray-600 pt-2">
+                  <label htmlFor={name} className="w-1/3 text-dim pt-2">
                     {label}
                   </label>
                   {type === "textarea" ? (
@@ -2263,7 +2263,7 @@ const [editProductData, setEditProductData] = useState(null);
                       name={name}
                       value={newService[name] || ""}
                       onChange={handleServiceInputChange}
-                      className="flex-1 border border-gray-300 rounded-md px-3 py-2 bg-gray-50"
+                      className="flex-1 border border-line rounded-md px-3 py-2 bg-canvas"
                     />
                   ) : (
                     <input
@@ -2272,7 +2272,7 @@ const [editProductData, setEditProductData] = useState(null);
                       type="text"
                       value={newService[name] || ""}
                       onChange={handleServiceInputChange}
-                      className="flex-1 border border-gray-300 rounded-md px-3 py-2 bg-gray-50"
+                      className="flex-1 border border-line rounded-md px-3 py-2 bg-canvas"
                     />
                   )}
                 </div>
@@ -2282,33 +2282,33 @@ const [editProductData, setEditProductData] = useState(null);
             {/* Render dynamic custom fields for services */}
             {newServiceCustomFields.map((field, index) => (
               <div key={index} className="flex items-start gap-4 mt-3">
-                <label className=" text-gray-600 pt-2 flex-shrink-0">
+                <label className=" text-dim pt-2 flex-shrink-0">
                   <Input
                     type="text"
                     placeholder="Add service"
                     value={field.label}
                     onChange={(e) => handleServiceCustomFieldChange(index, "label", e.target.value)}
-                    className="w-1/3 border border-gray-300 rounded-md px-4 py-2 bg-gray-50 "
+                    className="w-1/3 border border-line rounded-md px-4 py-2 bg-canvas "
                   />
                 </label>
                 <Input
                   type="text"
                   value={field.value || ""}
                   onChange={(e) => handleServiceCustomFieldChange(index, "value", e.target.value)}
-                  className="flex-1 border border-gray-300 rounded-md px-3 py-2 bg-gray-50"
+                  className="flex-1 border border-line rounded-md px-3 py-2 bg-canvas"
                 />
                 <button
                   onClick={() => handleRemoveServiceCustomField(index)}
-                  className="text-red-500 hover:text-red-700 text-lg pt-2"
+                  className="text-danger hover:text-danger text-lg pt-2"
                 >
                   −
                 </button>
               </div>
             ))}
-            <div className="sticky bottom-0 right-0 flex bg-white py-2 z-10 mt-top justify-end">
+            <div className="sticky bottom-0 right-0 flex bg-surface py-2 z-10 mt-top justify-end">
               <button
                 onClick={handleAddServiceCustomField}
-                className="text-sm font-medium text-emerald-700 hover:underline"
+                className="text-sm font-medium text-ink hover:underline"
               >
                 + Add Field
               </button>
@@ -2316,7 +2316,7 @@ const [editProductData, setEditProductData] = useState(null);
 
             {/* Image Upload Section */}
             <div className="mt-8">
-              <label className="block text-gray-600 mb-2">Service Images</label>
+              <label className="block text-dim mb-2">Service Images</label>
               <div className="flex flex-wrap gap-4">
                 {serviceImages.map((image, index) => (
                   <img
@@ -2328,7 +2328,7 @@ const [editProductData, setEditProductData] = useState(null);
                 ))}
                 <label
                   htmlFor="serviceImageUpload"
-                  className="w-24 h-24 flex items-center justify-center border-2 border-dashed text-gray-400 rounded-md cursor-pointer hover:border-emerald-500"
+                  className="w-24 h-24 flex items-center justify-center border-2 border-dashed text-dim rounded-md cursor-pointer hover:border-line"
                 >
                   +
                 </label>
@@ -2343,17 +2343,17 @@ const [editProductData, setEditProductData] = useState(null);
             </div>
 
             {/* Action Buttons */}
-            <div className="flex justify-end gap-3 pt-6 border-t mt-6 border-gray-200 bg-white">
+            <div className="flex justify-end gap-3 pt-6 border-t mt-6 border-line bg-surface">
               <button
                 onClick={handleCloseServiceAddForm}
-                className="px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-400 transition-colors"
+                className="px-4 py-2 bg-surface-hover text-ink rounded-md hover:bg-surface-hover focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-line transition-colors"
               >
                 Cancel
               </button>
               <button
                 onClick={handleAddService}
                 disabled={isAddingService}
-                className={`bg-gradient-to-l from-[#095B49] to-[#000000] text-white font-medium px-4 py-2 rounded-md hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 transition-opacity ${
+                className={`bg-gradient-to-l from-black to-black text-white font-medium px-4 py-2 rounded-md hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-ink transition-opacity ${
                   isAddingService ? 'opacity-70 cursor-not-allowed' : ''
                 }`}
               >

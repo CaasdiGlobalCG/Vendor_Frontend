@@ -22,6 +22,8 @@ import { InviteModal } from '../components/InviteModal';
 import { EditRoleModal } from '../components/EditRoleModal';
 import ActivityLogTab from '../components/ActivityLogTab';
 import RolesTab from '../components/RolesTab';
+import { PageHero, heroActionClass, Reveal, RevealFlat } from '../../components/ui';
+import { motion } from 'framer-motion';
 import { RemovalReasonModal } from '../components/RemovalReasonModal';
 import { SuspensionModal } from '../components/SuspensionModal';
 import {
@@ -331,28 +333,22 @@ export default function TeamPage() {
   return (
     <div className="mx-auto w-full max-w-[1600px] space-y-5 px-3 py-5 sm:px-5 sm:py-6 lg:px-8 xl:px-10">
       {/* ── Page Header ── */}
-      <div className="rounded-2xl border border-emerald-200/20 bg-gradient-to-r from-[#095B49] via-[#0A5F4B] to-[#000000] px-4 py-5 shadow-[0_16px_40px_rgba(6,95,70,0.22)] sm:px-6 sm:py-6">
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-          <div>
-            <p className="text-xs uppercase tracking-[0.18em] text-emerald-100/90">Administration</p>
-            <h1 className="mt-1 text-xl font-semibold text-white font-['Poppins'] sm:text-2xl">Team & Permissions</h1>
-            <p className="mt-2 max-w-2xl text-sm leading-6 text-emerald-50/95">
-              Control who can access what, assign the right roles, and keep governance clear as your SaaS team scales.
-            </p>
-          </div>
+      <PageHero
+        className="animate-hero-in"
+        eyebrow="Administration"
+        title="Team & Permissions"
+        description="Control who can access what, assign the right roles, and keep governance clear as your SaaS team scales."
+        actions={(
           <PermissionGate module="user_management" action="create">
-            <button
-              onClick={() => setShowInviteModal(true)}
-              className="inline-flex w-full items-center justify-center gap-2 rounded-lg border border-emerald-300/20 bg-black/30 px-4 py-2 text-sm font-medium text-emerald-50 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)] transition-colors hover:bg-black/40 sm:w-auto"
-            >
+            <button onClick={() => setShowInviteModal(true)} className={heroActionClass}>
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
               </svg>
               Invite Member
             </button>
           </PermissionGate>
-        </div>
-      </div>
+        )}
+      />
 
       {/* ── Feedback Toast ── */}
       {feedback && <FeedbackBanner message={feedback.msg} type={feedback.type} />}
@@ -360,35 +356,35 @@ export default function TeamPage() {
       {/* ── Phase 1 Indicator ── */}
       {isFallback && <Phase1Banner />}
 
-      {/* ── Team Summary Cards ── */}
-      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+      {/* ── Team Summary Cards ── hairline grid, staggered reveal */}
+      <Reveal className="grid grid-cols-2 gap-px overflow-hidden rounded-md border border-line bg-line lg:grid-cols-4">
         <StatTile label="Total Members" value={memberStats.total} tone="teal" />
         <StatTile label="Active" value={memberStats.active} tone="green" />
         <StatTile label="Invited" value={memberStats.invited} tone="amber" />
         <StatTile label="Suspended" value={memberStats.suspended} tone="red" />
-      </div>
+      </Reveal>
 
       {/* ── Your Access Card ── */}
-      <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm sm:p-6">
+      <Reveal className="rounded-md border border-line bg-surface p-4 sm:p-6">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <h2 className="text-lg font-medium text-gray-900">Your Access</h2>
-          <span className="inline-flex w-fit items-center rounded-full border border-gray-200 bg-gray-50 px-2.5 py-1 text-xs font-medium text-gray-600">
+          <h2 className="text-lg font-medium text-ink">Your Access</h2>
+          <span className="inline-flex w-fit items-center rounded-full border border-line bg-canvas px-2.5 py-1 text-xs font-medium text-dim">
             Authority Level {role?.roleLevel ?? '—'}
           </span>
         </div>
         <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-3 md:gap-6">
           <InfoBlock label="Account" value={currentUser?.email || '—'} />
           <div>
-            <p className="text-xs text-gray-500 uppercase tracking-wider mb-1.5">Role</p>
+            <p className="text-xs text-dim uppercase tracking-wider mb-1.5">Role</p>
             <RoleBadge roleId={role?.roleId} roleName={role?.roleName} />
           </div>
           <InfoBlock label="Modules Accessible" value={moduleCount} />
         </div>
-      </div>
+      </Reveal>
 
-      {/* ── Tab Navigation ── */}
-      <div className="overflow-x-auto rounded-2xl border border-gray-200 bg-white p-2 shadow-sm">
-        <nav className="flex w-max min-w-full gap-2" aria-label="Team management tabs">
+      {/* ── Tab Navigation ── underline tabs + sliding ink indicator */}
+      <Reveal className="overflow-x-auto border-b border-line">
+        <nav className="flex w-max min-w-full gap-1" aria-label="Team management tabs">
           {[
             { key: 'members', label: 'Members', count: members.length },
             { key: 'invitations', label: 'Invitations', count: invitations.length },
@@ -399,33 +395,37 @@ export default function TeamPage() {
             <button
               key={key}
               onClick={() => setActiveTab(key)}
-              className={`inline-flex items-center rounded-xl border px-3 py-2 text-sm font-medium whitespace-nowrap transition-colors
-                ${activeTab === key
-                  ? 'border-emerald-200 bg-emerald-50 text-emerald-700 shadow-sm'
-                  : 'border-transparent text-gray-500 hover:border-gray-200 hover:bg-gray-50 hover:text-gray-700'
-                }`}
+              className={`relative inline-flex items-center px-3 pb-3 pt-2 text-sm font-medium whitespace-nowrap transition-colors
+                ${activeTab === key ? 'text-ink' : 'text-dim hover:text-ink'}`}
             >
               {label}
               {count != null && (
                 <span className={`ml-1.5 rounded-full px-1.5 py-0.5 text-xs
-                  ${activeTab === key ? 'bg-white text-emerald-700' : 'bg-gray-100 text-gray-500'}`}>
+                  ${activeTab === key ? 'bg-ink text-paper' : 'bg-surface-hover text-dim'}`}>
                   {count}
                 </span>
+              )}
+              {activeTab === key && (
+                <motion.span
+                  layoutId="team-tab-underline"
+                  className="absolute inset-x-0 -bottom-px h-[2px] bg-ink"
+                  transition={{ duration: 0.25, ease: [0.22, 0.61, 0.36, 1] }}
+                />
               )}
             </button>
           ))}
         </nav>
-      </div>
+      </Reveal>
 
       {/* ── Tab Content ── */}
 
       {/* Members Tab */}
       {activeTab === 'members' && (
-        <div className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
-          <div className="border-b border-gray-200 px-4 py-4 sm:px-6 flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
+        <Reveal className="overflow-hidden rounded-md border border-line bg-surface">
+          <div className="border-b border-line px-4 py-4 sm:px-6 flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
             <div>
-              <h2 className="text-lg font-medium text-gray-900">Team Members</h2>
-              <p className="text-xs text-gray-500 mt-1">
+              <h2 className="text-lg font-medium text-ink">Team Members</h2>
+              <p className="text-xs text-dim mt-1">
                 {filteredMembers.length} of {members.length} member{members.length !== 1 ? 's' : ''}
               </p>
             </div>
@@ -437,9 +437,9 @@ export default function TeamPage() {
                   value={memberSearch}
                   onChange={(e) => setMemberSearch(e.target.value)}
                   placeholder="Search by email or role"
-                  className="h-10 w-full rounded-xl border border-gray-300 bg-white pl-9 pr-3 text-sm text-gray-700 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-100 sm:min-w-[220px] sm:rounded-lg sm:h-9"
+                  className="h-10 w-full rounded-md border border-line bg-surface pl-9 pr-3 text-sm text-ink focus:border-line focus:outline-none focus:ring-2 focus:ring-ink sm:min-w-[220px] sm:rounded-lg sm:h-9"
                 />
-                <svg className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4  text-dim" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="m21 21-4.35-4.35m1.85-5.65a7.5 7.5 0 1 1-15 0 7.5 7.5 0 0 1 15 0Z" />
                 </svg>
               </div>
@@ -447,7 +447,7 @@ export default function TeamPage() {
               <select
                 value={memberStatusFilter}
                 onChange={(e) => setMemberStatusFilter(e.target.value)}
-                className="h-10 rounded-xl border border-gray-300 bg-white px-3 text-sm text-gray-700 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-100 sm:h-9 sm:rounded-lg"
+                className="h-10 rounded-md border border-line bg-surface px-3 text-sm text-ink focus:border-line focus:outline-none focus:ring-2 focus:ring-ink sm:h-9 sm:rounded-lg"
               >
                 <option value="all">All statuses</option>
                 <option value="active">Active</option>
@@ -457,7 +457,7 @@ export default function TeamPage() {
 
               <button
                 onClick={fetchMembers}
-                className="h-10 rounded-xl border border-emerald-200 bg-emerald-50 px-3 text-xs font-semibold uppercase tracking-wide text-emerald-700 transition-colors hover:bg-emerald-100 sm:h-9 sm:rounded-lg"
+                className="h-10 rounded-md border border-line bg-surface-hover px-3 text-xs font-semibold uppercase tracking-wide text-ink transition-colors hover:bg-surface-hover sm:h-9 sm:rounded-lg"
               >
                 Refresh
               </button>
@@ -466,27 +466,27 @@ export default function TeamPage() {
 
           {membersLoading ? (
             <div className="p-8 text-center">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-teal-500 mx-auto mb-3" />
-              <p className="text-sm text-gray-500">Loading members...</p>
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-line mx-auto mb-3" />
+              <p className="text-sm text-dim">Loading members...</p>
             </div>
           ) : membersError ? (
             <div className="p-8 text-center">
-              <p className="text-sm text-red-600 mb-2">{membersError}</p>
-              <button onClick={fetchMembers} className="text-xs text-emerald-700 hover:underline">Try again</button>
+              <p className="text-sm text-danger mb-2">{membersError}</p>
+              <button onClick={fetchMembers} className="text-xs text-ink hover:underline">Try again</button>
             </div>
         ) : members.length === 0 ? (
-          <div className="p-8 text-center text-sm text-gray-500">
+          <div className="p-8 text-center text-sm text-dim">
             No members found. Invite someone to get started.
           </div>
         ) : filteredMembers.length === 0 ? (
           <div className="p-10 text-center">
-            <p className="text-sm font-medium text-gray-700">No members match your current filters.</p>
+            <p className="text-sm font-medium text-ink">No members match your current filters.</p>
             <button
               onClick={() => {
                 setMemberSearch('');
                 setMemberStatusFilter('all');
               }}
-              className="mt-2 text-xs font-medium text-emerald-700 hover:text-emerald-800"
+              className="mt-2 text-xs font-medium text-ink hover:text-ink"
             >
               Clear search and filters
             </button>
@@ -515,7 +515,7 @@ export default function TeamPage() {
           </div>
           <div className="hidden overflow-x-auto md:block">
             <table className="w-full min-w-[1080px] text-sm">
-              <thead className="sticky top-0 z-10 bg-gray-50 text-gray-500 text-[11px] uppercase">
+              <thead className="sticky top-0 z-10 bg-canvas text-dim text-[11px] uppercase">
                 <tr>
                   <th className="w-[30%] px-4 py-3 text-left font-medium lg:px-5">Member</th>
                   <th className="w-[15%] px-4 py-3 text-left font-medium lg:px-5">Role</th>
@@ -525,7 +525,7 @@ export default function TeamPage() {
                   <th className="w-[10%] px-4 py-3 text-right font-medium lg:px-5">Manage</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-100">
+              <tbody className="divide-y divide-line">
                 {filteredMembers.map((member, index) => (
                   <MemberRow
                     key={member.userId}
@@ -550,23 +550,23 @@ export default function TeamPage() {
           </div>
           </>
         )}
-      </div>
+      </Reveal>
       )}
 
       {/* Invitations Tab */}
       {activeTab === 'invitations' && (
         <PermissionGate module="user_management" action="view">
-          <div className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
-            <div className="border-b border-gray-200 px-4 py-4 sm:px-6">
-              <h2 className="text-lg font-medium text-gray-900">Pending Invitations</h2>
-              <p className="text-xs text-gray-500 mt-1">
+          <Reveal className="overflow-hidden rounded-md border border-line bg-surface">
+            <div className="border-b border-line px-4 py-4 sm:px-6">
+              <h2 className="text-lg font-medium text-ink">Pending Invitations</h2>
+              <p className="text-xs text-dim mt-1">
                 {invitations.length} pending
               </p>
             </div>
             {invitationsLoading ? (
-              <div className="p-6 text-center text-sm text-gray-500">Loading...</div>
+              <div className="p-6 text-center text-sm text-dim">Loading...</div>
             ) : invitations.length === 0 ? (
-              <div className="p-6 text-center text-sm text-gray-500">No pending invitations</div>
+              <div className="p-6 text-center text-sm text-dim">No pending invitations</div>
             ) : (
               <>
               <div className="space-y-3 p-4 sm:p-6 md:hidden">
@@ -580,7 +580,7 @@ export default function TeamPage() {
               </div>
               <div className="hidden overflow-x-auto md:block">
                 <table className="w-full text-sm">
-                  <thead className="bg-gray-50 text-gray-500 text-xs uppercase">
+                  <thead className="bg-canvas text-dim text-xs uppercase">
                     <tr>
                       <th className="px-6 py-3 text-left font-medium">Email</th>
                       <th className="px-6 py-3 text-left font-medium">Role</th>
@@ -590,28 +590,28 @@ export default function TeamPage() {
                       <th className="px-6 py-3 text-right font-medium">Action</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-gray-100">
+                  <tbody className="divide-y divide-line">
                     {invitations.map((inv) => (
-                      <tr key={inv.inviteId} className="hover:bg-gray-50">
-                        <td className="px-6 py-3 text-gray-900">{inv.email}</td>
+                      <tr key={inv.inviteId} className="hover:bg-canvas">
+                        <td className="px-6 py-3 text-ink">{inv.email}</td>
                         <td className="px-6 py-3"><RoleBadge roleId={inv.roleId} roleName={inv.roleName} size="sm" /></td>
                         <td className="px-6 py-3">
-                          <span className="text-gray-900 text-xs">{timeAgo(inv.createdAt)}</span>
-                          <span className="block text-gray-400 text-[10px]">{formatDate(inv.createdAt)}</span>
+                          <span className="text-ink text-xs">{timeAgo(inv.createdAt)}</span>
+                          <span className="block text-dim text-[10px]">{formatDate(inv.createdAt)}</span>
                         </td>
                         <td className="px-6 py-3">
                           {inv.isExpired ? (
-                            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium border bg-red-50 text-red-700 border-red-200">Expired</span>
+                            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium border bg-danger/10 text-danger border-danger/20">Expired</span>
                           ) : (
-                            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium border bg-amber-50 text-amber-700 border-amber-200">Pending</span>
+                            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium border bg-warning/10 text-warning border-warning/20">Pending</span>
                           )}
                         </td>
-                        <td className="px-6 py-3 text-gray-500 text-xs">{formatDate(inv.expiresAt)}</td>
+                        <td className="px-6 py-3 text-dim text-xs">{formatDate(inv.expiresAt)}</td>
                         <td className="px-6 py-3 text-right">
                           <PermissionGate module="user_management" action="edit">
                             <button
                               onClick={() => handleCancelInvitation(inv.inviteId)}
-                              className="text-xs text-red-600 hover:text-red-700 hover:underline font-medium"
+                              className="text-xs text-danger hover:text-danger hover:underline font-medium"
                             >
                               Cancel
                             </button>
@@ -624,38 +624,40 @@ export default function TeamPage() {
               </div>
               </>
             )}
-          </div>
+          </Reveal>
         </PermissionGate>
       )}
 
       {/* Roles Tab */}
       {activeTab === 'roles' && (
-        <div className="overflow-hidden rounded-xl border border-gray-200 bg-white p-4 shadow-sm sm:p-6">
+        <Reveal className="overflow-hidden rounded-md border border-line bg-surface p-4 sm:p-6">
           <RolesTab
             roles={roles}
             meta={rolesMeta}
             onRefresh={fetchRoles}
             showFeedback={showFeedback}
           />
-        </div>
+        </Reveal>
       )}
 
       {/* My Permissions Tab */}
       {activeTab === 'matrix' && (
-        <div className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
-          <div className="border-b border-gray-200 px-4 py-4 sm:px-6">
-            <h2 className="text-lg font-medium text-gray-900">Permission Matrix</h2>
-            <p className="text-xs text-gray-500 mt-1">
+        <Reveal className="overflow-hidden rounded-md border border-line bg-surface">
+          <div className="border-b border-line px-4 py-4 sm:px-6">
+            <h2 className="text-lg font-medium text-ink">Permission Matrix</h2>
+            <p className="text-xs text-dim mt-1">
               Your current access levels across all modules
             </p>
           </div>
           <EditablePermissionMatrix permissions={permissions} editable={false} />
-        </div>
+        </Reveal>
       )}
 
       {/* Activity Log Tab */}
       {activeTab === 'activity' && (
-        <ActivityLogTab members={members} />
+        <Reveal>
+          <ActivityLogTab members={members} />
+        </Reveal>
       )}
 
       {/* ── Invite Modal ── */}
@@ -739,20 +741,18 @@ function MemberRow({
   const isSelf = member.userId === currentUserId;
   const isInvited = member.status === 'invited';
   const memberInitial = String(member?.email || '?').charAt(0).toUpperCase();
-  const isMutedRow = rowIndex % 2 === 1;
-
   return (
-    <tr className={`hover:bg-gray-50/90 transition-colors ${isMutedRow ? 'bg-gray-50/35' : ''}`}>
+    <RevealFlat as="tr" delay={rowIndex * 40} className="hover:bg-canvas transition-colors">
       <td className="px-4 py-3 lg:px-5">
         <div className="flex items-center gap-3">
-          <span className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-teal-200 bg-teal-50 text-xs font-semibold text-teal-700">
+          <span className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-line bg-surface-hover text-xs font-semibold text-ink">
             {memberInitial}
           </span>
           <div>
-            <p className="text-sm font-medium text-gray-900">{member.email}</p>
+            <p className="text-sm font-medium text-ink">{member.email}</p>
             <div className="mt-0.5 flex items-center gap-1.5">
-              {isSelf && <span className="text-[10px] bg-teal-50 text-teal-700 px-1.5 py-0.5 rounded font-medium">You</span>}
-              {isInvited && <span className="text-[10px] bg-amber-50 text-amber-700 px-1.5 py-0.5 rounded font-medium">Pending acceptance</span>}
+              {isSelf && <span className="text-[10px] bg-surface-hover text-ink px-1.5 py-0.5 rounded font-medium">You</span>}
+              {isInvited && <span className="text-[10px] bg-warning/10 text-warning px-1.5 py-0.5 rounded font-medium">Pending acceptance</span>}
             </div>
           </div>
         </div>
@@ -763,7 +763,7 @@ function MemberRow({
             <select
               value={newRoleId}
               onChange={(e) => setNewRoleId(e.target.value)}
-              className="text-xs border border-gray-300 rounded px-2 py-1"
+              className="text-xs border border-line rounded px-2 py-1"
             >
               <option value="">Select role...</option>
               {assignableRoles.map((r) => (
@@ -772,13 +772,13 @@ function MemberRow({
             </select>
             <button
               onClick={() => onRoleChange(member.userId)}
-              className="rounded-md border border-teal-200 bg-teal-50 px-2 py-1 text-xs font-medium text-teal-700 hover:bg-teal-100"
+              className="rounded-md border border-line bg-surface-hover px-2 py-1 text-xs font-medium text-ink hover:bg-surface-hover"
             >
               Save
             </button>
             <button
               onClick={() => setChangingRoleFor(null)}
-              className="rounded-md border border-gray-200 bg-white px-2 py-1 text-xs text-gray-500 hover:bg-gray-50"
+              className="rounded-md border border-line bg-surface px-2 py-1 text-xs text-dim hover:bg-canvas"
             >
               Cancel
             </button>
@@ -799,13 +799,13 @@ function MemberRow({
       <td className="px-4 py-3 text-xs lg:px-5">
         {isInvited ? (
           <>
-            <span className="text-amber-600">{timeAgo(member.joinedAt || member.createdAt)}</span>
-            <span className="block text-gray-400 text-[10px]">Invited {formatDate(member.joinedAt || member.createdAt)}</span>
+            <span className="text-warning">{timeAgo(member.joinedAt || member.createdAt)}</span>
+            <span className="block text-dim text-[10px]">Invited {formatDate(member.joinedAt || member.createdAt)}</span>
           </>
         ) : (
           <>
-            <span className="text-gray-600">{timeAgo(member.joinedAt)}</span>
-            <span className="block text-gray-400 text-[10px]">{formatDate(member.joinedAt)}</span>
+            <span className="text-dim">{timeAgo(member.joinedAt)}</span>
+            <span className="block text-dim text-[10px]">{formatDate(member.joinedAt)}</span>
           </>
         )}
       </td>
@@ -823,10 +823,10 @@ function MemberRow({
             onEditScopes={onEditScopes}
           />
         ) : (
-          <span className="text-[11px] text-gray-400">—</span>
+          <span className="text-[11px] text-dim">—</span>
         )}
       </td>
-    </tr>
+    </RevealFlat>
   );
 }
 
@@ -850,17 +850,17 @@ function MemberCard({
   const memberInitial = String(member?.email || '?').charAt(0).toUpperCase();
 
   return (
-    <article className="rounded-2xl border border-gray-200 bg-gradient-to-br from-white via-white to-gray-50 p-4 shadow-sm">
+    <article className="rounded-lg border border-line bg-surface-hover p-4 ">
       <div className="flex items-start justify-between gap-3">
         <div className="flex min-w-0 items-start gap-3">
-          <span className="inline-flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full border border-teal-200 bg-teal-50 text-sm font-semibold text-teal-700">
+          <span className="inline-flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full border border-line bg-surface-hover text-sm font-semibold text-ink">
             {memberInitial}
           </span>
           <div className="min-w-0">
-            <p className="truncate text-sm font-semibold text-gray-900">{member.email}</p>
+            <p className="truncate text-sm font-semibold text-ink">{member.email}</p>
             <div className="mt-1 flex flex-wrap items-center gap-1.5">
-              {isSelf && <span className="rounded bg-teal-50 px-1.5 py-0.5 text-[10px] font-medium text-teal-700">You</span>}
-              {isInvited && <span className="rounded bg-amber-50 px-1.5 py-0.5 text-[10px] font-medium text-amber-700">Pending acceptance</span>}
+              {isSelf && <span className="rounded bg-surface-hover px-1.5 py-0.5 text-[10px] font-medium text-ink">You</span>}
+              {isInvited && <span className="rounded bg-warning/10 px-1.5 py-0.5 text-[10px] font-medium text-warning">Pending acceptance</span>}
               <StatusBadge status={member.status} />
             </div>
           </div>
@@ -882,15 +882,15 @@ function MemberCard({
       </div>
 
       <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
-        <div className="rounded-xl border border-gray-100 bg-white p-3">
-          <p className="text-[11px] uppercase tracking-[0.16em] text-gray-500">Role</p>
+        <div className="rounded-md border border-line bg-surface p-3">
+          <p className="text-[11px] uppercase tracking-[0.16em] text-dim">Role</p>
           <div className="mt-2">
             {changingRoleFor === member.userId ? (
               <div className="space-y-2">
                 <select
                   value={newRoleId}
                   onChange={(e) => setNewRoleId(e.target.value)}
-                  className="h-10 w-full rounded-xl border border-gray-300 px-3 text-sm text-gray-700 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-100"
+                  className="h-10 w-full rounded-md border border-line px-3 text-sm text-ink focus:border-line focus:outline-none focus:ring-2 focus:ring-ink"
                 >
                   <option value="">Select role...</option>
                   {assignableRoles.map((role) => (
@@ -900,13 +900,13 @@ function MemberCard({
                 <div className="grid grid-cols-2 gap-2">
                   <button
                     onClick={() => onRoleChange(member.userId)}
-                    className="rounded-xl border border-teal-200 bg-teal-50 px-3 py-2 text-xs font-semibold text-teal-700 hover:bg-teal-100"
+                    className="rounded-md border border-line bg-surface-hover px-3 py-2 text-xs font-semibold text-ink hover:bg-surface-hover"
                   >
                     Save
                   </button>
                   <button
                     onClick={() => setChangingRoleFor(null)}
-                    className="rounded-xl border border-gray-200 bg-white px-3 py-2 text-xs font-medium text-gray-500 hover:bg-gray-50"
+                    className="rounded-md border border-line bg-surface px-3 py-2 text-xs font-medium text-dim hover:bg-canvas"
                   >
                     Cancel
                   </button>
@@ -918,26 +918,26 @@ function MemberCard({
           </div>
         </div>
 
-        <div className="rounded-xl border border-gray-100 bg-white p-3">
-          <p className="text-[11px] uppercase tracking-[0.16em] text-gray-500">Joined</p>
+        <div className="rounded-md border border-line bg-surface p-3">
+          <p className="text-[11px] uppercase tracking-[0.16em] text-dim">Joined</p>
           <div className="mt-2 text-sm">
             {isInvited ? (
               <>
-                <span className="font-medium text-amber-600">{timeAgo(member.joinedAt || member.createdAt)}</span>
-                <span className="mt-1 block text-[11px] text-gray-400">Invited {formatDate(member.joinedAt || member.createdAt)}</span>
+                <span className="font-medium text-warning">{timeAgo(member.joinedAt || member.createdAt)}</span>
+                <span className="mt-1 block text-[11px] text-dim">Invited {formatDate(member.joinedAt || member.createdAt)}</span>
               </>
             ) : (
               <>
-                <span className="font-medium text-gray-700">{timeAgo(member.joinedAt)}</span>
-                <span className="mt-1 block text-[11px] text-gray-400">{formatDate(member.joinedAt)}</span>
+                <span className="font-medium text-ink">{timeAgo(member.joinedAt)}</span>
+                <span className="mt-1 block text-[11px] text-dim">{formatDate(member.joinedAt)}</span>
               </>
             )}
           </div>
         </div>
       </div>
 
-      <div className="mt-3 rounded-xl border border-gray-100 bg-white p-3">
-        <p className="text-[11px] uppercase tracking-[0.16em] text-gray-500">Access scope</p>
+      <div className="mt-3 rounded-md border border-line bg-surface p-3">
+        <p className="text-[11px] uppercase tracking-[0.16em] text-dim">Access scope</p>
         <div className="mt-2">
           <ScopeSummary
             projectAccess={member.projectAccess}
@@ -951,10 +951,10 @@ function MemberCard({
 
 function InvitationCard({ invitation, onCancel }) {
   return (
-    <article className="rounded-2xl border border-gray-200 bg-gradient-to-br from-white via-white to-gray-50 p-4 shadow-sm">
+    <article className="rounded-lg border border-line bg-surface-hover p-4 ">
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
-          <p className="truncate text-sm font-semibold text-gray-900">{invitation.email}</p>
+          <p className="truncate text-sm font-semibold text-ink">{invitation.email}</p>
           <div className="mt-1 flex flex-wrap items-center gap-2">
             <RoleBadge roleId={invitation.roleId} roleName={invitation.roleName} size="sm" />
             <StatusBadge status="invited" />
@@ -963,21 +963,21 @@ function InvitationCard({ invitation, onCancel }) {
         <button
           type="button"
           onClick={() => onCancel(invitation.inviteId)}
-          className="rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-xs font-semibold text-red-700 hover:bg-red-100"
+          className="rounded-md border border-danger/20 bg-danger/10 px-3 py-2 text-xs font-semibold text-danger hover:bg-danger/10"
         >
           Cancel
         </button>
       </div>
 
       <div className="mt-4 grid grid-cols-2 gap-3">
-        <div className="rounded-xl border border-gray-100 bg-white p-3">
-          <p className="text-[11px] uppercase tracking-[0.16em] text-gray-500">Sent</p>
-          <p className="mt-2 text-sm font-medium text-gray-700">{timeAgo(invitation.createdAt)}</p>
-          <p className="mt-1 text-[11px] text-gray-400">{formatDate(invitation.createdAt)}</p>
+        <div className="rounded-md border border-line bg-surface p-3">
+          <p className="text-[11px] uppercase tracking-[0.16em] text-dim">Sent</p>
+          <p className="mt-2 text-sm font-medium text-ink">{timeAgo(invitation.createdAt)}</p>
+          <p className="mt-1 text-[11px] text-dim">{formatDate(invitation.createdAt)}</p>
         </div>
-        <div className="rounded-xl border border-gray-100 bg-white p-3">
-          <p className="text-[11px] uppercase tracking-[0.16em] text-gray-500">Expires</p>
-          <p className="mt-2 text-sm font-medium text-gray-700">{formatDate(invitation.expiresAt)}</p>
+        <div className="rounded-md border border-line bg-surface p-3">
+          <p className="text-[11px] uppercase tracking-[0.16em] text-dim">Expires</p>
+          <p className="mt-2 text-sm font-medium text-ink">{formatDate(invitation.expiresAt)}</p>
         </div>
       </div>
     </article>
@@ -1001,7 +1001,7 @@ function MemberActionsMenu({
   const canManageMembers = can('user_management', 'manage');
 
   if (!canEditMembers && !canManageMembers) {
-    return <span className="text-[11px] text-gray-400">No actions</span>;
+    return <span className="text-[11px] text-dim">No actions</span>;
   }
 
   const closeMenu = (event) => {
@@ -1014,20 +1014,20 @@ function MemberActionsMenu({
     closeMenu(event);
   };
 
-  const actionClass = 'block w-full rounded-md px-3 py-2 text-left text-xs font-medium text-gray-700 transition-colors hover:bg-gray-50';
+  const actionClass = 'block w-full rounded-md px-3 py-2 text-left text-xs font-medium text-ink transition-colors hover:bg-canvas';
 
   return (
     <details className="relative inline-block text-left">
-      <summary className="list-none rounded-lg border border-gray-300 bg-white px-2.5 py-1.5 text-xs font-semibold text-gray-700 shadow-sm transition-colors hover:bg-gray-50 cursor-pointer [&::-webkit-details-marker]:hidden">
+      <summary className="list-none rounded-lg border border-line bg-surface px-2.5 py-1.5 text-xs font-semibold text-ink  transition-colors hover:bg-canvas cursor-pointer [&::-webkit-details-marker]:hidden">
         <span className="inline-flex items-center gap-1">
           Manage
-          <svg className="h-3.5 w-3.5 text-gray-500" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+          <svg className="h-3.5 w-3.5 text-dim" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
             <path fillRule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.51a.75.75 0 01-1.08 0l-4.25-4.51a.75.75 0 01.02-1.06z" clipRule="evenodd" />
           </svg>
         </span>
       </summary>
 
-      <div className="absolute right-0 z-20 mt-1.5 w-44 rounded-xl border border-gray-200 bg-white p-1 shadow-xl">
+      <div className="absolute right-0 z-20 mt-1.5 w-44 rounded-md border border-line bg-surface p-1 shadow-xl">
         {canEditMembers && (
           <button
             type="button"
@@ -1083,7 +1083,7 @@ function MemberActionsMenu({
           <button
             type="button"
             onClick={(event) => runAction(event, () => onStartRemove(member.userId, member.email))}
-            className="block w-full rounded-md px-3 py-2 text-left text-xs font-medium text-red-700 transition-colors hover:bg-red-50"
+            className="block w-full rounded-md px-3 py-2 text-left text-xs font-medium text-danger transition-colors hover:bg-danger/10"
           >
             Remove member
           </button>
@@ -1111,10 +1111,10 @@ function ScopeSummary({ projectAccess, workspaceAccess }) {
 
   return (
     <div className="flex flex-col gap-1">
-      <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] border bg-blue-50 text-blue-700 border-blue-200 w-fit">
+      <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] border bg-info/10 text-info border-info/20 w-fit">
         {projectLabel}
       </span>
-      <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] border bg-indigo-50 text-indigo-700 border-indigo-200 w-fit">
+      <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] border bg-info/10 text-info border-info/20 w-fit">
         {workspaceLabel}
       </span>
     </div>
@@ -1151,18 +1151,18 @@ function AccessScopeModal({
 
   return (
     <div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center p-4">
-      <div className="bg-white rounded-xl w-full max-w-3xl shadow-xl border border-gray-200">
-        <div className="px-6 py-4 border-b border-gray-200">
-          <h3 className="text-lg font-semibold text-gray-900">Edit Access Scope</h3>
-          <p className="text-xs text-gray-500 mt-1">{member.email}</p>
+      <div className="bg-surface rounded-md w-full max-w-3xl shadow-xl border border-line">
+        <div className="px-6 py-4 border-b border-line">
+          <h3 className="text-lg font-semibold text-ink">Edit Access Scope</h3>
+          <p className="text-xs text-dim mt-1">{member.email}</p>
         </div>
 
         <div className="px-6 py-5 grid grid-cols-1 md:grid-cols-2 gap-6 max-h-[60vh] overflow-y-auto">
           <div>
             <div className="flex items-center justify-between mb-2">
-              <h4 className="text-sm font-medium text-gray-900">Projects</h4>
+              <h4 className="text-sm font-medium text-ink">Projects</h4>
               <button
-                className={`text-xs px-2 py-1 rounded border ${isAllProjects ? 'bg-blue-100 text-blue-700 border-blue-200' : 'bg-gray-50 text-gray-600 border-gray-200'}`}
+                className={`text-xs px-2 py-1 rounded border ${isAllProjects ? 'bg-info/10 text-info border-info/20' : 'bg-canvas text-dim border-line'}`}
                 onClick={() => toggleValue(selectedProjectIds, '*', setSelectedProjectIds)}
                 type="button"
               >
@@ -1170,16 +1170,16 @@ function AccessScopeModal({
               </button>
             </div>
 
-            <div className="space-y-2 border border-gray-200 rounded-lg p-3">
+            <div className="space-y-2 border border-line rounded-lg p-3">
               {isLoading ? (
-                <p className="text-xs text-gray-500">Loading projects...</p>
+                <p className="text-xs text-dim">Loading projects...</p>
               ) : projects.length === 0 ? (
-                <p className="text-xs text-gray-500">No projects found.</p>
+                <p className="text-xs text-dim">No projects found.</p>
               ) : (
                 projects.map((project) => {
                   const id = project.projectId || project.id;
                   return (
-                    <label key={id} className="flex items-start gap-2 text-sm text-gray-700">
+                    <label key={id} className="flex items-start gap-2 text-sm text-ink">
                       <input
                         type="checkbox"
                         disabled={isAllProjects}
@@ -1188,8 +1188,8 @@ function AccessScopeModal({
                         className="mt-0.5"
                       />
                       <span>
-                        <span className="font-medium text-gray-900">{project.name || project.projectName || id}</span>
-                        <span className="block text-[11px] text-gray-500">{id}</span>
+                        <span className="font-medium text-ink">{project.name || project.projectName || id}</span>
+                        <span className="block text-[11px] text-dim">{id}</span>
                       </span>
                     </label>
                   );
@@ -1200,9 +1200,9 @@ function AccessScopeModal({
 
           <div>
             <div className="flex items-center justify-between mb-2">
-              <h4 className="text-sm font-medium text-gray-900">Workspaces</h4>
+              <h4 className="text-sm font-medium text-ink">Workspaces</h4>
               <button
-                className={`text-xs px-2 py-1 rounded border ${isAllWorkspaces ? 'bg-indigo-100 text-indigo-700 border-indigo-200' : 'bg-gray-50 text-gray-600 border-gray-200'}`}
+                className={`text-xs px-2 py-1 rounded border ${isAllWorkspaces ? 'bg-info/10 text-info border-info/20' : 'bg-canvas text-dim border-line'}`}
                 onClick={() => toggleValue(selectedWorkspaceIds, '*', setSelectedWorkspaceIds)}
                 type="button"
               >
@@ -1210,16 +1210,16 @@ function AccessScopeModal({
               </button>
             </div>
 
-            <div className="space-y-2 border border-gray-200 rounded-lg p-3">
+            <div className="space-y-2 border border-line rounded-lg p-3">
               {isLoading ? (
-                <p className="text-xs text-gray-500">Loading workspaces...</p>
+                <p className="text-xs text-dim">Loading workspaces...</p>
               ) : workspaces.length === 0 ? (
-                <p className="text-xs text-gray-500">No workspaces found.</p>
+                <p className="text-xs text-dim">No workspaces found.</p>
               ) : (
                 workspaces.map((workspace) => {
                   const id = workspace.workspaceId || workspace.id;
                   return (
-                    <label key={id} className="flex items-start gap-2 text-sm text-gray-700">
+                    <label key={id} className="flex items-start gap-2 text-sm text-ink">
                       <input
                         type="checkbox"
                         disabled={isAllWorkspaces}
@@ -1228,8 +1228,8 @@ function AccessScopeModal({
                         className="mt-0.5"
                       />
                       <span>
-                        <span className="font-medium text-gray-900">{workspace.title || workspace.name || id}</span>
-                        <span className="block text-[11px] text-gray-500">{id}</span>
+                        <span className="font-medium text-ink">{workspace.title || workspace.name || id}</span>
+                        <span className="block text-[11px] text-dim">{id}</span>
                       </span>
                     </label>
                   );
@@ -1239,18 +1239,18 @@ function AccessScopeModal({
           </div>
         </div>
 
-        <div className="px-6 py-4 border-t border-gray-200 flex items-center justify-end gap-2">
+        <div className="px-6 py-4 border-t border-line flex items-center justify-end gap-2">
           <button
             type="button"
             onClick={onClose}
-            className="px-4 py-2 rounded-lg border border-gray-300 text-sm text-gray-600 hover:bg-gray-50"
+            className="px-4 py-2 rounded-lg border border-line text-sm text-dim hover:bg-canvas"
           >
             Cancel
           </button>
           <button
             type="button"
             onClick={onSave}
-            className="px-4 py-2 rounded-lg bg-teal-600 text-white text-sm hover:bg-teal-700"
+            className="px-4 py-2 rounded-lg bg-cta text-cta-foreground text-sm hover:bg-cta"
           >
             Save Scope
           </button>
@@ -1264,16 +1264,16 @@ function AccessScopeModal({
 
 function StatTile({ label, value, tone = 'teal' }) {
   const tones = {
-    teal: 'border-teal-200 bg-teal-50 text-teal-700',
-    green: 'border-green-200 bg-green-50 text-green-700',
-    amber: 'border-amber-200 bg-amber-50 text-amber-700',
-    red: 'border-red-200 bg-red-50 text-red-700',
+    teal: 'text-ink',
+    green: 'text-success',
+    amber: 'text-warning',
+    red: 'text-danger',
   };
 
   return (
-    <div className={`rounded-xl border px-4 py-3 shadow-sm ${tones[tone] || tones.teal}`}>
-      <p className="text-[11px] uppercase tracking-wider">{label}</p>
-      <p className="mt-1 text-2xl font-semibold leading-none">{value}</p>
+    <div className="bg-surface px-4 py-4">
+      <p className="text-[11px] uppercase tracking-[0.18em] text-dim">{label}</p>
+      <p className={`mt-2 text-3xl font-semibold leading-none tracking-tight ${tones[tone] || tones.teal}`}>{value}</p>
     </div>
   );
 }
@@ -1282,8 +1282,8 @@ function StatTile({ label, value, tone = 'teal' }) {
 function InfoBlock({ label, value }) {
   return (
     <div>
-      <p className="text-xs text-gray-500 uppercase tracking-wider mb-1.5">{label}</p>
-      <p className="text-sm font-medium text-gray-900">{value}</p>
+      <p className="text-xs text-dim uppercase tracking-wider mb-1.5">{label}</p>
+      <p className="text-sm font-medium text-ink">{value}</p>
     </div>
   );
 }
@@ -1291,9 +1291,9 @@ function InfoBlock({ label, value }) {
 /** Member status badge */
 function StatusBadge({ status }) {
   const styles = {
-    active:    'bg-green-50 text-green-700 border-green-200',
-    invited:   'bg-amber-50 text-amber-700 border-amber-200',
-    suspended: 'bg-red-50 text-red-700 border-red-200',
+    active:    'bg-success/10 text-success border-success/20',
+    invited:   'bg-warning/10 text-warning border-warning/20',
+    suspended: 'bg-danger/10 text-danger border-danger/20',
   };
   return (
     <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium border ${styles[status] || styles.active}`}>
@@ -1305,14 +1305,14 @@ function StatusBadge({ status }) {
 /** Phase 1 indicator banner */
 function Phase1Banner() {
   return (
-    <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 flex items-start gap-3">
-      <svg className="w-5 h-5 text-amber-500 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <div className="bg-warning/10 border border-warning/20 rounded-lg p-4 flex items-start gap-3">
+      <svg className="w-5 h-5 text-warning flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
           d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
       </svg>
       <div>
-        <p className="text-sm font-medium text-amber-800">Phase 1 Mode</p>
-        <p className="text-xs text-amber-700 mt-0.5">
+        <p className="text-sm font-medium text-warning">Phase 1 Mode</p>
+        <p className="text-xs text-warning mt-0.5">
           RBAC is running with permissive defaults. All users currently have Super Admin access.
           Role restrictions will activate when enforcement is enabled.
         </p>
@@ -1323,7 +1323,7 @@ function Phase1Banner() {
 
 /** Feedback toast banner */
 function FeedbackBanner({ message, type }) {
-  const bg = type === 'error' ? 'bg-red-50 border-red-200 text-red-700' : 'bg-green-50 border-green-200 text-green-700';
+  const bg = type === 'error' ? 'bg-danger/10 border-danger/20 text-danger' : 'bg-success/10 border-success/20 text-success';
   return (
     <div className={`border rounded-lg p-3 text-sm font-medium ${bg}`}>
       {message}
@@ -1365,8 +1365,8 @@ function TeamPageLoading() {
   return (
     <div className="max-w-6xl mx-auto px-4 sm:px-6 py-6 flex items-center justify-center min-h-[400px]">
       <div className="text-center">
-        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-teal-500 mx-auto mb-4" />
-        <p className="text-sm text-gray-500">Loading permissions...</p>
+        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-line mx-auto mb-4" />
+        <p className="text-sm text-dim">Loading permissions...</p>
       </div>
     </div>
   );

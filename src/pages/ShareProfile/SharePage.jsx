@@ -262,7 +262,7 @@ export default function SharePage() {
   const enabledCount = Object.values(sections).filter(s => s.enabled).length;
 
   return (
-    <div className="min-h-screen bg-gray-50 pt-20">
+    <div className="min-h-screen bg-canvas pt-20">
       <div className="max-w-6xl mx-auto px-4 pb-12">
 
         {/* ===== HEADER ===== */}
@@ -294,7 +294,7 @@ export default function SharePage() {
               <React.Fragment key={s.key}>
                 {i > 0 && (
                   <div className="w-12 h-0.5 mx-1"
-                    style={{ backgroundColor: isDone || isActive ? accentColor : '#D1D5DB' }} />
+                    style={{ backgroundColor: isDone || isActive ? accentColor: 'rgb(var(--surface-hover))' }} />
                 )}
                 <button
                   onClick={() => { if (i <= step) setStep(i); }}
@@ -303,7 +303,7 @@ export default function SharePage() {
                       ? 'text-white shadow-lg'
                       : isDone
                         ? 'text-white bg-opacity-80'
-                        : 'text-gray-500 bg-gray-200'
+                        : 'text-dim bg-surface-hover'
                   }`}
                   style={isActive || isDone ? { backgroundColor: accentColor } : {}}
                 >
@@ -320,8 +320,8 @@ export default function SharePage() {
         {step === 0 && (
           <div>
             <div className="mb-6">
-              <h2 className="text-xl font-bold text-gray-900 mb-1">Choose a Template Design</h2>
-              <p className="text-sm text-gray-500">Select a visual style for your company portfolio. Each template has a unique color scheme and aesthetic.</p>
+              <h2 className="text-xl font-bold text-ink mb-1">Choose a Template Design</h2>
+              <p className="text-sm text-dim">Select a visual style for your company portfolio. Each template has a unique color scheme and aesthetic.</p>
             </div>
             <TemplateSelector
               selectedId={selectedTemplate.id}
@@ -336,8 +336,8 @@ export default function SharePage() {
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             <div className="lg:col-span-2">
               <div className="mb-6">
-                <h2 className="text-xl font-bold text-gray-900 mb-1">Edit Portfolio Content</h2>
-                <p className="text-sm text-gray-500">Customize every section's text. Changes are saved and encoded into your share link.</p>
+                <h2 className="text-xl font-bold text-ink mb-1">Edit Portfolio Content</h2>
+                <p className="text-sm text-dim">Customize every section's text. Changes are saved and encoded into your share link.</p>
               </div>
               <PortfolioEditor
                 content={content}
@@ -349,12 +349,12 @@ export default function SharePage() {
             {/* Right sidebar — live info */}
             <div>
               <div className="sticky top-24 space-y-4">
-                <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-5">
+                <div className="bg-surface rounded-xl  border border-line p-5">
                   <div className="flex items-center gap-2 mb-3">
                     <div className="w-4 h-4 rounded-full" style={{ backgroundColor: accentColor }} />
-                    <p className="text-sm font-bold text-gray-900">{selectedTemplate.name}</p>
+                    <p className="text-sm font-bold text-ink">{selectedTemplate.name}</p>
                   </div>
-                  <p className="text-xs text-gray-500 mb-4">{selectedTemplate.description}</p>
+                  <p className="text-xs text-dim mb-4">{selectedTemplate.description}</p>
                   <button onClick={() => setStep(0)}
                     className="text-xs font-semibold transition-colors" style={{ color: accentColor }}>
                     Change Template
@@ -363,7 +363,7 @@ export default function SharePage() {
 
                 <div className="p-4 rounded-lg border-2" style={{ borderColor: `${accentColor}30`, backgroundColor: `${accentColor}05` }}>
                   <h4 className="font-semibold text-sm mb-2" style={{ color: accentColor }}>Editing Tips</h4>
-                  <ul className="space-y-1.5 text-xs text-gray-600">
+                  <ul className="space-y-1.5 text-xs text-dim">
                     <li>• Edit text in each tab to customize your portfolio</li>
                     <li>• Leave fields blank to use your profile defaults</li>
                     <li>• Add/remove services, values, and segments</li>
@@ -380,28 +380,28 @@ export default function SharePage() {
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             <div className="lg:col-span-2 space-y-6">
               {/* Section Toggles */}
-              <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-                <h2 className="text-lg font-semibold text-gray-900 mb-1 flex items-center gap-2">
+              <div className="bg-surface rounded-xl  border border-line p-6">
+                <h2 className="text-lg font-semibold text-ink mb-1 flex items-center gap-2">
                   <Settings size={18} style={{ color: accentColor }} />
                   Portfolio Sections
                 </h2>
-                <p className="text-sm text-gray-500 mb-4">{enabledCount} of {Object.keys(sections).length} sections enabled</p>
+                <p className="text-sm text-dim mb-4">{enabledCount} of {Object.keys(sections).length} sections enabled</p>
 
                 <div className="space-y-2">
                   {Object.entries(sections).map(([key, section]) => (
                     <div key={key}
                       className={`flex items-center justify-between p-3 rounded-lg border transition-all ${
-                        section.enabled ? 'border-gray-200 bg-white' : 'border-gray-100 bg-gray-50 opacity-60'
+                        section.enabled ? 'border-line bg-surface' : 'border-line bg-canvas opacity-60'
                       }`}>
                       <div>
-                        <p className="font-medium text-gray-900 text-sm">{section.label}</p>
-                        <p className="text-xs text-gray-500">{section.description}</p>
+                        <p className="font-medium text-ink text-sm">{section.label}</p>
+                        <p className="text-xs text-dim">{section.description}</p>
                       </div>
                       <button onClick={() => toggleSection(key)} className="flex-shrink-0">
                         {section.enabled ? (
                           <ToggleRight size={28} style={{ color: accentColor }} />
                         ) : (
-                          <ToggleLeft size={28} className="text-gray-300" />
+                          <ToggleLeft size={28} className="text-dim" />
                         )}
                       </button>
                     </div>
@@ -410,8 +410,8 @@ export default function SharePage() {
               </div>
 
               {/* Share Methods */}
-              <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-                <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+              <div className="bg-surface rounded-xl  border border-line p-6">
+                <h2 className="text-lg font-semibold text-ink mb-4 flex items-center gap-2">
                   <Send size={18} style={{ color: accentColor }} />
                   Share Your Portfolio
                 </h2>
@@ -427,13 +427,13 @@ export default function SharePage() {
                       onClick={() => setShareMethod(m.key)}
                       className={`p-4 rounded-lg border-2 transition-all text-center ${
                         shareMethod === m.key
-                          ? 'border-current bg-gray-50'
-                          : 'border-gray-200 hover:border-gray-300'
+                          ? 'border-current bg-canvas'
+                          : 'border-line hover:border-line'
                       }`}
                       style={shareMethod === m.key ? { borderColor: m.color, color: m.color } : {}}
                     >
-                      <m.icon className={`w-5 h-5 mx-auto mb-1 ${shareMethod === m.key ? '' : 'text-gray-500'}`} />
-                      <p className={`text-xs font-semibold ${shareMethod === m.key ? '' : 'text-gray-700'}`}>{m.label}</p>
+                      <m.icon className={`w-5 h-5 mx-auto mb-1 ${shareMethod === m.key ? '' : 'text-dim'}`} />
+                      <p className={`text-xs font-semibold ${shareMethod === m.key ? '' : 'text-ink'}`}>{m.label}</p>
                     </button>
                   ))}
                 </div>
@@ -441,8 +441,8 @@ export default function SharePage() {
                 {shareMethod === 'link' && (
                   <div>
                     <div className="flex gap-2 mb-4">
-                      <div className="flex-1 bg-gray-100 rounded-lg p-3 overflow-x-auto">
-                        <code className="text-xs text-gray-800 break-all font-mono">{shareLink}</code>
+                      <div className="flex-1 bg-surface-hover rounded-lg p-3 overflow-x-auto">
+                        <code className="text-xs text-ink break-all font-mono">{shareLink}</code>
                       </div>
                       <button
                         onClick={handleCopyLink}
@@ -458,7 +458,7 @@ export default function SharePage() {
                 {shareMethod === 'email' && (
                   <button
                     onClick={handleEmailShare}
-                    className="w-full px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium flex items-center justify-center gap-2 transition-colors"
+                    className="w-full px-6 py-3 bg-info text-white rounded-lg hover:bg-info font-medium flex items-center justify-center gap-2 transition-colors"
                   >
                     <Mail size={18} /> Open Email Client
                   </button>
@@ -467,7 +467,7 @@ export default function SharePage() {
                 {shareMethod === 'whatsapp' && (
                   <button
                     onClick={handleWhatsAppShare}
-                    className="w-full px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 font-medium flex items-center justify-center gap-2 transition-colors"
+                    className="w-full px-6 py-3 bg-success text-white rounded-lg hover:bg-success font-medium flex items-center justify-center gap-2 transition-colors"
                   >
                     <MessageSquare size={18} /> Share on WhatsApp
                   </button>
@@ -479,9 +479,9 @@ export default function SharePage() {
             <div>
               <div className="sticky top-24 space-y-4">
                 {/* Mini Portfolio Preview */}
-                <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-                  <div className="p-4 border-b border-gray-200 flex items-center justify-between">
-                    <h3 className="font-semibold text-gray-900 text-sm">Portfolio Preview</h3>
+                <div className="bg-surface rounded-xl  border border-line overflow-hidden">
+                  <div className="p-4 border-b border-line flex items-center justify-between">
+                    <h3 className="font-semibold text-ink text-sm">Portfolio Preview</h3>
                     <button onClick={handlePreview} className="text-xs font-semibold flex items-center gap-1" style={{ color: accentColor }}>
                       <Eye size={12} /> Open Full Preview
                     </button>
@@ -498,35 +498,35 @@ export default function SharePage() {
                             {(content.companyName || 'C').charAt(0)}
                           </div>
                         )}
-                        <span className="text-xs font-bold text-gray-900 uppercase tracking-wider">
+                        <span className="text-xs font-bold text-ink uppercase tracking-wider">
                           {content.companyName || 'Company'}
                         </span>
                       </div>
                       <div>
-                        <p className="text-[10px] text-gray-500 uppercase tracking-wider">Company</p>
-                        <p className="text-2xl font-black text-gray-900">PROFILE</p>
+                        <p className="text-[10px] text-dim uppercase tracking-wider">Company</p>
+                        <p className="text-2xl font-black text-ink">PROFILE</p>
                         {content.tagline && (
-                          <p className="text-[9px] text-gray-500 mt-1 truncate max-w-[160px]">{content.tagline}</p>
+                          <p className="text-[9px] text-dim mt-1 truncate max-w-[160px]">{content.tagline}</p>
                         )}
                       </div>
                     </div>
                   </div>
 
                   <div className="p-4">
-                    <p className="text-xs text-gray-500 mb-3 font-semibold uppercase">Included Pages ({enabledCount + 2})</p>
+                    <p className="text-xs text-dim mb-3 font-semibold uppercase">Included Pages ({enabledCount + 2})</p>
                     <div className="space-y-1.5">
                       <div className="flex items-center gap-2 py-1">
                         <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: accentColor }} />
-                        <span className="text-xs text-gray-700">Cover Page</span>
+                        <span className="text-xs text-ink">Cover Page</span>
                       </div>
                       <div className="flex items-center gap-2 py-1">
                         <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: accentColor }} />
-                        <span className="text-xs text-gray-700">Table of Contents</span>
+                        <span className="text-xs text-ink">Table of Contents</span>
                       </div>
                       {Object.entries(sections).map(([key, section]) => section.enabled && (
                         <div key={key} className="flex items-center gap-2 py-1">
                           <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: accentColor }} />
-                          <span className="text-xs text-gray-700">{section.label}</span>
+                          <span className="text-xs text-ink">{section.label}</span>
                         </div>
                       ))}
                     </div>
@@ -545,11 +545,11 @@ export default function SharePage() {
         )}
 
         {/* ===== BOTTOM NAVIGATION ===== */}
-        <div className="flex items-center justify-between mt-8 pt-6 border-t border-gray-200">
+        <div className="flex items-center justify-between mt-8 pt-6 border-t border-line">
           <button
             onClick={prevStep}
             disabled={step === 0}
-            className="flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-medium transition-colors disabled:opacity-30 disabled:cursor-not-allowed border border-gray-300 hover:bg-gray-100 text-gray-700"
+            className="flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-medium transition-colors disabled:opacity-30 disabled:cursor-not-allowed border border-line hover:bg-surface-hover text-ink"
           >
             <ChevronLeft size={16} /> Previous
           </button>
@@ -557,7 +557,7 @@ export default function SharePage() {
           <div className="flex items-center gap-3">
             {step < STEPS.length - 1 && (
               <button onClick={handlePreview}
-                className="px-5 py-2.5 rounded-lg text-sm font-medium border border-gray-300 hover:bg-gray-100 text-gray-700 flex items-center gap-2 transition-colors">
+                className="px-5 py-2.5 rounded-lg text-sm font-medium border border-line hover:bg-surface-hover text-ink flex items-center gap-2 transition-colors">
                 <Eye size={16} /> Preview
               </button>
             )}

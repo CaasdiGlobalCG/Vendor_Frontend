@@ -230,13 +230,13 @@ const WorkspaceMain = ({
       {/* Focus mode toggle button — always visible */}
       <button
         onClick={onToggleSidebars}
-        className="absolute top-20 left-3 z-10 p-2 bg-white/90 backdrop-blur-sm border border-gray-200 rounded-lg shadow-sm hover:bg-gray-50 transition-colors group"
+        className="absolute top-20 left-3 z-10 p-2 bg-white/90 backdrop-blur-sm border border-line rounded-lg  hover:bg-canvas transition-colors group"
         title={focusMode ? 'Show panels (Ctrl+Shift+H)' : 'Focus mode (Ctrl+Shift+H)'}
         aria-label={focusMode ? 'Exit focus mode' : 'Enter focus mode'}
       >
         {focusMode
-          ? <Minimize2 className="w-4 h-4 text-gray-500 group-hover:text-gray-700" />
-          : <Maximize2 className="w-4 h-4 text-gray-500 group-hover:text-gray-700" />}
+          ? <Minimize2 className="w-4 h-4 text-dim group-hover:text-ink" />
+          : <Maximize2 className="w-4 h-4 text-dim group-hover:text-ink" />}
       </button>
 
       {/* Main Workspace Content */}
@@ -295,44 +295,44 @@ const WorkspaceMain = ({
         </div>
       ) : tasks && tasks.length > 0 ? (
         // Home view — hierarchical tree of tasks and their subtask canvases
-        <div className="h-full overflow-y-auto bg-gray-50/40 px-6 py-10">
+        <div className="h-full overflow-y-auto bg-canvas px-6 py-10">
           <div className="max-w-2xl mx-auto">
-            <h2 className="text-base font-semibold text-gray-900 mb-1">Workspace</h2>
-            <p className="text-xs text-gray-500 mb-5">
+            <h2 className="text-base font-semibold text-ink mb-1">Workspace</h2>
+            <p className="text-xs text-dim mb-5">
               {tasks.length} task{tasks.length !== 1 ? 's' : ''} · pick one to open its canvas
             </p>
             <div className="space-y-3">
               {tasks.map((task) => (
-                <div key={task.id || task.name} className="bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm">
+                <div key={task.id || task.name} className="bg-surface border border-line rounded-xl overflow-hidden ">
                   <button
                     onClick={() => onTaskClick?.(task)}
-                    className="w-full flex items-center gap-3 px-4 py-3 hover:bg-gray-50 transition-colors text-left"
+                    className="w-full flex items-center gap-3 px-4 py-3 hover:bg-canvas transition-colors text-left"
                   >
-                    <div className="p-1.5 bg-blue-50 rounded-lg">
-                      <CheckSquare className="w-4 h-4 text-blue-600" />
+                    <div className="p-1.5 bg-info/10 rounded-lg">
+                      <CheckSquare className="w-4 h-4 text-info" />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <div className="text-sm font-semibold text-gray-900 truncate">{task.name || 'Untitled task'}</div>
-                      <div className="text-[11px] text-gray-400">
+                      <div className="text-sm font-semibold text-ink truncate">{task.name || 'Untitled task'}</div>
+                      <div className="text-[11px] text-dim">
                         {task.subtasks?.length || 0} subtask{(task.subtasks?.length || 0) !== 1 ? 's' : ''}
                       </div>
                     </div>
-                    <ChevronRight className="w-4 h-4 text-gray-300" />
+                    <ChevronRight className="w-4 h-4 text-dim" />
                   </button>
                   {task.subtasks?.length > 0 && (
-                    <div className="border-t border-gray-100">
+                    <div className="border-t border-line">
                       {task.subtasks.map((st, i) => (
                         <button
                           key={st.id || i}
                           onClick={() => { onTaskClick?.(task); onSubtaskClick?.(st); }}
-                          className="w-full flex items-center gap-3 pl-11 pr-4 py-2.5 hover:bg-blue-50/50 transition-colors text-left group"
+                          className="w-full flex items-center gap-3 pl-11 pr-4 py-2.5 hover:bg-info transition-colors text-left group"
                         >
-                          <FileText className="w-3.5 h-3.5 text-gray-400 group-hover:text-blue-500" />
-                          <span className="flex-1 text-[13px] text-gray-700 truncate">{st.name || st.title || 'Untitled'}</span>
+                          <FileText className="w-3.5 h-3.5 text-dim group-hover:text-info" />
+                          <span className="flex-1 text-[13px] text-ink truncate">{st.name || st.title || 'Untitled'}</span>
                           {st.canvasData?.nodes?.length > 0 && (
-                            <span className="text-[10px] text-gray-400">{st.canvasData.nodes.length} elements</span>
+                            <span className="text-[10px] text-dim">{st.canvasData.nodes.length} elements</span>
                           )}
-                          <ChevronRight className="w-3.5 h-3.5 text-gray-300 group-hover:text-blue-500" />
+                          <ChevronRight className="w-3.5 h-3.5 text-dim group-hover:text-info" />
                         </button>
                       ))}
                     </div>
@@ -388,7 +388,7 @@ const WorkspaceMain = ({
             accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.dwg,.dxf,.step,.stp,.iges,.igs,.stl,.obj"
           />
 
-          <div className="absolute bottom-8 left-1/2 z-30 transform -translate-x-1/2 bg-white/95 backdrop-blur-sm border border-gray-200 rounded-xl shadow-xl px-3 py-2 flex items-center space-x-3">
+          <div className="absolute bottom-8 left-1/2 z-30 transform -translate-x-1/2 bg-white/95 backdrop-blur-sm border border-line rounded-xl shadow-xl px-3 py-2 flex items-center space-x-3">
             {!isPenToolbarActive ? (
               <>
                 {/* Collaborators indicator */}
@@ -407,14 +407,14 @@ const WorkspaceMain = ({
                           </div>
                         ))}
                         {workspaceCollaborators.length > 3 && (
-                          <div className="w-6 h-6 rounded-full border-2 border-white bg-gray-200 flex items-center justify-center text-[9px] font-semibold text-gray-600">
+                          <div className="w-6 h-6 rounded-full border-2 border-white bg-surface-hover flex items-center justify-center text-[9px] font-semibold text-dim">
                             +{workspaceCollaborators.length - 3}
                           </div>
                         )}
                       </div>
-                      <span className="text-[10px] text-gray-400 font-medium">{workspaceCollaborators.length}</span>
+                      <span className="text-[10px] text-dim font-medium">{workspaceCollaborators.length}</span>
                     </div>
-                    <div className="w-px h-5 bg-gray-200"></div>
+                    <div className="w-px h-5 bg-surface-hover"></div>
                   </>
                 )}
 
@@ -422,47 +422,47 @@ const WorkspaceMain = ({
                 {canvasWebSocket && (
                   <>
                     <div className="flex items-center gap-1" title={canvasWebSocket.isConnected ? 'Connected' : 'Disconnected'}>
-                      <div className={`w-1.5 h-1.5 rounded-full ${canvasWebSocket.isConnected ? 'bg-emerald-400' : 'bg-red-400'}`} />
-                      <span className="text-[10px] text-gray-400">{canvasWebSocket.isConnected ? 'Live' : 'Offline'}</span>
+                      <div className={`w-1.5 h-1.5 rounded-full ${canvasWebSocket.isConnected ? 'bg-cta' : 'bg-danger'}`} />
+                      <span className="text-[10px] text-dim">{canvasWebSocket.isConnected ? 'Live' : 'Offline'}</span>
                     </div>
-                    <div className="w-px h-5 bg-gray-200"></div>
+                    <div className="w-px h-5 bg-surface-hover"></div>
                   </>
                 )}
 
-                <button className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors" title="Zoom Out" onClick={handleZoomOut}>
-                  <svg className="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <button className="p-1.5 hover:bg-surface-hover rounded-lg transition-colors" title="Zoom Out" onClick={handleZoomOut}>
+                  <svg className="w-4 h-4 text-dim" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM13 10H7" />
                   </svg>
                 </button>
-                <button className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors" title="Zoom In" onClick={handleZoomIn}>
-                  <svg className="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <button className="p-1.5 hover:bg-surface-hover rounded-lg transition-colors" title="Zoom In" onClick={handleZoomIn}>
+                  <svg className="w-4 h-4 text-dim" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v6m3-3H7" />
                   </svg>
                 </button>
-                <div className="w-px h-5 bg-gray-200"></div>
-                <button className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors" title="Fit View" onClick={handleFitView}>
-                  <Hand className="w-4 h-4 text-gray-600" />
+                <div className="w-px h-5 bg-surface-hover"></div>
+                <button className="p-1.5 hover:bg-surface-hover rounded-lg transition-colors" title="Fit View" onClick={handleFitView}>
+                  <Hand className="w-4 h-4 text-dim" />
                 </button>
 
                 <button
-                  className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors"
+                  className="p-1.5 hover:bg-surface-hover rounded-lg transition-colors"
                   title={isUploadingDrawing ? 'Uploading...' : 'Upload drawing'}
                   onClick={handleToolbarUploadClick}
                   disabled={isUploadingDrawing}
                 >
-                  <Paperclip className="w-4 h-4 text-gray-600" />
+                  <Paperclip className="w-4 h-4 text-dim" />
                 </button>
 
                 <button
-                  className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors"
+                  className="p-1.5 hover:bg-surface-hover rounded-lg transition-colors"
                   title="Open pen tools"
                   onClick={() => setIsPenToolbarActive(true)}
                 >
-                  <Pencil className="w-4 h-4 text-gray-600" />
+                  <Pencil className="w-4 h-4 text-dim" />
                 </button>
 
-                <div className="w-px h-5 bg-gray-200"></div>
-                <div className="flex items-center gap-1 px-2.5 py-0.5 bg-gray-50 rounded-md">
+                <div className="w-px h-5 bg-surface-hover"></div>
+                <div className="flex items-center gap-1 px-2.5 py-0.5 bg-canvas rounded-md">
                   <input
                     type="text"
                     inputMode="numeric"
@@ -472,36 +472,36 @@ const WorkspaceMain = ({
                     onFocus={handleZoomInputFocus}
                     onBlur={handleZoomInputBlur}
                     onKeyDown={handleZoomInputKeyDown}
-                    className="w-12 bg-transparent text-xs font-semibold text-gray-700 focus:outline-none text-center"
+                    className="w-12 bg-transparent text-xs font-semibold text-ink focus:outline-none text-center"
                     aria-label="Set zoom level"
                   />
-                  <span className="text-xs font-semibold text-gray-500">%</span>
+                  <span className="text-xs font-semibold text-dim">%</span>
                 </div>
               </>
             ) : (
               <>
                 <div className="flex items-center gap-2">
-                  <Pencil className="w-4 h-4 text-blue-600" />
-                  <span className="text-xs font-semibold text-gray-700">Pen</span>
+                  <Pencil className="w-4 h-4 text-info" />
+                  <span className="text-xs font-semibold text-ink">Pen</span>
                 </div>
-                <div className="w-px h-5 bg-gray-200"></div>
+                <div className="w-px h-5 bg-surface-hover"></div>
 
                 <div className="flex items-center gap-1.5">
                   {drawingPalette.map((color) => (
                     <button
                       key={color}
                       onClick={() => setPenColor(color)}
-                      className={`w-5 h-5 rounded-full border-2 ${penColor === color ? 'border-gray-800' : 'border-gray-300'}`}
+                      className={`w-5 h-5 rounded-full border-2 ${penColor === color ? 'border-line' : 'border-line'}`}
                       style={{ backgroundColor: color }}
                       title={`Set color ${color}`}
                     />
                   ))}
                 </div>
 
-                <div className="w-px h-5 bg-gray-200"></div>
+                <div className="w-px h-5 bg-surface-hover"></div>
 
                 <div className="flex items-center gap-2">
-                  <span className="text-[11px] text-gray-500">Size</span>
+                  <span className="text-[11px] text-dim">Size</span>
                   <input
                     type="range"
                     min="1"
@@ -510,31 +510,31 @@ const WorkspaceMain = ({
                     onChange={(e) => setPenThickness(Number(e.target.value))}
                     className="w-24"
                   />
-                  <span className="text-[11px] font-semibold text-gray-700 w-4 text-right">{penThickness}</span>
+                  <span className="text-[11px] font-semibold text-ink w-4 text-right">{penThickness}</span>
                 </div>
 
-                <div className="w-px h-5 bg-gray-200"></div>
+                <div className="w-px h-5 bg-surface-hover"></div>
 
                 <button
-                  className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors"
+                  className="p-1.5 hover:bg-surface-hover rounded-lg transition-colors"
                   title="Undo stroke"
                   onClick={() => canvasRef.current?.undoPenStroke?.()}
                 >
-                  <Undo2 className="w-4 h-4 text-gray-600" />
+                  <Undo2 className="w-4 h-4 text-dim" />
                 </button>
                 <button
-                  className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors"
+                  className="p-1.5 hover:bg-surface-hover rounded-lg transition-colors"
                   title="Clear drawing"
                   onClick={() => canvasRef.current?.clearPenDrawings?.()}
                 >
-                  <Trash2 className="w-4 h-4 text-gray-600" />
+                  <Trash2 className="w-4 h-4 text-dim" />
                 </button>
                 <button
-                  className="p-1.5 hover:bg-red-50 rounded-lg transition-colors"
+                  className="p-1.5 hover:bg-danger/10 rounded-lg transition-colors"
                   title="Close pen tools"
                   onClick={closePenToolbar}
                 >
-                  <X className="w-4 h-4 text-red-600" />
+                  <X className="w-4 h-4 text-danger" />
                 </button>
               </>
             )}

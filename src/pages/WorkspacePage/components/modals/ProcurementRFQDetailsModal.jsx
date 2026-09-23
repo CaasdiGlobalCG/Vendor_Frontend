@@ -3,8 +3,8 @@ import { X, ClipboardList, Package, Truck, Building2, IndianRupee } from 'lucide
 
 const Row = ({ label, value }) => (
   <div>
-    <p className="text-xs font-medium uppercase tracking-wide text-gray-500">{label}</p>
-    <p className="mt-1 text-sm text-gray-900 break-words">{value || '-'}</p>
+    <p className="text-xs font-medium uppercase tracking-wide text-dim">{label}</p>
+    <p className="mt-1 text-sm text-ink break-words">{value || '-'}</p>
   </div>
 );
 
@@ -23,21 +23,21 @@ const ProcurementRFQDetailsModal = ({ isOpen, onClose, nodeData }) => {
 
   return (
     <div className="fixed inset-0 z-[120] flex items-center justify-center bg-black/45 p-4">
-      <div className="w-full max-w-4xl max-h-[92vh] overflow-hidden rounded-2xl bg-white shadow-xl border border-gray-200 flex flex-col">
-        <div className="flex items-center justify-between border-b border-gray-200 bg-gray-50 px-6 py-4">
+      <div className="w-full max-w-4xl max-h-[92vh] overflow-hidden rounded-2xl bg-surface shadow-xl border border-line flex flex-col">
+        <div className="flex items-center justify-between border-b border-line bg-canvas px-6 py-4">
           <div>
-            <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
-              <ClipboardList className="w-5 h-5 text-orange-600" />
+            <h3 className="text-lg font-semibold text-ink flex items-center gap-2">
+              <ClipboardList className="w-5 h-5 text-warning" />
               Procurement RFQ Details
             </h3>
-            <p className="text-xs text-gray-600 mt-1">
+            <p className="text-xs text-dim mt-1">
               Request ID: {request.requestId || '-'}
             </p>
           </div>
           <button
             type="button"
             onClick={onClose}
-            className="rounded-lg p-2 text-gray-500 hover:bg-gray-200"
+            className="rounded-lg p-2 text-dim hover:bg-surface-hover"
             title="Close"
           >
             <X className="w-5 h-5" />
@@ -45,9 +45,9 @@ const ProcurementRFQDetailsModal = ({ isOpen, onClose, nodeData }) => {
         </div>
 
         <div className="flex-1 overflow-y-auto px-6 py-5 space-y-6">
-          <section className="rounded-xl border border-gray-200 p-4">
-            <h4 className="text-sm font-semibold text-gray-800 flex items-center gap-2 mb-3">
-              <Package className="w-4 h-4 text-gray-600" />
+          <section className="rounded-xl border border-line p-4">
+            <h4 className="text-sm font-semibold text-ink flex items-center gap-2 mb-3">
+              <Package className="w-4 h-4 text-dim" />
               Product and RFQ Basics
             </h4>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -60,9 +60,9 @@ const ProcurementRFQDetailsModal = ({ isOpen, onClose, nodeData }) => {
             </div>
           </section>
 
-          <section className="rounded-xl border border-gray-200 p-4">
-            <h4 className="text-sm font-semibold text-gray-800 flex items-center gap-2 mb-3">
-              <IndianRupee className="w-4 h-4 text-gray-600" />
+          <section className="rounded-xl border border-line p-4">
+            <h4 className="text-sm font-semibold text-ink flex items-center gap-2 mb-3">
+              <IndianRupee className="w-4 h-4 text-dim" />
               Quantity and Pricing
             </h4>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -75,9 +75,9 @@ const ProcurementRFQDetailsModal = ({ isOpen, onClose, nodeData }) => {
             </div>
           </section>
 
-          <section className="rounded-xl border border-gray-200 p-4">
-            <h4 className="text-sm font-semibold text-gray-800 flex items-center gap-2 mb-3">
-              <Truck className="w-4 h-4 text-gray-600" />
+          <section className="rounded-xl border border-line p-4">
+            <h4 className="text-sm font-semibold text-ink flex items-center gap-2 mb-3">
+              <Truck className="w-4 h-4 text-dim" />
               Trade and Logistics
             </h4>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -90,9 +90,9 @@ const ProcurementRFQDetailsModal = ({ isOpen, onClose, nodeData }) => {
             </div>
           </section>
 
-          <section className="rounded-xl border border-gray-200 p-4">
-            <h4 className="text-sm font-semibold text-gray-800 flex items-center gap-2 mb-3">
-              <Building2 className="w-4 h-4 text-gray-600" />
+          <section className="rounded-xl border border-line p-4">
+            <h4 className="text-sm font-semibold text-ink flex items-center gap-2 mb-3">
+              <Building2 className="w-4 h-4 text-dim" />
               Supplier Requirements
             </h4>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -105,18 +105,18 @@ const ProcurementRFQDetailsModal = ({ isOpen, onClose, nodeData }) => {
             </div>
           </section>
 
-          <section className="rounded-xl border border-gray-200 p-4">
-            <h4 className="text-sm font-semibold text-gray-800 mb-3">Attachments and Notes</h4>
-            <div className="space-y-3 text-sm text-gray-800">
+          <section className="rounded-xl border border-line p-4">
+            <h4 className="text-sm font-semibold text-ink mb-3">Attachments and Notes</h4>
+            <div className="space-y-3 text-sm text-ink">
               <div>
-                <p className="text-xs font-medium uppercase tracking-wide text-gray-500">Attachments</p>
+                <p className="text-xs font-medium uppercase tracking-wide text-dim">Attachments</p>
                 <div className="mt-1">
                   {(notes.attachmentNames || []).length > 0 ? (
                     (notes.attachmentNames || []).map((fileName) => (
-                      <p key={fileName} className="text-sm text-gray-900">{fileName}</p>
+                      <p key={fileName} className="text-sm text-ink">{fileName}</p>
                     ))
                   ) : (
-                    <p className="text-sm text-gray-500">No attachments added</p>
+                    <p className="text-sm text-dim">No attachments added</p>
                   )}
                 </div>
               </div>

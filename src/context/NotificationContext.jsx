@@ -8,81 +8,81 @@ export const NotificationContext = createContext();
 const TYPE_META = {
   new_lead: {
     iconSymbol: 'L',
-    iconBackgroundClass: 'bg-amber-100',
-    iconTextClass: 'text-amber-700',
-    badge: { text: 'Lead', color: '#fef3c7', textColor: '#92400e' },
+    iconBackgroundClass: 'bg-warning/10',
+    iconTextClass: 'text-warning',
+    badge: { text: 'Lead', color: 'rgb(var(--warning) / 0.1)', textColor: 'rgb(var(--warning))' },
   },
   pm_decision: {
     iconSymbol: 'PM',
-    iconBackgroundClass: 'bg-emerald-100',
-    iconTextClass: 'text-emerald-700',
-    badge: { text: 'PM Decision', color: '#dcfce7', textColor: '#166534' },
+    iconBackgroundClass: 'bg-surface-hover',
+    iconTextClass: 'text-ink',
+    badge: { text: 'PM Decision', color: 'rgb(var(--surface-hover))', textColor: 'rgb(var(--text-ink))' },
   },
   updated_lead: {
     iconSymbol: 'UP',
-    iconBackgroundClass: 'bg-orange-100',
-    iconTextClass: 'text-orange-700',
-    badge: { text: 'Lead Update', color: '#ffedd5', textColor: '#9a3412' },
+    iconBackgroundClass: 'bg-warning/10',
+    iconTextClass: 'text-warning',
+    badge: { text: 'Lead Update', color: 'rgb(var(--warning) / 0.1)', textColor: 'rgb(var(--warning))' },
   },
   workspace_access: {
     iconSymbol: 'WS',
-    iconBackgroundClass: 'bg-cyan-100',
-    iconTextClass: 'text-cyan-700',
-    badge: { text: 'Workspace', color: '#cffafe', textColor: '#155e75' },
+    iconBackgroundClass: 'bg-info/10',
+    iconTextClass: 'text-info',
+    badge: { text: 'Workspace', color: 'rgb(var(--info) / 0.1)', textColor: 'rgb(var(--info))' },
   },
   comment_mention: {
     iconSymbol: '@',
-    iconBackgroundClass: 'bg-indigo-100',
-    iconTextClass: 'text-indigo-700',
-    badge: { text: 'Mention', color: '#e0e7ff', textColor: '#3730a3' },
+    iconBackgroundClass: 'bg-info/10',
+    iconTextClass: 'text-info',
+    badge: { text: 'Mention', color: 'rgb(var(--info) / 0.1)', textColor: 'rgb(var(--info))' },
   },
   lead_status_update: {
     iconSymbol: 'LS',
-    iconBackgroundClass: 'bg-sky-100',
-    iconTextClass: 'text-sky-700',
-    badge: { text: 'Status', color: '#e0f2fe', textColor: '#075985' },
+    iconBackgroundClass: 'bg-info/10',
+    iconTextClass: 'text-info',
+    badge: { text: 'Status', color: 'rgb(var(--info) / 0.1)', textColor: 'rgb(var(--info))' },
   },
   call_invitation: {
     iconSymbol: 'C',
-    iconBackgroundClass: 'bg-rose-100',
-    iconTextClass: 'text-rose-700',
-    badge: { text: 'Call', color: '#ffe4e6', textColor: '#9f1239' },
+    iconBackgroundClass: 'bg-danger/10',
+    iconTextClass: 'text-danger',
+    badge: { text: 'Call', color: 'rgb(var(--danger) / 0.1)', textColor: 'rgb(var(--danger))' },
   },
   call_ended: {
     iconSymbol: 'C',
-    iconBackgroundClass: 'bg-slate-100',
-    iconTextClass: 'text-slate-700',
-    badge: { text: 'Call Ended', color: '#e2e8f0', textColor: '#334155' },
+    iconBackgroundClass: 'bg-surface-hover',
+    iconTextClass: 'text-ink',
+    badge: { text: 'Call Ended', color: 'rgb(var(--surface-hover))', textColor: 'rgb(var(--text-ink))' },
   },
   call_declined: {
     iconSymbol: 'C',
-    iconBackgroundClass: 'bg-red-100',
-    iconTextClass: 'text-red-700',
-    badge: { text: 'Call Declined', color: '#fee2e2', textColor: '#991b1b' },
+    iconBackgroundClass: 'bg-danger/10',
+    iconTextClass: 'text-danger',
+    badge: { text: 'Call Declined', color: 'rgb(var(--danger) / 0.1)', textColor: 'rgb(var(--danger))' },
   },
   call_cancelled: {
     iconSymbol: 'C',
-    iconBackgroundClass: 'bg-red-100',
-    iconTextClass: 'text-red-700',
-    badge: { text: 'Call Cancelled', color: '#fee2e2', textColor: '#991b1b' },
+    iconBackgroundClass: 'bg-danger/10',
+    iconTextClass: 'text-danger',
+    badge: { text: 'Call Cancelled', color: 'rgb(var(--danger) / 0.1)', textColor: 'rgb(var(--danger))' },
   },
   call_participant_joined: {
     iconSymbol: 'IN',
-    iconBackgroundClass: 'bg-green-100',
-    iconTextClass: 'text-green-700',
-    badge: { text: 'Call Update', color: '#dcfce7', textColor: '#166534' },
+    iconBackgroundClass: 'bg-success/10',
+    iconTextClass: 'text-success',
+    badge: { text: 'Call Update', color: 'rgb(var(--success) / 0.1)', textColor: 'rgb(var(--success))' },
   },
   call_participant_left: {
     iconSymbol: 'OUT',
-    iconBackgroundClass: 'bg-yellow-100',
-    iconTextClass: 'text-yellow-700',
-    badge: { text: 'Call Update', color: '#fef3c7', textColor: '#92400e' },
+    iconBackgroundClass: 'bg-warning/10',
+    iconTextClass: 'text-warning',
+    badge: { text: 'Call Update', color: 'rgb(var(--warning) / 0.1)', textColor: 'rgb(var(--warning))' },
   },
   default: {
     iconSymbol: 'N',
-    iconBackgroundClass: 'bg-gray-100',
-    iconTextClass: 'text-gray-700',
-    badge: { text: 'Notification', color: '#f3f4f6', textColor: '#374151' },
+    iconBackgroundClass: 'bg-surface-hover',
+    iconTextClass: 'text-ink',
+    badge: { text: 'Notification', color: 'rgb(var(--surface-hover))', textColor: 'rgb(var(--text-ink))' },
   },
 };
 
@@ -760,15 +760,13 @@ export const NotificationProvider = ({ children }) => {
   const getColorForNotificationType = (type) => {
     switch (type) {
       case 'new_lead':
-        return '#fefcbf'; // Yellow
+        return 'rgb(var(--warning) / 0.1)';
       case 'project_update':
-        return '#e6fffa'; // Teal
       case 'lead_status_change':
-        return '#ebf4ff'; // Blue
       case 'project_status_change':
-        return '#ebf4ff'; // Blue
+        return 'rgb(var(--info) / 0.1)';
       default:
-        return '#f0f0f0'; // Gray
+        return 'rgb(var(--surface-hover))';
     }
   };
   

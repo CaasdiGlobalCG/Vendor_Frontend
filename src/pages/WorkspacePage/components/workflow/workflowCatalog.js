@@ -25,7 +25,7 @@ export const TRIGGER_TYPES = [
     label: 'A status changes',
     shortLabel: 'Status change',
     icon: RefreshCw,
-    cardClass: 'border-blue-200 bg-blue-50 text-blue-700',
+    cardClass: 'border-info/20 bg-info/10 text-info',
     description: 'Runs when an element on the canvas moves to a status you pick, like Approved.'
   },
   {
@@ -33,7 +33,7 @@ export const TRIGGER_TYPES = [
     label: 'A task is completed',
     shortLabel: 'Task completed',
     icon: CheckCircle2,
-    cardClass: 'border-emerald-200 bg-emerald-50 text-emerald-700',
+    cardClass: 'border-line bg-surface-hover text-ink',
     description: 'Runs as soon as a task or element is marked Completed.'
   },
   {
@@ -41,7 +41,7 @@ export const TRIGGER_TYPES = [
     label: 'An approval decision is made',
     shortLabel: 'Approval / rejection',
     icon: BadgeCheck,
-    cardClass: 'border-amber-200 bg-amber-50 text-amber-700',
+    cardClass: 'border-warning/20 bg-warning/10 text-warning',
     description: 'Runs when something is approved, rejected, or moved back to pending.'
   },
   {
@@ -49,7 +49,7 @@ export const TRIGGER_TYPES = [
     label: 'On a schedule',
     shortLabel: 'Schedule',
     icon: Clock,
-    cardClass: 'border-sky-200 bg-sky-50 text-sky-700',
+    cardClass: 'border-info/20 bg-info/10 text-info',
     description: 'Runs automatically every day, week, or month at a time you pick.'
   },
   {
@@ -57,7 +57,7 @@ export const TRIGGER_TYPES = [
     label: 'Conditions are met',
     shortLabel: 'Conditions',
     icon: Filter,
-    cardClass: 'border-violet-200 bg-violet-50 text-violet-700',
+    cardClass: 'border-line bg-surface-hover text-ink',
     description: 'Runs only when the event data matches rules you set (advanced).'
   },
   {
@@ -65,7 +65,7 @@ export const TRIGGER_TYPES = [
     label: 'Another app calls in',
     shortLabel: 'Webhook',
     icon: Webhook,
-    cardClass: 'border-rose-200 bg-rose-50 text-rose-700',
+    cardClass: 'border-danger/20 bg-danger/10 text-danger',
     description: 'Lets an external tool start this workflow through a secure webhook URL.'
   }
 ];
@@ -75,63 +75,63 @@ export const ACTION_TYPES = [
     value: 'create-task',
     label: 'Create a task',
     icon: ClipboardList,
-    cardClass: 'border-emerald-200 bg-emerald-50 text-emerald-700',
+    cardClass: 'border-line bg-surface-hover text-ink',
     description: 'Adds a new task to the workspace, like a work order or RFQ.'
   },
   {
     value: 'update-status',
     label: 'Change a status',
     icon: Tag,
-    cardClass: 'border-amber-200 bg-amber-50 text-amber-700',
+    cardClass: 'border-warning/20 bg-warning/10 text-warning',
     description: 'Moves an element to a new status, like Approved or Completed.'
   },
   {
     value: 'assign-user',
     label: 'Assign someone',
     icon: UserPlus,
-    cardClass: 'border-yellow-200 bg-yellow-50 text-yellow-700',
+    cardClass: 'border-warning/20 bg-warning/10 text-warning',
     description: 'Hands an element to a teammate to work on.'
   },
   {
     value: 'send-email',
     label: 'Send an email',
     icon: Mail,
-    cardClass: 'border-blue-200 bg-blue-50 text-blue-700',
+    cardClass: 'border-info/20 bg-info/10 text-info',
     description: 'Emails a person or team with the details of what happened.'
   },
   {
     value: 'call-webhook',
     label: 'Notify another app',
     icon: Globe,
-    cardClass: 'border-rose-200 bg-rose-50 text-rose-700',
+    cardClass: 'border-danger/20 bg-danger/10 text-danger',
     description: 'Sends the event to an external URL (webhook).'
   },
   {
     value: 'invoke-subworkflow',
     label: 'Run another workflow',
     icon: WorkflowIcon,
-    cardClass: 'border-purple-200 bg-purple-50 text-purple-700',
+    cardClass: 'border-line bg-surface-hover text-ink',
     description: 'Starts a different saved workflow as the next step.'
   },
   {
     value: 'wait-approval',
     label: 'Wait for approval',
     icon: Hourglass,
-    cardClass: 'border-orange-200 bg-orange-50 text-orange-700',
+    cardClass: 'border-warning/20 bg-warning/10 text-warning',
     description: 'Pauses until someone approves or rejects, then continues.'
   },
   {
     value: 'conditional-branch',
     label: 'If / else branch',
     icon: GitFork,
-    cardClass: 'border-indigo-200 bg-indigo-50 text-indigo-700',
+    cardClass: 'border-info/20 bg-info/10 text-info',
     description: 'Does different things depending on conditions (advanced).'
   },
   {
     value: 'loop',
     label: 'Repeat actions',
     icon: Repeat,
-    cardClass: 'border-cyan-200 bg-cyan-50 text-cyan-700',
+    cardClass: 'border-info/20 bg-info/10 text-info',
     description: 'Runs a set of actions multiple times (advanced).'
   }
 ];
@@ -310,7 +310,7 @@ export const buildWorkflowTemplates = () => {
       icon: Zap,
       name: 'Approval → work order',
       tagline: 'When something gets approved on the canvas, a work order task is created automatically.',
-      chipClass: 'bg-blue-100 text-blue-700',
+      chipClass: 'bg-info/10 text-info',
       form: {
         name: 'Approved → work order',
         description: 'Creates a work order whenever an element is approved.',
@@ -334,7 +334,7 @@ export const buildWorkflowTemplates = () => {
       icon: Mail,
       name: 'Task done → email the team',
       tagline: 'Sends an email as soon as a task is marked completed.',
-      chipClass: 'bg-emerald-100 text-emerald-700',
+      chipClass: 'bg-surface-hover text-ink',
       form: {
         name: 'Completed → notify by email',
         description: 'Emails the team when a task is completed.',
@@ -360,7 +360,7 @@ export const buildWorkflowTemplates = () => {
       icon: Clock,
       name: 'Every morning → daily log',
       tagline: 'Creates a daily site log task at 9:00 AM automatically.',
-      chipClass: 'bg-amber-100 text-amber-700',
+      chipClass: 'bg-warning/10 text-warning',
       form: {
         name: 'Daily site log',
         description: 'Creates a daily site log task every morning.',

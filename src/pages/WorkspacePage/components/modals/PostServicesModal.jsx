@@ -230,13 +230,13 @@ const PostServicesModal = ({ isOpen, onClose, currentUser, workspaceId, subtaskI
     return parts.map((part, index) => {
       if (part.type === 'mention') {
         return (
-          <span key={index} className="text-green-600 font-medium">
+          <span key={index} className="text-success font-medium">
             {part.content}
           </span>
         );
       } else if (part.type === 'hashtag') {
         return (
-          <span key={index} className="text-purple-600 font-medium">
+          <span key={index} className="text-ink font-medium">
             {part.content}
           </span>
         );
@@ -438,44 +438,44 @@ const PostServicesModal = ({ isOpen, onClose, currentUser, workspaceId, subtaskI
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 overflow-y-auto">
-      <div className="w-full max-w-3xl max-h-[90vh] bg-white rounded-2xl shadow-2xl overflow-hidden my-8 flex flex-col">
+      <div className="w-full max-w-3xl max-h-[90vh] bg-surface rounded-2xl shadow-2xl overflow-hidden my-8 flex flex-col">
         {/* Header */}
-        <div className="flex items-center justify-between px-5 py-4 border-b border-gray-200">
+        <div className="flex items-center justify-between px-5 py-4 border-b border-line">
           <div>
-            <h2 className="text-lg font-semibold text-gray-900">Post services</h2>
+            <h2 className="text-lg font-semibold text-ink">Post services</h2>
             {subtaskId && (
-              <p className="text-sm text-gray-500 mt-1">
+              <p className="text-sm text-dim mt-1">
                 Posts for: {selectedSubtask?.name || `Subtask ${subtaskId}`}
               </p>
             )}
           </div>
-          <button onClick={onClose} className="p-2 rounded-lg hover:bg-gray-100">
-            <X className="w-5 h-5 text-gray-500" />
+          <button onClick={onClose} className="p-2 rounded-lg hover:bg-surface-hover">
+            <X className="w-5 h-5 text-dim" />
           </button>
         </div>
 
         {/* Composer */}
         <div className="p-5">
-          <div className="bg-white rounded-xl border border-gray-200 shadow-sm">
+          <div className="bg-surface rounded-xl border border-line ">
             <div className="flex items-center px-4 py-3">
-              <div className="w-9 h-9 rounded-full bg-gray-200 flex items-center justify-center mr-3 overflow-hidden">
+              <div className="w-9 h-9 rounded-full bg-surface-hover flex items-center justify-center mr-3 overflow-hidden">
                 {currentUser?.avatarUrl ? (
                   <img src={currentUser.avatarUrl} alt={displayUser.name} className="w-full h-full object-cover" />
                 ) : (
-                  <User className="w-4 h-4 text-gray-600" />
+                  <User className="w-4 h-4 text-dim" />
                 )}
               </div>
               <div>
-                <div className="text-sm font-medium text-gray-900">{displayUser.name}</div>
-                <div className="text-xs text-gray-500">{displayUser.role}</div>
+                <div className="text-sm font-medium text-ink">{displayUser.name}</div>
+                <div className="text-xs text-dim">{displayUser.role}</div>
               </div>
             </div>
             <div className="px-4 pb-3 relative">
               <div className="relative">
-                <div className="w-full min-h-[80px] p-3 border border-gray-200 rounded-lg bg-white text-[13px] text-gray-800 whitespace-pre-wrap break-words leading-[1.4] focus-within:ring-8 focus-within:ring-blue-500 focus-within:border-transparent">
+                <div className="w-full min-h-[80px] p-3 border border-line rounded-lg bg-surface text-[13px] text-ink whitespace-pre-wrap break-words leading-[1.4] focus-within:ring-8 focus-within:ring-info focus-within:border-transparent">
                   {renderTextWithHighlights(message)}
                   {!message && (
-                    <span className="text-gray-400">Write your service request...</span>
+                    <span className="text-dim">Write your service request...</span>
                   )}
                 </div>
                 <textarea
@@ -484,7 +484,7 @@ const PostServicesModal = ({ isOpen, onClose, currentUser, workspaceId, subtaskI
                   rows={3}
                   className="absolute inset-0 w-full h-full resize-none outline-none text-[13px] text-transparent bg-transparent placeholder-transparent [text-indent:2px] cursor-text"
                   style={{
-                    caretColor: '#374151',
+                    caretColor: 'rgb(var(--info))',
                     fontFamily: 'inherit',
                     fontSize: '13px',
                     lineHeight: '1.4',
@@ -497,47 +497,47 @@ const PostServicesModal = ({ isOpen, onClose, currentUser, workspaceId, subtaskI
                
                {/* Mention Dropdown */}
                {showMentionDropdown && (
-                 <div className="absolute top-full left-4 right-4 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg z-10 max-h-48 overflow-y-auto">
+                 <div className="absolute top-full left-4 right-4 mt-1 bg-surface border border-line rounded-lg shadow-lg z-10 max-h-48 overflow-y-auto">
                    {filteredCollaborators.length > 0 ? (
                      filteredCollaborators.map((collab) => (
                        <button
                          key={collab.vendorId}
                          onClick={() => insertMention(collab.name)}
-                         className="w-full px-3 py-2 text-left hover:bg-gray-50 flex items-center space-x-2"
+                         className="w-full px-3 py-2 text-left hover:bg-canvas flex items-center space-x-2"
                        >
-                         <div className="w-6 h-6 rounded-full bg-gray-200 flex items-center justify-center">
-                           <span className="text-xs font-medium text-gray-600">
+                         <div className="w-6 h-6 rounded-full bg-surface-hover flex items-center justify-center">
+                           <span className="text-xs font-medium text-dim">
                              {collab.avatar || collab.name.charAt(0).toUpperCase()}
                            </span>
                          </div>
                          <div>
-                           <div className="text-sm font-medium text-gray-900">{collab.name}</div>
-                           <div className="text-xs text-gray-500">{collab.specialization}</div>
+                           <div className="text-sm font-medium text-ink">{collab.name}</div>
+                           <div className="text-xs text-dim">{collab.specialization}</div>
                          </div>
                        </button>
                      ))
                    ) : (
-                     <div className="px-3 py-2 text-sm text-gray-500">No collaborators found</div>
+                     <div className="px-3 py-2 text-sm text-dim">No collaborators found</div>
                    )}
                  </div>
                )}
 
                {/* Hashtag Dropdown */}
                {showHashtagDropdown && (
-                 <div className="absolute top-full left-4 right-4 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg z-10 max-h-48 overflow-y-auto">
+                 <div className="absolute top-full left-4 right-4 mt-1 bg-surface border border-line rounded-lg shadow-lg z-10 max-h-48 overflow-y-auto">
                    {filteredDepartments.length > 0 ? (
                      filteredDepartments.map((dept) => (
                        <button
                          key={dept}
                          onClick={() => insertHashtag(dept)}
-                         className="w-full px-2 py-2 text-left hover:bg-gray-50 flex items-center space-x-2"
+                         className="w-full px-2 py-2 text-left hover:bg-canvas flex items-center space-x-2"
                        >
-                         <Hash className="w-4 h-4 text-gray-400 font-bold" />
-                         <span className="text-sm text-gray-900 font-bold">{dept}</span>
+                         <Hash className="w-4 h-4 text-dim font-bold" />
+                         <span className="text-sm text-ink font-bold">{dept}</span>
                        </button>
                      ))
                    ) : (
-                     <div className="px-3 py-2 text-sm text-gray-500">No departments found</div>
+                     <div className="px-3 py-2 text-sm text-dim">No departments found</div>
                    )}
                  </div>
                )}
@@ -545,25 +545,25 @@ const PostServicesModal = ({ isOpen, onClose, currentUser, workspaceId, subtaskI
                {/* Attachment chips */}
                <div className="flex flex-wrap gap-2 mt-2">
                  {attachments.map(att => (
-                   <div key={att.id} className="inline-flex items-center gap-2 px-2 py-1 bg-gray-100 border border-gray-200 rounded-md">
-                     <span className="text-xs text-gray-700">{att.name}</span>
-                     <button onClick={() => removeAttachment(att.id)} className="p-1 hover:bg-gray-200 rounded">
-                       <X className="w-3 h-3 text-gray-500" />
+                   <div key={att.id} className="inline-flex items-center gap-2 px-2 py-1 bg-surface-hover border border-line rounded-md">
+                     <span className="text-xs text-ink">{att.name}</span>
+                     <button onClick={() => removeAttachment(att.id)} className="p-1 hover:bg-surface-hover rounded">
+                       <X className="w-3 h-3 text-dim" />
                      </button>
                    </div>
                  ))}
                </div>
             </div>
-            <div className="flex items-center justify-between px-4 py-3 border-t border-gray-200">
+            <div className="flex items-center justify-between px-4 py-3 border-t border-line">
               <div className="flex items-center gap-2">
-                <button className="px-3 py-1.5 text-xs bg-purple-50 text-purple-700 rounded-md border border-purple-200 hover:bg-purple-100">
+                <button className="px-3 py-1.5 text-xs bg-surface-hover text-ink rounded-md border border-line hover:bg-surface-hover">
                   <span className="inline-flex items-center gap-1"><Hash className="w-3 h-3" /> department</span>
                 </button>
-                <button className="px-3 py-1.5 text-xs bg-green-50 text-green-700 rounded-md border border-green-200 hover:bg-green-100">
+                <button className="px-3 py-1.5 text-xs bg-success/10 text-success rounded-md border border-success/20 hover:bg-success/10">
                   <span className="inline-flex items-center gap-1"><AtSign className="w-3 h-3" /> Person</span>
                 </button>
-                <button onClick={onPickFile} className="p-1.5 rounded-md hover:bg-gray-100" title="Attach">
-                  <Paperclip className="w-4 h-4 text-gray-600" />
+                <button onClick={onPickFile} className="p-1.5 rounded-md hover:bg-surface-hover" title="Attach">
+                  <Paperclip className="w-4 h-4 text-dim" />
                 </button>
                 <input 
                   ref={fileInputRef} 
@@ -585,8 +585,8 @@ const PostServicesModal = ({ isOpen, onClose, currentUser, workspaceId, subtaskI
                 disabled={isPosting || !message.trim()}
                 className={`px-3 py-1.5 text-xs rounded-md inline-flex items-center gap-1 transition-colors ${
                   isPosting || !message.trim()
-                    ? 'bg-gray-400 text-gray-200 cursor-not-allowed'
-                    : 'bg-blue-600 text-white hover:bg-blue-700'
+                    ? 'bg-cta text-dim cursor-not-allowed'
+                    : 'bg-info text-cta-foreground hover:bg-info'
                 }`}
               >
                 {isPosting ? (
@@ -607,50 +607,50 @@ const PostServicesModal = ({ isOpen, onClose, currentUser, workspaceId, subtaskI
 
         {/* Services List */}
         <div className="px-5 pb-5 flex-1 overflow-y-auto">
-          <div className="text-sm font-semibold text-gray-800 mb-3">Services</div>
+          <div className="text-sm font-semibold text-ink mb-3">Services</div>
           {posts.map(post => (
-            <div key={post.id} className="bg-white rounded-xl border border-gray-200 shadow-sm mb-4">
+            <div key={post.id} className="bg-surface rounded-xl border border-line  mb-4">
               <div className="flex items-start justify-between px-4 py-3">
                 <div className="flex items-center">
-                  <div className="w-9 h-9 rounded-full bg-gray-200 flex items-center justify-center mr-3">
-                    <User className="w-4 h-4 text-gray-600" />
+                  <div className="w-9 h-9 rounded-full bg-surface-hover flex items-center justify-center mr-3">
+                    <User className="w-4 h-4 text-dim" />
                   </div>
                   <div>
-                    <div className="text-sm font-medium text-gray-900">{post.author.name}</div>
-                    <div className="text-xs text-gray-500">{post.author.role}</div>
+                    <div className="text-sm font-medium text-ink">{post.author.name}</div>
+                    <div className="text-xs text-dim">{post.author.role}</div>
                   </div>
                 </div>
-                <div className="text-[11px] text-gray-400">{post.dateLabel}</div>
+                <div className="text-[11px] text-dim">{post.dateLabel}</div>
               </div>
-              <div className="px-4 pb-3 text-[13px] text-gray-800">
+              <div className="px-4 pb-3 text-[13px] text-ink">
                 {renderTextWithHighlights(post.text)}
               </div>
               {post.attachment && (
                 <div className="px-4">
-                  <div className="text-xs text-gray-600 mb-2">Attachment</div>
-                  <div className="overflow-hidden rounded-lg border border-gray-200">
+                  <div className="text-xs text-dim mb-2">Attachment</div>
+                  <div className="overflow-hidden rounded-lg border border-line">
                     {post.attachment.preview ? (
                       <img src={post.attachment.preview} alt={post.attachment.name} className="w-full max-h-48 object-cover" />
                     ) : (
-                      <div className="h-28 bg-gray-100 flex items-center justify-center">
-                        <ImageIcon className="w-6 h-6 text-gray-400" />
+                      <div className="h-28 bg-surface-hover flex items-center justify-center">
+                        <ImageIcon className="w-6 h-6 text-dim" />
                       </div>
                     )}
                   </div>
-                  <div className="mt-2 flex items-center justify-between text-xs text-gray-600 border border-gray-200 rounded-md px-3 py-2">
+                  <div className="mt-2 flex items-center justify-between text-xs text-dim border border-line rounded-md px-3 py-2">
                     <span>{post.attachment.name}</span>
                     <span>{formatSizeMB(post.attachment.size)}</span>
                   </div>
                 </div>
               )}
-              <div className="px-4 py-3 flex items-center justify-between text-[13px] text-gray-600">
-                <button className="inline-flex items-center gap-1 hover:text-gray-800">
+              <div className="px-4 py-3 flex items-center justify-between text-[13px] text-dim">
+                <button className="inline-flex items-center gap-1 hover:text-ink">
                   <span className="text-base leading-none">▢</span>
                   <span>{post.replies?.length || 0} replies</span>
                 </button>
                 <button 
                   onClick={() => setReplyingTo(replyingTo === post.id ? null : post.id)}
-                  className="hover:text-gray-800"
+                  className="hover:text-ink"
                 >
                   reply
                 </button>
@@ -658,28 +658,28 @@ const PostServicesModal = ({ isOpen, onClose, currentUser, workspaceId, subtaskI
 
               {/* Reply Composer */}
               {replyingTo === post.id && (
-                <div className="px-4 pb-4 border-t border-gray-100">
+                <div className="px-4 pb-4 border-t border-line">
                   <div className="mt-3 flex items-start space-x-3">
-                    <div className="w-6 h-6 rounded-full bg-gray-200 flex items-center justify-center flex-shrink-0">
-                      <User className="w-3 h-3 text-gray-600" />
+                    <div className="w-6 h-6 rounded-full bg-surface-hover flex items-center justify-center flex-shrink-0">
+                      <User className="w-3 h-3 text-dim" />
                     </div>
                     <div className="flex-1">
                       <textarea
                         value={replyMessage}
                         onChange={(e) => setReplyMessage(e.target.value)}
                         placeholder={`Reply to ${post.author.name}...`}
-                        className="w-full p-2 text-sm border border-gray-200 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        className="w-full p-2 text-sm border border-line rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-info focus:border-transparent"
                         rows={2}
                       />
                       <div className="flex items-center justify-between mt-2">
-                        <span className="text-xs text-gray-500">Replying to {post.author.name}</span>
+                        <span className="text-xs text-dim">Replying to {post.author.name}</span>
                         <div className="flex items-center space-x-2">
                           <button
                             onClick={() => {
                               setReplyingTo(null);
                               setReplyMessage('');
                             }}
-                            className="px-3 py-1 text-xs text-gray-600 hover:text-gray-800"
+                            className="px-3 py-1 text-xs text-dim hover:text-ink"
                           >
                             Cancel
                           </button>
@@ -688,8 +688,8 @@ const PostServicesModal = ({ isOpen, onClose, currentUser, workspaceId, subtaskI
                             disabled={isReplying || !replyMessage.trim()}
                             className={`px-3 py-1 text-xs rounded-md transition-colors ${
                               isReplying || !replyMessage.trim()
-                                ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                                : 'bg-blue-600 text-white hover:bg-blue-700'
+                                ? 'bg-surface-hover text-dim cursor-not-allowed'
+                                : 'bg-info text-white hover:bg-info'
                             }`}
                           >
                             {isReplying ? 'Replying...' : 'Reply'}
@@ -703,21 +703,21 @@ const PostServicesModal = ({ isOpen, onClose, currentUser, workspaceId, subtaskI
 
               {/* Replies Thread */}
               {post.replies && post.replies.length > 0 && (
-                <div className="px-4 pb-4 border-t border-gray-100">
+                <div className="px-4 pb-4 border-t border-line">
                   <div className="mt-3 space-y-3">
                     {post.replies.map((reply) => (
-                      <div key={reply.id} className="flex items-start space-x-3 pl-6 border-l-2 border-gray-200">
-                        <div className="w-6 h-6 rounded-full bg-gray-200 flex items-center justify-center flex-shrink-0">
-                          <User className="w-3 h-3 text-gray-600" />
+                      <div key={reply.id} className="flex items-start space-x-3 pl-6 border-l-2 border-line">
+                        <div className="w-6 h-6 rounded-full bg-surface-hover flex items-center justify-center flex-shrink-0">
+                          <User className="w-3 h-3 text-dim" />
                         </div>
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center space-x-2 mb-1">
-                            <span className="text-sm font-medium text-gray-900">{reply.author.name}</span>
-                            <span className="text-xs text-gray-500">{reply.author.role}</span>
-                            <span className="text-xs text-gray-400">•</span>
-                            <span className="text-xs text-gray-400">{reply.dateLabel}</span>
+                            <span className="text-sm font-medium text-ink">{reply.author.name}</span>
+                            <span className="text-xs text-dim">{reply.author.role}</span>
+                            <span className="text-xs text-dim">•</span>
+                            <span className="text-xs text-dim">{reply.dateLabel}</span>
                           </div>
-                          <div className="text-sm text-gray-800">
+                          <div className="text-sm text-ink">
                             {renderTextWithHighlights(reply.text)}
                           </div>
                         </div>

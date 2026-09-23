@@ -38,7 +38,7 @@ export default function AppHeader() {
 
   return (
     <section
-      className={`sticky top-0 z-50 mx-3 mt-3 overflow-hidden bg-gradient-to-r from-[#095B49] to-[#000000] text-white shadow-lg transition-all duration-300 ease-out sm:mx-4 sm:mt-4 ${
+      className={`sticky top-0 z-50 mx-3 mt-3 overflow-hidden bg-gradient-to-r from-black to-black text-white shadow-lg transition-all duration-300 ease-out sm:mx-4 sm:mt-4 ${
         isCompact ? 'rounded-b-lg px-3 py-3 sm:px-4' : 'rounded-b-xl px-3 py-3.5 sm:px-4 sm:py-4'
       }`}
     >
@@ -48,17 +48,17 @@ export default function AppHeader() {
         </div>
 
         <div className={`flex items-center justify-end gap-2 self-stretch rounded-full bg-white/8 px-2.5 py-1.5 transition-all duration-300 sm:self-auto sm:bg-transparent sm:px-0 sm:py-0 ${isCompact ? '' : 'sm:gap-4'}`}>
-          <Award className={`${isCompact ? 'h-4 w-4' : 'h-5 w-5'} text-yellow-400 transition-all duration-300`} />
+          <Award className={`${isCompact ? 'h-4 w-4' : 'h-5 w-5'} text-warning transition-all duration-300`} />
 
           <button onClick={handleShare} title="Share profile" className="rounded-full p-1.5 transition-colors hover:bg-white/10 sm:p-0">
-            <Share2 className={`${isCompact ? 'h-4 w-4' : 'h-5 w-5'} text-white hover:text-gray-300 transition-all duration-300`} />
+            <Share2 className={`${isCompact ? 'h-4 w-4' : 'h-5 w-5'} text-white hover:text-dim transition-all duration-300`} />
           </button>
           <button onClick={() => navigateTo("/settings")} aria-label="Settings" className="rounded-full p-1.5 transition-colors hover:bg-white/10 sm:p-0">
-            <Settings className={`${isCompact ? 'h-4 w-4' : 'h-5 w-5'} text-white hover:text-gray-300 transition-all duration-300`} />
+            <Settings className={`${isCompact ? 'h-4 w-4' : 'h-5 w-5'} text-white hover:text-dim transition-all duration-300`} />
           </button>
 
           <button onClick={() => navigateTo("/VendorDashboard")} aria-label="Go to home" className="rounded-full p-1.5 transition-colors hover:bg-white/10 sm:p-0">
-            <Home className={`${isCompact ? 'h-4 w-4' : 'h-5 w-5'} text-white hover:text-gray-300 transition-all duration-300`} />
+            <Home className={`${isCompact ? 'h-4 w-4' : 'h-5 w-5'} text-white hover:text-dim transition-all duration-300`} />
           </button>
         </div>
       </div>

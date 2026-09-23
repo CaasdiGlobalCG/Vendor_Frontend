@@ -15,15 +15,15 @@ export const useToastOptional = () => useContext(ToastContext);
 let toastIdCounter = 0;
 
 const ICONS = {
-  success: <CheckCircle className="w-4 h-4 text-emerald-500" />,
-  error: <AlertCircle className="w-4 h-4 text-red-500" />,
-  info: <Info className="w-4 h-4 text-blue-500" />,
+  success: <CheckCircle className="w-4 h-4 text-ink" />,
+  error: <AlertCircle className="w-4 h-4 text-danger" />,
+  info: <Info className="w-4 h-4 text-info" />,
 };
 
 const STYLES = {
-  success: 'border-emerald-200 bg-emerald-50',
-  error: 'border-red-200 bg-red-50',
-  info: 'border-blue-200 bg-blue-50',
+  success: 'border-line bg-surface-hover',
+  error: 'border-danger/20 bg-danger/10',
+  info: 'border-info/20 bg-info/10',
 };
 
 export const ToastProvider = ({ children }) => {
@@ -79,7 +79,7 @@ const Toast = ({ id, message, type, duration, actionLabel, onAction, onDismiss }
 
   return (
     <div
-      className={`pointer-events-auto flex items-center gap-2.5 px-4 py-2.5 rounded-lg border shadow-lg text-sm text-gray-800 transition-all duration-200 ${STYLES[type] || STYLES.info} ${exiting ? 'opacity-0 translate-x-4' : 'opacity-100 translate-x-0'}`}
+      className={`pointer-events-auto flex items-center gap-2.5 px-4 py-2.5 rounded-lg border shadow-lg text-sm text-ink transition-all duration-200 ${STYLES[type] || STYLES.info} ${exiting ? 'opacity-0 translate-x-4' : 'opacity-100 translate-x-0'}`}
       style={{ animation: exiting ? undefined : 'toast-in 0.2s ease-out' }}
       role="alert"
     >
@@ -91,12 +91,12 @@ const Toast = ({ id, message, type, duration, actionLabel, onAction, onDismiss }
             onAction();
             handleDismiss();
           }}
-          className="px-2 py-0.5 text-xs font-medium rounded border border-gray-300 bg-white hover:bg-gray-50 transition-colors"
+          className="px-2 py-0.5 text-xs font-medium rounded border border-line bg-surface hover:bg-canvas transition-colors"
         >
           {actionLabel}
         </button>
       )}
-      <button onClick={handleDismiss} className="p-0.5 text-gray-400 hover:text-gray-600 rounded transition-colors" aria-label="Dismiss">
+      <button onClick={handleDismiss} className="p-0.5 text-dim hover:text-dim rounded transition-colors" aria-label="Dismiss">
         <X className="w-3.5 h-3.5" />
       </button>
       <style>{`

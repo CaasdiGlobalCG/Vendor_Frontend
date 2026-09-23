@@ -117,45 +117,45 @@ const QuotesPage = ({ workspaceId, workspaceName, selectedTask, selectedSubtask,
     switch (status.toLowerCase()) {
       case 'draft':
         return {
-          bg: 'bg-gradient-to-r from-slate-50 to-gray-50',
-          text: 'text-slate-600',
-          border: 'border-slate-200',
-          dot: 'bg-slate-400'
+          bg: 'bg-gradient-to-r from-surface-hover to-surface-hover',
+          text: 'text-dim',
+          border: 'border-line',
+          dot: 'bg-cta'
         };
       case 'sent to pm for review':
         return {
-          bg: 'bg-gradient-to-r from-blue-50 to-indigo-50',
-          text: 'text-blue-700',
-          border: 'border-blue-200',
-          dot: 'bg-blue-500'
+          bg: 'bg-black',
+          text: 'text-info',
+          border: 'border-info/20',
+          dot: 'bg-info'
         };
       case 'approved by pm':
         return {
-          bg: 'bg-gradient-to-r from-green-50 to-emerald-50',
-          text: 'text-green-700',
-          border: 'border-green-200',
-          dot: 'bg-green-500'
+          bg: 'bg-black',
+          text: 'text-success',
+          border: 'border-success/20',
+          dot: 'bg-success'
         };
       case 'invoiced':
         return {
-          bg: 'bg-gradient-to-r from-purple-50 to-violet-50',
-          text: 'text-purple-700',
-          border: 'border-purple-200',
-          dot: 'bg-purple-500'
+          bg: 'bg-black',
+          text: 'text-ink',
+          border: 'border-line',
+          dot: 'bg-cta'
         };
       case 'sent to finance':
         return {
-          bg: 'bg-gradient-to-r from-orange-50 to-amber-50',
-          text: 'text-orange-700',
-          border: 'border-orange-200',
-          dot: 'bg-orange-500'
+          bg: 'bg-black',
+          text: 'text-warning',
+          border: 'border-warning/20',
+          dot: 'bg-warning'
         };
       default:
         return {
-          bg: 'bg-gradient-to-r from-gray-50 to-slate-50',
-          text: 'text-gray-600',
-          border: 'border-gray-200',
-          dot: 'bg-gray-400'
+          bg: 'bg-gradient-to-r from-surface-hover to-surface-hover',
+          text: 'text-dim',
+          border: 'border-line',
+          dot: 'bg-cta'
         };
     }
   };
@@ -167,10 +167,10 @@ const QuotesPage = ({ workspaceId, workspaceName, selectedTask, selectedSubtask,
   // Loading state for authentication
   if (!currentUser?.vendorId) {
     return (
-      <div className="min-h-full bg-gradient-to-br from-gray-50 via-slate-50 to-stone-50 flex items-center justify-center">
+      <div className="min-h-full bg-gradient-to-br from-surface-hover via-surface-hover to-surface-hover flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-slate-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading user authentication...</p>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-line mx-auto mb-4"></div>
+          <p className="text-dim">Loading user authentication...</p>
         </div>
       </div>
     );
@@ -179,10 +179,10 @@ const QuotesPage = ({ workspaceId, workspaceName, selectedTask, selectedSubtask,
   // Loading state for data fetching
   if (loading) {
     return (
-      <div className="min-h-full bg-gradient-to-br from-gray-50 via-slate-50 to-stone-50 flex items-center justify-center">
+      <div className="min-h-full bg-gradient-to-br from-surface-hover via-surface-hover to-surface-hover flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-slate-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading quotes...</p>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-line mx-auto mb-4"></div>
+          <p className="text-dim">Loading quotes...</p>
         </div>
       </div>
     );
@@ -191,16 +191,16 @@ const QuotesPage = ({ workspaceId, workspaceName, selectedTask, selectedSubtask,
   // Error state
   if (error) {
     return (
-      <div className="min-h-full bg-gradient-to-br from-gray-50 via-slate-50 to-stone-50 flex items-center justify-center">
+      <div className="min-h-full bg-gradient-to-br from-surface-hover via-surface-hover to-surface-hover flex items-center justify-center">
         <div className="text-center">
-          <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
-            <span className="text-red-600 text-2xl">⚠️</span>
+          <div className="w-16 h-16 bg-danger/10 rounded-full flex items-center justify-center mx-auto mb-4">
+            <span className="text-danger text-2xl">⚠️</span>
           </div>
-          <h3 className="text-lg font-semibold text-gray-900 mb-2">Error Loading Quotes</h3>
-          <p className="text-gray-500 mb-4">{error}</p>
+          <h3 className="text-lg font-semibold text-ink mb-2">Error Loading Quotes</h3>
+          <p className="text-dim mb-4">{error}</p>
           <button
             onClick={() => window.location.reload()}
-            className="bg-gradient-to-r from-slate-600 to-gray-700 text-white px-6 py-3 rounded-xl hover:from-slate-700 hover:to-gray-800 transition-all duration-300"
+            className="bg-surface text-white px-6 py-3 rounded-xl hover:from-surface hover:to-surface transition-all duration-300"
           >
             Try Again
           </button>
@@ -334,10 +334,10 @@ const QuotesPage = ({ workspaceId, workspaceName, selectedTask, selectedSubtask,
   }
 
   return (
-    <div className="min-h-full bg-gradient-to-br from-gray-50 via-slate-50 to-stone-50">
+    <div className="min-h-full bg-gradient-to-br from-surface-hover via-surface-hover to-surface-hover">
       {/* Preview Modal */}
       {showPreviewModal && (
-        <div className="fixed inset-0 z-50 flex flex-col bg-white">
+        <div className="fixed inset-0 z-50 flex flex-col bg-surface">
           <QuotesPreviewPanel
             quotes={quotesData}
             selectedQuoteId={previewQuoteId}
@@ -348,18 +348,18 @@ const QuotesPage = ({ workspaceId, workspaceName, selectedTask, selectedSubtask,
       )}
       {/* Beautiful Header with Stats */}
       <div className="relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-r from-slate-600/3 via-gray-600/3 to-stone-600/3"></div>
+        <div className="absolute inset-0 bg-surface"></div>
         <div className="relative px-8 py-8">
           <div className="flex items-center justify-between mb-8">
             <div>
-              <h1 className="text-3xl font-bold bg-gradient-to-r from-slate-800 via-gray-700 to-stone-700 bg-clip-text text-transparent">
+              <h1 className="text-3xl font-bold ">
                 Quotations Dashboard
               </h1>
-              <p className="text-gray-600 mt-2">Manage and track all your business quotations</p>
+              <p className="text-dim mt-2">Manage and track all your business quotations</p>
             </div>
             <button
               onClick={() => setShowNewQuote(true)}
-              className="bg-gradient-to-r from-slate-700 to-gray-700 text-white px-6 py-3 rounded-xl hover:from-slate-800 hover:to-gray-800 transition-all duration-300 flex items-center space-x-2 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
+              className="bg-surface text-white px-6 py-3 rounded-xl hover:from-surface hover:to-surface transition-all duration-300 flex items-center space-x-2 shadow-lg hover:shadow-xl transform "
             >
               <Plus className="w-5 h-5" />
               <span className="font-medium">New Quotation</span>
@@ -368,40 +368,40 @@ const QuotesPage = ({ workspaceId, workspaceName, selectedTask, selectedSubtask,
 
           {/* Stats Cards */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-            <div className="bg-white/80 backdrop-blur-sm border border-gray-200/50 rounded-2xl p-6 shadow-sm hover:shadow-md transition-all duration-300">
+            <div className="bg-white/80 backdrop-blur-sm border border-line rounded-2xl p-6   transition-all duration-300">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-gray-600 mb-1">Total Quotations</p>
-                  <p className="text-2xl font-bold text-gray-900">{stats.totalQuotes || quotesData.length}</p>
-                  <p className="text-xs text-green-600 mt-1">↗ +{stats.thisMonthQuotes || 12}% this month</p>
+                  <p className="text-sm font-medium text-dim mb-1">Total Quotations</p>
+                  <p className="text-2xl font-bold text-ink">{stats.totalQuotes || quotesData.length}</p>
+                  <p className="text-xs text-success mt-1">↗ +{stats.thisMonthQuotes || 12}% this month</p>
                 </div>
-                <div className="w-12 h-12 bg-gradient-to-br from-slate-500 to-gray-600 rounded-xl flex items-center justify-center">
+                <div className="w-12 h-12 bg-surface rounded-xl flex items-center justify-center">
                   <FileText className="w-6 h-6 text-white" />
                 </div>
               </div>
             </div>
 
-            <div className="bg-white/80 backdrop-blur-sm border border-gray-200/50 rounded-2xl p-6 shadow-sm hover:shadow-md transition-all duration-300">
+            <div className="bg-white/80 backdrop-blur-sm border border-line rounded-2xl p-6   transition-all duration-300">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-gray-600 mb-1">Total Value</p>
-                  <p className="text-2xl font-bold text-gray-900">₹{totalValue.toLocaleString()}</p>
-                  <p className="text-xs text-green-600 mt-1">↗ +{stats.thisMonthValue ? Math.round((stats.thisMonthValue / totalValue) * 100) : 8}% this month</p>
+                  <p className="text-sm font-medium text-dim mb-1">Total Value</p>
+                  <p className="text-2xl font-bold text-ink">₹{totalValue.toLocaleString()}</p>
+                  <p className="text-xs text-success mt-1">↗ +{stats.thisMonthValue ? Math.round((stats.thisMonthValue / totalValue) * 100) : 8}% this month</p>
                 </div>
-                <div className="w-12 h-12 bg-gradient-to-br from-green-500 to-emerald-600 rounded-xl flex items-center justify-center">
+                <div className="w-12 h-12 bg-black rounded-xl flex items-center justify-center">
                   <DollarSign className="w-6 h-6 text-white" />
                 </div>
               </div>
             </div>
 
-            <div className="bg-white/80 backdrop-blur-sm border border-gray-200/50 rounded-2xl p-6 shadow-sm hover:shadow-md transition-all duration-300">
+            <div className="bg-white/80 backdrop-blur-sm border border-line rounded-2xl p-6   transition-all duration-300">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-gray-600 mb-1">Approved</p>
-                  <p className="text-2xl font-bold text-gray-900">{stats.approvedQuotes || quotesData.filter(q => q.status.toLowerCase() === 'approved by pm').length}</p>
-                  <p className="text-xs text-green-600 mt-1">↗ +15% this month</p>
+                  <p className="text-sm font-medium text-dim mb-1">Approved</p>
+                  <p className="text-2xl font-bold text-ink">{stats.approvedQuotes || quotesData.filter(q => q.status.toLowerCase() === 'approved by pm').length}</p>
+                  <p className="text-xs text-success mt-1">↗ +15% this month</p>
                 </div>
-                <div className="w-12 h-12 bg-gradient-to-br from-stone-500 to-slate-600 rounded-xl flex items-center justify-center">
+                <div className="w-12 h-12 bg-surface rounded-xl flex items-center justify-center">
                   <TrendingUp className="w-6 h-6 text-white" />
                 </div>
               </div>
@@ -411,19 +411,19 @@ const QuotesPage = ({ workspaceId, workspaceName, selectedTask, selectedSubtask,
           {/* Enhanced Search and Filter */}
           <div className="flex items-center space-x-4">
             <div className="relative flex-1 max-w-md">
-              <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 transform  text-dim w-5 h-5" />
               <input
                 type="text"
                 placeholder="Search quotes or customers..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-12 pr-4 py-3 bg-white/80 backdrop-blur-sm border border-gray-200/50 rounded-xl focus:ring-2 focus:ring-slate-400 focus:border-transparent text-sm shadow-sm"
+                className="w-full pl-12 pr-4 py-3 bg-white/80 backdrop-blur-sm border border-line rounded-xl focus:ring-2 focus:ring-line focus:border-transparent text-sm "
               />
             </div>
             <select
               value={selectedStatus}
               onChange={(e) => setSelectedStatus(e.target.value)}
-              className="px-4 py-3 bg-white/80 backdrop-blur-sm border border-gray-200/50 rounded-xl focus:ring-2 focus:ring-slate-400 focus:border-transparent text-sm shadow-sm"
+              className="px-4 py-3 bg-white/80 backdrop-blur-sm border border-line rounded-xl focus:ring-2 focus:ring-line focus:border-transparent text-sm "
             >
               <option value="all">All Status</option>
               <option value="draft">Draft</option>
@@ -438,79 +438,79 @@ const QuotesPage = ({ workspaceId, workspaceName, selectedTask, selectedSubtask,
 
       {/* Beautiful Table */}
       <div className="px-8 pb-8">
-        <div className="bg-white/90 backdrop-blur-sm border border-gray-200/50 rounded-2xl shadow-sm">
+        <div className="bg-white/90 backdrop-blur-sm border border-line rounded-2xl ">
           <table className="w-full">
-            <thead className="bg-gradient-to-r from-gray-50/90 to-slate-50/90 backdrop-blur-sm">
+            <thead className="bg-gradient-to-r from-surface-hover to-surface-hover backdrop-blur-sm">
               <tr>
-                <th className="text-left py-5 px-6 text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                <th className="text-left py-5 px-6 text-xs font-semibold text-dim uppercase tracking-wider">
                   Quote
                 </th>
-                <th className="text-left py-5 px-6 text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                <th className="text-left py-5 px-6 text-xs font-semibold text-dim uppercase tracking-wider">
                   Customer
                 </th>
-                <th className="text-left py-5 px-6 text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                <th className="text-left py-5 px-6 text-xs font-semibold text-dim uppercase tracking-wider">
                   Date
                 </th>
-                <th className="text-right py-5 px-6 text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                <th className="text-right py-5 px-6 text-xs font-semibold text-dim uppercase tracking-wider">
                   Amount
                 </th>
-                <th className="text-center py-5 px-6 text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                <th className="text-center py-5 px-6 text-xs font-semibold text-dim uppercase tracking-wider">
                   Status
                 </th>
-                <th className="text-center py-5 px-6 text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                <th className="text-center py-5 px-6 text-xs font-semibold text-dim uppercase tracking-wider">
                   Actions
                 </th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-100/50">
+            <tbody className="divide-y divide-line">
               {filteredQuotes.map((quote, index) => {
                 const statusConfig = getStatusConfig(quote.status);
                 const isPoRequested = !!(quote.status && quote.status.toLowerCase().includes('requested po'));
                 const isLastRow = index === filteredQuotes.length - 1;
                 return (
-                  <tr key={quote.id} className="hover:bg-gradient-to-r hover:from-slate-50/40 hover:to-gray-50/40 transition-all duration-300 group">
+                  <tr key={quote.id} className="hover:bg-gradient-to-r hover:from-surface-hover hover:to-surface-hover transition-all duration-300 group">
                     <td className="py-5 px-6">
                       <div className="flex items-center space-x-4">
-                        <div className="w-10 h-10 bg-gradient-to-br from-slate-500 to-gray-600 rounded-xl flex items-center justify-center shadow-sm">
+                        <div className="w-10 h-10 bg-surface rounded-xl flex items-center justify-center ">
                           <FileText className="w-5 h-5 text-white" />
                         </div>
                         <div>
-                          <div className="font-semibold text-gray-900 group-hover:text-slate-700 transition-colors">{quote.customQuoteId || quote.quoteNumber || quote.displayQuoteId || quote.id}</div>
-                          <div className="text-xs text-gray-500">Quotation #{index + 1}</div>
+                          <div className="font-semibold text-ink group-hover:text-ink transition-colors">{quote.customQuoteId || quote.quoteNumber || quote.displayQuoteId || quote.id}</div>
+                          <div className="text-xs text-dim">Quotation #{index + 1}</div>
                         </div>
                       </div>
                     </td>
                     <td className="py-5 px-6">
-                      <div className="text-sm font-medium text-gray-900 group-hover:text-slate-700 transition-colors">
+                      <div className="text-sm font-medium text-ink group-hover:text-ink transition-colors">
                         {quote.customer}
                       </div>
                     </td>
                     <td className="py-5 px-6">
-                      <div className="flex items-center space-x-2 text-sm text-gray-600">
-                        <Calendar className="w-4 h-4 text-gray-400" />
+                      <div className="flex items-center space-x-2 text-sm text-dim">
+                        <Calendar className="w-4 h-4 text-dim" />
                         <span>{quote.date}</span>
                       </div>
                     </td>
                     <td className="py-5 px-4 text-right">
-                      <div className="min-w-[100px] max-w-[150px] overflow-hidden text-ellipsis whitespace-nowrap text-lg font-bold bg-gradient-to-r from-green-600 to-green-700 bg-clip-text text-transparent"
+                      <div className="min-w-[100px] max-w-[150px] overflow-hidden text-ellipsis whitespace-nowrap text-lg font-bold "
                         title={quote.totalAmount}>
                         {quote.totalAmount}
                       </div>
                     </td>
                     <td className="py-5 px-6 text-center">
-                      <span className={`inline-flex items-center px-3 py-1.5 rounded-full text-xs font-medium border ${statusConfig.bg} ${statusConfig.text} ${statusConfig.border} shadow-sm`}>
+                      <span className={`inline-flex items-center px-3 py-1.5 rounded-full text-xs font-medium border ${statusConfig.bg} ${statusConfig.text} ${statusConfig.border} `}>
                         <div className={`w-2 h-2 ${statusConfig.dot} rounded-full mr-2`}></div>
                         {quote.status}
                       </span>
                     </td>
                     <td className="py-5 px-6">
                       <div className="flex items-center justify-center space-x-1">
-                        <button className="p-2 text-gray-400 hover:text-slate-600 hover:bg-slate-50 rounded-xl transition-all duration-200 hover:scale-105" title="View" onClick={() => { setPreviewQuoteId(quote.id || quote.quotationId); setShowPreviewModal(true); }}>
+                        <button className="p-2 text-dim hover:text-dim hover:bg-canvas rounded-xl transition-all duration-200 hover:scale-105" title="View" onClick={() => { setPreviewQuoteId(quote.id || quote.quotationId); setShowPreviewModal(true); }}>
                           <Eye className="w-4 h-4" />
                         </button>
                         <button
                           onClick={() => handleEditQuote(quote)}
-                          className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-50 rounded-xl transition-all duration-200 hover:scale-105"
+                          className="p-2 text-dim hover:text-dim hover:bg-canvas rounded-xl transition-all duration-200 hover:scale-105"
                           title="Edit"
                         >
                           <Edit className="w-4 h-4" />
@@ -519,7 +519,7 @@ const QuotesPage = ({ workspaceId, workspaceName, selectedTask, selectedSubtask,
                         {quote.status.toLowerCase() === 'draft' && (
                           <button
                             onClick={() => handleSendToPM(quote)}
-                            className="flex items-center space-x-1.5 px-3 py-1.5 text-xs font-semibold text-blue-700 bg-blue-50 border border-blue-200 rounded-lg hover:bg-blue-100 transition-all duration-200"
+                            className="flex items-center space-x-1.5 px-3 py-1.5 text-xs font-semibold text-info bg-info/10 border border-info/20 rounded-lg hover:bg-info/10 transition-all duration-200"
                             title="Send to PM"
                           >
                             <Send className="w-3.5 h-3.5" />
@@ -530,7 +530,7 @@ const QuotesPage = ({ workspaceId, workspaceName, selectedTask, selectedSubtask,
                         {isPoRequested && onRaisePOFromQuote && (
                           <button
                             onClick={() => onRaisePOFromQuote(quote)}
-                            className="p-2 text-gray-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-xl transition-all duration-200 hover:scale-105"
+                            className="p-2 text-dim hover:text-ink hover:bg-surface-hover rounded-xl transition-all duration-200 hover:scale-105"
                             title="Raise Purchase Order"
                           >
                             <Package2 className="w-4 h-4" />
@@ -538,24 +538,24 @@ const QuotesPage = ({ workspaceId, workspaceName, selectedTask, selectedSubtask,
                         )}
                         <button
                           onClick={() => handleDownloadQuote(quote)}
-                          className="p-2 text-gray-400 hover:text-green-600 hover:bg-green-50 rounded-xl transition-all duration-200 hover:scale-105"
+                          className="p-2 text-dim hover:text-success hover:bg-success/10 rounded-xl transition-all duration-200 hover:scale-105"
                           title="Download"
                         >
                           <Download className="w-4 h-4" />
                         </button>
                         <div className="relative group/menu">
-                          <button className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-50 rounded-xl transition-all duration-200">
+                          <button className="p-2 text-dim hover:text-dim hover:bg-canvas rounded-xl transition-all duration-200">
                             <MoreHorizontal className="w-4 h-4" />
                           </button>
-                          <div className={`absolute right-0 ${isLastRow ? 'bottom-10' : 'top-10'} w-36 bg-white/95 backdrop-blur-sm border border-gray-200/50 rounded-xl shadow-lg opacity-0 invisible group-hover/menu:opacity-100 group-hover/menu:visible transition-all duration-200 z-20`}>
-                            <button className={`w-full text-left px-4 py-3 text-sm text-gray-700 hover:bg-slate-50 rounded-t-xl transition-colors ${quote.status.toLowerCase() !== 'draft' ? 'rounded-b-xl' : ''}`}>
+                          <div className={`absolute right-0 ${isLastRow ? 'bottom-10' : 'top-10'} w-36 bg-white/95 backdrop-blur-sm border border-line rounded-xl shadow-lg opacity-0 invisible group-hover/menu:opacity-100 group-hover/menu:visible transition-all duration-200 z-20`}>
+                            <button className={`w-full text-left px-4 py-3 text-sm text-ink hover:bg-canvas rounded-t-xl transition-colors ${quote.status.toLowerCase() !== 'draft' ? 'rounded-b-xl' : ''}`}>
                               Duplicate
                             </button>
                             {/* Delete is only available for drafts - locked once sent to PM */}
                             {quote.status.toLowerCase() === 'draft' && (
                               <button
                                 onClick={() => handleDeleteQuote(quote)}
-                                className="w-full text-left px-4 py-3 text-sm text-red-600 hover:bg-red-50 rounded-b-xl flex items-center space-x-2 transition-colors"
+                                className="w-full text-left px-4 py-3 text-sm text-danger hover:bg-danger/10 rounded-b-xl flex items-center space-x-2 transition-colors"
                               >
                                 <Trash2 className="w-4 h-4" />
                                 <span>Delete</span>
@@ -574,12 +574,12 @@ const QuotesPage = ({ workspaceId, workspaceName, selectedTask, selectedSubtask,
           {/* Beautiful Empty State */}
           {filteredQuotes.length === 0 && (
             <div className="text-center py-16">
-              <div className="w-20 h-20 bg-gradient-to-br from-slate-500 to-gray-600 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-sm">
+              <div className="w-20 h-20 bg-surface rounded-2xl flex items-center justify-center mx-auto mb-6 ">
                 <FileText className="w-10 h-10 text-white" />
               </div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">No quotes found</h3>
-              <p className="text-gray-500 mb-6">Try adjusting your search or filter criteria</p>
-              <button className="bg-gradient-to-r from-slate-600 to-gray-700 text-white px-6 py-3 rounded-xl hover:from-slate-700 hover:to-gray-800 transition-all duration-300 shadow-sm">
+              <h3 className="text-lg font-semibold text-ink mb-2">No quotes found</h3>
+              <p className="text-dim mb-6">Try adjusting your search or filter criteria</p>
+              <button className="bg-surface text-white px-6 py-3 rounded-xl hover:from-surface hover:to-surface transition-all duration-300 ">
                 Create New Quote
               </button>
             </div>
@@ -589,17 +589,17 @@ const QuotesPage = ({ workspaceId, workspaceName, selectedTask, selectedSubtask,
         {/* Enhanced Pagination */}
         {filteredQuotes.length > 0 && (
           <div className="flex items-center justify-between mt-8">
-            <div className="text-sm text-gray-600 bg-white/80 backdrop-blur-sm px-4 py-2 rounded-xl border border-gray-200/50">
-              Showing <span className="font-semibold text-gray-900">{filteredQuotes.length}</span> of <span className="font-semibold text-gray-900">{quotesData.length}</span> quotes
+            <div className="text-sm text-dim bg-white/80 backdrop-blur-sm px-4 py-2 rounded-xl border border-line">
+              Showing <span className="font-semibold text-ink">{filteredQuotes.length}</span> of <span className="font-semibold text-ink">{quotesData.length}</span> quotes
             </div>
             <div className="flex items-center space-x-2">
-              <button className="px-4 py-2 text-sm text-gray-500 hover:text-gray-700 bg-white/80 backdrop-blur-sm rounded-xl border border-gray-200/50 hover:bg-white transition-all duration-200 disabled:opacity-50" disabled>
+              <button className="px-4 py-2 text-sm text-dim hover:text-ink bg-white/80 backdrop-blur-sm rounded-xl border border-line hover:bg-surface transition-all duration-200 disabled:opacity-50" disabled>
                 Previous
               </button>
-              <button className="px-4 py-2 text-sm bg-gradient-to-r from-slate-600 to-gray-700 text-white rounded-xl shadow-sm hover:shadow-md transition-all duration-200">
+              <button className="px-4 py-2 text-sm bg-surface text-white rounded-xl transition-all duration-200">
                 1
               </button>
-              <button className="px-4 py-2 text-sm text-gray-500 hover:text-gray-700 bg-white/80 backdrop-blur-sm rounded-xl border border-gray-200/50 hover:bg-white transition-all duration-200 disabled:opacity-50" disabled>
+              <button className="px-4 py-2 text-sm text-dim hover:text-ink bg-white/80 backdrop-blur-sm rounded-xl border border-line hover:bg-surface transition-all duration-200 disabled:opacity-50" disabled>
                 Next
               </button>
             </div>

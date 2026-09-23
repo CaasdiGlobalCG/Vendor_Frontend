@@ -2,49 +2,75 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ============================================================
+   Caasdi Monochrome Design System — Token Source of Truth
+   Change a value here → every Tailwind class updates app-wide.
+   Legacy shadcn names (bg-primary, border-border, custom-bg…)
+   are aliased to these vars in tailwind.config.js.
+   ============================================================ */
+
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
+    /* Surfaces & text — light mode (Operon brand: closed monochrome) */
+    --canvas-bg: 255 255 255;      /* paper #FFFFFF — 55% default canvas */
+    --surface-card: 255 255 255;   /* paper — cards read via hairline, not fill */
+    --surface-hover: 240 240 240;  /* cloud #F0F0F0 — 25% secondary surface */
+    --border-subtle: 219 219 219;  /* ink-14 — default hairline (#DBDBDB on paper) */
+    --text-primary: 0 0 0;         /* ink #000000 */
+    --text-muted: 115 115 115;     /* ink-55 (#737373) */
+    --cta-action: 0 0 0;           /* ink — primary button = bg-ink */
+    --cta-text: 255 255 255;       /* paper */
 
-    --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
+    /* Brand accent — teal, the ONLY non-status hue */
+    --brand: 33 190 156;           /* #21BE9C */
+    --brand-foreground: 255 255 255;
 
-    --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
-
-    --primary: 162 47% 30%;
-    --primary-foreground: 210 40% 98%;
-
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
-
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
-
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
-
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
-
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 222.2 84% 4.9%;
+    /* Status colors — meaning only, never decoration */
+    --status-success: 16 185 129;  /* #10B981 */
+    --status-danger: 220 38 38;    /* #DC2626 */
+    --status-warning: 217 119 6;   /* #D97706 */
+    --status-info: 37 99 235;      /* #2563EB */
 
     --radius: 0.5rem;
+  }
+
+  .dark {
+    /* Surfaces & text — dark mode (brand reversed: ink canvas, paper steps) */
+    --canvas-bg: 0 0 0;            /* ink #000000 */
+    --surface-card: 16 16 16;      /* paper-06 — #101010 */
+    --surface-hover: 31 31 31;     /* paper-12 — #1F1F1F */
+    --border-subtle: 36 36 36;     /* paper-14 hairline — #242424 on ink */
+    --text-primary: 255 255 255;   /* paper */
+    --text-muted: 140 140 140;     /* paper-55 — #8C8C8C */
+    --cta-action: 255 255 255;     /* paper — reversed CTA = bg-paper */
+    --cta-text: 0 0 0;             /* ink */
+
+    --brand: 45 212 184;           /* #2DD4B8 — lifted for dark contrast */
+    --brand-foreground: 5 30 26;
+
+    --status-success: 52 211 153;  /* #34D399 */
+    --status-danger: 248 113 113;  /* #F87171 */
+    --status-warning: 251 191 36;  /* #FBBF24 */
+    --status-info: 96 165 250;     /* #60A5FA */
   }
 }
 
 @layer base {
   * {
-    @apply border-border;
+    border-color: rgb(var(--border-subtle));
   }
   body {
-    @apply bg-background text-foreground;
+    @apply bg-canvas text-ink font-sans;
   }
 }
 
+/* Tabular numerals — amounts, IDs, timers (prevents column jitter) */
+.tnum {
+  font-feature-settings: "tnum";
+  font-variant-numeric: tabular-nums;
+}
+
+/* Height-expand utility (used by canvas/workspace elements) */
 .animate-in {
   animation: animateIn 0.5s ease-out forwards;
 }
@@ -74,3 +100,97 @@
   }
 }
 
+/* ============================================================
+   Operon motion system — transform/opacity only.
+   Pairs with components/ui/reveal.jsx. All safe under
+   prefers-reduced-motion via the global override below.
+   ============================================================ */
+
+/* Scroll reveal — hidden until .reveal-visible is added by the IO */
+.vd-reveal {
+  opacity: 0;
+  transform: translateY(14px);
+  transition: opacity 0.45s cubic-bezier(0.22, 0.61, 0.36, 1),
+    transform 0.45s cubic-bezier(0.22, 0.61, 0.36, 1);
+  transition-delay: var(--reveal-delay, 0ms);
+}
+.vd-reveal.vd-from-left { transform: translateX(-22px); }
+.vd-reveal.vd-from-right { transform: translateX(22px); }
+/* transform: none (not translate(0,0)) releases the compositing layer —
+   lingering transforms disable subpixel AA and make text look blurry */
+.vd-reveal.reveal-visible,
+.vd-reveal.reveal-visible.vd-from-left,
+.vd-reveal.reveal-visible.vd-from-right {
+  opacity: 1;
+  transform: none;
+}
+
+/* Opacity-only reveal — safe inside <tr> and other no-transform contexts */
+.vd-reveal-flat {
+  opacity: 0;
+  transition: opacity 0.4s cubic-bezier(0.22, 0.61, 0.36, 1);
+  transition-delay: var(--reveal-delay, 0ms);
+}
+.vd-reveal-flat.reveal-visible { opacity: 1; }
+
+/* Hero mount stagger — apply with inline animation-delay */
+@keyframes vd-hero-in {
+  from { opacity: 0; transform: translateY(16px); }
+  to { opacity: 1; transform: none; }
+}
+.animate-hero-in { animation: vd-hero-in 0.5s cubic-bezier(0.22, 0.61, 0.36, 1) both; }
+
+/* Cursor spotlight — set --mx/--my via spotlightMove() onMouseMove */
+.vd-spotlight { position: relative; }
+.vd-spotlight::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.25s ease;
+  background: radial-gradient(
+    480px circle at var(--mx, 50%) var(--my, 50%),
+    rgb(var(--text-primary) / 0.06),
+    transparent 45%
+  );
+}
+.vd-spotlight:hover::after { opacity: 1; }
+
+/* Card hover lift — pairs with the shadow below */
+.vd-lift {
+  transition: transform 0.25s cubic-bezier(0.22, 0.61, 0.36, 1),
+    box-shadow 0.25s cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+.vd-lift:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 18px 44px rgb(var(--text-primary) / 0.12);
+}
+.dark .vd-lift:hover {
+  box-shadow: 0 18px 44px rgb(0 0 0 / 0.55);
+}
+
+/* List-row arrow slide-in — arrow enters from the left on hover */
+.vd-row-arrow {
+  opacity: 0;
+  transform: translateX(-8px);
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+.group:hover .vd-row-arrow { opacity: 1; transform: translateX(0); }
+
+/* Respect reduced-motion globally */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+  .vd-reveal,
+  .vd-reveal.vd-from-left,
+  .vd-reveal.vd-from-right {
+    opacity: 1;
+    transform: none;
+  }
+}

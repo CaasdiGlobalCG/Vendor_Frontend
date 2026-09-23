@@ -15,14 +15,14 @@ import {
 import config from '../../config/env';
 
 const CARD_SURFACES = [
-  'bg-emerald-50',
-  'bg-blue-50',
-  'bg-violet-50',
-  'bg-amber-50',
-  'bg-rose-50',
-  'bg-cyan-50',
-  'bg-lime-50',
-  'bg-slate-100',
+  'bg-surface-hover',
+  'bg-info/10',
+  'bg-surface-hover',
+  'bg-warning/10',
+  'bg-danger/10',
+  'bg-info/10',
+  'bg-success/10',
+  'bg-surface-hover',
 ];
 
 const surfaceFor = (idx) => CARD_SURFACES[idx % CARD_SURFACES.length];
@@ -452,20 +452,20 @@ const WorkspaceList = () => {
 
   /* ───── priority badge helper ───── */
   const priorityClasses = (p) => {
-    if (p === 'high') return 'bg-red-50 text-red-700 border-red-100';
-    if (p === 'medium') return 'bg-amber-50 text-amber-700 border-amber-100';
-    return 'bg-emerald-50 text-emerald-700 border-emerald-100';
+    if (p === 'high') return 'bg-danger/10 text-danger border-danger/10';
+    if (p === 'medium') return 'bg-warning/10 text-warning border-warning/10';
+    return 'bg-surface-hover text-ink border-line';
   };
 
   return (
     <div className="p-5 space-y-6">
       <div className="flex flex-wrap justify-between items-center gap-3">
         <div>
-          <h1 className="text-xl font-semibold text-gray-900">Workspaces</h1>
-          <p className="text-sm text-gray-600 max-w-2xl">{subtitle}</p>
+          <h1 className="text-xl font-semibold text-ink">Workspaces</h1>
+          <p className="text-sm text-dim max-w-2xl">{subtitle}</p>
         </div>
         {!loading && workspaces.length > 0 && (
-          <span className="text-xs text-gray-500 bg-gray-100 px-3 py-1.5 rounded-full border border-gray-200">
+          <span className="text-xs text-dim bg-surface-hover px-3 py-1.5 rounded-full border border-line">
             {workspaces.length} workspace{workspaces.length !== 1 && 's'}
           </span>
         )}
@@ -473,37 +473,37 @@ const WorkspaceList = () => {
 
       {/* ── states ── */}
       {accessFeedback ? (
-        <div className="rounded-lg border border-red-200 bg-red-50 text-red-700 px-4 py-2 text-sm">
+        <div className="rounded-lg border border-danger/20 bg-danger/10 text-danger px-4 py-2 text-sm">
           {accessFeedback}
         </div>
       ) : null}
 
       {loading ? (
         <div className="flex justify-center items-center py-16">
-          <ArrowPathIcon className="h-8 w-8 text-emerald-600 animate-spin" />
+          <ArrowPathIcon className="h-8 w-8 text-ink animate-spin" />
         </div>
       ) : error ? (
-        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-8 rounded-lg text-center">
+        <div className="bg-danger/10 border border-danger/20 text-danger px-4 py-8 rounded-lg text-center">
           <p className="mb-3">{error}</p>
           <button
             type="button"
             onClick={() => window.location.reload()}
-            className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 text-sm"
+            className="px-4 py-2 bg-danger text-white rounded-md hover:bg-danger text-sm"
           >
             Try Again
           </button>
         </div>
       ) : workspaces.length === 0 ? (
-        <div className="bg-gray-50 border border-gray-200 text-gray-700 px-4 py-8 rounded-lg">
+        <div className="bg-canvas border border-line text-ink px-4 py-8 rounded-lg">
           {hasWorkspaceScopeRestriction ? (
             <>
               <h2 className="text-base font-semibold mb-1">No workspace access</h2>
-              <p className="text-sm text-gray-600">You do not have access to any projects or workspaces.</p>
+              <p className="text-sm text-dim">You do not have access to any projects or workspaces.</p>
             </>
           ) : (
             <>
               <h2 className="text-base font-semibold mb-1">No workspaces available yet</h2>
-              <p className="text-sm text-gray-600">
+              <p className="text-sm text-dim">
                 Once a Project Manager approves your lead and grants workspace access, the workspace will appear here.
               </p>
             </>
@@ -525,11 +525,11 @@ const WorkspaceList = () => {
             return (
               <div
                 key={item.leadId}
-                className="group flex cursor-pointer flex-col overflow-hidden rounded-[22px] border border-gray-200 bg-white shadow-[0_8px_24px_rgba(15,23,42,0.05)] transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_14px_30px_rgba(15,23,42,0.08)]"
+                className="group flex cursor-pointer flex-col overflow-hidden rounded-[22px] border border-line bg-surface transition-all duration-200  hover:"
                 onClick={() => openWorkspace(item)}
               >
                 <div
-                  className={`relative h-48 overflow-hidden bg-white ${preview?.imageUrl || preview?.nodes?.length || preview?.edges?.length ? 'bg-white' : surfaceFor(idx)}`}
+                  className={`relative h-48 overflow-hidden bg-surface ${preview?.imageUrl || preview?.nodes?.length || preview?.edges?.length ? 'bg-surface' : surfaceFor(idx)}`}
                 >
                   {preview?.imageUrl ? (
                     <img
@@ -542,22 +542,22 @@ const WorkspaceList = () => {
                     <WorkspaceCanvasPreview preview={preview} />
                   ) : (
                     <div className="absolute inset-0 flex flex-col items-center justify-center gap-3">
-                      <div className="rounded-2xl border border-white/80 bg-white/80 p-4 shadow-sm">
-                        <Squares2X2Icon className="h-8 w-8 text-gray-500" />
+                      <div className="rounded-2xl border border-white/80 bg-white/80 p-4 ">
+                        <Squares2X2Icon className="h-8 w-8 text-dim" />
                       </div>
-                      <span className="text-xs font-medium text-gray-500">No canvas preview yet</span>
+                      <span className="text-xs font-medium text-dim">No canvas preview yet</span>
                     </div>
                   )}
 
                   <div className="absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-black/12 to-transparent" />
 
                   <div className="absolute left-3 top-3 flex items-center gap-2">
-                    <span className="inline-flex items-center rounded-full border border-white/80 bg-white/92 px-2.5 py-1 text-[10px] font-medium text-gray-700 shadow-sm">
+                    <span className="inline-flex items-center rounded-full border border-white/80 bg-white/92 px-2.5 py-1 text-[10px] font-medium text-ink ">
                       Workspace
                     </span>
                     {priorityLabel && (
                       <span
-                        className={`inline-flex items-center rounded-full border px-2.5 py-1 text-[10px] font-medium shadow-sm ${priorityClasses(
+                        className={`inline-flex items-center rounded-full border px-2.5 py-1 text-[10px] font-medium  ${priorityClasses(
                           asLowerString(priorityLabel),
                         )}`}
                       >
@@ -566,8 +566,8 @@ const WorkspaceList = () => {
                     )}
                   </div>
 
-                  <div className="absolute right-3 top-3 flex items-center gap-1 rounded-full border border-white/80 bg-white/92 px-2.5 py-1 text-[10px] font-medium text-emerald-700 shadow-sm">
-                    <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+                  <div className="absolute right-3 top-3 flex items-center gap-1 rounded-full border border-white/80 bg-white/92 px-2.5 py-1 text-[10px] font-medium text-ink ">
+                    <span className="h-1.5 w-1.5 rounded-full bg-cta" />
                     Ready
                   </div>
                 </div>
@@ -575,26 +575,26 @@ const WorkspaceList = () => {
                 <div className="flex flex-1 flex-col gap-3 px-4 py-3">
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0">
-                      <h3 className="truncate text-[15px] font-semibold text-gray-900">{title}</h3>
-                      <p className="mt-0.5 truncate text-sm text-gray-500">{editedLabel}</p>
+                      <h3 className="truncate text-[15px] font-semibold text-ink">{title}</h3>
+                      <p className="mt-0.5 truncate text-sm text-dim">{editedLabel}</p>
                     </div>
 
-                    <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center overflow-hidden rounded-full border border-gray-200 bg-amber-100 text-[11px] font-semibold text-amber-700">
+                    <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center overflow-hidden rounded-full border border-line bg-warning/10 text-[11px] font-semibold text-warning">
                       {avatarLabel}
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-2 text-sm text-gray-600">
-                    <span className="inline-flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-lg bg-blue-50 text-blue-600">
+                  <div className="flex items-center gap-2 text-sm text-dim">
+                    <span className="inline-flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-lg bg-info/10 text-info">
                       <RectangleGroupIcon className="h-4 w-4" />
                     </span>
                     <span className="truncate">{subtitleText}</span>
                   </div>
 
-                  <div className="flex items-center justify-between gap-3 border-t border-gray-100 pt-3">
+                  <div className="flex items-center justify-between gap-3 border-t border-line pt-3">
                     <div className="min-w-0">
-                      <p className="truncate text-[11px] font-medium uppercase tracking-[0.14em] text-gray-400">Lead</p>
-                      <p className="truncate text-xs text-gray-500" title={item.leadId}>{item.leadId}</p>
+                      <p className="truncate text-[11px] font-medium uppercase tracking-[0.14em] text-dim">Lead</p>
+                      <p className="truncate text-xs text-dim" title={item.leadId}>{item.leadId}</p>
                     </div>
 
                     <div className="flex items-center gap-2">
@@ -606,7 +606,7 @@ const WorkspaceList = () => {
                             openWorkspaceAccess(item);
                           }}
                           disabled={resolvingWorkspaceLeadId === item.leadId}
-                          className="inline-flex items-center justify-center rounded-lg border border-gray-200 bg-white px-3 py-2 text-xs font-medium text-gray-700 transition-colors hover:bg-gray-50 disabled:opacity-60"
+                          className="inline-flex items-center justify-center rounded-lg border border-line bg-surface px-3 py-2 text-xs font-medium text-ink transition-colors hover:bg-canvas disabled:opacity-60"
                         >
                           {resolvingWorkspaceLeadId === item.leadId ? 'Preparing...' : 'Access'}
                         </button>
@@ -618,7 +618,7 @@ const WorkspaceList = () => {
                           e.stopPropagation();
                           openWorkspace(item);
                         }}
-                        className="inline-flex items-center justify-center rounded-lg bg-gray-900 px-3 py-2 text-xs font-medium text-white transition-colors hover:bg-gray-800"
+                        className="inline-flex items-center justify-center rounded-lg bg-cta px-3 py-2 text-xs font-medium text-cta-foreground transition-colors hover:bg-cta"
                       >
                         Open
                       </button>
@@ -688,7 +688,7 @@ function WorkspaceCanvasPreview({ preview }) {
 
   return (
     <svg
-      className="h-full w-full bg-[#fbfcfe]"
+      className="h-full w-full bg-surface"
       viewBox={`0 0 ${width} ${height}`}
       preserveAspectRatio="xMidYMid meet"
       aria-label="Workspace canvas preview"
@@ -733,7 +733,7 @@ function WorkspaceCanvasPreview({ preview }) {
             key={edge?.id || `edge-${index}`}
             d={`M ${startX} ${startY} C ${controlX} ${startY}, ${controlX} ${endY}, ${endX} ${endY}`}
             fill="none"
-            stroke="#94a3b8"
+            stroke="rgb(var(--info))"
             strokeWidth="2"
             strokeLinecap="round"
             opacity="0.8"
@@ -761,7 +761,7 @@ function WorkspaceCanvasPreview({ preview }) {
               width={node.width}
               height={node.height}
               rx="12"
-              fill="#dfe7f3"
+              fill="rgb(var(--info))"
               opacity="0.45"
             />
             <rect
@@ -771,7 +771,7 @@ function WorkspaceCanvasPreview({ preview }) {
               height={node.height}
               rx="12"
               fill={fill}
-              stroke="#cfd8e3"
+              stroke="rgb(var(--info))"
             />
             <rect
               x={x + 10}
@@ -779,7 +779,7 @@ function WorkspaceCanvasPreview({ preview }) {
               width={Math.max(18, node.width * 0.45)}
               height="6"
               rx="3"
-              fill="#cbd5e1"
+              fill="rgb(var(--info))"
             />
             <rect
               x={x + 10}
@@ -787,7 +787,7 @@ function WorkspaceCanvasPreview({ preview }) {
               width={Math.max(26, node.width * 0.65)}
               height="5"
               rx="2.5"
-              fill="#e2e8f0"
+              fill="currentColor"
             />
           </g>
         );

@@ -25,7 +25,7 @@
     position: relative;
     width: 100vw;
     height: 100vh;
-    background: #ffffff;
+    background: rgb(var(--surface-card));
     overflow: hidden;
   }
   .role-rectangle {
@@ -64,7 +64,7 @@
     height: 30px;
     top: 58px;
     left: 295px;
-    color: #ffffff;
+    color: rgb(var(--text-muted));
     font-family: Poppins, var(--default-font-family);
     font-size: 20px;
     font-weight: 500;
@@ -81,7 +81,7 @@
     height: 36px;
     top: 110px;
     left: 769px;
-    color: #000000;
+    color: rgb(var(--text-primary));
     font-family: Poppins, var(--default-font-family);
     font-size: 24px;
     font-weight: 500;
@@ -98,7 +98,7 @@
     height: 24px;
     top: 140px;
     left: 769px;
-    color: #000000;
+    color: rgb(var(--text-primary));
     font-family: Poppins, var(--default-font-family);
     font-size: 16px;
     font-weight: 400;
@@ -114,7 +114,7 @@
     height: 70px;
     top: 235px;
     left: 840px;
-    border: 1px solid #21be9c;
+    border: 1px solid rgb(var(--border-subtle));
     z-index: 12;
     border-radius: 18px;
   }
@@ -138,7 +138,7 @@
     height: 36px;
     top: 8px;
     left: 165px;
-    color: #000000;
+    color: rgb(var(--text-primary));
     font-family: Poppins, var(--default-font-family);
     font-size: 18px;
     font-weight: 500;
@@ -190,7 +190,7 @@
     height: 24px;
     top: 34px;
     left: 154px;
-    color: #000000;
+    color: rgb(var(--text-primary));
     font-family: Poppins, var(--default-font-family);
     font-size: 14px;
     font-weight: 400;
@@ -206,7 +206,7 @@
     height: 70px;
     top: 330px;
     left: 840px;
-    border: 1px solid #000000;
+    border: 1px solid rgb(var(--border-subtle));
     z-index: 13;
     border-radius: 18px;
   }
@@ -230,7 +230,7 @@
     height: 36px;
     top: 8px;
     left: 165px;
-    color: #000000;
+    color: rgb(var(--text-primary));
     font-family: Poppins, var(--default-font-family);
     font-size: 18px;
     font-weight: 500;
@@ -282,7 +282,7 @@
     height: 34px;
     top: 34px;
     left: 154px;
-    color: #000000;
+    color: rgb(var(--text-primary));
     font-family: Poppins, var(--default-font-family);
     font-size: 14px;
     font-weight: 400;
@@ -313,7 +313,7 @@
     height: 36px;
     top: 6px;
     left: 230px;
-    color: #ffffff;
+    color: rgb(var(--text-muted));
     font-family: Poppins, var(--default-font-family);
     font-size: 18px;
     font-weight: 500;
@@ -331,7 +331,7 @@
     height: 30px;
     top: 525px;
     left: 190px;
-    color: #ffffff;
+    color: rgb(var(--text-muted));
     font-family: Poppins, var(--default-font-family);
     font-size: 20px;
     font-weight: 700;
@@ -349,7 +349,7 @@
     height: 96px;
     top: 555px;
     left: 42px;
-    color: #ffffff;
+    color: rgb(var(--text-muted));
     font-family: Poppins, var(--default-font-family);
     font-size: 16px;
     font-weight: 300;
@@ -363,7 +363,7 @@
     height: 6px;
     top: 670px;
     left: 254px;
-    background: #ffffff;
+    background: rgb(var(--surface-card));
     z-index: 9;
     border-radius: 4px;
   }
@@ -373,7 +373,7 @@
     height: 6px;
     top: 670px;
     left: 324px;
-    background: #ffffff;
+    background: rgb(var(--surface-card));
     opacity: 0.5;
     z-index: 10;
     border-radius: 4px;
@@ -384,7 +384,7 @@
     height: 6px;
     top: 670px;
     left: 392px;
-    background: #ffffff;
+    background: rgb(var(--surface-card));
     opacity: 0.5;
     z-index: 11;
     border-radius: 4px;

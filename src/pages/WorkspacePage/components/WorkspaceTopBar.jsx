@@ -154,7 +154,7 @@ const WorkspaceTopBar = ({
         className="ws-back-btn"
         title={`Back to ${userRole === 'pm' ? 'PM' : userRole === 'cas' ? 'CAS' : userRole === 'client' ? 'Client' : 'Vendor'} Dashboard`}
       >
-        <ChevronLeft className="w-5 h-5 text-gray-700" />
+        <ChevronLeft className="w-5 h-5 text-ink" />
       </button>
 
       {/* Brand Mark */}
@@ -186,7 +186,7 @@ const WorkspaceTopBar = ({
       {onRefresh && (
         <button
           onClick={onRefresh}
-          className="ws-icon-btn text-gray-500 hover:text-gray-900"
+          className="ws-icon-btn text-dim hover:text-ink"
           title="Refresh workspace"
         >
           <RotateCw className="w-4 h-4" />
@@ -197,7 +197,7 @@ const WorkspaceTopBar = ({
 
       {/* Quick Search ⌘K */}
       <div className="ws-search-box" onClick={handleSearchClick} title="Search actions & elements (Ctrl+K)">
-        <Search className="w-3.5 h-3.5 text-gray-400" />
+        <Search className="w-3.5 h-3.5 text-dim" />
         <span>Search</span>
         <kbd>⌘K</kbd>
       </div>
@@ -232,7 +232,7 @@ const WorkspaceTopBar = ({
             );
           })}
           {workspaceCollaborators.length > 3 && (
-            <div className="ws-avatar" style={{ backgroundColor: '#64748b', zIndex: 0 }}>
+            <div className="ws-avatar" style={{ backgroundColor: 'rgb(var(--info))', zIndex: 0 }}>
               +{workspaceCollaborators.length - 3}
             </div>
           )}
@@ -246,7 +246,7 @@ const WorkspaceTopBar = ({
           className="ws-icon-btn"
           title="Start video call with team"
         >
-          <Video className="w-4 h-4 text-gray-600 hover:text-blue-600" />
+          <Video className="w-4 h-4 text-dim hover:text-info" />
         </button>
       )}
 
@@ -259,30 +259,30 @@ const WorkspaceTopBar = ({
         >
           <Bell className="w-4 h-4" />
           {unreadCount > 0 && (
-            <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white rounded-full text-[9px] font-bold flex items-center justify-center">
+            <span className="absolute -top-1 -right-1 w-4 h-4 bg-danger text-white rounded-full text-[9px] font-bold flex items-center justify-center">
               {unreadCount > 9 ? '9+' : unreadCount}
             </span>
           )}
         </button>
 
         {showNotifications && (
-          <div className="absolute right-0 top-full mt-2 w-80 bg-white border border-gray-200 rounded-xl shadow-xl z-50 overflow-hidden">
-            <div className="flex items-center justify-between px-3.5 py-2.5 border-b border-gray-100">
-              <span className="text-xs font-semibold text-gray-900">Notifications</span>
+          <div className="absolute right-0 top-full mt-2 w-80 bg-surface border border-line rounded-xl shadow-xl z-50 overflow-hidden">
+            <div className="flex items-center justify-between px-3.5 py-2.5 border-b border-line">
+              <span className="text-xs font-semibold text-ink">Notifications</span>
               {unreadCount > 0 && onMarkAllNotificationsAsRead && (
                 <button
                   onClick={onMarkAllNotificationsAsRead}
-                  className="text-[11px] text-blue-600 hover:text-blue-800 transition-colors"
+                  className="text-[11px] text-info hover:text-info transition-colors"
                 >
                   Mark all read
                 </button>
               )}
             </div>
-            <div className="max-h-80 overflow-y-auto divide-y divide-gray-100">
+            <div className="max-h-80 overflow-y-auto divide-y divide-line">
               {notifications.length === 0 ? (
                 <div className="py-8 text-center">
-                  <Bell className="w-6 h-6 text-gray-300 mx-auto mb-2" />
-                  <p className="text-xs text-gray-400">No notifications yet</p>
+                  <Bell className="w-6 h-6 text-dim mx-auto mb-2" />
+                  <p className="text-xs text-dim">No notifications yet</p>
                 </div>
               ) : (
                 notifications.slice(0, 15).map((n) => {
@@ -292,20 +292,20 @@ const WorkspaceTopBar = ({
                     <button
                       key={nid || Math.random()}
                       onClick={() => nid && onMarkNotificationAsRead?.(nid)}
-                      className={`w-full flex items-start gap-2.5 px-3.5 py-2.5 text-left hover:bg-gray-50 transition-colors ${!n.isRead ? 'bg-blue-50/40' : ''}`}
+                      className={`w-full flex items-start gap-2.5 px-3.5 py-2.5 text-left hover:bg-canvas transition-colors ${!n.isRead ? 'bg-info' : ''}`}
                     >
-                      <span className={`mt-0.5 flex-shrink-0 w-6 h-6 rounded-full flex items-center justify-center ${n.actionRequired ? 'bg-amber-100 text-amber-600' : 'bg-gray-100 text-gray-500'}`}>
+                      <span className={`mt-0.5 flex-shrink-0 w-6 h-6 rounded-full flex items-center justify-center ${n.actionRequired ? 'bg-warning/10 text-warning' : 'bg-surface-hover text-dim'}`}>
                         <Icon className="w-3.5 h-3.5" />
                       </span>
                       <span className="flex-1 min-w-0">
-                        <span className="block text-xs font-medium text-gray-900 truncate">{n.title || 'Notification'}</span>
+                        <span className="block text-xs font-medium text-ink truncate">{n.title || 'Notification'}</span>
                         {n.message && (
-                          <span className="block text-[11px] text-gray-500 line-clamp-2">{n.message}</span>
+                          <span className="block text-[11px] text-dim line-clamp-2">{n.message}</span>
                         )}
-                        <span className="block text-[10px] text-gray-400 mt-0.5">{formatNotificationTime(n)}</span>
+                        <span className="block text-[10px] text-dim mt-0.5">{formatNotificationTime(n)}</span>
                       </span>
                       {!n.isRead && (
-                        <span className="w-1.5 h-1.5 rounded-full bg-blue-500 mt-1.5 flex-shrink-0" />
+                        <span className="w-1.5 h-1.5 rounded-full bg-info mt-1.5 flex-shrink-0" />
                       )}
                     </button>
                   );
@@ -324,7 +324,7 @@ const WorkspaceTopBar = ({
       >
         <MessageSquare className="w-4 h-4" />
         {unreadCount > 0 && (
-          <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white rounded-full text-[9px] font-bold flex items-center justify-center">
+          <span className="absolute -top-1 -right-1 w-4 h-4 bg-danger text-white rounded-full text-[9px] font-bold flex items-center justify-center">
             {unreadCount}
           </span>
         )}
@@ -352,38 +352,38 @@ const WorkspaceTopBar = ({
         </button>
 
         {showOverflow && (
-          <div className="absolute right-0 top-full mt-2 w-52 bg-white border border-gray-200 rounded-xl shadow-xl z-50 py-1.5 text-xs text-gray-700 animate-in fade-in duration-150">
+          <div className="absolute right-0 top-full mt-2 w-52 bg-surface border border-line rounded-xl shadow-xl z-50 py-1.5 text-xs text-ink animate-in fade-in duration-150">
             {/* PM specific actions */}
             {isPM && (
               <>
                 {onManagePermissions && (
                   <button
                     onClick={() => { onManagePermissions(); setShowOverflow(false); }}
-                    className="w-full flex items-center gap-2 px-3.5 py-2 hover:bg-gray-50 transition-colors"
+                    className="w-full flex items-center gap-2 px-3.5 py-2 hover:bg-canvas transition-colors"
                   >
-                    <Shield className="w-4 h-4 text-blue-600" />
+                    <Shield className="w-4 h-4 text-info" />
                     <span>Manage Permissions</span>
                   </button>
                 )}
                 {onInviteVendors && (
                   <button
                     onClick={() => { onInviteVendors(); setShowOverflow(false); }}
-                    className="w-full flex items-center gap-2 px-3.5 py-2 hover:bg-gray-50 transition-colors"
+                    className="w-full flex items-center gap-2 px-3.5 py-2 hover:bg-canvas transition-colors"
                   >
-                    <UserPlus className="w-4 h-4 text-emerald-600" />
+                    <UserPlus className="w-4 h-4 text-ink" />
                     <span>Invite Vendors</span>
                   </button>
                 )}
                 {onInviteCAS && (
                   <button
                     onClick={() => { onInviteCAS(); setShowOverflow(false); }}
-                    className="w-full flex items-center gap-2 px-3.5 py-2 hover:bg-gray-50 transition-colors"
+                    className="w-full flex items-center gap-2 px-3.5 py-2 hover:bg-canvas transition-colors"
                   >
-                    <UserPlus className="w-4 h-4 text-purple-600" />
+                    <UserPlus className="w-4 h-4 text-ink" />
                     <span>Invite CAS</span>
                   </button>
                 )}
-                <div className="border-t border-gray-100 my-1" />
+                <div className="border-t border-line my-1" />
               </>
             )}
 
@@ -391,9 +391,9 @@ const WorkspaceTopBar = ({
             {onShareProgress && (
               <button
                 onClick={() => { onShareProgress(); setShowOverflow(false); }}
-                className="w-full flex items-center gap-2 px-3.5 py-2 hover:bg-gray-50 transition-colors"
+                className="w-full flex items-center gap-2 px-3.5 py-2 hover:bg-canvas transition-colors"
               >
-                <Share2 className="w-4 h-4 text-blue-500" />
+                <Share2 className="w-4 h-4 text-info" />
                 <span>Share Progress</span>
               </button>
             )}
@@ -402,9 +402,9 @@ const WorkspaceTopBar = ({
             {onOpenDeletionHistory && (
               <button
                 onClick={() => { onOpenDeletionHistory(); setShowOverflow(false); }}
-                className="w-full flex items-center gap-2 px-3.5 py-2 hover:bg-gray-50 transition-colors"
+                className="w-full flex items-center gap-2 px-3.5 py-2 hover:bg-canvas transition-colors"
               >
-                <Trash2 className="w-4 h-4 text-gray-500" />
+                <Trash2 className="w-4 h-4 text-dim" />
                 <span>Deletion History</span>
               </button>
             )}
@@ -413,21 +413,21 @@ const WorkspaceTopBar = ({
             {(isPM || isClient) && onOpenProjectComplete && (
               <button
                 onClick={() => { onOpenProjectComplete(); setShowOverflow(false); }}
-                className="w-full flex items-center gap-2 px-3.5 py-2 hover:bg-gray-50 text-blue-600 font-medium transition-colors"
+                className="w-full flex items-center gap-2 px-3.5 py-2 hover:bg-canvas text-info font-medium transition-colors"
               >
-                <CheckCircle className="w-4 h-4 text-blue-600" />
+                <CheckCircle className="w-4 h-4 text-info" />
                 <span>Complete Request</span>
               </button>
             )}
 
-            <div className="border-t border-gray-100 my-1" />
+            <div className="border-t border-line my-1" />
 
             {/* B2B Marketplace Link */}
             <button
               onClick={handleB2BClick}
-              className="w-full flex items-center gap-2 px-3.5 py-2 hover:bg-gray-50 text-emerald-700 font-medium transition-colors"
+              className="w-full flex items-center gap-2 px-3.5 py-2 hover:bg-canvas text-ink font-medium transition-colors"
             >
-              <Link2 className="w-4 h-4 text-emerald-600" />
+              <Link2 className="w-4 h-4 text-ink" />
               <span>B2B Marketplace</span>
             </button>
           </div>
@@ -441,7 +441,7 @@ const WorkspaceTopBar = ({
           className="ws-btn-secondary"
           title="AI Canvas Builder — describe it, AI builds it"
         >
-          <Sparkles className="w-3.5 h-3.5 text-violet-600" />
+          <Sparkles className="w-3.5 h-3.5 text-ink" />
           <span>AI Builder</span>
         </button>
       )}
@@ -453,7 +453,7 @@ const WorkspaceTopBar = ({
           className="ws-btn-secondary"
           title="Post services"
         >
-          <MessageSquare className="w-3.5 h-3.5 text-blue-500" />
+          <MessageSquare className="w-3.5 h-3.5 text-info" />
           <span>Post Services</span>
         </button>
       )}
@@ -465,7 +465,7 @@ const WorkspaceTopBar = ({
           className="ws-btn-primary"
           title="Review project progress"
         >
-          <Zap className="w-3.5 h-3.5 text-amber-300" />
+          <Zap className="w-3.5 h-3.5 text-warning" />
           <span>Review Progress</span>
         </button>
       ) : isClient ? (
@@ -474,7 +474,7 @@ const WorkspaceTopBar = ({
           className="ws-btn-primary"
           title="Approve client progress"
         >
-          <Zap className="w-3.5 h-3.5 text-emerald-300" />
+          <Zap className="w-3.5 h-3.5 text-ink" />
           <span>Approve Progress</span>
         </button>
       ) : (
@@ -484,7 +484,7 @@ const WorkspaceTopBar = ({
           className={`ws-btn-primary ${shouldDisableEditing ? 'opacity-50 cursor-not-allowed' : ''}`}
           title="Update progress or post service"
         >
-          <Zap className="w-3.5 h-3.5 text-blue-300" />
+          <Zap className="w-3.5 h-3.5 text-info" />
           <span>Update Progress</span>
         </button>
       )}

@@ -136,16 +136,16 @@ const AddItemModal = ({ isOpen, onClose, onItemAdded }) => {
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-visible relative">
+      <div className="bg-surface rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-visible relative">
         {/* Header */}
-        <div className="bg-gradient-to-r from-stone-600 to-stone-700 text-white p-6 flex items-center justify-between">
+        <div className="bg-surface text-white p-6 flex items-center justify-between">
           <div className="flex items-center space-x-3">
             <div className="bg-white/20 p-2 rounded-lg">
               <Package className="w-6 h-6" />
             </div>
             <div>
               <h2 className="text-xl font-bold">Add New Item</h2>
-              <p className="text-stone-200 text-sm">
+              <p className="text-dim text-sm">
                 {step === 1 ? 'Choose item type' : `Add ${itemType} details`}
               </p>
             </div>
@@ -162,10 +162,10 @@ const AddItemModal = ({ isOpen, onClose, onItemAdded }) => {
           {step === 1 && (
             <div className="space-y-6">
               <div className="text-center mb-8">
-                <h3 className="text-lg font-semibold text-stone-800 mb-2">
+                <h3 className="text-lg font-semibold text-ink mb-2">
                   What type of item would you like to add?
                 </h3>
-                <p className="text-stone-600">
+                <p className="text-dim">
                   Choose between a physical product or a service
                 </p>
               </div>
@@ -174,18 +174,18 @@ const AddItemModal = ({ isOpen, onClose, onItemAdded }) => {
                 {/* Product Option */}
                 <button
                   onClick={() => handleTypeSelection('product')}
-                  className="group p-8 border-2 border-stone-200 rounded-xl hover:border-stone-400 hover:bg-stone-50 transition-all duration-200 text-left"
+                  className="group p-8 border-2 border-line rounded-xl hover:border-line hover:bg-canvas transition-all duration-200 text-left"
                 >
                   <div className="flex items-center space-x-4 mb-4">
-                    <div className="bg-blue-100 p-3 rounded-lg group-hover:bg-blue-200 transition-colors">
-                      <Package className="w-8 h-8 text-blue-600" />
+                    <div className="bg-info/10 p-3 rounded-lg group-hover:bg-info/20 transition-colors">
+                      <Package className="w-8 h-8 text-info" />
                     </div>
                     <div>
-                      <h4 className="text-lg font-semibold text-stone-800">Product</h4>
-                      <p className="text-stone-600 text-sm">Physical goods or items</p>
+                      <h4 className="text-lg font-semibold text-ink">Product</h4>
+                      <p className="text-dim text-sm">Physical goods or items</p>
                     </div>
                   </div>
-                  <div className="text-sm text-stone-500">
+                  <div className="text-sm text-dim">
                     <p>• Requires HSN code</p>
                     <p>• Physical inventory item</p>
                     <p>• Measurable units (Nos, Kg, etc.)</p>
@@ -195,18 +195,18 @@ const AddItemModal = ({ isOpen, onClose, onItemAdded }) => {
                 {/* Service Option */}
                 <button
                   onClick={() => handleTypeSelection('service')}
-                  className="group p-8 border-2 border-stone-200 rounded-xl hover:border-stone-400 hover:bg-stone-50 transition-all duration-200 text-left"
+                  className="group p-8 border-2 border-line rounded-xl hover:border-line hover:bg-canvas transition-all duration-200 text-left"
                 >
                   <div className="flex items-center space-x-4 mb-4">
-                    <div className="bg-green-100 p-3 rounded-lg group-hover:bg-green-200 transition-colors">
-                      <Wrench className="w-8 h-8 text-green-600" />
+                    <div className="bg-success/10 p-3 rounded-lg group-hover:bg-success/20 transition-colors">
+                      <Wrench className="w-8 h-8 text-success" />
                     </div>
                     <div>
-                      <h4 className="text-lg font-semibold text-stone-800">Service</h4>
-                      <p className="text-stone-600 text-sm">Intangible services</p>
+                      <h4 className="text-lg font-semibold text-ink">Service</h4>
+                      <p className="text-dim text-sm">Intangible services</p>
                     </div>
                   </div>
-                  <div className="text-sm text-stone-500">
+                  <div className="text-sm text-dim">
                     <p>• Requires SAC code</p>
                     <p>• Service-based offering</p>
                     <p>• Time-based units (Hrs, Days, etc.)</p>
@@ -221,7 +221,7 @@ const AddItemModal = ({ isOpen, onClose, onItemAdded }) => {
               {/* Back Button */}
               <button
                 onClick={() => setStep(1)}
-                className="flex items-center space-x-2 text-stone-600 hover:text-stone-800 transition-colors"
+                className="flex items-center space-x-2 text-dim hover:text-ink transition-colors"
               >
                 <ChevronDown className="w-4 h-4 rotate-90" />
                 <span>Back to type selection</span>
@@ -229,22 +229,22 @@ const AddItemModal = ({ isOpen, onClose, onItemAdded }) => {
 
               {/* Item Type Badge */}
               <div className="flex items-center space-x-2">
-                <div className={`p-2 rounded-lg ${itemType === 'product' ? 'bg-blue-100' : 'bg-green-100'}`}>
+                <div className={`p-2 rounded-lg ${itemType === 'product' ? 'bg-info/10' : 'bg-success/10'}`}>
                   {itemType === 'product' ? 
-                    <Package className={`w-5 h-5 ${itemType === 'product' ? 'text-blue-600' : 'text-green-600'}`} /> :
-                    <Wrench className={`w-5 h-5 ${itemType === 'product' ? 'text-blue-600' : 'text-green-600'}`} />
+                    <Package className={`w-5 h-5 ${itemType === 'product' ? 'text-info' : 'text-success'}`} /> :
+                    <Wrench className={`w-5 h-5 ${itemType === 'product' ? 'text-info' : 'text-success'}`} />
                   }
                 </div>
-                <span className="font-semibold text-stone-800 capitalize">{itemType}</span>
+                <span className="font-semibold text-ink capitalize">{itemType}</span>
               </div>
 
               {/* Form Fields */}
-              <div className="bg-stone-50 p-6 rounded-xl border border-stone-200">
-                <h4 className="text-lg font-semibold text-stone-800 mb-4 flex items-center">
-                  <div className={`p-2 rounded-lg mr-3 ${itemType === 'product' ? 'bg-blue-100' : 'bg-green-100'}`}>
+              <div className="bg-canvas p-6 rounded-xl border border-line">
+                <h4 className="text-lg font-semibold text-ink mb-4 flex items-center">
+                  <div className={`p-2 rounded-lg mr-3 ${itemType === 'product' ? 'bg-info/10' : 'bg-success/10'}`}>
                     {itemType === 'product' ? 
-                      <Package className="w-5 h-5 text-blue-600" /> :
-                      <Wrench className="w-5 h-5 text-green-600" />
+                      <Package className="w-5 h-5 text-info" /> :
+                      <Wrench className="w-5 h-5 text-success" />
                     }
                   </div>
                   {itemType === 'product' ? 'Product Details' : 'Service Details'}
@@ -252,7 +252,7 @@ const AddItemModal = ({ isOpen, onClose, onItemAdded }) => {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {/* Item Name */}
                 <div className="md:col-span-2">
-                  <label className="block text-sm font-medium text-stone-700 mb-2">
+                  <label className="block text-sm font-medium text-ink mb-2">
                     Item Name *
                   </label>
                   <input
@@ -260,13 +260,13 @@ const AddItemModal = ({ isOpen, onClose, onItemAdded }) => {
                     value={formData.name}
                     onChange={(e) => handleInputChange('name', e.target.value)}
                     placeholder={`Enter ${itemType} name`}
-                    className="w-full px-4 py-3 border border-stone-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors bg-white"
+                    className="w-full px-4 py-3 border border-line rounded-lg focus:ring-2 focus:ring-info focus:border-info transition-colors bg-surface"
                   />
                 </div>
 
                 {/* Description */}
                 <div className="md:col-span-2">
-                  <label className="block text-sm font-medium text-stone-700 mb-2">
+                  <label className="block text-sm font-medium text-ink mb-2">
                     Description
                   </label>
                   <textarea
@@ -274,13 +274,13 @@ const AddItemModal = ({ isOpen, onClose, onItemAdded }) => {
                     onChange={(e) => handleInputChange('description', e.target.value)}
                     placeholder={`Describe the ${itemType}`}
                     rows={3}
-                    className="w-full px-4 py-3 border border-stone-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors bg-white"
+                    className="w-full px-4 py-3 border border-line rounded-lg focus:ring-2 focus:ring-info focus:border-info transition-colors bg-surface"
                   />
                 </div>
 
                 {/* Unit */}
                 <div>
-                  <label className="block text-sm font-medium text-stone-700 mb-2">
+                  <label className="block text-sm font-medium text-ink mb-2">
                     Unit
                   </label>
                   <input
@@ -288,13 +288,13 @@ const AddItemModal = ({ isOpen, onClose, onItemAdded }) => {
                     value={formData.unit}
                     onChange={(e) => handleInputChange('unit', e.target.value)}
                     placeholder={itemType === 'product' ? 'Nos, Kg, Pcs' : 'Hrs, Days, Months'}
-                    className="w-full px-4 py-3 border border-stone-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors bg-white"
+                    className="w-full px-4 py-3 border border-line rounded-lg focus:ring-2 focus:ring-info focus:border-info transition-colors bg-surface"
                   />
                 </div>
 
                 {/* Price */}
                 <div>
-                  <label className="block text-sm font-medium text-stone-700 mb-2">
+                  <label className="block text-sm font-medium text-ink mb-2">
                     Price (₹) *
                   </label>
                   <input
@@ -304,31 +304,31 @@ const AddItemModal = ({ isOpen, onClose, onItemAdded }) => {
                     placeholder="0.00"
                     step="0.01"
                     min="0"
-                    className="w-full px-4 py-3 border border-stone-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors bg-white"
+                    className="w-full px-4 py-3 border border-line rounded-lg focus:ring-2 focus:ring-info focus:border-info transition-colors bg-surface"
                   />
                 </div>
 
                 {/* HSN/SAC Code Selection */}
                 <div className="md:col-span-2">
-                  <label className="block text-sm font-medium text-stone-700 mb-2">
+                  <label className="block text-sm font-medium text-ink mb-2">
                     {itemType === 'product' ? 'HSN Code' : 'SAC Code'} *
                   </label>
                   
                   {formData.hsnSacCode ? (
                     // Show selected code
-                    <div className="border-2 border-green-300 bg-green-50 rounded-lg p-4">
+                    <div className="border-2 border-success/30 bg-success/10 rounded-lg p-4">
                       <div className="flex items-center justify-between">
                         <div className="flex-1">
-                          <div className="font-semibold text-green-800 text-lg">
+                          <div className="font-semibold text-success text-lg">
                             {formData.hsnSacCode}
                           </div>
-                          <div className="text-sm text-green-600 mt-1">
+                          <div className="text-sm text-success mt-1">
                             {formData.hsnSacDescription}
                           </div>
                         </div>
                         <button
                           onClick={() => setShowHSNSACModal(true)}
-                          className="ml-4 px-4 py-2 text-green-700 hover:text-green-800 border border-green-300 hover:border-green-400 rounded-lg transition-colors"
+                          className="ml-4 px-4 py-2 text-success hover:text-success border border-success/30 hover:border-success rounded-lg transition-colors"
                         >
                           Change
                         </button>
@@ -338,15 +338,15 @@ const AddItemModal = ({ isOpen, onClose, onItemAdded }) => {
                     // Show selection button
                     <button
                       onClick={() => setShowHSNSACModal(true)}
-                      className="w-full p-4 border-2 border-dashed border-stone-300 hover:border-blue-400 rounded-lg transition-colors group"
+                      className="w-full p-4 border-2 border-dashed border-line hover:border-info rounded-lg transition-colors group"
                     >
-                      <div className="flex items-center justify-center space-x-3 text-stone-600 group-hover:text-blue-600">
+                      <div className="flex items-center justify-center space-x-3 text-dim group-hover:text-info">
                         <Search className="w-5 h-5" />
                         <span className="font-medium">
                           Select {itemType === 'product' ? 'HSN' : 'SAC'} Code
                         </span>
                       </div>
-                      <p className="text-xs text-stone-500 mt-2">
+                      <p className="text-xs text-dim mt-2">
                         Choose from {itemType === 'product' ? '21,744 HSN' : '681 SAC'} codes
                       </p>
                     </button>
@@ -356,17 +356,17 @@ const AddItemModal = ({ isOpen, onClose, onItemAdded }) => {
               </div>
 
               {/* Action Buttons */}
-              <div className="flex items-center justify-end space-x-4 pt-6 border-t border-stone-200">
+              <div className="flex items-center justify-end space-x-4 pt-6 border-t border-line">
                 <button
                   onClick={onClose}
-                  className="px-6 py-2 text-stone-600 hover:text-stone-800 transition-colors"
+                  className="px-6 py-2 text-dim hover:text-ink transition-colors"
                 >
                   Cancel
                 </button>
                 <button
                   onClick={handleSubmit}
                   disabled={loading || !formData.name || !formData.price || !formData.hsnSacCode}
-                  className="px-8 py-3 bg-stone-600 text-white rounded-lg hover:bg-stone-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center space-x-2"
+                  className="px-8 py-3 bg-cta text-cta-foreground rounded-lg hover:bg-cta disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center space-x-2"
                 >
                   {loading && (
                     <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>

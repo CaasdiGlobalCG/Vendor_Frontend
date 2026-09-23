@@ -542,7 +542,7 @@ const handleCompanySave = async (e) => {
 
 
   return (
-    <div className="min-h-screen bg-slate-50 font-sans w-full pb-24">
+    <div className="min-h-screen bg-canvas font-sans w-full pb-24">
       {/* Header Banner */}
       <AppHeader />
 
@@ -562,12 +562,12 @@ const handleCompanySave = async (e) => {
           description="Manage the business information shown across your vendor portfolio."
           actions={(
             <div className="flex w-full items-center justify-between gap-2 sm:w-auto sm:justify-end">
-              <button className="rounded-full p-2 transition-colors hover:bg-slate-100">
-                <Download className="w-5 h-5 text-gray-600" />
+              <button className="rounded-full p-2 transition-colors hover:bg-surface-hover">
+                <Download className="w-5 h-5 text-dim" />
               </button>
               <button 
                 onClick={handleCompanyEditClick} 
-                className="rounded-full border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-100"
+                className="rounded-full border border-line px-4 py-2 text-sm font-medium text-ink transition-colors hover:bg-surface-hover"
               >
                 Edit
               </button>
@@ -589,12 +589,12 @@ const handleCompanySave = async (e) => {
                     vendorData.companyDetails.segments.map((segment) => (
                       <span
                         key={segment}
-                        className="bg-gray-100 px-3 py-1 rounded-full text-xs font-medium"
+                        className="bg-surface-hover px-3 py-1 rounded-full text-xs font-medium"
                       >
                         {segment}
                       </span>
                     )) : 
-                    <span className="text-gray-400">No segments specified</span>
+                    <span className="text-dim">No segments specified</span>
                   }
                 </div>
               } 
@@ -623,12 +623,12 @@ const handleCompanySave = async (e) => {
                     vendorData.companyDetails.coreValues.map((value) => (
                       <span
                         key={value}
-                        className="bg-gray-100 px-3 py-1 rounded-full text-xs font-medium"
+                        className="bg-surface-hover px-3 py-1 rounded-full text-xs font-medium"
                       >
                         {value}
                       </span>
                     )) : 
-                    <span className="text-gray-400">No core values specified</span>
+                    <span className="text-dim">No core values specified</span>
                   }
                 </div>
               }
@@ -639,11 +639,11 @@ const handleCompanySave = async (e) => {
                 <div className="flex flex-wrap gap-4">
                   {(vendorData.companyDetails?.certifications && vendorData.companyDetails.certifications.length > 0) ? 
                     vendorData.companyDetails.certifications.map((cert, index) => (
-                      <span key={index} className="bg-gray-100 px-3 py-1 rounded text-xs font-medium">
+                      <span key={index} className="bg-surface-hover px-3 py-1 rounded text-xs font-medium">
                         {typeof cert === 'string' ? cert : cert.name || `Certification ${index + 1}`}
                       </span>
                     )) : 
-                    <span className="text-gray-400">No certifications uploaded</span>
+                    <span className="text-dim">No certifications uploaded</span>
                   }
                 </div>
               }
@@ -664,34 +664,34 @@ const handleCompanySave = async (e) => {
         </VendorTabPanel>
   
       {isProfileModalOpen && (
-                      <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 sm:p-6">
-                          <div className="bg-white rounded-xl shadow-xl w-full max-w-2xl max-h-[90vh] flex flex-col overflow-hidden">
+                      <div className="fixed inset-0 bg-cta backdrop-blur-sm z-50 flex items-center justify-center p-4 sm:p-6">
+                          <div className="bg-surface rounded-xl shadow-xl w-full max-w-2xl max-h-[90vh] flex flex-col overflow-hidden">
                               {/* Modal Header */}
-                              <div className="flex justify-between items-center px-6 py-4 border-b border-gray-200 flex-shrink-0 bg-white">
-                                  <h2 className="text-xl font-semibold text-gray-800">Edit Profile</h2>
-                                  <button onClick={handleProfileCloseModal} className="text-gray-400 hover:text-gray-600 transition-colors">
+                              <div className="flex justify-between items-center px-6 py-4 border-b border-line flex-shrink-0 bg-surface">
+                                  <h2 className="text-xl font-semibold text-ink">Edit Profile</h2>
+                                  <button onClick={handleProfileCloseModal} className="text-dim hover:text-dim transition-colors">
                                       <CloseIcon size={20} />
                                   </button>
                               </div>
                               {/* Modal Form */}
-                              <div className="overflow-y-auto p-6 flex-1 bg-white">
+                              <div className="overflow-y-auto p-6 flex-1 bg-surface">
                                   <form onSubmit={(e) => e.preventDefault()} className="space-y-4">
                                   <div className="flex flex-col items-center space-y-3">
-                                      <img src={imagePreview} alt="Profile Preview" className="w-32 h-32 rounded-full object-cover border-2 border-gray-300 shadow-sm" onError={(e) => { e.target.onerror = null; e.target.src = "https://via.placeholder.com/160"; }} />
-                                      <label htmlFor="profileImage" className="cursor-pointer bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-medium px-4 py-2 rounded-md transition-colors">Change Image</label>
+                                      <img src={imagePreview} alt="Profile Preview" className="w-32 h-32 rounded-full object-cover border-2 border-line " onError={(e) => { e.target.onerror = null; e.target.src = "https://via.placeholder.com/160"; }} />
+                                      <label htmlFor="profileImage" className="cursor-pointer bg-surface-hover hover:bg-surface-hover text-ink text-sm font-medium px-4 py-2 rounded-md transition-colors">Change Image</label>
                                       <input id="profileImage" name="profileImage" type="file" accept="image/png, image/jpeg, image/gif" onChange={handleProfileFileChange} className="hidden" />
                                   </div>
                                   {/* Input Fields */}
-                                  <div><label htmlFor="companyName" className="block text-sm font-medium text-gray-700 mb-1">Company Name</label><input type="text" id="companyName" name="companyName" value={profileFormData.companyName} onChange={handleProfileInputChange} className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent" /></div>
+                                  <div><label htmlFor="companyName" className="block text-sm font-medium text-ink mb-1">Company Name</label><input type="text" id="companyName" name="companyName" value={profileFormData.companyName} onChange={handleProfileInputChange} className="w-full px-3 py-2 border border-line rounded-md  focus:outline-none focus:ring-2 focus:ring-ink focus:border-transparent" /></div>
                                   <div>
-                                      <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-1">Phone</label>
-                                      <div className="flex rounded-md shadow-sm">
+                                      <label htmlFor="phone" className="block text-sm font-medium text-ink mb-1">Phone</label>
+                                      <div className="flex rounded-md ">
                                           <select
                                               value={phoneCountryCode}
                                               onChange={(e) => {
                                                   setPhoneCountryCode(e.target.value);
                                               }}
-                                              className="px-3 py-2 border border-gray-300 rounded-l-md focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-sm"
+                                              className="px-3 py-2 border border-line rounded-l-md focus:outline-none focus:ring-2 focus:ring-ink focus:border-transparent text-sm"
                                           >
                                               <option value="">Code</option>
                                               {countryCodes.map(c => (
@@ -706,14 +706,14 @@ const handleCompanySave = async (e) => {
                                               onChange={(e) => {
                                                   setPhoneNumberWithoutCode(e.target.value);
                                               }}
-                                              className="flex-1 px-3 py-2 border-t border-b border-r border-gray-300 rounded-r-md shadow-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-sm"
+                                              className="flex-1 px-3 py-2 border-t border-b border-r border-line rounded-r-md  focus:outline-none focus:ring-2 focus:ring-ink focus:border-transparent text-sm"
                                               placeholder="Phone number"
                                           />
                                       </div>
                                   </div>
                                   <div>
-                                      <label htmlFor="location" className="block text-sm font-medium text-gray-700 mb-1">Location</label>
-                                      <div className="flex rounded-md shadow-sm">
+                                      <label htmlFor="location" className="block text-sm font-medium text-ink mb-1">Location</label>
+                                      <div className="flex rounded-md ">
                                           <select
                                               value={selectedCountry}
                                               onChange={(e) => {
@@ -722,7 +722,7 @@ const handleCompanySave = async (e) => {
                                                   setStates(countryStateData[newCountry] || []);
                                                   setSelectedState('');
                                               }}
-                                              className="px-3 py-2 border border-gray-300 rounded-l-md focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-sm"
+                                              className="px-3 py-2 border border-line rounded-l-md focus:outline-none focus:ring-2 focus:ring-ink focus:border-transparent text-sm"
                                           >
                                               <option value="">Country</option>
                                               {Object.keys(countryStateData).map(country => (
@@ -735,7 +735,7 @@ const handleCompanySave = async (e) => {
                                                   const newState = e.target.value;
                                                   setSelectedState(newState);
                                               }}
-                                              className="flex-1 px-3 py-2 border-t border-b border-r border-gray-300 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-sm"
+                                              className="flex-1 px-3 py-2 border-t border-b border-r border-line focus:outline-none focus:ring-2 focus:ring-ink focus:border-transparent text-sm"
                                               disabled={states.length === 0}
                                           >
                                               <option value="">State/Region</option>
@@ -745,11 +745,11 @@ const handleCompanySave = async (e) => {
                                           </select>
                                       </div>
                                   </div>
-                                  <div><label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">Email</label><input type="email" id="email" name="email" value={profileFormData.email} onChange={handleProfileInputChange} className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent" required /></div>
+                                  <div><label htmlFor="email" className="block text-sm font-medium text-ink mb-1">Email</label><input type="email" id="email" name="email" value={profileFormData.email} onChange={handleProfileInputChange} className="w-full px-3 py-2 border border-line rounded-md  focus:outline-none focus:ring-2 focus:ring-ink focus:border-transparent" required /></div>
                                   {/* Action Buttons */}
-                                  <div className="flex justify-end gap-3 pt-6 border-t mt-6 border-gray-200">
-                                      <button type="button" onClick={handleProfileCloseModal} className="px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-400 transition-colors">Cancel</button>
-                                      <button type="button" onClick={handleProfileSave} className="px-4 py-2 bg-gradient-to-l from-[#095B49] to-[#000000] text-white rounded-md hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 transition-opacity">Save Changes</button>
+                                  <div className="flex justify-end gap-3 pt-6 border-t mt-6 border-line">
+                                      <button type="button" onClick={handleProfileCloseModal} className="px-4 py-2 bg-surface-hover text-ink rounded-md hover:bg-surface-hover focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-line transition-colors">Cancel</button>
+                                      <button type="button" onClick={handleProfileSave} className="px-4 py-2 bg-black text-white rounded-md hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-ink transition-opacity">Save Changes</button>
                                   </div>
                               </form>
                               </div>
@@ -759,24 +759,24 @@ const handleCompanySave = async (e) => {
                   
       {/* Company Edit Modal */}
       {isCompanyModalOpen && (
-        <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 sm:p-6">
-          <div className="bg-white rounded-xl shadow-xl w-full max-w-2xl max-h-[90vh] flex flex-col overflow-hidden">
-            <div className="flex justify-between items-center px-6 py-4 border-b border-gray-200 flex-shrink-0 bg-white">
-              <h2 className="text-xl font-semibold text-gray-800">Edit Company Details</h2>
-              <button onClick={() => setIsCompanyModalOpen(false)} className="text-gray-400 hover:text-gray-600 transition-colors">
+        <div className="fixed inset-0 bg-cta backdrop-blur-sm z-50 flex items-center justify-center p-4 sm:p-6">
+          <div className="bg-surface rounded-xl shadow-xl w-full max-w-2xl max-h-[90vh] flex flex-col overflow-hidden">
+            <div className="flex justify-between items-center px-6 py-4 border-b border-line flex-shrink-0 bg-surface">
+              <h2 className="text-xl font-semibold text-ink">Edit Company Details</h2>
+              <button onClick={() => setIsCompanyModalOpen(false)} className="text-dim hover:text-dim transition-colors">
                 <CloseIcon size={20} />
               </button>
             </div>
             
-            <div className="overflow-y-auto flex-1 p-6 bg-white">
+            <div className="overflow-y-auto flex-1 p-6 bg-surface">
             {companyError && (
-              <div className="mb-6 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
+              <div className="mb-6 bg-danger/10 border border-danger text-danger px-4 py-3 rounded">
                 <p>{companyError}</p>
               </div>
             )}
             
             {companySuccessMessage && (
-              <div className="mb-6 bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded">
+              <div className="mb-6 bg-success/10 border border-success text-success px-4 py-3 rounded">
                 <p>{companySuccessMessage}</p>
               </div>
             )}
@@ -784,7 +784,7 @@ const handleCompanySave = async (e) => {
             <form onSubmit={handleCompanySave} className="space-y-6">
               {/* Industry Type - Read-only */}
               <div>
-                <label htmlFor="industryType" className="block text-sm font-medium text-gray-700 mb-1">
+                <label htmlFor="industryType" className="block text-sm font-medium text-ink mb-1">
                   Industry Type
                 </label>
                 <input
@@ -794,24 +794,24 @@ const handleCompanySave = async (e) => {
                   value={companyFormData.industryType || "Not specified"}
                   readOnly
                   disabled
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm bg-gray-100 text-gray-700 cursor-not-allowed"
+                  className="w-full px-3 py-2 border border-line rounded-md  bg-surface-hover text-ink cursor-not-allowed"
                 />
-                <p className="mt-1 text-xs text-gray-500">Industry type cannot be changed</p>
+                <p className="mt-1 text-xs text-dim">Industry type cannot be changed</p>
               </div>
 
               {/* Segments */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-ink mb-1">
                   Segments
                 </label>
                 <div className="flex flex-wrap gap-2 mb-2">
                   {companyFormData.segments.map((segment, index) => (
-                    <div key={index} className="bg-gray-100 px-3 py-1 rounded-full text-sm font-medium flex items-center">
+                    <div key={index} className="bg-surface-hover px-3 py-1 rounded-full text-sm font-medium flex items-center">
                       <span>{segment}</span>
                       <button
                         type="button"
                         onClick={() => handleRemoveSegment(index)}
-                        className="ml-2 text-gray-500 hover:text-red-500"
+                        className="ml-2 text-dim hover:text-danger"
                       >
                         <CloseIcon size={14} />
                       </button>
@@ -824,12 +824,12 @@ const handleCompanySave = async (e) => {
                     value={newSegment}
                     onChange={(e) => setNewSegment(e.target.value)}
                     placeholder="Add a segment"
-                    className="flex-1 px-3 py-2 border border-gray-300 rounded-l-md shadow-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                    className="flex-1 px-3 py-2 border border-line rounded-l-md  focus:outline-none focus:ring-2 focus:ring-ink focus:border-transparent"
                   />
                   <button
                     type="button"
                     onClick={handleAddSegment}
-                    className="bg-emerald-800 text-white px-4 py-2 rounded-r-md hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500"
+                    className="bg-cta text-cta-foreground px-4 py-2 rounded-r-md hover:bg-cta focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-ink"
                   >
                     Add
                   </button>
@@ -838,7 +838,7 @@ const handleCompanySave = async (e) => {
 
               {/* Year of Establishment */}
               <div>
-                <label htmlFor="yearOfEstablishment" className="block text-sm font-medium text-gray-700 mb-1">
+                <label htmlFor="yearOfEstablishment" className="block text-sm font-medium text-ink mb-1">
                   Year of Establishment
                 </label>
                 <input
@@ -848,13 +848,13 @@ const handleCompanySave = async (e) => {
                   value={companyFormData.yearOfEstablishment}
                   onChange={handleCompanyInputChange}
                   placeholder="e.g., 25th March, 1990"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                  className="w-full px-3 py-2 border border-line rounded-md  focus:outline-none focus:ring-2 focus:ring-ink focus:border-transparent"
                 />
               </div>
 
               {/* Vision and Mission */}
               <div>
-                <label htmlFor="visionAndMission" className="block text-sm font-medium text-gray-700 mb-1">
+                <label htmlFor="visionAndMission" className="block text-sm font-medium text-ink mb-1">
                   Vision and Mission
                 </label>
                 <textarea
@@ -863,14 +863,14 @@ const handleCompanySave = async (e) => {
                   value={companyFormData.visionAndMission}
                   onChange={handleCompanyInputChange}
                   rows={4}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                  className="w-full px-3 py-2 border border-line rounded-md  focus:outline-none focus:ring-2 focus:ring-ink focus:border-transparent"
                   placeholder="Describe your company's vision and mission"
                 />
               </div>
 
               {/* Company Overview */}
               <div>
-                <label htmlFor="companyOverview" className="block text-sm font-medium text-gray-700 mb-1">
+                <label htmlFor="companyOverview" className="block text-sm font-medium text-ink mb-1">
                   Company Overview
                 </label>
                 <textarea
@@ -879,14 +879,14 @@ const handleCompanySave = async (e) => {
                   value={companyFormData.companyOverview}
                   onChange={handleCompanyInputChange}
                   rows={4}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                  className="w-full px-3 py-2 border border-line rounded-md  focus:outline-none focus:ring-2 focus:ring-ink focus:border-transparent"
                   placeholder="Provide an overview of your company"
                 />
               </div>
               
               {/* Industry Overview */}
               <div>
-                <label htmlFor="industryOverview" className="block text-sm font-medium text-gray-700 mb-1">
+                <label htmlFor="industryOverview" className="block text-sm font-medium text-ink mb-1">
                   Industry Overview
                 </label>
                 <textarea
@@ -895,24 +895,24 @@ const handleCompanySave = async (e) => {
                   value={companyFormData.industryOverview}
                   onChange={handleCompanyInputChange}
                   rows={4}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                  className="w-full px-3 py-2 border border-line rounded-md  focus:outline-none focus:ring-2 focus:ring-ink focus:border-transparent"
                   placeholder="Provide an overview of your industry"
                 />
               </div>
 
               {/* Core Values */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-ink mb-1">
                   Core Values
                 </label>
                 <div className="flex flex-wrap gap-2 mb-2">
                   {companyFormData.coreValues.map((value, index) => (
-                    <div key={index} className="bg-gray-100 px-3 py-1 rounded-full text-sm font-medium flex items-center">
+                    <div key={index} className="bg-surface-hover px-3 py-1 rounded-full text-sm font-medium flex items-center">
                       <span>{value}</span>
                       <button
                         type="button"
                         onClick={() => handleRemoveCoreValue(index)}
-                        className="ml-2 text-gray-500 hover:text-red-500"
+                        className="ml-2 text-dim hover:text-danger"
                       >
                         <CloseIcon size={14} />
                       </button>
@@ -925,12 +925,12 @@ const handleCompanySave = async (e) => {
                     value={newCoreValue}
                     onChange={(e) => setNewCoreValue(e.target.value)}
                     placeholder="Add a core value"
-                    className="flex-1 px-3 py-2 border border-gray-300 rounded-l-md shadow-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                    className="flex-1 px-3 py-2 border border-line rounded-l-md  focus:outline-none focus:ring-2 focus:ring-ink focus:border-transparent"
                   />
                   <button
                     type="button"
                     onClick={handleAddCoreValue}
-                    className="bg-emerald-800 text-white px-4 py-2 rounded-r-md hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500"
+                    className="bg-cta text-cta-foreground px-4 py-2 rounded-r-md hover:bg-cta focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-ink"
                   >
                     Add
                   </button>
@@ -939,22 +939,22 @@ const handleCompanySave = async (e) => {
               
               {/* Certifications */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-ink mb-1">
                   Certifications
                 </label>
                 <div className="flex flex-wrap gap-2 mb-2">
                   {companyFormData.certifications && companyFormData.certifications.map((cert, index) => (
-                    <div key={index} className="bg-gray-100 px-3 py-1 rounded-full text-sm font-medium">
+                    <div key={index} className="bg-surface-hover px-3 py-1 rounded-full text-sm font-medium">
                       {cert.name || "Certificate"}
                     </div>
                   ))}
                   {certificationFiles && certificationFiles.map((file, index) => (
-                    <div key={`new-${index}`} className="bg-emerald-100 px-3 py-1 rounded-full text-sm font-medium flex items-center">
+                    <div key={`new-${index}`} className="bg-surface-hover px-3 py-1 rounded-full text-sm font-medium flex items-center">
                       <span>{file.name}</span>
                       <button
                         type="button"
                         onClick={() => handleRemoveCertificationFile(index)}
-                        className="ml-2 text-gray-500 hover:text-red-500"
+                        className="ml-2 text-dim hover:text-danger"
                       >
                         <CloseIcon size={14} />
                       </button>
@@ -962,7 +962,7 @@ const handleCompanySave = async (e) => {
                   ))}
                 </div>
                 <div className="mt-2">
-                  <label htmlFor="certifications" className="cursor-pointer bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-medium px-4 py-2 rounded-md transition-colors flex items-center w-fit">
+                  <label htmlFor="certifications" className="cursor-pointer bg-surface-hover hover:bg-surface-hover text-ink text-sm font-medium px-4 py-2 rounded-md transition-colors flex items-center w-fit">
                     <Upload className="w-4 h-4 mr-2" />
                     Upload Certifications
                     <input
@@ -974,13 +974,13 @@ const handleCompanySave = async (e) => {
                       accept=".pdf,.jpg,.jpeg,.png"
                     />
                   </label>
-                  <p className="text-xs text-gray-500 mt-1">Upload certification documents (PDF, JPG, PNG)</p>
+                  <p className="text-xs text-dim mt-1">Upload certification documents (PDF, JPG, PNG)</p>
                 </div>
               </div>
 
               {/* Team Size */}
               <div>
-                <label htmlFor="teamSize" className="block text-sm font-medium text-gray-700 mb-1">
+                <label htmlFor="teamSize" className="block text-sm font-medium text-ink mb-1">
                   Team Size
                 </label>
                 <textarea
@@ -989,14 +989,14 @@ const handleCompanySave = async (e) => {
                   value={companyFormData.teamSize}
                   onChange={handleCompanyInputChange}
                   rows={2}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                  className="w-full px-3 py-2 border border-line rounded-md  focus:outline-none focus:ring-2 focus:ring-ink focus:border-transparent"
                   placeholder="Describe your team size and global presence"
                 />
               </div>
 
               {/* Unique Selling Proposition */}
               <div>
-                <label htmlFor="uniqueSellingProposition" className="block text-sm font-medium text-gray-700 mb-1">
+                <label htmlFor="uniqueSellingProposition" className="block text-sm font-medium text-ink mb-1">
                   Unique Selling Proposition
                 </label>
                 <textarea
@@ -1005,14 +1005,14 @@ const handleCompanySave = async (e) => {
                   value={companyFormData.uniqueSellingProposition}
                   onChange={handleCompanyInputChange}
                   rows={3}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                  className="w-full px-3 py-2 border border-line rounded-md  focus:outline-none focus:ring-2 focus:ring-ink focus:border-transparent"
                   placeholder="What makes your company unique?"
                 />
               </div>
               
               {/* Social Impact */}
               <div>
-                <label htmlFor="socialImpact" className="block text-sm font-medium text-gray-700 mb-1">
+                <label htmlFor="socialImpact" className="block text-sm font-medium text-ink mb-1">
                   Social Impact/ECG Focus
                 </label>
                 <textarea
@@ -1021,24 +1021,24 @@ const handleCompanySave = async (e) => {
                   value={companyFormData.socialImpact}
                   onChange={handleCompanyInputChange}
                   rows={3}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                  className="w-full px-3 py-2 border border-line rounded-md  focus:outline-none focus:ring-2 focus:ring-ink focus:border-transparent"
                   placeholder="Describe your company's social impact initiatives"
                 />
               </div>
 
               {/* Action Buttons */}
-              <div className="flex justify-end gap-3 pt-6 border-t mt-6 border-gray-200">
+              <div className="flex justify-end gap-3 pt-6 border-t mt-6 border-line">
                 <button 
                   type="button" 
                   onClick={() => setIsCompanyModalOpen(false)} 
-                  className="px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-400 transition-colors"
+                  className="px-4 py-2 bg-surface-hover text-ink rounded-md hover:bg-surface-hover focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-line transition-colors"
                   disabled={saving}
                 >
                   Cancel
                 </button>
                 <button 
                   type="submit"
-                  className="px-4 py-2 bg-gradient-to-l from-[#095B49] to-[#000000] text-white rounded-md hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 transition-opacity flex items-center"
+                  className="px-4 py-2 bg-black text-white rounded-md hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-ink transition-opacity flex items-center"
                   disabled={saving}
                 >
                   {saving ? (
@@ -1066,7 +1066,7 @@ const handleCompanySave = async (e) => {
 // DetailRow helper
 const DetailRow = ({ title, value }) => (
   <div className="border-t pt-4">
-    <p className="text-gray-500 font-semibold mb-1 text-base">{title}</p>
-    <div className="text-gray-700 whitespace-pre-line text-base">{value}</div>
+    <p className="text-dim font-semibold mb-1 text-base">{title}</p>
+    <div className="text-ink whitespace-pre-line text-base">{value}</div>
   </div>
 );

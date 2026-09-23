@@ -31,26 +31,26 @@ const PRIORITY_OPTIONS = [
 const getStatusBadgeClass = (status) => {
   switch (status) {
     case 'in-progress':
-      return 'bg-blue-100 text-blue-700 border-blue-200';
+      return 'bg-info/10 text-info border-info/20';
     case 'blocked':
-      return 'bg-red-100 text-red-700 border-red-200';
+      return 'bg-danger/10 text-danger border-danger/20';
     case 'completed':
-      return 'bg-emerald-100 text-emerald-700 border-emerald-200';
+      return 'bg-surface-hover text-ink border-line';
     default:
-      return 'bg-gray-100 text-gray-700 border-gray-200';
+      return 'bg-surface-hover text-ink border-line';
   }
 };
 
 const getPriorityBadgeClass = (priority) => {
   switch (priority) {
     case 'high':
-      return 'bg-orange-100 text-orange-700 border-orange-200';
+      return 'bg-warning/10 text-warning border-warning/20';
     case 'critical':
-      return 'bg-rose-100 text-rose-700 border-rose-200';
+      return 'bg-danger/10 text-danger border-danger/20';
     case 'medium':
-      return 'bg-amber-100 text-amber-700 border-amber-200';
+      return 'bg-warning/10 text-warning border-warning/20';
     default:
-      return 'bg-cyan-100 text-cyan-700 border-cyan-200';
+      return 'bg-info/10 text-info border-info/20';
   }
 };
 
@@ -248,30 +248,30 @@ const TaskCardRenderer = ({ data }) => {
 
   return (
     <div
-      className="w-[360px] bg-white border-2 border-gray-200 rounded-2xl shadow-lg overflow-hidden"
+      className="w-[360px] bg-surface border-2 border-line rounded-2xl shadow-lg overflow-hidden"
       onClick={(e) => e.stopPropagation()}
       onKeyDown={(e) => e.stopPropagation()}
     >
-      <div className="flex items-center px-4 py-3 bg-gradient-to-r from-sky-50 to-blue-50 border-b border-blue-100">
+      <div className="flex items-center px-4 py-3 bg-black border-b border-info/10">
         <div className="flex items-center space-x-2">
-          <CheckSquare className="w-5 h-5 text-blue-600" />
+          <CheckSquare className="w-5 h-5 text-info" />
           <input
             type="text"
             value={taskState.title}
             onChange={(e) => updateField('title', e.target.value)}
             onBlur={() => logActivity('Title updated', { title: taskState.title })}
             placeholder="Task title"
-            className="bg-transparent font-semibold text-gray-900 text-base focus:outline-none"
+            className="bg-transparent font-semibold text-ink text-base focus:outline-none"
           />
         </div>
       </div>
 
       <div className="px-4 py-3 space-y-4">
         <div className="grid grid-cols-2 gap-3">
-          <label className="col-span-2 flex items-center justify-between bg-slate-50 border border-slate-100 rounded-lg px-3 py-2 text-sm text-gray-600">
+          <label className="col-span-2 flex items-center justify-between bg-canvas border border-line rounded-lg px-3 py-2 text-sm text-dim">
             <span className="flex items-center space-x-2">
-              <CheckCircle className="w-4 h-4 text-blue-500" />
-              <span className="text-sm font-medium text-gray-700">Status</span>
+              <CheckCircle className="w-4 h-4 text-info" />
+              <span className="text-sm font-medium text-ink">Status</span>
             </span>
             <div className="flex items-center space-x-2">
               <span
@@ -282,7 +282,7 @@ const TaskCardRenderer = ({ data }) => {
               <select
                 value={taskState.status}
                 onChange={(e) => handleStatusChange(e.target.value)}
-                className="appearance-none bg-white border border-gray-200 text-xs rounded-lg px-2 py-1 focus:outline-none focus:ring-1 focus:ring-blue-400"
+                className="appearance-none bg-surface border border-line text-xs rounded-lg px-2 py-1 focus:outline-none focus:ring-1 focus:ring-info"
               >
                 {STATUS_OPTIONS.map((option) => (
                   <option key={option.value} value={option.value}>
@@ -292,18 +292,18 @@ const TaskCardRenderer = ({ data }) => {
               </select>
             </div>
           </label>
-          <label className="flex items-center space-x-2 text-sm text-gray-600 bg-slate-50 border border-slate-100 rounded-lg px-3 py-2">
-            <User className="w-4 h-4 text-blue-500" />
+          <label className="flex items-center space-x-2 text-sm text-dim bg-canvas border border-line rounded-lg px-3 py-2">
+            <User className="w-4 h-4 text-info" />
             <input
               type="text"
               value={taskState.assignedTo}
               onChange={(e) => handleAssignedToChange(e.target.value)}
               placeholder="Assigned to"
-              className="bg-transparent focus:outline-none text-sm text-gray-900"
+              className="bg-transparent focus:outline-none text-sm text-ink"
             />
           </label>
-          <label className="flex items-center space-x-2 text-sm text-gray-600 bg-slate-50 border border-slate-100 rounded-lg px-3 py-2">
-            <Flag className="w-4 h-4 text-amber-500" />
+          <label className="flex items-center space-x-2 text-sm text-dim bg-canvas border border-line rounded-lg px-3 py-2">
+            <Flag className="w-4 h-4 text-warning" />
             <select
               value={taskState.priority}
               onChange={(e) => handlePriorityChange(e.target.value)}
@@ -318,53 +318,53 @@ const TaskCardRenderer = ({ data }) => {
               ))}
             </select>
           </label>
-          <label className="flex items-center space-x-2 text-sm text-gray-600 bg-slate-50 border border-slate-100 rounded-lg px-3 py-2 col-span-2">
-            <Calendar className="w-4 h-4 text-emerald-500" />
+          <label className="flex items-center space-x-2 text-sm text-dim bg-canvas border border-line rounded-lg px-3 py-2 col-span-2">
+            <Calendar className="w-4 h-4 text-ink" />
             <input
               type="date"
               value={taskState.dueDate}
               onChange={(e) => handleDueDateChange(e.target.value)}
-              className="bg-transparent focus:outline-none text-sm text-gray-900"
+              className="bg-transparent focus:outline-none text-sm text-ink"
             />
           </label>
         </div>
 
         <div className="space-y-2">
-          <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Description</span>
+          <span className="text-xs font-semibold text-dim uppercase tracking-wide">Description</span>
           <textarea
             value={taskState.description}
             onChange={(e) => updateField('description', e.target.value)}
             onBlur={() => logActivity('Description updated')}
             placeholder="Describe the task, context, goals, or blockers..."
-            className="w-full min-h-[72px] border border-gray-200 rounded-lg p-3 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-100"
+            className="w-full min-h-[72px] border border-line rounded-lg p-3 text-sm text-ink focus:outline-none focus:ring-2 focus:ring-info/10"
           />
         </div>
 
         <div className="space-y-3">
           <div className="flex items-center justify-between">
-            <span className="text-sm font-semibold text-gray-700">Checklist</span>
-            <span className="text-xs text-gray-500">{plannedCompletion}% complete</span>
+            <span className="text-sm font-semibold text-ink">Checklist</span>
+            <span className="text-xs text-dim">{plannedCompletion}% complete</span>
           </div>
           <div className="space-y-2">
             {taskState.checklists.map((item) => (
               <div
                 key={item.id}
-                className="flex items-center justify-between bg-slate-50 border border-slate-100 rounded-lg px-3 py-2"
+                className="flex items-center justify-between bg-canvas border border-line rounded-lg px-3 py-2"
               >
-                <label className="flex items-center space-x-2 text-sm text-gray-700">
+                <label className="flex items-center space-x-2 text-sm text-ink">
                   <input
                     type="checkbox"
                     checked={item.completed}
                     onChange={() => toggleChecklist(item.id)}
-                    className="rounded border-gray-300 text-blue-500 focus:ring-blue-400"
+                    className="rounded border-line text-info focus:ring-info"
                   />
-                  <span className={item.completed ? 'line-through text-gray-400' : ''}>
+                  <span className={item.completed ? 'line-through text-dim' : ''}>
                     {item.text}
                   </span>
                 </label>
                 <button
                   type="button"
-                  className="text-gray-400 hover:text-rose-500"
+                  className="text-dim hover:text-danger"
                   onClick={() => removeChecklistItem(item.id)}
                 >
                   <Trash2 className="w-4 h-4" />
@@ -383,12 +383,12 @@ const TaskCardRenderer = ({ data }) => {
                   }
                 }}
                 placeholder="Add checklist item"
-                className="flex-1 border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-100"
+                className="flex-1 border border-line rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-info/10"
               />
               <button
                 type="button"
                 onClick={addChecklistItem}
-                className="px-3 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700"
+                className="px-3 py-2 bg-info text-white rounded-lg text-sm font-medium hover:bg-info"
               >
                 <Plus className="w-4 h-4" />
               </button>
@@ -398,8 +398,8 @@ const TaskCardRenderer = ({ data }) => {
 
         <div className="space-y-2">
           <div className="flex items-center justify-between">
-            <span className="text-sm font-semibold text-gray-700">Attachments</span>
-            <label className="flex items-center space-x-1 text-xs font-medium text-blue-600 cursor-pointer">
+            <span className="text-sm font-semibold text-ink">Attachments</span>
+            <label className="flex items-center space-x-1 text-xs font-medium text-info cursor-pointer">
               <UploadCloud className="w-4 h-4" />
               <span>Upload</span>
               <input
@@ -412,27 +412,27 @@ const TaskCardRenderer = ({ data }) => {
           </div>
           <div className="space-y-2">
             {taskState.attachments.length === 0 && (
-              <p className="text-xs text-gray-400 bg-slate-50 rounded-lg px-3 py-2">
+              <p className="text-xs text-dim bg-canvas rounded-lg px-3 py-2">
                 No files attached yet
               </p>
             )}
             {taskState.attachments.map((file) => (
               <div
                 key={file.id}
-                className="flex items-center justify-between bg-white border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-600"
+                className="flex items-center justify-between bg-surface border border-line rounded-lg px-3 py-2 text-sm text-dim"
               >
                 <div className="flex items-center space-x-2">
-                  <Paperclip className="w-4 h-4 text-gray-400" />
+                  <Paperclip className="w-4 h-4 text-dim" />
                   <span className="truncate max-w-[180px]" title={file.name}>
                     {file.name}
                   </span>
-                  <span className="text-xs text-gray-400">
+                  <span className="text-xs text-dim">
                     {(file.size / 1024).toFixed(1)} KB
                   </span>
                 </div>
                 <button
                   type="button"
-                  className="text-gray-400 hover:text-rose-500"
+                  className="text-dim hover:text-danger"
                   onClick={() => removeAttachment(file.id)}
                 >
                   <Trash2 className="w-4 h-4" />
@@ -443,7 +443,7 @@ const TaskCardRenderer = ({ data }) => {
         </div>
 
         <div className="space-y-3">
-          <span className="text-sm font-semibold text-gray-700">Comments</span>
+          <span className="text-sm font-semibold text-ink">Comments</span>
           <textarea
             value={commentText}
             onChange={(e) => setCommentText(e.target.value)}
@@ -453,13 +453,13 @@ const TaskCardRenderer = ({ data }) => {
               }
             }}
             placeholder="Add a comment (⌘ + Enter to submit)"
-            className="w-full min-h-[64px] border border-gray-200 rounded-lg p-3 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-100"
+            className="w-full min-h-[64px] border border-line rounded-lg p-3 text-sm text-ink focus:outline-none focus:ring-2 focus:ring-info/10"
           />
           <div className="flex justify-end">
             <button
               type="button"
               onClick={addComment}
-              className="inline-flex items-center space-x-2 px-4 py-2 bg-gray-900 text-white rounded-lg text-sm hover:bg-gray-700"
+              className="inline-flex items-center space-x-2 px-4 py-2 bg-cta text-cta-foreground rounded-lg text-sm hover:bg-cta"
             >
               <MessageCircle className="w-4 h-4" />
               <span>Comment</span>
@@ -467,37 +467,37 @@ const TaskCardRenderer = ({ data }) => {
           </div>
           <div className="space-y-2 max-h-36 overflow-y-auto">
             {taskState.comments.length === 0 && (
-              <p className="text-xs text-gray-400">No comments yet</p>
+              <p className="text-xs text-dim">No comments yet</p>
             )}
             {taskState.comments.map((comment) => (
-              <div key={comment.id} className="bg-slate-50 border border-slate-100 rounded-lg px-3 py-2">
-                <div className="flex items-center justify_between text-xs text-gray-500">
-                  <span className="font-medium text-gray-700">{comment.author}</span>
+              <div key={comment.id} className="bg-canvas border border-line rounded-lg px-3 py-2">
+                <div className="flex items-center justify_between text-xs text-dim">
+                  <span className="font-medium text-ink">{comment.author}</span>
                   <span>{comment.timestamp}</span>
                 </div>
-                <p className="text-sm text-gray-700 mt-1">{comment.text}</p>
+                <p className="text-sm text-ink mt-1">{comment.text}</p>
               </div>
             ))}
           </div>
         </div>
 
         <div className="space-y-3">
-          <div className="flex items-center justify-between text-sm font-semibold text-gray-700">
+          <div className="flex items-center justify-between text-sm font-semibold text-ink">
             <span>Dependencies</span>
           </div>
           <div className="space-y-2">
             {taskState.dependencies.map((dependency) => (
               <div
                 key={dependency}
-                className="flex items-center justify_between bg-white border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-600"
+                className="flex items-center justify_between bg-surface border border-line rounded-lg px-3 py-2 text-sm text-dim"
               >
                 <div className="flex items-center space-x-2">
-                  <Activity className="w-4 h-4 text-blue-500" />
+                  <Activity className="w-4 h-4 text-info" />
                   <span>{dependency}</span>
                 </div>
                 <button
                   type="button"
-                  className="text-gray-400 hover:text-rose-500"
+                  className="text-dim hover:text-danger"
                   onClick={() => {
                     setTaskState((prev) => ({
                       ...prev,
@@ -522,12 +522,12 @@ const TaskCardRenderer = ({ data }) => {
                   }
                 }}
                 placeholder="Link tasks or milestones"
-                className="flex-1 border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-100"
+                className="flex-1 border border-line rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-info/10"
               />
               <button
                 type="button"
                 onClick={addDependency}
-                className="px-3 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700"
+                className="px-3 py-2 bg-info text-white rounded-lg text-sm font-medium hover:bg-info"
               >
                 <Plus className="w-4 h-4" />
               </button>
@@ -536,18 +536,18 @@ const TaskCardRenderer = ({ data }) => {
         </div>
 
         <div className="space-y-2">
-          <span className="text-sm font-semibold text-gray-700">Labels / Tags</span>
+          <span className="text-sm font-semibold text-ink">Labels / Tags</span>
           <div className="flex flex-wrap gap-2">
             {taskState.labels.map((label) => (
               <span
                 key={label}
-                className="inline-flex items-center space-x-1 bg-purple-50 text-purple-600 border border-purple-100 rounded-full px-3 py-1 text-xs font-medium"
+                className="inline-flex items-center space-x-1 bg-surface-hover text-ink border border-line rounded-full px-3 py-1 text-xs font-medium"
               >
                 <Tag className="w-3 h-3" />
                 <span>{label}</span>
                 <button
                   type="button"
-                  className="text-purple-400 hover:text-purple-600"
+                  className="text-ink hover:text-ink"
                   onClick={() => removeLabel(label)}
                 >
                   ×
@@ -555,7 +555,7 @@ const TaskCardRenderer = ({ data }) => {
               </span>
             ))}
             {taskState.labels.length === 0 && (
-              <span className="text-xs text-gray-400">No labels yet</span>
+              <span className="text-xs text-dim">No labels yet</span>
             )}
           </div>
           <div className="flex space-x-2">
@@ -570,12 +570,12 @@ const TaskCardRenderer = ({ data }) => {
                 }
               }}
               placeholder="Add label or tag"
-              className="flex-1 border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-100"
+              className="flex-1 border border-line rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-info/10"
             />
             <button
               type="button"
               onClick={addLabel}
-              className="px-3 py-2 bg-gray-900 text-white rounded-lg text-sm font-medium hover:bg-gray-700"
+              className="px-3 py-2 bg-cta text-cta-foreground rounded-lg text-sm font-medium hover:bg-cta"
             >
               Add
             </button>
@@ -583,21 +583,21 @@ const TaskCardRenderer = ({ data }) => {
         </div>
 
         <div className="space-y-2">
-          <span className="text-sm font-semibold text-gray-700">Activity Log</span>
+          <span className="text-sm font-semibold text-ink">Activity Log</span>
           <div className="max-h-36 overflow-y-auto space-y-2">
             {taskState.activityLog.map((entry) => (
               <div
                 key={entry.id}
-                className="bg-slate-50 border border-slate-100 rounded-lg px-3 py-2 text-xs text-gray-600"
+                className="bg-canvas border border-line rounded-lg px-3 py-2 text-xs text-dim"
               >
                 <div className="flex justify-between">
-                  <span className="font-medium text-gray-700">{entry.action}</span>
-                  <span className="text-[11px] text-gray-400">{entry.timestamp}</span>
+                  <span className="font-medium text-ink">{entry.action}</span>
+                  <span className="text-[11px] text-dim">{entry.timestamp}</span>
                 </div>
                 {entry.meta && Object.keys(entry.meta).length > 0 && (
                   <div className="mt-1 space-y-0.5">
                     {Object.entries(entry.meta).map(([key, value]) => (
-                      <div key={key} className="flex items-center text-[11px] text-gray-500">
+                      <div key={key} className="flex items-center text-[11px] text-dim">
                         <span className="uppercase tracking-wide mr-1">{key}:</span>
                         <span>{String(value)}</span>
                       </div>

@@ -243,16 +243,16 @@ const TaskTab = ({
   return (
     <div className="flex min-h-0 flex-1 flex-col px-3 py-2.5">
       <div className="mb-3 flex items-center justify-between">
-      <h3 className="text-sm font-semibold text-gray-900">Tasks</h3>
+      <h3 className="text-sm font-semibold text-ink">Tasks</h3>
         <PermissionButton
           permission="canCreateTasks"
           workspace={workspace}
           userRole={userRole}
           onClick={onShowAddTaskModal}
-          className="rounded-lg p-1.5 hover:bg-gray-100 transition-colors"
+          className="rounded-lg p-1.5 hover:bg-surface-hover transition-colors"
           title="Add new task"
         >
-          <Plus className="h-4 w-4 text-blue-600" />
+          <Plus className="h-4 w-4 text-info" />
         </PermissionButton>
       </div>
 
@@ -268,22 +268,22 @@ const TaskTab = ({
             }
           }}
           placeholder="Quick add task and press Enter"
-          className="h-9 min-w-0 w-full flex-1 rounded-lg border border-gray-200 px-3 text-xs focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
+          className="h-9 min-w-0 w-full flex-1 rounded-lg border border-line px-3 text-xs focus:border-info focus:ring-2 focus:ring-info"
           disabled={isQuickAddingTask}
         />
         <button
           type="button"
           onClick={handleQuickAddTask}
           disabled={isQuickAddingTask || !quickTaskTitle.trim()}
-          className="h-9 w-full shrink-0 rounded-lg bg-blue-600 px-3 text-xs font-medium text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50 xl:w-auto"
+          className="h-9 w-full shrink-0 rounded-lg bg-info px-3 text-xs font-medium text-white hover:bg-info disabled:cursor-not-allowed disabled:opacity-50 xl:w-auto"
         >
           {isQuickAddingTask ? 'Adding...' : 'Add'}
         </button>
       </div>
 
-      <div className="mb-2.5 space-y-1.5 rounded-xl border border-slate-200 bg-white p-2 shadow-sm">
+      <div className="mb-2.5 space-y-1.5 rounded-xl border border-line bg-surface p-2 ">
         <div className="flex items-center justify-between">
-          <p className="text-[10px] font-medium leading-none text-slate-500">
+          <p className="text-[10px] font-medium leading-none text-dim">
             {filteredTasks.length} of {tasks.length} task{tasks.length !== 1 ? 's' : ''}
           </p>
           {isFilterActive && (
@@ -295,20 +295,20 @@ const TaskTab = ({
                 setStatusFilter('all');
                 setAssigneeFilter('all');
               }}
-              className="text-[10px] font-semibold leading-none text-blue-600 hover:text-blue-700"
+              className="text-[10px] font-semibold leading-none text-info hover:text-info"
             >
               Clear filters
             </button>
           )}
         </div>
         <div className="relative">
-          <Search className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-400" />
+          <Search className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5  text-dim" />
           <input
             type="text"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             placeholder="Search tasks or subtasks"
-            className="h-8 w-full rounded-lg border border-slate-200 bg-slate-50 py-1 pl-8 pr-2 text-[11px] text-slate-700 placeholder:text-slate-400 focus:border-blue-400 focus:bg-white focus:outline-none focus:ring-1 focus:ring-blue-200"
+            className="h-8 w-full rounded-lg border border-line bg-canvas py-1 pl-8 pr-2 text-[11px] text-ink placeholder:text-dim focus:border-info focus:bg-surface focus:outline-none focus:ring-1 focus:ring-info/20"
           />
         </div>
         <div className="grid grid-cols-2 gap-2">
@@ -316,7 +316,7 @@ const TaskTab = ({
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
-              className="h-7 w-full appearance-none rounded-lg border border-slate-200 bg-slate-50 pl-2 pr-7 text-[11px] text-slate-700 focus:border-blue-400 focus:bg-white focus:outline-none focus:ring-1 focus:ring-blue-200"
+              className="h-7 w-full appearance-none rounded-lg border border-line bg-canvas pl-2 pr-7 text-[11px] text-ink focus:border-info focus:bg-surface focus:outline-none focus:ring-1 focus:ring-info/20"
               title="Filter by status"
             >
               <option value="all">All statuses</option>
@@ -324,13 +324,13 @@ const TaskTab = ({
               <option value="in-progress">In progress</option>
               <option value="completed">Completed</option>
             </select>
-            <ChevronDown className="pointer-events-none absolute right-2 top-1/2 h-3 w-3 -translate-y-1/2 text-slate-400" />
+            <ChevronDown className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 h-3 w-3  text-dim" />
           </div>
           <div className="relative min-w-0">
             <select
               value={assigneeFilter}
               onChange={(e) => setAssigneeFilter(e.target.value)}
-              className="h-7 w-full appearance-none rounded-lg border border-slate-200 bg-slate-50 pl-2 pr-7 text-[11px] text-slate-700 focus:border-blue-400 focus:bg-white focus:outline-none focus:ring-1 focus:ring-blue-200"
+              className="h-7 w-full appearance-none rounded-lg border border-line bg-canvas pl-2 pr-7 text-[11px] text-ink focus:border-info focus:bg-surface focus:outline-none focus:ring-1 focus:ring-info/20"
               title="Filter by assignee"
             >
               <option value="all">All assignees</option>
@@ -339,7 +339,7 @@ const TaskTab = ({
                 <option key={`filter-${member.id}`} value={member.id}>{member.label}</option>
               ))}
             </select>
-            <ChevronDown className="pointer-events-none absolute right-2 top-1/2 h-3 w-3 -translate-y-1/2 text-slate-400" />
+            <ChevronDown className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 h-3 w-3  text-dim" />
           </div>
         </div>
       </div>
@@ -353,55 +353,55 @@ const TaskTab = ({
               <div 
                 key={selectedTask.id} 
                 onClick={() => onTaskClick(selectedTask)}
-                 className="flex items-start justify-between gap-2 p-1.5 border rounded-lg bg-blue-50 border-blue-300 shadow-md cursor-pointer group"
+                 className="flex items-start justify-between gap-2 p-1.5 border rounded-lg bg-info/10 border-info/30  cursor-pointer group"
               >
                 <div className="flex items-center space-x-2 min-w-0 flex-1">
-                  <div className="flex items-center justify-center w-6 h-6 bg-blue-100 rounded-lg">
-                    <FolderOpen className="w-3 h-3 text-blue-600" />
+                  <div className="flex items-center justify-center w-6 h-6 bg-info/10 rounded-lg">
+                    <FolderOpen className="w-3 h-3 text-info" />
                   </div>
-                  <span className="text-[11px] font-medium text-blue-800 truncate">
+                  <span className="text-[11px] font-medium text-info truncate">
                     {selectedTask.name}
                   </span>
                 </div>
                 
-                <div className="flex items-center gap-1 text-[10px] text-gray-500 shrink-0">
+                <div className="flex items-center gap-1 text-[10px] text-dim shrink-0">
                   <span className="hidden sm:inline">{selectedTask.assignedUsers} member{selectedTask.assignedUsers !== 1 ? 's' : ''}</span>
                   <button 
-                     className="p-0.5 hover:bg-gray-200 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200"
+                     className="p-0.5 hover:bg-surface-hover rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200"
 
                     onClick={(e) => {
                       e.stopPropagation();
                       // Handle more options
                     }}
                   >
-                     <MoreHorizontal className="w-2.5 h-2.5 text-gray-500" />
+                     <MoreHorizontal className="w-2.5 h-2.5 text-dim" />
                   </button>
                 </div>
               </div>
 
               {/* Hierarchy Connector */}
               <div className="flex items-center pl-4">
-              <div className="w-px h-4 border-l border-dashed border-gray-300"></div>
+              <div className="w-px h-4 border-l border-dashed border-line"></div>
               </div>
 
               {/* Current Subtask */}
-              <div className="ml-8 p-1.5 border-2 border-blue-400 rounded-lg bg-blue-100 shadow-lg">
+              <div className="ml-8 p-1.5 border-2 border-info rounded-lg bg-info/10 shadow-lg">
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <div className="flex items-center space-x-2">
-                    <div className="flex items-center justify-center w-5 h-5 bg-blue-200 rounded-lg">
+                    <div className="flex items-center justify-center w-5 h-5 bg-info/20 rounded-lg">
                       {selectedSubtask.status === 'completed' ? (
-                       <CheckSquare className="w-3 h-3 text-green-700" />
+                       <CheckSquare className="w-3 h-3 text-success" />
                       ) : selectedSubtask.status === 'in-progress' ? (
-                        <Clock className="w-3 h-3 text-blue-700" />
+                        <Clock className="w-3 h-3 text-info" />
                       ) : (
-                        <FileText className="w-3 h-3 text-blue-700" />
+                        <FileText className="w-3 h-3 text-info" />
                       )}
                     </div>
                     <div className="flex flex-col">
-                    <span className="text-[12px] font-semibold text-blue-900">
+                    <span className="text-[12px] font-semibold text-info">
                         {selectedSubtask.name}
                       </span>
-                      <span className="text-[10px] text-gray-500 whitespace-nowrap">
+                      <span className="text-[10px] text-dim whitespace-nowrap">
                         {(selectedSubtask.assignedUsers || 1)} member{(selectedSubtask.assignedUsers || 1) !== 1 ? 's' : ''}
                       </span>
                     </div>
@@ -410,7 +410,7 @@ const TaskTab = ({
                   <div className="flex items-center gap-1 whitespace-nowrap">
                     {isSubtaskApproved(selectedTask?.id, selectedSubtask) && (
                       <span
-                        className="inline-flex items-center gap-1 px-1.5 py-0.5 text-[10px] font-medium rounded-full bg-green-100 text-green-800 whitespace-nowrap"
+                        className="inline-flex items-center gap-1 px-1.5 py-0.5 text-[10px] font-medium rounded-full bg-success/10 text-success whitespace-nowrap"
                         title="Approved by PM and client"
                       >
                         <CheckCircle2 className="h-3 w-3" />
@@ -420,10 +420,10 @@ const TaskTab = ({
                     {/* Status Badge */}
                     <span className={`px-1.5 py-0.5 text-[10px] font-medium rounded-full whitespace-nowrap ${
                       selectedSubtask.status === 'completed' 
-                        ? 'bg-green-100 text-green-800'
+                        ? 'bg-success/10 text-success'
                         : selectedSubtask.status === 'in-progress'
-                        ? 'bg-yellow-100 text-yellow-800'
-                        : 'bg-gray-100 text-gray-800'
+                        ? 'bg-warning/10 text-warning'
+                        : 'bg-surface-hover text-ink'
                     }`}>
                       {selectedSubtask.status === 'completed' 
                         ? 'Completed'
@@ -436,7 +436,7 @@ const TaskTab = ({
                     {/* Assigned Users for Subtask
                     <div className="flex -space-x-1">
                       {Array.from({ length: selectedSubtask.assignedUsers || 1 }, (_, i) => (
-                        <div key={i} className="w-5 h-5 bg-blue-300 rounded-full border-2 border-white shadow-sm"></div>
+                        <div key={i} className="w-5 h-5 bg-info/30 rounded-full border-2 border-white "></div>
                       ))}
                     </div> */}
                   </div>
@@ -445,8 +445,8 @@ const TaskTab = ({
 
               {/* Quick switch: sibling subtasks */}
               {Array.isArray(selectedTask.subtasks) && selectedTask.subtasks.length > 1 && (
-                <div className="ml-8 mt-1.5 rounded-md border border-blue-200 bg-white p-1.5">
-                  <p className="mb-1 text-[10px] font-semibold uppercase tracking-wide text-slate-500">
+                <div className="ml-8 mt-1.5 rounded-md border border-info/20 bg-surface p-1.5">
+                  <p className="mb-1 text-[10px] font-semibold uppercase tracking-wide text-dim">
                     Other subtasks
                   </p>
                   <div className="space-y-1">
@@ -461,13 +461,13 @@ const TaskTab = ({
                             e.stopPropagation();
                             onSubtaskClick?.(subtask);
                           }}
-                          className="w-full rounded-md border border-transparent bg-slate-50 px-2 py-1 text-left text-[11px] font-medium text-slate-700 hover:border-blue-200 hover:bg-blue-50"
+                          className="w-full rounded-md border border-transparent bg-canvas px-2 py-1 text-left text-[11px] font-medium text-ink hover:border-info/20 hover:bg-info/10"
                           title={`Open ${subtask.name}`}
                         >
                           <span className="flex items-center gap-1.5">
                             {isSubtaskApproved(selectedTask.id, subtask) && (
                               <CheckCircle2
-                                className="h-3.5 w-3.5 shrink-0 text-green-600"
+                                className="h-3.5 w-3.5 shrink-0 text-success"
                                 title="Approved by PM and client"
                               />
                             )}
@@ -488,20 +488,20 @@ const TaskTab = ({
                 onClick={() => onTaskClick(task)}
                 className={`rounded-xl border p-2.5 transition-all duration-200 cursor-pointer group ${
                   selectedTask?.id === task.id
-                    ? 'bg-blue-50 border-blue-300 shadow-sm'
-                    : 'bg-white border-gray-200 hover:bg-gray-50 hover:border-gray-300 hover:shadow-sm'
+                    ? 'bg-info/10 border-info/30 '
+                    : 'bg-surface border-line hover:bg-canvas hover:border-line '
                 }`}
               >
                 <div className="flex items-start gap-2.5">
                   <div className={`mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ${
                     selectedTask?.id === task.id
-                      ? 'bg-blue-100'
-                      : 'bg-gray-100 group-hover:bg-gray-200'
+                      ? 'bg-info/10'
+                      : 'bg-surface-hover group-hover:bg-surface-hover'
                   }`}>
                     <FolderOpen className={`h-3.5 w-3.5 ${
                       selectedTask?.id === task.id
-                        ? 'text-blue-600'
-                        : 'text-gray-600 group-hover:text-gray-700'
+                        ? 'text-info'
+                        : 'text-dim group-hover:text-ink'
                     }`} />
                   </div>
 
@@ -525,23 +525,23 @@ const TaskTab = ({
                                 cancelTaskRename();
                               }
                             }}
-                            className="w-full rounded-md border border-blue-200 px-2 py-1 text-[13px] font-medium text-gray-900 focus:ring-1 focus:ring-blue-400"
+                            className="w-full rounded-md border border-info/20 px-2 py-1 text-[13px] font-medium text-ink focus:ring-1 focus:ring-info"
                           />
                         ) : (
                           <span className={`block truncate text-[13px] font-semibold leading-5 ${
-                            selectedTask?.id === task.id ? 'text-blue-800' : 'text-gray-900 group-hover:text-gray-700'
+                            selectedTask?.id === task.id ? 'text-info' : 'text-ink group-hover:text-ink'
                           }`}>
                             {task.name}
                           </span>
                         )}
 
-                        <div className="mt-1 flex flex-wrap items-center gap-1.5 text-[10px] text-gray-500">
-                          <span className="inline-flex items-center whitespace-nowrap rounded-full bg-slate-100 px-2 py-0.5 font-medium leading-none text-slate-600">
+                        <div className="mt-1 flex flex-wrap items-center gap-1.5 text-[10px] text-dim">
+                          <span className="inline-flex items-center whitespace-nowrap rounded-full bg-surface-hover px-2 py-0.5 font-medium leading-none text-dim">
                             {task.assignedUsers} member{task.assignedUsers !== 1 ? 's' : ''}
                           </span>
                           {isTaskApproved(task) && (
                             <span
-                              className="inline-flex items-center gap-1 whitespace-nowrap rounded-full bg-green-100 px-2 py-0.5 font-medium leading-none text-green-700"
+                              className="inline-flex items-center gap-1 whitespace-nowrap rounded-full bg-success/10 px-2 py-0.5 font-medium leading-none text-success"
                               title="Approved by PM and client"
                             >
                               <CheckCircle2 className="h-3 w-3" />
@@ -553,7 +553,7 @@ const TaskTab = ({
 
                       <div className="flex items-center gap-0.5 self-start">
                         <button
-                          className="rounded-md p-1 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600"
+                          className="rounded-md p-1 text-dim transition-colors hover:bg-surface-hover hover:text-dim"
                           onClick={(e) => {
                             e.stopPropagation();
                             startTaskRename(task);
@@ -563,7 +563,7 @@ const TaskTab = ({
                           <Edit2 className="h-3.5 w-3.5" />
                         </button>
                         <button 
-                          className="rounded-md p-1 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600"
+                          className="rounded-md p-1 text-dim transition-colors hover:bg-surface-hover hover:text-dim"
                           onClick={(e) => {
                             e.stopPropagation();
                             handleCheckSubmissions(task);
@@ -574,10 +574,10 @@ const TaskTab = ({
                         </button>
                         <div className="flex h-6 min-w-[22px] items-center justify-center">
                           {updatingTaskId === task.id && (
-                            <Loader2 className="h-3.5 w-3.5 text-blue-500 animate-spin" title="Saving" />
+                            <Loader2 className="h-3.5 w-3.5 text-info animate-spin" title="Saving" />
                           )}
                           {updatingTaskId !== task.id && successTaskId === task.id && (
-                            <Check className="h-3.5 w-3.5 text-emerald-600" title="Saved" />
+                            <Check className="h-3.5 w-3.5 text-ink" title="Saved" />
                           )}
                         </div>
                       </div>
@@ -590,14 +590,14 @@ const TaskTab = ({
                           onClick={(e) => e.stopPropagation()}
                           onChange={(e) => handleInlineTaskUpdate(task, { priority: e.target.value })}
                           disabled={updatingTaskId === task.id}
-                          className="h-8 w-full appearance-none rounded-lg border border-slate-200 bg-slate-50 pl-2.5 pr-9 text-[11px] font-medium text-slate-700 focus:border-blue-400 focus:bg-white focus:outline-none focus:ring-1 focus:ring-blue-200 disabled:bg-slate-100"
+                          className="h-8 w-full appearance-none rounded-lg border border-line bg-canvas pl-2.5 pr-9 text-[11px] font-medium text-ink focus:border-info focus:bg-surface focus:outline-none focus:ring-1 focus:ring-info/20 disabled:bg-surface-hover"
                           title="Set priority"
                         >
                           <option value="low">Low</option>
                           <option value="medium">Medium</option>
                           <option value="high">High</option>
                         </select>
-                        <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-3 w-3 -translate-y-1/2 text-slate-400" />
+                        <ChevronDown className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 h-3 w-3  text-dim" />
                       </div>
                       <div className="relative">
                         <select
@@ -605,7 +605,7 @@ const TaskTab = ({
                           onClick={(e) => e.stopPropagation()}
                           onChange={(e) => handleInlineTaskUpdate(task, { assignedUserId: e.target.value || null })}
                           disabled={updatingTaskId === task.id}
-                          className="h-8 w-full appearance-none rounded-lg border border-slate-200 bg-slate-50 pl-2.5 pr-9 text-[11px] font-medium text-slate-700 focus:border-blue-400 focus:bg-white focus:outline-none focus:ring-1 focus:ring-blue-200 disabled:bg-slate-100"
+                          className="h-8 w-full appearance-none rounded-lg border border-line bg-canvas pl-2.5 pr-9 text-[11px] font-medium text-ink focus:border-info focus:bg-surface focus:outline-none focus:ring-1 focus:ring-info/20 disabled:bg-surface-hover"
                           title="Assign member"
                         >
                           <option value="">Unassigned</option>
@@ -613,7 +613,7 @@ const TaskTab = ({
                             <option key={member.id} value={member.id}>{member.label}</option>
                           ))}
                         </select>
-                        <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-3 w-3 -translate-y-1/2 text-slate-400" />
+                        <ChevronDown className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 h-3 w-3  text-dim" />
                       </div>
                     </div>
                   </div>
@@ -621,7 +621,7 @@ const TaskTab = ({
               </div>
 
               {selectedTask?.id === task.id && Array.isArray(task.subtasks) && task.subtasks.length > 0 && (
-                <div className="ml-8 space-y-1.5 border-l border-blue-200 pl-3">
+                <div className="ml-8 space-y-1.5 border-l border-info/20 pl-3">
                   {task.subtasks.filter(matchesSubtaskFilters).map((subtask) => (
                     <button
                       key={`sidebar-subtask-${subtask.id}`}
@@ -632,8 +632,8 @@ const TaskTab = ({
                       }}
                       className={`w-full rounded-md border px-2 py-1 text-left text-[11px] transition-colors ${
                         selectedSubtask?.id === subtask.id
-                          ? 'border-blue-300 bg-blue-100 text-blue-800'
-                          : 'border-gray-200 bg-white text-gray-700 hover:border-blue-200 hover:bg-blue-50'
+                          ? 'border-info/30 bg-info/10 text-info'
+                          : 'border-line bg-surface text-ink hover:border-info/20 hover:bg-info/10'
                       }`}
                       title={`Open ${subtask.name}`}
                     >
@@ -641,13 +641,13 @@ const TaskTab = ({
                         <span className="flex min-w-0 items-center gap-1.5">
                           {isSubtaskApproved(task.id, subtask) && (
                             <CheckCircle2
-                              className="h-3.5 w-3.5 shrink-0 text-green-600"
+                              className="h-3.5 w-3.5 shrink-0 text-success"
                               title="Approved by PM and client"
                             />
                           )}
                           <span className="truncate font-medium">{subtask.name}</span>
                         </span>
-                        <span className={`shrink-0 text-[10px] ${isSubtaskApproved(task.id, subtask) ? 'font-medium text-green-700' : 'text-slate-500'}`}>
+                        <span className={`shrink-0 text-[10px] ${isSubtaskApproved(task.id, subtask) ? 'font-medium text-success' : 'text-dim'}`}>
                           {isSubtaskApproved(task.id, subtask)
                             ? 'Approved'
                             : subtask.status === 'in-progress' ? 'In progress' : subtask.status === 'completed' ? 'Done' : 'Pending'}
@@ -662,7 +662,7 @@ const TaskTab = ({
         )}
 
         {!selectedSubtask && filteredTasks.length === 0 && (
-          <div className="rounded-lg border border-dashed border-gray-300 bg-gray-50 p-3 text-center text-xs text-gray-500">
+          <div className="rounded-lg border border-dashed border-line bg-canvas p-3 text-center text-xs text-dim">
             No tasks match your current search or filters.
           </div>
         )}
@@ -674,7 +674,7 @@ const TaskTab = ({
           <button
             type="button"
             onClick={onLeaveWorkspace}
-            className="w-full rounded-lg border border-orange-200 bg-orange-50 px-3 py-2 text-xs font-medium text-orange-700 transition-colors hover:bg-orange-100"
+            className="w-full rounded-lg border border-warning/20 bg-warning/10 px-3 py-2 text-xs font-medium text-warning transition-colors hover:bg-warning/10"
           >
             Leave Workspace
           </button>
@@ -684,21 +684,21 @@ const TaskTab = ({
       {/* Submissions Modal */}
       {showSubmissionsModal && selectedTaskForSubmissions && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[80vh] overflow-y-auto">
+          <div className="bg-surface rounded-lg shadow-xl max-w-2xl w-full max-h-[80vh] overflow-y-auto">
             {/* Modal Header */}
-            <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between">
+            <div className="sticky top-0 bg-surface border-b border-line px-6 py-4 flex items-center justify-between">
               <div>
-                <h2 className="text-lg font-semibold text-gray-900">Progress Submissions</h2>
-                <p className="text-sm text-gray-600 mt-1">
+                <h2 className="text-lg font-semibold text-ink">Progress Submissions</h2>
+                <p className="text-sm text-dim mt-1">
                   Task: {selectedTaskForSubmissions.name}
                   {selectedSubtaskForSubmissions && ` / Subtask: ${selectedSubtaskForSubmissions.name}`}
                 </p>
               </div>
               <button
                 onClick={() => setShowSubmissionsModal(false)}
-                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                className="p-2 hover:bg-surface-hover rounded-lg transition-colors"
               >
-                <X className="w-5 h-5 text-gray-600" />
+                <X className="w-5 h-5 text-dim" />
               </button>
             </div>
 
@@ -710,8 +710,8 @@ const TaskTab = ({
                 if (submissions.length === 0) {
                   return (
                     <div className="text-center py-12">
-                      <FileText className="w-12 h-12 text-gray-300 mx-auto mb-4" />
-                      <p className="text-gray-600">No submissions found</p>
+                      <FileText className="w-12 h-12 text-dim mx-auto mb-4" />
+                      <p className="text-dim">No submissions found</p>
                     </div>
                   );
                 }
@@ -722,21 +722,21 @@ const TaskTab = ({
                       const isExpanded = expandedSubmissions[submission.id];
                       
                       return (
-                        <div key={submission.id} className="border border-gray-200 rounded-lg overflow-hidden">
+                        <div key={submission.id} className="border border-line rounded-lg overflow-hidden">
                           {/* Submission Header */}
                           <button
                             onClick={() => toggleSubmissionExpand(submission.id)}
-                            className="w-full flex items-center justify-between p-4 hover:bg-gray-50 transition-colors text-left"
+                            className="w-full flex items-center justify-between p-4 hover:bg-canvas transition-colors text-left"
                           >
                             <div className="flex items-center space-x-3 flex-1">
                               <ChevronDown
-                                className={`w-4 h-4 text-gray-600 transition-transform ${isExpanded ? 'rotate-180' : ''}`}
+                                className={`w-4 h-4 text-dim transition-transform ${isExpanded ? 'rotate-180' : ''}`}
                               />
                               <div className="flex-1">
-                                <p className="text-sm font-medium text-gray-900">
+                                <p className="text-sm font-medium text-ink">
                                   Submission #{submissions.length - index}
                                 </p>
-                                <p className="text-xs text-gray-500 mt-0.5">
+                                <p className="text-xs text-dim mt-0.5">
                                   {new Date(submission.submittedAt).toLocaleDateString()} at {new Date(submission.submittedAt).toLocaleTimeString()}
                                 </p>
                               </div>
@@ -744,11 +744,11 @@ const TaskTab = ({
                             
                             {/* Status Badge */}
                             <span className={`text-xs font-semibold px-3 py-1 rounded-full whitespace-nowrap ${
-                              submission.reviewStatus === 'client_approved' ? 'bg-green-100 text-green-800' :
-                              submission.reviewStatus === 'client_approval_pending' ? 'bg-yellow-100 text-yellow-800' :
-                              submission.reviewStatus === 'rejected' || submission.reviewStatus === 'pm_rejected' ? 'bg-red-100 text-red-800' :
-                              submission.reviewStatus === 'client_rejected' ? 'bg-red-100 text-red-800' :
-                              'bg-blue-100 text-blue-800'
+                              submission.reviewStatus === 'client_approved' ? 'bg-success/10 text-success' :
+                              submission.reviewStatus === 'client_approval_pending' ? 'bg-warning/10 text-warning' :
+                              submission.reviewStatus === 'rejected' || submission.reviewStatus === 'pm_rejected' ? 'bg-danger/10 text-danger' :
+                              submission.reviewStatus === 'client_rejected' ? 'bg-danger/10 text-danger' :
+                              'bg-info/10 text-info'
                             }`}>
                               {submission.reviewStatus === 'client_approved' ? '✓ Approved' :
                                submission.reviewStatus === 'client_approval_pending' ? '⏳ Awaiting' :
@@ -760,54 +760,54 @@ const TaskTab = ({
 
                           {/* Expanded Details */}
                           {isExpanded && (
-                            <div className="border-t border-gray-200 px-4 py-4 bg-gray-50 space-y-3">
+                            <div className="border-t border-line px-4 py-4 bg-canvas space-y-3">
                               <div className="grid grid-cols-2 gap-4">
                                 <div>
-                                  <label className="block text-xs font-medium text-gray-700 mb-1">Title</label>
-                                  <p className="text-sm text-gray-900">{submission.title}</p>
+                                  <label className="block text-xs font-medium text-ink mb-1">Title</label>
+                                  <p className="text-sm text-ink">{submission.title}</p>
                                 </div>
                                 <div>
-                                  <label className="block text-xs font-medium text-gray-700 mb-1">Description</label>
-                                  <p className="text-sm text-gray-900">{submission.description}</p>
+                                  <label className="block text-xs font-medium text-ink mb-1">Description</label>
+                                  <p className="text-sm text-ink">{submission.description}</p>
                                 </div>
                               </div>
 
-                              <div className="grid grid-cols-2 gap-4 p-3 bg-white rounded border border-gray-200">
+                              <div className="grid grid-cols-2 gap-4 p-3 bg-surface rounded border border-line">
                                 <div>
-                                  <label className="block text-xs font-medium text-gray-700 mb-1">Work Done</label>
-                                  <p className="text-sm text-gray-900">{submission.workDone}</p>
+                                  <label className="block text-xs font-medium text-ink mb-1">Work Done</label>
+                                  <p className="text-sm text-ink">{submission.workDone}</p>
                                 </div>
                                 <div>
-                                  <label className="block text-xs font-medium text-gray-700 mb-1">Work Pending</label>
-                                  <p className="text-sm text-gray-900">{submission.workPending}</p>
+                                  <label className="block text-xs font-medium text-ink mb-1">Work Pending</label>
+                                  <p className="text-sm text-ink">{submission.workPending}</p>
                                 </div>
                               </div>
 
                               {/* Timeline */}
-                              <div className="space-y-2 text-xs text-gray-600 pt-3 border-t border-gray-200">
+                              <div className="space-y-2 text-xs text-dim pt-3 border-t border-line">
                                 <div className="flex items-center justify-between">
-                                  <span className="text-gray-600">Submitted:</span>
-                                  <span className="font-medium text-gray-900">{new Date(submission.submittedAt).toLocaleString()}</span>
+                                  <span className="text-dim">Submitted:</span>
+                                  <span className="font-medium text-ink">{new Date(submission.submittedAt).toLocaleString()}</span>
                                 </div>
                                 
                                 {submission.pmApprovedAt && (
-                                  <div className="flex items-center justify-between bg-green-50 p-2 rounded">
-                                    <span className="text-green-700">PM Approved:</span>
-                                    <span className="font-medium text-green-900">{new Date(submission.pmApprovedAt).toLocaleString()}</span>
+                                  <div className="flex items-center justify-between bg-success/10 p-2 rounded">
+                                    <span className="text-success">PM Approved:</span>
+                                    <span className="font-medium text-success">{new Date(submission.pmApprovedAt).toLocaleString()}</span>
                                   </div>
                                 )}
                                 
                                 {submission.clientApprovedAt && (
-                                  <div className="flex items-center justify-between bg-green-50 p-2 rounded">
-                                    <span className="text-green-700">Client Approved:</span>
-                                    <span className="font-medium text-green-900">{new Date(submission.clientApprovedAt).toLocaleString()}</span>
+                                  <div className="flex items-center justify-between bg-success/10 p-2 rounded">
+                                    <span className="text-success">Client Approved:</span>
+                                    <span className="font-medium text-success">{new Date(submission.clientApprovedAt).toLocaleString()}</span>
                                   </div>
                                 )}
                                 
                                 {submission.rejectionReason && (
-                                  <div className="flex items-start justify-between bg-red-50 p-2 rounded">
-                                    <span className="text-red-700">Rejection:</span>
-                                    <span className="font-medium text-red-900 text-right ml-2">{submission.rejectionReason}</span>
+                                  <div className="flex items-start justify-between bg-danger/10 p-2 rounded">
+                                    <span className="text-danger">Rejection:</span>
+                                    <span className="font-medium text-danger text-right ml-2">{submission.rejectionReason}</span>
                                   </div>
                                 )}
                               </div>

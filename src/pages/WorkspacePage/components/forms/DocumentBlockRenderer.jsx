@@ -31,20 +31,20 @@ const formatTimestamp = (value) => {
 const getFileBadge = (type = '') => {
   switch (type.toLowerCase()) {
     case 'pdf':
-      return { label: 'PDF', className: 'bg-rose-100 text-rose-700 border-rose-200' };
+      return { label: 'PDF', className: 'bg-danger/10 text-danger border-danger/20' };
     case 'doc':
     case 'docx':
-      return { label: 'DOCX', className: 'bg-blue-100 text-blue-700 border-blue-200' };
+      return { label: 'DOCX', className: 'bg-info/10 text-info border-info/20' };
     case 'xls':
     case 'xlsx':
-      return { label: 'XLSX', className: 'bg-emerald-100 text-emerald-700 border-emerald-200' };
+      return { label: 'XLSX', className: 'bg-surface-hover text-ink border-line' };
     case 'ppt':
     case 'pptx':
-      return { label: 'PPT', className: 'bg-orange-100 text-orange-700 border-orange-200' };
+      return { label: 'PPT', className: 'bg-warning/10 text-warning border-warning/20' };
     case 'zip':
-      return { label: 'ZIP', className: 'bg-gray-100 text-gray-700 border-gray-200' };
+      return { label: 'ZIP', className: 'bg-surface-hover text-ink border-line' };
     default:
-      return { label: type.toUpperCase() || 'FILE', className: 'bg-slate-100 text-slate-600 border-slate-200' };
+      return { label: type.toUpperCase() || 'FILE', className: 'bg-surface-hover text-dim border-line' };
   }
 };
 
@@ -275,13 +275,13 @@ const DocumentBlockRenderer = ({ data, nodeId, workspaceId, setNodes }) => {
   return (
     <>
       <div
-        className="w-[460px] bg-white border-2 border-slate-200 rounded-2xl shadow-lg overflow-hidden"
+        className="w-[460px] bg-surface border-2 border-line rounded-2xl shadow-lg overflow-hidden"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="px-4 py-3 bg-gradient-to-r from-slate-50 to-sky-50 border-b border-slate-200 flex items-center justify-between">
+        <div className="px-4 py-3 bg-gradient-to-r from-surface-hover to-black border-b border-line flex items-center justify-between">
           <div className="flex items-center space-x-2">
-            <FileText className="w-5 h-5 text-sky-500" />
-            <span className="text-sm font-semibold text-gray-800">Document Block</span>
+            <FileText className="w-5 h-5 text-info" />
+            <span className="text-sm font-semibold text-ink">Document Block</span>
           </div>
           <div className="flex items-center space-x-2">
             <button
@@ -289,7 +289,7 @@ const DocumentBlockRenderer = ({ data, nodeId, workspaceId, setNodes }) => {
               onClick={handleDownload}
               disabled={!fileUrl}
               className={`inline-flex items-center space-x-1 px-3 py-1 text-xs font-semibold rounded-lg transition-colors ${
-                fileUrl ? 'text-sky-700 bg-white/70 hover:bg-white' : 'text-gray-400 bg-white/40 cursor-not-allowed'
+                fileUrl ? 'text-info bg-white/70 hover:bg-surface' : 'text-dim bg-white/40 cursor-not-allowed'
               }`}
             >
               <Download className="w-3 h-3" />
@@ -300,13 +300,13 @@ const DocumentBlockRenderer = ({ data, nodeId, workspaceId, setNodes }) => {
               onClick={handlePreview}
               disabled={!isPreviewablePdf}
               className={`inline-flex items-center space-x-1 px-3 py-1 text-xs font-semibold rounded-lg transition-colors ${
-                isPreviewablePdf ? 'text-sky-700 bg-white/70 hover:bg-white' : 'text-gray-400 bg-white/40 cursor-not-allowed'
+                isPreviewablePdf ? 'text-info bg-white/70 hover:bg-surface' : 'text-dim bg-white/40 cursor-not-allowed'
               }`}
             >
               <FileText className="w-3 h-3" />
               <span>Preview</span>
             </button>
-            <label className={`inline-flex items-center space-x-1 px-3 py-1 text-xs font-semibold text-white rounded-lg ${uploading ? 'bg-sky-400 cursor-wait' : 'bg-sky-600 cursor-pointer hover:bg-sky-700'}`}>
+            <label className={`inline-flex items-center space-x-1 px-3 py-1 text-xs font-semibold text-white rounded-lg ${uploading ? 'bg-info cursor-wait' : 'bg-info cursor-pointer hover:bg-info'}`}>
               {uploading ? (
                 <>
                   <Loader2 className="w-3 h-3 animate-spin" />
@@ -330,7 +330,7 @@ const DocumentBlockRenderer = ({ data, nodeId, workspaceId, setNodes }) => {
         </div>
 
         {uploadError && (
-          <div className="mx-4 mb-2 p-2 bg-red-50 border border-red-200 rounded-lg text-xs text-red-600">
+          <div className="mx-4 mb-2 p-2 bg-danger/10 border border-danger/20 rounded-lg text-xs text-danger">
             {uploadError}
           </div>
         )}
@@ -339,16 +339,16 @@ const DocumentBlockRenderer = ({ data, nodeId, workspaceId, setNodes }) => {
           <div className="space-y-3">
             <div className="flex items-start justify-between">
               <div>
-                <p className="text-sm font-semibold text-gray-800">{fileName || 'No document attached yet'}</p>
-                {fileSize && <p className="text-xs text-gray-500">{fileSize}</p>}
+                <p className="text-sm font-semibold text-ink">{fileName || 'No document attached yet'}</p>
+                {fileSize && <p className="text-xs text-dim">{fileSize}</p>}
               </div>
               <span className={`px-2 py-1 text-xs font-semibold rounded-full border ${fileBadge.className}`}>
                 {fileBadge.label}
               </span>
             </div>
 
-            <div className="rounded-xl border border-slate-200 bg-slate-50 overflow-hidden">
-              <div className="flex items-center justify-between px-3 py-2 border-b border-slate-200 text-xs text-slate-500 uppercase tracking-wide">
+            <div className="rounded-xl border border-line bg-canvas overflow-hidden">
+              <div className="flex items-center justify-between px-3 py-2 border-b border-line text-xs text-dim uppercase tracking-wide">
                 <span className="inline-flex items-center space-x-1">
                   <Layers className="w-3 h-3" />
                   <span>Inline Preview</span>
@@ -358,23 +358,23 @@ const DocumentBlockRenderer = ({ data, nodeId, workspaceId, setNodes }) => {
                   <span>Supported: {SUPPORTED_FORMATS.join(', ')}</span>
                 </span>
               </div>
-              <div className="p-4 bg-white min-h-[160px] flex items-center justify-center">
+              <div className="p-4 bg-surface min-h-[160px] flex items-center justify-center">
                 {fileUrl ? (
                   isPreviewablePdf ? (
                     <iframe
                       src={fileUrl}
                       title="Document Preview"
-                      className="w-full h-72 rounded-lg border border-slate-200"
+                      className="w-full h-72 rounded-lg border border-line"
                     />
                   ) : (
                     <div className="text-center space-y-2">
-                      <FileText className="w-12 h-12 text-sky-400 mx-auto" />
-                      <p className="text-sm text-gray-600">Preview not available for this format.</p>
-                      <p className="text-xs text-gray-400">Use the download button to view the file.</p>
+                      <FileText className="w-12 h-12 text-info mx-auto" />
+                      <p className="text-sm text-dim">Preview not available for this format.</p>
+                      <p className="text-xs text-dim">Use the download button to view the file.</p>
                     </div>
                   )
                 ) : (
-                  <div className="text-center space-y-2 text-gray-400">
+                  <div className="text-center space-y-2 text-dim">
                     <FileText className="w-12 h-12 mx-auto" />
                     <p className="text-sm">Upload a project document to preview it here.</p>
                     <p className="text-xs uppercase tracking-wide">PDF · DOCX · XLSX · PPT · ZIP</p>
@@ -386,23 +386,23 @@ const DocumentBlockRenderer = ({ data, nodeId, workspaceId, setNodes }) => {
 
           <div className="space-y-3">
             <div className="flex items-center justify-between">
-              <span className="text-sm font-semibold text-gray-800">Version History</span>
-              <span className="text-xs text-slate-400">Latest on top</span>
+              <span className="text-sm font-semibold text-ink">Version History</span>
+              <span className="text-xs text-dim">Latest on top</span>
             </div>
             {versions.length === 0 ? (
-              <p className="text-xs text-gray-400">No versions uploaded yet.</p>
+              <p className="text-xs text-dim">No versions uploaded yet.</p>
             ) : (
               <div className="space-y-2 max-h-40 overflow-y-auto pr-1">
                 {versions.map((version) => (
                   <div
                     key={version.id}
-                    className="px-3 py-2 border border-slate-200 rounded-lg bg-white hover:border-sky-200 transition-colors"
+                    className="px-3 py-2 border border-line rounded-lg bg-surface hover:border-info/20 transition-colors"
                   >
-                    <div className="flex items-center justify-between text-sm font-semibold text-slate-700">
+                    <div className="flex items-center justify-between text-sm font-semibold text-ink">
                       <span>{version.version}</span>
-                      <span className="text-xs text-slate-400">{formatTimestamp(version.uploadedAt)}</span>
+                      <span className="text-xs text-dim">{formatTimestamp(version.uploadedAt)}</span>
                     </div>
-                    <div className="mt-1 flex items-center justify-between text-xs text-slate-500">
+                    <div className="mt-1 flex items-center justify-between text-xs text-dim">
                       <span className="inline-flex items-center space-x-1">
                         <User className="w-3 h-3" />
                         <span>{version.uploadedBy}</span>
@@ -420,8 +420,8 @@ const DocumentBlockRenderer = ({ data, nodeId, workspaceId, setNodes }) => {
 
           <div className="space-y-3">
             <div className="flex items-center justify-between">
-              <span className="text-sm font-semibold text-gray-800">Comments</span>
-              <span className="text-xs text-slate-400">Discuss document feedback</span>
+              <span className="text-sm font-semibold text-ink">Comments</span>
+              <span className="text-xs text-dim">Discuss document feedback</span>
             </div>
             <div className="space-y-2">
               <div className="relative">
@@ -430,23 +430,23 @@ const DocumentBlockRenderer = ({ data, nodeId, workspaceId, setNodes }) => {
                   onChange={(e) => setNewComment(e.target.value)}
                   placeholder="Leave a note for collaborators"
                   rows={3}
-                  className="w-full border border-slate-200 rounded-lg p-3 pr-16 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-sky-100"
+                  className="w-full border border-line rounded-lg p-3 pr-16 text-sm text-ink focus:outline-none focus:ring-2 focus:ring-info/10"
                 />
                 <button
                   type="button"
                   onClick={handleAddComment}
-                  className="absolute bottom-2 right-2 px-3 py-1 text-xs font-semibold text-white bg-sky-600 rounded-lg hover:bg-sky-700"
+                  className="absolute bottom-2 right-2 px-3 py-1 text-xs font-semibold text-white bg-info rounded-lg hover:bg-info"
                 >
                   Post
                 </button>
               </div>
               {comments.length === 0 ? (
-                <p className="text-xs text-gray-400">No comments yet. Be the first to add feedback.</p>
+                <p className="text-xs text-dim">No comments yet. Be the first to add feedback.</p>
               ) : (
                 <div className="space-y-2 max-h-44 overflow-y-auto pr-1">
                   {comments.map((comment) => (
-                    <div key={comment.id} className="px-3 py-2 border border-slate-200 rounded-lg bg-white">
-                      <div className="flex items-center justify-between text-xs text-slate-500">
+                    <div key={comment.id} className="px-3 py-2 border border-line rounded-lg bg-surface">
+                      <div className="flex items-center justify-between text-xs text-dim">
                         <span className="inline-flex items-center space-x-1">
                           <MessageCircle className="w-3 h-3" />
                           <span>{comment.author}</span>
@@ -456,11 +456,11 @@ const DocumentBlockRenderer = ({ data, nodeId, workspaceId, setNodes }) => {
                           <span>{formatTimestamp(comment.timestamp)}</span>
                         </span>
                       </div>
-                      <p className="mt-1 text-sm text-gray-700">{comment.text}</p>
+                      <p className="mt-1 text-sm text-ink">{comment.text}</p>
                       <button
                         type="button"
                         onClick={() => removeComment(comment.id)}
-                        className="mt-2 inline-flex items-center space-x-1 text-xs text-rose-500 hover:text-rose-600"
+                        className="mt-2 inline-flex items-center space-x-1 text-xs text-danger hover:text-danger"
                       >
                         <X className="w-3 h-3" />
                         <span>Remove</span>
@@ -480,7 +480,7 @@ const DocumentBlockRenderer = ({ data, nodeId, workspaceId, setNodes }) => {
           onClick={() => setShowPreview(false)}
         >
           <div
-            className="relative max-w-4xl w-11/12 max-h-[90vh] bg-white rounded-2xl shadow-2xl overflow-hidden"
+            className="relative max-w-4xl w-11/12 max-h-[90vh] bg-surface rounded-2xl shadow-2xl overflow-hidden"
             onClick={(e) => e.stopPropagation()}
           >
             <button

@@ -26,21 +26,21 @@ const SidebarContent = () => {
         <div className="max-w-md">
           <h1 className="text-2xl font-[100] text-white mb-1">Welcome To</h1>
           <div className="mb-2">
-            <span className="text-4xl font-bold bg-gradient-to-r from-white to-[#24CA97] bg-clip-text text-transparent whitespace-nowrap">
+            <span className="text-4xl font-bold whitespace-nowrap">
               Operon Softwares
             </span>
           </div>
 
           <div className="text-white space-y-4 mt-8">
             <h2 className="text-xl font-thin">We're excited to have you here!</h2>
-            <p className="text-sm text-gray-200 leading-relaxed">
+            <p className="text-sm text-white/80 leading-relaxed">
               Let's set up your profile so we can match you with the right Client
               and projects.
             </p>
           </div>
 
           <div className="mt-8">
-            <button className="border border-white text-white px-6 py-2 rounded hover:bg-[#1992D3] hover:text-white transition-colors">
+            <button className="border border-white/60 text-cta-foreground px-6 py-2 rounded-md hover:bg-cta hover:border-line transition-colors duration-150">
               Learn more
             </button>
           </div>

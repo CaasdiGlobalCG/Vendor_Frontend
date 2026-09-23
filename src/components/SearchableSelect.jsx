@@ -37,13 +37,13 @@ export function SearchableSelect({
     <div ref={containerRef} className="relative w-full">
       <div
         onClick={() => setIsOpen(!isOpen)}
-        className="w-full border border-gray-300 rounded px-3 py-2 text-sm bg-white cursor-pointer flex justify-between items-center hover:bg-gray-50 transition-colors"
+        className="w-full border border-line rounded px-3 py-2 text-sm bg-surface cursor-pointer flex justify-between items-center hover:bg-canvas transition-colors"
       >
-        <span className={value ? 'text-gray-900' : 'text-gray-400'}>
+        <span className={value ? 'text-ink' : 'text-dim'}>
           {value || placeholder}
         </span>
         <svg
-          className={`w-4 h-4 text-gray-600 transition-transform ${isOpen ? 'rotate-180' : ''}`}
+          className={`w-4 h-4 text-dim transition-transform ${isOpen ? 'rotate-180' : ''}`}
           fill="none"
           stroke="currentColor"
           viewBox="0 0 24 24"
@@ -53,13 +53,13 @@ export function SearchableSelect({
       </div>
 
       {isOpen && (
-        <div className="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded shadow-lg">
+        <div className="absolute z-50 w-full mt-1 bg-surface border border-line rounded shadow-lg">
           <input
             type="text"
             placeholder="Search..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full px-3 py-2 text-sm border-b border-gray-200 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+            className="w-full px-3 py-2 text-sm border-b border-line focus:outline-none focus:ring-2 focus:ring-ink"
             autoFocus
           />
           <div className="max-h-48 overflow-y-auto">
@@ -70,22 +70,22 @@ export function SearchableSelect({
                   onClick={() => handleSelect(option)}
                   className={`px-3 py-2 text-sm cursor-pointer transition-colors ${
                     value === option
-                      ? 'bg-emerald-100 text-emerald-900 font-medium'
-                      : 'hover:bg-gray-100 text-gray-900'
+                      ? 'bg-surface-hover text-ink font-medium'
+                      : 'hover:bg-surface-hover text-ink'
                   }`}
                 >
                   {option}
                 </div>
               ))
             ) : (
-              <div className="px-3 py-2 text-sm text-gray-500">No matches found</div>
+              <div className="px-3 py-2 text-sm text-dim">No matches found</div>
             )}
           </div>
         </div>
       )}
 
       {required && !value && isOpen === false && (
-        <p className="mt-1 text-xs text-gray-400">Required field</p>
+        <p className="mt-1 text-xs text-dim">Required field</p>
       )}
     </div>
   );

@@ -135,13 +135,13 @@ const MentionInput = ({ collaborators = [], onSubmit, placeholder = 'Add a comme
           autoFocus={autoFocus}
           disabled={disabled}
           rows={Math.max(1, Math.min(4, text.split('\n').length))}
-          className="flex-1 text-xs leading-relaxed bg-white border border-gray-200 rounded-lg resize-none focus:outline-none focus:ring-1 focus:ring-blue-400 focus:border-blue-400 px-2.5 py-1.5 placeholder-gray-400 text-gray-700 disabled:bg-gray-50 disabled:text-gray-400"
+          className="flex-1 text-xs leading-relaxed bg-surface border border-line rounded-lg resize-none focus:outline-none focus:ring-1 focus:ring-info focus:border-info px-2.5 py-1.5 placeholder-dim text-ink disabled:bg-canvas disabled:text-dim"
           style={{ minHeight: '32px', maxHeight: '100px', overflow: 'auto' }}
         />
         <button
           onClick={(e) => { e.stopPropagation(); handleSubmit(); }}
           disabled={!text.trim() || disabled}
-          className="flex-shrink-0 w-7 h-7 rounded-full bg-blue-500 hover:bg-blue-600 disabled:bg-gray-300 text-white flex items-center justify-center transition-colors shadow-sm mb-0.5"
+          className="flex-shrink-0 w-7 h-7 rounded-full bg-info hover:bg-info disabled:bg-surface-hover text-white flex items-center justify-center transition-colors  mb-0.5"
           title="Post comment (Ctrl+Enter)"
         >
           <Send className="w-3.5 h-3.5" style={{ transform: 'rotate(-45deg)', marginLeft: '1px' }} />
@@ -150,22 +150,22 @@ const MentionInput = ({ collaborators = [], onSubmit, placeholder = 'Add a comme
 
       {/* @mention autocomplete dropdown */}
       {showMentions && filtered.length > 0 && (
-        <div className="absolute bottom-full left-0 mb-1 w-full max-w-[260px] bg-white border border-gray-200 rounded-lg shadow-xl z-50 py-1 max-h-[180px] overflow-y-auto">
-          <div className="px-2 py-1 text-[10px] font-semibold text-gray-400 uppercase tracking-wide">Collaborators</div>
+        <div className="absolute bottom-full left-0 mb-1 w-full max-w-[260px] bg-surface border border-line rounded-lg shadow-xl z-50 py-1 max-h-[180px] overflow-y-auto">
+          <div className="px-2 py-1 text-[10px] font-semibold text-dim uppercase tracking-wide">Collaborators</div>
           {filtered.map((user, idx) => (
             <button
               key={user.vendorId || user.email}
               onClick={(e) => { e.stopPropagation(); insertMention(user); }}
               className={`w-full px-2.5 py-1.5 text-left flex items-center space-x-2 text-xs transition-colors ${
-                idx === mentionIndex ? 'bg-blue-50 text-blue-700' : 'text-gray-700 hover:bg-gray-50'
+                idx === mentionIndex ? 'bg-info/10 text-info' : 'text-ink hover:bg-canvas'
               }`}
             >
-              <div className="w-5 h-5 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 text-white flex items-center justify-center text-[9px] font-bold flex-shrink-0">
+              <div className="w-5 h-5 rounded-full bg-black text-white flex items-center justify-center text-[9px] font-bold flex-shrink-0">
                 {(user.name || user.email || '?').charAt(0).toUpperCase()}
               </div>
               <div className="flex-1 min-w-0">
                 <div className="font-medium truncate">{user.name || 'Unknown'}</div>
-                <div className="text-[10px] text-gray-400 truncate">{user.email}</div>
+                <div className="text-[10px] text-dim truncate">{user.email}</div>
               </div>
             </button>
           ))}

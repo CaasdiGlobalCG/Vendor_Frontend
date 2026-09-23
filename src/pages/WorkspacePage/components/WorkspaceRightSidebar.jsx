@@ -554,15 +554,15 @@ const WorkspaceRightSidebar = ({
   // Get activity color
   const getActivityColor = (activity) => {
     const colorMap = {
-      'create': 'text-green-600',
-      'update': 'text-blue-600',
-      'delete': 'text-red-600',
-      'move': 'text-purple-600',
-      'style': 'text-pink-600',
-      'canvas': 'text-indigo-600'
+      'create': 'text-success',
+      'update': 'text-info',
+      'delete': 'text-danger',
+      'move': 'text-ink',
+      'style': 'text-ink',
+      'canvas': 'text-info'
     };
 
-    return colorMap[activity.actionType] || 'text-gray-600';
+    return colorMap[activity.actionType] || 'text-dim';
   };
 
   // Format activity description
@@ -627,7 +627,7 @@ const WorkspaceRightSidebar = ({
       className={`
         ${sidebarCollapsed ? 'w-0 overflow-hidden' : 'w-[min(20rem,32vw)] 2xl:w-96'}
         ${isOverlay ? 'absolute right-0 top-0 bottom-0 z-20 shadow-2xl' : ''}
-        bg-white border-l border-gray-100 flex flex-col flex-shrink-0 overflow-hidden
+        bg-surface border-l border-line flex flex-col flex-shrink-0 overflow-hidden
         transition-all duration-300 ease-in-out
       `}
       onMouseEnter={onMouseEnter}
@@ -638,13 +638,13 @@ const WorkspaceRightSidebar = ({
         <div className="flex items-center justify-start px-3 pt-2">
           <button
             onClick={onTogglePin}
-            className="p-1.5 rounded-md hover:bg-gray-100 transition-colors group"
+            className="p-1.5 rounded-md hover:bg-surface-hover transition-colors group"
             title={isPinned ? 'Unpin panel (Ctrl+Shift+R)' : 'Pin panel (Ctrl+Shift+R)'}
             aria-label={isPinned ? 'Unpin right panel' : 'Pin right panel'}
           >
             {isPinned
-              ? <PinOff className="w-3.5 h-3.5 text-blue-600 group-hover:text-blue-700" />
-              : <Pin className="w-3.5 h-3.5 text-gray-400 group-hover:text-gray-600" />}
+              ? <PinOff className="w-3.5 h-3.5 text-info group-hover:text-info" />
+              : <Pin className="w-3.5 h-3.5 text-dim group-hover:text-dim" />}
           </button>
         </div>
       )}
@@ -652,31 +652,31 @@ const WorkspaceRightSidebar = ({
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col overflow-hidden p-3 gap-3 min-h-0 lg:p-4 lg:gap-4">
         {/* Accordion: Recent Activity */}
-        <div className={`bg-white rounded-xl border border-gray-200 shadow-sm flex flex-col transition-all duration-300 ${activityExpanded ? 'flex-1 min-h-0' : ''}`}>
+        <div className={`bg-surface rounded-xl border border-line  flex flex-col transition-all duration-300 ${activityExpanded ? 'flex-1 min-h-0' : ''}`}>
           <button
             onClick={handleToggleActivity}
             className="w-full flex items-center justify-between px-4 py-3 text-left focus:outline-none lg:px-5 lg:py-4"
           >
             <div className="flex items-center space-x-2">
-              <h4 className="text-sm font-medium text-gray-900">Recent Activity</h4>
+              <h4 className="text-sm font-medium text-ink">Recent Activity</h4>
               {!initialLoad && loading && (
-                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600 opacity-60"></div>
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-info opacity-60"></div>
               )}
             </div>
-            <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform ${activityExpanded ? 'transform rotate-180' : ''}`} />
+            <ChevronDown className={`w-4 h-4 text-dim transition-transform ${activityExpanded ? 'transform rotate-180' : ''}`} />
           </button>
           <div className={`${activityExpanded ? 'flex-1 flex flex-col opacity-100 min-h-0' : 'max-h-0 opacity-0 pointer-events-none'} transition-all duration-300 ease-in-out overflow-hidden`}
                style={{transitionProperty: 'max-height, opacity'}}>
-            <div className="px-4 pb-4 border-t border-gray-100 flex-1 flex flex-col min-h-0 lg:px-5 lg:pb-5">
+            <div className="px-4 pb-4 border-t border-line flex-1 flex flex-col min-h-0 lg:px-5 lg:pb-5">
               <div className="flex items-center justify-between mb-3 pt-3 lg:mb-4 lg:pt-4">
-                <div className="text-xs text-gray-500">Latest updates from the workspace</div>
+                <div className="text-xs text-dim">Latest updates from the workspace</div>
                 <div className="flex items-center space-x-2">
                   <button
                     onClick={() => {
                       console.log('🔄 Manual refresh clicked');
                       loadRecentActivities();
                     }}
-                    className="flex items-center space-x-1 text-xs text-gray-600 hover:text-gray-700 transition-colors"
+                    className="flex items-center space-x-1 text-xs text-dim hover:text-ink transition-colors"
                     title="Refresh activities"
                   >
                     <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -685,7 +685,7 @@ const WorkspaceRightSidebar = ({
                   </button>
                   <button
                     onClick={() => setShowFullScreen(true)}
-                    className="flex items-center space-x-1 text-xs text-blue-600 hover:text-blue-700 transition-colors"
+                    className="flex items-center space-x-1 text-xs text-info hover:text-info transition-colors"
                     title="View full activity history"
                   >
                     <Maximize2 className="w-3 h-3" />
@@ -696,7 +696,7 @@ const WorkspaceRightSidebar = ({
 
               {loading ? (
                 <div className="flex items-center justify-center py-8">
-                  <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
+                  <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-info"></div>
                 </div>
               ) : realTimeActivities.length > 0 ? (
                 <div className="space-y-3 flex-1 overflow-y-auto pr-1 min-h-0 text-xs lg:space-y-4">
@@ -706,15 +706,15 @@ const WorkspaceRightSidebar = ({
 
                     return (
                       <div key={activity.activityId} className="flex items-start space-x-3">
-                        <div className="flex items-center justify-center w-7 h-7 bg-gray-100 rounded-full flex-shrink-0 lg:w-8 lg:h-8">
+                        <div className="flex items-center justify-center w-7 h-7 bg-surface-hover rounded-full flex-shrink-0 lg:w-8 lg:h-8">
                           <IconComponent className={`w-4 h-4 ${colorClass}`} />
                         </div>
                         <div className="flex-1 min-w-0">
-                          <p className="text-xs text-gray-900 leading-snug">
+                          <p className="text-xs text-ink leading-snug">
                             <span className="font-medium">{activity.userName}</span>{' '}
                             {formatActivityDescription(activity)}
                           </p>
-                          <p className="text-xs text-gray-500 mt-1 flex items-center">
+                          <p className="text-xs text-dim mt-1 flex items-center">
                             <Clock className="w-3 h-3 mr-1" />
                             {formatTimeAgo(activity.timestamp)}
                           </p>
@@ -725,14 +725,14 @@ const WorkspaceRightSidebar = ({
                 </div>
               ) : (
                 <div className="text-center py-7 lg:py-8">
-                  <FileText className="w-8 h-8 text-gray-400 mx-auto mb-2" />
-                  <p className="text-sm text-gray-500">No recent activity</p>
+                  <FileText className="w-8 h-8 text-dim mx-auto mb-2" />
+                  <p className="text-sm text-dim">No recent activity</p>
                 </div>
               )}
 
               <button
                 onClick={() => setShowFullScreen(true)}
-                className="w-full mt-3 pt-3 border-t border-gray-100 text-sm text-blue-600 hover:text-blue-700 font-medium transition-colors lg:mt-4 lg:pt-4"
+                className="w-full mt-3 pt-3 border-t border-line text-sm text-info hover:text-info font-medium transition-colors lg:mt-4 lg:pt-4"
               >
                 View all activity
               </button>
@@ -741,46 +741,46 @@ const WorkspaceRightSidebar = ({
         </div>
 
         {/* Accordion: Messages */}
-        <div className={`bg-white rounded-xl border border-gray-200 shadow-sm flex flex-col transition-all duration-300 ${messagesExpanded ? 'flex-1 min-h-0' : ''}`}>
+        <div className={`bg-surface rounded-xl border border-line  flex flex-col transition-all duration-300 ${messagesExpanded ? 'flex-1 min-h-0' : ''}`}>
           <button
             onClick={handleToggleMessages}
             className="w-full flex items-center justify-between px-4 py-3 text-left focus:outline-none lg:px-5 lg:py-4"
           >
             <div className="flex items-center space-x-2">
               <div>
-                <h3 className="text-sm font-medium text-gray-900">Messages</h3>
-                <p className="text-xs text-gray-500 mt-1">
+                <h3 className="text-sm font-medium text-ink">Messages</h3>
+                <p className="text-xs text-dim mt-1">
                   {selectedSubtask ? selectedSubtask.name : selectedTask ? selectedTask.name : 'Team chat'}
                 </p>
               </div>
               {!initialMessagesLoad && loadingMessages && (
-                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600 opacity-60"></div>
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-info opacity-60"></div>
               )}
             </div>
-            <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform ${messagesExpanded ? 'transform rotate-180' : ''}`} />
+            <ChevronDown className={`w-4 h-4 text-dim transition-transform ${messagesExpanded ? 'transform rotate-180' : ''}`} />
           </button>
           <div className={`${messagesExpanded ? 'flex-1 flex flex-col opacity-100 min-h-0' : 'max-h-0 opacity-0 pointer-events-none'} transition-all duration-300 ease-in-out overflow-hidden`}
                style={{transitionProperty: 'max-height, opacity'}}>
-            <div className="px-5 pb-5 border-t border-gray-100 flex-1 flex flex-col space-y-4 min-h-0">
+            <div className="px-5 pb-5 border-t border-line flex-1 flex flex-col space-y-4 min-h-0">
               <div className="flex items-center justify-between pt-4">
-                <div className="flex items-center space-x-1.5 text-xs text-gray-500">
+                <div className="flex items-center space-x-1.5 text-xs text-dim">
                   <Eye className="w-3 h-3" />
                   <span>Team chat history</span>
                 </div>
                 <div className="flex items-center space-x-1">
                   <button
                     onClick={() => setShowFullScreenMessages(true)}
-                    className="p-2 hover:bg-gray-50 rounded-lg transition-colors"
+                    className="p-2 hover:bg-canvas rounded-lg transition-colors"
                     title="View all messages"
                   >
-                    <Expand className="w-4 h-4 text-gray-400" />
+                    <Expand className="w-4 h-4 text-dim" />
                   </button>
                   <button
                     onClick={() => setShowVideoCall(true)}
-                    className="p-2 hover:bg-gray-50 rounded-lg transition-colors"
+                    className="p-2 hover:bg-canvas rounded-lg transition-colors"
                     title="Start video call"
                   >
-                    <Video className="w-4 h-4 text-gray-400" />
+                    <Video className="w-4 h-4 text-dim" />
                   </button>
                 </div>
               </div>
@@ -788,7 +788,7 @@ const WorkspaceRightSidebar = ({
               <div className="space-y-4 flex-1 overflow-y-auto pr-1 min-h-0">
                 {loadingMessages ? (
                   <div className="flex items-center justify-center py-8">
-                    <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
+                    <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-info"></div>
                   </div>
                 ) : workspaceMessages.length > 0 ? (
                   workspaceMessages.map((message) => {
@@ -796,12 +796,12 @@ const WorkspaceRightSidebar = ({
                     return (
                       <div key={message.messageId} className={`flex items-start space-x-3 ${isCurrentUser ? 'justify-end' : ''}`}>
                         {!isCurrentUser && (
-                          <div className="flex items-center justify-center w-6 h-6 bg-gray-200 rounded-full flex-shrink-0">
-                            <User className="w-3 h-3 text-gray-600" />
+                          <div className="flex items-center justify-center w-6 h-6 bg-surface-hover rounded-full flex-shrink-0">
+                            <User className="w-3 h-3 text-dim" />
                           </div>
                         )}
                         <div className={`${isCurrentUser ? 'text-right' : ''}`}>
-                          <div className={`${isCurrentUser ? 'bg-blue-600 text-white rounded-tr-sm' : 'bg-gray-50 text-gray-900 rounded-tl-sm'} rounded-2xl px-3 py-1.5 w-full`}>
+                          <div className={`${isCurrentUser ? 'bg-info text-white rounded-tr-sm' : 'bg-canvas text-ink rounded-tl-sm'} rounded-2xl px-3 py-1.5 w-full`}>
                             <p className="text-sm leading-tight break-words whitespace-pre-wrap">
                               {renderMentions(message.content)}
                             </p>
@@ -809,7 +809,7 @@ const WorkspaceRightSidebar = ({
                             {message.attachments && message.attachments.length > 0 && (
                               <div className="mt-2 space-y-1.5">
                                 {message.attachments.map((file, index) => (
-                                  <div key={index} className={`p-2 rounded-md border transition-all ${isCurrentUser ? 'border-blue-300 bg-blue-50 bg-opacity-30' : 'border-gray-200 bg-gray-50'}`}>
+                                  <div key={index} className={`p-2 rounded-md border transition-all ${isCurrentUser ? 'border-info/30 bg-info/10 bg-opacity-30' : 'border-line bg-canvas'}`}>
                                     <div className="flex items-center space-x-3">
                                       <div className="flex-shrink-0">
                                         {file.fileType?.startsWith('image/') ? (
@@ -820,16 +820,16 @@ const WorkspaceRightSidebar = ({
                                             onClick={() => window.open(file.s3Url, '_blank')}
                                           />
                                         ) : (
-                                          <div className={`w-8 h-8 rounded-md flex items-center justify-center ${isCurrentUser ? 'bg-blue-200' : 'bg-blue-100'}`}>
-                                            <FileText className={`w-4 h-4 ${isCurrentUser ? 'text-blue-800' : 'text-blue-600'}`} />
+                                          <div className={`w-8 h-8 rounded-md flex items-center justify-center ${isCurrentUser ? 'bg-info/20' : 'bg-info/10'}`}>
+                                            <FileText className={`w-4 h-4 ${isCurrentUser ? 'text-info' : 'text-info'}`} />
                                           </div>
                                         )}
                                       </div>
                                       <div className="flex-1 min-w-0">
-                                        <p className={`text-xs font-medium break-words ${isCurrentUser ? 'text-blue-900' : 'text-gray-900'}`}>
+                                        <p className={`text-xs font-medium break-words ${isCurrentUser ? 'text-info' : 'text-ink'}`}>
                                           {file.fileName}
                                         </p>
-                                        <p className={`text-[11px] ${isCurrentUser ? 'text-blue-700' : 'text-gray-500'}`}>
+                                        <p className={`text-[11px] ${isCurrentUser ? 'text-info' : 'text-dim'}`}>
                                           {file.fileSize ? `${Math.round(file.fileSize / 1024)} KB` : '0 KB'}
                                         </p>
                                       </div>
@@ -886,7 +886,7 @@ const WorkspaceRightSidebar = ({
                                               }
                                             }
                                           }}
-                                          className={`p-1.5 rounded transition-colors ${isCurrentUser ? 'hover:bg-blue-300 text-blue-800' : 'hover:bg-gray-200 text-gray-600'}`}
+                                          className={`p-1.5 rounded transition-colors ${isCurrentUser ? 'hover:bg-info/30 text-info' : 'hover:bg-surface-hover text-dim'}`}
                                           title="View"
                                         >
                                           <Eye className="w-4 h-4" />
@@ -898,7 +898,7 @@ const WorkspaceRightSidebar = ({
                                             link.download = file.fileName;
                                             link.click();
                                           }}
-                                          className={`p-2 rounded-md transition-colors ${isCurrentUser ? 'hover:bg-blue-300 text-blue-800' : 'hover:bg-gray-200 text-gray-600'}`}
+                                          className={`p-2 rounded-md transition-colors ${isCurrentUser ? 'hover:bg-info/30 text-info' : 'hover:bg-surface-hover text-dim'}`}
                                           title="Download"
                                         >
                                           <Download className="w-4 h-4" />
@@ -911,16 +911,16 @@ const WorkspaceRightSidebar = ({
                             )}
                           </div>
                           <div className="flex items-center space-x-1.5 mt-1">
-                            <p className={`text-[11px] text-gray-500 ${isCurrentUser ? 'mr-1' : 'ml-1'}`}>
+                            <p className={`text-[11px] text-dim ${isCurrentUser ? 'mr-1' : 'ml-1'}`}>
                               {isCurrentUser ? 'You' : message.senderName} • {formatMessageTime(message.timestamp)}
                             </p>
                             {message.isEdited && (
-                              <span className="text-[11px] text-gray-400 italic">edited</span>
+                              <span className="text-[11px] text-dim italic">edited</span>
                             )}
                           </div>
                         </div>
                         {isCurrentUser && (
-                          <div className="flex items-center justify-center w-6 h-6 bg-blue-600 rounded-full flex-shrink-0">
+                          <div className="flex items-center justify-center w-6 h-6 bg-info rounded-full flex-shrink-0">
                             <User className="w-3 h-3 text-white" />
                           </div>
                         )}
@@ -929,29 +929,29 @@ const WorkspaceRightSidebar = ({
                   })
                 ) : (
                   <div className="text-center py-8">
-                    <MessageCircle className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-                    <p className="text-sm text-gray-500 mb-1">No messages yet</p>
-                    <p className="text-xs text-gray-400">Start a conversation about this workspace</p>
+                    <MessageCircle className="w-12 h-12 text-dim mx-auto mb-3" />
+                    <p className="text-sm text-dim mb-1">No messages yet</p>
+                    <p className="text-xs text-dim">Start a conversation about this workspace</p>
                   </div>
                 )}
                 <div ref={messagesEndRef} className="h-0" />
               </div>
 
-              <div className="pt-2 border-t border-gray-100">
+              <div className="pt-2 border-t border-line">
                 <PermissionGuard
                   permission="canAccessMessages"
                   workspace={workspace}
                   userRole={userRole}
                   fallback={
-                    <div className="p-3 bg-gray-100 rounded-2xl border border-gray-200">
-                      <div className="flex items-center justify-center text-gray-500">
+                    <div className="p-3 bg-surface-hover rounded-2xl border border-line">
+                      <div className="flex items-center justify-center text-dim">
                         <MessageCircle className="w-4 h-4 mr-2" />
                         <span className="text-sm">Messaging disabled by project manager</span>
                       </div>
                     </div>
                   }
                 >
-                  <div className="flex items-center space-x-3 p-3 bg-gray-50 rounded-2xl border border-gray-200 focus-within:border-blue-300 focus-within:bg-white transition-all duration-200">
+                  <div className="flex items-center space-x-3 p-3 bg-canvas rounded-2xl border border-line focus-within:border-info/30 focus-within:bg-surface transition-all duration-200">
                     <PermissionButton
                       permission="canViewFiles"
                       workspace={workspace}
@@ -963,11 +963,11 @@ const WorkspaceRightSidebar = ({
                         }
                         setShowFileUpload(true);
                       }}
-                      className="p-1 hover:bg-gray-200 rounded-lg transition-colors"
+                      className="p-1 hover:bg-surface-hover rounded-lg transition-colors"
                       title="Upload files"
                       showTooltip={false}
                     >
-                      <Paperclip className="w-4 h-4 text-gray-400" />
+                      <Paperclip className="w-4 h-4 text-dim" />
                     </PermissionButton>
 
                     <PermissionInput
@@ -979,7 +979,7 @@ const WorkspaceRightSidebar = ({
                       onChange={(e) => setNewMessage(e.target.value)}
                       onKeyPress={handleMessageKeyPress}
                       placeholder={selectedSubtask ? `Message about ${selectedSubtask.name}...` : selectedTask ? `Message about ${selectedTask.name}...` : 'Type a message...'}
-                      className="flex-1 bg-transparent text-sm outline-none placeholder-gray-400"
+                      className="flex-1 bg-transparent text-sm outline-none placeholder-dim"
                       disabled={sendingMessage}
                     />
 
@@ -992,7 +992,7 @@ const WorkspaceRightSidebar = ({
                         sendMessage();
                       }}
                       disabled={!newMessage.trim() || sendingMessage}
-                      className="p-2 bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="p-2 bg-info hover:bg-info rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                       showTooltip={false}
                     >
                       {sendingMessage ? (
@@ -1009,26 +1009,26 @@ const WorkspaceRightSidebar = ({
         </div>
 
         {/* Accordion: Elements Overview */}
-        <div className={`bg-white rounded-xl border border-gray-200 shadow-sm flex flex-col transition-all duration-300 ${elementsOverviewExpanded ? 'flex-1 min-h-0' : ''}`}>
+        <div className={`bg-surface rounded-xl border border-line  flex flex-col transition-all duration-300 ${elementsOverviewExpanded ? 'flex-1 min-h-0' : ''}`}>
           <button
             onClick={handleToggleElementsOverview}
-            className="w-full flex items-center justify-between px-4 py-3 text-left focus:outline-none hover:bg-gray-50 transition-colors lg:px-5 lg:py-4"
+            className="w-full flex items-center justify-between px-4 py-3 text-left focus:outline-none hover:bg-canvas transition-colors lg:px-5 lg:py-4"
           >
             <div className="flex items-center space-x-2">
-              <h4 className="text-sm font-semibold text-gray-900">Elements Overview</h4>
-              <span className="text-xs text-gray-600 bg-gray-100 px-2 py-0.5 rounded-full font-medium">{sortedElements.length}</span>
+              <h4 className="text-sm font-semibold text-ink">Elements Overview</h4>
+              <span className="text-xs text-dim bg-surface-hover px-2 py-0.5 rounded-full font-medium">{sortedElements.length}</span>
             </div>
-            <ChevronDown className={`w-5 h-5 text-gray-500 transition-transform ${elementsOverviewExpanded ? 'transform rotate-180' : ''}`} />
+            <ChevronDown className={`w-5 h-5 text-dim transition-transform ${elementsOverviewExpanded ? 'transform rotate-180' : ''}`} />
           </button>
           
           {/* Sort Options */}
           {elementsOverviewExpanded && (
-            <div className="px-4 py-2 border-t border-gray-100 flex items-center gap-2 lg:px-5">
-              <span className="text-xs text-gray-600 font-medium">Sort by:</span>
+            <div className="px-4 py-2 border-t border-line flex items-center gap-2 lg:px-5">
+              <span className="text-xs text-dim font-medium">Sort by:</span>
               <select
                 value={elementsSortBy}
                 onChange={(e) => setElementsSortBy(e.target.value)}
-                className="text-xs border border-gray-200 rounded px-2 py-1 focus:outline-none focus:ring-1 focus:ring-blue-500 bg-white"
+                className="text-xs border border-line rounded px-2 py-1 focus:outline-none focus:ring-1 focus:ring-info bg-surface"
               >
                 <option value="sequence">Sequence</option>
                 <option value="recently-updated">Recently Updated</option>
@@ -1037,28 +1037,28 @@ const WorkspaceRightSidebar = ({
           )}
           <div className={`${elementsOverviewExpanded ? 'flex-1 flex flex-col opacity-100 min-h-0' : 'max-h-0 opacity-0 pointer-events-none'} transition-all duration-300 ease-in-out overflow-hidden`}
                style={{transitionProperty: 'max-height, opacity'}}>
-            <div className="px-3 pb-4 border-t border-gray-100 flex-1 flex flex-col min-h-0 pt-3">
+            <div className="px-3 pb-4 border-t border-line flex-1 flex flex-col min-h-0 pt-3">
               {sortedElements.length > 0 ? (
                 <div className="space-y-0.5 flex-1 overflow-y-auto pr-2 min-h-0">
                   {sortedElements.map((element, idx) => (
-                    <div key={element.id || idx} className={`group ${isRecentlyUpdated(element) ? 'bg-amber-50 border-l-2 border-amber-400' : ''}`}>
+                    <div key={element.id || idx} className={`group ${isRecentlyUpdated(element) ? 'bg-warning/10 border-l-2 border-warning' : ''}`}>
                       <button
                         onClick={() => {
                           if (onZoomToElement) {
                             onZoomToElement(element.id);
                           }
                         }}
-                        className={`w-full px-3 py-2 text-left rounded-lg transition-colors duration-150 flex items-center justify-between ${isRecentlyUpdated(element) ? 'hover:bg-amber-100' : 'hover:bg-blue-50'}`}
+                        className={`w-full px-3 py-2 text-left rounded-lg transition-colors duration-150 flex items-center justify-between ${isRecentlyUpdated(element) ? 'hover:bg-warning/10' : 'hover:bg-info/10'}`}
                         title={`Click to zoom to ${element.data?.name || element.data?.type || 'element'}`}
                       >
                         <div className="flex-1 min-w-0 flex items-center gap-2.5">
                           {/* Sequence Number */}
-                          <span className={`inline-flex items-center justify-center w-5 h-5 text-white text-[10px] font-bold rounded-full flex-shrink-0 ${isRecentlyUpdated(element) ? 'bg-amber-500' : 'bg-blue-600'}`}>
+                          <span className={`inline-flex items-center justify-center w-5 h-5 text-white text-[10px] font-bold rounded-full flex-shrink-0 ${isRecentlyUpdated(element) ? 'bg-warning' : 'bg-info'}`}>
                             {element.data?.sequenceNumber || idx + 1}
                           </span>
 
                           {/* Element Type Icon */}
-                          <div className="flex-shrink-0 w-5 h-5 flex items-center justify-center text-gray-600">
+                          <div className="flex-shrink-0 w-5 h-5 flex items-center justify-center text-dim">
                             {element.data?.type === 'form' || element.data?.type === 'form-template' ? (
                               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -1096,22 +1096,22 @@ const WorkspaceRightSidebar = ({
                                 onChange={(e) => setEditingElementName(e.target.value)}
                                 onKeyDown={(e) => handleKeyDown(e, element.id)}
                                 onBlur={() => handleSaveElementName(element.id)}
-                                className="w-full text-xs font-medium text-gray-900 px-2 py-1 bg-white border border-blue-400 rounded outline-none focus:ring-1 focus:ring-blue-500"
+                                className="w-full text-xs font-medium text-ink px-2 py-1 bg-surface border border-info rounded outline-none focus:ring-1 focus:ring-info"
                               />
                             ) : (
                               <div className="min-w-0">
                                 <div className="flex items-center gap-1.5">
-                                  <p className="text-xs font-medium text-gray-900 truncate">
+                                  <p className="text-xs font-medium text-ink truncate">
                                     {element.data?.name || element.data?.type || 'Element'}
                                   </p>
                                   {isRecentlyUpdated(element) && (
-                                    <span className="inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-semibold bg-amber-200 text-amber-800 flex-shrink-0 whitespace-nowrap">
+                                    <span className="inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-semibold bg-warning/20 text-warning flex-shrink-0 whitespace-nowrap">
                                       ✨ NEW
                                     </span>
                                   )}
                                 </div>
                                 {element.data?.type && element.data?.type !== (element.data?.name) && (
-                                  <p className="text-xs text-gray-500 capitalize truncate">{element.data?.type}</p>
+                                  <p className="text-xs text-dim capitalize truncate">{element.data?.type}</p>
                                 )}
                               </div>
                             )}
@@ -1126,7 +1126,7 @@ const WorkspaceRightSidebar = ({
                                 e.stopPropagation();
                                 handleSaveElementName(element.id);
                               }}
-                              className="p-1 text-green-600 hover:text-green-700 hover:bg-green-50 rounded transition-colors"
+                              className="p-1 text-success hover:text-success hover:bg-success/10 rounded transition-colors"
                               title="Save name"
                             >
                               <Check className="w-3.5 h-3.5" />
@@ -1138,7 +1138,7 @@ const WorkspaceRightSidebar = ({
                                   e.stopPropagation();
                                   handleEditElement(element.id, element.data?.name || '');
                                 }}
-                                className="p-1 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded transition-colors"
+                                className="p-1 text-dim hover:text-info hover:bg-info/10 rounded transition-colors"
                                 title="Edit name"
                               >
                                 <Edit2 className="w-3.5 h-3.5" />
@@ -1148,7 +1148,7 @@ const WorkspaceRightSidebar = ({
                                   e.stopPropagation();
                                   handleLockElement(element.id);
                                 }}
-                                className={`p-1 rounded transition-colors ${element.data?.locked ? 'text-orange-600 bg-orange-50' : 'text-gray-400 hover:text-orange-600 hover:bg-orange-50'}`}
+                                className={`p-1 rounded transition-colors ${element.data?.locked ? 'text-warning bg-warning/10' : 'text-dim hover:text-warning hover:bg-warning/10'}`}
                                 title={element.data?.locked ? 'Unlock element' : 'Lock element'}
                               >
                                 <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1162,7 +1162,7 @@ const WorkspaceRightSidebar = ({
                                     handleDeleteElement(element.id, element.data?.name || 'Unnamed');
                                   }
                                 }}
-                                className="p-1 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded transition-colors"
+                                className="p-1 text-dim hover:text-danger hover:bg-danger/10 rounded transition-colors"
                                 title="Delete element"
                               >
                                 <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1176,7 +1176,7 @@ const WorkspaceRightSidebar = ({
                               e.stopPropagation();
                               setInfoTooltipId(infoTooltipId === element.id ? null : element.id);
                             }}
-                            className="p-1 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded transition-colors"
+                            className="p-1 text-dim hover:text-dim hover:bg-surface-hover rounded transition-colors"
                             title="Element information"
                           >
                             <Info className="w-3.5 h-3.5" />
@@ -1186,23 +1186,23 @@ const WorkspaceRightSidebar = ({
 
                       {/* Info Tooltip */}
                       {infoTooltipId === element.id && (
-                        <div className="mx-3 mt-1 p-2.5 bg-gray-900 text-white text-xs rounded-lg border border-gray-700 space-y-1">
+                        <div className="mx-3 mt-1 p-2.5 bg-cta text-cta-foreground text-xs rounded-lg border border-line space-y-1">
                           <div>
-                            <p className="text-gray-400 text-[10px] font-semibold mb-0.5">NAME</p>
-                            <p className="font-medium truncate text-gray-100">{element.data?.name || 'Unnamed'}</p>
+                            <p className="text-dim text-[10px] font-semibold mb-0.5">NAME</p>
+                            <p className="font-medium truncate text-dim">{element.data?.name || 'Unnamed'}</p>
                           </div>
                           <div>
-                            <p className="text-gray-400 text-[10px] font-semibold mb-0.5">TYPE</p>
-                            <p className="font-medium capitalize truncate text-gray-100">{element.data?.type || 'Unknown'}</p>
+                            <p className="text-dim text-[10px] font-semibold mb-0.5">TYPE</p>
+                            <p className="font-medium capitalize truncate text-dim">{element.data?.type || 'Unknown'}</p>
                           </div>
                           <div className="flex gap-4">
                             <div>
-                              <p className="text-gray-400 text-[10px] font-semibold mb-0.5">X</p>
-                              <p className="font-mono text-gray-100">{Math.round(element.position?.x || 0)}</p>
+                              <p className="text-dim text-[10px] font-semibold mb-0.5">X</p>
+                              <p className="font-mono text-dim">{Math.round(element.position?.x || 0)}</p>
                             </div>
                             <div>
-                              <p className="text-gray-400 text-[10px] font-semibold mb-0.5">Y</p>
-                              <p className="font-mono text-gray-100">{Math.round(element.position?.y || 0)}</p>
+                              <p className="text-dim text-[10px] font-semibold mb-0.5">Y</p>
+                              <p className="font-mono text-dim">{Math.round(element.position?.y || 0)}</p>
                             </div>
                           </div>
                         </div>
@@ -1211,12 +1211,12 @@ const WorkspaceRightSidebar = ({
                   ))}
                 </div>
               ) : (
-                <div className="flex flex-col items-center justify-center py-12 text-center text-gray-500">
-                  <svg className="w-10 h-10 text-gray-300 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div className="flex flex-col items-center justify-center py-12 text-center text-dim">
+                  <svg className="w-10 h-10 text-dim mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
                   </svg>
-                  <p className="text-sm font-medium text-gray-600">No elements yet</p>
-                  <p className="text-xs text-gray-500 mt-1">Drag elements from the left panel</p>
+                  <p className="text-sm font-medium text-dim">No elements yet</p>
+                  <p className="text-xs text-dim mt-1">Drag elements from the left panel</p>
                 </div>
               )}
             </div>
@@ -1224,26 +1224,26 @@ const WorkspaceRightSidebar = ({
         </div>
 
         {/* Accordion: Deletion History */}
-        <div className={`bg-white rounded-xl border border-gray-200 shadow-sm flex flex-col transition-all duration-300 ${deletionHistoryExpanded ? 'flex-1 min-h-0' : ''}`}>
+        <div className={`bg-surface rounded-xl border border-line  flex flex-col transition-all duration-300 ${deletionHistoryExpanded ? 'flex-1 min-h-0' : ''}`}>
           <button
             onClick={handleToggleDeletionHistory}
-            className="w-full flex items-center justify-between px-4 py-3 text-left focus:outline-none hover:bg-gray-50 transition-colors lg:px-5 lg:py-4"
+            className="w-full flex items-center justify-between px-4 py-3 text-left focus:outline-none hover:bg-canvas transition-colors lg:px-5 lg:py-4"
           >
             <div className="flex items-center space-x-2">
-              <h4 className="text-sm font-semibold text-gray-900">Deletion History</h4>
+              <h4 className="text-sm font-semibold text-ink">Deletion History</h4>
               {deletionHistory.length > 0 && (
-                <span className="text-xs text-red-600 bg-red-100 px-2 py-0.5 rounded-full font-medium">{deletionHistory.length}</span>
+                <span className="text-xs text-danger bg-danger/10 px-2 py-0.5 rounded-full font-medium">{deletionHistory.length}</span>
               )}
             </div>
-            <ChevronDown className={`w-5 h-5 text-gray-500 transition-transform ${deletionHistoryExpanded ? 'transform rotate-180' : ''}`} />
+            <ChevronDown className={`w-5 h-5 text-dim transition-transform ${deletionHistoryExpanded ? 'transform rotate-180' : ''}`} />
           </button>
 
           <div className={`${deletionHistoryExpanded ? 'flex-1 flex flex-col opacity-100 min-h-0' : 'max-h-0 opacity-0 pointer-events-none'} transition-all duration-300 ease-in-out overflow-hidden`}
                style={{transitionProperty: 'max-height, opacity'}}>
-            <div className="px-3 pb-4 border-t border-gray-100 flex-1 flex flex-col min-h-0 pt-3">
+            <div className="px-3 pb-4 border-t border-line flex-1 flex flex-col min-h-0 pt-3">
               {loadingDeletionHistory ? (
                 <div className="flex items-center justify-center py-8">
-                  <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-red-600"></div>
+                  <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-danger"></div>
                 </div>
               ) : deletionHistory.length > 0 ? (
                 <div className="space-y-2 flex-1 overflow-y-auto pr-2 min-h-0">
@@ -1254,14 +1254,14 @@ const WorkspaceRightSidebar = ({
                         key={deletion.deletionId} 
                         className={`p-3 rounded-lg border transition-colors group ${
                           recently 
-                            ? 'bg-red-100 border-red-300 shadow-sm' 
-                            : 'bg-red-50 border-red-100 hover:border-red-200'
+                            ? 'bg-danger/10 border-danger/30 ' 
+                            : 'bg-danger/10 border-danger/10 hover:border-danger/20'
                         }`}
                       >
                         {/* Recently deleted badge */}
                         {recently && (
                           <div className="flex items-center justify-between mb-2">
-                            <span className="inline-flex items-center px-2 py-1 rounded-full text-[10px] font-bold bg-red-600 text-white">
+                            <span className="inline-flex items-center px-2 py-1 rounded-full text-[10px] font-bold bg-danger text-white">
                               🔥 RECENTLY DELETED
                             </span>
                           </div>
@@ -1269,27 +1269,27 @@ const WorkspaceRightSidebar = ({
 
                         <div className="flex items-start justify-between gap-2 mb-2">
                           <div className="flex-1 min-w-0">
-                            <p className="text-xs font-semibold text-gray-900 truncate">
+                            <p className="text-xs font-semibold text-ink truncate">
                               {deletion.elementName}
                             </p>
-                            <p className="text-[11px] text-gray-600 mt-0.5">
-                              <span className="inline-block px-1.5 py-0.5 bg-red-100 text-red-700 rounded text-[10px] font-medium">
+                            <p className="text-[11px] text-dim mt-0.5">
+                              <span className="inline-block px-1.5 py-0.5 bg-danger/10 text-danger rounded text-[10px] font-medium">
                                 {deletion.elementType}
                               </span>
                             </p>
                           </div>
-                          <span className="text-[10px] text-red-600 font-medium flex-shrink-0 whitespace-nowrap">
+                          <span className="text-[10px] text-danger font-medium flex-shrink-0 whitespace-nowrap">
                             {deletion.details?.deletedVia || 'canvas'}
                           </span>
                         </div>
 
                         <div className="space-y-1.5 text-[10px] mb-3">
-                          <div className="flex items-center gap-1 text-gray-700">
-                            <User className="w-3 h-3 text-gray-500 flex-shrink-0" />
+                          <div className="flex items-center gap-1 text-ink">
+                            <User className="w-3 h-3 text-dim flex-shrink-0" />
                             <span className="truncate">{deletion.deletedBy}</span>
                           </div>
-                          <div className="flex items-center gap-1 text-gray-700">
-                            <Clock className="w-3 h-3 text-gray-500 flex-shrink-0" />
+                          <div className="flex items-center gap-1 text-ink">
+                            <Clock className="w-3 h-3 text-dim flex-shrink-0" />
                             <span className="truncate">{new Date(deletion.deletedAt).toLocaleString()}</span>
                           </div>
                         </div>
@@ -1301,8 +1301,8 @@ const WorkspaceRightSidebar = ({
                 </div>
               ) : (
                 <div className="text-center py-8">
-                  <Trash2 className="w-8 h-8 text-gray-300 mx-auto mb-2" />
-                  <p className="text-sm text-gray-500">No deleted elements</p>
+                  <Trash2 className="w-8 h-8 text-dim mx-auto mb-2" />
+                  <p className="text-sm text-dim">No deleted elements</p>
                 </div>
               )}
             </div>

@@ -16,7 +16,7 @@ export default function AboutPage({ companyName, profileImage, overview, stats, 
   const displayStats = stats && stats.length > 0 ? stats : [];
 
   return (
-    <div pageTitle="About Us" className="bg-white relative" style={{ minHeight: '1123px' }}>
+    <div pageTitle="About Us" className="bg-surface relative" style={{ minHeight: '1123px' }}>
       {/* ===== TOP SECTION — Full-width image banner ===== */}
       <div className="relative h-[340px] overflow-hidden">
         {profileImage ? (
@@ -25,7 +25,7 @@ export default function AboutPage({ companyName, profileImage, overview, stats, 
             <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
           </>
         ) : (
-          <div className="w-full h-full relative" style={{ backgroundColor: '#1a1a1a' }}>
+          <div className="w-full h-full relative" style={{ backgroundColor: 'rgb(var(--text-ink))' }}>
             {/* Abstract geometric pattern fill */}
             <svg className="absolute inset-0 w-full h-full opacity-10" viewBox="0 0 400 200">
               <rect x="0" y="0" width="120" height="200" fill={accentColor} />
@@ -42,7 +42,7 @@ export default function AboutPage({ companyName, profileImage, overview, stats, 
         {/* Page header overlay */}
         <div className="absolute bottom-0 left-0 right-0 p-10">
           <div className="flex items-center gap-3 mb-2">
-            <div className="w-10 h-[3px] bg-white" />
+            <div className="w-10 h-[3px] bg-surface" />
             <span className="text-[10px] font-bold uppercase tracking-[0.3em] text-white/70">About</span>
           </div>
           <h2 className="text-4xl font-black text-white tracking-tight">
@@ -60,19 +60,19 @@ export default function AboutPage({ companyName, profileImage, overview, stats, 
         {/* Company Name + Overview */}
         <div className="flex gap-10 mb-10">
           <div className="flex-1">
-            <h3 className="text-xl font-black text-gray-900 mb-4">{companyName}</h3>
+            <h3 className="text-xl font-black text-ink mb-4">{companyName}</h3>
             {overview ? (
-              <p className="text-gray-600 text-sm leading-[1.8]">{overview}</p>
+              <p className="text-dim text-sm leading-[1.8]">{overview}</p>
             ) : (
-              <p className="text-gray-400 text-sm italic">Company overview will appear here.</p>
+              <p className="text-dim text-sm italic">Company overview will appear here.</p>
             )}
           </div>
 
           {/* Side accent block */}
           <div className="w-48 flex-shrink-0 hidden md:block">
             <div className="p-5 rounded-sm relative overflow-hidden" style={{ backgroundColor: accentColor }}>
-              <div className="absolute top-0 right-0 w-16 h-16 bg-white/10 rounded-full -translate-y-8 translate-x-8" />
-              <div className="absolute bottom-0 left-0 w-12 h-12 bg-white/10 rounded-full translate-y-6 -translate-x-6" />
+              <div className="absolute top-0 right-0 w-16 h-16 bg-white/10 rounded-full  translate-x-8" />
+              <div className="absolute bottom-0 left-0 w-12 h-12 bg-white/10 rounded-full  -translate-x-6" />
               <p className="text-white text-[10px] font-bold uppercase tracking-widest mb-2 relative z-10">Our Mission</p>
               <p className="text-white/80 text-xs leading-relaxed relative z-10">
                 Delivering excellence through innovation and commitment.
@@ -85,13 +85,13 @@ export default function AboutPage({ companyName, profileImage, overview, stats, 
         {displayStats.length > 0 && (
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-10">
             {displayStats.map((stat, i) => (
-              <div key={i} className="relative bg-gray-50 border border-gray-100 rounded-sm p-5 text-center overflow-hidden group">
+              <div key={i} className="relative bg-canvas border border-line rounded-sm p-5 text-center overflow-hidden group">
                 {/* Number badge */}
-                <div className="absolute top-2 right-2 text-[10px] font-bold text-gray-300">
+                <div className="absolute top-2 right-2 text-[10px] font-bold text-dim">
                   {String(i + 1).padStart(2, '0')}
                 </div>
                 <div className="text-3xl font-black mb-1" style={{ color: accentColor }}>{stat.value}</div>
-                <div className="text-[10px] text-gray-500 font-bold uppercase tracking-wider">{stat.label}</div>
+                <div className="text-[10px] text-dim font-bold uppercase tracking-wider">{stat.label}</div>
                 {/* Bottom accent */}
                 <div className="absolute bottom-0 left-0 right-0 h-1 opacity-0 group-hover:opacity-100 transition-opacity"
                   style={{ backgroundColor: accentColor }} />
@@ -108,14 +108,14 @@ export default function AboutPage({ companyName, profileImage, overview, stats, 
             { icon: Award, title: 'Our Standards', text: 'Meeting the highest industry standards with certified processes.' },
             { icon: Users, title: 'Our Team', text: 'Expert professionals dedicated to exceeding expectations.' },
           ].map(({ icon: Icon, title, text }, i) => (
-            <div key={i} className="flex gap-3 p-4 border border-gray-100 rounded-sm">
+            <div key={i} className="flex gap-3 p-4 border border-line rounded-sm">
               <div className="w-10 h-10 rounded-sm flex items-center justify-center flex-shrink-0"
-                style={{ backgroundColor: i === 0 ? accentColor : '#1a1a1a' }}>
+                style={{ backgroundColor: i === 0 ? accentColor: 'rgb(var(--text-ink))' }}>
                 <Icon size={16} className="text-white" />
               </div>
               <div>
-                <p className="font-bold text-gray-900 text-xs mb-0.5">{title}</p>
-                <p className="text-gray-500 text-[10px] leading-relaxed">{text}</p>
+                <p className="font-bold text-ink text-xs mb-0.5">{title}</p>
+                <p className="text-dim text-[10px] leading-relaxed">{text}</p>
               </div>
             </div>
           ))}

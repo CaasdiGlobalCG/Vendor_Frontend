@@ -25,7 +25,7 @@ const HeroSection = () => {
           className="text-center mt-2"
         >
           <motion.p
-            className="text-2xl md:text-3xl bg-gradient-to-r from-white to-black bg-clip-text text-transparent"
+            className="text-2xl md:text-3xl "
             initial={{ opacity: 0, y: 30 }}
             animate={inView ? { opacity: 1, y: 0 } : { opacity: 0, y: 30 }}
             transition={{ duration: 0.8, delay: 0.4 }}
@@ -34,7 +34,7 @@ const HeroSection = () => {
           </motion.p>
 
           <motion.h1
-            className="text-[2.5rem] md:text-[3.5rem] lg:text-[6rem] font-normal leading-[1.5] bg-gradient-to-r from-[#21be9c] to-[#8ff8e1] bg-clip-text text-transparent whitespace-nowrap"
+            className="text-[2.5rem] md:text-[3.5rem] lg:text-[6rem] font-normal leading-[1.5] whitespace-nowrap"
             initial={{ opacity: 0, y: 50 }}
             animate={inView ? { opacity: 1, y: 0 } : { opacity: 0, y: 50 }}
             transition={{ duration: 0.8, delay: 0.2 }}
@@ -49,7 +49,7 @@ const HeroSection = () => {
   transition={{ duration: 0.8, delay: 0.4 }}
 >
   <span className="relative w-[80px] sm:w-[100px] md:w-[120px] h-[40px] mr-1 sm:mr-2 md:mr-3 overflow-hidden">
-    <span className="absolute top-0 left-0 w-full animate-slideUpText text-center font-bold uppercase bg-gradient-to-r from-[#fb65b5] to-[#8ff8e1] bg-clip-text text-transparent text-[1rem] sm:text-[1.25rem] md:text-[1.5rem] leading-[40px]">
+    <span className="absolute top-0 left-0 w-full animate-slideUpText text-center font-bold uppercase text-[1rem] sm:text-[1.25rem] md:text-[1.5rem] leading-[40px]">
       Vendor<br />
       Project<br />
       Vendor<br />

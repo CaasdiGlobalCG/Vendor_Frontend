@@ -200,19 +200,19 @@ const ListConfigModal = ({ isOpen, onClose, onConfirm, listType }) => {
       case 'numbered-list':
         return (
           <div key={index} className="flex items-center space-x-3 group">
-            <span className="text-blue-600 font-bold min-w-[20px]">
+            <span className="text-info font-bold min-w-[20px]">
               {listType === 'numbered-list' ? `${index + 1}.` : '•'}
             </span>
             <input
               type="text"
               value={item}
               onChange={(e) => updateItem(index, e.target.value)}
-              className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              className="flex-1 px-3 py-2 border border-line rounded-md focus:ring-2 focus:ring-info focus:border-info"
               placeholder="Enter item text"
             />
             <button
               onClick={() => removeItem(index)}
-              className="opacity-0 group-hover:opacity-100 text-red-500 hover:text-red-700 transition-opacity"
+              className="opacity-0 group-hover:opacity-100 text-danger hover:text-danger transition-opacity"
               disabled={listItems.length === 1}
             >
               <Minus className="w-4 h-4" />
@@ -227,8 +227,8 @@ const ListConfigModal = ({ isOpen, onClose, onConfirm, listType }) => {
               onClick={() => toggleCheck(index)}
               className={`w-5 h-5 border-2 rounded flex items-center justify-center transition-colors ${
                 item.completed 
-                  ? 'bg-green-500 border-green-500 text-white' 
-                  : 'border-gray-300 hover:border-green-400'
+                  ? 'bg-success border-success text-white' 
+                  : 'border-line hover:border-success'
               }`}
             >
               {item.completed && <Check className="w-3 h-3" />}
@@ -237,14 +237,14 @@ const ListConfigModal = ({ isOpen, onClose, onConfirm, listType }) => {
               type="text"
               value={item.text}
               onChange={(e) => updateItem(index, e.target.value, 'text')}
-              className={`flex-1 px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
-                item.completed ? 'line-through text-gray-500' : ''
+              className={`flex-1 px-3 py-2 border border-line rounded-md focus:ring-2 focus:ring-info focus:border-info ${
+                item.completed ? 'line-through text-dim' : ''
               }`}
               placeholder="Enter task"
             />
             <button
               onClick={() => removeItem(index)}
-              className="opacity-0 group-hover:opacity-100 text-red-500 hover:text-red-700 transition-opacity"
+              className="opacity-0 group-hover:opacity-100 text-danger hover:text-danger transition-opacity"
               disabled={listItems.length === 1}
             >
               <Minus className="w-4 h-4" />
@@ -260,12 +260,12 @@ const ListConfigModal = ({ isOpen, onClose, onConfirm, listType }) => {
                 type="text"
                 value={item.term}
                 onChange={(e) => updateItem(index, e.target.value, 'term')}
-                className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 font-semibold"
+                className="flex-1 px-3 py-2 border border-line rounded-md focus:ring-2 focus:ring-info focus:border-info font-semibold"
                 placeholder="Enter term"
               />
               <button
                 onClick={() => removeItem(index)}
-                className="opacity-0 group-hover:opacity-100 text-red-500 hover:text-red-700 transition-opacity"
+                className="opacity-0 group-hover:opacity-100 text-danger hover:text-danger transition-opacity"
                 disabled={listItems.length === 1}
               >
                 <Minus className="w-4 h-4" />
@@ -276,7 +276,7 @@ const ListConfigModal = ({ isOpen, onClose, onConfirm, listType }) => {
                 type="text"
                 value={item.definition}
                 onChange={(e) => updateItem(index, e.target.value, 'definition')}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className="w-full px-3 py-2 border border-line rounded-md focus:ring-2 focus:ring-info focus:border-info"
                 placeholder="Enter definition"
               />
             </div>
@@ -287,24 +287,24 @@ const ListConfigModal = ({ isOpen, onClose, onConfirm, listType }) => {
         return (
           <div key={index} className="space-y-2 group">
             <div className="flex items-center space-x-3">
-              <span className="text-blue-600 font-bold">•</span>
+              <span className="text-info font-bold">•</span>
               <input
                 type="text"
                 value={item.text}
                 onChange={(e) => updateItem(index, e.target.value, 'text')}
-                className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 font-medium"
+                className="flex-1 px-3 py-2 border border-line rounded-md focus:ring-2 focus:ring-info focus:border-info font-medium"
                 placeholder="Enter main item"
               />
               <button
                 onClick={() => addSubItem(index)}
-                className="text-green-500 hover:text-green-700 transition-colors"
+                className="text-success hover:text-success transition-colors"
                 title="Add sub-item"
               >
                 <Plus className="w-4 h-4" />
               </button>
               <button
                 onClick={() => removeItem(index)}
-                className="opacity-0 group-hover:opacity-100 text-red-500 hover:text-red-700 transition-opacity"
+                className="opacity-0 group-hover:opacity-100 text-danger hover:text-danger transition-opacity"
                 disabled={listItems.length === 1}
               >
                 <Minus className="w-4 h-4" />
@@ -314,17 +314,17 @@ const ListConfigModal = ({ isOpen, onClose, onConfirm, listType }) => {
               <div className="ml-8 space-y-1">
                 {item.children.map((child, subIndex) => (
                   <div key={subIndex} className="flex items-center space-x-2 group/sub">
-                    <ArrowRight className="w-3 h-3 text-gray-400" />
+                    <ArrowRight className="w-3 h-3 text-dim" />
                     <input
                       type="text"
                       value={child}
                       onChange={(e) => updateSubItem(index, subIndex, e.target.value)}
-                      className="flex-1 px-2 py-1 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                      className="flex-1 px-2 py-1 border border-line rounded-md focus:ring-2 focus:ring-info focus:border-info text-sm"
                       placeholder="Enter sub-item"
                     />
                     <button
                       onClick={() => removeSubItem(index, subIndex)}
-                      className="opacity-0 group-hover/sub:opacity-100 text-red-500 hover:text-red-700 transition-opacity"
+                      className="opacity-0 group-hover/sub:opacity-100 text-danger hover:text-danger transition-opacity"
                     >
                       <X className="w-3 h-3" />
                     </button>
@@ -338,26 +338,26 @@ const ListConfigModal = ({ isOpen, onClose, onConfirm, listType }) => {
       case 'timeline-list':
         return (
           <div key={index} className="flex items-start space-x-3 group">
-            <Clock className="w-4 h-4 text-blue-500 mt-3" />
+            <Clock className="w-4 h-4 text-info mt-3" />
             <div className="flex-1 space-y-2">
               <input
                 type="text"
                 value={item.time}
                 onChange={(e) => updateItem(index, e.target.value, 'time')}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm font-medium"
+                className="w-full px-3 py-2 border border-line rounded-md focus:ring-2 focus:ring-info focus:border-info text-sm font-medium"
                 placeholder="Enter time (e.g., 9:00 AM)"
               />
               <input
                 type="text"
                 value={item.event}
                 onChange={(e) => updateItem(index, e.target.value, 'event')}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className="w-full px-3 py-2 border border-line rounded-md focus:ring-2 focus:ring-info focus:border-info"
                 placeholder="Enter event description"
               />
             </div>
             <button
               onClick={() => removeItem(index)}
-              className="opacity-0 group-hover:opacity-100 text-red-500 hover:text-red-700 transition-opacity mt-2"
+              className="opacity-0 group-hover:opacity-100 text-danger hover:text-danger transition-opacity mt-2"
               disabled={listItems.length === 1}
             >
               <Minus className="w-4 h-4" />
@@ -377,21 +377,21 @@ const ListConfigModal = ({ isOpen, onClose, onConfirm, listType }) => {
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-hidden">
+      <div className="bg-surface rounded-xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-hidden">
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-gray-200 bg-gradient-to-r from-blue-50 to-indigo-50">
+        <div className="flex items-center justify-between p-6 border-b border-line bg-black">
           <div className="flex items-center space-x-3">
-            <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-              <TypeIcon className="w-5 h-5 text-blue-600" />
+            <div className="w-10 h-10 bg-info/10 rounded-lg flex items-center justify-center">
+              <TypeIcon className="w-5 h-5 text-info" />
             </div>
             <div>
-              <h2 className="text-xl font-semibold text-gray-900">{typeInfo.name} Configuration</h2>
-              <p className="text-sm text-gray-600">{typeInfo.description}</p>
+              <h2 className="text-xl font-semibold text-ink">{typeInfo.name} Configuration</h2>
+              <p className="text-sm text-dim">{typeInfo.description}</p>
             </div>
           </div>
           <button
             onClick={handleClose}
-            className="text-gray-400 hover:text-gray-600 transition-colors"
+            className="text-dim hover:text-dim transition-colors"
           >
             <X className="w-6 h-6" />
           </button>
@@ -401,14 +401,14 @@ const ListConfigModal = ({ isOpen, onClose, onConfirm, listType }) => {
         <div className="p-6 overflow-y-auto max-h-[calc(90vh-200px)]">
           {/* List Title */}
           <div className="mb-6">
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-ink mb-2">
               List Title
             </label>
             <input
               type="text"
               value={listTitle}
               onChange={(e) => setListTitle(e.target.value)}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-lg font-medium"
+              className="w-full px-4 py-3 border border-line rounded-lg focus:ring-2 focus:ring-info focus:border-info text-lg font-medium"
               placeholder="Enter list title"
             />
           </div>
@@ -416,12 +416,12 @@ const ListConfigModal = ({ isOpen, onClose, onConfirm, listType }) => {
           {/* List Items */}
           <div className="mb-6">
             <div className="flex items-center justify-between mb-4">
-              <label className="block text-sm font-medium text-gray-700">
+              <label className="block text-sm font-medium text-ink">
                 List Items ({listItems.length})
               </label>
               <button
                 onClick={addItem}
-                className="flex items-center space-x-2 px-3 py-2 text-sm bg-blue-50 hover:bg-blue-100 text-blue-700 rounded-md transition-colors border border-blue-200"
+                className="flex items-center space-x-2 px-3 py-2 text-sm bg-info/10 hover:bg-info/10 text-info rounded-md transition-colors border border-info/20"
               >
                 <Plus className="w-4 h-4" />
                 <span>Add Item</span>
@@ -434,11 +434,11 @@ const ListConfigModal = ({ isOpen, onClose, onConfirm, listType }) => {
           </div>
 
           {/* Preview */}
-          <div className="bg-gray-50 rounded-lg p-4">
-            <h3 className="text-sm font-medium text-gray-700 mb-2">Preview</h3>
-            <div className="bg-white rounded border p-3 text-sm">
-              <div className="font-medium text-gray-900 mb-2">{listTitle}</div>
-              <div className="text-gray-600">
+          <div className="bg-canvas rounded-lg p-4">
+            <h3 className="text-sm font-medium text-ink mb-2">Preview</h3>
+            <div className="bg-surface rounded border p-3 text-sm">
+              <div className="font-medium text-ink mb-2">{listTitle}</div>
+              <div className="text-dim">
                 {listItems.length} item{listItems.length !== 1 ? 's' : ''} • {typeInfo.name}
               </div>
             </div>
@@ -446,10 +446,10 @@ const ListConfigModal = ({ isOpen, onClose, onConfirm, listType }) => {
         </div>
 
         {/* Footer */}
-        <div className="flex items-center justify-between p-6 border-t border-gray-200 bg-gray-50">
+        <div className="flex items-center justify-between p-6 border-t border-line bg-canvas">
           <button
             onClick={handleClose}
-            className="px-6 py-2 text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+            className="px-6 py-2 text-ink bg-surface border border-line rounded-lg hover:bg-canvas transition-colors"
           >
             Cancel
           </button>
@@ -464,13 +464,13 @@ const ListConfigModal = ({ isOpen, onClose, onConfirm, listType }) => {
                   listType: listType
                 });
               }}
-              className="px-6 py-2 text-blue-700 bg-blue-50 border border-blue-200 rounded-lg hover:bg-blue-100 transition-colors"
+              className="px-6 py-2 text-info bg-info/10 border border-info/20 rounded-lg hover:bg-info/10 transition-colors"
             >
               Use Default
             </button>
             <button
               onClick={handleConfirm}
-              className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+              className="px-6 py-2 bg-info text-white rounded-lg hover:bg-info transition-colors"
             >
               Create List
             </button>

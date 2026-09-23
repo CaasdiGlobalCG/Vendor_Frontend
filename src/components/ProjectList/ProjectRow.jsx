@@ -4,7 +4,7 @@
 //   const [isExpanded, setIsExpanded] = useState(false);
 //   const statusColors = {
 //     "Completed": "bg-[#58FF4C4F] text-[#00C110E6]",
-//     "InProgress": "bg-[#FFBD4C4F] text-[#FFA725]",
+//     "InProgress": "bg-[#FFBD4C4F] text-warning",
 //     "Pending": "bg-[#FF4C4C4F] text-[#F90B0BEB]"
 //   };
 
@@ -18,8 +18,8 @@
 //   return (
 //     <>
 //       <tr 
-//         className={`text-xs sm:text-sm font-medium border-b border-gray-200 cursor-pointer hover:bg-gray-200 rounded-lg ${
-//           isExpanded ? 'bg-gray-100' : 'hover:bg-gray-100'
+//         className={`text-xs sm:text-sm font-medium border-b border-line cursor-pointer hover:bg-surface-hover rounded-lg ${
+//           isExpanded ? 'bg-surface-hover' : 'hover:bg-surface-hover'
 //         }`}
 //         onClick={() => setIsExpanded(!isExpanded)}
 //       >
@@ -43,28 +43,28 @@
 //       </tr>
 //       {/* Accordion Content */}
 //       <tr className={`transition-all duration-700 ease-in-out ${isExpanded ? 'max-h-[500px] opacity-100' : 'max-h-0 opacity-0'}`}>
-//         <td colSpan="7" className="px-4 py-2 bg-gray-100">
+//         <td colSpan="7" className="px-4 py-2 bg-surface-hover">
 //         <div 
 //             className={`overflow-hidden transition-all duration-700 ease-in-out bg-white/50 rounded-lg shadow-xl ${isExpanded ? 'max-h-[500px] opacity-100' : 'max-h-0 opacity-0'}`}
 //           >
 //           <div className="p-4 align">
 //             <div>
 //               {/* <h4 className="font-semibold">Description</h4> */}
-//               <p className="text-sm text-gray-500 mb-6">{project.description || 'N/A'}</p>
+//               <p className="text-sm text-dim mb-6">{project.description || 'N/A'}</p>
 //             </div>
           
 //             <div className="flex flex-wrap justify-between items-end gap-4">
 //                 <div className="flex gap-6 text-sm">
 //                     <div>
-//                         <p className="text-[.7vw] text-gray-500 ">Project Manager</p>
-//                         <p className="text-[.8vw] font-medium text-gray-700">{project.manager}</p>
+//                         <p className="text-[.7vw] text-dim ">Project Manager</p>
+//                         <p className="text-[.8vw] font-medium text-ink">{project.manager}</p>
 //                     </div>
 //                     <div>
-//                         <p className="text-[.7vw] text-gray-500 ">Last Updated</p>
-//                         <p className="text-[.8vw] font-medium text-gray-700">{project.lastUpdate}</p>
+//                         <p className="text-[.7vw] text-dim ">Last Updated</p>
+//                         <p className="text-[.8vw] font-medium text-ink">{project.lastUpdate}</p>
 //                     </div>
 //                 </div>
-//                 <button className="bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white text-sm font-semibold px-5 py-2 rounded-lg shadow-md transition duration-150 ease-in-out">
+//                 <button className="bg-black hover:from-black hover:to-black text-white text-sm font-semibold px-5 py-2 rounded-lg transition duration-150 ease-in-out">
 //                     Workspace
 //                 </button>
 //             </div>
@@ -96,32 +96,40 @@ import { VendorContext } from '../../context/VendorContext';
 import config from '../../config/env';
 
 const statusColors = {
-  Completed: 'bg-emerald-50 text-emerald-700 border-emerald-100',
-  InProgress: 'bg-amber-50 text-amber-700 border-amber-100',
-  Pending: 'bg-rose-50 text-rose-700 border-rose-100',
+  Completed: 'bg-surface-hover text-ink border-line',
+  InProgress: 'bg-warning/10 text-warning border-warning/10',
+  Pending: 'bg-danger/10 text-danger border-danger/10',
+};
+
+// Plain-text status color for the dense desktop table (no pill chrome) —
+// mirrors the same semantics as statusColors above, just without the badge.
+const statusTextColors = {
+  Completed: 'text-ink',
+  InProgress: 'text-warning',
+  Pending: 'text-danger',
 };
 
 const getProgressMeta = (status) => {
   if (status === 'Completed') {
     return {
       percent: 100,
-      bgClass: 'bg-emerald-200',
-      fillClass: 'bg-emerald-500',
+      bgClass: 'bg-surface-hover',
+      fillClass: 'bg-cta',
     };
   }
 
   if (status === 'InProgress') {
     return {
       percent: 60,
-      bgClass: 'bg-amber-100',
-      fillClass: 'bg-amber-500',
+      bgClass: 'bg-warning/10',
+      fillClass: 'bg-warning',
     };
   }
 
   return {
     percent: 0,
-    bgClass: 'bg-slate-100',
-    fillClass: 'bg-slate-400',
+    bgClass: 'bg-surface-hover',
+    fillClass: 'bg-cta',
   };
 };
 
@@ -270,7 +278,7 @@ export const ProjectRow = ({ project, mobileView = false }) => {
 
   if (mobileView) {
     return (
-      <article className="overflow-hidden rounded-[22px] border border-slate-200 bg-white shadow-sm">
+      <article className="overflow-hidden rounded-md border border-line bg-surface">
         <button
           type="button"
           onClick={() => setIsExpanded(!isExpanded)}
@@ -279,12 +287,12 @@ export const ProjectRow = ({ project, mobileView = false }) => {
         >
           <div className="flex items-start justify-between gap-3">
             <div className="min-w-0">
-              <p className="text-[11px] font-medium uppercase tracking-[0.16em] text-slate-400">Project</p>
-              <h3 className="mt-1 truncate text-sm font-semibold text-slate-900">{project.name || 'Untitled project'}</h3>
-              <p className="mt-1 text-xs text-slate-500">ID: {project.id || 'N/A'}</p>
+              <p className="text-[11px] font-medium uppercase tracking-[0.14em] text-dim">Project</p>
+              <h3 className="mt-1 truncate text-sm font-semibold text-ink">{project.name || 'Untitled project'}</h3>
+              <p className="mt-1 text-xs text-dim">ID: {project.id || 'N/A'}</p>
             </div>
             <div className="flex items-center gap-2">
-              <span className={`inline-flex rounded-full border px-2.5 py-1 text-[11px] font-semibold ${statusColors[resolvedStatus] || 'bg-slate-100 text-slate-700 border-slate-200'}`}>
+              <span className={`inline-flex rounded-full border px-2.5 py-1 text-[11px] font-semibold ${statusColors[resolvedStatus] || 'bg-surface-hover text-ink border-line'}`}>
                 {resolvedStatus}
               </span>
               <img
@@ -295,19 +303,19 @@ export const ProjectRow = ({ project, mobileView = false }) => {
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-3 text-xs text-slate-600">
-            <div className="rounded-2xl bg-slate-50 p-3">
-              <p className="text-[10px] uppercase tracking-[0.14em] text-slate-400">Client</p>
-              <p className="mt-1 truncate font-medium text-slate-700">{project.clientId || 'N/A'}</p>
+          <div className="grid grid-cols-2 gap-3 text-xs text-dim">
+            <div className="rounded-md bg-canvas p-3">
+              <p className="text-[10px] uppercase tracking-[0.12em] text-dim">Client</p>
+              <p className="mt-1 truncate font-medium text-ink">{project.clientId || 'N/A'}</p>
             </div>
-            <div className="rounded-2xl bg-slate-50 p-3">
-              <p className="text-[10px] uppercase tracking-[0.14em] text-slate-400">Created</p>
-              <p className="mt-1 font-medium text-slate-700">{formatDateForDisplay(createdDate)}</p>
+            <div className="rounded-md bg-canvas p-3">
+              <p className="text-[10px] uppercase tracking-[0.12em] text-dim">Created</p>
+              <p className="mt-1 font-medium text-ink">{formatDateForDisplay(createdDate)}</p>
             </div>
           </div>
 
           <div>
-            <div className="mb-2 flex items-center justify-between text-[11px] font-medium text-slate-500">
+            <div className="mb-2 flex items-center justify-between text-[11px] font-medium text-dim">
               <span>Progress</span>
               <span>{progressMeta.percent}%</span>
             </div>
@@ -324,27 +332,27 @@ export const ProjectRow = ({ project, mobileView = false }) => {
           </div>
         </button>
 
-        <div className={`overflow-hidden border-t border-slate-100 transition-[max-height,opacity] duration-300 ease-out ${isExpanded ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'}`}>
-          <div className="space-y-4 bg-slate-50/70 p-4">
+        <div className={`overflow-hidden border-t border-line transition-[max-height,opacity] duration-300 ease-out ${isExpanded ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'}`}>
+          <div className="space-y-4 bg-canvas p-4">
             <div>
-              <p className="text-[10px] uppercase tracking-[0.14em] text-slate-400">Description</p>
-              <p className="mt-2 text-sm leading-6 text-slate-600">{project.description || 'No description available.'}</p>
+              <p className="text-[10px] uppercase tracking-[0.12em] text-dim">Description</p>
+              <p className="mt-2 text-sm leading-6 text-dim">{project.description || 'No description available.'}</p>
             </div>
 
-            <div className="grid grid-cols-2 gap-3 text-xs text-slate-600">
-              <div className="rounded-2xl bg-white p-3">
-                <p className="text-[10px] uppercase tracking-[0.14em] text-slate-400">Manager</p>
-                <p className="mt-1 font-medium text-slate-700">{project.manager || 'N/A'}</p>
+            <div className="grid grid-cols-2 gap-3 text-xs text-dim">
+              <div className="rounded-md bg-surface p-3">
+                <p className="text-[10px] uppercase tracking-[0.12em] text-dim">Manager</p>
+                <p className="mt-1 font-medium text-ink">{project.manager || 'N/A'}</p>
               </div>
-              <div className="rounded-2xl bg-white p-3">
-                <p className="text-[10px] uppercase tracking-[0.14em] text-slate-400">Updated</p>
-                <p className="mt-1 font-medium text-slate-700">{project.lastUpdate || 'N/A'}</p>
+              <div className="rounded-md bg-surface p-3">
+                <p className="text-[10px] uppercase tracking-[0.12em] text-dim">Updated</p>
+                <p className="mt-1 font-medium text-ink">{project.lastUpdate || 'N/A'}</p>
               </div>
             </div>
 
             <button
               onClick={openWorkspace}
-              className="w-full rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-600 px-4 py-3 text-sm font-semibold text-white shadow-md transition hover:from-emerald-600 hover:to-teal-700"
+              className="w-full rounded-md bg-cta px-4 py-3 text-sm font-semibold text-cta-foreground transition hover:opacity-90"
             >
               Open Workspace
             </button>
@@ -357,18 +365,18 @@ export const ProjectRow = ({ project, mobileView = false }) => {
   return (
     <>
       <tr
-        className={`text-xs sm:text-sm font-medium border-b border-gray-200 cursor-pointer hover:bg-gray-50 ${
-          isExpanded ? 'bg-gray-50' : ''
+        className={`border-b border-line text-xs font-normal text-ink sm:text-sm cursor-pointer hover:bg-canvas ${
+          isExpanded ? 'bg-canvas' : ''
         }`}
         onClick={() => setIsExpanded(!isExpanded)}
         aria-expanded={isExpanded}
       >
-        <td className="py-2 px-2 sm:px-4 whitespace-nowrap">{project.id}</td>
-        <td className="py-2 px-2 sm:px-4">{project.name}</td>
-        <td className="py-2 px-2 sm:px-4 whitespace-nowrap">{project.clientId ? project.clientId : 'N/A'}</td>
-        <td className="py-2 px-2 sm:px-4 whitespace-nowrap">{(workspaceCreatedAt || project.createdAt) ? formatDateForDisplay(workspaceCreatedAt || project.createdAt) : 'N/A'}</td>
-        <td className="py-2 px-2 sm:px-4 whitespace-nowrap">{resolvedStatus}</td>
-        <td className="py-2 px-2 sm:px-4 whitespace-nowrap">
+        <td className="py-2.5 px-2 text-dim sm:px-4">{project.id}</td>
+        <td className="py-2.5 px-2 font-medium sm:px-4">{project.name}</td>
+        <td className="py-2.5 px-2 text-dim sm:px-4">{project.clientId ? project.clientId : 'N/A'}</td>
+        <td className="py-2.5 px-2 text-dim sm:px-4 whitespace-nowrap">{(workspaceCreatedAt || project.createdAt) ? formatDateForDisplay(workspaceCreatedAt || project.createdAt) : 'N/A'}</td>
+        <td className={`py-2.5 px-2 font-medium sm:px-4 whitespace-nowrap ${statusTextColors[resolvedStatus] || 'text-ink'}`}>{resolvedStatus}</td>
+        <td className="py-2.5 px-2 sm:px-4 whitespace-nowrap">
           <div className="w-full">
             <div className={`w-full h-2 rounded-full ${progressMeta.bgClass} p-0.5`} title={`${resolvedStatus} ${progressMeta.percent}%`}>
               <div
@@ -395,24 +403,24 @@ export const ProjectRow = ({ project, mobileView = false }) => {
           <div
             className={`overflow-hidden transition-[max-height,opacity] duration-500 ease-in-out ${isExpanded ? 'max-h-[500px] opacity-100' : 'max-h-0 opacity-0'}`}
           >
-            <div className="p-3 sm:p-4 bg-gray-50 border-b border-gray-200">
+            <div className="p-3 sm:p-4 bg-canvas border-b border-line">
               <div>
-                <p className="text-xs sm:text-sm text-gray-600 mb-4 sm:mb-6">{project.description || 'N/A'}</p>
+                <p className="text-xs sm:text-sm text-dim mb-4 sm:mb-6">{project.description || 'N/A'}</p>
               </div>
               <div className="flex flex-wrap justify-between items-end gap-4">
                 <div className="flex flex-wrap gap-x-4 sm:gap-x-6 gap-y-2 text-sm">
                   <div>
-                    <p className="text-[10px] sm:text-xs text-gray-500 ">Project Manager</p>
-                    <p className="text-xs sm:text-sm font-medium text-gray-700">{project.manager || 'N/A'}</p>
+                    <p className="text-[10px] sm:text-xs text-dim ">Project Manager</p>
+                    <p className="text-xs sm:text-sm font-medium text-ink">{project.manager || 'N/A'}</p>
                   </div>
                   <div>
-                    <p className="text-[10px] sm:text-xs text-gray-500 ">Last Updated</p>
-                    <p className="text-xs sm:text-sm font-medium text-gray-700">{project.lastUpdate || 'N/A'}</p>
+                    <p className="text-[10px] sm:text-xs text-dim ">Last Updated</p>
+                    <p className="text-xs sm:text-sm font-medium text-ink">{project.lastUpdate || 'N/A'}</p>
                   </div>
                 </div>
                 <button 
                   onClick={openWorkspace}
-                  className="bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white text-xs sm:text-sm font-semibold px-4 sm:px-5 py-1.5 sm:py-2 rounded-lg shadow-md transition duration-150 ease-in-out flex-shrink-0"
+                  className="flex-shrink-0 rounded-md bg-cta px-4 py-1.5 text-xs font-semibold text-cta-foreground transition hover:opacity-90 sm:px-5 sm:py-2 sm:text-sm"
                 >
                   Workspace
                 </button>

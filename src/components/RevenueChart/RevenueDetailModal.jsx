@@ -242,29 +242,29 @@ export function RevenueDetailModal({ isOpen, onClose }) {
       onClick={onClose}
     >
       <div
-        className="relative w-full max-w-6xl rounded-[28px] border border-slate-200 bg-white shadow-[0_20px_60px_rgba(15,23,42,0.12)] my-4"
+        className="relative w-full max-w-6xl rounded-[28px] border border-line bg-surface my-4"
         onClick={e => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="sticky top-0 z-10 flex items-center justify-between gap-4 rounded-t-[28px] border-b border-slate-200 bg-white/95 px-6 py-5 backdrop-blur-sm sm:px-8">
+        <div className="sticky top-0 z-10 flex items-center justify-between gap-4 rounded-t-[28px] border-b border-line bg-white/95 px-6 py-5 backdrop-blur-sm sm:px-8">
           <div>
-            <p className="text-xs font-medium text-emerald-700">Revenue analytics</p>
-            <h2 className="mt-1 text-xl font-semibold tracking-tight text-slate-900">Financial overview — detailed view</h2>
-            <p className="mt-1 text-[13px] text-slate-500">
+            <p className="text-xs font-medium text-ink">Revenue analytics</p>
+            <h2 className="mt-1 text-xl font-semibold tracking-tight text-ink">Financial overview — detailed view</h2>
+            <p className="mt-1 text-[13px] text-dim">
               Comprehensive breakdown of revenue streams, expenses, and profitability trends.
             </p>
           </div>
           <div className="flex items-center gap-3">
             <button
               onClick={() => {}}
-              className="hidden sm:inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 shadow-sm transition hover:bg-slate-50"
+              className="hidden sm:inline-flex items-center gap-2 rounded-xl border border-line bg-surface px-4 py-2.5 text-sm font-medium text-ink  transition hover:bg-canvas"
             >
               <Download size={16} />
               Export report
             </button>
             <button
               onClick={onClose}
-              className="rounded-xl border border-slate-200 bg-white p-2.5 text-slate-500 shadow-sm transition hover:bg-slate-50 hover:text-slate-700"
+              className="rounded-xl border border-line bg-surface p-2.5 text-dim  transition hover:bg-canvas hover:text-ink"
               aria-label="Close modal"
             >
               <X size={18} />
@@ -276,49 +276,49 @@ export function RevenueDetailModal({ isOpen, onClose }) {
         <div className="p-6 sm:px-8 sm:py-6">
           {/* KPI Cards */}
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            <div className="rounded-[22px] border border-slate-200 bg-white p-5 shadow-sm">
-              <div className="flex items-center gap-2 text-slate-500">
+            <div className="rounded-[22px] border border-line bg-surface p-5 ">
+              <div className="flex items-center gap-2 text-dim">
                 <CircleDollarSign size={15} />
                 <p className="text-[11px] font-semibold uppercase tracking-[0.18em]">Total revenue</p>
               </div>
-              <p className="mt-3 text-[1.4rem] font-semibold tracking-[-0.03em] text-slate-900">{formatCurrency(totalRevenue)}</p>
-              <div className="mt-2 inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-1 text-xs font-medium text-emerald-700">
+              <p className="mt-3 text-[1.4rem] font-semibold tracking-[-0.03em] text-ink">{formatCurrency(totalRevenue)}</p>
+              <div className="mt-2 inline-flex items-center gap-1 rounded-full bg-surface-hover px-2 py-1 text-xs font-medium text-ink">
                 <ArrowUpRight size={12} />
                 +{revenueGrowth}%
               </div>
             </div>
 
-            <div className="rounded-[22px] border border-slate-200 bg-white p-5 shadow-sm">
-              <div className="flex items-center gap-2 text-slate-500">
+            <div className="rounded-[22px] border border-line bg-surface p-5 ">
+              <div className="flex items-center gap-2 text-dim">
                 <TrendingUp size={15} />
                 <p className="text-[11px] font-semibold uppercase tracking-[0.18em]">Net profit</p>
               </div>
-              <p className="mt-3 text-[1.4rem] font-semibold tracking-[-0.03em] text-slate-900">{formatCurrency(netProfit)}</p>
-              <div className="mt-2 inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-1 text-xs font-medium text-emerald-700">
+              <p className="mt-3 text-[1.4rem] font-semibold tracking-[-0.03em] text-ink">{formatCurrency(netProfit)}</p>
+              <div className="mt-2 inline-flex items-center gap-1 rounded-full bg-surface-hover px-2 py-1 text-xs font-medium text-ink">
                 <ArrowUpRight size={12} />
                 {profitMargin}%
               </div>
             </div>
 
-            <div className="rounded-[22px] border border-slate-200 bg-white p-5 shadow-sm">
-              <div className="flex items-center gap-2 text-slate-500">
+            <div className="rounded-[22px] border border-line bg-surface p-5 ">
+              <div className="flex items-center gap-2 text-dim">
                 <BarChart3 size={15} />
                 <p className="text-[11px] font-semibold uppercase tracking-[0.18em]">Total expenses</p>
               </div>
-              <p className="mt-3 text-[1.4rem] font-semibold tracking-[-0.03em] text-slate-900">{formatCurrency(totalExpenses)}</p>
-              <div className="mt-2 inline-flex items-center gap-1 rounded-full bg-amber-50 px-2 py-1 text-xs font-medium text-amber-700">
+              <p className="mt-3 text-[1.4rem] font-semibold tracking-[-0.03em] text-ink">{formatCurrency(totalExpenses)}</p>
+              <div className="mt-2 inline-flex items-center gap-1 rounded-full bg-warning/10 px-2 py-1 text-xs font-medium text-warning">
                 <ArrowUpRight size={12} />
                 +{expenseGrowth}%
               </div>
             </div>
 
-            <div className="rounded-[22px] border border-slate-200 bg-white p-5 shadow-sm">
-              <div className="flex items-center gap-2 text-slate-500">
+            <div className="rounded-[22px] border border-line bg-surface p-5 ">
+              <div className="flex items-center gap-2 text-dim">
                 <Calendar size={15} />
                 <p className="text-[11px] font-semibold uppercase tracking-[0.18em]">Active projects</p>
               </div>
-              <p className="mt-3 text-[1.4rem] font-semibold tracking-[-0.03em] text-slate-900">24</p>
-              <div className="mt-2 inline-flex items-center gap-1 rounded-full bg-sky-50 px-2 py-1 text-xs font-medium text-sky-700">
+              <p className="mt-3 text-[1.4rem] font-semibold tracking-[-0.03em] text-ink">24</p>
+              <div className="mt-2 inline-flex items-center gap-1 rounded-full bg-info/10 px-2 py-1 text-xs font-medium text-info">
                 <ArrowUpRight size={12} />
                 8 this quarter
               </div>
@@ -328,10 +328,10 @@ export function RevenueDetailModal({ isOpen, onClose }) {
           {/* Charts Grid */}
           <div className="mt-6 grid grid-cols-1 gap-5 lg:grid-cols-2">
             {/* Revenue vs Expenses */}
-            <div className="rounded-[24px] border border-slate-200 bg-white p-5 shadow-sm">
+            <div className="rounded-[24px] border border-line bg-surface p-5 ">
               <div className="mb-4">
-                <h3 className="text-sm font-semibold text-slate-900">Revenue vs Expenses</h3>
-                <p className="text-xs text-slate-500">Monthly comparison for the current fiscal year</p>
+                <h3 className="text-sm font-semibold text-ink">Revenue vs Expenses</h3>
+                <p className="text-xs text-dim">Monthly comparison for the current fiscal year</p>
               </div>
               <div className="h-[280px] w-full">
                 <Bar data={revenueExpenseChartData} options={revenueExpenseChartOptions} />
@@ -339,10 +339,10 @@ export function RevenueDetailModal({ isOpen, onClose }) {
             </div>
 
             {/* Trend Line */}
-            <div className="rounded-[24px] border border-slate-200 bg-white p-5 shadow-sm">
+            <div className="rounded-[24px] border border-line bg-surface p-5 ">
               <div className="mb-4">
-                <h3 className="text-sm font-semibold text-slate-900">Revenue & Profit Trend</h3>
-                <p className="text-xs text-slate-500">Trailing 12-month performance curve</p>
+                <h3 className="text-sm font-semibold text-ink">Revenue & Profit Trend</h3>
+                <p className="text-xs text-dim">Trailing 12-month performance curve</p>
               </div>
               <div className="h-[280px] w-full">
                 <Line data={trendLineData} options={trendLineOptions} />
@@ -353,10 +353,10 @@ export function RevenueDetailModal({ isOpen, onClose }) {
           {/* Bottom Row */}
           <div className="mt-5 grid grid-cols-1 gap-5 lg:grid-cols-3">
             {/* Revenue by Source */}
-            <div className="rounded-[24px] border border-slate-200 bg-white p-5 shadow-sm">
+            <div className="rounded-[24px] border border-line bg-surface p-5 ">
               <div className="mb-4">
-                <h3 className="text-sm font-semibold text-slate-900">Revenue by source</h3>
-                <p className="text-xs text-slate-500">Breakdown by business segment</p>
+                <h3 className="text-sm font-semibold text-ink">Revenue by source</h3>
+                <p className="text-xs text-dim">Breakdown by business segment</p>
               </div>
               <div className="h-[260px] w-full">
                 <Doughnut data={sourceDoughnutData} options={sourceDoughnutOptions} />
@@ -370,9 +370,9 @@ export function RevenueDetailModal({ isOpen, onClose }) {
                     <div key={idx} className="flex items-center justify-between text-sm">
                       <div className="flex items-center gap-2">
                         <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: item.color }} />
-                        <span className="text-slate-600">{item.label}</span>
+                        <span className="text-dim">{item.label}</span>
                       </div>
-                      <span className="font-medium text-slate-900">{pct}%</span>
+                      <span className="font-medium text-ink">{pct}%</span>
                     </div>
                   );
                 })}
@@ -380,26 +380,26 @@ export function RevenueDetailModal({ isOpen, onClose }) {
             </div>
 
             {/* Recent Transactions */}
-            <div className="lg:col-span-2 rounded-[24px] border border-slate-200 bg-white p-5 shadow-sm">
+            <div className="lg:col-span-2 rounded-[24px] border border-line bg-surface p-5 ">
               <div className="mb-4 flex items-center justify-between">
                 <div>
-                  <h3 className="text-sm font-semibold text-slate-900">Recent transactions</h3>
-                  <p className="text-xs text-slate-500">Latest income and expense entries</p>
+                  <h3 className="text-sm font-semibold text-ink">Recent transactions</h3>
+                  <p className="text-xs text-dim">Latest income and expense entries</p>
                 </div>
-                <button className="rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-600 transition hover:bg-slate-50">
+                <button className="rounded-lg border border-line px-3 py-1.5 text-xs font-medium text-dim transition hover:bg-canvas">
                   View all
                 </button>
               </div>
-              <div className="divide-y divide-slate-100">
+              <div className="divide-y divide-line">
                 {transactions.map((tx) => (
                   <div key={tx.id} className="flex items-center justify-between py-3">
                     <div className="flex items-start gap-3">
-                      <div className={`mt-0.5 rounded-lg p-2 ${tx.type === 'income' ? 'bg-emerald-50 text-emerald-600' : 'bg-rose-50 text-rose-600'}`}>
+                      <div className={`mt-0.5 rounded-lg p-2 ${tx.type === 'income' ? 'bg-surface-hover text-ink' : 'bg-danger/10 text-danger'}`}>
                         {tx.type === 'income' ? <ArrowUpRight size={14} /> : <ArrowDownRight size={14} />}
                       </div>
                       <div>
-                        <p className="text-sm font-medium text-slate-900">{tx.description}</p>
-                        <div className="mt-1 flex items-center gap-2 text-xs text-slate-500">
+                        <p className="text-sm font-medium text-ink">{tx.description}</p>
+                        <div className="mt-1 flex items-center gap-2 text-xs text-dim">
                           <span className="inline-flex items-center gap-1">
                             <Calendar size={12} />
                             {tx.date}
@@ -412,10 +412,10 @@ export function RevenueDetailModal({ isOpen, onClose }) {
                       </div>
                     </div>
                     <div className="text-right">
-                      <p className={`text-sm font-semibold ${tx.type === 'income' ? 'text-emerald-700' : 'text-rose-700'}`}>
+                      <p className={`text-sm font-semibold ${tx.type === 'income' ? 'text-ink' : 'text-danger'}`}>
                         {tx.type === 'income' ? '+' : ''}{formatCurrency(tx.amount)}
                       </p>
-                      <span className={`mt-1 inline-block rounded-full px-2 py-0.5 text-[10px] font-medium uppercase tracking-wider ${tx.status === 'completed' ? 'bg-emerald-50 text-emerald-700' : 'bg-amber-50 text-amber-700'}`}>
+                      <span className={`mt-1 inline-block rounded-full px-2 py-0.5 text-[10px] font-medium uppercase tracking-wider ${tx.status === 'completed' ? 'bg-surface-hover text-ink' : 'bg-warning/10 text-warning'}`}>
                         {tx.status}
                       </span>
                     </div>
@@ -426,8 +426,8 @@ export function RevenueDetailModal({ isOpen, onClose }) {
           </div>
 
           {/* Footer note */}
-          <div className="mt-6 rounded-[18px] border border-emerald-100 bg-emerald-50/50 p-4 text-center">
-            <p className="text-xs text-emerald-700">
+          <div className="mt-6 rounded-[18px] border border-line bg-cta p-4 text-center">
+            <p className="text-xs text-ink">
               This view shows placeholder data for UI confirmation. Connect real data endpoints once the layout is approved.
             </p>
           </div>

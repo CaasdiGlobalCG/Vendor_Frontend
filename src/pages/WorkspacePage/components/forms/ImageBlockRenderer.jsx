@@ -221,20 +221,20 @@ const ImageBlockRenderer = ({ data, nodeId, workspaceId, setNodes }) => {
   return (
     <>
       <div
-        className="w-[420px] bg-white border-2 border-gray-200 rounded-2xl shadow-lg overflow-hidden"
+        className="w-[420px] bg-surface border-2 border-line rounded-2xl shadow-lg overflow-hidden"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="px-4 py-3 bg-gradient-to-r from-cyan-50 to-blue-50 border-b border-blue-100 flex items-center justify-between">
+        <div className="px-4 py-3 bg-black border-b border-info/10 flex items-center justify-between">
           <div className="flex items-center space-x-2">
-            <ImageIcon className="w-5 h-5 text-cyan-500" />
-            <span className="text-sm font-semibold text-gray-800">Image Block</span>
+            <ImageIcon className="w-5 h-5 text-info" />
+            <span className="text-sm font-semibold text-ink">Image Block</span>
           </div>
           <div className="flex items-center space-x-2">
             <button
               type="button"
               onClick={handlePreview}
               disabled={!imageUrl}
-              className={`inline-flex items-center space-x-1 px-3 py-1 text-xs font-semibold rounded-lg transition-colors ${imageUrl ? 'text-cyan-700 bg-white/70 hover:bg-white' : 'text-gray-400 bg-white/40 cursor-not-allowed'}`}
+              className={`inline-flex items-center space-x-1 px-3 py-1 text-xs font-semibold rounded-lg transition-colors ${imageUrl ? 'text-info bg-white/70 hover:bg-surface' : 'text-dim bg-white/40 cursor-not-allowed'}`}
             >
               <Eye className="w-3 h-3" />
               <span>Preview</span>
@@ -243,12 +243,12 @@ const ImageBlockRenderer = ({ data, nodeId, workspaceId, setNodes }) => {
               type="button"
               onClick={handleDownload}
               disabled={!imageUrl}
-              className={`inline-flex items-center space-x-1 px-3 py-1 text-xs font-semibold rounded-lg transition-colors ${imageUrl ? 'text-cyan-700 bg-white/70 hover:bg-white' : 'text-gray-400 bg-white/40 cursor-not-allowed'}`}
+              className={`inline-flex items-center space-x-1 px-3 py-1 text-xs font-semibold rounded-lg transition-colors ${imageUrl ? 'text-info bg-white/70 hover:bg-surface' : 'text-dim bg-white/40 cursor-not-allowed'}`}
             >
               <Download className="w-3 h-3" />
               <span>Download</span>
             </button>
-            <label className={`inline-flex items-center space-x-1 px-3 py-1 text-xs font-semibold text-white rounded-lg ${uploading ? 'bg-cyan-400 cursor-wait' : 'bg-cyan-600 cursor-pointer hover:bg-cyan-700'}`}>
+            <label className={`inline-flex items-center space-x-1 px-3 py-1 text-xs font-semibold text-white rounded-lg ${uploading ? 'bg-info cursor-wait' : 'bg-info cursor-pointer hover:bg-info'}`}>
               {uploading ? (
                 <>
                   <Loader2 className="w-3 h-3 animate-spin" />
@@ -266,7 +266,7 @@ const ImageBlockRenderer = ({ data, nodeId, workspaceId, setNodes }) => {
         </div>
 
         {uploadError && (
-          <div className="mx-4 mb-2 p-2 bg-red-50 border border-red-200 rounded-lg text-xs text-red-600">
+          <div className="mx-4 mb-2 p-2 bg-danger/10 border border-danger/20 rounded-lg text-xs text-danger">
             {uploadError}
           </div>
         )}
@@ -274,18 +274,18 @@ const ImageBlockRenderer = ({ data, nodeId, workspaceId, setNodes }) => {
         <div className="p-4 space-y-4">
           <div className="space-y-3">
             <div
-              className="relative w-full bg-slate-100 border border-slate-200 rounded-xl flex items-center justify-center overflow-hidden"
+              className="relative w-full bg-surface-hover border border-line rounded-xl flex items-center justify-center overflow-hidden"
               style={{ padding: '12px' }}
             >
               <div
                 className="relative w-full overflow-hidden rounded-lg"
                 style={{ width: `${Math.min(Math.max(imageWidth, 40), 100)}%` }}
               >
-                <div className="relative w-full aspect-video bg-white border border-slate-200 rounded-lg overflow-hidden">
+                <div className="relative w-full aspect-video bg-surface border border-line rounded-lg overflow-hidden">
                   {imageUrl ? (
                     <img src={imageUrl} alt={caption || 'Uploaded image'} className="w-full h-full object-cover" />
                   ) : (
-                    <div className="text-center text-slate-400">
+                    <div className="text-center text-dim">
                       <ImageIcon className="w-12 h-12 mx-auto mb-2 opacity-60" />
                       <p className="text-sm">Upload site photos or design references</p>
                     </div>
@@ -294,7 +294,7 @@ const ImageBlockRenderer = ({ data, nodeId, workspaceId, setNodes }) => {
               </div>
             </div>
             <div className="flex items-center space-x-3">
-              <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Width</span>
+              <span className="text-xs font-semibold text-dim uppercase tracking-wide">Width</span>
               <input
                 type="range"
                 min={40}
@@ -303,49 +303,49 @@ const ImageBlockRenderer = ({ data, nodeId, workspaceId, setNodes }) => {
                 onChange={(e) => setImageWidth(Number(e.target.value))}
                 className="flex-1"
               />
-              <span className="text-xs text-gray-500 w-10 text-right">{imageWidth}%</span>
+              <span className="text-xs text-dim w-10 text-right">{imageWidth}%</span>
             </div>
           </div>
 
           <div className="grid grid-cols-2 gap-3">
-            <label className="flex items-center space-x-2 bg-slate-50 border border-slate-100 rounded-lg px-3 py-2 text-xs text-gray-600">
-              <Clock className="w-4 h-4 text-blue-500" />
+            <label className="flex items-center space-x-2 bg-canvas border border-line rounded-lg px-3 py-2 text-xs text-dim">
+              <Clock className="w-4 h-4 text-info" />
               <input
                 type="datetime-local"
                 value={timestamp}
                 onChange={(e) => setTimestamp(e.target.value)}
-                className="bg-transparent focus:outline-none text-sm text-gray-900"
+                className="bg-transparent focus:outline-none text-sm text-ink"
               />
             </label>
-            <label className="flex items-center space-x-2 bg-slate-50 border border-slate-100 rounded-lg px-3 py-2 text-xs text-gray-600">
-              <MapPin className="w-4 h-4 text-emerald-500" />
+            <label className="flex items-center space-x-2 bg-canvas border border-line rounded-lg px-3 py-2 text-xs text-dim">
+              <MapPin className="w-4 h-4 text-ink" />
               <input
                 type="text"
                 value={geotag}
                 onChange={(e) => setGeotag(e.target.value)}
                 placeholder="Geotag (optional)"
-                className="bg-transparent focus:outline-none text-sm text-gray-900"
+                className="bg-transparent focus:outline-none text-sm text-ink"
               />
             </label>
           </div>
 
           <div className="space-y-2">
-            <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Caption</span>
+            <span className="text-xs font-semibold text-dim uppercase tracking-wide">Caption</span>
             <textarea
               value={caption}
               onChange={(e) => setCaption(e.target.value)}
               placeholder="Add a caption or notes about this image"
-              className="w-full min-h-[72px] border border-gray-200 rounded-lg p-3 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-cyan-100"
+              className="w-full min-h-[72px] border border-line rounded-lg p-3 text-sm text-ink focus:outline-none focus:ring-2 focus:ring-info/10"
             />
           </div>
 
           <div className="space-y-3">
             <div className="flex items-center justify-between">
-              <span className="text-sm font-semibold text-gray-700">Annotations</span>
+              <span className="text-sm font-semibold text-ink">Annotations</span>
               <button
                 type="button"
                 onClick={addAnnotation}
-                className="inline-flex items-center space-x-1 px-3 py-1 text-xs font-semibold text-cyan-600 hover:text-cyan-800"
+                className="inline-flex items-center space-x-1 px-3 py-1 text-xs font-semibold text-info hover:text-info"
               >
                 <Plus className="w-4 h-4" />
                 <span>Add</span>
@@ -353,25 +353,25 @@ const ImageBlockRenderer = ({ data, nodeId, workspaceId, setNodes }) => {
             </div>
             <div className="space-y-2">
               {annotations.length === 0 && (
-                <p className="text-xs text-gray-400">No annotations yet.</p>
+                <p className="text-xs text-dim">No annotations yet.</p>
               )}
               {annotations.map((annotation) => (
                 <div
                   key={annotation.id}
-                  className="grid grid-cols-[1fr,auto] gap-2 items-start bg-slate-50 border border-slate-100 rounded-lg px-3 py-2"
+                  className="grid grid-cols-[1fr,auto] gap-2 items-start bg-canvas border border-line rounded-lg px-3 py-2"
                 >
                   <div className="space-y-2">
                     <input
                       type="text"
                       value={annotation.text}
                       onChange={(e) => updateAnnotation(annotation.id, 'text', e.target.value)}
-                      className="w-full border border-slate-200 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-cyan-100"
+                      className="w-full border border-line rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-info/10"
                       placeholder="Annotation text"
                     />
                     <select
                       value={annotation.position}
                       onChange={(e) => updateAnnotation(annotation.id, 'position', e.target.value)}
-                      className="w-full border border-slate-200 rounded-lg px-3 py-1.5 text-xs text-gray-600 focus:outline-none focus:ring-1 focus:ring-cyan-200"
+                      className="w-full border border-line rounded-lg px-3 py-1.5 text-xs text-dim focus:outline-none focus:ring-1 focus:ring-info/20"
                     >
                       {['top-left', 'top-right', 'bottom-left', 'bottom-right'].map((pos) => (
                         <option key={pos} value={pos}>
@@ -383,7 +383,7 @@ const ImageBlockRenderer = ({ data, nodeId, workspaceId, setNodes }) => {
                   <button
                     type="button"
                     onClick={() => removeAnnotation(annotation.id)}
-                    className="text-slate-400 hover:text-rose-500"
+                    className="text-dim hover:text-danger"
                   >
                     <Trash2 className="w-4 h-4" />
                   </button>
@@ -400,7 +400,7 @@ const ImageBlockRenderer = ({ data, nodeId, workspaceId, setNodes }) => {
           onClick={() => setShowPreview(false)}
         >
           <div
-            className="relative max-w-4xl w-11/12 max-h-[90vh] bg-white rounded-2xl shadow-2xl overflow-hidden"
+            className="relative max-w-4xl w-11/12 max-h-[90vh] bg-surface rounded-2xl shadow-2xl overflow-hidden"
             onClick={(e) => e.stopPropagation()}
           >
             <button
@@ -414,7 +414,7 @@ const ImageBlockRenderer = ({ data, nodeId, workspaceId, setNodes }) => {
             {(caption || timestamp || geotag) && (
               <div className="absolute bottom-0 inset-x-0 bg-black/60 text-white text-sm px-4 py-3 space-y-1">
                 {caption && <p className="font-medium">{caption}</p>}
-                <div className="flex flex-wrap gap-3 text-xs text-gray-200">
+                <div className="flex flex-wrap gap-3 text-xs text-dim">
                   {timestamp && (
                     <span className="inline-flex items-center space-x-1">
                       <Clock className="w-3 h-3" />

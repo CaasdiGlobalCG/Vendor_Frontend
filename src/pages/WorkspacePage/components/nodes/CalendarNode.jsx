@@ -226,17 +226,17 @@ const CalendarNode = ({ id, data, isConnectable, selected }) => {
   };
 
   return (
-    <div className={`${isImportant ? 'bg-blue-100' : 'bg-white'} rounded-lg border border-blue-200 shadow-md overflow-hidden w-96 relative group`}>
+    <div className={`${isImportant ? 'bg-info/10' : 'bg-surface'} rounded-lg border border-info/20  overflow-hidden w-96 relative group`}>
       {/* Sequence Number Badge - Top left corner */}
       {data.sequenceNumber && (
-        <div className="absolute -top-4 -left-4 z-20 w-8 h-8 bg-gradient-to-br from-green-500 to-emerald-600 text-white rounded-full flex items-center justify-center text-sm font-bold shadow-lg border-2 border-white hover:shadow-xl transition-shadow">
+        <div className="absolute -top-4 -left-4 z-20 w-8 h-8 bg-black text-white rounded-full flex items-center justify-center text-sm font-bold shadow-lg border-2 border-white hover:shadow-xl transition-shadow">
           {data.sequenceNumber}
         </div>
       )}
       <Handle type="target" position={Position.Top} />
       
       {/* Header */}
-      <div className="bg-blue-600 text-white p-3 flex items-center justify-between">
+      <div className="bg-info text-white p-3 flex items-center justify-between">
         <div className="flex items-center space-x-2">
           <Calendar className="w-5 h-5" />
           <span className="font-medium">Schedule Meeting</span>
@@ -247,21 +247,21 @@ const CalendarNode = ({ id, data, isConnectable, selected }) => {
               setIsImportant(!isImportant);
               await persistIsImportantLocal(!isImportant);
             }}
-            className={`p-1 rounded text-sm ${isImportant ? 'bg-yellow-400 text-white' : 'hover:bg-blue-500'}`}
+            className={`p-1 rounded text-sm ${isImportant ? 'bg-warning text-white' : 'hover:bg-info'}`}
             title={isImportant ? 'Unmark as Important' : 'Mark as Important'}
           >
             {isImportant ? '★' : '☆'}
           </button>
           <button 
             onClick={() => setShowDeadlineInput(!showDeadlineInput)}
-            className="p-1 hover:bg-blue-500 rounded"
+            className="p-1 hover:bg-info rounded"
             title="Set Deadline"
           >
             <Clock className="w-4 h-4" />
           </button>
           <button 
             onClick={() => setIsEditing(!isEditing)}
-            className="p-1 hover:bg-blue-500 rounded"
+            className="p-1 hover:bg-info rounded"
           >
             {isEditing ? <Check className="w-4 h-4" /> : <MoreVertical className="w-4 h-4" />}
           </button>
@@ -270,7 +270,7 @@ const CalendarNode = ({ id, data, isConnectable, selected }) => {
 
       {/* Deadline Input */}
       {showDeadlineInput && (
-        <div className="px-3 py-2 bg-blue-50 border-b border-blue-100 flex gap-1">
+        <div className="px-3 py-2 bg-info/10 border-b border-info/10 flex gap-1">
           <input
             type="datetime-local"
             className="border rounded px-2 py-1 text-xs flex-1"
@@ -279,7 +279,7 @@ const CalendarNode = ({ id, data, isConnectable, selected }) => {
             disabled={saving}
           />
           <button
-            className="px-2 py-1 text-xs bg-blue-600 text-white rounded"
+            className="px-2 py-1 text-xs bg-info text-white rounded"
             onClick={async () => {
               setShowDeadlineInput(false);
               await persistDeadlineLocal(deadline);
@@ -293,7 +293,7 @@ const CalendarNode = ({ id, data, isConnectable, selected }) => {
 
       {/* Deadline Display */}
       {deadline && timeLeft && !timeLeft.isExpired && (
-        <div className="px-3 py-1 bg-blue-50 border-b border-blue-100 text-xs text-blue-600">
+        <div className="px-3 py-1 bg-info/10 border-b border-info/10 text-xs text-info">
           ⏱ {formatTimeLeft(timeLeft)}
         </div>
       )}
@@ -308,13 +308,13 @@ const CalendarNode = ({ id, data, isConnectable, selected }) => {
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
                 placeholder="Meeting Title"
-                className="w-full p-2 border rounded focus:ring-2 focus:ring-blue-200 focus:border-blue-300 outline-none"
+                className="w-full p-2 border rounded focus:ring-2 focus:ring-info/20 focus:border-info/30 outline-none"
               />
             </div>
 
             <div className="flex space-x-2">
               <div className="flex-1">
-                <label className="text-xs text-gray-500 block mb-1">Start</label>
+                <label className="text-xs text-dim block mb-1">Start</label>
                 <DatePicker
                   selected={startDate}
                   onChange={(date) => setStartDate(date)}
@@ -322,11 +322,11 @@ const CalendarNode = ({ id, data, isConnectable, selected }) => {
                   timeFormat="HH:mm"
                   timeIntervals={15}
                   dateFormat="MMMM d, yyyy h:mm aa"
-                  className="w-full p-2 border rounded focus:ring-2 focus:ring-blue-200 focus:border-blue-300 outline-none"
+                  className="w-full p-2 border rounded focus:ring-2 focus:ring-info/20 focus:border-info/30 outline-none"
                 />
               </div>
               <div className="flex-1">
-                <label className="text-xs text-gray-500 block mb-1">End</label>
+                <label className="text-xs text-dim block mb-1">End</label>
                 <DatePicker
                   selected={endDate}
                   onChange={(date) => setEndDate(date)}
@@ -334,19 +334,19 @@ const CalendarNode = ({ id, data, isConnectable, selected }) => {
                   timeFormat="HH:mm"
                   timeIntervals={15}
                   dateFormat="MMMM d, yyyy h:mm aa"
-                  className="w-full p-2 border rounded focus:ring-2 focus:ring-blue-200 focus:border-blue-300 outline-none"
+                  className="w-full p-2 border rounded focus:ring-2 focus:ring-info/20 focus:border-info/30 outline-none"
                 />
               </div>
             </div>
 
             <div className="flex items-center space-x-2">
-              <MapPin className="text-gray-400 w-4 h-4" />
+              <MapPin className="text-dim w-4 h-4" />
               <input
                 type="text"
                 value={location}
                 onChange={(e) => setLocation(e.target.value)}
                 placeholder="Add location"
-                className="flex-1 p-2 border rounded focus:ring-2 focus:ring-blue-200 focus:border-blue-300 outline-none"
+                className="flex-1 p-2 border rounded focus:ring-2 focus:ring-info/20 focus:border-info/30 outline-none"
               />
             </div>
 
@@ -356,14 +356,14 @@ const CalendarNode = ({ id, data, isConnectable, selected }) => {
                 onChange={(e) => setDescription(e.target.value)}
                 placeholder="Add description"
                 rows={3}
-                className="w-full p-2 border rounded focus:ring-2 focus:ring-blue-200 focus:border-blue-300 outline-none"
+                className="w-full p-2 border rounded focus:ring-2 focus:ring-info/20 focus:border-info/30 outline-none"
               />
             </div>
 
             <div className="relative">
               <div className="flex items-center justify-between mb-2">
                 <span className="text-sm font-medium">Participants</span>
-                <span className="text-xs text-gray-500">Type @ to mention users</span>
+                <span className="text-xs text-dim">Type @ to mention users</span>
               </div>
               
               {/* Participants input with @mention support */}
@@ -383,14 +383,14 @@ const CalendarNode = ({ id, data, isConnectable, selected }) => {
                   }}
                   placeholder="Type @username to add participants..."
                   rows={3}
-                  className="w-full p-2 border rounded text-sm focus:ring-2 focus:ring-blue-200 focus:border-blue-300 outline-none resize-none"
+                  className="w-full p-2 border rounded text-sm focus:ring-2 focus:ring-info/20 focus:border-info/30 outline-none resize-none"
                 />
                 
                 {/* Mention dropdown */}
                 {showMentionDropdown && (
                   <div 
                     ref={mentionDropdownRef}
-                    className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg z-50 max-h-48 overflow-y-auto"
+                    className="absolute top-full left-0 right-0 mt-1 bg-surface border border-line rounded-lg shadow-lg z-50 max-h-48 overflow-y-auto"
                   >
                     {collaborators.filter(collab => 
                       collab.name.toLowerCase().includes(mentionQuery.toLowerCase())
@@ -403,21 +403,21 @@ const CalendarNode = ({ id, data, isConnectable, selected }) => {
                           <button
                             key={`${collab.vendorId}-${collab.name}-${index}`}
                             onClick={() => insertMention(collab.name)}
-                            className="w-full px-3 py-2 text-left hover:bg-gray-50 flex items-center space-x-2"
+                            className="w-full px-3 py-2 text-left hover:bg-canvas flex items-center space-x-2"
                           >
-                            <div className="w-6 h-6 rounded-full bg-gray-200 flex items-center justify-center flex-shrink-0">
-                              <span className="text-xs font-medium text-gray-600">
+                            <div className="w-6 h-6 rounded-full bg-surface-hover flex items-center justify-center flex-shrink-0">
+                              <span className="text-xs font-medium text-dim">
                                 {collab.avatar || collab.name.charAt(0).toUpperCase()}
                               </span>
                             </div>
                             <div className="flex-1 min-w-0">
-                              <div className="text-sm font-medium text-gray-900 truncate">{collab.name}</div>
-                              <div className="text-xs text-gray-500 truncate">{collab.specialization || collab.email}</div>
+                              <div className="text-sm font-medium text-ink truncate">{collab.name}</div>
+                              <div className="text-xs text-dim truncate">{collab.specialization || collab.email}</div>
                             </div>
                           </button>
                         ))
                     ) : (
-                      <div className="px-3 py-2 text-sm text-gray-500">No collaborators found</div>
+                      <div className="px-3 py-2 text-sm text-dim">No collaborators found</div>
                     )}
                   </div>
                 )}
@@ -429,13 +429,13 @@ const CalendarNode = ({ id, data, isConnectable, selected }) => {
                   {participants.map((p, index) => (
                     <div 
                       key={index} 
-                      className="flex items-center bg-blue-50 rounded-full px-2 py-1 text-xs"
+                      className="flex items-center bg-info/10 rounded-full px-2 py-1 text-xs"
                     >
-                      <User className="w-3 h-3 text-blue-500 mr-1 flex-shrink-0" />
-                      <span className="text-blue-700 font-medium">{p.name}</span>
+                      <User className="w-3 h-3 text-info mr-1 flex-shrink-0" />
+                      <span className="text-info font-medium">{p.name}</span>
                       <button
                         onClick={() => removeParticipant(p.name)}
-                        className="ml-1 text-blue-400 hover:text-blue-600"
+                        className="ml-1 text-info hover:text-info"
                       >
                         <X className="w-3 h-3" />
                       </button>
@@ -448,14 +448,14 @@ const CalendarNode = ({ id, data, isConnectable, selected }) => {
             <div className="flex justify-between pt-2">
               <button
                 onClick={handleSave}
-                className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                className="px-4 py-2 bg-info text-white rounded hover:bg-info focus:outline-none focus:ring-2 focus:ring-info focus:ring-offset-2"
               >
                 Save
               </button>
               <button
                 onClick={handleStartMeeting}
                 disabled={isStarting || participants.length === 0}
-                className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 flex items-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="px-4 py-2 bg-success text-white rounded hover:bg-success focus:outline-none focus:ring-2 focus:ring-success focus:ring-offset-2 flex items-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {isStarting ? (
                   <>
@@ -476,7 +476,7 @@ const CalendarNode = ({ id, data, isConnectable, selected }) => {
             <h3 className="font-medium text-lg">{title}</h3>
             
             <div className="flex items-start space-x-2">
-              <Clock className="text-gray-400 w-4 h-4 mt-0.5 flex-shrink-0" />
+              <Clock className="text-dim w-4 h-4 mt-0.5 flex-shrink-0" />
               <div>
                 <p className="text-sm">
                   {startDate.toLocaleString('en-US', {
@@ -488,7 +488,7 @@ const CalendarNode = ({ id, data, isConnectable, selected }) => {
                     minute: '2-digit'
                   })}
                 </p>
-                <p className="text-sm text-gray-500">
+                <p className="text-sm text-dim">
                   {endDate.toLocaleString('en-US', {
                     hour: '2-digit',
                     minute: '2-digit',
@@ -500,24 +500,24 @@ const CalendarNode = ({ id, data, isConnectable, selected }) => {
 
             {location && (
               <div className="flex items-center space-x-2">
-                <MapPin className="text-gray-400 w-4 h-4 flex-shrink-0" />
+                <MapPin className="text-dim w-4 h-4 flex-shrink-0" />
                 <p className="text-sm">{location}</p>
               </div>
             )}
 
             {description && (
               <div className="pt-2">
-                <p className="text-sm text-gray-700 whitespace-pre-line">{description}</p>
+                <p className="text-sm text-ink whitespace-pre-line">{description}</p>
               </div>
             )}
 
             {participants.length > 0 && (
               <div className="pt-2">
-                <p className="text-xs text-gray-500 mb-1">Participants:</p>
+                <p className="text-xs text-dim mb-1">Participants:</p>
                 <div className="flex flex-wrap gap-2">
                   {participants.map((p, i) => (
-                    <div key={i} className="flex items-center bg-blue-50 rounded-full px-2 py-1">
-                      <User className="w-3 h-3 text-blue-500 mr-1" />
+                    <div key={i} className="flex items-center bg-info/10 rounded-full px-2 py-1">
+                      <User className="w-3 h-3 text-info mr-1" />
                       <span className="text-xs">
                         {p.name || p.email.split('@')[0]}
                       </span>

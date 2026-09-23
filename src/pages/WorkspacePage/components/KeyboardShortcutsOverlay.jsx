@@ -40,17 +40,17 @@ const KeyboardShortcutsOverlay = ({ isOpen, onClose }) => {
       <div className="fixed inset-0 bg-black/40 backdrop-blur-sm" />
       <div
         ref={panelRef}
-        className="relative w-full max-w-md bg-white rounded-xl shadow-2xl border border-gray-200 overflow-hidden animate-in"
+        className="relative w-full max-w-md bg-surface rounded-xl shadow-2xl border border-line overflow-hidden animate-in"
         onClick={e => e.stopPropagation()}
         role="dialog"
         aria-label="Keyboard shortcuts"
       >
         {/* Header */}
-        <div className="flex items-center justify-between px-5 py-3.5 border-b border-gray-200">
-          <h2 className="text-sm font-semibold text-gray-900">Keyboard Shortcuts</h2>
+        <div className="flex items-center justify-between px-5 py-3.5 border-b border-line">
+          <h2 className="text-sm font-semibold text-ink">Keyboard Shortcuts</h2>
           <button
             onClick={onClose}
-            className="p-1 text-gray-400 hover:text-gray-600 rounded-md hover:bg-gray-100 transition-colors"
+            className="p-1 text-dim hover:text-dim rounded-md hover:bg-surface-hover transition-colors"
             aria-label="Close"
           >
             <X className="w-4 h-4" />
@@ -61,16 +61,16 @@ const KeyboardShortcutsOverlay = ({ isOpen, onClose }) => {
         <div className="max-h-[400px] overflow-y-auto p-5 space-y-5">
           {shortcuts.map(group => (
             <div key={group.category}>
-              <h3 className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-2">{group.category}</h3>
+              <h3 className="text-[10px] font-semibold text-dim uppercase tracking-wider mb-2">{group.category}</h3>
               <div className="space-y-1.5">
                 {group.items.map((item, i) => (
                   <div key={i} className="flex items-center justify-between py-1">
-                    <span className="text-sm text-gray-700">{item.desc}</span>
+                    <span className="text-sm text-ink">{item.desc}</span>
                     <div className="flex items-center gap-1">
                       {item.keys.map((key, ki) => (
                         <React.Fragment key={ki}>
-                          {ki > 0 && <span className="text-gray-300 text-xs">+</span>}
-                          <kbd className="inline-flex items-center px-1.5 py-0.5 text-[11px] font-medium text-gray-600 bg-gray-100 rounded border border-gray-200 min-w-[24px] justify-center">
+                          {ki > 0 && <span className="text-dim text-xs">+</span>}
+                          <kbd className="inline-flex items-center px-1.5 py-0.5 text-[11px] font-medium text-dim bg-surface-hover rounded border border-line min-w-[24px] justify-center">
                             {key}
                           </kbd>
                         </React.Fragment>
@@ -84,8 +84,8 @@ const KeyboardShortcutsOverlay = ({ isOpen, onClose }) => {
         </div>
 
         {/* Footer */}
-        <div className="px-5 py-2.5 border-t border-gray-100 text-[10px] text-gray-400 text-center">
-          Press <kbd className="px-1 py-0.5 bg-gray-100 rounded border border-gray-200">?</kbd> anytime to show this
+        <div className="px-5 py-2.5 border-t border-line text-[10px] text-dim text-center">
+          Press <kbd className="px-1 py-0.5 bg-surface-hover rounded border border-line">?</kbd> anytime to show this
         </div>
       </div>
 

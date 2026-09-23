@@ -202,11 +202,11 @@ const ApprovalBoardNode = ({ id, data, isConnectable, selected }) => {
   const getStatusIcon = (status) => {
     switch (status) {
       case 'submitted':
-        return <Clock className="w-4 h-4 text-blue-500" />;
+        return <Clock className="w-4 h-4 text-info" />;
       case 'underReview':
-        return <AlertCircle className="w-4 h-4 text-yellow-500" />;
+        return <AlertCircle className="w-4 h-4 text-warning" />;
       case 'approved':
-        return <CheckCircle className="w-4 h-4 text-green-500" />;
+        return <CheckCircle className="w-4 h-4 text-success" />;
       default:
         return null;
     }
@@ -236,17 +236,17 @@ const ApprovalBoardNode = ({ id, data, isConnectable, selected }) => {
   };
 
   return (
-    <div className="bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden w-full max-w-4xl">
+    <div className="bg-surface rounded-lg border border-line  overflow-hidden w-full max-w-4xl">
       {/* Sequence Number Badge - Top left corner */}
       {data.sequenceNumber && (
-        <div className="absolute -top-4 -left-4 z-20 w-8 h-8 bg-gradient-to-br from-green-500 to-emerald-600 text-white rounded-full flex items-center justify-center text-sm font-bold shadow-lg border-2 border-white hover:shadow-xl transition-shadow">
+        <div className="absolute -top-4 -left-4 z-20 w-8 h-8 bg-black text-white rounded-full flex items-center justify-center text-sm font-bold shadow-lg border-2 border-white hover:shadow-xl transition-shadow">
           {data.sequenceNumber}
         </div>
       )}
       <Handle type="target" position={Position.Top} />
       
       {/* Header */}
-      <div className="bg-indigo-600 text-white p-3 flex items-center justify-between">
+      <div className="bg-info text-white p-3 flex items-center justify-between">
         <div className="flex items-center space-x-2">
           <CheckCircle className="w-5 h-5" />
           <span className="font-medium">Approval Board</span>
@@ -257,28 +257,28 @@ const ApprovalBoardNode = ({ id, data, isConnectable, selected }) => {
               setIsImportant(!isImportant);
               await persistIsImportantLocal(!isImportant);
             }}
-            className={`px-2 py-1 rounded text-sm ${isImportant ? 'bg-yellow-400 text-white' : 'bg-white text-indigo-600 hover:bg-indigo-50'}`}
+            className={`px-2 py-1 rounded text-sm ${isImportant ? 'bg-warning text-white' : 'bg-surface text-info hover:bg-info/10'}`}
             title={isImportant ? 'Unmark as Important' : 'Mark as Important'}
           >
             {isImportant ? '★' : '☆'}
           </button>
           <button 
             onClick={() => setShowDeadlineInput(!showDeadlineInput)}
-            className="p-2 rounded bg-white text-indigo-600 hover:bg-indigo-50"
+            className="p-2 rounded bg-surface text-info hover:bg-info/10"
             title="Set Deadline"
           >
             <Clock className="w-4 h-4" />
           </button>
           <button 
             onClick={() => setShowAddModal(true)}
-            className="px-3 py-1 bg-white text-indigo-600 text-sm rounded hover:bg-indigo-50 flex items-center space-x-1"
+            className="px-3 py-1 bg-surface text-info text-sm rounded hover:bg-info/10 flex items-center space-x-1"
           >
             <Plus className="w-4 h-4" />
             <span>Add Task</span>
           </button>
           <button 
             onClick={() => setIsEditing(!isEditing)}
-            className={`p-2 rounded ${isEditing ? 'bg-indigo-700' : 'bg-indigo-500 hover:bg-indigo-600'}`}
+            className={`p-2 rounded ${isEditing ? 'bg-info' : 'bg-info hover:bg-info'}`}
             title={isEditing ? 'Editing Mode: On' : 'Click to edit'}
           >
             <MoreVertical className="w-4 h-4" />
@@ -288,7 +288,7 @@ const ApprovalBoardNode = ({ id, data, isConnectable, selected }) => {
 
       {/* Deadline Input */}
       {showDeadlineInput && (
-        <div className="px-3 py-2 bg-indigo-50 border-b border-indigo-100 flex gap-1">
+        <div className="px-3 py-2 bg-info/10 border-b border-info/10 flex gap-1">
           <input
             type="datetime-local"
             className="border rounded px-2 py-1 text-xs flex-1"
@@ -297,7 +297,7 @@ const ApprovalBoardNode = ({ id, data, isConnectable, selected }) => {
             disabled={saving}
           />
           <button
-            className="px-2 py-1 text-xs bg-indigo-600 text-white rounded"
+            className="px-2 py-1 text-xs bg-info text-white rounded"
             onClick={async () => {
               setShowDeadlineInput(false);
               await persistDeadlineLocal(deadline);
@@ -311,7 +311,7 @@ const ApprovalBoardNode = ({ id, data, isConnectable, selected }) => {
 
       {/* Deadline Display */}
       {deadline && timeLeft && !timeLeft.isExpired && (
-        <div className="px-3 py-1 bg-indigo-50 border-b border-indigo-100 text-xs text-indigo-600">
+        <div className="px-3 py-1 bg-info/10 border-b border-info/10 text-xs text-info">
           ⏱ {formatTimeLeft(timeLeft)}
         </div>
       )}
@@ -324,11 +324,11 @@ const ApprovalBoardNode = ({ id, data, isConnectable, selected }) => {
           
           return (
             <div key={column.id} className="flex-1 min-w-64">
-              <div className="bg-gray-50 rounded-lg p-3 h-full">
+              <div className="bg-canvas rounded-lg p-3 h-full">
                 <div className="flex items-center justify-between mb-3">
                   <div className="flex items-center space-x-2">
                     <span className="font-medium text-sm">{column.title}</span>
-                    <span className="bg-white text-gray-600 text-xs px-2 py-0.5 rounded-full">
+                    <span className="bg-surface text-dim text-xs px-2 py-0.5 rounded-full">
                       {itemCount}
                     </span>
                   </div>
@@ -338,7 +338,7 @@ const ApprovalBoardNode = ({ id, data, isConnectable, selected }) => {
                   {column.items.map((item) => (
                     <div 
                       key={item.id} 
-                      className="bg-white p-3 rounded border shadow-sm hover:shadow-md transition-shadow cursor-pointer relative group"
+                      className="bg-surface p-3 rounded border   transition-shadow cursor-pointer relative group"
                       onClick={() => showDetails(item, columnId)}
                     >
                       {isEditing && (
@@ -346,14 +346,14 @@ const ApprovalBoardNode = ({ id, data, isConnectable, selected }) => {
                           <div className="relative">
                             <button
                               onClick={(e) => toggleMoveMenu(e, item.id)}
-                              className="p-1 text-gray-400 hover:text-indigo-600 rounded-full hover:bg-indigo-50"
+                              className="p-1 text-dim hover:text-info rounded-full hover:bg-info/10"
                               title="Move to section"
                             >
                               <ChevronRight className="w-4 h-4" />
                             </button>
                             
                             {showMoveMenu.show && showMoveMenu.itemId === item.id && (
-                              <div className="absolute right-0 mt-1 w-40 bg-white rounded-md shadow-lg z-10 border">
+                              <div className="absolute right-0 mt-1 w-40 bg-surface rounded-md shadow-lg z-10 border">
                                 {columnOrder
                                   .filter(id => id !== columnId) // Don't show current column
                                   .map((targetColumnId) => {
@@ -365,7 +365,7 @@ const ApprovalBoardNode = ({ id, data, isConnectable, selected }) => {
                                           e.stopPropagation();
                                           moveItem(item.id, columnId, targetColumnId);
                                         }}
-                                        className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-indigo-50 flex items-center justify-between"
+                                        className="w-full text-left px-4 py-2 text-sm text-ink hover:bg-info/10 flex items-center justify-between"
                                       >
                                         {targetColumn.title}
                                         {getStatusIcon(targetColumnId)}
@@ -381,7 +381,7 @@ const ApprovalBoardNode = ({ id, data, isConnectable, selected }) => {
                               e.stopPropagation();
                               handleDeleteItem(columnId, item.id);
                             }}
-                            className="p-1 text-red-400 hover:text-red-600 rounded-full hover:bg-red-50"
+                            className="p-1 text-danger hover:text-danger rounded-full hover:bg-danger/10"
                             title="Delete item"
                           >
                             <X className="w-4 h-4" />
@@ -395,32 +395,32 @@ const ApprovalBoardNode = ({ id, data, isConnectable, selected }) => {
                       </div>
                       
                       {item.description && (
-                        <p className="mt-1 text-xs text-gray-500 line-clamp-2">
+                        <p className="mt-1 text-xs text-dim line-clamp-2">
                           {item.description}
                         </p>
                       )}
                       
-                      <div className="mt-2 flex items-center justify-between text-xs text-gray-500">
+                      <div className="mt-2 flex items-center justify-between text-xs text-dim">
                         <div className="flex items-center space-x-1 truncate">
-                          <User className="w-3 h-3 flex-shrink-0 text-gray-400" />
+                          <User className="w-3 h-3 flex-shrink-0 text-dim" />
                           <span className="truncate">{item.assignedTo}</span>
                         </div>
                         
                         {item.dueDate && (
-                          <div className="text-xs text-amber-600 bg-amber-50 px-1.5 py-0.5 rounded">
+                          <div className="text-xs text-warning bg-warning/10 px-1.5 py-0.5 rounded">
                             Due: {new Date(item.dueDate).toLocaleDateString()}
                           </div>
                         )}
                       </div>
                       
                       {item.submittedDate && (
-                        <div className="mt-1 text-xs text-gray-400">
+                        <div className="mt-1 text-xs text-dim">
                           Submitted: {new Date(item.submittedDate).toLocaleDateString()}
                         </div>
                       )}
                       
                       {item.approvedDate && (
-                        <div className="mt-1 text-xs text-green-500 flex items-center">
+                        <div className="mt-1 text-xs text-success flex items-center">
                           <Check className="w-3 h-3 mr-1" />
                           Approved: {new Date(item.approvedDate).toLocaleDateString()}
                         </div>
@@ -429,7 +429,7 @@ const ApprovalBoardNode = ({ id, data, isConnectable, selected }) => {
                   ))}
                   
                   {column.items.length === 0 && (
-                    <div className="text-center text-gray-400 text-sm py-4">
+                    <div className="text-center text-dim text-sm py-4">
                       No items in this section
                     </div>
                   )}
@@ -445,68 +445,68 @@ const ApprovalBoardNode = ({ id, data, isConnectable, selected }) => {
       {/* Add Task Modal */}
       {showAddModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg w-full max-w-md">
+          <div className="bg-surface rounded-lg w-full max-w-md">
             <div className="p-4 border-b">
               <h3 className="text-lg font-medium">Add New Task</h3>
             </div>
             
             <div className="p-4 space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Title *</label>
+                <label className="block text-sm font-medium text-ink mb-1">Title *</label>
                 <input
                   type="text"
                   value={newItem.title}
                   onChange={(e) => setNewItem({ ...newItem, title: e.target.value })}
                   placeholder="Task title"
-                  className="w-full p-2 border rounded focus:ring-2 focus:ring-indigo-200 focus:border-indigo-300 outline-none"
+                  className="w-full p-2 border rounded focus:ring-2 focus:ring-info/20 focus:border-info/30 outline-none"
                 />
               </div>
               
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
+                <label className="block text-sm font-medium text-ink mb-1">Description</label>
                 <textarea
                   value={newItem.description}
                   onChange={(e) => setNewItem({ ...newItem, description: e.target.value })}
                   placeholder="Task description"
                   rows={3}
-                  className="w-full p-2 border rounded focus:ring-2 focus:ring-indigo-200 focus:border-indigo-300 outline-none"
+                  className="w-full p-2 border rounded focus:ring-2 focus:ring-info/20 focus:border-info/30 outline-none"
                 />
               </div>
               
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Assigned To</label>
+                  <label className="block text-sm font-medium text-ink mb-1">Assigned To</label>
                   <input
                     type="email"
                     value={newItem.assignedTo}
                     onChange={(e) => setNewItem({ ...newItem, assignedTo: e.target.value })}
                     placeholder="Email address"
-                    className="w-full p-2 border rounded focus:ring-2 focus:ring-indigo-200 focus:border-indigo-300 outline-none"
+                    className="w-full p-2 border rounded focus:ring-2 focus:ring-info/20 focus:border-info/30 outline-none"
                   />
                 </div>
                 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Due Date</label>
+                  <label className="block text-sm font-medium text-ink mb-1">Due Date</label>
                   <input
                     type="date"
                     value={newItem.dueDate}
                     onChange={(e) => setNewItem({ ...newItem, dueDate: e.target.value })}
-                    className="w-full p-2 border rounded focus:ring-2 focus:ring-indigo-200 focus:border-indigo-300 outline-none"
+                    className="w-full p-2 border rounded focus:ring-2 focus:ring-info/20 focus:border-info/30 outline-none"
                   />
                 </div>
               </div>
             </div>
             
-            <div className="p-4 bg-gray-50 flex justify-end space-x-2 rounded-b-lg">
+            <div className="p-4 bg-canvas flex justify-end space-x-2 rounded-b-lg">
               <button
                 onClick={closeModals}
-                className="px-4 py-2 text-sm text-gray-600 hover:bg-gray-100 rounded"
+                className="px-4 py-2 text-sm text-dim hover:bg-surface-hover rounded"
               >
                 Cancel
               </button>
               <button
                 onClick={handleAddItem}
-                className="px-4 py-2 bg-indigo-600 text-white text-sm rounded hover:bg-indigo-700 disabled:opacity-50"
+                className="px-4 py-2 bg-info text-white text-sm rounded hover:bg-info disabled:opacity-50"
                 disabled={!newItem.title}
               >
                 Add Task
@@ -519,12 +519,12 @@ const ApprovalBoardNode = ({ id, data, isConnectable, selected }) => {
       {/* Task Details Modal */}
       {showItemDetails.show && showItemDetails.item && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg w-full max-w-2xl max-h-[90vh] flex flex-col">
+          <div className="bg-surface rounded-lg w-full max-w-2xl max-h-[90vh] flex flex-col">
             <div className="p-4 border-b flex justify-between items-center">
               <h3 className="text-lg font-medium">{showItemDetails.item.title}</h3>
               <button 
                 onClick={closeModals}
-                className="text-gray-400 hover:text-gray-600"
+                className="text-dim hover:text-dim"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -533,15 +533,15 @@ const ApprovalBoardNode = ({ id, data, isConnectable, selected }) => {
             <div className="p-6 overflow-y-auto">
               <div className="space-y-6">
                 <div>
-                  <h4 className="text-sm font-medium text-gray-500 mb-2">DESCRIPTION</h4>
-                  <p className="text-gray-800">
+                  <h4 className="text-sm font-medium text-dim mb-2">DESCRIPTION</h4>
+                  <p className="text-ink">
                     {showItemDetails.item.description || 'No description provided.'}
                   </p>
                 </div>
                 
                 <div className="grid grid-cols-2 gap-6">
                   <div>
-                    <h4 className="text-sm font-medium text-gray-500 mb-2">STATUS</h4>
+                    <h4 className="text-sm font-medium text-dim mb-2">STATUS</h4>
                     <div className="flex items-center">
                       {getStatusIcon(showItemDetails.item.status)}
                       <span className="ml-2 capitalize">{showItemDetails.item.status}</span>
@@ -549,16 +549,16 @@ const ApprovalBoardNode = ({ id, data, isConnectable, selected }) => {
                   </div>
                   
                   <div>
-                    <h4 className="text-sm font-medium text-gray-500 mb-2">ASSIGNED TO</h4>
+                    <h4 className="text-sm font-medium text-dim mb-2">ASSIGNED TO</h4>
                     <div className="flex items-center">
-                      <User className="w-4 h-4 text-gray-400 mr-2" />
+                      <User className="w-4 h-4 text-dim mr-2" />
                       <span>{showItemDetails.item.assignedTo}</span>
                     </div>
                   </div>
                   
                   {showItemDetails.item.submittedDate && (
                     <div>
-                      <h4 className="text-sm font-medium text-gray-500 mb-2">SUBMITTED</h4>
+                      <h4 className="text-sm font-medium text-dim mb-2">SUBMITTED</h4>
                       <div>
                         {new Date(showItemDetails.item.submittedDate).toLocaleDateString()}
                       </div>
@@ -567,8 +567,8 @@ const ApprovalBoardNode = ({ id, data, isConnectable, selected }) => {
                   
                   {showItemDetails.item.dueDate && (
                     <div>
-                      <h4 className="text-sm font-medium text-gray-500 mb-2">DUE DATE</h4>
-                      <div className={new Date(showItemDetails.item.dueDate) < new Date() ? 'text-red-500' : ''}>
+                      <h4 className="text-sm font-medium text-dim mb-2">DUE DATE</h4>
+                      <div className={new Date(showItemDetails.item.dueDate) < new Date() ? 'text-danger' : ''}>
                         {new Date(showItemDetails.item.dueDate).toLocaleDateString()}
                       </div>
                     </div>
@@ -577,7 +577,7 @@ const ApprovalBoardNode = ({ id, data, isConnectable, selected }) => {
                 
                 {isEditing && (
                   <div>
-                    <h4 className="text-sm font-medium text-gray-500 mb-3">ACTIONS</h4>
+                    <h4 className="text-sm font-medium text-dim mb-3">ACTIONS</h4>
                     <div className="flex flex-wrap gap-2">
                       {columnOrder
                         .filter(id => id !== showItemDetails.item.status) // Don't show current status
@@ -588,7 +588,7 @@ const ApprovalBoardNode = ({ id, data, isConnectable, selected }) => {
                               moveItem(showItemDetails.item.id, showItemDetails.item.status, status);
                               closeModals();
                             }}
-                            className="px-3 py-1.5 text-xs bg-indigo-50 text-indigo-600 rounded-md hover:bg-indigo-100 flex items-center"
+                            className="px-3 py-1.5 text-xs bg-info/10 text-info rounded-md hover:bg-info/10 flex items-center"
                           >
                             Move to {status.charAt(0).toUpperCase() + status.slice(1)}
                             <ChevronRight className="w-3.5 h-3.5 ml-1" />
@@ -602,7 +602,7 @@ const ApprovalBoardNode = ({ id, data, isConnectable, selected }) => {
                             closeModals();
                           }
                         }}
-                        className="px-3 py-1.5 text-xs bg-red-50 text-red-600 rounded-md hover:bg-red-100 flex items-center"
+                        className="px-3 py-1.5 text-xs bg-danger/10 text-danger rounded-md hover:bg-danger/10 flex items-center"
                       >
                         <Trash2 className="w-3.5 h-3.5 mr-1" />
                         Delete
@@ -613,10 +613,10 @@ const ApprovalBoardNode = ({ id, data, isConnectable, selected }) => {
               </div>
             </div>
             
-            <div className="p-4 bg-gray-50 border-t flex justify-end">
+            <div className="p-4 bg-canvas border-t flex justify-end">
               <button
                 onClick={closeModals}
-                className="px-4 py-2 bg-indigo-600 text-white text-sm rounded hover:bg-indigo-700"
+                className="px-4 py-2 bg-info text-white text-sm rounded hover:bg-info"
               >
                 Close
               </button>

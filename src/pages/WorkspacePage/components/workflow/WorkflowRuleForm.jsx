@@ -22,8 +22,8 @@ const DAY_OPTIONS = [
   { value: 0, label: 'Sunday' }
 ];
 
-const inputClass = 'mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm';
-const labelClass = 'text-xs font-medium text-gray-600';
+const inputClass = 'mt-1 w-full rounded-lg border border-line px-3 py-2 text-sm';
+const labelClass = 'text-xs font-medium text-dim';
 
 const WorkflowRuleForm = ({ initialValue, onCancel, onSave }) => {
   const initialType = initialValue?.type || 'status-change';
@@ -104,17 +104,17 @@ const WorkflowRuleForm = ({ initialValue, onCancel, onSave }) => {
         onChange={(e) => updateRule('nodeId', e.target.value)}
         placeholder="e.g. execution-request_123"
       />
-      <span className="block mt-1 text-[11px] font-normal text-gray-500">
+      <span className="block mt-1 text-[11px] font-normal text-dim">
         Leave blank to run for every element on the canvas.
       </span>
     </label>
   );
 
   return (
-    <div className="rounded-xl border border-blue-200 bg-blue-50/40 p-4 space-y-4">
+    <div className="rounded-xl border border-info/20 bg-info p-4 space-y-4">
       <div className="flex items-center justify-between">
-        <h4 className="text-sm font-semibold text-gray-900">{title}</h4>
-        {typeMeta && <span className="text-[11px] text-gray-500">{typeMeta.description}</span>}
+        <h4 className="text-sm font-semibold text-ink">{title}</h4>
+        {typeMeta && <span className="text-[11px] text-dim">{typeMeta.description}</span>}
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
@@ -127,13 +127,13 @@ const WorkflowRuleForm = ({ initialValue, onCancel, onSave }) => {
               type="button"
               onClick={() => handleTypeChange(item.value)}
               className={`flex items-start gap-2.5 rounded-lg border p-2.5 text-left transition-colors ${
-                selected ? `${item.cardClass} ring-1 ring-current` : 'border-gray-200 bg-white hover:bg-gray-50 text-gray-700'
+                selected ? `${item.cardClass} ring-1 ring-current` : 'border-line bg-surface hover:bg-canvas text-ink'
               }`}
             >
               <Icon className="h-4 w-4 mt-0.5 shrink-0" />
               <span>
                 <span className="block text-sm font-medium">{item.label}</span>
-                <span className={`block text-[11px] mt-0.5 ${selected ? 'opacity-80' : 'text-gray-500'}`}>
+                <span className={`block text-[11px] mt-0.5 ${selected ? 'opacity-80' : 'text-dim'}`}>
                   {item.description}
                 </span>
               </span>
@@ -247,7 +247,7 @@ const WorkflowRuleForm = ({ initialValue, onCancel, onSave }) => {
           <button
             type="button"
             onClick={() => setShowCron((prev) => !prev)}
-            className="inline-flex items-center gap-1 text-xs text-gray-500 hover:text-gray-700"
+            className="inline-flex items-center gap-1 text-xs text-dim hover:text-ink"
           >
             <ChevronDown className={`h-3.5 w-3.5 transition-transform ${showCron ? 'rotate-180' : ''}`} />
             Advanced — custom cron schedule
@@ -261,7 +261,7 @@ const WorkflowRuleForm = ({ initialValue, onCancel, onSave }) => {
                 onChange={(e) => updateRule('cronExpression', e.target.value)}
                 placeholder="0 9 * * *"
               />
-              <span className="block mt-1 text-[11px] font-normal text-gray-500">
+              <span className="block mt-1 text-[11px] font-normal text-dim">
                 If filled in, this overrides the simple schedule above.
               </span>
             </label>
@@ -275,7 +275,7 @@ const WorkflowRuleForm = ({ initialValue, onCancel, onSave }) => {
             <label className={labelClass}>
               Match
               <select
-                className="ml-2 rounded-lg border border-gray-300 px-2 py-1 text-sm font-normal"
+                className="ml-2 rounded-lg border border-line px-2 py-1 text-sm font-normal"
                 value={rule.operator || 'AND'}
                 onChange={(e) => updateRule('operator', e.target.value)}
               >
@@ -286,7 +286,7 @@ const WorkflowRuleForm = ({ initialValue, onCancel, onSave }) => {
             <button
               type="button"
               onClick={addOperand}
-              className="inline-flex items-center gap-1 text-sm px-2 py-1 rounded-md bg-blue-50 text-blue-700 border border-blue-200"
+              className="inline-flex items-center gap-1 text-sm px-2 py-1 rounded-md bg-info/10 text-info border border-info/20"
             >
               <Plus className="h-3.5 w-3.5" /> Add condition
             </button>
@@ -329,7 +329,7 @@ const WorkflowRuleForm = ({ initialValue, onCancel, onSave }) => {
               <button
                 type="button"
                 onClick={() => removeOperand(index)}
-                className="col-span-1 h-10 rounded-lg border border-red-200 text-red-600 hover:bg-red-50 flex items-center justify-center"
+                className="col-span-1 h-10 rounded-lg border border-danger/20 text-danger hover:bg-danger/10 flex items-center justify-center"
                 title="Remove condition"
               >
                 <Trash2 className="h-4 w-4" />
@@ -350,26 +350,26 @@ const WorkflowRuleForm = ({ initialValue, onCancel, onSave }) => {
               placeholder="e.g. erp-system"
             />
           </label>
-          <p className="text-[11px] text-gray-500">
+          <p className="text-[11px] text-dim">
             After you save this workflow, its webhook URL and secret appear under Advanced → Webhooks.
           </p>
         </div>
       )}
 
-      {error && <p className="text-sm text-red-600">{error}</p>}
+      {error && <p className="text-sm text-danger">{error}</p>}
 
       <div className="flex justify-end gap-2 pt-1">
         <button
           type="button"
           onClick={onCancel}
-          className="px-3 py-2 rounded-lg text-sm border border-gray-300 text-gray-700 hover:bg-gray-50 bg-white"
+          className="px-3 py-2 rounded-lg text-sm border border-line text-ink hover:bg-canvas bg-surface"
         >
           Cancel
         </button>
         <button
           type="button"
           onClick={handleSave}
-          className="px-3 py-2 rounded-lg text-sm bg-blue-600 text-white hover:bg-blue-700"
+          className="px-3 py-2 rounded-lg text-sm bg-info text-white hover:bg-info"
         >
           {initialValue ? 'Save changes' : 'Add this "when"'}
         </button>

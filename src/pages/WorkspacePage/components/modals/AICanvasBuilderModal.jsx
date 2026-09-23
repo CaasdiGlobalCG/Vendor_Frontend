@@ -90,16 +90,16 @@ const AICanvasBuilderModal = ({ isOpen, onClose, canvasElements = [] }) => {
 
   return (
     <div className="fixed inset-0 z-[110] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[85vh] flex flex-col overflow-hidden">
+      <div className="bg-surface rounded-2xl shadow-2xl w-full max-w-2xl max-h-[85vh] flex flex-col overflow-hidden">
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 bg-gradient-to-r from-violet-50 to-blue-50">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-line bg-black">
           <div className="flex items-center gap-2.5">
-            <div className="p-2 bg-violet-600 rounded-xl">
-              <Sparkles className="w-4 h-4 text-white" />
+            <div className="p-2 bg-cta rounded-xl">
+              <Sparkles className="w-4 h-4 text-cta-foreground" />
             </div>
             <div>
-              <h2 className="text-base font-semibold text-gray-900">Atlas</h2>
-              <p className="text-xs text-gray-500">AI canvas agent — describe what you're working on and Atlas builds it</p>
+              <h2 className="text-base font-semibold text-ink">Atlas</h2>
+              <p className="text-xs text-dim">AI canvas agent — describe what you're working on and Atlas builds it</p>
             </div>
           </div>
           <button
@@ -107,7 +107,7 @@ const AICanvasBuilderModal = ({ isOpen, onClose, canvasElements = [] }) => {
             disabled={stage === 'generating'}
             className="p-1.5 hover:bg-white/70 rounded-lg transition-colors disabled:opacity-40"
           >
-            <X className="w-5 h-5 text-gray-500" />
+            <X className="w-5 h-5 text-dim" />
           </button>
         </div>
 
@@ -115,7 +115,7 @@ const AICanvasBuilderModal = ({ isOpen, onClose, canvasElements = [] }) => {
         <div className="flex-1 overflow-y-auto px-6 py-5">
           {(stage === 'prompt' || stage === 'generating') && (
             <div>
-              <label className="block text-sm font-medium text-gray-800 mb-2">
+              <label className="block text-sm font-medium text-ink mb-2">
                 What are you working on?
               </label>
               <textarea
@@ -124,12 +124,12 @@ const AICanvasBuilderModal = ({ isOpen, onClose, canvasElements = [] }) => {
                 placeholder="e.g. Vendor submits quotation → PM reviews → approves → invoice is generated…"
                 rows={4}
                 disabled={stage === 'generating'}
-                className="w-full px-3.5 py-3 text-sm border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-violet-500 resize-none disabled:bg-gray-50"
+                className="w-full px-3.5 py-3 text-sm border border-line rounded-xl focus:outline-none focus:ring-2 focus:ring-ink focus:border-line resize-none disabled:bg-canvas"
                 autoFocus
               />
 
               <div className="mt-3">
-                <div className="text-[11px] font-semibold text-gray-400 uppercase tracking-wide mb-1.5">
+                <div className="text-[11px] font-semibold text-dim uppercase tracking-wide mb-1.5">
                   Try an example
                 </div>
                 <div className="flex flex-wrap gap-1.5">
@@ -138,7 +138,7 @@ const AICanvasBuilderModal = ({ isOpen, onClose, canvasElements = [] }) => {
                       key={ex}
                       onClick={() => setPrompt(ex)}
                       disabled={stage === 'generating'}
-                      className="text-[11px] text-gray-600 bg-gray-100 hover:bg-violet-100 hover:text-violet-700 rounded-full px-3 py-1.5 transition-colors text-left"
+                      className="text-[11px] text-dim bg-surface-hover hover:bg-surface-hover hover:text-ink rounded-full px-3 py-1.5 transition-colors text-left"
                     >
                       {ex}
                     </button>
@@ -147,7 +147,7 @@ const AICanvasBuilderModal = ({ isOpen, onClose, canvasElements = [] }) => {
               </div>
 
               {stage === 'generating' && (
-                <div className="mt-5 flex items-center gap-2.5 text-sm text-violet-700">
+                <div className="mt-5 flex items-center gap-2.5 text-sm text-ink">
                   <Loader2 className="w-4 h-4 animate-spin" />
                   <span>AI is designing your canvas…</span>
                 </div>
@@ -157,22 +157,22 @@ const AICanvasBuilderModal = ({ isOpen, onClose, canvasElements = [] }) => {
 
           {stage === 'error' && (
             <div className="text-center py-8">
-              <div className="inline-flex p-3 bg-red-50 rounded-full mb-3">
-                <AlertTriangle className="w-6 h-6 text-red-500" />
+              <div className="inline-flex p-3 bg-danger/10 rounded-full mb-3">
+                <AlertTriangle className="w-6 h-6 text-danger" />
               </div>
-              <p className="text-sm text-gray-800 font-medium">Generation failed</p>
-              <p className="text-xs text-gray-500 mt-1 max-w-md mx-auto">{error}</p>
+              <p className="text-sm text-ink font-medium">Generation failed</p>
+              <p className="text-xs text-dim mt-1 max-w-md mx-auto">{error}</p>
             </div>
           )}
         </div>
 
         {/* Footer */}
-        <div className="px-6 py-4 border-t border-gray-200 flex items-center justify-end bg-gray-50">
+        <div className="px-6 py-4 border-t border-line flex items-center justify-end bg-canvas">
           <div className="flex items-center gap-2">
             <button
               onClick={onClose}
               disabled={stage === 'generating'}
-              className="px-4 py-2 text-sm font-medium text-gray-600 hover:bg-gray-200 rounded-lg transition-colors disabled:opacity-40"
+              className="px-4 py-2 text-sm font-medium text-dim hover:bg-surface-hover rounded-lg transition-colors disabled:opacity-40"
             >
               Cancel
             </button>
@@ -180,7 +180,7 @@ const AICanvasBuilderModal = ({ isOpen, onClose, canvasElements = [] }) => {
               <button
                 onClick={generate}
                 disabled={!prompt.trim()}
-                className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-violet-600 hover:bg-violet-700 rounded-lg transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-cta-foreground bg-cta hover:bg-cta rounded-lg transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
               >
                 <Wand2 className="w-4 h-4" />
                 Generate
@@ -189,7 +189,7 @@ const AICanvasBuilderModal = ({ isOpen, onClose, canvasElements = [] }) => {
             {stage === 'error' && (
               <button
                 onClick={() => setStage('prompt')}
-                className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-violet-600 hover:bg-violet-700 rounded-lg transition-colors"
+                className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-cta-foreground bg-cta hover:bg-cta rounded-lg transition-colors"
               >
                 Try again
               </button>

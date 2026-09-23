@@ -235,30 +235,30 @@ const TaskSubtasksView = ({
     <div className="h-full min-h-0 px-4 py-4 sm:px-5 lg:px-6">
       {/* Task Header
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-800 mb-2">{selectedTask.name}</h1>
-        <p className="text-gray-600">Manage subtasks for {selectedTask.name}</p>
+        <h1 className="text-3xl font-bold text-ink mb-2">{selectedTask.name}</h1>
+        <p className="text-dim">Manage subtasks for {selectedTask.name}</p>
       </div> */}
 
       {/* Subtasks Section */}
-      <div className="mx-auto flex h-full min-h-0 w-full max-w-5xl flex-col overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
+      <div className="mx-auto flex h-full min-h-0 w-full max-w-5xl flex-col overflow-hidden rounded-2xl border border-line bg-surface ">
         {/* Subtasks Header */}
-        <div className="flex items-center justify-between border-b border-gray-200 px-4 py-3 sm:px-5">
+        <div className="flex items-center justify-between border-b border-line px-4 py-3 sm:px-5">
           <div>
-          <h3 className="text-sm font-semibold text-gray-800">Subtasks</h3>
-          <p className="text-xs text-gray-600 mt-0.5">
+          <h3 className="text-sm font-semibold text-ink">Subtasks</h3>
+          <p className="text-xs text-dim mt-0.5">
               {selectedTask.subtasks?.length || 0} subtask{selectedTask.subtasks?.length !== 1 ? 's' : ''}
             </p>
           </div>
           <button
             onClick={onShowAddSubtaskModal}
-            className="flex items-center space-x-1.5 rounded-md bg-blue-600 px-3 py-1.5 text-xs text-white shadow-sm transition-colors hover:bg-blue-700 sm:text-sm"
+            className="flex items-center space-x-1.5 rounded-md bg-info px-3 py-1.5 text-xs text-white  transition-colors hover:bg-info sm:text-sm"
           >
             <Plus className="w-3 h-3" />
             <span className="font-medium">Add Subtask</span>
           </button>
         </div>
 
-        <div className="flex min-w-0 flex-col gap-2 border-b border-gray-100 bg-gray-50/70 px-4 py-2.5 sm:px-5 xl:flex-row xl:items-center">
+        <div className="flex min-w-0 flex-col gap-2 border-b border-line bg-canvas px-4 py-2.5 sm:px-5 xl:flex-row xl:items-center">
           <input
             type="text"
             value={quickSubtaskTitle}
@@ -270,25 +270,25 @@ const TaskSubtasksView = ({
               }
             }}
             placeholder="Quick add subtask and press Enter"
-            className="h-9 min-w-0 w-full flex-1 rounded-lg border border-gray-200 px-3 text-xs focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
+            className="h-9 min-w-0 w-full flex-1 rounded-lg border border-line px-3 text-xs focus:border-info focus:ring-2 focus:ring-info"
             disabled={isQuickAddingSubtask}
           />
           <button
             type="button"
             onClick={handleQuickAddSubtask}
             disabled={isQuickAddingSubtask || !quickSubtaskTitle.trim()}
-            className="h-9 w-full shrink-0 rounded-lg bg-blue-600 px-3 text-xs font-medium text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50 xl:w-auto"
+            className="h-9 w-full shrink-0 rounded-lg bg-info px-3 text-xs font-medium text-white hover:bg-info disabled:cursor-not-allowed disabled:opacity-50 xl:w-auto"
           >
             {isQuickAddingSubtask ? 'Adding...' : 'Add'}
           </button>
         </div>
 
-        <div className="flex flex-wrap items-center justify-between gap-2 border-b border-gray-100 bg-white px-4 py-2 sm:px-5">
+        <div className="flex flex-wrap items-center justify-between gap-2 border-b border-line bg-surface px-4 py-2 sm:px-5">
           <div className="flex flex-wrap items-center gap-2">
             <select
               value={densityMode}
               onChange={(e) => setDensityMode(e.target.value)}
-              className="h-7 rounded-md border border-gray-200 px-2 text-[11px] text-gray-700"
+              className="h-7 rounded-md border border-line px-2 text-[11px] text-ink"
               title="Density"
             >
               <option value="comfortable">Comfortable</option>
@@ -297,7 +297,7 @@ const TaskSubtasksView = ({
             <select
               value={sortMode}
               onChange={(e) => setSortMode(e.target.value)}
-              className="h-7 rounded-md border border-gray-200 px-2 text-[11px] text-gray-700"
+              className="h-7 rounded-md border border-line px-2 text-[11px] text-ink"
               title="Sort subtasks"
             >
               <option value="flow">Sort: Flow order</option>
@@ -307,7 +307,7 @@ const TaskSubtasksView = ({
             <select
               value={statusViewFilter}
               onChange={(e) => setStatusViewFilter(e.target.value)}
-              className="h-7 rounded-md border border-gray-200 px-2 text-[11px] text-gray-700"
+              className="h-7 rounded-md border border-line px-2 text-[11px] text-ink"
               title="Filter subtasks"
             >
               <option value="all">All subtasks</option>
@@ -324,7 +324,7 @@ const TaskSubtasksView = ({
               setSortMode('flow');
               setStatusViewFilter('all');
             }}
-            className="text-[11px] font-medium text-blue-600 hover:text-blue-700"
+            className="text-[11px] font-medium text-info hover:text-info"
           >
             Reset view
           </button>
@@ -332,10 +332,10 @@ const TaskSubtasksView = ({
 
         <div className="flex-1 min-h-0 overflow-y-auto">
         {sortedFlowSubtasks.length > 0 && (
-          <div className="border-b border-gray-100 bg-slate-50/70 px-4 pb-2.5 pt-3 sm:px-5">
+          <div className="border-b border-line bg-canvas px-4 pb-2.5 pt-3 sm:px-5">
             <div className="mb-2 flex items-center justify-between gap-3">
-              <h4 className="text-xs font-semibold uppercase tracking-wide text-slate-700">Subtask Flow</h4>
-              <span className="text-[11px] text-slate-500">Visual order for execution</span>
+              <h4 className="text-xs font-semibold uppercase tracking-wide text-ink">Subtask Flow</h4>
+              <span className="text-[11px] text-dim">Visual order for execution</span>
             </div>
 
             <div className="flex flex-wrap items-center gap-1.5">
@@ -345,19 +345,19 @@ const TaskSubtasksView = ({
                 <React.Fragment key={`${subtask.id}-flow`}>
                   <button
                     onClick={() => onSubtaskClick(subtask)}
-                    className={`group inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px] transition-colors ${blocked ? 'border-rose-200 bg-rose-50 text-rose-700 hover:bg-rose-100' : 'border-blue-200 bg-white text-blue-700 hover:bg-blue-50'}`}
+                    className={`group inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px] transition-colors ${blocked ? 'border-danger/20 bg-danger/10 text-danger hover:bg-danger/10' : 'border-info/20 bg-surface text-info hover:bg-info/10'}`}
                     title={getDependencyName(subtask) ? `Depends on ${getDependencyName(subtask)}` : 'No dependency'}
                   >
-                    <span className="inline-flex h-4.5 w-4.5 items-center justify-center rounded-full bg-blue-100 text-[9px] font-semibold text-blue-700">
+                    <span className="inline-flex h-4.5 w-4.5 items-center justify-center rounded-full bg-info/10 text-[9px] font-semibold text-info">
                       {Number.isFinite(Number(subtask.flowOrder)) ? Number(subtask.flowOrder) : index + 1}
                     </span>
                     <span className="max-w-[120px] truncate font-medium sm:max-w-[160px]">{subtask.name}</span>
                     {blocked && (
-                      <span className="rounded-full bg-rose-100 px-1.5 py-0.5 text-[9px] font-semibold text-rose-700">Blocked</span>
+                      <span className="rounded-full bg-danger/10 px-1.5 py-0.5 text-[9px] font-semibold text-danger">Blocked</span>
                     )}
                   </button>
                   {index < visibleSubtasks.length - 1 && (
-                    <ArrowRight className="h-3 w-3 text-slate-400" />
+                    <ArrowRight className="h-3 w-3 text-dim" />
                   )}
                 </React.Fragment>
               )})}
@@ -365,34 +365,34 @@ const TaskSubtasksView = ({
           </div>
         )}
 
-        <div className="border-b border-gray-100 bg-white px-4 py-2.5 sm:px-5">
+        <div className="border-b border-line bg-surface px-4 py-2.5 sm:px-5">
           <button
             type="button"
             onClick={() => setTimelineExpanded((prev) => !prev)}
             className="w-full flex items-center justify-between text-left"
           >
             <div>
-              <h4 className="text-xs font-semibold text-slate-700 uppercase tracking-wide">Activity Timeline</h4>
-              <p className="text-[11px] text-slate-500 mt-0.5">Updates, edits, approvals, comments for this task</p>
+              <h4 className="text-xs font-semibold text-ink uppercase tracking-wide">Activity Timeline</h4>
+              <p className="text-[11px] text-dim mt-0.5">Updates, edits, approvals, comments for this task</p>
             </div>
-            <span className="text-[11px] text-blue-600 font-medium">{timelineExpanded ? 'Hide' : 'Show'}</span>
+            <span className="text-[11px] text-info font-medium">{timelineExpanded ? 'Hide' : 'Show'}</span>
           </button>
 
           {timelineExpanded && (
             <div className="mt-2 max-h-32 space-y-1.5 overflow-y-auto">
               {timelineLoading && (
-                <p className="text-[11px] text-slate-500">Loading timeline...</p>
+                <p className="text-[11px] text-dim">Loading timeline...</p>
               )}
               {!timelineLoading && activityItems.length === 0 && (
-                <p className="text-[11px] text-slate-500">No activity yet for this task.</p>
+                <p className="text-[11px] text-dim">No activity yet for this task.</p>
               )}
               {!timelineLoading && activityItems.map((item) => (
-                <div key={item.activityId} className="rounded-md border border-slate-200 bg-slate-50 px-2.5 py-1.5">
+                <div key={item.activityId} className="rounded-md border border-line bg-canvas px-2.5 py-1.5">
                   <div className="flex items-center justify-between gap-2">
-                    <p className="text-[11px] font-medium text-slate-700 truncate">{formatTimelineAction(item)}</p>
-                    <span className="text-[10px] text-slate-500 shrink-0">{formatTimelineTime(item.timestamp || item.createdAt)}</span>
+                    <p className="text-[11px] font-medium text-ink truncate">{formatTimelineAction(item)}</p>
+                    <span className="text-[10px] text-dim shrink-0">{formatTimelineTime(item.timestamp || item.createdAt)}</span>
                   </div>
-                  <p className="text-[10px] text-slate-500 mt-0.5 truncate">
+                  <p className="text-[10px] text-dim mt-0.5 truncate">
                     {item.userName || 'User'}
                     {getTimelineSubtaskName(item) ? ` • ${getTimelineSubtaskName(item)}` : ''}
                     {item.targetType ? ` • ${item.targetType}` : ''}
@@ -413,17 +413,17 @@ const TaskSubtasksView = ({
                 return (
                 <div 
                   key={subtask.id} 
-                   className={`flex items-center justify-between gap-2 rounded-lg border transition-colors cursor-pointer ${densityMode === 'compact' ? 'p-1.5' : 'p-2'} ${isBlocked ? 'bg-rose-50 border-rose-200 hover:bg-rose-100' : 'bg-blue-50 border-blue-100 hover:bg-blue-100'}`}
+                   className={`flex items-center justify-between gap-2 rounded-lg border transition-colors cursor-pointer ${densityMode === 'compact' ? 'p-1.5' : 'p-2'} ${isBlocked ? 'bg-danger/10 border-danger/20 hover:bg-danger/10' : 'bg-info/10 border-info/10 hover:bg-info/10'}`}
                   onClick={() => onSubtaskClick(subtask)}
                 >
                   <div className="flex min-w-0 flex-1 items-center space-x-2">
-                  <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-blue-100">
+                  <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-info/10">
                       {subtask.status === 'completed' ? (
-                        <CheckSquare className="w-3.5 h-3.5 text-green-600" />
+                        <CheckSquare className="w-3.5 h-3.5 text-success" />
                       ) : subtask.status === 'in-progress' ? (
-                        <Clock className="w-4 h-4 text-blue-600" />
+                        <Clock className="w-4 h-4 text-info" />
                       ) : (
-                        <FileText className="w-3.5 h-3.5 text-blue-600" />
+                        <FileText className="w-3.5 h-3.5 text-info" />
                       )}
                     </div>
                     <div className="min-w-0">
@@ -444,35 +444,35 @@ const TaskSubtasksView = ({
                               cancelSubtaskRename();
                             }
                           }}
-                          className="rounded border border-blue-200 px-1.5 py-0.5 text-[12px] font-medium focus:ring-1 focus:ring-blue-400"
+                          className="rounded border border-info/20 px-1.5 py-0.5 text-[12px] font-medium focus:ring-1 focus:ring-info"
                         />
                       ) : (
-                        <h4 className="truncate text-[12px] font-medium text-gray-900">{subtask.name}</h4>
+                        <h4 className="truncate text-[12px] font-medium text-ink">{subtask.name}</h4>
                       )}
-                      <div className="mt-0.5 text-[10px] text-slate-500">
+                      <div className="mt-0.5 text-[10px] text-dim">
                         Step {Number.isFinite(Number(subtask.flowOrder)) ? Number(subtask.flowOrder) : index + 1}
                         {getDependencyName(subtask) ? ` • depends on ${getDependencyName(subtask)}` : ''}
                       </div>
                       <div className="mt-0.5 flex flex-wrap items-center gap-1.5">
                         <span className={`px-2 py-0.5 text-[10px] rounded-full ${
-                          subtask.status === 'completed' ? 'bg-green-100 text-green-800' :
-                          subtask.status === 'in-progress' ? 'bg-blue-100 text-blue-800' :
-                           'bg-orange-100 text-orange-700'
+                          subtask.status === 'completed' ? 'bg-success/10 text-success' :
+                          subtask.status === 'in-progress' ? 'bg-info/10 text-info' :
+                           'bg-warning/10 text-warning'
                         }`}>
                           {subtask.status === 'in-progress' ? 'In Progress' : 
                            subtask.status === 'completed' ? 'Completed' : 'Pending'}
                         </span>
                         {isBlocked && (
-                          <span className="px-2 py-0.5 text-[10px] rounded-full bg-rose-100 text-rose-700">
+                          <span className="px-2 py-0.5 text-[10px] rounded-full bg-danger/10 text-danger">
                             Blocked
                           </span>
                         )}
-                        <span className="text-[10px] text-gray-500">
+                        <span className="text-[10px] text-dim">
                           {subtask.assignedUsers} member{subtask.assignedUsers !== 1 ? 's' : ''}
                         </span>
                       </div>
                       {dependencyMeta && (
-                        <div className={`mt-1 rounded-md px-2 py-1 text-[10px] ${dependencyMeta.isBlocked ? 'bg-rose-100 text-rose-700' : 'bg-emerald-100 text-emerald-700'}`}>
+                        <div className={`mt-1 rounded-md px-2 py-1 text-[10px] ${dependencyMeta.isBlocked ? 'bg-danger/10 text-danger' : 'bg-surface-hover text-ink'}`}>
                           {dependencyMeta.isBlocked ? 'Blocked by' : 'Depends on'} {dependencyMeta.name} ({dependencyMeta.assignee}, {dependencyMeta.status})
                         </div>
                       )}
@@ -485,7 +485,7 @@ const TaskSubtasksView = ({
                       onClick={(e) => e.stopPropagation()}
                       onChange={(e) => handleInlineSubtaskUpdate(subtask, { priority: e.target.value })}
                       disabled={updatingSubtaskId === subtask.id}
-                      className="max-w-[82px] rounded border border-gray-200 bg-white px-1 py-0.5 text-[10px]"
+                      className="max-w-[82px] rounded border border-line bg-surface px-1 py-0.5 text-[10px]"
                       title="Set priority"
                     >
                       <option value="low">Low</option>
@@ -497,7 +497,7 @@ const TaskSubtasksView = ({
                       onClick={(e) => e.stopPropagation()}
                       onChange={(e) => handleInlineSubtaskUpdate(subtask, { assignedUserId: e.target.value || null })}
                       disabled={updatingSubtaskId === subtask.id}
-                      className="max-w-[100px] rounded border border-gray-200 bg-white px-1 py-0.5 text-[10px]"
+                      className="max-w-[100px] rounded border border-line bg-surface px-1 py-0.5 text-[10px]"
                       title="Assign member"
                     >
                       <option value="">Unassigned</option>
@@ -506,23 +506,23 @@ const TaskSubtasksView = ({
                       ))}
                     </select>
                     <button
-                      className="rounded p-1 hover:bg-gray-200"
+                      className="rounded p-1 hover:bg-surface-hover"
                       onClick={(e) => {
                         e.stopPropagation();
                         startSubtaskRename(subtask);
                       }}
                       title="Rename subtask"
                     >
-                      <Edit2 className="w-3.5 h-3.5 text-gray-500" />
+                      <Edit2 className="w-3.5 h-3.5 text-dim" />
                     </button>
-                    <button className="rounded p-1 hover:bg-gray-200">
-                    <MoreHorizontal className="w-3.5 h-3.5 text-gray-500" />
+                    <button className="rounded p-1 hover:bg-surface-hover">
+                    <MoreHorizontal className="w-3.5 h-3.5 text-dim" />
                     </button>
                     {updatingSubtaskId === subtask.id && (
-                      <Loader2 className="w-3.5 h-3.5 text-blue-500 animate-spin" title="Saving" />
+                      <Loader2 className="w-3.5 h-3.5 text-info animate-spin" title="Saving" />
                     )}
                     {updatingSubtaskId !== subtask.id && successSubtaskId === subtask.id && (
-                      <Check className="w-3.5 h-3.5 text-emerald-600" title="Saved" />
+                      <Check className="w-3.5 h-3.5 text-ink" title="Saved" />
                     )}
                   </div>
                 </div>
@@ -531,16 +531,16 @@ const TaskSubtasksView = ({
           ) : (
             /* Empty State */
             <div className="py-10 text-center">
-              <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Plus className="w-8 h-8 text-gray-400" />
+              <div className="w-16 h-16 bg-surface-hover rounded-full flex items-center justify-center mx-auto mb-4">
+                <Plus className="w-8 h-8 text-dim" />
               </div>
-              <h3 className="text-lg font-medium text-gray-900 mb-2">No subtasks yet</h3>
-              <p className="text-gray-500 mb-6 max-w-sm mx-auto">
+              <h3 className="text-lg font-medium text-ink mb-2">No subtasks yet</h3>
+              <p className="text-dim mb-6 max-w-sm mx-auto">
                 Break down "{selectedTask.name}" into smaller, manageable subtasks to track progress better.
               </p>
               <button
                 onClick={onShowAddSubtaskModal}
-                className="inline-flex items-center space-x-2 px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors shadow-sm"
+                className="inline-flex items-center space-x-2 px-6 py-3 bg-info hover:bg-info text-white rounded-lg transition-colors "
               >
                 <Plus className="w-5 h-5" />
                 <span>Create First Subtask</span>

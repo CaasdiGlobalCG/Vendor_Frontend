@@ -17,9 +17,9 @@ export default function WhatWeDoPage({ industryType, industryOverview, businessT
   ];
 
   return (
-    <div pageTitle="What We Do" className="bg-white relative overflow-hidden" style={{ minHeight: '1123px' }}>
+    <div pageTitle="What We Do" className="bg-surface relative overflow-hidden" style={{ minHeight: '1123px' }}>
       {/* ===== TOP HERO BAR ===== */}
-      <div className="relative h-[180px] bg-gray-900 overflow-hidden">
+      <div className="relative h-[180px] bg-cta overflow-hidden">
         {/* Geometric pattern */}
         <svg className="absolute inset-0 w-full h-full opacity-10" viewBox="0 0 800 180" preserveAspectRatio="none">
           <rect x="0" y="0" width="300" height="180" fill={accentColor} />
@@ -52,8 +52,8 @@ export default function WhatWeDoPage({ industryType, industryOverview, businessT
             <div className="flex gap-6">
               <div className="w-1 flex-shrink-0 rounded-full" style={{ backgroundColor: accentColor }} />
               <div>
-                <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-2">Industry Overview</p>
-                <p className="text-gray-600 text-sm leading-[1.8]">{industryOverview}</p>
+                <p className="text-[10px] font-bold uppercase tracking-widest text-dim mb-2">Industry Overview</p>
+                <p className="text-dim text-sm leading-[1.8]">{industryOverview}</p>
               </div>
             </div>
           </div>
@@ -83,13 +83,13 @@ export default function WhatWeDoPage({ industryType, industryOverview, businessT
           <div className="mb-8">
             <div className="flex items-center gap-3 mb-4">
               <Globe size={14} style={{ color: accentColor }} />
-              <p className="text-sm font-bold text-gray-900">Business Segments</p>
+              <p className="text-sm font-bold text-ink">Business Segments</p>
             </div>
             <div className="flex flex-wrap gap-2">
               {segmentList.map((seg, i) => (
-                <div key={i} className="flex items-center gap-2 px-4 py-2 rounded-sm border border-gray-100 bg-gray-50">
+                <div key={i} className="flex items-center gap-2 px-4 py-2 rounded-sm border border-line bg-canvas">
                   <div className="w-2 h-2 rounded-full" style={{ backgroundColor: accentColor }} />
-                  <span className="text-xs font-medium text-gray-700">
+                  <span className="text-xs font-medium text-ink">
                     {typeof seg === 'string' ? seg : seg?.name || seg?.title || `Segment ${i + 1}`}
                   </span>
                 </div>
@@ -103,20 +103,20 @@ export default function WhatWeDoPage({ industryType, industryOverview, businessT
           <div className="mb-6">
             <div className="flex items-center gap-3 mb-4">
               <Shield size={14} style={{ color: accentColor }} />
-              <p className="text-sm font-bold text-gray-900">Certifications & Compliance</p>
+              <p className="text-sm font-bold text-ink">Certifications & Compliance</p>
             </div>
             <div className="grid grid-cols-2 gap-3">
               {certList.map((cert, i) => (
-                <div key={i} className="flex items-center gap-3 p-4 rounded-sm bg-gray-50 border border-gray-100">
+                <div key={i} className="flex items-center gap-3 p-4 rounded-sm bg-canvas border border-line">
                   <div className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0"
                     style={{ backgroundColor: `${accentColor}15`, border: `1px solid ${accentColor}30` }}>
                     <Shield size={14} style={{ color: accentColor }} />
                   </div>
                   <div>
-                    <p className="text-xs font-bold text-gray-800">
+                    <p className="text-xs font-bold text-ink">
                       {typeof cert === 'string' ? cert : cert?.name || cert?.title || `Certificate ${i + 1}`}
                     </p>
-                    {cert?.issuer && <p className="text-[10px] text-gray-400">{cert.issuer}</p>}
+                    {cert?.issuer && <p className="text-[10px] text-dim">{cert.issuer}</p>}
                   </div>
                 </div>
               ))}
@@ -127,7 +127,7 @@ export default function WhatWeDoPage({ industryType, industryOverview, businessT
 
       {/* Bottom decorative strip */}
       <div className="absolute bottom-0 left-0 right-0 h-2 flex">
-        <div className="flex-1 bg-gray-900" />
+        <div className="flex-1 bg-cta" />
         <div className="w-32" style={{ backgroundColor: accentColor }} />
       </div>
     </div>

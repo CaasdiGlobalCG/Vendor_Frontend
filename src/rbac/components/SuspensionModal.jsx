@@ -56,22 +56,22 @@ export function SuspensionModal({ mode, memberEmail, onConfirm, onClose }) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-      <div className="bg-white rounded-xl shadow-xl w-full max-w-md mx-4">
-        <div className="px-6 pt-5 pb-3 border-b border-gray-100">
-          <h3 className="text-lg font-semibold text-gray-900">
+      <div className="bg-surface rounded-xl shadow-xl w-full max-w-md mx-4">
+        <div className="px-6 pt-5 pb-3 border-b border-line">
+          <h3 className="text-lg font-semibold text-ink">
             {isSuspend ? 'Suspend Team Member' : 'Unsuspend Team Member'}
           </h3>
-          <p className="text-sm text-gray-500 mt-1">
+          <p className="text-sm text-dim mt-1">
             {isSuspend ? 'Temporarily block access for ' : 'Restore access for '}
-            <span className="font-medium text-gray-700">{memberEmail}</span>
+            <span className="font-medium text-ink">{memberEmail}</span>
             .
           </p>
         </div>
 
         <form onSubmit={handleSubmit} className="px-6 py-4 space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Reason {isSuspend ? <span className="text-red-500">*</span> : <span className="text-gray-400">(optional)</span>}
+            <label className="block text-sm font-medium text-ink mb-1">
+              Reason {isSuspend ? <span className="text-danger">*</span> : <span className="text-dim">(optional)</span>}
             </label>
             <textarea
               value={reason}
@@ -79,18 +79,18 @@ export function SuspensionModal({ mode, memberEmail, onConfirm, onClose }) {
               placeholder={isSuspend ? 'Explain why this member is being suspended...' : 'Optional note for unsuspension...'}
               rows={3}
               maxLength={500}
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm
-                         focus:ring-2 focus:ring-teal-500 focus:border-teal-500 resize-none"
+              className="w-full border border-line rounded-lg px-3 py-2 text-sm
+                         focus:ring-2 focus:ring-ink focus:border-line resize-none"
               disabled={submitting}
               autoFocus
             />
-            <p className="text-xs text-gray-400 mt-1 text-right">{reason.length}/500</p>
+            <p className="text-xs text-dim mt-1 text-right">{reason.length}/500</p>
           </div>
 
           {isSuspend && (
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Suspension duration in days <span className="text-gray-400">(optional)</span>
+              <label className="block text-sm font-medium text-ink mb-1">
+                Suspension duration in days <span className="text-dim">(optional)</span>
               </label>
               <input
                 type="number"
@@ -99,15 +99,15 @@ export function SuspensionModal({ mode, memberEmail, onConfirm, onClose }) {
                 value={durationDays}
                 onChange={(e) => setDurationDays(e.target.value)}
                 placeholder="Leave empty for manual unsuspend"
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm
-                           focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
+                className="w-full border border-line rounded-lg px-3 py-2 text-sm
+                           focus:ring-2 focus:ring-ink focus:border-line"
                 disabled={submitting}
               />
             </div>
           )}
 
           {error && (
-            <p className="text-sm text-red-600 bg-red-50 rounded-lg px-3 py-2">{error}</p>
+            <p className="text-sm text-danger bg-danger/10 rounded-lg px-3 py-2">{error}</p>
           )}
 
           <div className="flex justify-end gap-3 pt-2">
@@ -115,8 +115,8 @@ export function SuspensionModal({ mode, memberEmail, onConfirm, onClose }) {
               type="button"
               onClick={onClose}
               disabled={submitting}
-              className="px-4 py-2 text-sm text-gray-600 hover:text-gray-800 font-medium rounded-lg
-                         hover:bg-gray-100 transition-colors"
+              className="px-4 py-2 text-sm text-dim hover:text-ink font-medium rounded-lg
+                         hover:bg-surface-hover transition-colors"
             >
               Cancel
             </button>
@@ -124,7 +124,7 @@ export function SuspensionModal({ mode, memberEmail, onConfirm, onClose }) {
               type="submit"
               disabled={submitting || (isSuspend && !reason.trim())}
               className="px-4 py-2 text-sm font-medium text-white rounded-lg transition-colors
-                         disabled:opacity-50 disabled:cursor-not-allowed bg-teal-600 hover:bg-teal-700"
+                         disabled:opacity-50 disabled:cursor-not-allowed bg-cta hover:bg-cta"
             >
               {submitting
                 ? (isSuspend ? 'Suspending...' : 'Unsuspending...')

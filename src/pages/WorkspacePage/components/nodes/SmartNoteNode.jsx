@@ -165,23 +165,23 @@ const SmartNoteNode = ({ id, data, isConnectable, selected }) => {
   if (isMinimized) {
     return (
       <div 
-        className="bg-yellow-50 border border-yellow-200 rounded-lg shadow-md overflow-hidden w-48"
+        className="bg-warning/10 border border-warning/20 rounded-lg  overflow-hidden w-48"
         style={{ position: 'absolute', left: position.x, top: position.y }}
       >
-        <div className="bg-yellow-100 px-3 py-2 flex justify-between items-center">
-          <span className="text-xs font-medium text-yellow-800 truncate">
+        <div className="bg-warning/10 px-3 py-2 flex justify-between items-center">
+          <span className="text-xs font-medium text-warning truncate">
             {content.substring(0, 20) || 'New Note...'}
           </span>
           <div className="flex space-x-1">
             <button 
               onClick={() => setIsMinimized(false)}
-              className="text-yellow-600 hover:text-yellow-800 p-1"
+              className="text-warning hover:text-warning p-1"
             >
               <Maximize2 size={14} />
             </button>
             <button 
               onClick={() => data.onDelete?.(data.id)}
-              className="text-yellow-600 hover:text-yellow-800 p-1"
+              className="text-warning hover:text-warning p-1"
             >
               <X size={14} />
             </button>
@@ -200,16 +200,16 @@ const SmartNoteNode = ({ id, data, isConnectable, selected }) => {
       defaultClassName="react-draggable"
     >
       <div 
-        className={`relative bg-yellow-50 border ${selected ? 'border-blue-400 shadow-lg' : 'border-yellow-200'} rounded-lg shadow-sm`}
+        className={`relative bg-warning/10 border ${selected ? 'border-info shadow-lg' : 'border-warning/20'} rounded-lg `}
         style={{ width: size.width, height: 'auto', minHeight: '150px' }}
       >
         {/* Header */}
         <div 
-          className="smart-note-handle bg-yellow-100 px-3 py-2 flex justify-between items-center cursor-move group"
+          className="smart-note-handle bg-warning/10 px-3 py-2 flex justify-between items-center cursor-move group"
         >
           <div className="flex items-center space-x-2">
-            <Sparkles size={16} className="text-yellow-600" />
-            <span className="text-sm font-medium text-yellow-800">Smart Note</span>
+            <Sparkles size={16} className="text-warning" />
+            <span className="text-sm font-medium text-warning">Smart Note</span>
           </div>
           <div className="flex space-x-1">
             <button 
@@ -217,28 +217,28 @@ const SmartNoteNode = ({ id, data, isConnectable, selected }) => {
                 setIsImportant(!isImportant);
                 await persistIsImportantLocal(!isImportant);
               }}
-              className={`px-1.5 py-1 rounded text-xs ${isImportant ? 'bg-yellow-400 text-white' : 'text-yellow-600 hover:text-yellow-800'}`}
+              className={`px-1.5 py-1 rounded text-xs ${isImportant ? 'bg-warning text-white' : 'text-warning hover:text-warning'}`}
               title={isImportant ? 'Unmark as Important' : 'Mark as Important'}
             >
               {isImportant ? '★' : '☆'}
             </button>
             <button 
               onClick={() => setShowDeadlineInput(!showDeadlineInput)}
-              className="text-yellow-600 hover:text-yellow-800 p-1"
+              className="text-warning hover:text-warning p-1"
               title="Set Deadline"
             >
               <Clock size={14} />
             </button>
             <button 
               onClick={() => setIsMinimized(true)}
-              className="text-yellow-600 hover:text-yellow-800 p-1"
+              className="text-warning hover:text-warning p-1"
               title="Minimize"
             >
               <Minimize2 size={14} />
             </button>
             <button 
               onClick={() => data.onDelete?.(data.id)}
-              className="text-yellow-600 hover:text-yellow-800 p-1"
+              className="text-warning hover:text-warning p-1"
               title="Delete"
             >
               <X size={14} />
@@ -248,7 +248,7 @@ const SmartNoteNode = ({ id, data, isConnectable, selected }) => {
 
         {/* Deadline Input */}
         {showDeadlineInput && (
-          <div className="px-3 py-2 bg-yellow-50 border-b border-yellow-100 flex gap-1">
+          <div className="px-3 py-2 bg-warning/10 border-b border-warning/10 flex gap-1">
             <input
               type="datetime-local"
               className="border rounded px-2 py-1 text-xs flex-1"
@@ -257,7 +257,7 @@ const SmartNoteNode = ({ id, data, isConnectable, selected }) => {
               disabled={saving}
             />
             <button
-              className="px-2 py-1 text-xs bg-yellow-400 text-white rounded"
+              className="px-2 py-1 text-xs bg-warning text-white rounded"
               onClick={async () => {
                 setShowDeadlineInput(false);
                 await persistDeadlineLocal(deadline);
@@ -271,7 +271,7 @@ const SmartNoteNode = ({ id, data, isConnectable, selected }) => {
 
         {/* Deadline Display */}
         {deadline && timeLeft && !timeLeft.isExpired && (
-          <div className="px-3 py-1 bg-blue-50 border-b border-blue-100 text-xs text-blue-600">
+          <div className="px-3 py-1 bg-info/10 border-b border-info/10 text-xs text-info">
             ⏱ {formatTimeLeft(timeLeft)}
           </div>
         )}
@@ -281,12 +281,12 @@ const SmartNoteNode = ({ id, data, isConnectable, selected }) => {
           {tags.map(tag => (
             <span 
               key={tag.id}
-              className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-yellow-100 text-yellow-800"
+              className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-warning/10 text-warning"
             >
               {tag.name}
               <button 
                 onClick={() => handleRemoveTag(tag.id)}
-                className="ml-1 text-yellow-500 hover:text-yellow-700"
+                className="ml-1 text-warning hover:text-warning"
               >
                 <X size={12} />
               </button>
@@ -299,13 +299,13 @@ const SmartNoteNode = ({ id, data, isConnectable, selected }) => {
               onChange={(e) => setNewTag(e.target.value)}
               onKeyDown={handleAddTag}
               onBlur={() => setShowTagInput(false)}
-              className="text-xs border border-yellow-300 rounded px-2 py-0.5 w-20"
+              className="text-xs border border-warning/30 rounded px-2 py-0.5 w-20"
               autoFocus
             />
           ) : (
             <button
               onClick={() => setShowTagInput(true)}
-              className="text-xs text-yellow-600 hover:text-yellow-800 flex items-center"
+              className="text-xs text-warning hover:text-warning flex items-center"
             >
               <Plus size={12} className="mr-0.5" /> Add Tag
             </button>
@@ -318,31 +318,31 @@ const SmartNoteNode = ({ id, data, isConnectable, selected }) => {
             value={content}
             onChange={(e) => setContent(e.target.value)}
             placeholder="Start typing or use AI actions..."
-            className="w-full min-h-[100px] p-2 border border-gray-200 rounded focus:outline-none focus:ring-2 focus:ring-yellow-300 focus:border-transparent"
+            className="w-full min-h-[100px] p-2 border border-line rounded focus:outline-none focus:ring-2 focus:ring-warning/30 focus:border-transparent"
             style={{ resize: 'vertical' }}
           />
         </div>
 
         {/* Footer */}
-        <div className="px-3 py-2 bg-yellow-50 border-t border-yellow-100 flex justify-between items-center">
+        <div className="px-3 py-2 bg-warning/10 border-t border-warning/10 flex justify-between items-center">
           <div className="flex space-x-1">
             <button
               onClick={() => formatText('bold')}
-              className="p-1.5 rounded hover:bg-yellow-200 text-yellow-700 hover:text-yellow-900"
+              className="p-1.5 rounded hover:bg-warning/20 text-warning hover:text-warning"
               title="Bold"
             >
               <span className="font-bold">B</span>
             </button>
             <button
               onClick={() => formatText('italic')}
-              className="p-1.5 rounded hover:bg-yellow-200 text-yellow-700 hover:text-yellow-900"
+              className="p-1.5 rounded hover:bg-warning/20 text-warning hover:text-warning"
               title="Italic"
             >
               <span className="italic">I</span>
             </button>
             <button
               onClick={() => formatText('code')}
-              className="p-1.5 rounded hover:bg-yellow-200 text-yellow-700 hover:text-yellow-900"
+              className="p-1.5 rounded hover:bg-warning/20 text-warning hover:text-warning"
               title="Code"
             >
               <code>\`\`\`</code>
@@ -352,11 +352,11 @@ const SmartNoteNode = ({ id, data, isConnectable, selected }) => {
                 key={action.id}
                 onClick={() => handleAIAction(action.id)}
                 disabled={isProcessing}
-                className="p-1.5 rounded hover:bg-yellow-200 text-yellow-700 hover:text-yellow-900 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="p-1.5 rounded hover:bg-warning/20 text-warning hover:text-warning disabled:opacity-50 disabled:cursor-not-allowed"
                 title={action.label}
               >
                 {isProcessing && action.id === 'summarize' ? (
-                  <div className="w-4 h-4 border-2 border-yellow-500 border-t-transparent rounded-full animate-spin"></div>
+                  <div className="w-4 h-4 border-2 border-warning border-t-transparent rounded-full animate-spin"></div>
                 ) : (
                   action.icon
                 )}
@@ -364,14 +364,14 @@ const SmartNoteNode = ({ id, data, isConnectable, selected }) => {
             ))}
           </div>
           
-          <div className="text-xs text-yellow-600">
+          <div className="text-xs text-warning">
             {new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
           </div>
         </div>
 
         {/* Sequence Number Badge - Top left corner */}
         {data.sequenceNumber && (
-          <div className="absolute -top-4 -left-4 z-20 w-8 h-8 bg-gradient-to-br from-green-500 to-emerald-600 text-white rounded-full flex items-center justify-center text-sm font-bold shadow-lg border-2 border-white hover:shadow-xl transition-shadow">
+          <div className="absolute -top-4 -left-4 z-20 w-8 h-8 bg-black text-white rounded-full flex items-center justify-center text-sm font-bold shadow-lg border-2 border-white hover:shadow-xl transition-shadow">
             {data.sequenceNumber}
           </div>
         )}
@@ -381,13 +381,13 @@ const SmartNoteNode = ({ id, data, isConnectable, selected }) => {
           type="target"
           position={Position.Top}
           isConnectable={isConnectable}
-          className="w-2 h-2 bg-yellow-500"
+          className="w-2 h-2 bg-warning"
         />
         <Handle
           type="source"
           position={Position.Bottom}
           isConnectable={isConnectable}
-          className="w-2 h-2 bg-yellow-500"
+          className="w-2 h-2 bg-warning"
         />
       </div>
     </Draggable>

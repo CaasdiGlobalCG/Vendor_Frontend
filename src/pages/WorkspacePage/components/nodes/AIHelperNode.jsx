@@ -108,22 +108,22 @@ const AIHelperNode = memo(({ id, data, isConnectable, selected }) => {
   };
 
   return (
-    <div className={`bg-gradient-to-br from-purple-50 to-indigo-50 rounded-xl border-2 shadow-lg transition-all duration-200 min-w-[280px] max-w-[340px] ${
-      selected ? 'border-purple-400 shadow-purple-200/50' : 'border-purple-200'
+    <div className={`bg-gradient-to-br from-black to-black rounded-xl border-2 shadow-lg transition-all duration-200 min-w-[280px] max-w-[340px] ${
+      selected ? 'border-line shadow-purple-200/50' : 'border-line'
     }`}>
       {/* Handles */}
-      <Handle type="target" position={Position.Top} isConnectable={isConnectable} className="!bg-purple-400 !w-2.5 !h-2.5 !border-2 !border-white" />
-      <Handle type="source" position={Position.Bottom} isConnectable={isConnectable} className="!bg-purple-400 !w-2.5 !h-2.5 !border-2 !border-white" />
+      <Handle type="target" position={Position.Top} isConnectable={isConnectable} className="!bg-cta !w-2.5 !h-2.5 !border-2 !border-white" />
+      <Handle type="source" position={Position.Bottom} isConnectable={isConnectable} className="!bg-cta !w-2.5 !h-2.5 !border-2 !border-white" />
 
       {/* Header */}
-      <div className="flex items-center justify-between px-3 py-2 border-b border-purple-200/60">
+      <div className="flex items-center justify-between px-3 py-2 border-b border-line">
         <div className="flex items-center gap-2">
-          <div className="w-6 h-6 bg-gradient-to-r from-purple-500 to-indigo-500 rounded-lg flex items-center justify-center">
+          <div className="w-6 h-6 bg-black rounded-lg flex items-center justify-center">
             <Sparkles className="w-3.5 h-3.5 text-white" />
           </div>
-          <span className="text-sm font-semibold text-purple-900">AI Helper</span>
+          <span className="text-sm font-semibold text-ink">AI Helper</span>
         </div>
-        <button onClick={() => setExpanded(!expanded)} className="p-0.5 text-purple-400 hover:text-purple-600 rounded">
+        <button onClick={() => setExpanded(!expanded)} className="p-0.5 text-ink hover:text-ink rounded">
           {expanded ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
         </button>
       </div>
@@ -132,16 +132,16 @@ const AIHelperNode = memo(({ id, data, isConnectable, selected }) => {
         <div className="p-3 space-y-2">
           <button
             onClick={() => setIsModalOpen(true)}
-            className="w-full px-3 py-2 text-sm font-medium rounded-lg text-white bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 transition-colors"
+            className="w-full px-3 py-2 text-sm font-medium rounded-lg text-white bg-black hover:from-black hover:to-black transition-colors"
           >
             Open AI Actions
           </button>
           {result?.text && (
-            <div className="bg-white border border-purple-200 rounded-lg px-2.5 py-2 text-xs text-gray-700">
+            <div className="bg-surface border border-line rounded-lg px-2.5 py-2 text-xs text-ink">
               <div className="flex items-center justify-between mb-1">
-                <span className="font-semibold text-purple-600">Latest Result</span>
-                <button onClick={handleCopy} className="p-0.5 text-purple-400 hover:text-purple-600 rounded transition-colors" title="Copy">
-                  {copied ? <Check className="w-3 h-3 text-green-500" /> : <Copy className="w-3 h-3" />}
+                <span className="font-semibold text-ink">Latest Result</span>
+                <button onClick={handleCopy} className="p-0.5 text-ink hover:text-ink rounded transition-colors" title="Copy">
+                  {copied ? <Check className="w-3 h-3 text-success" /> : <Copy className="w-3 h-3" />}
                 </button>
               </div>
               <p className="line-clamp-3 whitespace-pre-wrap">{result.text}</p>

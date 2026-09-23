@@ -279,29 +279,29 @@ const TableConfigModal = ({ isOpen, onClose, onConfirm, tableType }) => {
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden">
+      <div className="bg-surface rounded-xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden">
         {/* Modal Header */}
-        <div className="flex items-center justify-between p-4 border-b border-gray-200">
+        <div className="flex items-center justify-between p-4 border-b border-line">
           <div>
-            <h2 className="text-lg font-bold text-gray-900">Configure Table Data</h2>
-            <p className="text-xs text-gray-600 mt-0.5">Set up your {tableType?.replace('-', ' ')} with custom data</p>
+            <h2 className="text-lg font-bold text-ink">Configure Table Data</h2>
+            <p className="text-xs text-dim mt-0.5">Set up your {tableType?.replace('-', ' ')} with custom data</p>
           </div>
           <button
             onClick={onClose}
-            className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors"
+            className="p-1.5 hover:bg-surface-hover rounded-lg transition-colors"
           >
-            <X className="w-4 h-4 text-gray-500" />
+            <X className="w-4 h-4 text-dim" />
           </button>
         </div>
 
         {/* Tab Navigation */}
-        <div className="flex border-b border-gray-200">
+        <div className="flex border-b border-line">
           <button
             onClick={() => setActiveTab('manual')}
             className={`flex-1 px-3 py-2 text-xs font-medium transition-colors ${
               activeTab === 'manual'
-                ? 'text-blue-600 border-b-2 border-blue-600 bg-blue-50'
-                : 'text-gray-500 hover:text-gray-700'
+                ? 'text-info border-b-2 border-info bg-info/10'
+                : 'text-dim hover:text-ink'
             }`}
           >
             <Edit3 className="w-3 h-3 inline mr-1" />
@@ -311,8 +311,8 @@ const TableConfigModal = ({ isOpen, onClose, onConfirm, tableType }) => {
             onClick={() => setActiveTab('upload')}
             className={`flex-1 px-3 py-2 text-xs font-medium transition-colors ${
               activeTab === 'upload'
-                ? 'text-blue-600 border-b-2 border-blue-600 bg-blue-50'
-                : 'text-gray-500 hover:text-gray-700'
+                ? 'text-info border-b-2 border-info bg-info/10'
+                : 'text-dim hover:text-ink'
             }`}
           >
             <Upload className="w-3 h-3 inline mr-1" />
@@ -326,18 +326,18 @@ const TableConfigModal = ({ isOpen, onClose, onConfirm, tableType }) => {
             <div className="space-y-4">
               {/* Column Controls */}
               <div className="flex items-center justify-between">
-                <h3 className="text-sm font-semibold text-gray-900">Table Structure</h3>
+                <h3 className="text-sm font-semibold text-ink">Table Structure</h3>
                 <div className="flex space-x-1.5">
                   <button
                     onClick={addColumn}
-                    className="px-2 py-1 bg-green-500 text-white rounded text-xs hover:bg-green-600 flex items-center space-x-0.5"
+                    className="px-2 py-1 bg-success text-white rounded text-xs hover:bg-success flex items-center space-x-0.5"
                   >
                     <Plus className="w-3 h-3" />
                     <span>Add Column</span>
                   </button>
                   <button
                     onClick={addRow}
-                    className="px-2 py-1 bg-blue-500 text-white rounded text-xs hover:bg-blue-600 flex items-center space-x-0.5"
+                    className="px-2 py-1 bg-info text-white rounded text-xs hover:bg-info flex items-center space-x-0.5"
                   >
                     <Plus className="w-3 h-3" />
                     <span>Add Row</span>
@@ -346,23 +346,23 @@ const TableConfigModal = ({ isOpen, onClose, onConfirm, tableType }) => {
               </div>
 
               {/* Data Table */}
-              <div className="overflow-x-auto border border-gray-300 rounded-lg">
+              <div className="overflow-x-auto border border-line rounded-lg">
                 <table className="min-w-full text-xs">
-                  <thead className="bg-gray-50">
+                  <thead className="bg-canvas">
                     <tr>
                       {columns.map((column, index) => (
-                        <th key={index} className="px-2 py-1.5 border-b border-gray-300">
+                        <th key={index} className="px-2 py-1.5 border-b border-line">
                           <div className="flex items-center space-x-1">
                             <input
                               type="text"
                               value={column}
                               onChange={(e) => updateColumnName(index, e.target.value)}
-                              className="font-semibold text-xs text-gray-700 bg-transparent border-none focus:outline-none focus:ring-1 focus:ring-blue-500 rounded px-1.5 py-0.5"
+                              className="font-semibold text-xs text-ink bg-transparent border-none focus:outline-none focus:ring-1 focus:ring-info rounded px-1.5 py-0.5"
                             />
                             {columns.length > 1 && (
                               <button
                                 onClick={() => removeColumn(index)}
-                                className="text-red-500 hover:text-red-700"
+                                className="text-danger hover:text-danger"
                               >
                                 <Minus className="w-3 h-3" />
                               </button>
@@ -370,28 +370,28 @@ const TableConfigModal = ({ isOpen, onClose, onConfirm, tableType }) => {
                           </div>
                         </th>
                       ))}
-                      <th className="px-2 py-1.5 border-b border-gray-300 w-12">Actions</th>
+                      <th className="px-2 py-1.5 border-b border-line w-12">Actions</th>
                     </tr>
                   </thead>
                   <tbody>
                     {tableData.map((row, rowIndex) => (
-                      <tr key={row.id || rowIndex} className="hover:bg-gray-50">
+                      <tr key={row.id || rowIndex} className="hover:bg-canvas">
                         {columns.map((column) => (
-                          <td key={column} className="px-2 py-1.5 border-b border-gray-200">
+                          <td key={column} className="px-2 py-1.5 border-b border-line">
                             <input
                               type="text"
                               value={row[column] || ''}
                               onChange={(e) => updateCellValue(rowIndex, column, e.target.value)}
-                              className="w-full px-1.5 py-0.5 text-xs border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
+                              className="w-full px-1.5 py-0.5 text-xs border border-line rounded focus:outline-none focus:ring-1 focus:ring-info"
                               placeholder={`Enter ${column}`}
                             />
                           </td>
                         ))}
-                        <td className="px-2 py-1.5 border-b border-gray-200">
+                        <td className="px-2 py-1.5 border-b border-line">
                           {tableData.length > 1 && (
                             <button
                               onClick={() => removeRow(rowIndex)}
-                              className="text-red-500 hover:text-red-700"
+                              className="text-danger hover:text-danger"
                             >
                               <Minus className="w-3 h-3" />
                             </button>
@@ -403,7 +403,7 @@ const TableConfigModal = ({ isOpen, onClose, onConfirm, tableType }) => {
                 </table>
               </div>
 
-              <div className="text-xs text-gray-600 space-y-0.5">
+              <div className="text-xs text-dim space-y-0.5">
                 <p>• Click column headers to rename them</p>
                 <p>• Use the + buttons to add more rows or columns</p>
                 <p>• Use the - buttons to remove rows or columns</p>
@@ -414,22 +414,22 @@ const TableConfigModal = ({ isOpen, onClose, onConfirm, tableType }) => {
           {activeTab === 'upload' && (
             <div className="space-y-3">
               <div className="text-center">
-                <FileSpreadsheet className="w-10 h-10 text-gray-400 mx-auto mb-2" />
-                <h3 className="text-sm font-semibold text-gray-900 mb-1">Upload Your Data</h3>
-                <p className="text-xs text-gray-600 mb-4">
+                <FileSpreadsheet className="w-10 h-10 text-dim mx-auto mb-2" />
+                <h3 className="text-sm font-semibold text-ink mb-1">Upload Your Data</h3>
+                <p className="text-xs text-dim mb-4">
                   Upload a CSV or Excel file to automatically populate your table
                 </p>
 
                 {/* File Upload Area */}
                 <div
                   onClick={() => fileInputRef.current?.click()}
-                  className="border-2 border-dashed border-gray-300 rounded-lg p-8 hover:border-blue-400 hover:bg-blue-50 transition-colors cursor-pointer"
+                  className="border-2 border-dashed border-line rounded-lg p-8 hover:border-info hover:bg-info/10 transition-colors cursor-pointer"
                 >
-                  <Upload className="w-8 h-8 text-gray-400 mx-auto mb-2" />
-                  <p className="text-gray-600">
+                  <Upload className="w-8 h-8 text-dim mx-auto mb-2" />
+                  <p className="text-dim">
                     {fileName ? `Selected: ${fileName}` : 'Click to select CSV or Excel file'}
                   </p>
-                  <p className="text-sm text-gray-500 mt-2">
+                  <p className="text-sm text-dim mt-2">
                     Supports CSV and XLSX files with headers
                   </p>
                 </div>
@@ -443,23 +443,23 @@ const TableConfigModal = ({ isOpen, onClose, onConfirm, tableType }) => {
                 />
 
                 {isProcessing && (
-                  <div className="mt-4 text-blue-600">
+                  <div className="mt-4 text-info">
                     Processing file...
                   </div>
                 )}
 
                 {fileName && !isProcessing && (
-                  <div className="mt-4 p-4 bg-green-50 border border-green-200 rounded-lg">
-                    <p className="text-green-700 text-sm">
+                  <div className="mt-4 p-4 bg-success/10 border border-success/20 rounded-lg">
+                    <p className="text-success text-sm">
                       ✅ File uploaded successfully! Switch to Manual Entry tab to review the data.
                     </p>
                   </div>
                 )}
               </div>
 
-              <div className="bg-gray-50 p-3 rounded-lg">
-                <h4 className="font-semibold text-xs text-gray-900 mb-1">File Format Requirements:</h4>
-                <ul className="text-xs text-gray-600 space-y-0.5">
+              <div className="bg-canvas p-3 rounded-lg">
+                <h4 className="font-semibold text-xs text-ink mb-1">File Format Requirements:</h4>
+                <ul className="text-xs text-dim space-y-0.5">
                   <li>• First row should contain column headers</li>
                   <li>• CSV: Data should be comma-separated</li>
                   <li>• CSV: Text with commas should be enclosed in quotes</li>
@@ -475,33 +475,33 @@ const TableConfigModal = ({ isOpen, onClose, onConfirm, tableType }) => {
         {/* Sheet Selector Modal Overlay */}
         {showSheetSelector && (
           <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center z-10">
-            <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full mx-4 max-h-[80vh] overflow-hidden">
+            <div className="bg-surface rounded-lg shadow-xl max-w-4xl w-full mx-4 max-h-[80vh] overflow-hidden">
               <div className="p-6">
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                <h3 className="text-lg font-semibold text-ink mb-4">
                   Multiple Sheets Found
                 </h3>
-                <p className="text-gray-600 mb-4">
+                <p className="text-dim mb-4">
                   This Excel file contains multiple worksheets. Please select which sheet you'd like to import:
                 </p>
                 
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                   {/* Sheet Selection */}
                   <div>
-                    <h4 className="font-medium text-gray-900 mb-3">Available Sheets:</h4>
+                    <h4 className="font-medium text-ink mb-3">Available Sheets:</h4>
                     <div className="space-y-2 mb-6">
                       {availableSheets.map((sheetName, index) => (
-                        <label key={sheetName} className="flex items-center space-x-3 cursor-pointer p-2 rounded hover:bg-gray-50">
+                        <label key={sheetName} className="flex items-center space-x-3 cursor-pointer p-2 rounded hover:bg-canvas">
                           <input
                             type="radio"
                             name="selectedSheet"
                             value={sheetName}
                             checked={selectedSheet === sheetName}
                             onChange={() => handleSheetSelection(sheetName)}
-                            className="text-blue-600 focus:ring-blue-500"
+                            className="text-info focus:ring-info"
                           />
-                          <span className="text-gray-700 font-medium">{sheetName}</span>
+                          <span className="text-ink font-medium">{sheetName}</span>
                           {index === 0 && (
-                            <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">
+                            <span className="text-xs text-dim bg-surface-hover px-2 py-1 rounded">
                               Default
                             </span>
                           )}
@@ -512,24 +512,24 @@ const TableConfigModal = ({ isOpen, onClose, onConfirm, tableType }) => {
 
                   {/* Preview */}
                   <div>
-                    <h4 className="font-medium text-gray-900 mb-3">Preview:</h4>
+                    <h4 className="font-medium text-ink mb-3">Preview:</h4>
                     {sheetPreview ? (
-                      <div className="border border-gray-200 rounded-lg overflow-hidden">
+                      <div className="border border-line rounded-lg overflow-hidden">
                         {sheetPreview.isEmpty ? (
-                          <div className="p-4 text-center text-gray-500">
+                          <div className="p-4 text-center text-dim">
                             {sheetPreview.error ? 'Error reading sheet' : 'Sheet appears to be empty'}
                           </div>
                         ) : (
                           <div>
-                            <div className="bg-gray-50 px-3 py-2 text-sm text-gray-600 border-b">
+                            <div className="bg-canvas px-3 py-2 text-sm text-dim border-b">
                               {sheetPreview.totalRows} rows • {sheetPreview.headers.length} columns
                             </div>
                             <div className="overflow-x-auto max-h-48">
                               <table className="min-w-full text-sm">
-                                <thead className="bg-gray-100">
+                                <thead className="bg-surface-hover">
                                   <tr>
                                     {sheetPreview.headers.map((header, i) => (
-                                      <th key={i} className="px-3 py-2 text-left font-medium text-gray-700 border-r border-gray-200 last:border-r-0">
+                                      <th key={i} className="px-3 py-2 text-left font-medium text-ink border-r border-line last:border-r-0">
                                         {header || `Column ${i + 1}`}
                                       </th>
                                     ))}
@@ -537,9 +537,9 @@ const TableConfigModal = ({ isOpen, onClose, onConfirm, tableType }) => {
                                 </thead>
                                 <tbody>
                                   {sheetPreview.rows.map((row, i) => (
-                                    <tr key={i} className="border-b border-gray-100">
+                                    <tr key={i} className="border-b border-line">
                                       {row.map((cell, j) => (
-                                        <td key={j} className="px-3 py-2 text-gray-600 border-r border-gray-100 last:border-r-0">
+                                        <td key={j} className="px-3 py-2 text-dim border-r border-line last:border-r-0">
                                           {cell || '-'}
                                         </td>
                                       ))}
@@ -549,7 +549,7 @@ const TableConfigModal = ({ isOpen, onClose, onConfirm, tableType }) => {
                               </table>
                             </div>
                             {sheetPreview.totalRows > 3 && (
-                              <div className="px-3 py-2 text-xs text-gray-500 bg-gray-50 border-t">
+                              <div className="px-3 py-2 text-xs text-dim bg-canvas border-t">
                                 Showing first 3 rows of {sheetPreview.totalRows} total rows
                               </div>
                             )}
@@ -557,7 +557,7 @@ const TableConfigModal = ({ isOpen, onClose, onConfirm, tableType }) => {
                         )}
                       </div>
                     ) : (
-                      <div className="border border-gray-200 rounded-lg p-4 text-center text-gray-500">
+                      <div className="border border-line rounded-lg p-4 text-center text-dim">
                         Select a sheet to see preview
                       </div>
                     )}
@@ -568,13 +568,13 @@ const TableConfigModal = ({ isOpen, onClose, onConfirm, tableType }) => {
                   <button
                     onClick={confirmSheetSelection}
                     disabled={!selectedSheet}
-                    className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
+                    className="flex-1 px-4 py-2 bg-info text-white rounded-lg hover:bg-info disabled:bg-surface-hover disabled:cursor-not-allowed transition-colors"
                   >
                     Import Selected Sheet
                   </button>
                   <button
                     onClick={cancelSheetSelection}
-                    className="flex-1 px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors"
+                    className="flex-1 px-4 py-2 bg-surface-hover text-ink rounded-lg hover:bg-surface-hover transition-colors"
                   >
                     Cancel
                   </button>
@@ -585,23 +585,23 @@ const TableConfigModal = ({ isOpen, onClose, onConfirm, tableType }) => {
         )}
 
         {/* Modal Footer */}
-        <div className="flex items-center justify-between p-3 border-t border-gray-200 bg-gray-50">
+        <div className="flex items-center justify-between p-3 border-t border-line bg-canvas">
           <button
             onClick={resetToDefault}
-            className="px-3 py-1.5 text-xs text-gray-600 hover:text-gray-800 transition-colors"
+            className="px-3 py-1.5 text-xs text-dim hover:text-ink transition-colors"
           >
             Reset to Default
           </button>
           <div className="flex space-x-2">
             <button
               onClick={onClose}
-              className="px-4 py-1.5 border border-gray-300 text-xs text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+              className="px-4 py-1.5 border border-line text-xs text-ink rounded-lg hover:bg-canvas transition-colors"
             >
               Cancel
             </button>
             <button
               onClick={handleConfirm}
-              className="px-4 py-1.5 bg-blue-600 text-white text-xs rounded-lg hover:bg-blue-700 transition-colors"
+              className="px-4 py-1.5 bg-info text-white text-xs rounded-lg hover:bg-info transition-colors"
             >
               Create Table
             </button>
