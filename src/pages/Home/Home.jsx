@@ -111,9 +111,11 @@ export default function CompanyProfile() {
           const vendor = data.data;
           
           // Prepare profile data first
+          // NOTE: /api/vendor/me returns `vendorId`/`id`, NOT `_id`. Guard the substring.
+          const rawVendorId = vendor.vendorId || vendor.id;
           const newProfileData = {
             name: vendor.vendorDetails?.primaryContactName || currentUser?.name || vendorUser?.name || '',
-            vendorId: `#${vendor._id.substring(0, 6)}` || '#CXV001',
+            vendorId: rawVendorId ? `#${String(rawVendorId).substring(0, 6)}` : '#CXV001',
             image: vendor.profileImage?.url || profileplaceholder,
             companyName: vendor.companyDetails?.companyName || vendor.vendorDetails?.companyName || '',
             phone: vendor.vendorDetails?.primaryContactPhone || '',
