@@ -2,7 +2,6 @@ import React, { useState, useEffect, useContext } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { ArrowPathIcon, MagnifyingGlassIcon } from '@heroicons/react/24/outline';
 import ProjectCard from '../../components/ProjectPage/ProjectCard';
-import { PageHero, heroActionClass } from '../../components/ui';
 import { VendorContext } from '../../context/VendorContext';
 import { useRBAC } from '../../rbac/context/RBACContext';
 import { usePermission } from '../../rbac/hooks/usePermission';
@@ -241,30 +240,27 @@ const ProjectsPage = () => {
     };
 
     return (
-        <div className="mx-auto w-full max-w-[1600px] space-y-6 px-3 py-6 sm:px-5 lg:px-8 xl:px-10">
-            <PageHero
-                eyebrow="Delivery Overview"
-                title="Projects List"
-                description="Review active engagements, workspace readiness, and ownership details in one place."
-                chips={[
-                    `${projects.length} total`,
-                    `${displayedProjects.length} visible`,
-                    `${filterCounts.Pending || 0} pending`,
-                ]}
-                actions={(
-                    <>
-                        <span className="rounded-lg border border-white/20 bg-white/10 px-3 py-2 text-xs font-medium text-white/80">
-                            Updated {formatDate(new Date())}
-                        </span>
-                        <Link to="/VendorDashboard/leads" className={heroActionClass}>
-                            Leads
-                            <ArrowPathIcon className="h-4 w-4" />
-                        </Link>
-                    </>
-                )}
-            />
+        <div className="mx-auto w-full max-w-[1600px] space-y-6 px-4 py-6 sm:px-6 lg:px-8">
+            {/* Page header — plain, sits on the canvas (matches dashboard) */}
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+                <div className="min-w-0">
+                    <p className="text-sm text-dim">Delivery overview</p>
+                    <h1 className="mt-1 text-[26px] font-semibold tracking-tight text-ink sm:text-[28px]">Projects</h1>
+                    <div className="mt-2 flex flex-wrap items-center gap-4 text-sm text-dim">
+                        <span>{projects.length} total</span>
+                        <span>{displayedProjects.length} visible</span>
+                        <span>{filterCounts.Pending || 0} pending</span>
+                        <span>Updated {formatDate(new Date())}</span>
+                    </div>
+                </div>
 
-            <div className="rounded-xl border border-line bg-surface p-4 ">
+                <Link to="/VendorDashboard/leads" className="group inline-flex items-center gap-1 text-sm font-medium text-ink transition-colors hover:text-dim">
+                    Leads
+                    <ArrowPathIcon className="h-4 w-4" />
+                </Link>
+            </div>
+
+            <div className="rounded-lg border border-line bg-surface p-3">
                 <div className="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
                     <div className="relative w-full xl:max-w-sm">
                         <input
@@ -272,17 +268,17 @@ const ProjectsPage = () => {
                             value={projectSearch}
                             onChange={(e) => setProjectSearch(e.target.value)}
                             placeholder="Search by project, manager, or ID"
-                            className="h-10 w-full rounded-lg border border-line bg-surface pl-10 pr-3 text-sm text-ink focus:border-line focus:outline-none focus:ring-2 focus:ring-ink"
+                            className="h-9 w-full rounded-md border border-line bg-surface pl-9 pr-3 text-[13px] text-ink focus:border-line focus:outline-none focus:ring-2 focus:ring-ink"
                         />
                         <MagnifyingGlassIcon className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4  text-dim" />
                     </div>
 
-                    <div className="flex flex-wrap items-center gap-2">
+                    <div className="flex flex-wrap items-center gap-1.5">
                         {filters.map((filter) => (
                             <button
                                 key={filter}
                                 onClick={() => setActiveFilter(filter)}
-                                className={`inline-flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
+                                className={`inline-flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-xs font-medium transition-colors ${
                                     activeFilter === filter
                                         ? 'border border-line bg-surface-hover text-ink'
                                         : 'border border-line bg-canvas text-dim hover:bg-surface-hover'
@@ -300,9 +296,9 @@ const ProjectsPage = () => {
                 </div>
             </div>
 
-            <div className="space-y-4">
+            <div className="space-y-3">
                 {accessFeedback ? (
-                    <div className={`rounded-lg border px-3 py-2 text-sm ${
+                    <div className={`rounded-md border px-3 py-2 text-sm ${
                         accessFeedback.toLowerCase().includes('success')
                             ? 'border-success/20 bg-success/10 text-success'
                             : 'border-danger/20 bg-danger/10 text-danger'
@@ -312,16 +308,16 @@ const ProjectsPage = () => {
                 ) : null}
 
                 {loading ? (
-                    <div className="rounded-xl border border-line bg-surface py-10 text-center ">
+                    <div className="rounded-lg border border-line bg-surface py-10 text-center ">
                         <ArrowPathIcon className="mx-auto h-8 w-8 animate-spin text-ink" />
                         <p className="mt-2 text-sm text-dim">Loading projects...</p>
                     </div>
                 ) : error ? (
-                    <div className="rounded-xl border border-danger/20 bg-danger/10 py-10 text-center text-danger">
+                    <div className="rounded-lg border border-danger/20 bg-danger/10 py-10 text-center text-danger">
                         {error}
                     </div>
                 ) : displayedProjects.length > 0 ? (
-                    <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
+                    <div className="grid grid-cols-1 gap-3 lg:grid-cols-2 xl:grid-cols-3">
                         {displayedProjects.map((project) => (
                             <ProjectCard
                                 key={project.id || project.projectId}
@@ -333,11 +329,11 @@ const ProjectsPage = () => {
                         ))}
                     </div>
                 ) : hasProjectScopeRestriction ? (
-                    <div className="rounded-xl border border-line bg-surface py-12 text-center text-sm text-dim ">
+                    <div className="rounded-lg border border-line bg-surface py-12 text-center text-sm text-dim ">
                         You do not have access to any projects.
                     </div>
                 ) : (
-                    <div className="rounded-xl border border-line bg-surface py-12 text-center ">
+                    <div className="rounded-lg border border-line bg-surface py-12 text-center ">
                         <p className="text-sm text-dim">No projects found matching the current filter.</p>
                         <button
                             onClick={() => {

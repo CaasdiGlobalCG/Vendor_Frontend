@@ -198,56 +198,52 @@ const ProjectCard = ({ project, onManageAccess, canManageAccess = false, onRaise
         }
   };
   return (
-    <div className="group relative flex h-full flex-col overflow-hidden rounded-xl border border-line bg-surface p-4 shadow-none transition-colors duration-200 hover:border-line">
+    <div className="group relative flex h-full flex-col overflow-hidden rounded-lg border border-line bg-surface p-3 shadow-none transition-colors duration-200 hover:border-line">
       <div className={`pointer-events-none absolute inset-x-0 top-0 h-0.5 ${statusMeta.accent}`} />
 
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
-          <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-dim">Project</p>
-          <h2 className="mt-1 truncate text-[15px] font-semibold leading-5 text-ink" title={project.name || 'Untitled Project'}>
+          <h2 className="truncate text-sm font-semibold leading-5 text-ink" title={project.name || 'Untitled Project'}>
             {project.name || 'Untitled Project'}
           </h2>
-          <p className="mt-1 text-xs text-dim">
-            {`ID ${projectId} • Client ${clientId}`}
+          <p className="mt-0.5 truncate text-[11px] text-dim">
+            {`ID ${projectId} · Client ${clientId}`}
           </p>
         </div>
 
         <div className="flex shrink-0 flex-col items-end gap-1">
-          <span className={`inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-medium ${statusMeta.badge}`}>
+          <span className={`inline-flex items-center rounded-full border px-2 py-0.5 text-[11px] font-medium ${statusMeta.badge}`}>
             {statusMeta.label}
           </span>
-          <span className="inline-flex items-center gap-1 text-xs text-dim">
-            <ClockIcon className="h-3.5 w-3.5" />
+          <span className="inline-flex items-center gap-1 text-[11px] text-dim">
+            <ClockIcon className="h-3 w-3" />
             {`Updated ${project.lastUpdate || '—'}`}
           </span>
         </div>
       </div>
 
       {project.fromLead && (
-        <p className="mt-2 text-xs font-medium text-info">Lead approved for collaboration</p>
+        <p className="mt-1.5 text-[11px] font-medium text-info">Lead approved for collaboration</p>
       )}
 
-      <p className="mt-3 text-[13px] leading-5 text-ink">{visibleDescription}</p>
+      <p className="mt-2 text-xs leading-5 text-dim">{visibleDescription}</p>
 
-      <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-3">
-        <CompactMeta
-          icon={UserCircleIcon}
-          label="Manager"
-          value={project.manager || 'Project Manager'}
-        />
-        <CompactMeta
-          icon={CalendarDaysIcon}
-          label="Start"
-          value={project.startDate || '—'}
-        />
-        <CompactMeta
-          icon={CalendarDaysIcon}
-          label="Close"
-          value={project.closeDate || '—'}
-        />
+      <div className="mb-2 mt-2.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-dim">
+        <span className="inline-flex items-center gap-1">
+          <UserCircleIcon className="h-3.5 w-3.5" />
+          <span className="font-medium text-ink">{project.manager || 'Project Manager'}</span>
+        </span>
+        <span className="inline-flex items-center gap-1">
+          <CalendarDaysIcon className="h-3.5 w-3.5" />
+          Start <span className="font-medium text-ink">{project.startDate || '—'}</span>
+        </span>
+        <span className="inline-flex items-center gap-1">
+          <CalendarDaysIcon className="h-3.5 w-3.5" />
+          Close <span className="font-medium text-ink">{project.closeDate || '—'}</span>
+        </span>
       </div>
 
-      <div className="mt-auto flex flex-wrap items-center justify-end gap-2 border-t border-line pt-3">
+      <div className="mt-auto flex flex-wrap items-center justify-end gap-1.5 border-t border-line pt-2.5">
         {canManageAccess && onManageAccess ? (
           <button
             type="button"
@@ -256,7 +252,7 @@ const ProjectCard = ({ project, onManageAccess, canManageAccess = false, onRaise
               e.stopPropagation();
               onManageAccess(project);
             }}
-            className="h-8 rounded-md border border-line bg-surface px-3 text-xs font-medium text-ink transition-colors hover:bg-surface-hover"
+            className="h-7 rounded-md border border-line bg-surface px-2.5 text-[11px] font-medium text-ink transition-colors hover:bg-surface-hover"
           >
             Manage Access
           </button>
@@ -264,7 +260,7 @@ const ProjectCard = ({ project, onManageAccess, canManageAccess = false, onRaise
 
         <button
           onClick={openWorkspace}
-          className="inline-flex h-8 items-center gap-1.5 rounded-md bg-cta px-3 text-xs font-semibold text-cta-foreground transition-colors hover:bg-cta"
+          className="inline-flex h-7 items-center gap-1.5 rounded-md bg-cta px-2.5 text-[11px] font-semibold text-cta-foreground transition-colors hover:bg-cta"
         >
           <CalendarDaysIcon className="h-3.5 w-3.5" />
           Open Workspace
@@ -277,7 +273,7 @@ const ProjectCard = ({ project, onManageAccess, canManageAccess = false, onRaise
               e.stopPropagation();
               onRaiseSupport(project);
             }}
-            className="inline-flex h-8 items-center gap-1.5 rounded-md border border-line bg-surface-hover px-3 text-xs font-semibold text-ink transition-colors hover:bg-surface-hover"
+            className="inline-flex h-7 items-center gap-1.5 rounded-md border border-line bg-surface-hover px-2.5 text-[11px] font-semibold text-ink transition-colors hover:bg-surface-hover"
           >
             Support
           </button>
@@ -286,19 +282,5 @@ const ProjectCard = ({ project, onManageAccess, canManageAccess = false, onRaise
     </div>
   );
 };
-
-function CompactMeta({ icon: Icon, label, value }) {
-  return (
-    <div className="rounded-md border border-line bg-canvas px-2.5 py-2">
-      <div className="flex items-start gap-1.5">
-        <Icon className="mt-0.5 h-4 w-4 text-dim" />
-        <div className="min-w-0">
-          <p className="text-[10px] uppercase tracking-wide text-dim">{label}</p>
-          <p className="truncate text-xs font-semibold text-ink">{value || '—'}</p>
-        </div>
-      </div>
-    </div>
-  );
-}
 
 export default ProjectCard;

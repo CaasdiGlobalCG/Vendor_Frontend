@@ -458,14 +458,16 @@ const WorkspaceList = () => {
   };
 
   return (
-    <div className="p-5 space-y-6">
-      <div className="flex flex-wrap justify-between items-center gap-3">
-        <div>
-          <h1 className="text-xl font-semibold text-ink">Workspaces</h1>
-          <p className="text-sm text-dim max-w-2xl">{subtitle}</p>
+    <div className="mx-auto w-full max-w-[1600px] space-y-8 px-4 py-6 sm:px-6 sm:pt-8 lg:px-8">
+      {/* Page header — plain, sits on the canvas (matches dashboard) */}
+      <div className="flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
+        <div className="min-w-0">
+          <p className="text-sm text-dim">Collaborative workspaces</p>
+          <h1 className="mt-1 text-[26px] font-semibold tracking-tight text-ink sm:text-[28px]">Workspaces</h1>
+          <p className="mt-2 max-w-2xl text-sm text-dim">{subtitle}</p>
         </div>
         {!loading && workspaces.length > 0 && (
-          <span className="text-xs text-dim bg-surface-hover px-3 py-1.5 rounded-full border border-line">
+          <span className="text-sm text-dim">
             {workspaces.length} workspace{workspaces.length !== 1 && 's'}
           </span>
         )}
@@ -473,7 +475,7 @@ const WorkspaceList = () => {
 
       {/* ── states ── */}
       {accessFeedback ? (
-        <div className="rounded-lg border border-danger/20 bg-danger/10 text-danger px-4 py-2 text-sm">
+        <div className="rounded-md border border-danger/20 bg-danger/10 text-danger px-4 py-2 text-sm">
           {accessFeedback}
         </div>
       ) : null}
@@ -495,6 +497,7 @@ const WorkspaceList = () => {
         </div>
       ) : workspaces.length === 0 ? (
         <div className="bg-canvas border border-line text-ink px-4 py-8 rounded-lg">
+
           {hasWorkspaceScopeRestriction ? (
             <>
               <h2 className="text-base font-semibold mb-1">No workspace access</h2>
@@ -510,7 +513,7 @@ const WorkspaceList = () => {
           )}
         </div>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
           {workspaces.map((item, idx) => {
             const preview = workspacePreviews[item.leadId];
             const title = item.leadTitle || 'Workspace';
@@ -525,7 +528,7 @@ const WorkspaceList = () => {
             return (
               <div
                 key={item.leadId}
-                className="group flex cursor-pointer flex-col overflow-hidden rounded-[22px] border border-line bg-surface transition-all duration-200  hover:"
+                className="vd-lift group flex cursor-pointer flex-col overflow-hidden rounded-lg border border-line bg-surface transition-all duration-200"
                 onClick={() => openWorkspace(item)}
               >
                 <div
@@ -542,7 +545,7 @@ const WorkspaceList = () => {
                     <WorkspaceCanvasPreview preview={preview} />
                   ) : (
                     <div className="absolute inset-0 flex flex-col items-center justify-center gap-3">
-                      <div className="rounded-2xl border border-white/80 bg-white/80 p-4 ">
+                      <div className="rounded-md border border-white/80 bg-white/80 p-4 ">
                         <Squares2X2Icon className="h-8 w-8 text-dim" />
                       </div>
                       <span className="text-xs font-medium text-dim">No canvas preview yet</span>

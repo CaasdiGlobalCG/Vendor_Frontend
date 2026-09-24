@@ -545,7 +545,6 @@ import { ChevronLeftIcon, CheckBadgeIcon, XMarkIcon } from '@heroicons/react/24/
 import ProjectRequestCard from '../../components/ProjectRequestCard/ProjectRequestCard';
 import { VendorContext } from '../../context/VendorContext';
 import ComparisonModal from '../../components/ComparisonModal/ComparisonModal';
-import { PageHero, heroActionClass } from '../../components/ui';
 import config from '../../config/env';
 
 const LeadsPage = () => {
@@ -874,7 +873,7 @@ const LeadsPage = () => {
     const paginationEnd = Math.min(currentPage * PAGE_SIZE, filteredRequests.length);
 
     const getTabClassName = (tabName) => {
-        return `inline-flex items-center gap-1.5 rounded-full border px-4 py-2 text-sm font-medium transition ${
+        return `inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-medium transition ${
             activeTab === tabName && !isCompareMode
                 ? 'border-line bg-surface-hover text-ink '
                 : 'border-line bg-surface text-dim hover:border-line hover:bg-canvas hover:text-ink'
@@ -890,85 +889,81 @@ const LeadsPage = () => {
     };
 
     return (
-        <div className="mx-auto w-full max-w-[1600px] space-y-6 px-3 py-6 sm:px-5 lg:px-8 xl:px-10">
+        <div className="mx-auto w-full max-w-[1600px] space-y-6 px-4 py-6 sm:px-6 lg:px-8">
 
-            <PageHero
-                eyebrow="Collaboration Pipeline"
-                title="Leads Overview"
-                description="Track project manager leads, compare opportunities, and respond to collaboration requests from one place."
-                back={(
-                    <Link to="/VendorDashboard/projects" className="inline-flex items-center text-sm font-medium text-white/70 transition hover:text-white">
-                        <ChevronLeftIcon className="mr-2 h-4 w-4" />
-                        Back to Projects
+            {/* Page header — plain, sits on the canvas (matches dashboard) */}
+            <div className="flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
+                <div className="min-w-0">
+                    <Link to="/VendorDashboard/projects" className="inline-flex items-center text-sm text-dim transition hover:text-ink">
+                        <ChevronLeftIcon className="mr-1 h-4 w-4" />
+                        Projects
                     </Link>
-                )}
-                chips={[
-                    `${tabCounts.all} total`,
-                    `${stats.pending} pending`,
-                    `${selectedRequests.length} selected`,
-                ]}
-                actions={(
-                    <>
-                        <span className="rounded-lg border border-white/20 bg-white/10 px-3 py-2 text-xs font-medium text-white/80">
-                            {currentUser?.name || currentUser?.email || 'Vendor'}
-                        </span>
-                        <Link to="/VendorDashboard/leads/newleads" className={heroActionClass}>
-                            Send Leads
-                        </Link>
-                        <Link to="/VendorDashboard/leads/sent" className={heroActionClass}>
-                            Sent Leads
-                        </Link>
-                    </>
-                )}
-            />
-
-            <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-                <div className="rounded-2xl border border-line bg-surface p-5 ">
-                    <div className="text-xs font-semibold uppercase tracking-[0.18em] text-dim">Pending</div>
-                    <div className="mt-3 text-3xl font-semibold text-ink">{stats.pending}</div>
-                    <div className="mt-2 text-sm text-dim">Awaiting your response</div>
-                </div>
-                <div className="rounded-2xl border border-line bg-surface p-5 ">
-                    <div className="text-xs font-semibold uppercase tracking-[0.18em] text-dim">Approved</div>
-                    <div className="mt-3 text-3xl font-semibold text-ink">{stats.approved}</div>
-                    <div className="mt-2 text-sm text-dim">Accepted from your side</div>
-                </div>
-                <div className="rounded-2xl border border-line bg-surface p-5 ">
-                    <div className="text-xs font-semibold uppercase tracking-[0.18em] text-dim">Rejected</div>
-                    <div className="mt-3 text-3xl font-semibold text-danger">{stats.rejected}</div>
-                    <div className="mt-2 text-sm text-dim">Closed opportunities</div>
-                </div>
-                <div className="rounded-2xl border border-line bg-surface p-5 ">
-                    <div className="flex items-center justify-between">
-                        <div className="text-xs font-semibold uppercase tracking-[0.18em] text-dim">Selection</div>
-                        <CheckBadgeIcon className="h-5 w-5 text-ink" />
+                    <h1 className="mt-1 text-[26px] font-semibold tracking-tight text-ink sm:text-[28px]">Leads</h1>
+                    <div className="mt-2 flex flex-wrap items-center gap-4 text-sm text-dim">
+                        <span>{tabCounts.all} total</span>
+                        <span>{stats.pending} pending</span>
+                        <span>{selectedRequests.length} selected</span>
+                        <span>{currentUser?.name || currentUser?.email || 'Vendor'}</span>
                     </div>
-                    <div className="mt-3 text-3xl font-semibold text-ink">{selectedRequests.length}</div>
-                    <div className="mt-2 text-sm text-dim">Ready for comparison</div>
+                </div>
+
+                <nav className="flex items-center gap-5" aria-label="Lead actions">
+                    <Link to="/VendorDashboard/leads/newleads" className="text-sm font-medium text-ink transition-colors hover:text-dim">
+                        Send Leads
+                    </Link>
+                    <Link to="/VendorDashboard/leads/sent" className="text-sm font-medium text-ink transition-colors hover:text-dim">
+                        Sent Leads
+                    </Link>
+                </nav>
+            </div>
+
+            <div className="grid grid-cols-2 gap-2 lg:grid-cols-4">
+                <div className="rounded-lg border border-line bg-surface p-3 ">
+                    <div className="text-[11px] text-dim">Pending</div>
+                    <div className="mt-1 text-xl font-semibold tracking-tight text-warning">{stats.pending}</div>
+                    <div className="mt-0.5 text-xs text-dim">Awaiting your response</div>
+                </div>
+                <div className="rounded-lg border border-line bg-surface p-3 ">
+                    <div className="text-[11px] text-dim">Approved</div>
+                    <div className="mt-1 text-xl font-semibold tracking-tight text-success">{stats.approved}</div>
+                    <div className="mt-0.5 text-xs text-dim">Accepted from your side</div>
+                </div>
+                <div className="rounded-lg border border-line bg-surface p-3 ">
+                    <div className="text-[11px] text-dim">Rejected</div>
+                    <div className="mt-1 text-xl font-semibold tracking-tight text-danger">{stats.rejected}</div>
+                    <div className="mt-0.5 text-xs text-dim">Closed opportunities</div>
+                </div>
+                <div className="rounded-lg border border-line bg-surface p-3 ">
+                    <div className="flex items-center justify-between">
+                        <div className="text-[11px] text-dim">Selection</div>
+                        <CheckBadgeIcon className="h-3.5 w-3.5 text-dim" />
+                    </div>
+                    <div className="mt-1 text-xl font-semibold tracking-tight text-ink">{selectedRequests.length}</div>
+                    <div className="mt-0.5 text-xs text-dim">Ready for comparison</div>
                 </div>
             </div>
 
             {isCompareMode && (
-                <div className="w-full rounded-2xl border border-line bg-black p-4 sm:p-6 flex flex-wrap justify-between items-center gap-3 sm:gap-4 ">
+                <div className="w-full rounded-lg border border-line bg-black p-3 sm:p-4 flex flex-wrap justify-between items-center gap-3 ">
                     <div className="flex-grow">
-                        <h3 className="text-lg sm:text-xl font-medium text-white">
+                        <h3 className="text-base font-medium text-white">
                             {selectedRequests.length} lead{selectedRequests.length !== 1 ? 's' : ''} selected
                         </h3>
-                        <p className="text-xs sm:text-sm text-white/60 mt-1">
+                        <p className="text-xs text-white/60 mt-0.5">
                             Select at least 2 leads to compare side by side
                         </p>
                     </div>
-                    <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0">
+                    <div className="flex items-center gap-2 flex-shrink-0">
                         <button
                             onClick={handleClearSelection}
-                            className="bg-white/15 text-white text-xs sm:text-sm font-medium px-3 sm:px-5 py-2 sm:py-2.5 rounded-md hover:bg-white/25 border border-white/20 transition"
+                            className="bg-white/15 text-white text-xs font-medium px-3 py-1.5 rounded-md hover:bg-white/25 border border-white/20 transition"
                         >
                             Clear selection
                         </button>
                         <button
                             onClick={handleCompareSelection}
                             disabled={selectedRequests.length < 2}
-                            className={`bg-white text-black text-xs sm:text-sm font-medium px-3 sm:px-5 py-2 sm:py-2.5 rounded-md transition ${
+                            className={`bg-white text-black text-xs font-medium px-3 py-1.5 rounded-md transition ${
                                 selectedRequests.length < 2 ? 'opacity-50 cursor-not-allowed' : 'hover:bg-white/85'
                             }`}
                         >
@@ -978,9 +973,9 @@ const LeadsPage = () => {
                 </div>
             )}
 
-            <div className="rounded-2xl border border-line bg-surface p-4 ">
-                <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-                    <div className="flex flex-wrap gap-2">
+            <div className="rounded-lg border border-line bg-surface p-3 ">
+                <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+                    <div className="flex flex-wrap gap-1.5">
                     <button onClick={() => setActiveTab('All')} disabled={isCompareMode} className={getTabClassName('All')}>
                         All <span className={getTabCountClassName('All')}>{tabCounts.all}</span>
                     </button>
@@ -996,12 +991,12 @@ const LeadsPage = () => {
                     </div>
 
                     <div className="flex items-center gap-3">
-                        <div className="hidden text-sm text-dim sm:block">
+                        <div className="hidden text-xs text-dim sm:block">
                             Showing {paginationStart}-{paginationEnd} of {filteredRequests.length} in {activeTab.toLowerCase()}
                         </div>
                         <button
                             onClick={toggleCompareMode}
-                            className={`px-4 py-2 text-sm font-medium rounded-xl transition flex items-center gap-1.5 ${
+                            className={`px-3 py-1.5 text-xs font-medium rounded-md transition flex items-center gap-1.5 ${
                                 isCompareMode ? 'bg-danger/10 text-danger hover:bg-danger/20' : 'bg-surface-hover text-ink hover:bg-surface-hover'
                             }`}
                         >
@@ -1017,9 +1012,9 @@ const LeadsPage = () => {
                 </div>
             </div>
 
-            <div className="space-y-4">
+            <div className="space-y-3">
                 {!currentUser ? (
-                    <div className="rounded-2xl border border-warning/20 bg-warning/10 px-4 py-8 text-center text-warning ">
+                    <div className="rounded-lg border border-warning/20 bg-warning/10 px-4 py-8 text-center text-warning ">
                         <p>You need to be logged in to view your project leads.</p>
                         <Link
                             to="/login"
@@ -1029,12 +1024,12 @@ const LeadsPage = () => {
                         </Link>
                     </div>
                 ) : loading ? (
-                    <div className="rounded-2xl border border-line bg-surface py-12 text-center ">
+                    <div className="rounded-lg border border-line bg-surface py-12 text-center ">
                         <div className="mx-auto h-12 w-12 animate-spin rounded-full border-b-2 border-t-2 border-line"></div>
                         <p className="mt-3 text-sm text-dim">Loading leads...</p>
                     </div>
                 ) : error ? (
-                    <div className="rounded-2xl border border-danger/20 bg-danger/10 px-4 py-8 text-center text-danger ">
+                    <div className="rounded-lg border border-danger/20 bg-danger/10 px-4 py-8 text-center text-danger ">
                         <p>{error}</p>
                         <button
                             onClick={() => window.location.reload()}
@@ -1044,30 +1039,32 @@ const LeadsPage = () => {
                         </button>
                     </div>
                 ) : filteredRequests.length > 0 ? (
-                    <div className="space-y-4">
-                        {paginatedRequests.map(project => (
-                            <ProjectRequestCard
-                                key={project._id}
-                                project={project}
-                                onApprove={handleApprove}
-                                onReject={handleReject}
-                                isCompareMode={isCompareMode}
-                                isSelected={selectedRequests.includes(project._id)}
-                                onSelectRequest={handleSelectRequest}
-                            />
-                        ))}
+                    <div className="space-y-3">
+                        <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
+                            {paginatedRequests.map(project => (
+                                <ProjectRequestCard
+                                    key={project._id}
+                                    project={project}
+                                    onApprove={handleApprove}
+                                    onReject={handleReject}
+                                    isCompareMode={isCompareMode}
+                                    isSelected={selectedRequests.includes(project._id)}
+                                    onSelectRequest={handleSelectRequest}
+                                />
+                            ))}
+                        </div>
 
                         {totalPages > 1 && (
-                            <div className="flex flex-col gap-3 rounded-2xl border border-line bg-surface px-4 py-4  sm:flex-row sm:items-center sm:justify-between">
-                                <div className="text-sm text-dim">
+                            <div className="flex flex-col gap-2 rounded-lg border border-line bg-surface px-3 py-2.5  sm:flex-row sm:items-center sm:justify-between">
+                                <div className="text-xs text-dim">
                                     Page {currentPage} of {totalPages}
                                 </div>
-                                <div className="flex flex-wrap items-center gap-2">
+                                <div className="flex flex-wrap items-center gap-1.5">
                                     <button
                                         type="button"
                                         onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
                                         disabled={currentPage === 1}
-                                        className="rounded-xl border border-line bg-surface px-4 py-2 text-sm font-medium text-ink transition hover:bg-canvas disabled:cursor-not-allowed disabled:opacity-50"
+                                        className="rounded-md border border-line bg-surface px-3 py-1.5 text-xs font-medium text-ink transition hover:bg-canvas disabled:cursor-not-allowed disabled:opacity-50"
                                     >
                                         Previous
                                     </button>
@@ -1076,7 +1073,7 @@ const LeadsPage = () => {
                                             key={page}
                                             type="button"
                                             onClick={() => setCurrentPage(page)}
-                                            className={`min-w-[42px] rounded-xl px-3 py-2 text-sm font-medium transition ${
+                                            className={`min-w-[32px] rounded-md px-2 py-1.5 text-xs font-medium transition ${
                                                 page === currentPage
                                                     ? 'bg-cta text-cta-foreground '
                                                     : 'border border-line bg-surface text-ink hover:bg-canvas'
@@ -1089,7 +1086,7 @@ const LeadsPage = () => {
                                         type="button"
                                         onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
                                         disabled={currentPage === totalPages}
-                                        className="rounded-xl border border-line bg-surface px-4 py-2 text-sm font-medium text-ink transition hover:bg-canvas disabled:cursor-not-allowed disabled:opacity-50"
+                                        className="rounded-md border border-line bg-surface px-3 py-1.5 text-xs font-medium text-ink transition hover:bg-canvas disabled:cursor-not-allowed disabled:opacity-50"
                                     >
                                         Next
                                     </button>
@@ -1098,14 +1095,14 @@ const LeadsPage = () => {
                         )}
                     </div>
                 ) : (
-                    <div className="rounded-2xl border border-line bg-surface px-6 py-10 text-center ">
-                        <p className="text-base font-medium text-ink">No PM-sent collaborative leads found for the "{activeTab}" filter.</p>
-                        <p className="mt-2 text-sm text-dim">
+                    <div className="rounded-lg border border-line bg-surface px-6 py-8 text-center ">
+                        <p className="text-sm font-medium text-ink">No PM-sent collaborative leads found for the "{activeTab}" filter.</p>
+                        <p className="mt-2 text-xs text-dim">
                             {activeTab === 'All'
                                 ? "You don't have any PM-sent collaborative project leads yet."
                                 : `You don't have any ${activeTab.toLowerCase()} PM-sent collaborative leads.`}
                         </p>
-                        <div className="mt-5 rounded-2xl border border-info/20 bg-info/10 p-4 text-left">
+                        <div className="mt-5 rounded-lg border border-info/20 bg-info/10 p-4 text-left">
                             <p className="text-sm font-medium text-info">📋 About Collaborative Leads</p>
                             <p className="text-xs text-info mt-2">
                                 This page shows only leads sent by Project Managers through the PM-Vendor collaboration system.

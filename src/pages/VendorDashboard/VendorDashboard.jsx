@@ -475,7 +475,7 @@ export const VendorDashboard = () => {
   }, []);
 
   return (
-    <div className="space-y-4 px-4 pb-10 pt-4 sm:p-5 sm:pb-24">
+    <div className="mx-auto max-w-[1440px] space-y-8 px-4 pb-16 pt-6 sm:px-6 sm:pt-8 sm:pb-24 lg:px-8">
       {/* Passkey Registration Banner - Show if user doesn't have a passkey */}
       {!checkingPasskey && !userHasPasskey && currentUser?.email && (
         <PasskeyRegistrationBanner
@@ -488,69 +488,73 @@ export const VendorDashboard = () => {
         />
       )}
 
-      {/* ── Single hairline unit: header + stats, minimal chrome ── */}
-      <Reveal className="overflow-hidden rounded-lg border border-line bg-surface">
-        <header className="flex flex-wrap items-center gap-x-6 gap-y-2 px-4 py-3.5">
+      {/* Page header — plain, sits on the canvas (Notion/Vercel: no card chrome, generous type) */}
+      <Reveal>
+        <div className="flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
           <div className="min-w-0">
-            <p className="text-[10px] font-medium uppercase tracking-[0.18em] text-dim">Operations overview</p>
-            <h1 className="mt-0.5 truncate text-lg font-semibold tracking-tight text-ink">
+            <p className="text-sm text-dim">Dashboard</p>
+            <h1 className="mt-1 truncate text-[26px] font-semibold tracking-tight text-ink sm:text-[28px]">
               Good day, {vendorDisplayName}
             </h1>
-          </div>
-
-          <div className="hidden items-center gap-4 text-xs text-dim lg:flex">
-            <span className="inline-flex items-center gap-1.5"><Building2 size={13} />{vendorCompanyName}</span>
-            <span className="inline-flex items-center gap-1.5"><TrendingUp size={13} />{tenderCount} tenders</span>
-          </div>
-
-          {/* Thin ink progress accent — completion at a glance */}
-          <div className="hidden items-center gap-2 md:flex" title={`${completionPercentage}% of pipeline completed`}>
-            <div className="h-px w-16 bg-line">
-              <div className="h-px bg-ink transition-[width] duration-500" style={{ width: `${completionPercentage}%` }} />
+            <div className="mt-2 flex flex-wrap items-center gap-4 text-sm text-dim">
+              <span className="inline-flex items-center gap-1.5"><Building2 size={14} />{vendorCompanyName}</span>
+              <span className="inline-flex items-center gap-1.5"><TrendingUp size={14} />{tenderCount} tenders</span>
             </div>
-            <span className="tnum text-[11px] font-medium text-ink">{completionPercentage}%</span>
           </div>
 
-          <nav className="flex items-center sm:ml-auto" aria-label="Quick actions">
-            {quickActions.map((action, i) => (
+          <nav className="flex items-center gap-5" aria-label="Quick actions">
+            {quickActions.map((action) => (
               <button
                 key={action.label}
                 type="button"
                 onClick={action.onClick}
-                className={`group inline-flex items-center gap-1 px-3 py-1.5 text-[13px] font-medium text-ink transition-colors hover:bg-surface-hover ${i > 0 ? 'border-l border-line' : ''}`}
+                className="group inline-flex items-center gap-1 text-sm font-medium text-ink transition-colors hover:text-dim"
               >
                 {action.label}
-                <ArrowRight size={13} className="vd-row-arrow" />
+                <ArrowRight size={14} className="vd-row-arrow" />
               </button>
             ))}
           </nav>
-        </header>
-
-        {/* Stat strip — hairline cells, same surface */}
-        <div className="grid grid-cols-2 gap-px border-t border-line bg-line lg:grid-cols-4">
-          {statCells.map((cell) => (
-            <div key={cell.label} className="bg-surface px-4 py-3 transition-colors hover:bg-surface-hover">
-              <p className="text-[10px] font-medium uppercase tracking-[0.16em] text-dim">{cell.label}</p>
-              <p className={`tnum mt-1 text-xl font-semibold tracking-tight ${cell.tone}`}>{cell.value}</p>
-            </div>
-          ))}
         </div>
       </Reveal>
 
-      <div className="grid grid-cols-1 gap-5 lg:grid-cols-[2fr_1fr]">
+      {/* Stat cards — separate bordered cards, not a stitched mosaic */}
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+        {statCells.map((cell, i) => (
+          <Reveal
+            key={cell.label}
+            delay={i * 60}
+            className="rounded-lg border border-line bg-surface p-4 transition-colors hover:bg-surface-hover"
+          >
+            <p className="text-xs text-dim">{cell.label}</p>
+            <p className={`tnum mt-2 text-2xl font-semibold tracking-tight ${cell.tone}`}>{cell.value}</p>
+          </Reveal>
+        ))}
+      </div>
+
+      {/* Pipeline completion — its own quiet line, not squeezed into the header */}
+      <div className="flex items-center gap-3 text-sm text-dim" title={`${completionPercentage}% of pipeline completed`}>
+        <span className="flex-shrink-0">Pipeline completion</span>
+        <div className="h-1 max-w-xs flex-1 rounded-full bg-line">
+          <div className="h-1 rounded-full bg-ink transition-[width] duration-500" style={{ width: `${completionPercentage}%` }} />
+        </div>
+        <span className="tnum flex-shrink-0 font-medium text-ink">{completionPercentage}%</span>
+      </div>
+
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-[2fr_1fr]">
         {/* Left Column — tracker is the dominant element */}
         <Reveal className="rounded-lg border border-line bg-surface">
-          <div className="flex items-center justify-between gap-4 border-b border-line px-4 py-3">
+          <div className="flex items-center justify-between gap-4 border-b border-line px-5 py-4">
             <div className="flex items-baseline gap-3">
-              <h2 className="text-sm font-semibold tracking-tight text-ink">Active delivery pipeline</h2>
-              <p className="text-[11px] text-dim">
+              <h2 className="text-[15px] font-semibold tracking-tight text-ink">Active delivery pipeline</h2>
+              <p className="text-sm text-dim">
                 {pendingProjects + inProgressProjects > 0
                   ? `${pendingProjects + inProgressProjects} need follow-up`
                   : 'up to date'}
               </p>
             </div>
-            <p className="tnum text-[11px] font-medium text-dim">
-              <span className="text-ink">{completedProjects}</span>/{totalProjects} done
+            <p className="tnum text-sm text-dim">
+              <span className="font-medium text-ink">{completedProjects}</span>/{totalProjects} done
             </p>
           </div>
 
@@ -576,7 +580,7 @@ export const VendorDashboard = () => {
         </Reveal>
 
         {/* Right rail — tenders + finance only */}
-        <div className="min-w-0 space-y-5">
+        <div className="min-w-0 space-y-6">
           <Reveal delay={120}>
             <TenderCarousel tenders={tenders} />
           </Reveal>
