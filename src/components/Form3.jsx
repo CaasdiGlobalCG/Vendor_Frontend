@@ -25,7 +25,7 @@ const MFG_SUBTYPES = [
 
 const DEFAULT_MACHINE = { machineName: "", serialNumber: "", modelNumber: "", manufacturerName: "", contact: "", purchaseDate: "", warrantyStart: "", warrantyEnd: "", maintenanceDetails: "" };
 
-const DEFAULT_SP = { credentialDeck: null, officeAddress: "", officePhotos: null, teamSize: "", orgChart: null, keyPersonnelCVs: null, professionalLicences: [], techStackDeclaration: "", dataSecurityPolicy: "", dataSecurityPolicyDoc: null, subcontractorDisclosure: "" };
+const DEFAULT_SP = { credentialDeck: null, officeAddress: "", officePhotos: null, teamSize: "" };
 
 const DEFAULT_MFG = { manufacturerSubType: "", factoryAddress: "", factoryPhotos: null, productionCapacity: "", rawMaterialStorage: "", wipStorage: "", finishedGoodsWarehouse: "", workforceHeadcount: "", utilityInfrastructure: "", machineryDetails: [{ ...DEFAULT_MACHINE }], iso9001Certificate: null, productCertifications: [], testReports: null, inHouseQCLab: "", msdsDocument: null, rejectionReturnRate: "", logisticsInfrastructure: "", moqLeadTime: "", packagingStandards: "", batchTrackingSystem: "" };
 
@@ -109,7 +109,7 @@ export default function Form3() {
     productDescription: spd.productDescription || "",
     paymentTerms: spd.paymentTerms || "",
     paymentMode: spd.paymentMode || "",
-    serviceProviderDetails: { ...DEFAULT_SP, ...(spd.serviceProviderDetails || {}), professionalLicences: spd.serviceProviderDetails?.professionalLicences || [] },
+    serviceProviderDetails: { ...DEFAULT_SP, ...(spd.serviceProviderDetails || {}) },
     manufacturerDetails: { ...DEFAULT_MFG, ...(spd.manufacturerDetails || {}), machineryDetails: spd.manufacturerDetails?.machineryDetails?.length ? spd.manufacturerDetails.machineryDetails : [{ ...DEFAULT_MACHINE }], productCertifications: spd.manufacturerDetails?.productCertifications || [] },
   });
 
@@ -224,8 +224,6 @@ export default function Form3() {
 
   const uploadSPFile = (fieldName, file) => uploadFileForSection("serviceProviderDetails", fieldName, file);
   const deleteSPFile = (fieldName) => deleteFileForSection("serviceProviderDetails", fieldName);
-  const addSPLicence = (file) => addFileToArray("serviceProviderDetails", "professionalLicences", file, "spLicence");
-  const removeSPLicence = (index) => removeFileFromArray("serviceProviderDetails", "professionalLicences", index);
 
   const handleMFGChange = (e) => {
     const { name, value } = e.target;
@@ -307,40 +305,6 @@ export default function Form3() {
       <FileUploadField label="Office / Premises Photos" hint="Photos of operational premises (JPG/PNG/ZIP)" fieldName="officePhotos" value={spDetails.officePhotos} onUpload={uploadSPFile} onDelete={deleteSPFile} accept="image/*,.zip" />
 
       <TextField label="Team Size" hint="Total number of employees / contractors" name="teamSize" value={spDetails.teamSize} onChange={handleSPChange} placeholder="e.g. 50" type="number" />
-
-      <FileUploadField label="Org Chart" hint="Organisational chart showing team structure (PDF/PNG)" fieldName="orgChart" value={spDetails.orgChart} onUpload={uploadSPFile} onDelete={deleteSPFile} accept=".pdf,.png,.jpg,.pptx" />
-
-      <FileUploadField label="Key Personnel CVs" hint="CVs of project leads / key personnel (PDF/ZIP)" fieldName="keyPersonnelCVs" value={spDetails.keyPersonnelCVs} onUpload={uploadSPFile} onDelete={deleteSPFile} accept=".pdf,.zip" />
-
-      <div className="flex flex-col md:flex-row items-start gap-6">
-        <div className="w-full md:w-1/3">
-          <label className="text-sm font-semibold text-ink block mb-1">Professional Licences / Certifications</label>
-          <p className="text-xs text-dim">ISO 9001, ISO 27001, CA/CS/Legal bar, IT security certs, etc.</p>
-        </div>
-        <div className="w-full md:w-2/3 space-y-2">
-          {spDetails.professionalLicences.map((lic, i) => (
-            <div key={i} className="flex items-center justify-between border border-line rounded px-3 py-2">
-              <div>
-                <p className="text-sm">{lic.name}</p>
-                <p className="text-xs text-success">{lic.uploading ? "Uploading..." : "✓ Uploaded"}</p>
-              </div>
-              <button type="button" onClick={() => removeSPLicence(i)} className="text-danger text-xs hover:text-danger">Remove</button>
-            </div>
-          ))}
-          <label className="cursor-pointer border border-dashed border-line rounded px-3 py-2 text-sm text-dim hover:border-line transition-colors block">
-            + Add Licence / Certificate
-            <input type="file" className="hidden" accept=".pdf,.jpg,.png,.doc,.docx" onChange={(e) => { if (e.target.files?.[0]) addSPLicence(e.target.files[0]); }} />
-          </label>
-        </div>
-      </div>
-
-      <TextAreaField label="Technology / Tool Stack" hint="Software, platforms, CRM/ERP tools used for service delivery" name="techStackDeclaration" value={spDetails.techStackDeclaration} onChange={handleSPChange} placeholder="List the software, platforms, and tools used in service delivery..." />
-
-      <TextAreaField label="Data Security Policy" hint="Firewall, access controls, data handling, encryption practices" name="dataSecurityPolicy" value={spDetails.dataSecurityPolicy} onChange={handleSPChange} placeholder="Describe your data security and IT infrastructure measures..." />
-
-      <FileUploadField label="Data Security Policy Document" hint="Upload policy document (PDF)" fieldName="dataSecurityPolicyDoc" value={spDetails.dataSecurityPolicyDoc} onUpload={uploadSPFile} onDelete={deleteSPFile} accept=".pdf,.doc,.docx" />
-
-      <TextAreaField label="Sub-contractor / 3rd Party Disclosure" hint="Identify if critical services are outsourced to third parties" name="subcontractorDisclosure" value={spDetails.subcontractorDisclosure} onChange={handleSPChange} placeholder="List any sub-contractors or critical third-party service dependencies..." />
     </div>
   );
 

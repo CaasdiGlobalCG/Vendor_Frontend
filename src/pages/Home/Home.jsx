@@ -497,9 +497,21 @@ const handleCompanySave = async (e) => {
             formDataToSend.append('certifications', file);
         });
         
-        // Add email for identification
+        // Add identifiers for the backend to locate the vendor record
+        const vendorEmail = currentUser?.email
+            || profileData?.email
+            || vendorData?.vendorDetails?.primaryContactEmail
+            || vendorUser?.email
+            || '';
+        const vendorId = vendorData?.vendorId || vendorUser?.vendorId || '';
+        if (!vendorId && !vendorEmail) {
+            setCompanyError('Unable to identify vendor account. Please refresh and try again.');
+            setSaving(false);
+            return;
+        }
         formDataToSend.append('vendorDetails', JSON.stringify({
-            primaryContactEmail: currentUser?.email
+            vendorId,
+            primaryContactEmail: vendorEmail
         }));
         
         // Send update to backend
@@ -514,17 +526,23 @@ const handleCompanySave = async (e) => {
         
         const result = await response.json();
         console.log("Company update result:", result);
-        
-        // Update vendor data in context
+
+        // Use the vendor record returned by the backend so newly uploaded
+        // certification URLs are reflected in the UI immediately
+        const updatedCompanyDetails = result?.data?.companyDetails || {
+            ...vendorData.companyDetails,
+            ...companyFormData,
+            industryType: vendorData.companyDetails?.industryType || companyFormData.industryType
+        };
         setVendorData({
             ...vendorData,
-            companyDetails: {
-                ...vendorData.companyDetails,
-                ...companyFormData,
-                // Ensure we keep the original industry type
-                industryType: vendorData.companyDetails?.industryType || companyFormData.industryType
-            }
+            companyDetails: updatedCompanyDetails
         });
+        setCompanyFormData(prev => ({
+            ...prev,
+            certifications: updatedCompanyDetails.certifications || []
+        }));
+        setCertificationFiles([]);
         
         // Show success message
         setCompanySuccessMessage("Company details updated successfully!");
@@ -640,11 +658,25 @@ const handleCompanySave = async (e) => {
               value={
                 <div className="flex flex-wrap gap-4">
                   {(vendorData.companyDetails?.certifications && vendorData.companyDetails.certifications.length > 0) ? 
-                    vendorData.companyDetails.certifications.map((cert, index) => (
-                      <span key={index} className="bg-surface-hover px-3 py-1 rounded text-xs font-medium">
-                        {typeof cert === 'string' ? cert : cert.name || `Certification ${index + 1}`}
-                      </span>
-                    )) : 
+                    vendorData.companyDetails.certifications.map((cert, index) => {
+                      const certUrl = typeof cert === 'string' ? null : (cert.url || cert.signedUrl || cert.s3Url);
+                      return (
+                        <span key={index} className="bg-surface-hover px-3 py-1 rounded text-xs font-medium inline-flex items-center gap-2">
+                          {typeof cert === 'string' ? cert : cert.name || cert.originalName || `Certification ${index + 1}`}
+                          {certUrl && (
+                            <a
+                              href={certUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-info hover:text-info"
+                              title="View certification"
+                            >
+                              <Eye className="w-3.5 h-3.5" />
+                            </a>
+                          )}
+                        </span>
+                      );
+                    }) : 
                     <span className="text-dim">No certifications uploaded</span>
                   }
                 </div>
@@ -945,11 +977,25 @@ const handleCompanySave = async (e) => {
                   Certifications
                 </label>
                 <div className="flex flex-wrap gap-2 mb-2">
-                  {companyFormData.certifications && companyFormData.certifications.map((cert, index) => (
-                    <div key={index} className="bg-surface-hover px-3 py-1 rounded-full text-sm font-medium">
-                      {cert.name || "Certificate"}
-                    </div>
-                  ))}
+                  {companyFormData.certifications && companyFormData.certifications.map((cert, index) => {
+                    const certUrl = typeof cert === 'string' ? null : (cert.url || cert.signedUrl || cert.s3Url);
+                    return (
+                      <div key={index} className="bg-surface-hover px-3 py-1 rounded-full text-sm font-medium flex items-center gap-2">
+                        {cert.name || cert.originalName || "Certificate"}
+                        {certUrl && (
+                          <a
+                            href={certUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-info hover:text-info"
+                            title="View certification"
+                          >
+                            <Eye className="w-4 h-4" />
+                          </a>
+                        )}
+                      </div>
+                    );
+                  })}
                   {certificationFiles && certificationFiles.map((file, index) => (
                     <div key={`new-${index}`} className="bg-surface-hover px-3 py-1 rounded-full text-sm font-medium flex items-center">
                       <span>{file.name}</span>
