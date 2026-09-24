@@ -23,6 +23,16 @@ const useCanvasWebSocket = (workspaceId, currentUser, options = {}) => {
   const reconnectAttempts = useRef(0);
   const maxReconnectAttempts = 10;
 
+  // Unique per-tab/per-mount client id. Echo suppression must NOT use userId —
+  // the same account open in two windows (e.g. testing PM + vendor locally)
+  // shares a userId, and userId-based filtering would silently drop every
+  // remote op between those windows.
+  const clientIdRef = useRef(
+    (typeof crypto !== 'undefined' && crypto.randomUUID)
+      ? crypto.randomUUID()
+      : `c-${Math.random().toString(36).slice(2)}-${Date.now()}`
+  );
+
   const [isConnected, setIsConnected] = useState(false);
   const [connectedUsers, setConnectedUsers] = useState([]);
   const [remoteCursors, setRemoteCursors] = useState({}); // { userId: { x, y, userName } }
@@ -49,8 +59,9 @@ const useCanvasWebSocket = (workspaceId, currentUser, options = {}) => {
   const handleMessageRef = useRef(null);
 
   handleMessageRef.current = (data) => {
-    // Ignore messages from self (canvas ops have _from, cursors use userId)
-    if (data._from === userIdRef.current && data.type !== 'CONNECTED' && data.type !== 'FULL_STATE') {
+    // Ignore messages sent by THIS tab's socket (canvas ops carry _clientId).
+    // Do not compare userId — two tabs on the same account must still sync.
+    if (data._clientId === clientIdRef.current && data.type !== 'CONNECTED' && data.type !== 'FULL_STATE') {
       return;
     }
 
@@ -76,6 +87,7 @@ const useCanvasWebSocket = (workspaceId, currentUser, options = {}) => {
         break;
 
       case 'CURSOR_MOVE':
+        if (data.clientId && data.clientId === clientIdRef.current) break;
         setRemoteCursors(prev => ({
           ...prev,
           [data.userId]: { x: data.x, y: data.y, userName: data.userName },
@@ -133,6 +145,7 @@ const useCanvasWebSocket = (workspaceId, currentUser, options = {}) => {
       userId: userIdRef.current,
       userName: userNameRef.current,
       userRole: userRoleRef.current,
+      clientId: clientIdRef.current,
     });
     const wsUrl = `${wsProtocol}//${wsHost}/api/workspace/ws/${workspaceId}?${params.toString()}`;
 

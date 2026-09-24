@@ -1,7 +1,7 @@
 import React, { useState, useContext, useEffect, useRef } from 'react';
 import { useParams } from 'react-router-dom';
-import { getWorkspaceById, updateWorkspace, notifyWorkspaceEvent } from '../../utils/workspaceApi';
-import { persistIsImportant, persistDeadline, persistTextContent, persistNodeDataPatch, getTimeLeft as calculateTimeLeft, formatTimeLeft } from '../../utils/nodePersistence';
+import { getWorkspaceById, notifyWorkspaceEvent } from '../../utils/workspaceApi';
+import { persistIsImportant, persistDeadline, persistTextContent, persistNodeDataPatch, persistNodeDeletion, getTimeLeft as calculateTimeLeft, formatTimeLeft } from '../../utils/nodePersistence';
 import { Handle, Position, useReactFlow, NodeResizer } from 'reactflow';
 import * as XLSX from 'xlsx';
 import { Download, Eye, ExternalLink, X, ArrowRight, Check, X as XIcon, Menu, Star, Heart, Info, HelpCircle, Lock, Send, MoreVertical, Copy, Edit2, Trash2, FileText, MessageCircle, FileSpreadsheet } from 'lucide-react';
@@ -44,7 +44,7 @@ import { createTableHelpers, defaultTableData } from '../../utils/tableUtils';
 
 const ElementNode = ({ id, data, isConnectable, selected }) => {
   const workspaceId = data.workspaceId;  // Get workspaceId from node data
-  const { setNodes } = useReactFlow();
+  const { setNodes, setEdges } = useReactFlow();
   const [saving, setSaving] = useState(false);
   // Important state for highlighting
   const [isImportant, setIsImportant] = useState(false);
@@ -374,9 +374,6 @@ const ElementNode = ({ id, data, isConnectable, selected }) => {
   // Force re-render after approval
   const [forceUpdate, setForceUpdate] = useState(0);
   
-  // Send for approval state
-  const [isSendingForApproval, setIsSendingForApproval] = useState(false);
-  
   // Deletion request state
   const [showDeletionModal, setShowDeletionModal] = useState(false);
   const [deletionReason, setDeletionReason] = useState('');
@@ -495,109 +492,11 @@ const ElementNode = ({ id, data, isConnectable, selected }) => {
     return currentUser?.role || 'vendor';
   };
   
-  // Check if vendor can send element for approval
-  const canSendForApproval = () => {
-    const currentUserRole = getCurrentUserRole();
-    const approvalStatus = data.approvalStatus || 'draft';
-    
-    // Only vendors can send for approval, and only if element is in draft/initial state
-    // Accept both 'draft' and 'pending' as initial states (before being sent to PM)
-    const canSend = currentUserRole === 'vendor' && (approvalStatus === 'draft' || approvalStatus === 'pending' || approvalStatus === undefined || approvalStatus === null);
-    
-    if (!canSend && currentUserRole === 'vendor') {
-      console.log('🔍 canSendForApproval DEBUG:', {
-        currentUserRole,
-        approvalStatus,
-        dataApprovalStatus: data.approvalStatus,
-        canSend
-      });
-    }
-    
-    return canSend;
-  };
-  
   // Check if element is locked (cannot be edited)
   const isElementLocked = () => {
     const approvalStatus = data.approvalStatus || 'draft';
     // Element is locked if it's in approval process or fully approved
     return ['sent_to_pm', 'pm_approved', 'client_approved', 'locked'].includes(approvalStatus);
-  };
-  
-  // Handle sending element for approval
-  const handleSendForApproval = async () => {
-    console.log('🚀 handleSendForApproval CALLED! Node ID:', id);
-    console.log('🔍 Current approval status:', data.approvalStatus);
-    console.log('🔍 Workspace ID:', workspaceId);
-    
-    setIsSendingForApproval(true);
-    
-    // Mark that we're in approval submission to prevent WorkspacePage from saving stale canvas data
-    window.__isApprovingInProgress = true;
-    
-    try {
-      const patch = {
-        approvalStatus: 'sent_to_pm',
-        sentForApprovalAt: new Date().toISOString(),
-        sentForApprovalBy: currentUser?.name || currentUser?.email || 'Unknown User'
-      };
-
-      console.log('📤 Persisting send-for-approval patch (subtask-aware)...', { nodeId: id, workspaceId, patch });
-      await persistNodeDataPatch(id, patch, setNodes, workspaceId, { bypassApprovalFlow: true });
-
-      // Fetch fresh workspace data to ensure UI is in sync
-      console.log('🔄 Fetching fresh workspace data...');
-      const freshWorkspaceData = await getWorkspaceById(workspaceId);
-
-      if (freshWorkspaceData) {
-        // Find the updated node from fresh data
-        let updatedNodeFromServer = null;
-        (freshWorkspaceData.tasks || []).forEach(task => {
-          (task.subtasks || []).forEach(subtask => {
-            (subtask.canvasData?.nodes || []).forEach(node => {
-              if (node.id === id) {
-                updatedNodeFromServer = node;
-                console.log('📝 Found updated node from server:', {
-                  id: node.id,
-                  approvalStatus: node.data?.approvalStatus
-                });
-              }
-            });
-          });
-        });
-
-        if (!updatedNodeFromServer) {
-          console.error('❌ Could not find updated node in fresh data after send-for-approval');
-        }
-      }
-
-      // Force re-render to ensure UI updates
-      setForceUpdate(prev => prev + 1);
-
-      // Notify PMs that this element needs their approval
-      notifyWorkspaceEvent({
-        workspaceId,
-        roles: ['pm'],
-        excludeUserId: currentUser?.vendorId || currentUser?.userId || currentUser?.pmId || currentUser?.id,
-        type: 'approval_request',
-        title: 'Approval requested',
-        message: `${currentUser?.name || currentUser?.email || 'A vendor'} sent "${data.name || data.type || 'an element'}" for approval`,
-        data: { nodeId: id, elementName: data.name, elementType: data.type },
-        priority: 'high',
-        actionRequired: true,
-      });
-
-      console.log('✅ Element sent for approval successfully');
-    } catch (error) {
-      console.error('❌ Error sending element for approval:', error);
-      console.error('Error details:', error.message, error.stack);
-    } finally {
-      setIsSendingForApproval(false);
-      // Wait before clearing the approval flag to ensure canvas saves are blocked
-      setTimeout(() => {
-        window.__isApprovingInProgress = false;
-        console.log('✅ Send for approval workflow completed, canvas saves re-enabled');
-      }, 2000);
-    }
   };
   
   // Handle opening approval modal
@@ -694,7 +593,7 @@ const ElementNode = ({ id, data, isConnectable, selected }) => {
 
         // Update local React Flow state with fresh data from server
         console.log('🔄 Updating local React Flow state with server data...');
-        if (updatedNodeFromServer) {
+        if (updatedNodeFromServer && updatedNodeFromServer.data?.approvalStatus === newApprovalStatus) {
           setNodes((nds) => nds.map((node) => {
             if (node.id === id) {
               console.log('📝 Local state updated with server node data:', updatedNodeFromServer.data);
@@ -702,6 +601,19 @@ const ElementNode = ({ id, data, isConnectable, selected }) => {
             }
             return node;
           }));
+        } else {
+          // Server read may still be stale (eventual consistency) — keep the
+          // optimistic approval patch locally so the UI doesn't appear to revert
+          console.warn('⚠️ Fresh data missing approval — applying patch locally', {
+            nodeId: id,
+            expected: newApprovalStatus,
+            received: updatedNodeFromServer?.data?.approvalStatus
+          });
+          setNodes((nds) => nds.map((node) =>
+            node.id === id
+              ? { ...node, data: { ...(node.data || {}), ...newApprovalData } }
+              : node
+          ));
         }
       }
         
@@ -911,15 +823,14 @@ const ElementNode = ({ id, data, isConnectable, selected }) => {
       if (data.deletionRequested) {
         // PM approving an existing deletion request
         if (window.confirm('Approve deletion of this element?')) {
-          // Emit delete action for actual deletion
-          const event = new CustomEvent('element-delete', { detail: { nodeId: id } });
-          window.dispatchEvent(event);
+          // Emit delete action for actual deletion — CanvasWorkspace listens
+          // for 'deleteElement' on document with an elementId payload
+          document.dispatchEvent(new CustomEvent('deleteElement', { detail: { elementId: id } }));
         }
       } else {
         // PM deleting directly (with confirmation)
         if (window.confirm('Are you sure you want to delete this element?')) {
-          const event = new CustomEvent('element-delete', { detail: { nodeId: id } });
-          window.dispatchEvent(event);
+          document.dispatchEvent(new CustomEvent('deleteElement', { detail: { elementId: id } }));
         }
       }
     }
@@ -983,7 +894,7 @@ const ElementNode = ({ id, data, isConnectable, selected }) => {
         type: 'deletion_request',
         title: 'Deletion requested',
         message: `${currentUser?.name || currentUser?.email || 'A vendor'} requested deletion of "${data.name || data.type || 'an element'}"`,
-        data: { nodeId: id, elementName: data.name, elementType: data.type },
+        data: { nodeId: id, elementName: data.name, elementType: data.type, taskId: data.taskId, subtaskId: data.subtaskId },
         priority: 'high',
         actionRequired: true,
       });
@@ -1001,25 +912,18 @@ const ElementNode = ({ id, data, isConnectable, selected }) => {
 
     try {
       setIsSubmittingDeletion(true);
-      
-      // Get current workspace
-      const workspace = await getWorkspaceById(workspaceId);
-      
-      // Filter out the deleted node
-      const updatedNodes = (workspace.nodes || []).filter(node => node.id !== id);
-      
-      // Update workspace without the deleted element
-      await updateWorkspace(workspaceId, {
-        nodes: updatedNodes,
-        edges: workspace.edges || [],
-        zoomLevel: workspace.zoomLevel || 100
-      });
-      
+
+      // Run the canvas delete path first — removes node + connected edges
+      // locally, emits NODE_DELETE to collaborators, records deletion history
+      document.dispatchEvent(new CustomEvent('deleteElement', { detail: { elementId: id } }));
+
+      // Then durably remove the node from the owning subtask canvas (elements
+      // live in subtask canvasData, not the workspace root nodes) so the
+      // deletion persists regardless of WebSocket/autosave state
+      await persistNodeDeletion(id, setNodes, setEdges, workspaceId);
+
       console.log('✅ Element deleted successfully by PM:', { nodeId: id, workspaceId });
-      
-      // Remove from local React state
-      setNodes((currentNodes) => currentNodes.filter(node => node.id !== id));
-      
+
       // Emit event for parent component
       const event = new CustomEvent('element-deleted', { detail: { nodeId: id } });
       window.dispatchEvent(event);
@@ -2042,7 +1946,7 @@ const ElementNode = ({ id, data, isConnectable, selected }) => {
           type="source"
           position={Position.Top}
           id="top-out"
-          style={{ left: '48%' }}
+          style={{ left: '50%' }}
           className="w-3 h-3 !bg-cta !border-2 !border-white opacity-0 group-hover:opacity-100 transition-opacity hover:!bg-cta"
           isConnectable={isConnectable}
         />
@@ -2050,7 +1954,7 @@ const ElementNode = ({ id, data, isConnectable, selected }) => {
           type="target"
           position={Position.Top}
           id="top-in"
-          style={{ left: '52%' }}
+          style={{ left: '50%' }}
           className="w-3 h-3 !bg-cta !border-2 !border-white opacity-0 group-hover:opacity-100 transition-opacity hover:!bg-cta"
           isConnectable={isConnectable}
         />
@@ -2059,7 +1963,7 @@ const ElementNode = ({ id, data, isConnectable, selected }) => {
           type="source"
           position={Position.Right}
           id="right-out"
-          style={{ top: '48%' }}
+          style={{ top: '50%' }}
           className="w-3 h-3 !bg-cta !border-2 !border-white opacity-0 group-hover:opacity-100 transition-opacity hover:!bg-cta"
           isConnectable={isConnectable}
         />
@@ -2067,7 +1971,7 @@ const ElementNode = ({ id, data, isConnectable, selected }) => {
           type="target"
           position={Position.Right}
           id="right-in"
-          style={{ top: '52%' }}
+          style={{ top: '50%' }}
           className="w-3 h-3 !bg-cta !border-2 !border-white opacity-0 group-hover:opacity-100 transition-opacity hover:!bg-cta"
           isConnectable={isConnectable}
         />
@@ -2076,7 +1980,7 @@ const ElementNode = ({ id, data, isConnectable, selected }) => {
           type="source"
           position={Position.Bottom}
           id="bottom-out"
-          style={{ left: '48%' }}
+          style={{ left: '50%' }}
           className="w-3 h-3 !bg-cta !border-2 !border-white opacity-0 group-hover:opacity-100 transition-opacity hover:!bg-cta"
           isConnectable={isConnectable}
         />
@@ -2084,7 +1988,7 @@ const ElementNode = ({ id, data, isConnectable, selected }) => {
           type="target"
           position={Position.Bottom}
           id="bottom-in"
-          style={{ left: '52%' }}
+          style={{ left: '50%' }}
           className="w-3 h-3 !bg-cta !border-2 !border-white opacity-0 group-hover:opacity-100 transition-opacity hover:!bg-cta"
           isConnectable={isConnectable}
         />
@@ -2093,7 +1997,7 @@ const ElementNode = ({ id, data, isConnectable, selected }) => {
           type="source"
           position={Position.Left}
           id="left-out"
-          style={{ top: '48%' }}
+          style={{ top: '50%' }}
           className="w-3 h-3 !bg-cta !border-2 !border-white opacity-0 group-hover:opacity-100 transition-opacity hover:!bg-cta"
           isConnectable={isConnectable}
         />
@@ -2101,7 +2005,7 @@ const ElementNode = ({ id, data, isConnectable, selected }) => {
           type="target"
           position={Position.Left}
           id="left-in"
-          style={{ top: '52%' }}
+          style={{ top: '50%' }}
           className="w-3 h-3 !bg-cta !border-2 !border-white opacity-0 group-hover:opacity-100 transition-opacity hover:!bg-cta"
           isConnectable={isConnectable}
         />
@@ -2245,21 +2149,21 @@ const ElementNode = ({ id, data, isConnectable, selected }) => {
     return (
       <div className={`relative group ${selected ? 'z-10' : ''}`}>
         {/* Connection Handles - uniform gray, bidirectional */}
-        <Handle type="source" position={Position.Top} id="top-out" style={{ left: '48%' }}
+        <Handle type="source" position={Position.Top} id="top-out" style={{ left: '50%' }}
           className="w-2.5 h-2.5 !bg-cta !border-2 !border-white opacity-0 group-hover:opacity-100 transition-opacity" isConnectable={isConnectable} />
-        <Handle type="target" position={Position.Top} id="top-in" style={{ left: '52%' }}
+        <Handle type="target" position={Position.Top} id="top-in" style={{ left: '50%' }}
           className="w-2.5 h-2.5 !bg-cta !border-2 !border-white opacity-0 group-hover:opacity-100 transition-opacity" isConnectable={isConnectable} />
-        <Handle type="source" position={Position.Right} id="right-out" style={{ top: '48%' }}
+        <Handle type="source" position={Position.Right} id="right-out" style={{ top: '50%' }}
           className="w-2.5 h-2.5 !bg-cta !border-2 !border-white opacity-0 group-hover:opacity-100 transition-opacity" isConnectable={isConnectable} />
-        <Handle type="target" position={Position.Right} id="right-in" style={{ top: '52%' }}
+        <Handle type="target" position={Position.Right} id="right-in" style={{ top: '50%' }}
           className="w-2.5 h-2.5 !bg-cta !border-2 !border-white opacity-0 group-hover:opacity-100 transition-opacity" isConnectable={isConnectable} />
-        <Handle type="source" position={Position.Bottom} id="bottom-out" style={{ left: '48%' }}
+        <Handle type="source" position={Position.Bottom} id="bottom-out" style={{ left: '50%' }}
           className="w-2.5 h-2.5 !bg-cta !border-2 !border-white opacity-0 group-hover:opacity-100 transition-opacity" isConnectable={isConnectable} />
-        <Handle type="target" position={Position.Bottom} id="bottom-in" style={{ left: '52%' }}
+        <Handle type="target" position={Position.Bottom} id="bottom-in" style={{ left: '50%' }}
           className="w-2.5 h-2.5 !bg-cta !border-2 !border-white opacity-0 group-hover:opacity-100 transition-opacity" isConnectable={isConnectable} />
-        <Handle type="source" position={Position.Left} id="left-out" style={{ top: '48%' }}
+        <Handle type="source" position={Position.Left} id="left-out" style={{ top: '50%' }}
           className="w-2.5 h-2.5 !bg-cta !border-2 !border-white opacity-0 group-hover:opacity-100 transition-opacity" isConnectable={isConnectable} />
-        <Handle type="target" position={Position.Left} id="left-in" style={{ top: '52%' }}
+        <Handle type="target" position={Position.Left} id="left-in" style={{ top: '50%' }}
           className="w-2.5 h-2.5 !bg-cta !border-2 !border-white opacity-0 group-hover:opacity-100 transition-opacity" isConnectable={isConnectable} />
 
         {/* The button itself */}
@@ -2470,21 +2374,21 @@ const ElementNode = ({ id, data, isConnectable, selected }) => {
         style={{ width: 36, height: 36 }}
       >
         {/* Connection Handles */}
-        <Handle type="source" position={Position.Top} id="top-out" style={{ left: '48%' }}
+        <Handle type="source" position={Position.Top} id="top-out" style={{ left: '50%' }}
           className="w-2.5 h-2.5 !bg-cta !border-2 !border-white opacity-0 group-hover:opacity-100 transition-opacity" isConnectable={isConnectable} />
-        <Handle type="target" position={Position.Top} id="top-in" style={{ left: '52%' }}
+        <Handle type="target" position={Position.Top} id="top-in" style={{ left: '50%' }}
           className="w-2.5 h-2.5 !bg-cta !border-2 !border-white opacity-0 group-hover:opacity-100 transition-opacity" isConnectable={isConnectable} />
-        <Handle type="source" position={Position.Right} id="right-out" style={{ top: '48%' }}
+        <Handle type="source" position={Position.Right} id="right-out" style={{ top: '50%' }}
           className="w-2.5 h-2.5 !bg-cta !border-2 !border-white opacity-0 group-hover:opacity-100 transition-opacity" isConnectable={isConnectable} />
-        <Handle type="target" position={Position.Right} id="right-in" style={{ top: '52%' }}
+        <Handle type="target" position={Position.Right} id="right-in" style={{ top: '50%' }}
           className="w-2.5 h-2.5 !bg-cta !border-2 !border-white opacity-0 group-hover:opacity-100 transition-opacity" isConnectable={isConnectable} />
-        <Handle type="source" position={Position.Bottom} id="bottom-out" style={{ left: '48%' }}
+        <Handle type="source" position={Position.Bottom} id="bottom-out" style={{ left: '50%' }}
           className="w-2.5 h-2.5 !bg-cta !border-2 !border-white opacity-0 group-hover:opacity-100 transition-opacity" isConnectable={isConnectable} />
-        <Handle type="target" position={Position.Bottom} id="bottom-in" style={{ left: '52%' }}
+        <Handle type="target" position={Position.Bottom} id="bottom-in" style={{ left: '50%' }}
           className="w-2.5 h-2.5 !bg-cta !border-2 !border-white opacity-0 group-hover:opacity-100 transition-opacity" isConnectable={isConnectable} />
-        <Handle type="source" position={Position.Left} id="left-out" style={{ top: '48%' }}
+        <Handle type="source" position={Position.Left} id="left-out" style={{ top: '50%' }}
           className="w-2.5 h-2.5 !bg-cta !border-2 !border-white opacity-0 group-hover:opacity-100 transition-opacity" isConnectable={isConnectable} />
-        <Handle type="target" position={Position.Left} id="left-in" style={{ top: '52%' }}
+        <Handle type="target" position={Position.Left} id="left-in" style={{ top: '50%' }}
           className="w-2.5 h-2.5 !bg-cta !border-2 !border-white opacity-0 group-hover:opacity-100 transition-opacity" isConnectable={isConnectable} />
 
         {/* ── Avatar Pin (always visible) ── */}
@@ -2744,7 +2648,7 @@ const ElementNode = ({ id, data, isConnectable, selected }) => {
         type="source"
         position={Position.Top}
         id="top-out"
-        style={{ left: '48%' }}
+        style={{ left: '50%' }}
         className="w-3 h-3 !bg-cta !border-2 !border-white opacity-0 group-hover:opacity-100 transition-opacity hover:!bg-cta"
         isConnectable={isConnectable}
       />
@@ -2752,7 +2656,7 @@ const ElementNode = ({ id, data, isConnectable, selected }) => {
         type="target"
         position={Position.Top}
         id="top-in"
-        style={{ left: '52%' }}
+        style={{ left: '50%' }}
         className="w-3 h-3 !bg-cta !border-2 !border-white opacity-0 group-hover:opacity-100 transition-opacity hover:!bg-cta"
         isConnectable={isConnectable}
       />
@@ -2761,7 +2665,7 @@ const ElementNode = ({ id, data, isConnectable, selected }) => {
         type="source"
         position={Position.Right}
         id="right-out"
-        style={{ top: '48%' }}
+        style={{ top: '50%' }}
         className="w-3 h-3 !bg-cta !border-2 !border-white opacity-0 group-hover:opacity-100 transition-opacity hover:!bg-cta"
         isConnectable={isConnectable}
       />
@@ -2769,7 +2673,7 @@ const ElementNode = ({ id, data, isConnectable, selected }) => {
         type="target"
         position={Position.Right}
         id="right-in"
-        style={{ top: '52%' }}
+        style={{ top: '50%' }}
         className="w-3 h-3 !bg-cta !border-2 !border-white opacity-0 group-hover:opacity-100 transition-opacity hover:!bg-cta"
         isConnectable={isConnectable}
       />
@@ -2778,7 +2682,7 @@ const ElementNode = ({ id, data, isConnectable, selected }) => {
         type="source"
         position={Position.Bottom}
         id="bottom-out"
-        style={{ left: '48%' }}
+        style={{ left: '50%' }}
         className="w-3 h-3 !bg-cta !border-2 !border-white opacity-0 group-hover:opacity-100 transition-opacity hover:!bg-cta"
         isConnectable={isConnectable}
       />
@@ -2786,7 +2690,7 @@ const ElementNode = ({ id, data, isConnectable, selected }) => {
         type="target"
         position={Position.Bottom}
         id="bottom-in"
-        style={{ left: '52%' }}
+        style={{ left: '50%' }}
         className="w-3 h-3 !bg-cta !border-2 !border-white opacity-0 group-hover:opacity-100 transition-opacity hover:!bg-cta"
         isConnectable={isConnectable}
       />
@@ -2795,7 +2699,7 @@ const ElementNode = ({ id, data, isConnectable, selected }) => {
         type="source"
         position={Position.Left}
         id="left-out"
-        style={{ top: '48%' }}
+        style={{ top: '50%' }}
         className="w-3 h-3 !bg-cta !border-2 !border-white opacity-0 group-hover:opacity-100 transition-opacity hover:!bg-cta"
         isConnectable={isConnectable}
       />
@@ -2803,7 +2707,7 @@ const ElementNode = ({ id, data, isConnectable, selected }) => {
         type="target"
         position={Position.Left}
         id="left-in"
-        style={{ top: '52%' }}
+        style={{ top: '50%' }}
         className="w-3 h-3 !bg-cta !border-2 !border-white opacity-0 group-hover:opacity-100 transition-opacity hover:!bg-cta"
         isConnectable={isConnectable}
       />
@@ -3213,40 +3117,6 @@ const ElementNode = ({ id, data, isConnectable, selected }) => {
           </div>
         )}
         
-        {/* Send for Approval Button (only for vendors on draft elements) */}
-        {(() => {
-          const canSend = canSendForApproval();
-          console.log('📤 Button visibility check:', {
-            nodeId: id,
-            canSend,
-            currentUserRole: getCurrentUserRole(),
-            approvalStatus: data.approvalStatus
-          });
-          return canSend && (
-            <div className="mb-3">
-              <button
-                onClick={handleSendForApproval}
-                disabled={isSendingForApproval}
-                className="w-full flex items-center justify-center space-x-2 px-3 py-2 bg-info hover:bg-info text-white text-sm font-medium rounded-lg transition-colors  disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {isSendingForApproval ? (
-                  <>
-                    <svg className="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                    </svg>
-                    <span>Sending...</span>
-                  </>
-                ) : (
-                  <>
-                    <Send className="w-4 h-4" />
-                    <span>Send for Approval</span>
-                  </>
-                )}
-              </button>
-            </div>
-          );
-        })()}
         
         {/* Approval/Reject Buttons (only show if user can approve) */}
         {canApprove() && (

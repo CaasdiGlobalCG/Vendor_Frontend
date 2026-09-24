@@ -35,6 +35,7 @@ import ReviewProgressModal from './components/modals/ReviewProgressModal';
 import ProjectCompleteModal from './components/modals/ProjectCompleteModal';
 import PermissionsModal from './components/PermissionsModal';
 import InviteCASModal from './components/InviteCASModal';
+import InviteVendorsModal from './components/InviteVendorsModal';
 import CostCalculatorsModal from './components/modals/CostCalculatorsModal';
 import useWebSocketNotifications from '../../hooks/useWebSocketNotifications';
 import useCanvasWebSocket from '../../hooks/useCanvasWebSocket';
@@ -47,6 +48,8 @@ import WorkflowBuilderModal from './components/modals/WorkflowBuilderModal';
 import useVideoCall from '../../hooks/useVideoCall';
 import config from '../../config/env';
 import authFetch from '../../utils/authFetch';
+import { notifyWorkspaceEvent, getWorkspaceById } from './utils/workspaceApi';
+import { findSubtaskContainingNode } from './utils/nodePersistence';
 
 const WorkspacePage = () => {
   const COMPACT_WORKSPACE_BREAKPOINT = 768;
@@ -55,6 +58,47 @@ const WorkspacePage = () => {
   const location = useLocation();
   const vendorContextValue = useContext(VendorContext);
   const { currentUser, setUser } = vendorContextValue;
+
+  // Share-link params — present when someone opens a "Share Progress" invite
+  const shareParams = useMemo(() => {
+    const params = new URLSearchParams(window.location.search);
+    return {
+      isSharedVisit: params.get('shared') === '1',
+      invite: params.get('invite'),
+      sharedBy: params.get('sharedBy'),
+      permission: params.get('permission') || 'view',
+    };
+  }, []);
+  const shareViewOnly = shareParams.isSharedVisit && shareParams.permission === 'view';
+  const shareCanEdit = shareParams.isSharedVisit && (shareParams.permission === 'edit' || shareParams.permission === 'anyone_edit');
+
+  // Notify PMs when an invitee opens a Share Progress link (once per session)
+  const shareJoinNotifiedRef = useRef(false);
+  useEffect(() => {
+    if (!shareParams.isSharedVisit || !shareParams.invite || !workspaceId) return;
+    if (shareJoinNotifiedRef.current) return;
+    const dedupeKey = `share_joined_${workspaceId}_${shareParams.invite}`;
+    if (sessionStorage.getItem(dedupeKey)) return;
+    shareJoinNotifiedRef.current = true;
+
+    (async () => {
+      await notifyWorkspaceEvent({
+        workspaceId,
+        roles: ['pm'],
+        type: 'share_joined',
+        title: 'Shared link opened',
+        message: `${shareParams.invite} opened the workspace via a shared link${shareParams.sharedBy ? ` from ${shareParams.sharedBy}` : ''}`,
+        data: { invitee: shareParams.invite, permission: shareParams.permission },
+        priority: 'medium',
+      });
+      sessionStorage.setItem(dedupeKey, '1');
+    })();
+
+    // Strip share params from the URL so refreshes don't re-trigger
+    const url = new URL(window.location.href);
+    ['shared', 'invite', 'sharedBy', 'permission'].forEach(k => url.searchParams.delete(k));
+    window.history.replaceState({}, '', url.toString());
+  }, [workspaceId, shareParams]);
   
   // Enhanced PM and CAS detection for cross-origin access
   const urlParams = new URLSearchParams(location.search);
@@ -530,15 +574,24 @@ const WorkspacePage = () => {
       if (response.ok) {
         const freshWorkspaceData = await response.json();
         setWorkspace(freshWorkspaceData);
-        
-        // Keep selectedTask/selectedSubtask in sync
-        if (selectedTask?.id && selectedSubtask?.id && Array.isArray(freshWorkspaceData?.tasks)) {
-          const updatedTask = freshWorkspaceData.tasks.find(t => t.id === selectedTask.id);
-          const updatedSubtask = updatedTask?.subtasks?.find(s => s.id === selectedSubtask.id);
-          if (updatedTask) setSelectedTask(updatedTask);
-          if (updatedSubtask) setSelectedSubtask(updatedSubtask);
+
+        // Keep selectedTask/selectedSubtask in sync — functional updates so an
+        // in-flight refetch refreshes whatever the user has selected NOW,
+        // instead of reverting them to the subtask captured in this closure.
+        if (Array.isArray(freshWorkspaceData?.tasks)) {
+          setSelectedTask(prev =>
+            prev?.id ? freshWorkspaceData.tasks.find(t => t.id === prev.id) || prev : prev
+          );
+          setSelectedSubtask(prev => {
+            if (!prev?.id) return prev;
+            for (const t of freshWorkspaceData.tasks) {
+              const s = t.subtasks?.find(s => s.id === prev.id);
+              if (s) return s;
+            }
+            return prev;
+          });
         }
-        
+
         console.log('✅ Workspace data refreshed');
         return freshWorkspaceData;
       }
@@ -1107,6 +1160,34 @@ const WorkspacePage = () => {
     canAssignTasks: false,
     canUpdateTaskStatus: false
   });
+
+  // Text tool state — mirrors CanvasWorkspace's text-placement mode so the
+  // dock icon can highlight and toggle it
+  const [isTextToolActive, setIsTextToolActive] = useState(false);
+  useEffect(() => {
+    const handler = (e) => setIsTextToolActive(!!e.detail?.active);
+    document.addEventListener('activateTextMode', handler);
+    return () => document.removeEventListener('activateTextMode', handler);
+  }, []);
+
+  const handleSelectDockTabTextAware = useCallback((tabId) => {
+    // The Text icon is a canvas tool, not a panel tab — click toggles
+    // text-placement mode (I-beam cursor, click anywhere to type), click
+    // again to exit. Switching to another tab exits text mode.
+    if (tabId === 'text') {
+      if (isTextToolActive || userPermissions?.canEdit) {
+        document.dispatchEvent(new CustomEvent('activateTextMode', {
+          detail: { active: !isTextToolActive }
+        }));
+      }
+      return;
+    }
+    if (isTextToolActive) {
+      document.dispatchEvent(new CustomEvent('activateTextMode', { detail: { active: false } }));
+    }
+    handleSelectDockTab(tabId);
+  }, [isTextToolActive, userPermissions?.canEdit, handleSelectDockTab]);
+
   const [showPermissionsModal, setShowPermissionsModal] = useState(false);
   const [showInviteVendorsModal, setShowInviteVendorsModal] = useState(false);
   const [showInviteCASModal, setShowInviteCASModal] = useState(false);
@@ -1229,7 +1310,7 @@ const WorkspacePage = () => {
           });
           
           setUserPermissions({
-            canEdit: finalRole === 'pm' || permissions.canEdit?.includes(userId) || false,
+            canEdit: shareViewOnly ? false : (shareCanEdit || finalRole === 'pm' || permissions.canEdit?.includes(userId) || false),
             canComment: permissions.canComment?.includes(userId) || true,
             canViewFiles: permissions.canViewFiles?.includes(userId) || true,
             canCreateTasks: finalRole === 'pm' || permissions.canCreateTasks?.includes(userId) || false,
@@ -1244,7 +1325,7 @@ const WorkspacePage = () => {
           // Default permissions for non-RBAC workspaces
           const finalRole = isClient ? 'client' : userRole;
           setUserPermissions({
-            canEdit: finalRole === 'pm',
+            canEdit: shareViewOnly ? false : (shareCanEdit || finalRole === 'pm'),
             canComment: true,
             canViewFiles: true,
             canCreateTasks: finalRole === 'pm',
@@ -1284,11 +1365,18 @@ const WorkspacePage = () => {
           setWorkspace(freshWorkspaceData);
 
           // Keep selectedTask/selectedSubtask in sync so CanvasWorkspace renders latest canvasData
-          if (selectedTask?.id && selectedSubtask?.id && Array.isArray(freshWorkspaceData?.tasks)) {
-            const updatedTask = freshWorkspaceData.tasks.find(t => t.id === selectedTask.id);
-            const updatedSubtask = updatedTask?.subtasks?.find(s => s.id === selectedSubtask.id);
-            if (updatedTask) setSelectedTask(updatedTask);
-            if (updatedSubtask) setSelectedSubtask(updatedSubtask);
+          if (Array.isArray(freshWorkspaceData?.tasks)) {
+            setSelectedTask(prev =>
+              prev?.id ? freshWorkspaceData.tasks.find(t => t.id === prev.id) || prev : prev
+            );
+            setSelectedSubtask(prev => {
+              if (!prev?.id) return prev;
+              for (const t of freshWorkspaceData.tasks) {
+                const s = t.subtasks?.find(s => s.id === prev.id);
+                if (s) return s;
+              }
+              return prev;
+            });
           }
 
           console.log('✅ WorkspacePage: Workspace refreshed after approval completion');
@@ -1361,16 +1449,20 @@ const WorkspacePage = () => {
         // Update the workspace with the latest data
         setWorkspace(result.workspace);
         
-        // Update selectedSubtask to reflect the new canvas data
+        // Update selectedSubtask to reflect the new canvas data — functional
+        // update so a slow save can't revert a subtask switch made in the meantime
         if (result.workspace?.tasks) {
-          const updatedTask = result.workspace.tasks.find(t => t.id === selectedTask.id);
-          if (updatedTask?.subtasks) {
-            const updatedSubtask = updatedTask.subtasks.find(s => s.id === selectedSubtask.id);
-            if (updatedSubtask) {
-              setSelectedSubtask(updatedSubtask);
-              console.log('🔄 WorkspacePage: Updated selectedSubtask with new canvas data');
+          setSelectedSubtask(prev => {
+            if (!prev?.id) return prev;
+            for (const t of result.workspace.tasks) {
+              const s = t.subtasks?.find(s => s.id === prev.id);
+              if (s) {
+                console.log('🔄 WorkspacePage: Updated selectedSubtask with new canvas data');
+                return s;
+              }
             }
-          }
+            return prev;
+          });
         }
         
       } catch (error) {
@@ -1499,6 +1591,13 @@ const WorkspacePage = () => {
   const handleCASInviteSuccess = (invitedEmployees) => {
     console.log('✅ CAS members invited successfully:', invitedEmployees);
     // Refresh workspace so casCollaborators (e.g. Turnkey members) is up to date
+    triggerActivityRefresh();
+    refetchWorkspace();
+  };
+
+  const handleVendorInviteSuccess = (invitedVendors) => {
+    console.log('✅ Vendors invited successfully:', invitedVendors);
+    // Refresh workspace so collaborators/permissions reflect the new vendors
     triggerActivityRefresh();
     refetchWorkspace();
   };
@@ -1934,6 +2033,47 @@ const WorkspacePage = () => {
 
   const handleSubtaskClick = (subtask) => {
     setSelectedSubtask(subtask);
+  };
+
+  // Notification click — mark read, then act on it. Notifications carrying a
+  // canvas node (deletion requests etc.) navigate to the owning subtask and
+  // focus/select the node so the PM can immediately review it.
+  const handleNotificationClick = async (notification) => {
+    const nodeId = notification?.data?.nodeId || notification?.data?.elementId;
+    if (!nodeId) return;
+
+    // Locate the subtask canvas containing the node — prefer the ids carried
+    // in the notification, fall back to searching the workspace.
+    let taskId = notification.data?.taskId || null;
+    let subtaskId = notification.data?.subtaskId || null;
+
+    let ws = workspace;
+    if (!taskId || !subtaskId) {
+      let hit = findSubtaskContainingNode(ws, nodeId);
+      if (!hit && workspaceId) {
+        try {
+          ws = await getWorkspaceById(workspaceId);
+          hit = findSubtaskContainingNode(ws, nodeId);
+        } catch (e) {
+          console.warn('Could not refetch workspace for notification navigation', e);
+        }
+      }
+      taskId = hit?.taskId || taskId;
+      subtaskId = hit?.subtaskId || subtaskId;
+    }
+
+    const task = ws?.tasks?.find(t => t.id === taskId);
+    const subtask = task?.subtasks?.find(s => s.id === subtaskId);
+    if (task && subtask) {
+      setSelectedTask(task);
+      setSelectedSubtask(subtask);
+      setSelectedLayer(null);
+      setSelectedLayerItem(null);
+    }
+
+    // Select + center the node once its canvas is on screen (the canvas
+    // retries internally while the subtask finishes loading)
+    window.dispatchEvent(new CustomEvent('focusCanvasNode', { detail: { nodeId } }));
   };
 
   const handleBackToTask = () => {
@@ -2396,12 +2536,13 @@ const WorkspacePage = () => {
           unreadCount={unreadCount}
           notifications={notifications}
           onMarkNotificationAsRead={markNotificationAsRead}
+          onNotificationClick={handleNotificationClick}
           onMarkAllNotificationsAsRead={markAllAsRead}
           onStartCall={handleStartCallClick}
           onManagePermissions={handleManagePermissions}
           onInviteVendors={handleInviteVendors}
           onInviteCAS={handleInviteCAS}
-          onShareProgress={() => setShowShareModal(true)}
+          onShareProgress={detectedUserRole === 'pm' ? () => setShowShareModal(true) : undefined}
           onOpenPostServices={() => setShowPostServicesModal(true)}
           onOpenAIBuilder={() => setShowAIBuilder(true)}
           onOpenUpdateProgress={() => setShowUpdateProgressModal(true)}
@@ -2447,8 +2588,9 @@ const WorkspacePage = () => {
           {!isMobile && (
             <WorkspaceDock
               activeTab={dockActiveTab}
-              onSelectTab={handleSelectDockTab}
+              onSelectTab={handleSelectDockTabTextAware}
               isPanelOpen={isContextPanelOpen}
+              activeToolId={isTextToolActive ? 'text' : null}
             />
           )}
 
@@ -2522,6 +2664,7 @@ const WorkspacePage = () => {
               userPermissions={userPermissions}
               canvasWebSocket={canvasWebSocket}
               workspaceCollaborators={workspaceCollaborators}
+              currentUser={currentUser}
               focusMode={focusMode}
               canvasTheme={canvasTheme}
             />
@@ -2542,6 +2685,7 @@ const WorkspacePage = () => {
             unreadCount={unreadCount}
             isConnected={isConnected}
             onMarkNotificationAsRead={markNotificationAsRead}
+            onNotificationClick={handleNotificationClick}
             onMarkAllAsRead={markAllAsRead}
             canvasElements={canvasNodes}
             onZoomToElement={(elementId) => {
@@ -2806,6 +2950,14 @@ const WorkspacePage = () => {
         onClose={() => setShowInviteCASModal(false)}
         workspace={workspace}
         onInviteSuccess={handleCASInviteSuccess}
+      />
+
+      {/* Invite Vendors Modal */}
+      <InviteVendorsModal
+        isOpen={showInviteVendorsModal}
+        onClose={() => setShowInviteVendorsModal(false)}
+        workspace={workspace}
+        onInviteSuccess={handleVendorInviteSuccess}
       />
 
       {/* Cost Calculators Modal */}

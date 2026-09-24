@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
-import { persistIsImportant, persistDeadline, persistTextContent, formatTimeLeft, getTimeLeft } from '../../utils/nodePersistence';
+import { persistIsImportant, persistDeadline, persistTextContent, emitLiveTextPatch, consumeTextNodeFocus, formatTimeLeft, getTimeLeft } from '../../utils/nodePersistence';
 import { Handle, Position, useReactFlow } from 'reactflow';
 
 const TextNode = ({ id, data, isConnectable, selected }) => {
@@ -48,6 +48,17 @@ const TextNode = ({ id, data, isConnectable, selected }) => {
       setEditContent(data.content);
     }
   }, [data.content, isEditing]);
+
+  // Nodes placed by the text tool are queued for edit-mode on first mount
+  // (module-level registry — never broadcast or persisted). Also clear any
+  // stale data.isEditing flag left over from older saves.
+  useEffect(() => {
+    if (consumeTextNodeFocus(id)) setIsEditing(true);
+    if (data.isEditing) {
+      setNodes(nds => nds.map(n => n.id === id ? { ...n, data: { ...n.data, isEditing: false } } : n));
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Auto-save text content when editing completes
   useEffect(() => {
@@ -119,24 +130,32 @@ const TextNode = ({ id, data, isConnectable, selected }) => {
     return 'border-line';
   };
 
+  const FONT_WEIGHTS = { regular: '400', medium: '500', semibold: '600', bold: '700' };
+
   const getTextStyle = () => {
     const styles = {
       fontFamily: data.fontFamily || 'Arial',
       fontSize: `${data.fontSize || 12}pt`,
       color: data.color || '#000000',
+      lineHeight: data.lineHeight || '1.5',
+      letterSpacing: data.letterSpacing ? `${data.letterSpacing}px` : undefined,
     };
+
+    if (data.fontWeight && FONT_WEIGHTS[data.fontWeight]) {
+      styles.fontWeight = FONT_WEIGHTS[data.fontWeight];
+    }
 
     // Apply formatting - handle both array and object formats
     if (data.formats) {
       if (Array.isArray(data.formats)) {
         // Handle array format: ['bold', 'italic']
-        if (data.formats.includes('bold')) styles.fontWeight = 'bold';
+        if (data.formats.includes('bold')) styles.fontWeight = '700';
         if (data.formats.includes('italic')) styles.fontStyle = 'italic';
         if (data.formats.includes('underline')) styles.textDecoration = 'underline';
         if (data.formats.includes('strikethrough')) styles.textDecoration = 'line-through';
       } else if (typeof data.formats === 'object') {
         // Handle object format: { bold: true, italic: false }
-        if (data.formats.bold) styles.fontWeight = 'bold';
+        if (data.formats.bold) styles.fontWeight = '700';
         if (data.formats.italic) styles.fontStyle = 'italic';
         if (data.formats.underline) styles.textDecoration = 'underline';
         if (data.formats.strikethrough) styles.textDecoration = 'line-through';
@@ -169,6 +188,13 @@ const TextNode = ({ id, data, isConnectable, selected }) => {
 
   const handleEditComplete = async () => {
     setIsEditing(false);
+    // An empty caption the user clicked away from is removed outright
+    if (data.caption && !editContent.trim()) {
+      document.dispatchEvent(new CustomEvent('deleteElement', {
+        detail: { elementId: id, allowEmptyCaption: true }
+      }));
+      return;
+    }
     // Persist the updated content
     if (workspaceId && editContent) {
       try {
@@ -187,14 +213,14 @@ const TextNode = ({ id, data, isConnectable, selected }) => {
     }
   };
 
-  return (
-    <div 
-      className={`border-2 rounded-xl shadow-xl p-6 min-w-[300px] max-w-[500px] relative group transition-all ${getBorderStyle()}`}
-      style={{
-        backgroundColor: data.backgroundColor && data.backgroundColor !== 'transparent' ? data.backgroundColor : (isImportant ? '#fffacd' : '#ffffff'),
-      }}
-    >
-      {/* Connection Handles - Same as other nodes */}
+  const hasExplicitWidth = data.width != null && data.width !== '';
+  const hasExplicitHeight = data.height != null && data.height !== '';
+  const verticalAlignMap = { top: 'flex-start', middle: 'center', bottom: 'flex-end' };
+  const strokeWidthNum = parseFloat(data.strokeWidth) || 0;
+
+  // Connection Handles - shared by card and caption renders
+  const connectionHandles = (
+    <>
       <Handle
         type="source"
         position={Position.Top}
@@ -211,7 +237,7 @@ const TextNode = ({ id, data, isConnectable, selected }) => {
         className="w-3 h-3 !bg-cta !border-2 !border-white opacity-0 group-hover:opacity-100 transition-opacity hover:!bg-cta"
         isConnectable={isConnectable}
       />
-      
+
       <Handle
         type="source"
         position={Position.Right}
@@ -228,7 +254,7 @@ const TextNode = ({ id, data, isConnectable, selected }) => {
         className="w-3 h-3 !bg-cta !border-2 !border-white opacity-0 group-hover:opacity-100 transition-opacity hover:!bg-cta"
         isConnectable={isConnectable}
       />
-      
+
       <Handle
         type="source"
         position={Position.Bottom}
@@ -245,7 +271,7 @@ const TextNode = ({ id, data, isConnectable, selected }) => {
         className="w-3 h-3 !bg-cta !border-2 !border-white opacity-0 group-hover:opacity-100 transition-opacity hover:!bg-cta"
         isConnectable={isConnectable}
       />
-      
+
       <Handle
         type="source"
         position={Position.Left}
@@ -262,39 +288,112 @@ const TextNode = ({ id, data, isConnectable, selected }) => {
         className="w-3 h-3 !bg-cta !border-2 !border-white opacity-0 group-hover:opacity-100 transition-opacity hover:!bg-cta"
         isConnectable={isConnectable}
       />
+    </>
+  );
+
+  // Caption mode — created by the text tool: bare text on the canvas, no card
+  // chrome and no connection handles. Single click selects it (opens the left
+  // text inspector); a second click or double-click enters editing.
+  if (data.caption) {
+    return (
+      <div
+        className="relative"
+        style={{
+          opacity: data.opacity != null ? Math.max(0, Math.min(100, Number(data.opacity))) / 100 : 1,
+          transform: data.rotation ? `rotate(${Number(data.rotation) || 0}deg)` : undefined,
+        }}
+      >
+        <div
+          className="cursor-text whitespace-pre-wrap min-w-[24px] max-w-[420px] px-1 py-0.5"
+          style={{
+            ...getTextStyle(),
+            textAlign: getTextAlign(),
+            color: editContent ? (data.color || '#111827') : '#9CA3AF',
+            outline: selected ? '1.5px dashed #3b82f6' : 'none',
+            outlineOffset: 3,
+          }}
+          onClick={() => { if (selected && !isEditing) setIsEditing(true); }}
+          onDoubleClick={() => { if (!isEditing) setIsEditing(true); }}
+        >
+          {isEditing ? (
+            <textarea
+              value={editContent}
+              onChange={(e) => {
+                setEditContent(e.target.value);
+                emitLiveTextPatch(id, e.target.value, 'content', setNodes);
+              }}
+              onBlur={handleEditComplete}
+              onKeyPress={handleKeyPress}
+              onKeyDown={(e) => {
+                e.stopPropagation();
+                if (e.key === 'Escape') e.currentTarget.blur();
+              }}
+              onFocus={(e) => e.stopPropagation()}
+              className="w-full resize-none border-none outline-none bg-transparent"
+              style={{ ...getTextStyle(), textAlign: getTextAlign(), overflow: 'hidden' }}
+              placeholder="Type here..."
+              autoFocus
+            />
+          ) : (
+            editContent
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div
+      className={`border-2 rounded-xl shadow-xl p-6 ${hasExplicitWidth ? 'w-full' : 'min-w-[300px] max-w-[500px]'} ${hasExplicitHeight ? 'h-full' : ''} relative group transition-all ${getBorderStyle()}`}
+      style={{
+        backgroundColor: data.backgroundColor && data.backgroundColor !== 'transparent' ? data.backgroundColor : (isImportant ? '#fffacd' : '#ffffff'),
+        opacity: data.opacity != null ? Math.max(0, Math.min(100, Number(data.opacity))) / 100 : 1,
+        borderRadius: data.borderRadius != null ? `${Number(data.borderRadius) || 0}px` : undefined,
+        transform: data.rotation ? `rotate(${Number(data.rotation) || 0}deg)` : undefined,
+        ...(strokeWidthNum > 0 ? { borderColor: data.strokeColor || '#000000', borderWidth: strokeWidthNum, borderStyle: 'solid' } : {}),
+        boxShadow: data.shadow ? '0 8px 24px rgba(0,0,0,0.18)' : undefined,
+      }}
+    >
+      {connectionHandles}
       
-      {/* Text Content */}
+      {/* Text Content — vertical alignment fills the box when a height is set */}
+      <div
+        className={`w-full ${hasExplicitHeight ? 'h-full flex' : 'flex'} `}
+        style={{ alignItems: verticalAlignMap[data.verticalAlign] || 'center' }}
+      >
       {isEditing ? (
         <textarea
           value={editContent}
-          onChange={(e) => setEditContent(e.target.value)}
+          onChange={(e) => {
+            setEditContent(e.target.value);
+            emitLiveTextPatch(id, e.target.value, 'content', setNodes);
+          }}
           onBlur={handleEditComplete}
           onKeyPress={handleKeyPress}
           onKeyDown={(e) => e.stopPropagation()}
           onFocus={(e) => e.stopPropagation()}
           className="w-full resize-none border-none outline-none bg-transparent"
-          style={{ 
+          style={{
             ...getTextStyle(),
             textAlign: getTextAlign(),
-            lineHeight: '1.5'
           }}
           placeholder="Type your text here..."
           autoFocus
         />
       ) : (
-        <div 
+        <div
           onDoubleClick={handleDoubleClick}
-          className="cursor-text min-h-[20px] flex items-center"
-          style={{ 
+          className="cursor-text min-h-[20px] w-full"
+          style={{
             ...getTextStyle(),
             textAlign: getTextAlign(),
-            lineHeight: '1.5',
             color: editContent ? (data.color || '#000000') : '#9CA3AF'
           }}
         >
           {editContent || 'Double click to edit text'}
         </div>
       )}
+      </div>
       
       {/* Persistence Controls */}
       <div className="absolute top-2 right-2 flex gap-1 text-xs opacity-0 group-hover:opacity-100 transition-opacity">

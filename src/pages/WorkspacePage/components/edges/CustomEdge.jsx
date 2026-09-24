@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { getSmoothStepPath } from 'reactflow';
 
 const CustomEdge = ({ 
   id, 
@@ -13,13 +14,21 @@ const CustomEdge = ({
   markerEnd,
   animated
 }) => {
-  const edgePath = `M${sourceX},${sourceY} C${sourceX + 50},${sourceY} ${targetX - 50},${targetY} ${targetX},${targetY}`;
-  
-  // Check if this is an auto-connected edge
-  const isAutoConnected = data?.isAutoConnected || false;
+  // Route the edge orthogonally based on the actual handle positions —
+  // the previous hardcoded horizontal bezier ignored handle sides and
+  // produced sideways spaghetti for vertical/backward connections
+  const [edgePath, labelX, labelY] = getSmoothStepPath({
+    sourceX,
+    sourceY,
+    sourcePosition,
+    targetX,
+    targetY,
+    targetPosition,
+    borderRadius: 16,
+  });
   
   // Get custom edge color and style
-  const edgeColor = data?.edgeColor || style?.stroke || (isAutoConnected ? '#3b82f6' : '#6b7280');
+  const edgeColor = data?.edgeColor || style?.stroke || '#6b7280';
   const edgeStyle = data?.edgeStyle || 'default';
   
   // Calculate stroke dasharray based on style
@@ -42,16 +51,10 @@ const CustomEdge = ({
     ...style,
     stroke: edgeColor,
     strokeDasharray,
-    ...(isAutoConnected && {
-      strokeWidth: 3,
-      filter: 'drop-shadow(0 0 8px rgba(59, 130, 246, 0.6))',
-    })
   };
   
-  // Calculate label position (center of edge)
-  const labelX = (sourceX + targetX) / 2;
-  const labelY = (sourceY + targetY) / 2;
-  
+  // labelX/labelY come from getSmoothStepPath — the true center of the path
+
   return (
     <>
       {/* INVISIBLE WIDE HIT AREA - Makes clicking easier */}
@@ -64,29 +67,14 @@ const CustomEdge = ({
         style={{ cursor: 'pointer' }}
       />
       
-      {/* Glow effect for auto-connected edges */}
-      {isAutoConnected && (
-        <path
-          id={`${id}-glow`}
-          style={{
-            strokeWidth: 8,
-            stroke: 'rgba(59, 130, 246, 0.15)',
-            fill: 'none',
-            filter: 'blur(2px)',
-          }}
-          d={edgePath}
-          markerEnd={markerEnd}
-        />
-      )}
-      
       {/* Visible edge path */}
       <path
         id={id}
         style={pathStyle}
-        className={`react-flow__edge-path ${isAutoConnected ? 'auto-connected-edge' : ''} ${animated || edgeStyle === 'animated' ? 'animated' : ''}`}
+        className={`react-flow__edge-path ${animated || edgeStyle === 'animated' ? 'animated' : ''}`}
         d={edgePath}
         markerEnd={markerEnd}
-        strokeWidth={isAutoConnected ? 3 : 2}
+        strokeWidth={2}
         fill="none"
       />
       
@@ -122,21 +110,6 @@ const CustomEdge = ({
         </g>
       )}
       
-      {/* Auto-connected indicator badge (only show if no label) */}
-      {isAutoConnected && !data?.label && (
-        <circle
-          cx={labelX}
-          cy={labelY}
-          r="6"
-          fill="rgb(var(--info))"
-          opacity="0.8"
-          style={{
-            animation: 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite',
-            pointerEvents: 'none'
-          }}
-        />
-      )}
-
       {/* Edge comment icon — appears on hover offset below the edge midpoint */}
       <foreignObject
         x={labelX + (data?.label ? (data.label.length * 4 + 14) : 10)}

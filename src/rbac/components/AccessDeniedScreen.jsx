@@ -7,7 +7,7 @@
 //              VendorContext (logout)
 // ============================================================
 
-import React, { useContext } from 'react';
+import React, { useContext, useRef } from 'react';
 import { useRBAC } from '../context/RBACContext';
 import { VendorContext } from '../../context/VendorContext';
 import AuthSkeletonScreen from '../../components/loading/AuthSkeletonScreen';
@@ -21,9 +21,16 @@ import AuthSkeletonScreen from '../../components/loading/AuthSkeletonScreen';
  */
 export function AccessDeniedGuard({ children }) {
   const { accessDenied, isLoading } = useRBAC();
+  const resolvedOnceRef = useRef(false);
 
-  // Block rendering until RBAC has resolved — prevents flash of protected content
-  if (isLoading) {
+  if (!isLoading) {
+    resolvedOnceRef.current = true;
+  }
+
+  // Block rendering only until RBAC resolves the FIRST time — a refetch must not
+  // unmount children, or mounted pages refetch on every remount and any writer
+  // that produces a new currentUser object spins an infinite skeleton loop.
+  if (isLoading && !resolvedOnceRef.current) {
     return <AuthSkeletonScreen message="Checking your access permissions..." />;
   }
 

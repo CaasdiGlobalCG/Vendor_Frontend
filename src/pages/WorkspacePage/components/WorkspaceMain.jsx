@@ -39,9 +39,23 @@ const WorkspaceMain = ({
   onZoomChange,
   canvasWebSocket,
   workspaceCollaborators,
+  currentUser,
   focusMode,
 }) => {
   const canvasRef = useRef(null);
+
+  // Collaborators dropdown (bottom toolbar avatar stack)
+  const [showCollaborators, setShowCollaborators] = useState(false);
+  const collaboratorsRef = useRef(null);
+  useEffect(() => {
+    const handleOutsideClick = (e) => {
+      if (collaboratorsRef.current && !collaboratorsRef.current.contains(e.target)) {
+        setShowCollaborators(false);
+      }
+    };
+    document.addEventListener('mousedown', handleOutsideClick);
+    return () => document.removeEventListener('mousedown', handleOutsideClick);
+  }, []);
   
   // Make canvas ref globally accessible for approval operations
   useEffect(() => {
@@ -391,32 +405,98 @@ const WorkspaceMain = ({
           <div className="absolute bottom-8 left-1/2 z-30 transform -translate-x-1/2 bg-white/95 backdrop-blur-sm border border-line rounded-xl shadow-xl px-3 py-2 flex items-center space-x-3">
             {!isPenToolbarActive ? (
               <>
-                {/* Collaborators indicator */}
-                {workspaceCollaborators && workspaceCollaborators.length > 0 && (
-                  <>
-                    <div className="flex items-center gap-1.5" title={`${workspaceCollaborators.length} collaborator${workspaceCollaborators.length > 1 ? 's' : ''} online`}>
-                      <div className="flex -space-x-1.5">
-                        {workspaceCollaborators.slice(0, 3).map((collab, i) => (
-                          <div
-                            key={collab.userId || i}
-                            className="w-6 h-6 rounded-full border-2 border-white flex items-center justify-center text-[9px] font-bold text-white"
-                            style={{ backgroundColor: ['#3b82f6', '#8b5cf6', '#ef4444', '#10b981', '#f59e0b'][i % 5], zIndex: 3 - i }}
-                            title={collab.name || collab.userName || 'Collaborator'}
-                          >
-                            {(collab.name || collab.userName || '?').charAt(0).toUpperCase()}
+                {/* Collaborators indicator — click to see the full list */}
+                {workspaceCollaborators && workspaceCollaborators.length > 0 && (() => {
+                  const colors = ['#3b82f6', '#8b5cf6', '#ef4444', '#10b981', '#f59e0b'];
+                  const roleColors = {
+                    pm: { bg: '#eff6ff', text: '#1d4ed8', border: '#bfdbfe' },
+                    vendor: { bg: '#ecfdf5', text: '#047857', border: '#a7f3d0' },
+                    cas: { bg: '#f5f3ff', text: '#6d28d9', border: '#ddd6fe' },
+                    client: { bg: '#fff7ed', text: '#c2410c', border: '#fed7aa' }
+                  };
+                  const currentUserId = currentUser?.vendorId || currentUser?.userId || currentUser?.pmId || currentUser?.id;
+                  const collaboratorRole = (c) =>
+                    c.isPM ? 'PM'
+                      : c.isClient ? 'Client'
+                      : c.isCAS ? 'CAS'
+                      : (['PM', 'Client', 'CAS'].includes(c.role) ? c.role : 'Vendor');
+                  return (
+                    <>
+                      <div ref={collaboratorsRef} className="relative">
+                        <button
+                          onClick={() => setShowCollaborators(prev => !prev)}
+                          className="flex items-center gap-1.5"
+                          title={`${workspaceCollaborators.length} collaborator${workspaceCollaborators.length > 1 ? 's' : ''} — click to view`}
+                        >
+                          <div className="flex -space-x-1.5">
+                            {workspaceCollaborators.slice(0, 3).map((collab, i) => (
+                              <div
+                                key={collab.userId || collab.vendorId || i}
+                                className="w-6 h-6 rounded-full border-2 border-white flex items-center justify-center text-[9px] font-bold text-white"
+                                style={{ backgroundColor: colors[i % colors.length], zIndex: 3 - i }}
+                                title={collab.name || collab.userName || 'Collaborator'}
+                              >
+                                {(collab.name || collab.userName || '?').charAt(0).toUpperCase()}
+                              </div>
+                            ))}
+                            {workspaceCollaborators.length > 3 && (
+                              <div className="w-6 h-6 rounded-full border-2 border-white bg-surface-hover flex items-center justify-center text-[9px] font-semibold text-black">
+                                +{workspaceCollaborators.length - 3}
+                              </div>
+                            )}
                           </div>
-                        ))}
-                        {workspaceCollaborators.length > 3 && (
-                          <div className="w-6 h-6 rounded-full border-2 border-white bg-surface-hover flex items-center justify-center text-[9px] font-semibold text-dim">
-                            +{workspaceCollaborators.length - 3}
+                          <span className="text-[10px] text-dim font-medium">{workspaceCollaborators.length}</span>
+                        </button>
+
+                        {showCollaborators && (
+                          <div className="absolute left-0 bottom-full mb-2 w-72 bg-surface border border-line rounded-xl shadow-xl z-50 overflow-hidden">
+                            <div className="px-3.5 py-2.5 border-b border-line">
+                              <span className="text-xs font-semibold text-ink">
+                                Collaborators ({workspaceCollaborators.length})
+                              </span>
+                            </div>
+                            <div className="max-h-72 overflow-y-auto divide-y divide-line">
+                              {workspaceCollaborators.map((c, i) => {
+                                const name = c.name || c.userName || 'Collaborator';
+                                const role = collaboratorRole(c);
+                                const rc = roleColors[role.toLowerCase()] || roleColors.vendor;
+                                const isYou = currentUserId && (c.vendorId === currentUserId || c.userId === currentUserId || c.id === currentUserId);
+                                return (
+                                  <div key={c.vendorId || c.userId || i} className="flex items-center gap-2.5 px-3.5 py-2.5">
+                                    <span
+                                      className="w-7 h-7 rounded-full flex items-center justify-center text-white text-xs font-semibold flex-shrink-0"
+                                      style={{ backgroundColor: colors[i % colors.length] }}
+                                    >
+                                      {name.charAt(0).toUpperCase()}
+                                    </span>
+                                    <span className="flex-1 min-w-0">
+                                      <span className="block text-xs font-medium text-ink truncate">
+                                        {name}
+                                        {isYou && <span className="text-dim font-normal"> (You)</span>}
+                                      </span>
+                                      {(c.email || c.accessLevel) && (
+                                        <span className="block text-[11px] text-dim truncate">
+                                          {c.email}{c.accessLevel ? ` · ${c.accessLevel}` : ''}
+                                        </span>
+                                      )}
+                                    </span>
+                                    <span
+                                      className="text-[10px] font-medium px-1.5 py-0.5 rounded-full flex-shrink-0"
+                                      style={{ backgroundColor: rc.bg, color: rc.text, border: `1px solid ${rc.border}` }}
+                                    >
+                                      {role}
+                                    </span>
+                                  </div>
+                                );
+                              })}
+                            </div>
                           </div>
                         )}
                       </div>
-                      <span className="text-[10px] text-dim font-medium">{workspaceCollaborators.length}</span>
-                    </div>
-                    <div className="w-px h-5 bg-surface-hover"></div>
-                  </>
-                )}
+                      <div className="w-px h-5 bg-surface-hover"></div>
+                    </>
+                  );
+                })()}
 
                 {/* Connection status dot */}
                 {canvasWebSocket && (

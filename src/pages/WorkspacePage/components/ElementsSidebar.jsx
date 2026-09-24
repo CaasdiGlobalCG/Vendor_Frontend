@@ -32,8 +32,8 @@ const ElementsSidebar = ({ isOpen, onClose, onElementSelect, userRole, currentUs
     { id: 'other', name: 'other elements', icon: Grid, color: 'bg-surface-hover text-ink' }
   ];
 
-  // Add turnkey category if user is turnkey CAS member
-  const elementCategories = isTurnkeyCAS ? [
+  // Add turnkey category if a turnkey CAS member is in the workspace
+  const elementCategories = showTurnkeyCategory ? [
     { id: 'turnkey', name: 'Turnkey', icon: Settings, color: 'bg-danger/10 text-danger' },
     ...baseElementCategories
   ] : baseElementCategories;

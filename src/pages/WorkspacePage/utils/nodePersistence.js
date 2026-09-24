@@ -29,6 +29,22 @@ export const unregisterCanvasEmitter = () => {
   _globalSubtaskId = null;
 };
 
+// ---- Pending text-focus registry ----
+// Node ids queued here start in edit mode on their next mount. Used instead
+// of a data flag so the "please focus me" intent is never broadcast or
+// persisted (a remote client receiving isEditing:true would hijack focus).
+const pendingTextFocusNodeIds = new Set();
+
+export const markTextNodeForFocus = (nodeId) => {
+  if (nodeId) pendingTextFocusNodeIds.add(nodeId);
+};
+
+export const consumeTextNodeFocus = (nodeId) => {
+  const pending = pendingTextFocusNodeIds.has(nodeId);
+  if (pending) pendingTextFocusNodeIds.delete(nodeId);
+  return pending;
+};
+
 const isApprovalFlowInProgress = () => {
   try {
     return typeof window !== 'undefined' && !!window.__isApprovingInProgress;
@@ -37,7 +53,52 @@ const isApprovalFlowInProgress = () => {
   }
 };
 
-const findSubtaskContainingNode = (workspace, nodeId) => {
+/**
+ * Approval/workflow state changes must go through the durable HTTP path.
+ * The WebSocket fast path is fire-and-forget: ops are buffered and flushed to
+ * DynamoDB on an interval, and the in-memory snapshot can be stale — so an
+ * approval could be dropped or reverted before it ever reaches the DB.
+ */
+const requiresDurableWrite = (dataPatch) =>
+  !!dataPatch && (
+    'approvalStatus' in dataPatch ||
+    'pmApproval' in dataPatch ||
+    'clientApproval' in dataPatch ||
+    'approval' in dataPatch ||
+    'sentForApprovalAt' in dataPatch ||
+    'deletionRequested' in dataPatch ||
+    'deletionRequestedAt' in dataPatch ||
+    'deletionRequestedBy' in dataPatch ||
+    'deletionReason' in dataPatch ||
+    'deletionApprovedAt' in dataPatch ||
+    'deletionRejectedAt' in dataPatch ||
+    'deletionRejectedBy' in dataPatch
+  );
+
+/**
+ * Live-sync text while typing: patches the node's data locally (so autosave
+ * and the shared snapshot see it) and emits an ephemeral NODE_UPDATE so
+ * collaborators see keystrokes in real time. The durable write still happens
+ * on blur via persistTextContent.
+ */
+export const emitLiveTextPatch = (nodeId, content, contentType, setNodes) => {
+  const patch = { [contentType]: content, lastModifiedAt: new Date().toISOString() };
+  if (_globalEmitOp) {
+    _globalEmitOp({
+      ...createNodeUpdateOp(nodeId, patch, _globalTaskId, _globalSubtaskId),
+      ephemeral: true
+    });
+  }
+  // Always patch local node data — otherwise content only exists in the
+  // component's local state until blur (invisible to collaborators/DB).
+  setNodes?.((currentNodes) =>
+    currentNodes.map(node =>
+      node.id === nodeId ? { ...node, data: { ...node.data, ...patch } } : node
+    )
+  );
+};
+
+export const findSubtaskContainingNode = (workspace, nodeId) => {
   const tasks = workspace?.tasks || [];
   for (const task of tasks) {
     const subtasks = task?.subtasks || [];
@@ -94,12 +155,17 @@ export const persistNodeDataPatch = async (nodeId, dataPatch, setNodes, workspac
     return;
   }
 
-  // ---- Fast path: emit via WebSocket if available ----
+  // ---- Always emit via WebSocket when available ----
+  // The op broadcasts the change to collaborators in real time (e.g. the PM's
+  // canvas must see approvalStatus: 'sent_to_pm' for approve/reject buttons to
+  // appear). For workflow-state patches we then CONTINUE to the durable HTTP
+  // write below — the op alone is not enough since flush is buffered and the
+  // subsequent refresh must read the committed value.
   if (_globalEmitOp) {
     const op = createNodeUpdateOp(nodeId, dataPatch, _globalTaskId, _globalSubtaskId);
     _globalEmitOp(op);
 
-    // Also update local React state immediately (optimistic)
+    // Update local React state immediately (optimistic)
     if (typeof setNodes === 'function') {
       setNodes((currentNodes) =>
         currentNodes.map((node) =>
@@ -109,10 +175,12 @@ export const persistNodeDataPatch = async (nodeId, dataPatch, setNodes, workspac
         )
       );
     }
-    return;
+
+    // Non-durable patches are done — WS op + optimistic update suffice.
+    if (!requiresDurableWrite(dataPatch)) return;
   }
 
-  // ---- Fallback: original HTTP read-then-write ----
+  // ---- Durable path: HTTP read-then-write ----
 
   const workspace = await getWorkspaceById(workspaceId);
   const subtaskLocation = findSubtaskContainingNode(workspace, nodeId);
@@ -183,6 +251,65 @@ export const persistNodeDataPatch = async (nodeId, dataPatch, setNodes, workspac
             }
           : node
       )
+    );
+  }
+};
+
+/**
+ * Durably delete a node from the persisted canvas.
+ * Elements live inside subtask canvasData — filtering workspace.nodes (the
+ * root canvas) removes nothing. This removes the node and its connected edges
+ * from the owning subtask via HTTP, emits NODE_DELETE so the shared WS
+ * snapshot/collaborators drop it too, and updates local React Flow state.
+ */
+export const persistNodeDeletion = async (nodeId, setNodes, setEdges, workspaceId) => {
+  if (!workspaceId || !nodeId) return;
+
+  // Emit NODE_DELETE so the shared WS snapshot drops the node, the deletion is
+  // marked (stale snapshots can't resurrect it on flush), and collaborators
+  // see it disappear in real time.
+  if (_globalEmitOp) {
+    _globalEmitOp({
+      type: 'NODE_DELETE',
+      nodeId,
+      taskId: _globalTaskId,
+      subtaskId: _globalSubtaskId
+    });
+  }
+
+  const workspace = await getWorkspaceById(workspaceId);
+  const subtaskLocation = findSubtaskContainingNode(workspace, nodeId);
+
+  if (subtaskLocation?.taskId && subtaskLocation?.subtaskId) {
+    const nodes = (subtaskLocation.canvasData.nodes || []).filter(n => n?.id !== nodeId);
+    const edges = (subtaskLocation.canvasData.edges || []).filter(
+      e => e?.source !== nodeId && e?.target !== nodeId
+    );
+
+    await saveSubtaskCanvas(workspaceId, subtaskLocation.taskId, subtaskLocation.subtaskId, {
+      ...subtaskLocation.canvasData,
+      nodes,
+      edges
+    });
+  } else {
+    const nodes = (workspace.nodes || []).filter(n => n?.id !== nodeId);
+    const edges = (workspace.edges || []).filter(
+      e => e?.source !== nodeId && e?.target !== nodeId
+    );
+
+    await updateWorkspace(workspaceId, {
+      nodes,
+      edges,
+      zoomLevel: workspace.zoomLevel || 100
+    });
+  }
+
+  if (typeof setNodes === 'function') {
+    setNodes((currentNodes) => currentNodes.filter(n => n.id !== nodeId));
+  }
+  if (typeof setEdges === 'function') {
+    setEdges((currentEdges) =>
+      currentEdges.filter(e => e.source !== nodeId && e.target !== nodeId)
     );
   }
 };

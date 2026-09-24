@@ -18,14 +18,23 @@ export function nodeChangesToOps(changes, taskId, subtaskId) {
 
   // Collect position changes — these are batched into a single NODES_BATCH_UPDATE
   const positionChanges = [];
+  const streamChanges = [];
   const dimensionChanges = [];
 
   for (const change of changes) {
     switch (change.type) {
       case 'position': {
-        // Only emit when dragging is done (not intermediate)
         if (change.dragging === false && change.position) {
+          // Final position — durable op, persisted on flush
           positionChanges.push({
+            type: 'position',
+            id: change.id,
+            position: change.position,
+          });
+        } else if (change.dragging === true && change.position) {
+          // Intermediate position — ephemeral live-stream op so collaborators
+          // see the element move in real time (not persisted on its own)
+          streamChanges.push({
             type: 'position',
             id: change.id,
             position: change.position,
@@ -61,7 +70,7 @@ export function nodeChangesToOps(changes, taskId, subtaskId) {
     }
   }
 
-  // Batch position changes
+  // Batch final position changes
   if (positionChanges.length === 1) {
     ops.push({
       type: 'NODE_MOVE',
@@ -76,6 +85,27 @@ export function nodeChangesToOps(changes, taskId, subtaskId) {
       changes: positionChanges,
       taskId,
       subtaskId,
+    });
+  }
+
+  // Stream intermediate drag positions as ephemeral ops (the 50ms batcher
+  // dedupes per node, so this yields ~20 updates/sec, not a flood)
+  if (streamChanges.length === 1) {
+    ops.push({
+      type: 'NODE_MOVE',
+      nodeId: streamChanges[0].id,
+      position: streamChanges[0].position,
+      taskId,
+      subtaskId,
+      ephemeral: true,
+    });
+  } else if (streamChanges.length > 1) {
+    ops.push({
+      type: 'NODES_BATCH_UPDATE',
+      changes: streamChanges,
+      taskId,
+      subtaskId,
+      ephemeral: true,
     });
   }
 
@@ -117,9 +147,13 @@ export function edgeChangesToOps(changes, taskId, subtaskId) {
  * Create a NODE_ADD op from a newly created node.
  */
 export function createNodeAddOp(node, taskId, subtaskId) {
+  // isEditing is a transient UI flag — strip it so remote clients/persisted
+  // snapshots never auto-enter edit mode on mount
+  const data = { ...(node.data || {}) };
+  delete data.isEditing;
   return {
     type: 'NODE_ADD',
-    node,
+    node: { ...node, data },
     taskId,
     subtaskId,
   };
@@ -222,6 +256,18 @@ export class OperationBatcher {
     // Dedup: CURSOR_MOVE always replaces previous
     if (op.type === 'CURSOR_MOVE') {
       const existingIdx = this.pending.findIndex(p => p.type === 'CURSOR_MOVE');
+      if (existingIdx !== -1) {
+        this.pending[existingIdx] = op;
+        return;
+      }
+    }
+
+    // Dedup: consecutive ephemeral NODE_UPDATEs for the same node (live typing)
+    // — only the latest content matters
+    if (op.type === 'NODE_UPDATE' && op.ephemeral) {
+      const existingIdx = this.pending.findIndex(
+        p => p.type === 'NODE_UPDATE' && p.ephemeral && p.nodeId === op.nodeId
+      );
       if (existingIdx !== -1) {
         this.pending[existingIdx] = op;
         return;

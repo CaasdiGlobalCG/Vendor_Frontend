@@ -208,6 +208,14 @@ export const VendorProvider = ({ children }) => {
         resubmitRemarks,
       };
 
+      // Avoid replacing currentUser with an identical object — a fresh object
+      // identity re-fires RBAC/guard effects and remounts protected pages.
+      const isSameUser = (a, b) => {
+        if (!a || !b) return false;
+        const keys = new Set([...Object.keys(a), ...Object.keys(b)]);
+        return [...keys].every((k) => a[k] === b[k]);
+      };
+
       // Restore any in-progress form draft saved in a previous session
       let savedDraftData = null;
       const savedDraft = localStorage.getItem(`vendorFormDraft_${email}`);
@@ -253,7 +261,9 @@ export const VendorProvider = ({ children }) => {
       // On external access links the workspace page sets the PM/CAS identity;
       // don't clobber it with the ambient vendor identity.
       if (!isExternalAccessLink()) {
-        setCurrentUser(hydratedUser);
+        // Functional form — hydrateCurrentUser is a useCallback, so a closure
+        // read of currentUser would be stale.
+        setCurrentUser((prev) => (isSameUser(prev, hydratedUser) ? prev : hydratedUser));
       }
       return { ok: true, user: hydratedUser };
     } catch (error) {
@@ -329,14 +339,23 @@ export const VendorProvider = ({ children }) => {
 
   // Set current user and reset vendor data if needed
   const setUser = (user) => {
+    // No-op when the incoming user is shallow-equal — callers like Header spread
+    // {...currentUser} on every fetch, and a new object identity re-fires the
+    // RBAC fetch → skeleton → unmount → refetch loop.
+    if (currentUser && user) {
+      const keys = new Set([...Object.keys(currentUser), ...Object.keys(user)]);
+      const identical = [...keys].every((k) => currentUser[k] === user[k]);
+      if (identical) return;
+    }
+
     console.log("VendorContext: Setting new user:", user);
-    
+
     // Clear previous user data if changing users (check by email since that's our primary identifier)
     if (currentUser && (!user || currentUser.email !== user.email)) {
       console.log("VendorContext: Resetting vendor data for new user");
       setVendorData(initialData);
     }
-    
+
     // Set the new user
     setCurrentUser(user);
   };

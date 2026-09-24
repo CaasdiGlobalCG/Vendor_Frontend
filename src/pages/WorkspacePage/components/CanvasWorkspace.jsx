@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useEffect, useContext, useRef, useImperativeHandle, forwardRef } from 'react';
-import { Plus, Save, Eye, X, Users, Grid, Maximize2, Minimize2, Check, Gauge, Download, FileText, AlignHorizontalDistributeCenter, Sparkles } from 'lucide-react';
+import { Plus, Save, Eye, X, Users, Grid, Maximize2, Minimize2, Check, Gauge, Download, FileText, AlignHorizontalDistributeCenter, Sparkles, Trash2 } from 'lucide-react';
 import { toJpeg } from 'html-to-image';
 import { VendorContext } from '../../../context/VendorContext';
 import ReactFlow, {
@@ -10,7 +10,8 @@ import ReactFlow, {
   Controls,
   MiniMap,
   Panel,
-  MarkerType
+  MarkerType,
+  ConnectionMode
 } from 'reactflow';
 import 'reactflow/dist/style.css';
 
@@ -34,8 +35,8 @@ import TaskCardConfigModal from './modals/TaskCardConfigModal';
 import ProcurementRFQDetailsModal from './modals/ProcurementRFQDetailsModal';
 import ExecutionRequestDetailsModal from './modals/ExecutionRequestDetailsModal';
 import { getFlowchartTemplate } from '../utils/flowchartTemplates';
-import { getWorkspaceById } from '../utils/workspaceApi';
-import { registerCanvasEmitter, unregisterCanvasEmitter } from '../utils/nodePersistence';
+import { getWorkspaceById, notifyWorkspaceEvent } from '../utils/workspaceApi';
+import { registerCanvasEmitter, unregisterCanvasEmitter, persistNodeDataPatch, markTextNodeForFocus } from '../utils/nodePersistence';
 import config from '../../../config/env';
 import RemoteCursor from './RemoteCursor';
 import { useToast } from './ToastProvider';
@@ -62,20 +63,6 @@ const controlsCSS = `
   }
   .react-flow__controls-button:hover {
     background-color: #f3f4f6 !important;
-  }
-  
-  /* Auto-connected edge animations */
-  .auto-connected-edge {
-    animation: connectionGlow 2s ease-in-out infinite;
-  }
-  
-  @keyframes connectionGlow {
-    0%, 100% {
-      filter: drop-shadow(0 0 4px rgba(59, 130, 246, 0.4));
-    }
-    50% {
-      filter: drop-shadow(0 0 12px rgba(59, 130, 246, 0.8));
-    }
   }
   
   @keyframes pulse {
@@ -146,6 +133,9 @@ const edgeTypes = {
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [headerOffset, setHeaderOffset] = useState(0);
   const [showClearConfirmation, setShowClearConfirmation] = useState(false);
+  const [deletionRequestTarget, setDeletionRequestTarget] = useState(null);
+  const [deletionRequestReason, setDeletionRequestReason] = useState('');
+  const [isSubmittingDeletionRequest, setIsSubmittingDeletionRequest] = useState(false);
   const [isPenMode, setIsPenMode] = useState(false);
   const [penColor, setPenColor] = useState('#ef4444');
   const [penThickness, setPenThickness] = useState(3);
@@ -291,8 +281,8 @@ const edgeTypes = {
     return userRole || currentUser?.role || 'vendor';
   }, [userRole, currentUser?.role]);
 
-  // Element nodes can only be removed with PM approval. For non-PM users this
-  // opens the element's "Request Deletion" modal (vendors) or keeps the node,
+  // Canvas nodes can only be removed with PM approval. For non-PM users this
+  // opens the "Request Deletion" reason modal (vendors) or keeps the node,
   // and returns only the nodes that may still be deleted directly.
   const filterDirectlyDeletableNodes = useCallback((nodesToDelete) => {
     const role = getCurrentUserRole();
@@ -304,10 +294,6 @@ const edgeTypes = {
     let blockedCount = 0;
 
     nodesToDelete.forEach((node) => {
-      if (node.type !== 'elementNode') {
-        deletable.push(node);
-        return;
-      }
       if (node.data?.deletionRequested) {
         pendingCount += 1;
         return;
@@ -317,8 +303,10 @@ const edgeTypes = {
         window.dispatchEvent(new CustomEvent('request-element-deletion', {
           detail: { nodeId: node.id }
         }));
-      } else {
+      } else if (node.type === 'elementNode') {
         blockedCount += 1;
+      } else {
+        deletable.push(node);
       }
     });
 
@@ -1057,6 +1045,7 @@ const edgeTypes = {
   // Update canvas data when selectedSubtask changes
   // BUT: Skip this if we're currently updating nodes locally (to prevent losing new additions)
   // Also skip if this was triggered by an auto-save response (skipNextSyncRef)
+  const canvasSyncRequestRef = useRef(0);
   useEffect(() => {
     // If we're actively updating nodes locally (like after drop), skip this refresh
     if (isUpdatingNodesLocallyRef.current) {
@@ -1066,7 +1055,7 @@ const edgeTypes = {
 
     // If the subtask ID actually changed (user switched subtasks), always do a full sync
     const subtaskActuallyChanged = selectedSubtask?.id !== lastSyncedSubtaskIdRef.current;
-    
+
     // If this was triggered by an auto-save response (not a subtask switch), skip it
     // The auto-save just wrote local data to the backend - no need to re-read it
     if (!subtaskActuallyChanged && skipNextSyncRef.current) {
@@ -1074,7 +1063,7 @@ const edgeTypes = {
       skipNextSyncRef.current = false;
       return;
     }
-    
+
     // If same subtask and we already have nodes, skip the sync
     // (updatedAt changes from auto-save shouldn't overwrite local state)
     if (!subtaskActuallyChanged && nodes.length > 0) {
@@ -1082,19 +1071,77 @@ const edgeTypes = {
       return;
     }
 
+    // Update the last synced subtask ID
+    lastSyncedSubtaskIdRef.current = selectedSubtask?.id;
+
+    // On a real subtask switch, flush any pending WS ops then load the freshest
+    // canvas from the server — the workspace prop can be stale, and loading it
+    // would revert unsynced changes (e.g. a moved element snapping back).
+    if (subtaskActuallyChanged && workspace?.workspaceId) {
+      const requestId = ++canvasSyncRequestRef.current;
+      // Flush any ops still sitting in the 50ms batch window first so the
+      // FLUSH reaches the server after them, then request an immediate persist.
+      batcherRef.current?.flush();
+      canvasWebSocket?.emitOperation?.({ type: 'FLUSH' });
+      const targetSubtaskId = selectedSubtask?.id;
+
+      (async () => {
+        let freshCanvasData = null;
+        try {
+          const freshWorkspace = await getWorkspaceById(workspace.workspaceId);
+          if (targetSubtaskId) {
+            for (const task of freshWorkspace?.tasks || []) {
+              const st = (task.subtasks || []).find(s => s?.id === targetSubtaskId);
+              if (st) { freshCanvasData = st.canvasData; break; }
+            }
+            // Subtask with no saved canvas is empty — never fall back to root nodes
+            if (!freshCanvasData) {
+              freshCanvasData = { nodes: [], edges: [], zoomLevel: 100 };
+            }
+          } else {
+            freshCanvasData = {
+              nodes: freshWorkspace?.nodes || [],
+              edges: freshWorkspace?.edges || [],
+              zoomLevel: freshWorkspace?.zoomLevel || 100
+            };
+          }
+        } catch (err) {
+          console.warn('⚠️ Fresh canvas fetch failed, falling back to cached canvasData', err);
+          freshCanvasData = getCanvasData();
+        }
+
+        // A newer subtask switch superseded this request — don't load stale data
+        if (canvasSyncRequestRef.current !== requestId) return;
+
+        // This load will change nodes.length and re-trigger this effect —
+        // mark it so the re-run skips instead of reloading stale canvasData.
+        skipNextSyncRef.current = true;
+
+        const nodesToLoad = cleanupOrphanedNodesHelper(freshCanvasData?.nodes || []);
+        const collabs = workspaceCollaboratorsRef.current;
+        const nodesWithCollabs = collabs.length > 0
+          ? nodesToLoad.map(n => ({ ...n, data: { ...n.data, workspaceCollaborators: collabs } }))
+          : nodesToLoad;
+        setNodesRaw(nodesWithCollabs);
+        setCanvasLoadedCounter(c => c + 1);
+        setEdgesRaw(Array.isArray(freshCanvasData?.edges) ? freshCanvasData.edges : []);
+        updateZoomLevel(freshCanvasData?.zoomLevel || 100);
+        lastAddedNodeIdRef.current = nodesWithCollabs.length > 0
+          ? nodesWithCollabs[nodesWithCollabs.length - 1].id
+          : null;
+      })();
+      return;
+    }
+
     const newCanvasData = getCanvasData();
     console.log('🔄 CanvasWorkspace: Updating canvas data for subtask change', {
       subtaskId: selectedSubtask?.id,
-      previousSubtaskId: lastSyncedSubtaskIdRef.current,
       subtaskActuallyChanged,
       nodesCount: newCanvasData.nodes.length,
       edgesCount: newCanvasData.edges.length,
       zoomLevel: newCanvasData.zoomLevel
     });
-    
-    // Update the last synced subtask ID
-    lastSyncedSubtaskIdRef.current = selectedSubtask?.id;
-    
+
     // Directly clear and set nodes to ensure fresh data for new subtask
     // Use setNodesRaw/setEdgesRaw to bypass WS emission (this is data loading, not user action)
     if (Array.isArray(newCanvasData.nodes)) {
@@ -1111,7 +1158,7 @@ const edgeTypes = {
       setEdgesRaw(newCanvasData.edges);
     }
     updateZoomLevel(newCanvasData.zoomLevel);
-    
+
     // Update last added node reference to the most recently added node (last in array)
     if (newCanvasData.nodes && newCanvasData.nodes.length > 0) {
       const lastNode = newCanvasData.nodes[newCanvasData.nodes.length - 1];
@@ -1184,16 +1231,21 @@ const edgeTypes = {
     }));
   }, [workspaceCollaborators, canvasLoadedCounter]);
 
-  // Send initial snapshot when WebSocket connects and canvas data is loaded
+  // Send initial snapshot when WebSocket connects and canvas data is loaded.
+  // Re-runs when nodes first load so the snapshot is still initialized if the
+  // socket connected before the canvas finished hydrating.
   useEffect(() => {
     if (canvasWebSocket?.isConnected && canvasWebSocket?.initSnapshot && nodes.length > 0) {
       const taskId = selectedTask?.id || null;
       const subtaskId = selectedSubtask?.id || null;
       canvasWebSocket.initSnapshot({ nodes, edges, zoomLevel, taskId, subtaskId });
+      // Pull the authoritative room snapshot — no-op if we just initialized it,
+      // resyncs us with other collaborators' changes after a reconnect.
+      canvasWebSocket.requestFullState?.(taskId, subtaskId);
     }
-  // Only run when connection state changes, not on every node change
+  // Only run on connection/subtask change or first node load
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [canvasWebSocket?.isConnected, selectedSubtask?.id]);
+  }, [canvasWebSocket?.isConnected, selectedSubtask?.id, nodes.length > 0]);
 
   // Handle incoming remote operations
   useEffect(() => {
@@ -1780,12 +1832,13 @@ const edgeTypes = {
                 sourceHandle: sourceHandle,
                 targetHandle: targetHandle,
                 type: 'custom',
-                animated: true,
-                style: { 
-                  strokeWidth: 3, 
-                  stroke: '#3b82f6',
+                animated: false,
+                style: {
+                  strokeWidth: 2,
+                  stroke: '#6b7280',
                 },
-                data: { 
+                markerEnd: { type: MarkerType.ArrowClosed, width: 18, height: 18, color: '#6b7280' },
+                data: {
                   label: '',
                   isAutoConnected: true
                 }
@@ -2216,7 +2269,10 @@ const edgeTypes = {
       const selectEvent = new CustomEvent('selectTextElement', {
         detail: {
           id: textNode.id,
-          ...textNode.data
+          ...textNode.data,
+          position: textNode.position,
+          width: textNode.style?.width ?? textNode.width ?? textNode.data?.width ?? null,
+          height: textNode.style?.height ?? textNode.height ?? textNode.data?.height ?? null,
         }
       });
       document.dispatchEvent(selectEvent);
@@ -2838,11 +2894,9 @@ const edgeTypes = {
 
   // Handle canvas click to hide flowchart toolbar and context menu
   const onPaneClick = useCallback((event) => {
-    console.log('🖱️ Pane clicked - Text mode active:', isTextModeActive);
-    
-    // If text mode is active, create a new text node
+    // If text mode is active, place a caption-style text node at the click
+    // point and let the user type immediately (Figma-style text tool)
     if (isTextModeActive && reactFlowInstance) {
-      console.log('✏️ Creating text node from pane click');
       const position = reactFlowInstance.screenToFlowPosition({
         x: event.clientX,
         y: event.clientY
@@ -2852,29 +2906,30 @@ const edgeTypes = {
         id: `text_${Date.now()}`,
         type: 'textNode',
         position,
+        selected: true,
         data: {
           name: 'Text',
           type: 'text',
-          content: 'Type here...',
-          fontSize: textModeConfig?.fontSize || '16',
+          caption: true,
+          content: '',
+          fontSize: textModeConfig?.fontSize || '14',
           fontFamily: textModeConfig?.fontFamily || 'Arial',
-          color: textModeConfig?.color || '#000000',
-          backgroundColor: textModeConfig?.backgroundColor || '#ffffff',
+          color: textModeConfig?.color || '#111827',
+          backgroundColor: 'transparent',
           formats: [],
-          isEditing: true,
           workspaceId: workspace?.workspaceId
         }
       };
 
-      console.log('✏️ Adding text node:', newTextNode);
-      setNodes(nds => [...nds, newTextNode]);
-      
-      // Emit event to select this text element in the panel
-      const selectEvent = new CustomEvent('selectTextElement', {
-        detail: newTextNode.data
-      });
-      document.dispatchEvent(selectEvent);
-      
+      // Queue edit-mode for the node's first mount (kept out of node.data so
+      // it's never broadcast or persisted — a remote client must not auto-edit)
+      markTextNodeForFocus(newTextNode.id);
+
+      setNodes(nds => [
+        ...nds.map(n => (n.selected ? { ...n, selected: false } : n)),
+        newTextNode
+      ]);
+
       // Prevent default pane click behavior
       event.stopPropagation();
       return;
@@ -3370,7 +3425,11 @@ const edgeTypes = {
 
   const handleNodeDragStop = useCallback(() => {
     setHelperLines({ horizontal: null, vertical: null });
-  }, []);
+    // Push the pending move op out of the 50ms batch window, then ask the
+    // server to persist immediately so a refresh can't lose the new position.
+    batcherRef.current?.flush();
+    canvasWebSocket?.emitOperation?.({ type: 'FLUSH' });
+  }, [canvasWebSocket]);
 
   // ---- Align / distribute selected elements ----
   const alignSelectedNodes = useCallback((mode) => {
@@ -4143,6 +4202,7 @@ const edgeTypes = {
         const newNode = createElementNode(element, targetPosition);
         console.log('🆕 Adding turnkey element:', newNode);
         setNodes((nds) => nds.concat(newNode));
+        autoConnectNewNode(newNode);
         return;
       }
       // Check if it's a task card element
@@ -4151,6 +4211,7 @@ const edgeTypes = {
         const imageBlockData = JSON.parse(JSON.stringify(element.imageBlockData || {}));
         const newNode = createElementNode(element, targetPosition, { imageBlockData });
         setNodes((nds) => nds.concat(newNode));
+        autoConnectNewNode(newNode);
         trackActivity('element_added', 'create', 'element', {
           elementId: newNode.id,
           elementType: element.type,
@@ -4169,6 +4230,7 @@ const edgeTypes = {
         const taskCardData = element.taskCardData || pendingTaskCardInitialData || {};
         const newNode = createElementNode(element, targetPosition, { taskCardData });
         setNodes((nds) => nds.concat(newNode));
+        autoConnectNewNode(newNode);
         trackActivity('element_added', 'create', 'element', {
           elementId: newNode.id,
           elementType: element.type,
@@ -4186,7 +4248,8 @@ const edgeTypes = {
       const newNode = createElementNode(element, targetPosition);
       console.log('🆕 Adding element from double-click:', newNode);
       setNodes((nds) => nds.concat(newNode));
-      
+      autoConnectNewNode(newNode);
+
       // Add a subtle animation effect
       setTimeout(() => {
         console.log('✨ Element successfully added to canvas via double-click');
@@ -4402,8 +4465,10 @@ const edgeTypes = {
       if (!nodeToDelete) return;
 
       // Non-PM users cannot hard-delete elements — route them through the
-      // Request Deletion (PM approval) flow instead.
-      if (filterDirectlyDeletableNodes([nodeToDelete]).length === 0) return;
+      // Request Deletion (PM approval) flow instead. Exception: empty caption
+      // text the user just placed and abandoned can self-delete.
+      const isEmptyCaption = event.detail?.allowEmptyCaption && nodeToDelete.data?.caption === true;
+      if (filterDirectlyDeletableNodes([nodeToDelete]).length === 0 && !isEmptyCaption) return;
 
       const nodeData = nodeToDelete?.data || {};
       
@@ -4460,6 +4525,101 @@ const edgeTypes = {
     };
   }, [setNodes, setEdges, trackActivity, recordDeletionHistory, nodes, edges, canEdit, notifyViewOnly, filterDirectlyDeletableNodes, purgeDeletedFromCanvasCache]);
 
+  // Non-elementNode types (text, notes, etc.) don't carry their own deletion
+  // modal, so when a vendor requests their deletion via keyboard, context
+  // menu, or Elements Overview, this canvas-level modal collects the reason.
+  useEffect(() => {
+    const handleDeletionRequest = (event) => {
+      const nodeId = event.detail?.nodeId;
+      if (!nodeId) return;
+      const node = nodes.find(n => n.id === nodeId);
+      if (!node || node.type === 'elementNode') return; // ElementNode opens its own modal
+      setDeletionRequestTarget({ nodeId, name: node.data?.name || node.data?.type || 'element' });
+      setDeletionRequestReason('');
+    };
+    window.addEventListener('request-element-deletion', handleDeletionRequest);
+    return () => window.removeEventListener('request-element-deletion', handleDeletionRequest);
+  }, [nodes]);
+
+  const handleSubmitCanvasDeletionRequest = async () => {
+    if (!deletionRequestTarget || !deletionRequestReason.trim()) return;
+    setIsSubmittingDeletionRequest(true);
+    try {
+      const patch = {
+        deletionRequested: true,
+        deletionRequestedAt: new Date().toISOString(),
+        deletionRequestedBy: currentUser?.name || currentUser?.email || 'Unknown User',
+        deletionReason: deletionRequestReason.trim()
+      };
+
+      await persistNodeDataPatch(
+        deletionRequestTarget.nodeId,
+        patch,
+        setNodes,
+        workspace?.workspaceId,
+        { bypassApprovalFlow: true }
+      );
+
+      notifyWorkspaceEvent({
+        workspaceId: workspace?.workspaceId,
+        roles: ['pm'],
+        excludeUserId: currentUser?.vendorId || currentUser?.userId || currentUser?.pmId || currentUser?.id,
+        type: 'deletion_request',
+        title: 'Deletion requested',
+        message: `${currentUser?.name || currentUser?.email || 'A vendor'} requested deletion of "${deletionRequestTarget.name}"`,
+        data: {
+          nodeId: deletionRequestTarget.nodeId,
+          elementName: deletionRequestTarget.name,
+          taskId: taskIdRef.current,
+          subtaskId: subtaskIdRef.current
+        },
+        priority: 'high',
+        actionRequired: true,
+      });
+
+      toast.success('Deletion request sent to PM for approval');
+      setDeletionRequestTarget(null);
+      setDeletionRequestReason('');
+    } catch (error) {
+      console.error('❌ Error submitting deletion request:', error);
+      toast.error('Failed to submit deletion request');
+    } finally {
+      setIsSubmittingDeletionRequest(false);
+    }
+  };
+
+  // ---- Focus a node from a notification click ----
+  // Queues the node id and retries whenever the canvas nodes change, so it
+  // still works while the target subtask's canvas is still loading.
+  const pendingFocusNodeRef = useRef(null);
+  const [focusTick, setFocusTick] = useState(0);
+
+  useEffect(() => {
+    const handler = (e) => {
+      pendingFocusNodeRef.current = e.detail?.nodeId || null;
+      setFocusTick(t => t + 1);
+    };
+    window.addEventListener('focusCanvasNode', handler);
+    return () => window.removeEventListener('focusCanvasNode', handler);
+  }, []);
+
+  useEffect(() => {
+    const nodeId = pendingFocusNodeRef.current;
+    if (!nodeId) return;
+    const node = nodes.find(n => n.id === nodeId);
+    if (!node) return; // canvas for the target subtask hasn't loaded yet — retry on next nodes change
+    pendingFocusNodeRef.current = null;
+
+    setNodesRaw(nds => nds.map(n => ({ ...n, selected: n.id === nodeId })));
+
+    const w = node.width ?? node.measured?.width ?? node.style?.width ?? 200;
+    const h = node.height ?? node.measured?.height ?? node.style?.height ?? 100;
+    reactFlowInstance?.setCenter?.(
+      node.position.x + w / 2,
+      node.position.y + h / 2,
+      { zoom: reactFlowInstance.getZoom?.() || 1, duration: 400 }
+    );
+  }, [nodes, focusTick, reactFlowInstance, setNodesRaw]);
 
 
   // Handle lock/unlock element
@@ -4511,8 +4671,11 @@ const edgeTypes = {
   const onNodesDelete = useCallback((nodesToDelete) => {
     console.log('🗑️ Deleting nodes:', nodesToDelete);
 
-    // Non-PM users cannot hard-delete elements — route them through the
-    // Request Deletion (PM approval) flow instead.
+    // Non-PM removes are already blocked in onNodesChange (which also routes
+    // them through the request-deletion flow) — re-filtering here would
+    // dispatch the request event a second time.
+    if (getCurrentUserRole() !== 'pm') return;
+
     const deletableNodes = filterDirectlyDeletableNodes(nodesToDelete);
     if (deletableNodes.length === 0) return;
 
@@ -4569,7 +4732,7 @@ const edgeTypes = {
     // Purge the deleted ids from the cached canvas data so the subtask sync
     // effect can't restore them once the canvas becomes empty.
     purgeDeletedFromCanvasCache(deletableNodes.map(n => n.id));
-  }, [setNodes, recordDeletionHistory, nodes, filterDirectlyDeletableNodes, purgeDeletedFromCanvasCache]);
+  }, [setNodes, recordDeletionHistory, nodes, filterDirectlyDeletableNodes, purgeDeletedFromCanvasCache, getCurrentUserRole]);
 
   // Connection validation
   const isValidConnection = useCallback((connection) => {
@@ -4635,18 +4798,27 @@ const edgeTypes = {
       }
       const updatedElement = event.detail;
       console.log('✏️ Updating text element:', updatedElement);
-      
+
+      const { id, position, width, height, ...dataPatch } = updatedElement;
+
       setNodes(nds => nds.map(node => {
-        if (node.id === updatedElement.id) {
-          return {
-            ...node,
-            data: {
-              ...node.data,
-              ...updatedElement
-            }
-          };
-        }
-        return node;
+        if (node.id !== id) return node;
+
+        const nextStyle = { ...(node.style || {}) };
+        const nextData = { ...node.data, ...dataPatch };
+
+        // width/height: a number sets an explicit size, null clears back to auto
+        if (width === null) { delete nextStyle.width; delete nextData.width; }
+        else if (width !== undefined && width !== '') { nextStyle.width = Number(width); nextData.width = Number(width); }
+        if (height === null) { delete nextStyle.height; delete nextData.height; }
+        else if (height !== undefined && height !== '') { nextStyle.height = Number(height); nextData.height = Number(height); }
+
+        return {
+          ...node,
+          ...(position ? { position: { x: Number(position.x) || 0, y: Number(position.y) || 0 } } : {}),
+          style: nextStyle,
+          data: nextData
+        };
       }));
     };
 
@@ -4757,7 +4929,7 @@ const edgeTypes = {
           // No sourceHandle/targetHandle — node types use different handle ids
           // (some have none), and RF drops edges that reference missing handles
           type: 'custom',
-          animated: true,
+          animated: false,
           style: { strokeWidth: 2, stroke: '#6b7280' },
           markerEnd: { type: MarkerType.ArrowClosed, width: 18, height: 18, color: '#6b7280' },
           data: { label: e.label || '' }
@@ -4863,6 +5035,7 @@ const edgeTypes = {
       const newNode = createElementNode(element, position);
       if (newNode) {
         setNodes(nds => [...nds, newNode]);
+        autoConnectNewNode(newNode);
       }
     };
     document.addEventListener('addElementToCanvas', handleAddElement);
@@ -4886,18 +5059,26 @@ const edgeTypes = {
         return;
       }
       
+      // Escape exits text-placement mode (same as clicking the Text tool again)
+      if (event.key === 'Escape' && isTextModeActive) {
+        document.dispatchEvent(new CustomEvent('activateTextMode', { detail: { active: false } }));
+        return;
+      }
+
       // Delete/Backspace: React Flow removes deletable selection itself
-      // (deleteKeyCode). Element nodes carry deletable:false for non-PM users,
-      // so this only routes them through the PM approval request flow.
+      // (deleteKeyCode) and onNodesChange routes vendors through the approval
+      // flow. Only elementNode needs a manual nudge — it carries
+      // deletable:false for non-PM users, so React Flow never emits a remove
+      // change for it.
       if (event.key === 'Delete' || event.key === 'Backspace') {
-        const selectedNodes = nodes.filter(node => node.selected);
-        if (selectedNodes.length > 0) {
-          filterDirectlyDeletableNodes(selectedNodes);
+        const selectedElementNodes = nodes.filter(node => node.selected && node.type === 'elementNode');
+        if (selectedElementNodes.length > 0) {
+          filterDirectlyDeletableNodes(selectedElementNodes);
         }
       }
       
-      // Clear all connections with Ctrl+Shift+C
-      if (event.ctrlKey && event.shiftKey && event.key === 'C') {
+      // Clear all connections with Ctrl+Shift+C (PM only — same gating as Clear All)
+      if (event.ctrlKey && event.shiftKey && event.key === 'C' && getCurrentUserRole() === 'pm') {
         setEdges([]);
         console.log('🧹 All connections cleared');
       }
@@ -4905,7 +5086,7 @@ const edgeTypes = {
 
     document.addEventListener('keydown', handleKeyPress);
     return () => document.removeEventListener('keydown', handleKeyPress);
-  }, [nodes, edges, onNodesDelete, onEdgesDelete, setEdges, canEdit, notifyViewOnly, filterDirectlyDeletableNodes]);
+  }, [nodes, edges, onNodesDelete, onEdgesDelete, setEdges, canEdit, notifyViewOnly, filterDirectlyDeletableNodes, isTextModeActive]);
 
   // Handle connections between nodes
   const onConnect = useCallback((params) => {
@@ -4915,7 +5096,7 @@ const edgeTypes = {
       ...params,
       id: edgeId,
       type: 'custom',
-      animated: true,
+      animated: false,
       style: { strokeWidth: 2, stroke: '#6b7280' },
       markerEnd: { type: MarkerType.ArrowClosed, width: 18, height: 18, color: '#6b7280' },
       data: { label: '' }
@@ -5400,12 +5581,13 @@ const edgeTypes = {
                     sourceHandle: sourceHandle,
                     targetHandle: targetHandle,
                     type: 'custom',
-                    animated: true,
-                    style: { 
-                      strokeWidth: 3, 
-                      stroke: '#3b82f6',
+                    animated: false,
+                    style: {
+                      strokeWidth: 2,
+                      stroke: '#6b7280',
                     },
-                    data: { 
+                    markerEnd: { type: MarkerType.ArrowClosed, width: 18, height: 18, color: '#6b7280' },
+                    data: {
                       label: '',
                       isAutoConnected: true
                     }
@@ -5630,7 +5812,7 @@ const edgeTypes = {
       <div 
         ref={canvasContainerRef}
         data-tour="canvas"
-        className="flex-1 relative overflow-hidden" 
+        className={`flex-1 relative overflow-hidden ${isTextModeActive ? 'text-cursor-mode' : ''}`}
         style={{ 
           width: '100%', 
           height: '100%',
@@ -5679,10 +5861,28 @@ const edgeTypes = {
           nodes={renderedNodes}
           edges={renderedEdges}
           onNodesChange={canEdit ? (changes) => {
-            onNodesChange(changes);
+            // Vendors can't hard-delete — remove changes for nodes that fail
+            // the approval filter are stripped here (onNodesDelete routes them
+            // through the request-deletion flow instead) so they never apply
+            // locally or broadcast a NODE_DELETE to collaborators.
+            let allowedChanges = changes;
+            const removeChanges = changes.filter(c => c.type === 'remove');
+            if (removeChanges.length > 0 && getCurrentUserRole() !== 'pm') {
+              const removedIds = new Set(removeChanges.map(c => c.id));
+              const deletable = new Set(
+                filterDirectlyDeletableNodes(
+                  nodes.filter(n => removedIds.has(n.id))
+                ).map(n => n.id)
+              );
+              if (deletable.size < removedIds.size) {
+                allowedChanges = changes.filter(c => c.type !== 'remove' || deletable.has(c.id));
+              }
+            }
+            if (allowedChanges.length === 0) return;
+            onNodesChange(allowedChanges);
             // Emit position/dimension/remove changes as ops
             if (!isApplyingRemoteRef.current) {
-              const ops = nodeChangesToOps(changes, selectedTask?.id, selectedSubtask?.id);
+              const ops = nodeChangesToOps(allowedChanges, selectedTask?.id, selectedSubtask?.id);
               ops.forEach(op => emitOp(op));
             }
           } : undefined}
@@ -5724,8 +5924,10 @@ const edgeTypes = {
           panOnScroll={!isPenMode}
           panOnScrollMode="free"
           panActivationKey={canEdit ? 'Space' : undefined}
+          connectionMode={ConnectionMode.Loose}
           connectionLineType="smoothstep"
           connectionLineStyle={{ strokeWidth: 2, stroke: '#6b7280' }}
+          elevateEdgesOnSelect
           onlyRenderVisibleElements={performanceMode}
           deleteKeyCode={['Backspace', 'Delete']}
           className={`bg-transparent transition-all duration-200 ${
@@ -5888,7 +6090,7 @@ const edgeTypes = {
                 )}
 
                 {/* Connection Tools */}
-                {nodes.length > 1 && (
+                {nodes.length > 1 && getCurrentUserRole() === 'pm' && (
                   <div className="flex items-center gap-2 border-l border-line pl-3">
                     <button
                       onClick={() => setShowClearConfirmation(true)}
@@ -6397,6 +6599,82 @@ const edgeTypes = {
                 className="px-4 py-2 text-sm font-medium text-white bg-danger rounded-md hover:bg-danger transition-colors"
               >
                 Delete All
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Request Deletion Modal (non-elementNode nodes: text, notes, etc.) */}
+      {deletionRequestTarget && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[10000] p-4">
+          <div className="bg-surface rounded-2xl shadow-2xl max-w-md w-full overflow-hidden border border-line">
+            {/* Modal Header */}
+            <div className="bg-danger px-6 py-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-3">
+                  <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center">
+                    <Trash2 className="w-5 h-5 text-white" />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-bold text-white">Request Deletion</h3>
+                    <p className="text-sm text-white/80">{deletionRequestTarget.name}</p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setDeletionRequestTarget(null)}
+                  className="p-2 hover:bg-white/20 rounded-full transition-colors"
+                >
+                  <X className="w-5 h-5 text-white" />
+                </button>
+              </div>
+            </div>
+
+            {/* Modal Body */}
+            <div className="p-6">
+              <div className="mb-4 p-3 rounded-lg bg-warning/10 border border-warning/20">
+                <p className="text-sm text-warning">
+                  This element will be marked for deletion. A PM will need to approve this request before it's permanently deleted.
+                </p>
+              </div>
+
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-ink mb-2">
+                  Reason for Deletion <span className="text-danger">*</span>
+                </label>
+                <textarea
+                  value={deletionRequestReason}
+                  onChange={(e) => setDeletionRequestReason(e.target.value)}
+                  placeholder="Enter reason for requesting deletion..."
+                  className="w-full px-4 py-3 border border-line rounded-xl focus:ring-2 focus:ring-warning focus:border-warning resize-none transition-all bg-surface text-ink"
+                  rows={4}
+                  autoFocus
+                />
+              </div>
+            </div>
+
+            {/* Modal Footer */}
+            <div className="px-6 py-4 bg-canvas border-t border-line flex space-x-3">
+              <button
+                onClick={() => setDeletionRequestTarget(null)}
+                disabled={isSubmittingDeletionRequest}
+                className="flex-1 px-4 py-2.5 border border-line text-ink rounded-xl hover:bg-surface-hover transition-colors font-medium"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleSubmitCanvasDeletionRequest}
+                disabled={!deletionRequestReason.trim() || isSubmittingDeletionRequest}
+                className="flex-1 px-4 py-2.5 text-white rounded-xl font-medium transition-all flex items-center justify-center space-x-2 bg-warning hover:bg-warning disabled:bg-warning/30 disabled:cursor-not-allowed"
+              >
+                {isSubmittingDeletionRequest ? (
+                  <span>Submitting...</span>
+                ) : (
+                  <>
+                    <Trash2 className="w-4 h-4" />
+                    <span>Request Deletion</span>
+                  </>
+                )}
               </button>
             </div>
           </div>

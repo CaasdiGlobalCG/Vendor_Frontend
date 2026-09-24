@@ -1,9 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import ShareProgressModal from '../../../components/ShareProgressModal';
 import { 
   UserGroupIcon, 
-  CogIcon, 
-  ShareIcon,
+  CogIcon,
   EyeIcon,
   PencilIcon,
   ShieldCheckIcon,
@@ -22,9 +20,6 @@ const RoleBasedHeader = ({ userRole, currentUser, workspace, onManagePermissions
   const isVendor = userRole === 'vendor';
   const isCAS = userRole === 'cas';
   const isClient = userRole === 'client';
-
-  // Modal state for Share Progress
-  const [showShareModal, setShowShareModal] = useState(false);
 
   // Fetch collaborators when details panel opens
   useEffect(() => {
@@ -283,29 +278,11 @@ const RoleBasedHeader = ({ userRole, currentUser, workspace, onManagePermissions
                     Manage Permissions
                   </button>
                 </>
-              ) : (
-                <button
-                  className="w-full flex items-center justify-center px-3 py-2 text-xs font-medium text-ink bg-canvas hover:bg-surface-hover rounded-md transition-colors"
-                  onClick={() => setShowShareModal(true)}
-                >
-                  <ShareIcon className="h-4 w-4 mr-2" />
-                  Share Progress
-                </button>
-              )}
+              ) : null}
             </div>
           </div>
         </div>
       )}
-      {/* Share Progress Modal */}
-      <ShareProgressModal
-        open={showShareModal}
-        onClose={() => setShowShareModal(false)}
-        workspaceLink={workspace?.workspaceLink || window.location.href}
-        onSendEmails={(emails) => {
-          // You can implement email sending logic here or pass a prop from parent
-          setShowShareModal(false);
-        }}
-      />
     </div>
   );
 };

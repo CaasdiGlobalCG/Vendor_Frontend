@@ -15,7 +15,8 @@ const WorkspaceDock = ({
   activeTab,
   onSelectTab,
   isPanelOpen = true,
-  disabled = false
+  disabled = false,
+  activeToolId = null
 }) => {
   const topDockItems = [
     { id: 'elements', label: 'Elements', icon: Grid, title: 'Elements library' },
@@ -40,7 +41,7 @@ const WorkspaceDock = ({
     <aside className="ws-dock" data-workspace-dock>
       {topDockItems.map((item) => {
         const IconComponent = item.icon;
-        const isActive = activeTab === item.id && isPanelOpen;
+        const isActive = (activeTab === item.id && isPanelOpen) || activeToolId === item.id;
         return (
           <button
             key={item.id}

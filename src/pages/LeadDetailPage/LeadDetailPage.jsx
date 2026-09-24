@@ -81,8 +81,46 @@ const LeadDetailPage = () => {
                             rejectionReason: data.lead.rejectionReason,
                             negotiationHistory: data.lead.negotiationHistory,
                             leadVersion: data.lead.leadVersion,
-                            status: data.lead.status
+                            status: data.lead.status,
+                            pdfUrl: data.lead.pdfUrl,
+                            vendorResponse: data.lead.vendorResponse,
+                            vendorBoqAttachment: data.lead.vendorBoqAttachment,
+                            vendorQuotationResponse: data.lead.vendorQuotationResponse,
+                            vendorQuotationApprovalStatus: data.lead.vendorQuotationApprovalStatus,
+                            vendorQuotationRejectionReason: data.lead.vendorQuotationRejectionReason
                         });
+
+                        // Restore submitted state only while submission is locked
+                        // (pending PM review / final decision). When the PM sends
+                        // the lead back for revision the upload forms must
+                        // reappear so the vendor can resubmit.
+                        const resubmittable =
+                            !data.lead.status ||
+                            data.lead.status === 'sent' ||
+                            data.lead.status === 'pm_rejected_for_revision' ||
+                            data.lead.vendorQuotationApprovalStatus === 'rejected';
+
+                        if (!resubmittable && data.lead.vendorBoqAttachment?.fileUrl) {
+                            setUploadedVendorBoq({
+                                boqFileUrl: data.lead.vendorBoqAttachment.fileUrl,
+                                fileName: data.lead.vendorBoqAttachment.fileName,
+                                uploadedAt: data.lead.vendorBoqAttachment.uploadedAt
+                            });
+                        }
+                        if (!resubmittable && data.lead.vendorQuotationResponse?.quotationUrl) {
+                            setUploadedVendorQuotation({
+                                quotationFileUrl: data.lead.vendorQuotationResponse.quotationUrl,
+                                fileName: data.lead.vendorQuotationResponse.quotationFileName,
+                                uploadedAt: data.lead.vendorQuotationResponse.submittedAt
+                            });
+                        }
+                        const pmBoqQuotationUrl = data.lead.vendorResponse?.quotationPdfUrl || data.lead.pdfUrl;
+                        if (!resubmittable && pmBoqQuotationUrl) {
+                            setUploadedQuotation({
+                                pdfUrl: pmBoqQuotationUrl,
+                                status: 'sent to pm for review'
+                            });
+                        }
                     }
                 }
             } catch (error) {
@@ -365,6 +403,7 @@ const LeadDetailPage = () => {
                 uploadedAt: new Date().toISOString()
             });
             setVendorQuotationFile(null);
+            setFreshLeadData(prev => ({ ...(prev || {}), status: 'vendor_accepted' }));
             
             alert('Your quotation has been uploaded and sent to PM for review!');
         } catch (error) {
@@ -430,6 +469,7 @@ const LeadDetailPage = () => {
 
             // Update local state with the new lead data
             setUploadedQuotation(data.quotation || null);
+            setFreshLeadData(prev => ({ ...(prev || {}), status: 'vendor_accepted' }));
             
             // Update leadDetails in location state to persist the new status
             if (location.state) {
@@ -468,6 +508,20 @@ const LeadDetailPage = () => {
     }
 
     const isPending = leadDetails.status === null;
+
+    // Vendor may submit/resubmit only while the lead is awaiting their response:
+    // freshly sent, sent back by PM for revision, or vendor-BOQ quotation rejected.
+    // Locked while pending PM review (vendor_accepted) and after a final decision.
+    const leadStatus = leadDetails?.status;
+    const quoteApprovalStatus = leadDetails?.vendorQuotationApprovalStatus;
+    const canSubmit =
+        !leadStatus ||
+        leadStatus === 'sent' ||
+        leadStatus === 'pm_rejected_for_revision' ||
+        quoteApprovalStatus === 'rejected';
+    const pmApproved = leadStatus === 'pm_approved' || quoteApprovalStatus === 'approved';
+    const vendorBoqRejected = quoteApprovalStatus === 'rejected';
+    const rejectionReasonText = leadDetails?.rejectionReason || leadDetails?.vendorQuotationRejectionReason;
 
     const getStatusStyles = (status) => {
         switch (status) {
@@ -510,13 +564,15 @@ const LeadDetailPage = () => {
                     >
                         Raise Support
                     </button>
-                    <button
-                        onClick={openWorkspace}
-                        className="inline-flex items-center px-4 py-2 bg-info text-white text-sm font-medium rounded-md hover:bg-info focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-info transition-colors duration-200"
-                    >
-                        <RectangleGroupIcon className="h-4 w-4 mr-2" />
-                        Open Workspace
-                    </button>
+                    {pmApproved && (
+                        <button
+                            onClick={openWorkspace}
+                            className="inline-flex items-center px-4 py-2 bg-info text-white text-sm font-medium rounded-md hover:bg-info focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-info transition-colors duration-200"
+                        >
+                            <RectangleGroupIcon className="h-4 w-4 mr-2" />
+                            Open Workspace
+                        </button>
+                    )}
                     <span className={`inline-block rounded-full px-4 py-1 text-sm font-medium ${getStatusStyles(leadDetails?.status)}`}>
                         {formatStatus(leadDetails?.status)}
                     </span>
@@ -592,6 +648,39 @@ const LeadDetailPage = () => {
                                 }
                             </p>
 
+                            {!canSubmit ? (
+                                <div className="bg-success/10 border border-success/20 rounded-md p-3">
+                                    <div className="flex items-center gap-2">
+                                        <CheckIcon className="h-5 w-5 text-success flex-shrink-0" />
+                                        <div>
+                                            <p className="text-sm font-medium text-success">
+                                                {pmApproved
+                                                    ? 'Your BOQ & quotation have been approved by the PM.'
+                                                    : 'Your BOQ & quotation have been sent to the PM for review.'}
+                                            </p>
+                                            <p className="text-xs text-success mt-1">
+                                                {pmApproved
+                                                    ? 'This submission is final.'
+                                                    : 'You can upload again only if the PM sends this lead back for revision.'}
+                                            </p>
+                                            {(uploadedVendorBoq?.fileName || uploadedVendorQuotation?.fileName) && (
+                                                <p className="text-xs text-success mt-1">
+                                                    {[uploadedVendorBoq?.fileName, uploadedVendorQuotation?.fileName].filter(Boolean).join(' • ')}
+                                                </p>
+                                            )}
+                                        </div>
+                                    </div>
+                                </div>
+                            ) : (
+                            <>
+                            {(leadDetails?.vendorBoqAttachment || leadDetails?.vendorQuotationResponse) && (
+                                <p className="text-xs text-dim mb-3 italic">
+                                    Previously submitted: {[
+                                        leadDetails?.vendorBoqAttachment?.fileName,
+                                        leadDetails?.vendorQuotationResponse?.quotationFileName
+                                    ].filter(Boolean).join(' • ')} — upload a revised BOQ and quotation below.
+                                </p>
+                            )}
                             {/* Vendor BOQ Upload */}
                             {!uploadedVendorBoq ? (
                                 <div>
@@ -730,13 +819,15 @@ const LeadDetailPage = () => {
                                     )}
                                 </div>
                             )}
+                            </>
+                            )}
                         </div>
                     </div>
                 </div>
             )}
 
             {/* PM Rejection Feedback (if rejected for revision or has negotiation history) */}
-            {(leadDetails?.status === 'sent' || leadDetails?.rejectionReason || leadDetails?.negotiationHistory?.length > 0) && leadDetails?.rejectionReason && (
+            {(vendorBoqRejected || ((leadDetails?.status === 'sent' || leadDetails?.rejectionReason || leadDetails?.negotiationHistory?.length > 0) && leadDetails?.rejectionReason)) && (
                 <div className="mb-10 p-4 rounded-lg border-l-4 border-danger bg-danger/10">
                     <div className="flex items-start gap-3">
                         <div className="flex-shrink-0">
@@ -761,7 +852,7 @@ const LeadDetailPage = () => {
                             <div className="text-sm text-danger mb-3">
                                 <p className="font-medium mb-1">Reason for Rejection:</p>
                                 <p className="bg-surface rounded px-3 py-2 border border-danger/20 mb-2">
-                                    {leadDetails.rejectionReason}
+                                    {rejectionReasonText}
                                 </p>
                             </div>
                             {leadDetails?.pmDecision?.feedback && (
@@ -803,15 +894,19 @@ const LeadDetailPage = () => {
                     </p>
                 </div>
 
-                {uploadedQuotation ? (
+                {uploadedQuotation || !canSubmit ? (
                     <div className="flex items-center justify-between gap-3 p-3 border rounded-md bg-success/10 mb-4">
                         <div className="flex items-center gap-2">
                             <PaperClipIcon className="h-5 w-5 text-success flex-shrink-0" />
                             <div>
                                 <p className="text-sm font-medium text-success">
-                                    Quotation sent to PM for review
+                                    {pmApproved
+                                        ? 'Quotation approved by PM'
+                                        : leadStatus === 'pm_rejected'
+                                            ? 'Quotation rejected by PM'
+                                            : 'Quotation sent to PM for review'}
                                 </p>
-                                {uploadedQuotation.pdfUrl && (
+                                {uploadedQuotation?.pdfUrl && (
                                     <a
                                         href={uploadedQuotation.pdfUrl}
                                         target="_blank"
@@ -824,11 +919,16 @@ const LeadDetailPage = () => {
                             </div>
                         </div>
                         <span className="text-xs text-success">
-                            Status: {uploadedQuotation.status || 'sent to pm for review'}
+                            Status: {pmApproved ? 'approved' : leadStatus === 'pm_rejected' ? 'rejected' : (uploadedQuotation?.status || 'sent to pm for review')}
                         </span>
                     </div>
                 ) : (
                     <>
+                        {(leadDetails?.vendorResponse?.quotationPdfUrl || leadDetails?.pdfUrl) && (
+                            <p className="text-xs text-dim mb-3 italic">
+                                A quotation was previously submitted for this lead — upload a revised PDF below.
+                            </p>
+                        )}
                         <div className="border-2 border-dashed border-line rounded-md p-6 flex flex-col items-center justify-center text-center bg-canvas">
                             <UploadIcon className="h-10 w-10 text-dim mb-2" />
                             <p className="text-sm text-ink mb-1">

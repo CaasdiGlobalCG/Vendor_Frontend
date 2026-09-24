@@ -41,6 +41,7 @@ const WorkspaceTopBar = ({
   unreadCount = 0,
   notifications = [],
   onMarkNotificationAsRead,
+  onNotificationClick,
   onMarkAllNotificationsAsRead,
   onStartCall,
   onManagePermissions,
@@ -61,6 +62,8 @@ const WorkspaceTopBar = ({
   const overflowRef = useRef(null);
   const [showNotifications, setShowNotifications] = useState(false);
   const notificationsRef = useRef(null);
+  const [showCollaborators, setShowCollaborators] = useState(false);
+  const collaboratorsRef = useRef(null);
 
   // Close overflow on click outside
   useEffect(() => {
@@ -70,6 +73,9 @@ const WorkspaceTopBar = ({
       }
       if (notificationsRef.current && !notificationsRef.current.contains(e.target)) {
         setShowNotifications(false);
+      }
+      if (collaboratorsRef.current && !collaboratorsRef.current.contains(e.target)) {
+        setShowCollaborators(false);
       }
     };
     document.addEventListener('mousedown', handleOutsideClick);
@@ -213,31 +219,91 @@ const WorkspaceTopBar = ({
         <span>{syncStatus === 'saving' ? 'Saving...' : 'Live'}</span>
       </div>
 
-      {/* Collaborators Avatar Stack */}
-      {workspaceCollaborators && workspaceCollaborators.length > 0 && (
-        <div className="ws-avatars" title={`${workspaceCollaborators.length} collaborator(s) online`}>
-          {workspaceCollaborators.slice(0, 3).map((c, i) => {
-            const name = c.name || c.userName || 'Collaborator';
-            const initial = name.charAt(0).toUpperCase();
-            const colors = ['#3b82f6', '#8b5cf6', '#10b981', '#f59e0b', '#ec4899'];
-            return (
-              <div
-                key={c.userId || i}
-                className="ws-avatar"
-                style={{ backgroundColor: colors[i % colors.length], zIndex: 3 - i }}
-                title={name}
-              >
-                {initial}
+      {/* Collaborators Avatar Stack — click to see the full list (all roles) */}
+      {workspaceCollaborators && workspaceCollaborators.length > 0 && (() => {
+        const colors = ['#3b82f6', '#8b5cf6', '#10b981', '#f59e0b', '#ec4899'];
+        const currentUserId = currentUser?.vendorId || currentUser?.userId || currentUser?.pmId || currentUser?.id;
+        const collaboratorRole = (c) =>
+          c.isPM ? 'PM'
+            : c.isClient ? 'Client'
+            : c.isCAS ? 'CAS'
+            : (c.role === 'PM' || c.role === 'Client' || c.role === 'CAS' ? c.role : 'Vendor');
+        return (
+          <div ref={collaboratorsRef} className="relative">
+            <button
+              onClick={() => setShowCollaborators(prev => !prev)}
+              className="ws-avatars cursor-pointer"
+              title={`${workspaceCollaborators.length} collaborator(s) — click to view`}
+            >
+              {workspaceCollaborators.slice(0, 3).map((c, i) => {
+                const name = c.name || c.userName || 'Collaborator';
+                const initial = name.charAt(0).toUpperCase();
+                return (
+                  <div
+                    key={c.userId || c.vendorId || i}
+                    className="ws-avatar"
+                    style={{ backgroundColor: colors[i % colors.length], zIndex: 3 - i }}
+                    title={name}
+                  >
+                    {initial}
+                  </div>
+                );
+              })}
+              {workspaceCollaborators.length > 3 && (
+                <div className="ws-avatar" style={{ backgroundColor: 'rgb(var(--info))', color: '#000000', zIndex: 0 }}>
+                  +{workspaceCollaborators.length - 3}
+                </div>
+              )}
+            </button>
+
+            {showCollaborators && (
+              <div className="absolute right-0 top-full mt-2 w-72 bg-surface border border-line rounded-xl shadow-xl z-50 overflow-hidden">
+                <div className="px-3.5 py-2.5 border-b border-line">
+                  <span className="text-xs font-semibold text-ink">
+                    Collaborators ({workspaceCollaborators.length})
+                  </span>
+                </div>
+                <div className="max-h-72 overflow-y-auto divide-y divide-line">
+                  {workspaceCollaborators.map((c, i) => {
+                    const name = c.name || c.userName || 'Collaborator';
+                    const initial = name.charAt(0).toUpperCase();
+                    const role = collaboratorRole(c);
+                    const rc = roleColors[role.toLowerCase()] || roleColors.vendor;
+                    const isYou = currentUserId && (c.vendorId === currentUserId || c.userId === currentUserId || c.id === currentUserId);
+                    return (
+                      <div key={c.vendorId || c.userId || i} className="flex items-center gap-2.5 px-3.5 py-2.5">
+                        <span
+                          className="w-7 h-7 rounded-full flex items-center justify-center text-white text-xs font-semibold flex-shrink-0"
+                          style={{ backgroundColor: colors[i % colors.length] }}
+                        >
+                          {initial}
+                        </span>
+                        <span className="flex-1 min-w-0">
+                          <span className="block text-xs font-medium text-ink truncate">
+                            {name}
+                            {isYou && <span className="text-dim font-normal"> (You)</span>}
+                          </span>
+                          {(c.email || c.accessLevel) && (
+                            <span className="block text-[11px] text-dim truncate">
+                              {c.email}{c.accessLevel ? ` · ${c.accessLevel}` : ''}
+                            </span>
+                          )}
+                        </span>
+                        <span
+                          className="text-[10px] font-medium px-1.5 py-0.5 rounded-full capitalize flex-shrink-0"
+                          style={{ backgroundColor: rc.bg, color: rc.text, border: `1px solid ${rc.border}` }}
+                        >
+                          {role}
+                        </span>
+                      </div>
+                    );
+                  })}
+                </div>
               </div>
-            );
-          })}
-          {workspaceCollaborators.length > 3 && (
-            <div className="ws-avatar" style={{ backgroundColor: 'rgb(var(--info))', zIndex: 0 }}>
-              +{workspaceCollaborators.length - 3}
-            </div>
-          )}
-        </div>
-      )}
+            )}
+          </div>
+        );
+      })()}
 
       {/* Video Call button */}
       {onStartCall && (
@@ -291,7 +357,11 @@ const WorkspaceTopBar = ({
                   return (
                     <button
                       key={nid || Math.random()}
-                      onClick={() => nid && onMarkNotificationAsRead?.(nid)}
+                      onClick={() => {
+                        if (nid) onMarkNotificationAsRead?.(nid);
+                        onNotificationClick?.(n);
+                        setShowNotifications(false);
+                      }}
                       className={`w-full flex items-start gap-2.5 px-3.5 py-2.5 text-left hover:bg-canvas transition-colors ${!n.isRead ? 'bg-info' : ''}`}
                     >
                       <span className={`mt-0.5 flex-shrink-0 w-6 h-6 rounded-full flex items-center justify-center ${n.actionRequired ? 'bg-warning/10 text-warning' : 'bg-surface-hover text-dim'}`}>

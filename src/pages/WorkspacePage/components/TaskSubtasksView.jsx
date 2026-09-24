@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Plus, MoreHorizontal, FileText, CheckSquare, Clock, ArrowRight, Edit2, Loader2, Check } from 'lucide-react';
+import { Plus, MoreHorizontal, FileText, CheckSquare, Clock, ArrowRight, Edit2, Loader2, Check, Unlink } from 'lucide-react';
 import { useToast } from './ToastProvider';
 
 const TaskSubtasksView = ({ 
@@ -170,6 +170,15 @@ const TaskSubtasksView = ({
     const dependencyMeta = getDependencyMeta(subtask);
     return Boolean(dependencyMeta?.isBlocked);
   };
+
+  // Subtasks this one may depend on: exclude itself and any subtask that
+  // already depends on it (direct A<->B cycle would block both forever).
+  const getDependencyCandidates = (subtask) =>
+    subtasks.filter(
+      (item) =>
+        item.id !== subtask.id &&
+        !(item.dependsOnSubtaskIds || []).includes(subtask.id)
+    );
 
   const visibleSubtasks = sortedFlowSubtasks.filter((subtask) => {
     if (statusViewFilter === 'all') return true;
@@ -472,8 +481,22 @@ const TaskSubtasksView = ({
                         </span>
                       </div>
                       {dependencyMeta && (
-                        <div className={`mt-1 rounded-md px-2 py-1 text-[10px] ${dependencyMeta.isBlocked ? 'bg-danger/10 text-danger' : 'bg-surface-hover text-ink'}`}>
-                          {dependencyMeta.isBlocked ? 'Blocked by' : 'Depends on'} {dependencyMeta.name} ({dependencyMeta.assignee}, {dependencyMeta.status})
+                        <div className={`mt-1 flex items-center justify-between gap-1 rounded-md px-2 py-1 text-[10px] ${dependencyMeta.isBlocked ? 'bg-danger/10 text-danger' : 'bg-surface-hover text-ink'}`}>
+                          <span>
+                            {dependencyMeta.isBlocked ? 'Blocked by' : 'Depends on'} {dependencyMeta.name} ({dependencyMeta.assignee}, {dependencyMeta.status})
+                          </span>
+                          <button
+                            type="button"
+                            title="Remove dependency"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleInlineSubtaskUpdate(subtask, { dependsOnSubtaskIds: [] });
+                            }}
+                            disabled={updatingSubtaskId === subtask.id}
+                            className="shrink-0 rounded p-0.5 opacity-60 hover:opacity-100 hover:bg-surface"
+                          >
+                            <Unlink className="h-3 w-3" />
+                          </button>
                         </div>
                       )}
                     </div>
@@ -491,6 +514,21 @@ const TaskSubtasksView = ({
                       <option value="low">Low</option>
                       <option value="medium">Medium</option>
                       <option value="high">High</option>
+                    </select>
+                    <select
+                      value={subtask.dependsOnSubtaskIds?.[0] || ''}
+                      onClick={(e) => e.stopPropagation()}
+                      onChange={(e) => handleInlineSubtaskUpdate(subtask, { dependsOnSubtaskIds: e.target.value ? [e.target.value] : [] })}
+                      disabled={updatingSubtaskId === subtask.id}
+                      className="max-w-[110px] rounded border border-line bg-surface px-1 py-0.5 text-[10px]"
+                      title="Depends on"
+                    >
+                      <option value="">No dependency</option>
+                      {getDependencyCandidates(subtask).map((candidate) => (
+                        <option key={candidate.id} value={candidate.id}>
+                          Depends on: {candidate.name}
+                        </option>
+                      ))}
                     </select>
                     <select
                       value={getPrimaryAssignee(subtask)}

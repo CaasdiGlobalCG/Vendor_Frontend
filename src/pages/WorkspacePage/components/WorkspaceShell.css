@@ -203,6 +203,11 @@
   display: flex;
   align-items: center;
 }
+button.ws-avatars {
+  background: none;
+  border: none;
+  padding: 0;
+}
 .ws-avatar {
   width: 28px;
   height: 28px;
@@ -214,7 +219,7 @@
   justify-content: center;
   font-size: 11px;
   font-weight: 600;
-  color: rgb(var(--text-muted));
+  color: #ffffff;
   box-shadow: 0 1px 2px rgba(0,0,0,0.08);
 }
 .ws-avatar:first-child {
@@ -248,7 +253,7 @@
 
 .ws-btn-primary {
   background: rgb(var(--status-info));
-  color: rgb(var(--text-muted));
+  color: #ffffff;
   border: none;
   padding: 7px 14px;
   border-radius: var(--ws-radius-s);
@@ -559,6 +564,11 @@
 }
 
 /* Empty Drop Frame */
+/* Text-placement mode — I-beam cursor over the canvas pane */
+.text-cursor-mode .react-flow__pane {
+  cursor: text !important;
+}
+
 .ws-canvas-empty {
   position: absolute;
   top: 50%;

@@ -117,27 +117,44 @@ const ProjectRequestCard = ({ project, onApprove, onReject, isCompareMode, isSel
     const isPending = project.status === null; // Check based on mock data status
     const isApproved = project.status === 'approved';
     const isRejected = project.status === 'rejected';
-    const statusLabel = isPending
-      ? 'Pending Review'
-      : isApproved
-        ? 'Awaiting PM Decision'
-        : isRejected
-          ? 'Declined'
-          : 'Unknown';
-    const statusTone = isPending
-      ? 'border-warning/20 bg-warning/10 text-warning'
-      : isApproved
-        ? 'border-line bg-surface-hover text-ink'
-        : isRejected
-          ? 'border-danger/20 bg-danger/10 text-danger'
-          : 'border-line bg-canvas text-ink';
-    const accentBar = isPending
-      ? 'bg-warning'
-      : isApproved
-        ? 'bg-success'
-        : isRejected
-          ? 'bg-danger'
-          : 'bg-line';
+    // rawStatus is the real backend status — 'approved' alone can't distinguish
+    // vendor_accepted (awaiting PM) from pm_approved (final decision).
+    const rawStatus = project.rawStatus;
+    const pmApproved = rawStatus === 'pm_approved' || project.pmDecision?.approved === true;
+    const pmRejected = rawStatus === 'pm_rejected' || (project.pmDecision && project.pmDecision.approved === false);
+    const statusLabel = pmApproved
+      ? 'PM Approved'
+      : pmRejected
+        ? 'PM Rejected'
+        : isPending
+          ? 'Pending Review'
+          : isApproved
+            ? 'Awaiting PM Decision'
+            : isRejected
+              ? 'Declined'
+              : 'Unknown';
+    const statusTone = pmApproved
+      ? 'border-success/20 bg-success/10 text-success'
+      : pmRejected
+        ? 'border-danger/20 bg-danger/10 text-danger'
+        : isPending
+          ? 'border-warning/20 bg-warning/10 text-warning'
+          : isApproved
+            ? 'border-line bg-surface-hover text-ink'
+            : isRejected
+              ? 'border-danger/20 bg-danger/10 text-danger'
+              : 'border-line bg-canvas text-ink';
+    const accentBar = pmApproved
+      ? 'bg-success'
+      : pmRejected
+        ? 'bg-danger'
+        : isPending
+          ? 'bg-warning'
+          : isApproved
+            ? 'bg-info'
+            : isRejected
+              ? 'bg-danger'
+              : 'bg-line';
 
     const handleCheckboxChange = () => {
         if (onSelectRequest) {
@@ -240,13 +257,6 @@ const ProjectRequestCard = ({ project, onApprove, onReject, isCompareMode, isSel
                         <ClockIcon className="h-3 w-3" />
                         <span>{statusLabel}</span>
                     </div>
-                    {project.pmDecision && (
-                        <div className={`inline-flex items-center rounded-full border px-2 py-0.5 text-[11px] font-medium ${
-                          project.pmDecision.approved ? 'bg-surface-hover text-ink border-line' : 'bg-danger/10 text-danger border-danger/20'
-                        }`}>
-                            PM: {project.pmDecision.approved ? 'Approved' : 'Rejected'}
-                        </div>
-                    )}
                     {/* Needs Revision Badge (NEW) */}
                     {(project.status === 'sent' || project.rawStatus === 'sent') && project.rejectionReason && (
                         <div className={`text-[11px] px-2 py-0.5 rounded-full font-medium border bg-warning/10 text-warning border-warning/20 flex items-center gap-1`}>
@@ -444,7 +454,7 @@ const ProjectRequestCard = ({ project, onApprove, onReject, isCompareMode, isSel
                           <span className="hidden sm:inline">Collaborative</span>
                         </button>
                       </PermissionGate>
-                    ) : project.status === 'approved' && project.sentByPmId ? (
+                    ) : project.status === 'approved' && !pmApproved && project.sentByPmId ? (
                       <PermissionGate module="workspace" action="view">
                         <button
                           onClick={openWorkspace}
@@ -523,7 +533,7 @@ const ProjectRequestCard = ({ project, onApprove, onReject, isCompareMode, isSel
                         </PermissionGate>
                     ) : (
                       <span className={`rounded-md border px-2.5 py-1 text-[11px] font-semibold ${project.status === 'approved' ? 'bg-surface-hover text-ink border-line' : 'bg-danger/10 text-danger border-danger/20'}`}>
-                           {project.status === 'approved' ? 'Approved' : 'Rejected'}
+                           {project.status === 'approved' ? 'Accepted' : 'Rejected'}
                         </span>
                     )}
                 </div>

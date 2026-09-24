@@ -9,7 +9,6 @@ import {
   MousePointer, 
   BarChart3, 
   FileText, 
-  Type, 
   AlignLeft, 
   Grid3X3, 
   Columns, 
@@ -713,7 +712,7 @@ const WorkspaceContextPanel = ({
           <div className="ws-panel-head">
             <div>
               <h3 className="ws-panel-title">Text</h3>
-              <p className="ws-panel-desc">Drag a text block onto the canvas.</p>
+              <p className="ws-panel-desc">Click anywhere on the canvas to type.</p>
             </div>
             <button onClick={onClose} className="ws-icon-btn" title="Close panel">
               <X className="w-4 h-4" />
@@ -721,37 +720,12 @@ const WorkspaceContextPanel = ({
           </div>
 
           <div className="ws-panel-body">
-            <div className="space-y-2 mb-4">
-              {[
-                { type: 'text-heading', label: 'Heading', style: 'font-semibold text-base text-ink' },
-                { type: 'text-subheading', label: 'Subheading', style: 'font-medium text-sm text-ink' },
-                { type: 'text-body', label: 'Body Text', style: 'font-normal text-xs text-dim' },
-                { type: 'text-note', label: 'Sticky Note / Callout', style: 'font-normal text-xs text-warning italic' }
-              ].map((item) => {
-                const elementData = {
-                  type: 'text',
-                  name: item.label,
-                  label: item.label,
-                  textType: item.type,
-                  content: item.label
-                };
-                return (
-                  <div
-                    key={item.type}
-                    draggable
-                    onDragStart={(e) => handleDragStart(e, elementData)}
-                    onClick={() => handleDoubleClick(elementData)}
-                    className="p-3 bg-surface border border-line hover:border-info/30 hover:bg-info rounded-lg cursor-grab active:cursor-grabbing transition-all flex items-center justify-between group"
-                  >
-                    <span className={item.style}>{item.label}</span>
-                    <Type className="w-3.5 h-3.5 text-dim group-hover:text-info" />
-                  </div>
-                );
-              })}
-            </div>
-
             <div className="ws-hint-box">
-              Select any placed text on canvas to customize font, alignment, and styling.
+              Click the <strong>Text</strong> tool in the dock to toggle text mode. With the
+              I-beam cursor active, click anywhere on the canvas and start typing —
+              text is placed as a caption, not a card. Click the Text tool again
+              (or press Escape) to stop. Select any placed text to adjust font,
+              size, color, and alignment from the inspector.
             </div>
           </div>
         </>

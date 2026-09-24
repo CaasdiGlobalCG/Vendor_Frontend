@@ -258,7 +258,10 @@ export const RBACProvider = ({ children }) => {
     }
 
     fetchRBAC();
-  }, [currentUser, isHydratingUser, fetchRBAC]);
+    // Depend on identity primitives, not the whole currentUser object —
+    // callers spread {...currentUser} on every /me fetch, and an identity-only
+    // change re-fires this effect → isLoading → skeleton → unmount loop.
+  }, [currentUser?.vendorId, currentUser?.email, isHydratingUser, fetchRBAC]);
 
   // Memoize the context value to prevent unnecessary re-renders
   const contextValue = useMemo(() => ({
