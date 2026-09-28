@@ -142,12 +142,31 @@ const ProgressTimelineModal = ({ isOpen, onClose, workspace = {}, workspaceId })
   );
 
   // Elements whose data.addedAt falls on the selected day — used for the
-  // "day snapshot" mini-canvas AND as a fallback for the added list when the
-  // activity log is empty.
+  // "day snapshot" mini-canvas AND merged into the added list (many node
+  // types are added without an activity record, so activities alone miss them).
   const dayNodes = useMemo(
     () => collectAllNodes(workspace).filter((n) => localDay(n?.data?.addedAt) === selectedDate),
     [workspace, selectedDate]
   );
+
+  // Union: logged activities + dayNodes not already covered by an activity entry
+  const dayElementEntries = useMemo(() => {
+    const covered = new Set(
+      dayActivities.map((a) => a.targetId || a.details?.elementId).filter(Boolean)
+    );
+    const nodeEntries = dayNodes
+      .filter((n) => !covered.has(n.id))
+      .map((n) => ({
+        activityId: n.id,
+        userName: n.data?.addedBy || n.data?.addedByName || 'Unknown',
+        timestamp: n.data?.addedAt,
+        elementType: n.data?.type || n.type,
+        details: { elementName: n.data?.name || n.data?.elementName || n.data?.type },
+        _ctxLabel: n._ctx?.label,
+      }));
+    return [...dayActivities, ...nodeEntries]
+      .sort((a, b) => new Date(a.timestamp || a.createdAt) - new Date(b.timestamp || b.createdAt));
+  }, [dayActivities, dayNodes]);
 
   // Pass the real node objects through so each element renders exactly as it
   // does on the workspace canvas (same node type, same data, same size).
@@ -306,18 +325,11 @@ const ProgressTimelineModal = ({ isOpen, onClose, workspace = {}, workspaceId })
             </h3>
             {activitiesLoading ? (
               <p className="text-xs text-dim">Loading activity…</p>
-            ) : dayActivities.length === 0 && dayNodes.length === 0 ? (
+            ) : dayElementEntries.length === 0 ? (
               <p className="text-xs text-dim">No elements added this day.</p>
             ) : (
               <div className="border border-line rounded-lg divide-y divide-line">
-                {(dayActivities.length > 0 ? dayActivities : dayNodes.map((n) => ({
-                  activityId: n.id,
-                  userName: n.data?.addedBy || n.data?.addedByName || 'Unknown',
-                  timestamp: n.data?.addedAt,
-                  elementType: n.data?.type || n.type,
-                  details: { elementName: n.data?.name || n.data?.elementName || n.data?.type },
-                  _ctxLabel: n._ctx?.label,
-                }))).map((a, i) => (
+                {dayElementEntries.map((a, i) => (
                   <div key={a.activityId || a.id || i} className="flex items-center justify-between px-3 py-2 text-sm">
                     <div className="min-w-0">
                       <p className="text-ink font-medium truncate">
