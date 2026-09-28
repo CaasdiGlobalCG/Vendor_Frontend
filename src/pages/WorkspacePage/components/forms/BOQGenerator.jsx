@@ -443,7 +443,7 @@ const BOQTableDisplay = ({ boqData, costBreakdown, onRegenerate }) => {
 
 /* ─────────── MAIN COMPONENT (used in ElementNode) ─────────── */
 const BOQGenerator = ({ onClose }) => {
-  const [showModal, setShowModal] = useState(true); // auto-open on mount
+  const [showModal, setShowModal] = useState(false); // open via placeholder/regenerate button — never auto-open on mount (breaks snapshot renders and canvas remounts)
   const [boqData, setBOQData] = useState(null);
   const [costBreakdown, setCostBreakdown] = useState(null);
   const tableContainerRef = React.useRef(null);

@@ -17,7 +17,8 @@ import {
   Trash2,
   Sparkles,
   Bell,
-  Send
+  Send,
+  Calendar
 } from 'lucide-react';
 import config from '../../../config/env';
 import { Auth } from 'aws-amplify';
@@ -55,6 +56,7 @@ const WorkspaceTopBar = ({
   onOpenClientReviewProgress,
   onOpenProjectComplete,
   onOpenDeletionHistory,
+  onShowProgress,
   isWorkspaceCompleted = false,
   shouldDisableEditing = false,
 }) => {
@@ -455,6 +457,17 @@ const WorkspaceTopBar = ({
                 )}
                 <div className="border-t border-line my-1" />
               </>
+            )}
+
+            {/* Progress timeline — see what was done on any day */}
+            {onShowProgress && (
+              <button
+                onClick={() => { onShowProgress(); setShowOverflow(false); }}
+                className="w-full flex items-center gap-2 px-3.5 py-2 hover:bg-canvas transition-colors"
+              >
+                <Calendar className="w-4 h-4 text-info" />
+                <span>Show Progress</span>
+              </button>
             )}
 
             {/* Share progress */}

@@ -4,6 +4,31 @@ import { VendorContext } from '../../../../context/VendorContext';
 import config from '../../../../config/env';
 import invoiceFetch from '../invoice/utils/invoiceFetch';
 
+const todayStr = () => new Date().toISOString().slice(0, 10);
+
+// Group submissions by the day the work was done (progressDate), newest first.
+// Older records without progressDate fall back to their submittedAt day.
+const groupSubmissionsByDate = (submissions) => {
+  const groups = new Map();
+  submissions.forEach((s) => {
+    const key = s.progressDate || (s.submittedAt ? s.submittedAt.slice(0, 10) : 'unknown');
+    if (!groups.has(key)) groups.set(key, []);
+    groups.get(key).push(s);
+  });
+  return [...groups.entries()]
+    .sort((a, b) => (a[0] < b[0] ? 1 : -1))
+    .map(([date, items]) => ({
+      date,
+      items: items.sort((a, b) => new Date(b.submittedAt) - new Date(a.submittedAt)),
+    }));
+};
+
+const formatProgressDate = (dateStr) => {
+  if (!dateStr || dateStr === 'unknown') return 'Unknown date';
+  const d = new Date(`${dateStr}T00:00:00`);
+  return d.toLocaleDateString('en-IN', { weekday: 'long', day: '2-digit', month: 'short', year: 'numeric' });
+};
+
 const UpdateProgressModal = ({ isOpen, onClose, workspaceId, projectId, taskId, subtaskId, tasks = [], onUpdate, workspace = {} }) => {
     // Dropdown state for task and subtask
     const [selectedTaskId, setSelectedTaskId] = useState(taskId || '');
@@ -31,6 +56,7 @@ const UpdateProgressModal = ({ isOpen, onClose, workspaceId, projectId, taskId, 
           description: '',
           workDone: '',
           workPending: '',
+          progressDate: todayStr(),
           proofOfCompletion: null
         });
         setCompletionFormData({
@@ -51,6 +77,7 @@ const UpdateProgressModal = ({ isOpen, onClose, workspaceId, projectId, taskId, 
     description: '',
     workDone: '',
     workPending: '',
+    progressDate: todayStr(),
     proofOfCompletion: null
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -165,6 +192,11 @@ const UpdateProgressModal = ({ isOpen, onClose, workspaceId, projectId, taskId, 
       return;
     }
 
+    if (!formData.progressDate) {
+      setError('Please select the date this work was done');
+      return;
+    }
+
     setIsSubmitting(true);
     setError(null);
 
@@ -176,6 +208,7 @@ const UpdateProgressModal = ({ isOpen, onClose, workspaceId, projectId, taskId, 
       submitData.append('description', formData.description);
       submitData.append('workDone', formData.workDone);
       submitData.append('workPending', formData.workPending);
+      submitData.append('progressDate', formData.progressDate);
       submitData.append('projectId', projectId || '');
       submitData.append('taskId', selectedTaskId);
       submitData.append('subtaskId', selectedSubtaskId || '');
@@ -214,6 +247,7 @@ const UpdateProgressModal = ({ isOpen, onClose, workspaceId, projectId, taskId, 
           description: '',
           workDone: '',
           workPending: '',
+          progressDate: todayStr(),
           proofOfCompletion: null
         });
 
@@ -420,6 +454,23 @@ const UpdateProgressModal = ({ isOpen, onClose, workspaceId, projectId, taskId, 
                   </select>
                 </div>
               )}
+
+              <div>
+                <label htmlFor="progressDate" className="block text-sm font-medium text-ink mb-2">
+                  Work Date *
+                </label>
+                <input
+                  type="date"
+                  id="progressDate"
+                  name="progressDate"
+                  value={formData.progressDate}
+                  onChange={handleInputChange}
+                  max={todayStr()}
+                  className="w-full px-3 py-2 border border-line rounded-lg focus:ring-2 focus:ring-info focus:border-info"
+                  required
+                />
+                <p className="text-xs text-dim mt-1">The day this work was actually done (cannot be in the future).</p>
+              </div>
 
               <div>
                 <label htmlFor="title" className="block text-sm font-medium text-ink mb-2">
@@ -715,15 +766,23 @@ const UpdateProgressModal = ({ isOpen, onClose, workspaceId, projectId, taskId, 
                   <p className="text-dim text-lg">No previous submissions found</p>
                 </div>
               ) : (
-                <div className="space-y-4">
-                  {previousSubmissions.map((submission, index) => (
+                <div className="space-y-6">
+                  {groupSubmissionsByDate(previousSubmissions).map((group) => (
+                    <div key={group.date}>
+                      {/* Day header — what progress happened on this day */}
+                      <div className="flex items-center justify-between mb-2 sticky top-14 bg-surface z-10 py-1">
+                        <h3 className="text-sm font-semibold text-ink">{formatProgressDate(group.date)}</h3>
+                        <span className="text-xs text-dim">{group.items.length} submission{group.items.length !== 1 ? 's' : ''}</span>
+                      </div>
+                      <div className="space-y-4">
+                  {group.items.map((submission) => (
                     <div key={submission.id} className="border border-line rounded-lg p-4  transition-shadow">
                       {/* Header with Index and Status */}
                       <div className="flex items-center justify-between mb-3">
                         <div>
-                          <p className="text-sm font-medium text-ink">Submission #{previousSubmissions.length - index}</p>
+                          <p className="text-sm font-medium text-ink">{submission.title}</p>
                           <p className="text-xs text-dim">
-                            {new Date(submission.submittedAt).toLocaleDateString()} at {new Date(submission.submittedAt).toLocaleTimeString()}
+                            Submitted {new Date(submission.submittedAt).toLocaleDateString()} at {new Date(submission.submittedAt).toLocaleTimeString()}
                           </p>
                         </div>
                         <div className="flex items-center space-x-2">
@@ -746,8 +805,8 @@ const UpdateProgressModal = ({ isOpen, onClose, workspaceId, projectId, taskId, 
                       {/* Details Grid */}
                       <div className="grid grid-cols-2 gap-4 mb-3">
                         <div>
-                          <label className="block text-xs font-medium text-ink mb-1">Title</label>
-                          <p className="text-sm text-ink">{submission.title}</p>
+                          <label className="block text-xs font-medium text-ink mb-1">Work Date</label>
+                          <p className="text-sm text-ink">{submission.progressDate ? formatProgressDate(submission.progressDate) : '—'}</p>
                         </div>
                         <div>
                           <label className="block text-xs font-medium text-ink mb-1">Description</label>
@@ -791,6 +850,9 @@ const UpdateProgressModal = ({ isOpen, onClose, workspaceId, projectId, taskId, 
                             <span className="font-medium text-right ml-2">{submission.rejectionReason}</span>
                           </div>
                         )}
+                      </div>
+                    </div>
+                  ))}
                       </div>
                     </div>
                   ))}

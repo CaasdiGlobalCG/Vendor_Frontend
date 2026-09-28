@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useEffect, useContext, useRef, useImperativeHandle, forwardRef } from 'react';
-import { Plus, Save, Eye, X, Users, Grid, Maximize2, Minimize2, Check, Gauge, Download, FileText, AlignHorizontalDistributeCenter, Sparkles, Trash2 } from 'lucide-react';
+import { Plus, Save, Eye, X, Users, Grid, Maximize2, Minimize2, Check, Gauge, Download, FileText, AlignHorizontalDistributeCenter, Sparkles, Trash2, TrendingUp } from 'lucide-react';
 import { toJpeg } from 'html-to-image';
 import { VendorContext } from '../../../context/VendorContext';
 import ReactFlow, {
@@ -127,6 +127,7 @@ const edgeTypes = {
   onZoomChange,
   canvasWebSocket,
   workspaceCollaborators,
+  highlightDay, // YYYY-MM-DD — elements added this day get a highlight ring
 }, ref) => {
   const { currentUser } = useContext(VendorContext);
 
@@ -5648,6 +5649,34 @@ const edgeTypes = {
     },
     [reactFlowInstance, setNodes, trackActivity, nodes]
   );
+  // Progress-day highlight: add 'progress-day-highlight' to node.className for
+  // elements whose data.addedAt falls on the chosen day. className is a real
+  // React Flow node prop rendered on the node wrapper — survives re-renders.
+  // The setNodes guard returns the same array when nothing changed, so this
+  // effect cannot loop even though it depends on `nodes`.
+  useEffect(() => {
+    const dayOf = (ts) => {
+      if (!ts) return '';
+      const d = new Date(ts);
+      if (isNaN(d.getTime())) return '';
+      return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+    };
+    setNodes((nds) => {
+      let changed = false;
+      const next = nds.map((n) => {
+        const want = Boolean(highlightDay) && dayOf(n?.data?.addedAt) === highlightDay;
+        const classes = (n.className || '').split(' ').filter(Boolean);
+        const has = classes.includes('progress-day-highlight');
+        if (want === has) return n;
+        changed = true;
+        const cls = classes.filter((c) => c !== 'progress-day-highlight');
+        if (want) cls.push('progress-day-highlight');
+        return { ...n, className: cls.join(' ') };
+      });
+      return changed ? next : nds;
+    });
+  }, [highlightDay, nodes, selectedSubtask?.id]);
+
   useEffect(() => {
     updateOffset();
     window.addEventListener('resize', updateOffset);
@@ -5745,6 +5774,21 @@ const edgeTypes = {
               aria-label={performanceMode ? 'Disable performance mode' : 'Enable performance mode'}
             >
               <Gauge className="w-5 h-5" />
+            </button>
+
+            {/* Progress-by-day sidebar toggle */}
+            <button
+              onClick={() => window.dispatchEvent(new CustomEvent('progress-sidebar-toggle'))}
+              className={`p-2 border rounded-lg transition-colors flex items-center justify-center focus:outline-none focus:ring-2 focus:ring-info ${
+                highlightDay
+                  ? 'border-info/40 bg-info/10 text-info'
+                  : 'bg-white/40 supports-[backdrop-filter]:bg-white/20 backdrop-blur-md border-white/40 hover:bg-white/55 text-ink'
+              }`}
+              title="Progress by day — highlight elements added on a date"
+              aria-label="Toggle progress day panel"
+            >
+              <TrendingUp className="w-5 h-5" />
+              {highlightDay && <span className="sr-only">highlighting {highlightDay}</span>}
             </button>
 
             {/* Real-time sync indicator */}

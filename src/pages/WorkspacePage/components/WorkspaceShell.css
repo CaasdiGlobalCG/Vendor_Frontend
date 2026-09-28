@@ -706,3 +706,14 @@ button.ws-avatars {
   text-decoration: underline;
   color: rgb(var(--status-danger));
 }
+
+/* Progress-day highlight — green ring + tint on elements added on the selected day */
+.react-flow__node.progress-day-highlight {
+  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.95), 0 0 24px rgba(16, 185, 129, 0.4);
+  border-radius: 10px;
+  z-index: 1000 !important;
+}
+.react-flow__node.progress-day-highlight > div {
+  border-radius: inherit;
+  background-color: rgba(16, 185, 129, 0.08);
+}

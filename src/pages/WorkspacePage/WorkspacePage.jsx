@@ -32,6 +32,9 @@ import RoleBasedHeader from './components/RoleBasedHeader';
 import { PostServicesModal } from './components/modals/PostServices';
 import UpdateProgressModal from './components/modals/UpdateProgressModal';
 import ReviewProgressModal from './components/modals/ReviewProgressModal';
+import ProgressTimelineModal from './components/modals/ProgressTimelineModal';
+import ProgressSidebar from './components/ProgressSidebar';
+import DayReportModal from './components/modals/DayReportModal';
 import ProjectCompleteModal from './components/modals/ProjectCompleteModal';
 import PermissionsModal from './components/PermissionsModal';
 import InviteCASModal from './components/InviteCASModal';
@@ -435,6 +438,57 @@ const WorkspacePage = () => {
   const [showPostServicesModal, setShowPostServicesModal] = useState(false);
   const [showUpdateProgressModal, setShowUpdateProgressModal] = useState(false);
   const [showReviewProgressModal, setShowReviewProgressModal] = useState(false);
+const [showProgressTimelineModal, setShowProgressTimelineModal] = useState(false);
+const [showProgressSidebar, setShowProgressSidebar] = useState(false);
+const [progressDay, setProgressDay] = useState(null); // YYYY-MM-DD highlighted on canvas
+const [reportDay, setReportDay] = useState(null); // {date, label} for DayReportModal
+
+// Live canvas nodes — CanvasWorkspace broadcasts 'canvasNodesChanged' on every
+// change. We keep only the current node list (when the id set changes) so the
+// progress sidebar/report see elements that haven't been saved to Dynamo yet.
+const [liveCanvasNodes, setLiveCanvasNodes] = useState([]);
+const liveNodeIdsRef = useRef('');
+useEffect(() => {
+  const handler = (e) => {
+    const list = e.detail?.nodes || [];
+    const ids = list.map((n) => n.id).sort().join(',');
+    if (ids === liveNodeIdsRef.current) return;
+    liveNodeIdsRef.current = ids;
+    setLiveCanvasNodes(list);
+  };
+  document.addEventListener('canvasNodesChanged', handler);
+  return () => document.removeEventListener('canvasNodesChanged', handler);
+}, []);
+
+// Canvas header button toggles the progress-day sidebar via a DOM event
+useEffect(() => {
+  const handler = () =>
+    setShowProgressSidebar((p) => {
+      if (!p) refetchWorkspace?.(); // pull latest saved canvas before showing
+      if (p) setProgressDay(null); // closing clears the highlight
+      return !p;
+    });
+  window.addEventListener('progress-sidebar-toggle', handler);
+  return () => window.removeEventListener('progress-sidebar-toggle', handler);
+}, []);
+
+// Workspace view for progress UIs — overlays the LIVE canvas nodes onto the
+// selected subtask so just-added elements appear in reports/highlights even
+// before the autosave round-trip lands in the workspace record.
+const workspaceForProgress = useMemo(() => {
+  if (!workspace || !selectedSubtask || !liveCanvasNodes.length) return workspace;
+  return {
+    ...workspace,
+    tasks: (workspace.tasks || []).map((t) => ({
+      ...t,
+      subtasks: (t.subtasks || []).map((s) =>
+        s.id === selectedSubtask.id
+          ? { ...s, canvasData: { ...(s.canvasData || {}), nodes: liveCanvasNodes } }
+          : s
+      ),
+    })),
+  };
+}, [workspace, selectedSubtask, liveCanvasNodes]);
   const [showClientReviewProgressModal, setShowClientReviewProgressModal] = useState(false);
   const [showProjectCompleteModal, setShowProjectCompleteModal] = useState(false);
   const [showCostCalculatorsModal, setShowCostCalculatorsModal] = useState(false);
@@ -2547,6 +2601,7 @@ const WorkspacePage = () => {
           onOpenAIBuilder={() => setShowAIBuilder(true)}
           onOpenUpdateProgress={() => setShowUpdateProgressModal(true)}
           onOpenReviewProgress={() => setShowReviewProgressModal(true)}
+          onShowProgress={() => setShowProgressTimelineModal(true)}
           onOpenClientReviewProgress={() => setShowClientReviewProgressModal(true)}
           onOpenProjectComplete={() => setShowProjectCompleteModal(true)}
           onOpenDeletionHistory={() => setRightPanelPinned(true)}
@@ -2667,6 +2722,7 @@ const WorkspacePage = () => {
               currentUser={currentUser}
               focusMode={focusMode}
               canvasTheme={canvasTheme}
+              highlightDay={progressDay}
             />
           </div>
 
@@ -2891,6 +2947,53 @@ const WorkspacePage = () => {
         }}
         workspace={workspace}
         userRole={userRole}
+      />
+
+      {/* Progress Timeline — pick a day, see that day's submissions */}
+      <ProgressTimelineModal
+        isOpen={showProgressTimelineModal}
+        onClose={() => setShowProgressTimelineModal(false)}
+        workspace={workspaceForProgress}
+        workspaceId={workspaceId}
+      />
+
+      {/* Day progress report — view + PDF download */}
+      <DayReportModal
+        isOpen={Boolean(reportDay)}
+        onClose={() => setReportDay(null)}
+        workspace={workspaceForProgress}
+        workspaceId={workspaceId}
+        date={reportDay?.date}
+        dayLabel={reportDay?.label}
+        generatedBy={currentUser?.name || currentUser?.email}
+      />
+
+      {/* Progress by Day sidebar — highlight a day's elements on the canvas */}
+      <ProgressSidebar
+        open={showProgressSidebar}
+        onClose={() => { setShowProgressSidebar(false); setProgressDay(null); }}
+        workspace={workspaceForProgress}
+        selectedDay={progressDay}
+        onSelectDay={(day) => {
+          setProgressDay(day);
+          if (!day) return;
+          // Jump to the subtask that contains that day's elements
+          const dayMatches = (n) => {
+            if (!n?.data?.addedAt) return false;
+            const d = new Date(n.data.addedAt);
+            return !isNaN(d) && `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}` === day;
+          };
+          for (const task of workspaceForProgress?.tasks || []) {
+            for (const sub of task?.subtasks || []) {
+              if ((sub?.canvasData?.nodes || []).some(dayMatches)) {
+                setSelectedTask(task);
+                setSelectedSubtask(sub);
+                return;
+              }
+            }
+          }
+        }}
+        onOpenReport={(d) => setReportDay({ date: d.date, label: d.label })}
       />
 
       {/* Client Review Progress Modal */}

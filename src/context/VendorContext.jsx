@@ -114,6 +114,7 @@ export const VendorProvider = ({ children }) => {
       let isTeamMember = false;
       let resubmitPermissions = null;
       let resubmitRemarks = null;
+      let additionalDocRequest = null;
 
       const tryMe = async () => {
         const res = await authFetch(`${config.VENDOR_BACKEND_URL}/api/vendor/me`, {
@@ -163,6 +164,7 @@ export const VendorProvider = ({ children }) => {
         isTeamMember = v?.isTeamMember === true;
         resubmitPermissions = v?.resubmitPermissions || null;
         resubmitRemarks = v?.resubmitRemarks || null;
+        additionalDocRequest = v?.additionalDocRequest || null;
       }
 
       if (
@@ -206,6 +208,7 @@ export const VendorProvider = ({ children }) => {
         isTeamMember,
         resubmitPermissions,
         resubmitRemarks,
+        additionalDocRequest,
       };
 
       // Avoid replacing currentUser with an identical object — a fresh object

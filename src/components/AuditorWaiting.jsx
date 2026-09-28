@@ -12,6 +12,10 @@ import {
   requestReschedule,
   uploadEvidence,
 } from "../services/physicalKYCApi";
+import {
+  getAdditionalDocRequest,
+  uploadAdditionalDocument,
+} from "../services/additionalDocsApi";
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -302,6 +306,128 @@ function EvidenceUploadPanel({ vendorId, scheduleId }) {
   );
 }
 
+// ─── Additional documents requested by the auditor ────────────────────────────
+
+const ADDITIONAL_DOC_ACCEPT = ".pdf,.jpg,.jpeg,.png,.doc,.docx";
+
+export function AdditionalDocsPanel() {
+  const [request, setRequest] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [uploadingId, setUploadingId] = useState(null);
+  const [error, setError] = useState(null);
+
+  const load = useCallback(async () => {
+    try {
+      const data = await getAdditionalDocRequest();
+      setRequest(data);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    load();
+  }, [load]);
+
+  const handleUpload = async (docId, file) => {
+    if (!file) return;
+    setUploadingId(docId);
+    setError(null);
+    try {
+      const result = await uploadAdditionalDocument(docId, file);
+      setRequest(result.additionalDocRequest || null);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setUploadingId(null);
+    }
+  };
+
+  if (loading || !request) return null;
+
+  const items = Array.isArray(request.documents) ? request.documents : [];
+  const pendingItems = items.filter((d) => d.status !== 'submitted');
+  const isSubmitted = request.status === 'submitted' || pendingItems.length === 0;
+
+  return (
+    <div className="bg-surface rounded-2xl border border-line p-6 mt-8 max-w-2xl mx-auto">
+      <h3 className="text-lg font-semibold text-ink mb-1">📄 Additional Documents Requested</h3>
+      <p className="text-xs text-dim mb-4">
+        The auditor needs the following documents to continue your verification. Upload each document below.
+      </p>
+
+      {request.remarks && (
+        <div className="bg-canvas rounded-lg p-3 mb-4 text-sm text-ink">
+          <span className="text-xs text-dim block mb-1">Auditor note</span>
+          {request.remarks}
+        </div>
+      )}
+
+      <div className="space-y-3">
+        {items.map((doc) => {
+          const submitted = doc.status === 'submitted' && doc.file;
+          const inputId = `addl-doc-${doc.id}`;
+          return (
+            <div
+              key={doc.id}
+              className={`border rounded-lg p-3 flex items-center justify-between gap-3 ${
+                submitted ? 'border-success/30 bg-success/10' : 'border-line'
+              }`}
+            >
+              <div className="min-w-0">
+                <p className="text-sm font-medium text-ink">{doc.name}</p>
+                {doc.description && (
+                  <p className="text-xs text-dim mt-0.5">{doc.description}</p>
+                )}
+                {submitted && (
+                  <p className="text-xs text-success mt-1 truncate">✓ {doc.file.name}</p>
+                )}
+              </div>
+              {!isSubmitted && (
+                <div className="flex-shrink-0">
+                  <input
+                    type="file"
+                    id={inputId}
+                    accept={ADDITIONAL_DOC_ACCEPT}
+                    className="hidden"
+                    onChange={(e) => {
+                      const f = e.target.files?.[0];
+                      e.target.value = '';
+                      if (f) handleUpload(doc.id, f);
+                    }}
+                  />
+                  <label
+                    htmlFor={inputId}
+                    className={`text-xs px-3 py-2 rounded-lg cursor-pointer transition inline-block ${
+                      uploadingId === doc.id
+                        ? 'bg-surface-hover text-dim pointer-events-none'
+                        : submitted
+                        ? 'border border-line text-dim hover:bg-canvas'
+                        : 'bg-success text-white hover:bg-success/90'
+                    }`}
+                  >
+                    {uploadingId === doc.id ? 'Uploading…' : submitted ? 'Replace' : 'Upload'}
+                  </label>
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
+
+      {error && <p className="mt-3 text-xs text-danger">{error}</p>}
+
+      {isSubmitted && (
+        <p className="mt-4 text-sm p-3 rounded-lg bg-success/10 text-success">
+          ✅ All requested documents submitted. The auditor will continue your verification.
+        </p>
+      )}
+    </div>
+  );
+}
+
 // ─── Status Panels ────────────────────────────────────────────────────────────
 
 function OnlineKYCPendingPanel() {
@@ -569,6 +695,8 @@ export default function AuditorWaiting() {
       {/* Main content */}
       <div className="max-w-5xl mx-auto px-4 pb-16">
         {renderContent()}
+        {/* Auditor-requested extra documents — shown on top of any status panel */}
+        <AdditionalDocsPanel />
       </div>
 
       {/* Footer */}

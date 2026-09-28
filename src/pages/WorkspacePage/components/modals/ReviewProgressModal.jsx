@@ -339,7 +339,10 @@ const ReviewProgressModal = ({ isOpen, onClose, workspace, userRole, taskId, sub
                           <div>
                             <p className="text-sm font-medium text-ink">{submission.title}</p>
                             <p className="text-xs text-dim mt-1">
-                              {new Date(submission.submittedAt).toLocaleDateString()} at {new Date(submission.submittedAt).toLocaleTimeString()}
+                              {submission.progressDate
+                                ? `Work date: ${new Date(`${submission.progressDate}T00:00:00`).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })} · `
+                                : ''}
+                              Submitted {new Date(submission.submittedAt).toLocaleDateString()} at {new Date(submission.submittedAt).toLocaleTimeString()}
                             </p>
                           </div>
                           <div className="flex items-center space-x-2">
@@ -420,6 +423,13 @@ const ReviewProgressModal = ({ isOpen, onClose, workspace, userRole, taskId, sub
                         >
                           View Attached File
                         </a>
+                      </div>
+                    )}
+
+                    {selectedProgress.progressDate && (
+                      <div>
+                        <label className="block text-sm font-medium text-ink mb-2">Work Date</label>
+                        <p className="text-ink text-sm">{new Date(`${selectedProgress.progressDate}T00:00:00`).toLocaleDateString('en-IN', { weekday: 'long', day: '2-digit', month: 'short', year: 'numeric' })}</p>
                       </div>
                     )}
 

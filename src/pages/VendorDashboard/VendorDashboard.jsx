@@ -11,6 +11,7 @@ import { ProjectList } from "../../components/ProjectList/ProjectList";
 import TenderCarousel from "../../components/TenderCard/TenderCarousel";
 import PasskeyRegistrationBanner from "../../components/PasskeyRegistrationBanner";
 import { Reveal } from "../../components/ui";
+import { AdditionalDocsPanel } from "../../components/AuditorWaiting";
 import { VendorContext } from "../../context/VendorContext";
 import { useLocation, useNavigate } from "react-router-dom";
 import config from '../../config/env';
@@ -602,6 +603,9 @@ export const VendorDashboard = () => {
           )}
         </div>
       </div>
+
+      {/* Auditor-requested additional documents */}
+      <AdditionalDocsPanel />
 
       {/* Floating Support Button */}
       <div className="pb-4 sm:pb-0">

@@ -41,6 +41,7 @@ const WorkspaceMain = ({
   workspaceCollaborators,
   currentUser,
   focusMode,
+  highlightDay,
 }) => {
   const canvasRef = useRef(null);
 
@@ -282,6 +283,7 @@ const WorkspaceMain = ({
               onZoomChange={onZoomChange}
               canvasWebSocket={canvasWebSocket}
               workspaceCollaborators={workspaceCollaborators}
+              highlightDay={highlightDay}
             />
           </div>
         ) : (
