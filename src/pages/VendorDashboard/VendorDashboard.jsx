@@ -1,91 +1,36 @@
 import React, { useContext, useEffect, useState, useCallback } from "react";
 import {
-  AlertCircle,
   ArrowRight,
   Building2,
   LifeBuoy,
   TrendingUp,
 } from 'lucide-react';
-import { RevenueChart } from "../../components/RevenueChart/RevenueChart";
-import { ProjectList } from "../../components/ProjectList/ProjectList";
-import TenderCarousel from "../../components/TenderCard/TenderCarousel";
+// Adopted design (variant 1, "Ops cockpit") now lives in a permanent component set.
+import {
+  FinancePanel,
+  MetricTile,
+  Panel,
+  ProgressBar,
+  ProjectTable,
+  StatusBar,
+  TenderPanel,
+  STATUS,
+  formatCurrencyShort,
+} from '../../components/dashboard';
 import PasskeyRegistrationBanner from "../../components/PasskeyRegistrationBanner";
+
 import { Reveal } from "../../components/ui";
 import { AdditionalDocsPanel } from "../../components/AuditorWaiting";
+
 import { VendorContext } from "../../context/VendorContext";
 import { useLocation, useNavigate } from "react-router-dom";
 import config from '../../config/env';
 
 
-const mockTenders = [
-  {
-    title: "Public work mail department",
-    description: "04 Pghj | Road to rawadisa",
-    closingDate: "25th April, 2025",
-    amount: "2.9 cr",
-  },
-  {
-    title: "National Highway Authority",
-    description: "NH-27 | Highway expansion project",
-    closingDate: "12th May, 2025",
-    amount: "15.3 cr",
-  },
-  {
-    title: "Ministry of Railways",
-    description: "Track electrification | Eastern Corridor",
-    closingDate: "3rd June, 2025",
-    amount: "8.7 cr",
-  },
-  {
-    title: "Municipal Corporation of Delhi",
-    description: "Waste management system | South Delhi",
-    closingDate: "17th April, 2025",
-    amount: "4.2 cr",
-  },
-  {
-    title: "Airport Authority of India",
-    description: "Terminal renovation | Domestic wing",
-    closingDate: "30th May, 2025",
-    amount: "12.5 cr",
-  },
-  {
-    title: "Ministry of Urban Development",
-    description: "Smart city project | Water conservation",
-    closingDate: "22nd July, 2025",
-    amount: "6.8 cr",
-  }
-];
-
-// --- Generate More Realistic Revenue Data ---
-const generateRealisticRevenueData = (years) => {
-  const data = [];
-  const endDate = new Date(); // Today
-  // Ensure start date is the beginning of the month 'years' ago
-  const startDate = new Date(endDate.getFullYear() - years, endDate.getMonth(), 1);
-
-  let currentDate = new Date(startDate);
-
-  while (currentDate <= endDate) {
-    // Simulate some seasonality and randomness
-    const month = currentDate.getMonth();
-    const baseRevenue = 50000 + Math.sin(month / 6 * Math.PI) * 20000; // Simple sine wave for seasonality
-    const randomFactor = 0.8 + Math.random() * 0.4; // Randomness factor (0.8 to 1.2)
-    const monthRevenue = baseRevenue * randomFactor * (1 + (currentDate.getFullYear() - startDate.getFullYear()) * 0.05); // Slight yearly growth
-
-    data.push({
-      // Format as YYYY-MM-DD for easier sorting/filtering
-      date: currentDate.toISOString().split('T')[0],
-      revenue: Math.max(0, Math.round(monthRevenue)) // Ensure non-negative
-    });
-    // Move to the first day of the next month
-    currentDate.setMonth(currentDate.getMonth() + 1, 1);
-  }
-  // Sort just in case date manipulation caused issues (though it shouldn't here)
-  return data.sort((a, b) => new Date(a.date) - new Date(b.date));
-};
-
-// Generate 5 years of monthly data ending today
-const realisticRevenueData = generateRealisticRevenueData(5);
+// REMOVED: the hardcoded `mockTenders` array and the synthetic 5-year revenue
+// series (`generateRealisticRevenueData`). Both were fabricated data that could
+// reach a live KPI surface whenever a request failed — `mockTenders` was in fact
+// already unreferenced. Missing data now renders an empty/error state instead.
 
 const PROJECTS_CACHE_KEY = 'vd_projects_cache';
 const WORKSPACE_STATUSES_CACHE_KEY = 'vd_workspace_statuses_cache';
@@ -376,14 +321,34 @@ export const VendorDashboard = () => {
   const tenderCount = tenders.length;
   const vendorDisplayName = vendorName || vendorData?.vendorDetails?.primaryContactName || currentUser?.name || 'Vendor';
   const vendorCompanyName = vendorData?.companyDetails?.companyName || 'Your company profile';
-  // Compact stat strip — each number appears once, hairline-separated.
-  // Compact stat strip — each number once; color is semantic (status indication)
-  const statCells = [
-    { label: 'Total Projects', value: totalProjects, tone: 'text-ink' },
-    { label: 'In Progress', value: inProgressProjects, tone: 'text-info' },
-    { label: 'Completed', value: completedProjects, tone: 'text-success' },
-    { label: 'Pending', value: pendingProjects, tone: 'text-warning' },
+  // KPI tiles — each real figure appears exactly once. `status` is semantic only:
+  // it tints the value, nothing else. No tile shows an invented number.
+  const revenueTrend = financeData.map((point) => point.revenue);
+  const tiles = [
+    { label: 'Total projects', value: totalProjects, hint: 'Approved with workspace access' },
+    { label: 'In progress', value: inProgressProjects, status: STATUS.IN_PROGRESS, hint: 'Work underway' },
+    { label: 'Completed', value: completedProjects, status: STATUS.COMPLETED, hint: 'Delivered' },
+    { label: 'Pending', value: pendingProjects, status: STATUS.PENDING, hint: 'Awaiting first move' },
+    { label: 'Open tenders', value: tenderCount, hint: 'Matched to your profile' },
+    { label: 'Net profit', value: formatCurrencyShort(financeSummary.netProfit), hint: 'From finance records', trend: revenueTrend },
   ];
+
+  // Portfolio distribution — the same three counts the tiles show, as one bar.
+  const statusCounts = {
+    [STATUS.PENDING]: pendingProjects,
+    [STATUS.IN_PROGRESS]: inProgressProjects,
+    [STATUS.COMPLETED]: completedProjects,
+  };
+
+  // Presentation adapter only: reshapes the existing finance state into the shape
+  // FinancePanel expects. The fetch effect above is untouched.
+  const financeForPanel = {
+    series: financeData.map((point) => ({ label: point.date, date: point.date, revenue: point.revenue })),
+    totalRevenue: financeSummary.totalRevenue,
+    totalExpenses: financeSummary.totalExpenses,
+    netProfit: financeSummary.netProfit,
+  };
+
   const quickActions = [
     { label: 'Open Projects', onClick: () => navigate('/VendorDashboard/projects') },
     { label: 'Review Leads', onClick: () => navigate('/VendorDashboard/leads') },
@@ -476,7 +441,7 @@ export const VendorDashboard = () => {
   }, []);
 
   return (
-    <div className="mx-auto max-w-[1440px] space-y-8 px-4 pb-16 pt-6 sm:px-6 sm:pt-8 sm:pb-24 lg:px-8">
+    <div className="mx-auto max-w-[1440px] space-y-6 px-4 pb-16 pt-6 sm:px-6 sm:pt-8 sm:pb-24 lg:px-8">
       {/* Passkey Registration Banner - Show if user doesn't have a passkey */}
       {!checkingPasskey && !userHasPasskey && currentUser?.email && (
         <PasskeyRegistrationBanner
@@ -489,123 +454,94 @@ export const VendorDashboard = () => {
         />
       )}
 
-      {/* Page header — plain, sits on the canvas (Notion/Vercel: no card chrome, generous type) */}
-      <Reveal>
-        <div className="flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
-          <div className="min-w-0">
-            <p className="text-sm text-dim">Dashboard</p>
-            <h1 className="mt-1 truncate text-[26px] font-semibold tracking-tight text-ink sm:text-[28px]">
-              Good day, {vendorDisplayName}
-            </h1>
-            <div className="mt-2 flex flex-wrap items-center gap-4 text-sm text-dim">
-              <span className="inline-flex items-center gap-1.5"><Building2 size={14} />{vendorCompanyName}</span>
-              <span className="inline-flex items-center gap-1.5"><TrendingUp size={14} />{tenderCount} tenders</span>
-            </div>
+      {/* Page header — plain, sits on the canvas (no card chrome, generous type) */}
+      <header className="flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
+        <div className="min-w-0">
+          <p className="text-[10px] font-medium uppercase tracking-[0.16em] text-dim">Dashboard</p>
+          <h1 className="mt-1.5 truncate text-[26px] font-semibold tracking-tight text-ink sm:text-[28px]">
+            Good day, {vendorDisplayName}
+          </h1>
+          <div className="mt-2 flex flex-wrap items-center gap-4 text-sm text-dim">
+            <span className="inline-flex items-center gap-1.5"><Building2 size={14} />{vendorCompanyName}</span>
+            <span className="inline-flex items-center gap-1.5"><TrendingUp size={14} />{tenderCount} tenders</span>
           </div>
-
-          <nav className="flex items-center gap-5" aria-label="Quick actions">
-            {quickActions.map((action) => (
-              <button
-                key={action.label}
-                type="button"
-                onClick={action.onClick}
-                className="group inline-flex items-center gap-1 text-sm font-medium text-ink transition-colors hover:text-dim"
-              >
-                {action.label}
-                <ArrowRight size={14} className="vd-row-arrow" />
-              </button>
-            ))}
-          </nav>
         </div>
-      </Reveal>
 
-      {/* Stat cards — separate bordered cards, not a stitched mosaic */}
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-        {statCells.map((cell, i) => (
-          <Reveal
-            key={cell.label}
-            delay={i * 60}
-            className="rounded-lg border border-line bg-surface p-4 transition-colors hover:bg-surface-hover"
-          >
-            <p className="text-xs text-dim">{cell.label}</p>
-            <p className={`tnum mt-2 text-2xl font-semibold tracking-tight ${cell.tone}`}>{cell.value}</p>
-          </Reveal>
+        <nav className="flex flex-wrap items-center gap-x-5 gap-y-2" aria-label="Quick actions">
+          {quickActions.map((action) => (
+            <button
+              key={action.label}
+              type="button"
+              onClick={action.onClick}
+              className="group inline-flex items-center gap-1 text-sm font-medium text-ink transition-colors hover:text-dim focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ink"
+            >
+              {action.label}
+              <ArrowRight size={14} className="vd-row-arrow" />
+            </button>
+          ))}
+        </nav>
+      </header>
+
+      {/* KPI strip — six real figures, each appearing once */}
+      <div className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-6">
+        {tiles.map((tile) => (
+          <MetricTile key={tile.label} {...tile} loading={isLoading} />
         ))}
       </div>
 
-      {/* Pipeline completion — its own quiet line, not squeezed into the header */}
-      <div className="flex items-center gap-3 text-sm text-dim" title={`${completionPercentage}% of pipeline completed`}>
-        <span className="flex-shrink-0">Pipeline completion</span>
-        <div className="h-1 max-w-xs flex-1 rounded-full bg-line">
-          <div className="h-1 rounded-full bg-ink transition-[width] duration-500" style={{ width: `${completionPercentage}%` }} />
-        </div>
-        <span className="tnum flex-shrink-0 font-medium text-ink">{completionPercentage}%</span>
-      </div>
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-[2fr_1fr]">
+        <section className="rounded-lg border border-line bg-surface p-5">
+          <div className="flex items-baseline justify-between gap-4">
+            <h2 className="text-[15px] font-semibold tracking-tight text-ink">Portfolio split</h2>
+            <p className="tnum text-xs text-dim">{totalProjects} projects</p>
+          </div>
+          <div className="mt-4">
+            <StatusBar total={totalProjects} counts={statusCounts} />
+          </div>
+        </section>
 
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-[2fr_1fr]">
-        {/* Left Column — tracker is the dominant element */}
-        <Reveal className="rounded-lg border border-line bg-surface">
-          <div className="flex items-center justify-between gap-4 border-b border-line px-5 py-4">
-            <div className="flex items-baseline gap-3">
-              <h2 className="text-[15px] font-semibold tracking-tight text-ink">Active delivery pipeline</h2>
-              <p className="text-sm text-dim">
-                {pendingProjects + inProgressProjects > 0
-                  ? `${pendingProjects + inProgressProjects} need follow-up`
-                  : 'up to date'}
-              </p>
-            </div>
-            <p className="tnum text-sm text-dim">
-              <span className="font-medium text-ink">{completedProjects}</span>/{totalProjects} done
+        <section className="rounded-lg border border-line bg-surface p-5">
+          <div className="flex items-baseline justify-between gap-4">
+            <h2 className="text-[15px] font-semibold tracking-tight text-ink">Pipeline completion</h2>
+            <p className="text-xs text-dim">
+              {pendingProjects + inProgressProjects > 0
+                ? `${pendingProjects + inProgressProjects} need follow-up`
+                : 'up to date'}
             </p>
           </div>
-
-          {isLoading ? (
-            <div className="flex h-64 items-center justify-center rounded-md border border-dashed border-line bg-canvas">
-              <p className="text-sm text-dim">Loading projects...</p>
-            </div>
-          ) : error ? (
-            <div className="flex h-64 items-center justify-center rounded-md border border-danger/30 bg-danger/10 px-5 text-center">
-              <div>
-                <AlertCircle className="mx-auto mb-3 text-danger" size={20} />
-                <p className="text-sm font-medium text-danger">{error}</p>
-              </div>
-            </div>
-          ) : (
-            <ProjectList 
-              projects={projects.map(project => ({
-                ...project,
-                status: getStandardStatus(workspaceStatuses[project.id] || project.status)
-              }))} 
-            />
-          )}
-        </Reveal>
-
-        {/* Right rail — tenders + finance only */}
-        <div className="min-w-0 space-y-6">
-          <Reveal delay={120}>
-            <TenderCarousel tenders={tenders} />
-          </Reveal>
-          {loadingFinance ? (
-            <div className="rounded-lg border border-line bg-surface p-5">
-              <div className="flex h-[300px] items-center justify-center">
-                <p className="text-sm text-dim">Loading finance data...</p>
-              </div>
-            </div>
-          ) : (
-            <Reveal delay={200}>
-              <RevenueChart 
-                data={financeData.length > 0 ? financeData : realisticRevenueData}
-                totalRevenue={financeSummary.totalRevenue}
-                totalExpenses={financeSummary.totalExpenses}
-                netProfit={financeSummary.netProfit}
-              />
-            </Reveal>
-          )}
-        </div>
+          <div className="mt-4">
+            <ProgressBar percent={completionPercentage} label="Completed of total" />
+          </div>
+        </section>
       </div>
 
       {/* Auditor-requested additional documents */}
       <AdditionalDocsPanel />
+
+      <FinancePanel
+        finance={financeForPanel}
+        state={loadingFinance ? 'loading' : financeData.length > 0 ? 'ready' : 'empty'}
+      />
+
+      <Panel
+        title="Delivery pipeline"
+        meta={`${completedProjects}/${totalProjects} complete`}
+        state={isLoading ? 'loading' : error ? 'error' : 'ready'}
+        errorHint={error}
+        bodyPadded={false}
+      >
+        <ProjectTable
+          projects={projects.map(project => ({
+            ...project,
+            status: getStandardStatus(workspaceStatuses[project.id] || project.status)
+          }))}
+        />
+      </Panel>
+
+      <TenderPanel
+        tenders={tenders}
+        state={isLoading ? 'loading' : tenders.length > 0 ? 'ready' : 'empty'}
+      />
 
       {/* Floating Support Button */}
       <div className="pb-4 sm:pb-0">

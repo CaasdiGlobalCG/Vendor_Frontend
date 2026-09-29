@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import SidebarContent from "./SidebarContent";
-import StepIndicator from "./StepIndicator";
+import KycFormShell from "./KycFormShell";
+import { getKycMaxStep } from "./KycFormGuard";
 
 function TermsAndConditions() {
   const navigate = useNavigate();
@@ -20,31 +20,25 @@ function TermsAndConditions() {
   };
 
   return (
-    <div className="flex min-h-screen bg-surface">
-      {/* Left Sidebar */}
-      <SidebarContent />
-
-      {/* Right Content */}
-      <div className="flex-1 flex flex-col">
-        {/* Step Indicator */}
-        <StepIndicator currentStep={7} />
-
-        {/* Terms Content */}
-        <div className="w-full max-w-4xl mx-auto px-4 pb-10 bg-surface md:px-0">
-          <h1 className="text-2xl font-bold text-ink mb-8">
-            Terms & Condition
-          </h1>
-
+    /* Shared KYC shell: black step rail + light content area (design only) */
+    <KycFormShell
+      currentStep={7}
+      maxStep={getKycMaxStep()}
+      onStepSelect={(n) => navigate(`/Form${n}`)}
+      title="Terms & Condition"
+      subtitle="Review and accept the platform terms to finish your onboarding."
+    >
           <div className="max-w-none space-y-8">
             {/* Terms Content */}
-            <div className="border-t border-line pt-6">
-              <div className="max-h-96 overflow-y-auto space-y-6 text-ink">
+            {/* terms body card — matches the section cards used by Form1-6 */}
+            <div className="rounded-xl border border-neutral-200 bg-white p-6 kyc-card kyc-fade-up">
+              <div className="max-h-96 overflow-y-auto space-y-6 text-neutral-900">
                 <p className="text-sm leading-relaxed">
                   Welcome to CAASDI Global ("Company", "we", "our", or "us"). These Terms and Conditions ("Terms") govern your use of the CAASDI Global platform, services, and related applications (collectively, the "Platform"). By registering, accessing, or using the Platform, you ("User", "Client", "Vendor", or "Project Manager") agree to these Terms.
                 </p>
 
                 <section>
-                  <h3 className="text-base font-semibold text-ink mb-2">
+                  <h3 className="text-base font-semibold text-neutral-900 mb-2">
                     1. Eligibility & Account Registration
                   </h3>
                   <div className="space-y-2 text-sm leading-relaxed">
@@ -56,7 +50,7 @@ function TermsAndConditions() {
                 </section>
 
                 <section>
-                  <h3 className="text-base font-semibold text-ink mb-2">
+                  <h3 className="text-base font-semibold text-neutral-900 mb-2">
                     2. Platform Services
                   </h3>
                   <div className="space-y-2 text-sm leading-relaxed">
@@ -67,7 +61,7 @@ function TermsAndConditions() {
                 </section>
 
                 <section>
-                  <h3 className="text-base font-semibold text-ink mb-2">
+                  <h3 className="text-base font-semibold text-neutral-900 mb-2">
                     3. User Responsibilities
                   </h3>
                   <div className="space-y-2 text-sm leading-relaxed">
@@ -79,7 +73,7 @@ function TermsAndConditions() {
                 </section>
 
                 <section>
-                  <h3 className="text-base font-semibold text-ink mb-2">
+                  <h3 className="text-base font-semibold text-neutral-900 mb-2">
                     4. Privacy & Data Protection
                   </h3>
                   <div className="space-y-2 text-sm leading-relaxed">
@@ -90,7 +84,7 @@ function TermsAndConditions() {
                 </section>
 
                 <section>
-                  <h3 className="text-base font-semibold text-ink mb-2">
+                  <h3 className="text-base font-semibold text-neutral-900 mb-2">
                     5. Limitation of Liability
                   </h3>
                   <div className="space-y-2 text-sm leading-relaxed">
@@ -101,7 +95,7 @@ function TermsAndConditions() {
                 </section>
 
                 <section>
-                  <h3 className="text-base font-semibold text-ink mb-2">
+                  <h3 className="text-base font-semibold text-neutral-900 mb-2">
                     6. Termination
                   </h3>
                   <div className="space-y-2 text-sm leading-relaxed">
@@ -112,7 +106,7 @@ function TermsAndConditions() {
                 </section>
 
                 <section>
-                  <h3 className="text-base font-semibold text-ink mb-2">
+                  <h3 className="text-base font-semibold text-neutral-900 mb-2">
                     7. Governing Law
                   </h3>
                   <p className="text-sm leading-relaxed">
@@ -129,9 +123,9 @@ function TermsAndConditions() {
                 id="acceptTerms"
                 checked={isAccepted}
                 onChange={(e) => setIsAccepted(e.target.checked)}
-                className="mt-1 h-4 w-4 text-ink border-line rounded focus:ring-ink"
+                className="mt-1 h-4 w-4 text-neutral-900 border-neutral-200 rounded focus:ring-neutral-900"
               />
-              <label htmlFor="acceptTerms" className="text-sm text-ink leading-relaxed">
+              <label htmlFor="acceptTerms" className="text-sm text-neutral-900 leading-relaxed">
                 I agree to terms and condition
               </label>
             </div>
@@ -141,7 +135,7 @@ function TermsAndConditions() {
               <button
                 type="button"
                 onClick={handleDecline}
-                className="px-6 py-2 border border-line text-ink rounded-lg hover:bg-surface-hover transition-colors"
+                className="px-6 py-2 border border-neutral-200 text-neutral-900 rounded-lg hover:bg-neutral-100 transition-colors"
               >
                 cancel
               </button>
@@ -149,15 +143,13 @@ function TermsAndConditions() {
                 type="button"
                 onClick={handleAccept}
                 disabled={!isAccepted}
-                className="text-white px-6 py-2 rounded-lg font-medium bg-black hover:from-black/90 hover:to-black/90 focus:outline-none focus:ring-2 focus:ring-ink disabled:opacity-50 disabled:cursor-not-allowed"
+                className="text-white px-6 py-2 rounded-lg font-medium bg-black hover:from-black/90 hover:to-black/90 focus:outline-none focus:ring-2 focus:ring-neutral-900 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 Agree and continue
               </button>
             </div>
           </div>
-        </div>
-      </div>
-    </div>
+    </KycFormShell>
   );
 }
 

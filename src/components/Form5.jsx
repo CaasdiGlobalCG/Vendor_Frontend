@@ -5,11 +5,10 @@ import { UserContext } from "../context/UserContext";
 import { useNavigate } from "react-router-dom";
 import { uploadFileToS3, deleteFileFromS3 } from "../utils/fileUpload";
 import { resolveUserEmail } from "../utils/resolveUserIdentity";
-import StepIndicator from "./StepIndicator";
-import SidebarContent from "./SidebarContent";
+import KycFormShell from "./KycFormShell";
 import ResubmitBanner from "./ResubmitBanner";
 import { isResubmitMode, isSectionEditable } from "../utils/resubmitPermissions";
-import { setKycStep } from "./KycFormGuard";
+import { getKycMaxStep, setKycStep } from "./KycFormGuard";
 
 export default function Form5() {
   const navigate = useNavigate();
@@ -244,26 +243,19 @@ export default function Form5() {
   };
 
   return (
-    <div className="flex min-h-screen bg-surface">
+    /* Shared KYC shell: black step rail + light content area (design only) */
+    <KycFormShell
+      currentStep={5}
+      maxStep={getKycMaxStep(draftEmail)}
+      onStepSelect={(n) => { setKycStep(n, draftEmail); navigate(`/Form${n}`); }}
+      title="Compliance and Certifications"
+      subtitle="Certifications and declarations required to trade on the platform."
+    >
       {showSaveIndicator && (
         <div className="fixed top-5 right-5 bg-success text-white py-2 px-4 rounded shadow z-50">
           Changes saved successfully!
         </div>
       )}
-
-      {/* Left Sidebar */}
-      <SidebarContent />
-
-      {/* Right Content */}
-      <div className="flex-1 flex flex-col">
-        {/* Step Indicator */}
-        <StepIndicator currentStep={5} />
-
-        {/* Form Content */}
-        <div className="w-full max-w-4xl mx-auto px-4 pb-10 bg-surface md:px-0">
-          <h1 className="text-2xl font-bold text-ink mb-8">
-            Compliance and Certifications
-          </h1>
 
           <ResubmitBanner sectionKey="compliance" />
 
@@ -272,12 +264,12 @@ export default function Form5() {
             <fieldset disabled={sectionReadOnly} className="contents space-y-8">
             {/* Certifications Question */}
             <div className="space-y-6">
-              <div className="flex flex-col md:flex-row items-start gap-6">
-                <div className="w-full md:w-1/3">
-                  <label className="text-sm font-semibold text-ink block mb-1">Certifications</label>
-                  <p className="text-xs text-dim">Do you have necessary certifications/licenses?</p>
+              <div className="flex flex-col gap-4 rounded-xl border border-neutral-200 bg-white p-6 kyc-card kyc-fade-up">
+                <div className="flex flex-wrap items-baseline justify-between gap-2">
+                  <label className="text-sm font-semibold text-neutral-900 block mb-1">Certifications</label>
+                  <p className="text-xs text-neutral-500">Do you have necessary certifications/licenses?</p>
                 </div>
-                <div className="w-full md:w-2/3">
+                <div className="grid w-full gap-4 sm:grid-cols-2">
                   <div className="flex gap-8">
                     <label className="flex items-center gap-2">
                       <input type="radio" name="hasCertifications" value="yes" checked={formData.hasCertifications === true} onChange={handleInputChange} />
@@ -293,13 +285,13 @@ export default function Form5() {
 
               {/* Conditional Certificate Upload - Only if hasCertifications is true */}
               {formData.hasCertifications && (
-                <div className="flex flex-col md:flex-row items-start gap-6">
-                  <div className="w-full md:w-1/3">
-                    <label className="text-sm font-semibold text-ink block mb-1">Certificate Upload</label>
-                    <p className="text-xs text-dim">provide certification document</p>
+                <div className="flex flex-col gap-4 rounded-xl border border-neutral-200 bg-white p-6 kyc-card kyc-fade-up">
+                  <div className="flex flex-wrap items-baseline justify-between gap-2">
+                    <label className="text-sm font-semibold text-neutral-900 block mb-1">Certificate Upload</label>
+                    <p className="text-xs text-neutral-500">provide certification document</p>
                   </div>
-                  <div className="w-full md:w-2/3">
-                    <div onClick={() => !formData.certificateUpload && document.getElementById("certificateUpload").click()} className="cursor-pointer border border-line rounded px-3 py-2 text-sm hover:border-line transition-colors">
+                  <div className="grid w-full gap-4 sm:grid-cols-2">
+                    <div onClick={() => !formData.certificateUpload && document.getElementById("certificateUpload").click()} className="cursor-pointer border border-neutral-200 rounded px-3 py-2 text-sm hover:border-neutral-200 transition-colors">
                       <input type="file" name="certificateUpload" id="certificateUpload" onChange={handleInputChange} style={{ display: "none" }} />
                       {formData.certificateUpload ? (
                         <div>
@@ -308,7 +300,7 @@ export default function Form5() {
                           <button type="button" onClick={(e) => { e.stopPropagation(); handleDeleteFile("certificateUpload"); }} className="text-danger text-sm mt-1">Delete</button>
                         </div>
                       ) : (
-                        <div className="text-sm text-dim">Click to upload certificate</div>
+                        <div className="text-sm text-neutral-500">Click to upload certificate</div>
                       )}
                     </div>
                   </div>
@@ -316,13 +308,13 @@ export default function Form5() {
               )}
 
               {/* Upload Document */}
-              <div className="flex flex-col md:flex-row items-start gap-6">
-                <div className="w-full md:w-1/3">
-                  <label className="text-sm font-semibold text-ink block mb-1">Upload Document</label>
-                  <p className="text-xs text-dim">provide document</p>
+              <div className="flex flex-col gap-4 rounded-xl border border-neutral-200 bg-white p-6 kyc-card kyc-fade-up">
+                <div className="flex flex-wrap items-baseline justify-between gap-2">
+                  <label className="text-sm font-semibold text-neutral-900 block mb-1">Upload Document</label>
+                  <p className="text-xs text-neutral-500">provide document</p>
                 </div>
-                <div className="w-full md:w-2/3">
-                  <div onClick={() => !formData.uploadDocument && document.getElementById("uploadDocument").click()} className="cursor-pointer border border-line rounded px-3 py-2 text-sm hover:border-line transition-colors">
+                <div className="grid w-full gap-4 sm:grid-cols-2">
+                  <div onClick={() => !formData.uploadDocument && document.getElementById("uploadDocument").click()} className="cursor-pointer border border-neutral-200 rounded px-3 py-2 text-sm hover:border-neutral-200 transition-colors">
                     <input type="file" name="uploadDocument" id="uploadDocument" onChange={handleInputChange} style={{ display: "none" }} />
                     {formData.uploadDocument ? (
                       <div>
@@ -331,20 +323,20 @@ export default function Form5() {
                         <button type="button" onClick={(e) => { e.stopPropagation(); handleDeleteFile("uploadDocument"); }} className="text-danger text-sm mt-1">Delete</button>
                       </div>
                     ) : (
-                      <div className="text-sm text-dim">Click to upload document</div>
+                      <div className="text-sm text-neutral-500">Click to upload document</div>
                     )}
                   </div>
                 </div>
               </div>
 
               {/* ISO Certificate */}
-              <div className="flex flex-col md:flex-row items-start gap-6">
-                <div className="w-full md:w-1/3">
-                  <label className="text-sm font-semibold text-ink block mb-1">ISO Certificate</label>
-                  <p className="text-xs text-dim">provide ISO certificate</p>
+              <div className="flex flex-col gap-4 rounded-xl border border-neutral-200 bg-white p-6 kyc-card kyc-fade-up">
+                <div className="flex flex-wrap items-baseline justify-between gap-2">
+                  <label className="text-sm font-semibold text-neutral-900 block mb-1">ISO Certificate</label>
+                  <p className="text-xs text-neutral-500">provide ISO certificate</p>
                 </div>
-                <div className="w-full md:w-2/3">
-                  <div onClick={() => !formData.isoCertificate && document.getElementById("isoCertificate").click()} className="cursor-pointer border border-line rounded px-3 py-2 text-sm hover:border-line transition-colors">
+                <div className="grid w-full gap-4 sm:grid-cols-2">
+                  <div onClick={() => !formData.isoCertificate && document.getElementById("isoCertificate").click()} className="cursor-pointer border border-neutral-200 rounded px-3 py-2 text-sm hover:border-neutral-200 transition-colors">
                     <input type="file" name="isoCertificate" id="isoCertificate" onChange={handleInputChange} style={{ display: "none" }} />
                     {formData.isoCertificate ? (
                       <div>
@@ -353,7 +345,7 @@ export default function Form5() {
                         <button type="button" onClick={(e) => { e.stopPropagation(); handleDeleteFile("isoCertificate"); }} className="text-danger text-sm mt-1">Delete</button>
                       </div>
                     ) : (
-                      <div className="text-sm text-dim">Click to upload ISO Certificate</div>
+                      <div className="text-sm text-neutral-500">Click to upload ISO Certificate</div>
                     )}
                   </div>
                 </div>
@@ -361,20 +353,20 @@ export default function Form5() {
 
               {/* Manufacturer-Specific Compliance Documents */}
               {isMFG && (
-                <div className="space-y-6 border-t border-line pt-6">
+                <div className="space-y-6 border-t border-neutral-200 pt-6">
                   <div>
-                    <h3 className="text-sm font-semibold text-ink mb-1">Factory & Regulatory Compliance</h3>
-                    <p className="text-xs text-dim">Required for manufacturing / production facilities</p>
+                    <h3 className="text-sm font-semibold text-neutral-900 mb-1">Factory & Regulatory Compliance</h3>
+                    <p className="text-xs text-neutral-500">Required for manufacturing / production facilities</p>
                   </div>
 
                   {[{ name: "factoryLicence", label: "Factory Licence", hint: "Factory Act registration / licence (PDF)" }, { name: "pcbConsent", label: "PCB Consent to Operate", hint: "Pollution Control Board consent for factory with emissions (PDF)" }, { name: "esicEpfCompliance", label: "ESIC & EPF Compliance", hint: "Employee social security and provident fund registration (PDF)" }, { name: "fireSafetyNoc", label: "Fire & Safety NOC", hint: "Fire NOC from local authority (PDF)" }, { name: "statutoryCompliance", label: "Statutory Compliance Certificate", hint: "Factory Act / Shops & Establishment Act compliance (PDF)" }].map((field) => (
-                    <div key={field.name} className="flex flex-col md:flex-row items-start gap-6">
-                      <div className="w-full md:w-1/3">
-                        <label className="text-sm font-semibold text-ink block mb-1">{field.label}</label>
-                        <p className="text-xs text-dim">{field.hint}</p>
+                    <div key={field.name} className="flex flex-col gap-4 rounded-xl border border-neutral-200 bg-white p-6 kyc-card kyc-fade-up">
+                      <div className="flex flex-wrap items-baseline justify-between gap-2">
+                        <label className="text-sm font-semibold text-neutral-900 block mb-1">{field.label}</label>
+                        <p className="text-xs text-neutral-500">{field.hint}</p>
                       </div>
-                      <div className="w-full md:w-2/3">
-                        <div onClick={() => !formData[field.name] && document.getElementById(field.name).click()} className="cursor-pointer border border-line rounded px-3 py-2 text-sm hover:border-line transition-colors">
+                      <div className="grid w-full gap-4 sm:grid-cols-2">
+                        <div onClick={() => !formData[field.name] && document.getElementById(field.name).click()} className="cursor-pointer border border-neutral-200 rounded px-3 py-2 text-sm hover:border-neutral-200 transition-colors">
                           <input type="file" name={field.name} id={field.name} accept=".pdf,.jpg,.png" onChange={handleInputChange} style={{ display: "none" }} />
                           {formData[field.name] ? (
                             <div>
@@ -383,7 +375,7 @@ export default function Form5() {
                               <button type="button" onClick={(e) => { e.stopPropagation(); handleDeleteFile(field.name); }} className="text-danger text-sm mt-1">Delete</button>
                             </div>
                           ) : (
-                            <div className="text-sm text-dim">Click to upload {field.label.toLowerCase()}</div>
+                            <div className="text-sm text-neutral-500">Click to upload {field.label.toLowerCase()}</div>
                           )}
                         </div>
                       </div>
@@ -394,20 +386,20 @@ export default function Form5() {
 
               {/* Service Provider-Specific Compliance Documents */}
               {isSP && (
-                <div className="space-y-6 border-t border-line pt-6">
+                <div className="space-y-6 border-t border-neutral-200 pt-6">
                   <div>
-                    <h3 className="text-sm font-semibold text-ink mb-1">Professional & Liability Compliance</h3>
-                    <p className="text-xs text-dim">Required for service-based vendors</p>
+                    <h3 className="text-sm font-semibold text-neutral-900 mb-1">Professional & Liability Compliance</h3>
+                    <p className="text-xs text-neutral-500">Required for service-based vendors</p>
                   </div>
 
                   {[{ name: "professionalIndemnity", label: "Professional Indemnity Insurance", hint: "PI insurance policy document (PDF)" }, { name: "cyberLiabilityInsurance", label: "Cyber Liability Insurance", hint: "Required for IT / data services vendors (PDF)" }, { name: "dataProtectionCompliance", label: "Data Protection Compliance", hint: "GDPR / IT Act / PDPB compliance certificate or policy (PDF)" }].map((field) => (
-                    <div key={field.name} className="flex flex-col md:flex-row items-start gap-6">
-                      <div className="w-full md:w-1/3">
-                        <label className="text-sm font-semibold text-ink block mb-1">{field.label}</label>
-                        <p className="text-xs text-dim">{field.hint}</p>
+                    <div key={field.name} className="flex flex-col gap-4 rounded-xl border border-neutral-200 bg-white p-6 kyc-card kyc-fade-up">
+                      <div className="flex flex-wrap items-baseline justify-between gap-2">
+                        <label className="text-sm font-semibold text-neutral-900 block mb-1">{field.label}</label>
+                        <p className="text-xs text-neutral-500">{field.hint}</p>
                       </div>
-                      <div className="w-full md:w-2/3">
-                        <div onClick={() => !formData[field.name] && document.getElementById(field.name).click()} className="cursor-pointer border border-line rounded px-3 py-2 text-sm hover:border-line transition-colors">
+                      <div className="grid w-full gap-4 sm:grid-cols-2">
+                        <div onClick={() => !formData[field.name] && document.getElementById(field.name).click()} className="cursor-pointer border border-neutral-200 rounded px-3 py-2 text-sm hover:border-neutral-200 transition-colors">
                           <input type="file" name={field.name} id={field.name} accept=".pdf,.jpg,.png" onChange={handleInputChange} style={{ display: "none" }} />
                           {formData[field.name] ? (
                             <div>
@@ -416,7 +408,7 @@ export default function Form5() {
                               <button type="button" onClick={(e) => { e.stopPropagation(); handleDeleteFile(field.name); }} className="text-danger text-sm mt-1">Delete</button>
                             </div>
                           ) : (
-                            <div className="text-sm text-dim">Click to upload {field.label.toLowerCase()}</div>
+                            <div className="text-sm text-neutral-500">Click to upload {field.label.toLowerCase()}</div>
                           )}
                         </div>
                       </div>
@@ -426,19 +418,19 @@ export default function Form5() {
               )}
 
               {/* Health and Safety Standards - Always visible */}
-              <div className="flex flex-col md:flex-row items-start gap-6">
-                <div className="w-full md:w-1/3">
-                  <label className="text-sm font-semibold text-ink block mb-1">Health and Safety Standards</label>
-                  <p className="text-xs text-dim">provide health and safety standards</p>
+              <div className="flex flex-col gap-4 rounded-xl border border-neutral-200 bg-white p-6 kyc-card kyc-fade-up">
+                <div className="flex flex-wrap items-baseline justify-between gap-2">
+                  <label className="text-sm font-semibold text-neutral-900 block mb-1">Health and Safety Standards</label>
+                  <p className="text-xs text-neutral-500">provide health and safety standards</p>
                 </div>
-                <div className="w-full md:w-2/3">
+                <div className="grid w-full gap-4 sm:grid-cols-2">
                   <textarea
                     required
                     name="healthSafetyStandards"
                     value={formData.healthSafetyStandards}
                     onChange={handleInputChange}
                     placeholder="Health and safety standards you take"
-                    className="w-full border border-line rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ink focus:border-transparent resize-none"
+                    className="w-full border border-neutral-200 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-neutral-900 focus:border-transparent resize-none"
                     rows={4}
                   />
                 </div>
@@ -452,21 +444,19 @@ export default function Form5() {
               <button
                 type="button"
                 onClick={handlePrevious}
-                className="px-8 py-3 text-dim hover:text-ink transition-colors"
+                className="px-8 py-3 text-neutral-500 hover:text-neutral-900 transition-colors"
               >
                 Back
               </button>
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className="text-white px-8 py-3 rounded-lg font-medium bg-black hover:from-black/90 hover:to-black/90 focus:outline-none focus:ring-2 focus:ring-ink disabled:opacity-60 disabled:cursor-not-allowed"
+                className="text-white px-8 py-3 rounded-lg font-medium bg-black hover:from-black/90 hover:to-black/90 focus:outline-none focus:ring-2 focus:ring-neutral-900 disabled:opacity-60 disabled:cursor-not-allowed"
               >
                 {isSubmitting ? "Please wait..." : "Next"}
               </button>
             </div>
           </form>
-        </div>
-      </div>
-    </div>
+    </KycFormShell>
   );
 }

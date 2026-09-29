@@ -1,3 +1,25 @@
+// ============================================================
+// FILE: components/Login.jsx
+// PURPOSE: The live vendor login screen — the login / forgot-password / reset-password
+//          views, the passkey + TOTP MFA hand-off, and the post-login routing to the
+//          vendor, client or sales platform. This page renders ONLY its own form content;
+//          the approved "Split immersive" shell (the full-height black brand panel at
+//          ~55% and the narrower right column with its padding and measure) is owned by
+//          components/auth/AuthSplitLayout.jsx, which nests this page under /login. The
+//          form rises in a stagger (`.auth-rise`, main.css) with inline `animationDelay`.
+//          The panel's rotating carousel and its 5-second rotation timer were removed
+//          from this page when the layout took over the panel (the slides now live in the
+//          layout, listed statically); the brand-panel component is no longer imported here.
+// CONNECTS TO: components/auth/AuthSplitLayout.jsx (owns the split shell + brand panel),
+//              components/auth/AuthModeSwitch.jsx, components/auth/auth-primitives.jsx,
+//              components/ui/Alert.jsx, components/PasskeyMFAVerification.jsx,
+//              components/TOTPVerificationModal.jsx, context/VendorContext.jsx,
+//              context/UserContext.jsx, utils/handoffToClient.js, utils/handoffToSales.js,
+//              utils/vendorAuthRouting.js, utils/postLoginPlatformResolver.js,
+//              config/env.js — main.css (.auth-rise/.brand-press),
+//              tailwind.config.js (canvas/surface/ink/dim/line/cta + ease-signal/duration-*).
+// ============================================================
+
 import React, { useEffect, useMemo, useState, useContext, useRef } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { Auth } from "aws-amplify";
@@ -5,9 +27,8 @@ import { Auth } from "aws-amplify";
 import { VendorContext } from "../context/VendorContext";
 import { UserContext } from "../context/UserContext";
 import Alert from "./ui/Alert";
-import background from "../assets/loginbackground.png";
-import operonLogo from "../assets/Platform-white-crop.png";
-import { Eye, EyeOff } from "lucide-react";
+import AuthModeSwitch from "./auth/AuthModeSwitch";
+import { BrandMark, MonoEyebrow, Field, PasswordField, PrimaryButton, TextLink } from "./auth/auth-primitives";
 import config from "../config/env";
 import PasskeyMFAVerification from "./PasskeyMFAVerification";
 import TOTPVerificationModal from "./TOTPVerificationModal";
@@ -18,29 +39,6 @@ import { resolvePostLoginPlatform, persistLastSelectedPlatform } from "../utils/
 
 const AUTH_TRANSITION_KEY = 'vendorAuthTransitionInProgress';
 const AUTH_TRANSITION_STARTED_AT_KEY = 'vendorAuthTransitionStartedAt';
-
-const carouselItems = [
-  {
-    title: "Stay in Control",
-    description: "Track progress, monitor performance, and ensure quality with our smart dashboards.",
-  },
-  {
-    title: "Real-time Insights",
-    description: "Get instant visibility into your projects with live updates and detailed analytics.",
-  },
-  {
-    title: "Seamless Collaboration",
-    description: "Work together with your team effortlessly with integrated communication tools.",
-  },
-  {
-    title: "Powerful Analytics",
-    description: "Leverage data-driven insights to make better business decisions faster.",
-  },
-  {
-    title: "Complete Integration",
-    description: "Connect all your tools and workflows in one unified platform.",
-  },
-];
 
 function Login() {
   const location = useLocation();
@@ -58,7 +56,6 @@ function Login() {
   const [verificationCode, setVerificationCode] = useState("");
 
   const [showPassword, setShowPassword] = useState(false);
-  const [currentCarouselIndex, setCurrentCarouselIndex] = useState(0);
 
   const [alertMessage, setAlertMessage] = useState("");
   const [showAlert, setShowAlert] = useState(false);
@@ -79,14 +76,6 @@ function Login() {
     const qp = new URLSearchParams(location.search);
     return qp.get("fromClient") === "true" || qp.get("role") === "vendor" || Boolean(qp.get("handoff"));
   }, [location.search]);
-
-  // Carousel rotation
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setCurrentCarouselIndex((prevIndex) => (prevIndex + 1) % carouselItems.length);
-    }, 5000);
-    return () => clearInterval(interval);
-  }, []);
 
   // ═══ DEBUG: Track TOTP modal state ═══
   useEffect(() => {
@@ -570,201 +559,165 @@ function Login() {
   };
 
   return (
-    <div
-      className="relative flex min-h-screen items-start justify-center overflow-y-auto bg-center bg-cover bg-no-repeat px-4 py-6 sm:px-6 sm:py-8 lg:items-center lg:px-8"
-      style={{ backgroundImage: `url(${background})` }}
-    >
-      <div className="my-auto grid w-full max-w-6xl grid-cols-1 items-start gap-6 lg:grid-cols-[minmax(0,30rem)_minmax(0,1fr)] lg:items-center lg:gap-12">
-        <div className="w-full max-w-xl mx-auto rounded-2xl bg-surface border border-line shadow-2xl">
-          <div className="rounded-2xl bg-surface p-5 sm:p-6 md:p-8">
+    // form content only — the split shell (the brand panel and the right column with its
+    // padding and measure) is owned by AuthSplitLayout, which nests this page under /login.
+    <>
+            {/* card header: brand mark + current mode label — the intro block */}
+            <div className="auth-rise flex items-center justify-between gap-4">
+              <BrandMark className="h-6" />
+              <MonoEyebrow>{view === "login" ? "Sign in" : "Account"}</MonoEyebrow>
+            </div>
+
+            {/* the segmented switch navigates to /signup via the existing handler.
+                `.auth-rise` lives on this wrapper, never on a `.brand-press` element. */}
+            {view === "login" && (
+              <div className="auth-rise mt-7" style={{ animationDelay: '90ms' }}>
+                <AuthModeSwitch
+                  active="login"
+                  onSelect={(m) => {
+                    if (m === "signup") handleSignUpRedirect();
+                  }}
+                  className="w-full"
+                />
+              </div>
+            )}
+
             {showAlert && (
-              <div className="mb-4">
+              <div className="mt-4">
                 <Alert message={alertMessage} type={alertType} onClose={() => setShowAlert(false)} />
               </div>
             )}
 
             {view === "login" && (
               <>
-                <h2 className="mb-2 text-2xl font-semibold text-ink sm:text-[1.75rem]">Hello User</h2>
-                <p className="mb-6 text-sm leading-6 text-dim">Enter your email and password to log in</p>
-              </>
-            )}
+                <h2 className="auth-rise mt-3 text-2xl font-semibold tracking-tight text-ink">Hello User</h2>
+                <p className="auth-rise mt-1.5 text-sm text-dim">Enter your email and password to log in</p>
 
-            {view === "forgotPassword" && (
-              <>
-                <h2 className="text-ink text-2xl font-semibold mb-2">Forgot Password</h2>
-                <p className="text-sm text-dim mb-6">Enter your email to receive a reset code</p>
-              </>
-            )}
-
-            {view === "login" && (
-              <>
-                <form className="w-full" onSubmit={handleLogin}>
-                  <input
-                    type="email"
-                    placeholder="Enter your mail id"
-                    className="mb-4 w-full rounded-xl border border-line bg-canvas px-4 py-3 text-ink placeholder:text-dim focus:outline-none focus:ring-2 focus:ring-ink"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    required
-                  />
-                  <div className="relative mb-4">
-                    <input
-                      type={showPassword ? "text" : "password"}
-                      placeholder="Enter your password"
-                      className="w-full rounded-xl border border-line bg-canvas px-4 py-3 pr-10 text-ink placeholder:text-dim focus:outline-none focus:ring-2 focus:ring-ink"
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
+                <form className="mt-7 grid gap-4" onSubmit={handleLogin}>
+                  <div className="auth-rise" style={{ animationDelay: '150ms' }}>
+                    <Field
+                      id="login-email"
+                      label="Email"
+                      type="email"
+                      autoComplete="email"
+                      placeholder="Enter your mail id"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
                       required
                     />
-                    <button
-                      type="button"
-                      onClick={togglePasswordVisibility}
-                      className="absolute inset-y-0 right-3 flex items-center text-dim hover:text-ink transition-colors duration-150"
-                      aria-label={showPassword ? "Hide password" : "Show password"}
-                    >
-                      {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                    </button>
                   </div>
-                  <div className="text-right mb-4">
-                    <span
-                      className="text-sm text-ink cursor-pointer hover:underline"
-                      onClick={() => setView("forgotPassword")}
-                    >
-                      Forgot Password?
-                    </span>
+
+                  <div className="auth-rise" style={{ animationDelay: '210ms' }}>
+                    <div>
+                      <PasswordField
+                        id="login-password"
+                        label="Password"
+                        placeholder="Enter your password"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        show={showPassword}
+                        onToggle={togglePasswordVisibility}
+                        autoComplete="current-password"
+                        required
+                      />
+                      <div className="mt-1.5 text-right">
+                        <TextLink className="text-xs" onClick={() => setView("forgotPassword")}>
+                          Forgot Password?
+                        </TextLink>
+                      </div>
+                    </div>
                   </div>
-                  <button
-                    type="submit"
-                    className={`w-full rounded-xl bg-cta px-6 py-3 text-cta-foreground font-medium transition-colors duration-150 hover:bg-surface-hover ${
-                      loading ? "opacity-50 cursor-not-allowed" : ""
-                    }`}
-                    disabled={loading}
-                  >
-                    {loading ? "Logging in..." : "Login"}
-                  </button>
+
+                  {/* `.brand-press` on the button, `.auth-rise` on the wrapper — the entrance's
+                      `animation-fill-mode: both` final transform would otherwise kill the press. */}
+                  <div className="auth-rise" style={{ animationDelay: '350ms' }}>
+                    <PrimaryButton type="submit" loading={loading} className="brand-press w-full duration-180 ease-signal">
+                      {loading ? "Logging in..." : "Login"}
+                    </PrimaryButton>
+                  </div>
                 </form>
 
-                <p className="text-sm text-dim mt-6 text-center">
+                <p className="auth-rise mt-4 text-center text-sm text-dim" style={{ animationDelay: '390ms' }}>
                   Don’t have an account?{" "}
-                  <span
-                    className="text-ink underline cursor-pointer font-semibold"
-                    onClick={handleSignUpRedirect}
-                  >
-                    Signup
-                  </span>
+                  <TextLink onClick={handleSignUpRedirect}>Signup</TextLink>
                 </p>
               </>
             )}
 
             {view === "forgotPassword" && (
               <>
-                <form className="w-full" onSubmit={handleForgotPassword}>
-                  <input
-                    type="email"
-                    placeholder="Email"
-                    className="mb-4 w-full rounded-xl border border-line bg-canvas px-4 py-3 text-ink placeholder:text-dim focus:outline-none focus:ring-2 focus:ring-ink"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    required
-                  />
-                  <button
-                    type="submit"
-                    className={`w-full rounded-xl bg-cta px-6 py-3 text-cta-foreground font-medium transition-colors duration-150 hover:bg-surface-hover ${
-                      loading ? "opacity-50 cursor-not-allowed" : ""
-                    }`}
-                    disabled={loading}
-                  >
-                    {loading ? "Sending..." : "Send Reset Code"}
-                  </button>
+                <h2 className="auth-rise mt-3 text-2xl font-semibold tracking-tight text-ink">Forgot Password</h2>
+                <p className="auth-rise mt-1.5 text-sm text-dim">Enter your email to receive a reset code</p>
+
+                <form className="mt-7 grid gap-4" onSubmit={handleForgotPassword}>
+                  <div className="auth-rise" style={{ animationDelay: '150ms' }}>
+                    <Field
+                      id="forgot-email"
+                      label="Email"
+                      type="email"
+                      autoComplete="email"
+                      placeholder="Email"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      required
+                    />
+                  </div>
+                  <div className="auth-rise" style={{ animationDelay: '350ms' }}>
+                    <PrimaryButton type="submit" loading={loading} className="brand-press w-full duration-180 ease-signal">
+                      {loading ? "Sending..." : "Send Reset Code"}
+                    </PrimaryButton>
+                  </div>
                 </form>
-                <p className="text-sm text-dim mt-4">
-                  <span
-                    className="text-ink underline cursor-pointer font-semibold"
-                    onClick={() => setView("login")}
-                  >
-                    Back to Login
-                  </span>
+
+                <p className="auth-rise mt-4 text-center text-sm text-dim" style={{ animationDelay: '390ms' }}>
+                  <TextLink onClick={() => setView("login")}>Back to Login</TextLink>
                 </p>
               </>
             )}
 
             {view === "resetPassword" && (
               <>
-                <h2 className="text-ink text-xl font-semibold mb-2">Reset Your Password</h2>
-                <p className="text-sm text-dim mb-6">Enter the code from your email and a new password.</p>
-                <form className="w-full" onSubmit={handleResetPassword}>
-                  <input
-                    type="text"
-                    placeholder="Verification Code"
-                    className="mb-4 w-full rounded-xl border border-line bg-canvas px-4 py-3 text-ink placeholder:text-dim focus:outline-none focus:ring-2 focus:ring-ink"
-                    value={verificationCode}
-                    onChange={(e) => setVerificationCode(e.target.value)}
-                    required
-                  />
-                  <input
-                    type="password"
-                    placeholder="New Password"
-                    className="mb-4 w-full rounded-xl border border-line bg-canvas px-4 py-3 text-ink placeholder:text-dim focus:outline-none focus:ring-2 focus:ring-ink"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    required
-                  />
-                  <button
-                    type="submit"
-                    className={`w-full rounded-xl bg-cta px-6 py-3 text-cta-foreground font-medium transition-colors duration-150 hover:bg-surface-hover ${
-                      loading ? "opacity-50 cursor-not-allowed" : ""
-                    }`}
-                    disabled={loading}
-                  >
-                    {loading ? "Resetting..." : "Reset Password"}
-                  </button>
+                <h2 className="auth-rise mt-3 text-2xl font-semibold tracking-tight text-ink">Reset Your Password</h2>
+                <p className="auth-rise mt-1.5 text-sm text-dim">
+                  Enter the code from your email and a new password.
+                </p>
+
+                <form className="mt-7 grid gap-4" onSubmit={handleResetPassword}>
+                  <div className="auth-rise" style={{ animationDelay: '150ms' }}>
+                    <Field
+                      id="reset-code"
+                      label="Verification Code"
+                      placeholder="Verification Code"
+                      value={verificationCode}
+                      onChange={(e) => setVerificationCode(e.target.value)}
+                      required
+                    />
+                  </div>
+                  <div className="auth-rise" style={{ animationDelay: '210ms' }}>
+                    <PasswordField
+                      id="reset-password"
+                      label="New Password"
+                      placeholder="New Password"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      show={showPassword}
+                      onToggle={togglePasswordVisibility}
+                      autoComplete="new-password"
+                      required
+                    />
+                  </div>
+                  <div className="auth-rise" style={{ animationDelay: '350ms' }}>
+                    <PrimaryButton type="submit" loading={loading} className="brand-press w-full duration-180 ease-signal">
+                      {loading ? "Resetting..." : "Reset Password"}
+                    </PrimaryButton>
+                  </div>
                 </form>
-                <p className="text-sm text-dim mt-4">
-                  <span
-                    className="text-ink underline cursor-pointer font-semibold"
-                    onClick={() => setView("forgotPassword")}
-                  >
-                    Resend Code
-                  </span>
+
+                <p className="auth-rise mt-4 text-center text-sm text-dim" style={{ animationDelay: '390ms' }}>
+                  <TextLink onClick={() => setView("forgotPassword")}>Resend Code</TextLink>
                 </p>
               </>
             )}
-          </div>
-        </div>
-
-        <div className="hidden lg:flex relative flex-col items-center justify-center p-6 text-center text-white">
-          <img src={operonLogo} alt="Operon" className="h-14 w-auto mb-6" />
-
-          <div className="relative w-full max-w-sm h-36 overflow-hidden">
-            {carouselItems.map((item, index) => (
-              <div
-                key={index}
-                className={`absolute inset-0 flex flex-col items-center justify-center transition-all duration-700 ease-in-out ${
-                  index === currentCarouselIndex ? "opacity-100 scale-100" : "opacity-0 scale-95"
-                }`}
-              >
-                <h3 className="text-2xl font-semibold mb-3">{item.title}</h3>
-                <p className="text-white/80 max-w-sm text-sm leading-relaxed">{item.description}</p>
-              </div>
-            ))}
-          </div>
-
-          <div className="mt-6 flex gap-2">
-            {carouselItems.map((_, index) => (
-              <button
-                key={index}
-                onClick={() => setCurrentCarouselIndex(index)}
-                className={`h-2 rounded-full transition-all duration-300 ${
-                  index === currentCarouselIndex ? "w-8 bg-cta" : "w-2 bg-white/40 hover:bg-white/70"
-                }`}
-                aria-label={`Go to slide ${index + 1}`}
-              />
-            ))}
-          </div>
-        </div>
-
-      </div>
 
       {showMFAVerification && (
         <PasskeyMFAVerification
@@ -782,7 +735,7 @@ function Login() {
           onCancel={handleTOTPCancel}
         />
       )}
-    </div>
+    </>
   );
 }
 

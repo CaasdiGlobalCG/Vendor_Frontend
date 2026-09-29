@@ -1,4 +1,4 @@
-import { Routes, Route, useNavigate, useLocation } from "react-router-dom";
+import { Routes, Route, Navigate, useNavigate, useLocation } from "react-router-dom";
 import { useEffect, useContext, useState, useMemo, useRef } from "react";
 import { Auth } from "aws-amplify";
 import HomePage from "./pages/HomePage";
@@ -14,9 +14,10 @@ import { ModuleGuard } from "./rbac/components/ModuleGuard";
 import UnauthorizedPage from "./pages/UnauthorizedPage";
 import { SessionChangeBanner } from "./components/SessionChangeBanner";
 import SignUp from "./components/SignUp";
-import Home from "./pages/Home/Home";
-import UserProjectPage from './pages/UserProjectPage/UserProjectPage'; // Assuming UserProjectPage is here
-import UserPortfolio from './pages/UserProductPage/UserProductPage'; // Assuming UserProductPage is here
+// Consolidated Portfolio page — the split-rail design hosting the three real page bodies.
+// Home / UserProjectPage / UserProductPage are no longer routed (their three paths redirect
+// into /portfolio) but their files remain on disk, so reverting is a three-line swap.
+import PortfolioPage from "./pages/PortfolioPage/PortfolioPage";
 import SharedProfile from './pages/SharedProfile/SharedProfile'; // Import SharedProfile for public sharing
 import SharePage from './pages/ShareProfile/SharePage'; // Import SharePage for sharing functionality
 import { VendorDashboard } from "./pages/VendorDashboard/VendorDashboard";
@@ -33,8 +34,9 @@ import Form6 from "./components/Form6";
 import KycFormGuard from "./components/KycFormGuard";
 import Auditor from "./components/AuditorWaiting";
 import Login from "./components/Login";
+import AuthSplitLayout from "./components/auth/AuthSplitLayout";
 import GoogleOAuthCallback from "./components/GoogleOAuthCallback";
-import { Header } from "./components/Header/Header";
+import { VendorHeader } from "./components/vendor-header";
 import { Outlet } from "react-router-dom";
 import ProjectsPage from "./pages/ProjectsPage/ProjectsPage"; // Assuming ProjectsPage is here
 import LeadDetailPage from "./pages/LeadDetailPage/LeadDetailPage"; // Assuming LeadDetailPage is here
@@ -44,6 +46,8 @@ import SentLeadsPage from "./pages/Leadspage/SentLeadsPage";
 import ProjectLeadForm from "./pages/ProjectLeadFolder/ProjectLeadForm"; // Assuming ProjectLeadForm is here
 import NotificationsPage from "./pages/NotificationPage/NotificationPage"; // Import NotificationsPage
 import RoleSelection from "./pages/Onboarding/RoleSelection"; // Import Role Selector
+// KYC Form-1 design variants were adopted into the real forms (see
+// components/KycFormShell.jsx) - the preview routes were removed.
 import Verification from "./components/Verification";
 import TermsAndConditions from "./components/TermsAndConditions";
 import { Component } from "react";
@@ -210,7 +214,7 @@ const Layout = () => {
     <div className="bg-surface min-h-screen ">{/* Or your default page background */}
         <SessionChangeBanner />
         <div className="pt-5 px-5 pb-0">
-            <Header />
+            <VendorHeader />
         </div>
  
       <main>
@@ -223,7 +227,15 @@ const Layout = () => {
 // Routes that must render without RBACProvider — user is not yet authenticated
 // (new signups have a pendingVerification context user that would trigger /api/rbac/me
 //  → 401 → "Access Verification Failed" screen).
-const PRE_AUTH_PATHS = ['/signup', '/verification', '/verify-email'];
+const PRE_AUTH_PATHS = [
+  // /login and /signup share AuthSplitLayout so the brand panel renders ONCE and never
+  // re-mounts when switching between them. Login.jsx has no RBAC usage (verified — no
+  // useRBAC/PermissionGate/usePermission), so moving it out of the RBAC tree is safe.
+  '/login',
+  '/signup',
+  '/verification',
+  '/verify-email',
+];
 
 function isPreAuthPath(pathname) {
   return PRE_AUTH_PATHS.some((p) => pathname === p || pathname.startsWith(p + '/'));
@@ -233,7 +245,12 @@ function isPreAuthPath(pathname) {
 function PreAuthContent() {
   return (
     <Routes>
-      <Route path="/signup" element={<SignUp />} />
+      {/* Login and signup share one split layout, so the black brand panel is rendered
+          once by the layout and only the form swaps when you move between them. */}
+      <Route element={<AuthSplitLayout />}>
+        <Route path="/login" element={<LoginRouteGate><Login /></LoginRouteGate>} />
+        <Route path="/signup" element={<SignUp />} />
+      </Route>
       <Route path="/verification" element={<Verification />} />
       <Route path="/verify-email" element={<Verification />} />
     </Routes>
@@ -469,13 +486,17 @@ function AppContent() {
       {/* ── PUBLIC ROUTES — no RBAC, no access-checking skeleton ── */}
       <Route path="/" element={<HomePage />} />
       <Route path="/home" element={<HomePage />} />
-      <Route path="/login" element={<LoginRouteGate><Login /></LoginRouteGate>} />
+      {/* /login now lives in PreAuthContent under AuthSplitLayout, so the brand panel is
+          shared with /signup and does not re-mount when switching between them. */}
       <Route path="/unauthorized" element={<UnauthorizedPage />} />
       <Route path="/terms-and-conditions" element={<TermsAndConditions />} />
       <Route path="/auth/google/callback" element={<GoogleOAuthCallback />} />
       <Route path="/shared-profile/:vendorId" element={<SharedProfile />} />
       {/* Role selection: needs Cognito session check only, not RBAC */}
       <Route path="/role-selection" element={<AuthVerifiedGuard><RoleSelection /></AuthVerifiedGuard>} />
+
+      {/* KYC form design previews were removed - the chosen design now lives in
+          the real /Form1../Form6 pages via components/KycFormShell.jsx */}
 
       {/* Public Careers Routes */}
       <Route path="/careers" element={<CareersPage />} />
@@ -538,9 +559,15 @@ function AppContent() {
         {/* Vendor PO Response Route */}
         <Route path="/workspace/po-responses" element={<RoleGuard><VendorPOResponsePage /></RoleGuard>} />
         <Route path="/share" element={<RoleGuard><SharePage /></RoleGuard>} />
-        <Route path="/vendor-home" element={<Home />} />
-        <Route path="/userproject" element={<UserProjectPage />} />
-        <Route path="/userproduct" element={<UserPortfolio />} />
+        {/* Consolidated Portfolio page: the split-rail design hosting the three real page
+            bodies — CompanyView / ProjectsView / CatalogueView — with their logic intact
+            (byte-identical to Home.jsx / UserProjectPage.jsx / UserProductPage.jsx). */}
+        <Route path="/portfolio" element={<PortfolioPage />} />
+        {/* The three former routes redirect into it, landing on the matching view so
+            existing links and bookmarks keep working. The source pages remain on disk. */}
+        <Route path="/vendor-home" element={<Navigate to="/portfolio?tab=company" replace />} />
+        <Route path="/userproject" element={<Navigate to="/portfolio?tab=projects" replace />} />
+        <Route path="/userproduct" element={<Navigate to="/portfolio?tab=catalogue" replace />} />
         <Route path="/pmleads" element={<ProjectLeadForm />} />
         <Route path="/leads/:leadId" element={<LeadDetailPage />} />
         <Route path="/workspace" element={<WorkspacePage />} />

@@ -7,12 +7,11 @@ import { uploadFileToS3, deleteFileFromS3 } from "../utils/fileUpload";
 import { resolveUserEmail } from "../utils/resolveUserIdentity";
 import { validateGSTIN } from "../utils/gstinValidation";
 import { validatePAN } from "../utils/panValidation";
-import StepIndicator from "./StepIndicator";
-import SidebarContent from "./SidebarContent";
+import KycFormShell from "./KycFormShell";
 import SearchableSelect from "./SearchableSelect";
 import ResubmitBanner from "./ResubmitBanner";
 import { isResubmitMode, isSectionEditable } from "../utils/resubmitPermissions";
-import { setKycStep } from "./KycFormGuard";
+import { getKycMaxStep, setKycStep } from "./KycFormGuard";
 import { BUSINESS_TYPES, FLAT_BUSINESS_TYPES, INDUSTRY_TYPES, FLAT_INDUSTRY_TYPES } from "../constants/businessIndustryTypes";
 
 export default function Form2() {
@@ -318,25 +317,19 @@ export default function Form2() {
 
 
   return (
-    <div className="flex min-h-screen bg-surface">
-       {showSaveIndicator && (
+    /* Shared KYC shell: black step rail + light content area (design only) */
+    <KycFormShell
+      currentStep={2}
+      maxStep={getKycMaxStep(draftEmail)}
+      onStepSelect={(n) => { setKycStep(n, draftEmail); navigate(`/Form${n}`); }}
+      title="Business Details"
+      subtitle="Company information used across your vendor profile and documents."
+    >
+      {showSaveIndicator && (
         <div className="fixed top-5 right-5 bg-success text-white py-2 px-4 rounded shadow z-50">
           Changes saved successfully!
         </div>
       )}
-      {/* Left Sidebar */}
-      <SidebarContent />
-
-      {/* Right Content */}
-      <div className="flex-1 flex flex-col">
-        {/* Step Indicator */}
-        <StepIndicator currentStep={2} />
-
-        {/* Form Content */}
-        <div className="w-full max-w-4xl mx-auto px-4 pb-10 bg-surface md:px-0">
-          <h1 className="text-2xl font-bold text-ink mb-8">
-            Business Details
-          </h1>
 
           <ResubmitBanner sectionKey="company" />
 
@@ -345,12 +338,12 @@ export default function Form2() {
             <fieldset disabled={sectionReadOnly} className="contents space-y-8">
             {/* Business Information Section */}
             <div className="space-y-6">
-              <div className="flex flex-col md:flex-row items-start gap-6">
-                <div className="w-full md:w-1/3">
-                  <h3 className="text-sm font-semibold text-ink block mb-1">Business Type</h3>
-                  <p className="text-xs text-dim">select your business type</p>
+              <div className="flex flex-col gap-4 rounded-xl border border-neutral-200 bg-white p-6 kyc-card kyc-fade-up">
+                <div className="flex flex-wrap items-baseline justify-between gap-2">
+                  <h3 className="text-sm font-semibold text-neutral-900 block mb-1">Business Type</h3>
+                  <p className="text-xs text-neutral-500">select your business type</p>
                 </div>
-                <div className="w-full md:w-2/3">
+                <div className="grid w-full gap-4 sm:grid-cols-2 z-10">
                   <SearchableSelect
                     required
                     name="businessType"
@@ -362,12 +355,12 @@ export default function Form2() {
                 </div>
               </div>
 
-              <div className="flex flex-col md:flex-row items-start gap-6">
-                <div className="w-full md:w-1/3">
-                  <h3 className="text-sm font-semibold text-ink block mb-1">Industry Type</h3>
-                  <p className="text-xs text-dim">select your industry type</p>
+              <div className="flex flex-col gap-4 rounded-xl border border-neutral-200 bg-white p-6 kyc-card kyc-fade-up">
+                <div className="flex flex-wrap items-baseline justify-between gap-2">
+                  <h3 className="text-sm font-semibold text-neutral-900 block mb-1">Industry Type</h3>
+                  <p className="text-xs text-neutral-500">select your industry type</p>
                 </div>
-                <div className="w-full md:w-2/3">
+                <div className="grid w-full gap-4 sm:grid-cols-2">
                   <SearchableSelect
                     required
                     name="industryType"
@@ -379,9 +372,9 @@ export default function Form2() {
                 </div>
               </div>
 
-              <div className="flex flex-col md:flex-row items-start gap-6">
-                <div className="w-full md:w-1/3"></div>
-                <div className="w-full md:w-2/3">
+              <div className="flex flex-col gap-4 rounded-xl border border-neutral-200 bg-white p-6 kyc-card kyc-fade-up">
+                <div className="flex flex-wrap items-baseline justify-between gap-2"></div>
+                <div className="grid w-full gap-4 sm:grid-cols-2">
                   <input
                     required
                   type="number"
@@ -391,17 +384,17 @@ export default function Form2() {
                   placeholder="Year of establishment (YYYY)"
                   min="1900"
                   max={currentYear}
-                  className="w-full border border-line rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ink focus:border-transparent [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                  className="w-full border border-neutral-200 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-neutral-900 focus:border-transparent [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                   />
                 </div>
               </div>
 
-              <div className="flex flex-col md:flex-row items-start gap-6">
-                <div className="w-full md:w-1/3">
-                  <h3 className="text-sm font-semibold text-ink block mb-1">GST Number</h3>
-                  <p className="text-xs text-dim">enter your GST number</p>
+              <div className="flex flex-col gap-4 rounded-xl border border-neutral-200 bg-white p-6 kyc-card kyc-fade-up">
+                <div className="flex flex-wrap items-baseline justify-between gap-2">
+                  <h3 className="text-sm font-semibold text-neutral-900 block mb-1">GST Number</h3>
+                  <p className="text-xs text-neutral-500">enter your GST number</p>
                 </div>
-                <div className="w-full md:w-2/3">
+                <div className="grid w-full gap-4 sm:grid-cols-2">
                   <div className="flex gap-2">
                     <div className="flex-1">
                       <input
@@ -415,8 +408,8 @@ export default function Form2() {
                         className={`w-full border rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:border-transparent ${
                           gstinErrors.gstNumber
                             ? 'border-danger focus:ring-danger'
-                            : 'border-line focus:ring-ink'
-                        } bg-surface`}
+                            : 'border-neutral-200 focus:ring-neutral-900'
+                        } bg-white`}
                       />
                       {gstinErrors.gstNumber && (
                         <p className="mt-1 text-xs text-danger">{gstinErrors.gstNumber}</p>
@@ -426,7 +419,7 @@ export default function Form2() {
                     <button
                       type="button"
                       onClick={() => document.getElementById('gstCertificate').click()}
-                      className="px-4 py-2 text-sm border border-line rounded text-dim hover:bg-canvas transition-colors whitespace-nowrap"
+                      className="px-4 py-2 text-sm border border-neutral-200 rounded text-neutral-500 hover:bg-neutral-50 transition-colors whitespace-nowrap"
                     >
                       {formData.gstCertificate
                         ? formData.gstCertificate.uploading
@@ -436,7 +429,7 @@ export default function Form2() {
                     </button>
                   </div>
                   {formData.gstCertificate && 
-                    <div className="mt-2 text-xs text-dim flex justify-between items-center">
+                    <div className="mt-2 text-xs text-neutral-500 flex justify-between items-center">
                       <span>{formData.gstCertificate.name}</span>
                       <button type="button" onClick={() => handleDeleteFile('gstCertificate')} className="text-danger hover:text-danger">Delete</button>
                     </div>
@@ -444,12 +437,12 @@ export default function Form2() {
                 </div>
               </div>
 
-              <div className="flex flex-col md:flex-row items-start gap-6">
-                <div className="w-full md:w-1/3">
-                  <h3 className="text-sm font-semibold text-ink block mb-1">PAN Number</h3>
-                  <p className="text-xs text-dim">enter your PAN number</p>
+              <div className="flex flex-col gap-4 rounded-xl border border-neutral-200 bg-white p-6 kyc-card kyc-fade-up">
+                <div className="flex flex-wrap items-baseline justify-between gap-2">
+                  <h3 className="text-sm font-semibold text-neutral-900 block mb-1">PAN Number</h3>
+                  <p className="text-xs text-neutral-500">enter your PAN number</p>
                 </div>
-                <div className="w-full md:w-2/3">
+                <div className="grid w-full gap-4 sm:grid-cols-2">
                   <div className="flex gap-2">
                     <div className="flex-1">
                       <input
@@ -463,8 +456,8 @@ export default function Form2() {
                         className={`w-full border rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:border-transparent ${
                           panErrors.panNumber
                             ? 'border-danger focus:ring-danger'
-                            : 'border-line focus:ring-ink'
-                        } bg-surface`}
+                            : 'border-neutral-200 focus:ring-neutral-900'
+                        } bg-white`}
                       />
                       {panErrors.panNumber && (
                         <p className="mt-1 text-xs text-danger">{panErrors.panNumber}</p>
@@ -474,7 +467,7 @@ export default function Form2() {
                     <button
                       type="button"
                       onClick={() => document.getElementById('panCertificate').click()}
-                      className="px-4 py-2 text-sm border border-line rounded text-dim hover:bg-canvas transition-colors whitespace-nowrap"
+                      className="px-4 py-2 text-sm border border-neutral-200 rounded text-neutral-500 hover:bg-neutral-50 transition-colors whitespace-nowrap"
                     >
                      {formData.panCertificate
                        ? formData.panCertificate.uploading
@@ -484,7 +477,7 @@ export default function Form2() {
                     </button>
                   </div>
                   {formData.panCertificate &&
-                    <div className="mt-2 text-xs text-dim flex justify-between items-center">
+                    <div className="mt-2 text-xs text-neutral-500 flex justify-between items-center">
                       <span>{formData.panCertificate.name}</span>
                       <button type="button" onClick={() => handleDeleteFile('panCertificate')} className="text-danger hover:text-danger">Delete</button>
                     </div>
@@ -500,21 +493,19 @@ export default function Form2() {
               <button
                 type="button"
                 onClick={handlePrevious}
-                className="px-8 py-3 text-dim hover:text-ink transition-colors"
+                className="px-8 py-3 text-neutral-500 hover:text-neutral-900 transition-colors"
               >
                 Back
               </button>
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className="text-white px-8 py-3 rounded-lg font-medium bg-black hover:from-black/90 hover:to-black/90 focus:outline-none focus:ring-2 focus:ring-ink disabled:opacity-60 disabled:cursor-not-allowed"
+                className="text-white px-8 py-3 rounded-lg font-medium bg-black hover:from-black/90 hover:to-black/90 focus:outline-none focus:ring-2 focus:ring-neutral-900 disabled:opacity-60 disabled:cursor-not-allowed"
               >
                 {isSubmitting ? "Please wait..." : "Next"}
               </button>
             </div>
           </form>
-        </div>
-      </div>
-    </div>
+    </KycFormShell>
   );
 }

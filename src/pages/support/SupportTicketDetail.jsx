@@ -5,20 +5,9 @@ import {
   Tag, Clock, User, Hash, ChevronDown, ChevronUp, X, Paperclip, FileText,
 } from 'lucide-react';
 import { getTicket, getTicketReference, addMessage, rateTicket, reopenTicket } from '../../services/supportApi';
+import { PriorityPill, StatusPill } from '../../components/support';
 
 /* ── constants ───────────────────────────────────────────── */
-const STATUS_META = {
-  open:        { label: 'Open',        pill: 'bg-surface-hover text-success border border-line' },
-  in_progress: { label: 'In Progress', pill: 'bg-surface-hover text-ink border border-line' },
-  resolved:    { label: 'Resolved',    pill: 'bg-surface-hover text-ink border border-line' },
-  closed:      { label: 'Closed',      pill: 'bg-surface-hover text-dim border border-line' },
-};
-const PRIORITY_META = {
-  urgent: 'bg-danger/10 text-danger border border-danger/10',
-  high:   'bg-warning/10 text-warning border border-warning/10',
-  medium: 'bg-warning/10 text-warning border border-warning/10',
-  low:    'bg-canvas text-dim border border-line',
-};
 const CSAT_LABELS = ['', 'Terrible', 'Poor', 'Okay', 'Good', 'Excellent'];
 const CSAT_COLORS = ['', 'text-danger', 'text-warning', 'text-warning', 'text-success', 'text-ink'];
 
@@ -227,8 +216,7 @@ export default function SupportTicketDetail({
 
   const isResolved = ticket && ticket.status === 'resolved';
   const isTerminal = ticket && ['resolved', 'closed'].includes(ticket.status);
-  const s  = ticket ? (STATUS_META[ticket.status] || STATUS_META.open) : null;
-  const pp = ticket ? (PRIORITY_META[ticket.priority] || PRIORITY_META.medium) : null;
+
   const referenceLabel = reference?.label || ticket?.referenceLabel || ticket?.sourceRecordId;
   const waitingLabel = waitingOnLabel(ticket?.waitingOn);
 
@@ -236,22 +224,22 @@ export default function SupportTicketDetail({
   if (loading) {
     const cls = isPanel
       ? 'w-full h-full flex items-center justify-center bg-surface'
-      : 'min-h-screen bg-surface flex items-center justify-center';
-    return <div className={cls}><Loader2 size={28} className="text-success animate-spin" /></div>;
+      : 'min-h-screen bg-canvas flex items-center justify-center';
+    return <div className={cls}><Loader2 size={28} className="text-dim animate-spin" /></div>;
   }
 
   /* ── error ─── */
   if (error || !ticket) {
     const cls = isPanel
       ? 'w-full h-full flex flex-col items-center justify-center bg-surface gap-3 px-6'
-      : 'min-h-screen bg-surface flex items-center justify-center';
+      : 'min-h-screen bg-canvas flex items-center justify-center';
     return (
       <div className={cls}>
         {!isPanel && (
-          <div className="bg-surface rounded-2xl p-8  border border-line max-w-sm w-full text-center">
+          <div className="bg-surface rounded-xl p-8 border border-line max-w-sm w-full text-center">
             <AlertCircle size={28} className="text-danger mx-auto mb-3" />
             <p className="text-sm font-semibold text-ink mb-4">{error || 'Ticket not found.'}</p>
-            <button onClick={handleBack} className="px-5 py-2.5 bg-success text-white text-sm font-semibold rounded-xl hover:bg-success transition">
+            <button onClick={handleBack} className="px-5 py-2.5 bg-cta text-cta-foreground text-sm font-semibold rounded-xl transition-opacity hover:opacity-85">
               Back to Support
             </button>
           </div>
@@ -260,7 +248,7 @@ export default function SupportTicketDetail({
           <>
             <AlertCircle size={24} className="text-danger" />
             <p className="text-sm text-dim text-center">{error || 'Ticket not found.'}</p>
-            <button onClick={handleBack} className="text-xs text-success underline">Close</button>
+            <button onClick={handleBack} className="text-xs text-ink underline underline-offset-2">Close</button>
           </>
         )}
       </div>
@@ -275,20 +263,20 @@ export default function SupportTicketDetail({
     return (
       <div key={msg.messageId} className={`flex gap-2.5 ${isUser ? 'flex-row-reverse' : 'flex-row'}`}>
         {!isUser && (
-          <div className="h-7 w-7 flex-shrink-0 rounded-full bg-black flex items-center justify-center text-white text-[10px] font-bold mt-1">
+          <div className="h-7 w-7 flex-shrink-0 rounded-full bg-ink flex items-center justify-center text-cta-foreground text-[10px] font-bold mt-1">
             {initials(msg.senderName || 'Agent')}
           </div>
         )}
         <div className={`max-w-[72%] flex flex-col gap-0.5 ${isUser ? 'items-end' : 'items-start'}`}>
           <div className={`px-3.5 py-2.5 text-sm leading-relaxed ${
             isUser
-              ? 'bg-success text-white rounded-tl-2xl rounded-tr-sm rounded-bl-2xl rounded-br-2xl'
-              : 'bg-canvas border border-line text-ink rounded-tl-sm rounded-tr-2xl rounded-bl-2xl rounded-br-2xl'
+              ? 'bg-cta text-cta-foreground rounded-2xl rounded-tr-sm'
+              : 'bg-surface border border-line text-ink rounded-2xl rounded-tl-sm'
           }`}>
             {msg.content || msg.body}
             {msg.attachments && msg.attachments.length > 0 && (
               <div className="mt-2 space-y-1.5">
-                {msg.attachments.map((att, i) => (
+                {msg.attachments.map((att, i) =>
                   /^image\//.test(att.type)
                     ? <img key={i} src={att.url} alt={att.name}
                         className="rounded-xl max-w-full max-h-44 object-cover block mt-1" />
@@ -296,7 +284,7 @@ export default function SupportTicketDetail({
                         className="flex items-center gap-1.5 text-xs underline underline-offset-2 opacity-80 hover:opacity-100">
                         <FileText size={11} />{att.name}
                       </a>
-                ))}
+                )}
               </div>
             )}
           </div>
@@ -317,10 +305,10 @@ export default function SupportTicketDetail({
       {files.length > 0 && (
         <div className="flex flex-wrap gap-1.5 mb-2">
           {files.map((f, i) => (
-            <span key={i} className="flex items-center gap-1 bg-surface-hover border border-line text-success text-[11px] font-medium rounded-lg px-2 py-0.5">
+            <span key={i} className="flex items-center gap-1 bg-surface-hover border border-line text-ink text-[11px] font-medium rounded-lg px-2 py-0.5">
               <FileText size={10} />{f.name}
               <button onClick={() => setFiles(prev => prev.filter((_, j) => j !== i))}
-                className="ml-0.5 text-ink hover:text-success"><X size={10} /></button>
+                className="ml-0.5 text-dim hover:text-danger"><X size={10} /></button>
             </span>
           ))}
         </div>
@@ -331,7 +319,7 @@ export default function SupportTicketDetail({
           className="hidden"
           onChange={e => setFiles(prev => [...prev, ...Array.from(e.target.files)])} />
         {/* Textarea with paperclip embedded inside at bottom-left */}
-        <div className="relative flex-1 bg-canvas border border-line rounded-xl focus-within:ring-2 focus-within:border-success/20 focus-within:border-success/40 transition overflow-hidden">
+        <div className="relative flex-1 bg-canvas border border-line rounded-xl focus-within:ring-2 focus-within:border-ink/40 transition overflow-hidden">
           <textarea
             value={reply}
             onChange={e => setReply(e.target.value)}
@@ -343,13 +331,13 @@ export default function SupportTicketDetail({
           <div className="absolute bottom-1.5 left-2">
             <button onClick={() => fileRef.current?.click()}
               title="Attach file"
-              className="h-6 w-6 rounded-lg flex items-center justify-center text-dim hover:text-success hover:bg-surface-hover transition">
+              className="h-6 w-6 rounded-lg flex items-center justify-center text-dim hover:text-ink hover:bg-surface-hover transition">
               <Paperclip size={13} />
             </button>
           </div>
         </div>
         <button onClick={handleSend} disabled={sending || (!reply.trim() && files.length === 0)}
-          className="h-10 w-10 rounded-xl bg-success text-white flex items-center justify-center hover:bg-success disabled:opacity-40 transition flex-shrink-0">
+          className="h-10 w-10 rounded-xl bg-cta text-cta-foreground flex items-center justify-center transition-opacity hover:opacity-85 disabled:opacity-40 flex-shrink-0">
           {sending ? <Loader2 size={15} className="animate-spin" /> : <Send size={14} />}
         </button>
       </div>
@@ -358,9 +346,9 @@ export default function SupportTicketDetail({
 
   const resolvedFooter = isTerminal && (
     <div className="flex-shrink-0 border-t border-line px-5 py-3 bg-surface flex items-center justify-between gap-3">
-      <p className="text-xs text-dim">This ticket is {ticket.status}. <button onClick={handleBack} className="text-success hover:underline">{isPanel ? 'Close' : 'Back to all tickets'}</button></p>
+      <p className="text-xs text-dim">This ticket is {ticket.status}. <button onClick={handleBack} className="text-ink underline underline-offset-2">{isPanel ? 'Close' : 'Back to all tickets'}</button></p>
       <button onClick={handleReopen} disabled={reopening}
-        className="flex-shrink-0 px-4 py-2 bg-warning text-white text-xs font-semibold rounded-xl hover:bg-warning transition disabled:opacity-50">
+        className="flex-shrink-0 px-4 py-2 bg-warning text-white text-xs font-semibold rounded-xl transition-opacity hover:opacity-90 disabled:opacity-50">
         {reopening ? 'Reopening…' : 'Reopen Ticket'}
       </button>
     </div>
@@ -373,21 +361,21 @@ export default function SupportTicketDetail({
     return (
       <div className="w-full flex flex-col overflow-hidden bg-surface">
         {/* Panel top bar */}
-        <div className="flex-shrink-0 px-4 h-13 min-h-[52px] border-b border-line flex items-center gap-2.5 bg-surface">
+        <div className="flex-shrink-0 px-4 min-h-[52px] border-b border-line flex items-center gap-2.5 bg-surface">
           <button onClick={handleBack}
-            className="h-7 w-7 rounded-lg hover:bg-surface-hover flex items-center justify-center text-dim hover:text-dim transition flex-shrink-0">
+            className="h-7 w-7 rounded-lg hover:bg-surface-hover flex items-center justify-center text-dim transition flex-shrink-0">
             <X size={14} />
           </button>
           <div className="flex-1 flex items-center gap-2 min-w-0">
             <span className="text-[11px] font-mono text-dim flex-shrink-0">{ticket.ticketId}</span>
             <span className="text-sm font-semibold text-ink truncate">{ticket.subject}</span>
           </div>
-          <span className={`flex-shrink-0 text-[10px] font-bold px-2 py-0.5 rounded-full ${s.pill}`}>{s.label}</span>
+          <StatusPill status={ticket.status} className="flex-shrink-0" />
         </div>
 
         {/* Info strip */}
         <div className="flex-shrink-0 px-4 py-2 border-b border-line bg-canvas flex items-center gap-3 flex-wrap">
-          <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${pp}`}>{ticket.priority}</span>
+          <PriorityPill priority={ticket.priority} />
           {ticket.teamLabel && <span className="text-[11px] text-dim">{ticket.teamLabel}</span>}
           <span className="text-[11px] text-dim">Waiting on: {waitingLabel}</span>
           {referenceLabel && <span className="text-[11px] text-dim">Linked: {referenceLabel}</span>}
@@ -417,9 +405,9 @@ export default function SupportTicketDetail({
      PAGE MODE (full page / mobile)
   ════════════════════════════════════════════════════════ */
   return (
-    <div className="min-h-screen bg-surface flex flex-col">
+    <div className="min-h-screen bg-canvas flex flex-col">
       {/* Sticky top bar */}
-      <div className="sticky top-0 z-20 bg-surface border-b border-line ">
+      <div className="sticky top-0 z-20 bg-surface border-b border-line">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 h-14 flex items-center gap-3">
           <button onClick={handleBack}
             className="h-8 w-8 rounded-xl hover:bg-surface-hover flex items-center justify-center text-dim hover:text-ink transition flex-shrink-0">
@@ -429,14 +417,14 @@ export default function SupportTicketDetail({
             <span className="text-xs font-mono text-dim flex-shrink-0">{ticket.ticketId}</span>
             <span className="text-sm font-semibold text-ink truncate">{ticket.subject}</span>
           </div>
-          <span className={`flex-shrink-0 text-[11px] font-bold px-2.5 py-1 rounded-full ${s.pill}`}>{s.label}</span>
+          <StatusPill status={ticket.status} className="flex-shrink-0" />
         </div>
       </div>
 
       <div className="max-w-4xl mx-auto w-full px-4 sm:px-6 py-6 flex flex-col lg:flex-row gap-5">
         {/* Thread column */}
         <div className="flex-1 flex flex-col min-h-0">
-          <div className="bg-surface rounded-2xl border border-line  flex flex-col overflow-hidden">
+          <div className="bg-surface rounded-xl border border-line flex flex-col overflow-hidden">
             <div ref={threadRef} className="overflow-y-auto px-4 py-5 space-y-4" style={{minHeight: '260px', maxHeight: '60vh'}}>
               {messages.length === 0 && (
                 <p className="text-center text-sm text-dim py-8">No messages yet.</p>
@@ -452,15 +440,15 @@ export default function SupportTicketDetail({
         {/* Info sidebar */}
         <div className="lg:w-64 flex-shrink-0 space-y-3">
           <button onClick={() => setInfoOpen(v => !v)}
-            className="lg:hidden w-full flex items-center justify-between px-4 py-3 bg-surface rounded-2xl border border-line text-sm font-semibold text-ink ">
+            className="lg:hidden w-full flex items-center justify-between px-4 py-3 bg-surface rounded-xl border border-line text-sm font-semibold text-ink">
             Ticket Details
             {infoOpen ? <ChevronUp size={16} className="text-dim" /> : <ChevronDown size={16} className="text-dim" />}
           </button>
-          <div className={`bg-surface rounded-2xl border border-line  p-4 space-y-4 ${infoOpen ? 'block' : 'hidden lg:block'}`}>
+          <div className={`bg-surface rounded-xl border border-line p-4 space-y-4 ${infoOpen ? 'block' : 'hidden lg:block'}`}>
             <p className="text-xs font-bold text-dim uppercase tracking-wide">Ticket Info</p>
             <InfoRow icon={Hash} label="ID"><span className="font-mono text-xs text-ink">{ticket.ticketId}</span></InfoRow>
-            <InfoRow icon={Tag} label="Status"><span className={`text-[11px] font-bold px-2 py-0.5 rounded-full ${s.pill}`}>{s.label}</span></InfoRow>
-            <InfoRow icon={Tag} label="Priority"><span className={`text-[11px] font-bold px-2 py-0.5 rounded-full ${pp}`}>{ticket.priority}</span></InfoRow>
+            <InfoRow icon={Tag} label="Status"><StatusPill status={ticket.status} /></InfoRow>
+            <InfoRow icon={Tag} label="Priority"><PriorityPill priority={ticket.priority} /></InfoRow>
             <InfoRow icon={User} label="Team"><span className="text-xs text-ink">{ticket.teamLabel || ticket.assignedTeam || '—'}</span></InfoRow>
             <InfoRow icon={Clock} label="Waiting On"><span className="text-xs text-ink">{waitingLabel}</span></InfoRow>
             {ticket.firstResponseDeadline && (

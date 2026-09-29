@@ -1,9 +1,10 @@
 import React, { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import "../styles/Verification.css";
 import config from "../config/env";
 import { redirectToClientWithHandoff } from '../utils/handoffToClient';
 import { Auth } from "aws-amplify";
+import { OtpCells } from "./otp-verification/OtpCells";
+import { OtpStatusBanner } from "./otp-verification/OtpStatusBanner";
 
 function Verification() {
   const navigate = useNavigate();
@@ -107,88 +108,99 @@ function Verification() {
 
   if (isVerifying) {
     return (
-      <div className="verification-page">
-        <div className="verification-content">
-          <span className="verification-brand">Caasdi Global</span>
-          <div className="verification-card">
-            <h1>Confirming your email</h1>
-            <p>Please wait while Cognito completes verification.</p>
-          </div>
+      <div className="flex min-h-[100dvh] items-center justify-center bg-canvas px-4 py-12 text-ink">
+        <div className="auth-rise w-full max-w-[30rem] text-center" role="status" aria-live="polite">
+          <span
+            className="mx-auto mb-4 block h-9 w-9 animate-spin rounded-full border-[3px] border-line border-t-ink"
+            aria-hidden="true"
+          />
+          <p className="text-sm font-semibold text-ink">Confirming your email</p>
+          <p className="mt-1 text-xs text-dim">Please wait while Cognito completes verification.</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="verification-page">
-      <div className="verification-content">
-        <span className="verification-brand">Caasdi Global</span>
-        <div className="verification-card">
-          <h1>Check Your Email</h1>
-          <p>
-            Verify your email. Cognito sent a six-digit verification code to{' '}
-            <span className="verification-email">{email || "your email"}</span>.
-            Enter it below to activate your account.
-          </p>
-          {verificationStatus === "verified" ? (
-            <>
-              <div className="verification-success" role="status">
-                Your email has been verified successfully.
-              </div>
-              <button
-                type="button"
-                className="verification-button"
-                onClick={() => navigate('/login', { replace: true })}
-              >
-                Go To Login
-              </button>
-            </>
-          ) : (
-            <form onSubmit={handleVerifyCode}>
-              <label className="verification-code-label" htmlFor="verification-code">
-                Verification code
-              </label>
-              <input
-                id="verification-code"
-                className="verification-code-input"
-                value={verificationCode}
-                onChange={(event) => setVerificationCode(event.target.value.replace(/\D/g, '').slice(0, 6))}
-                inputMode="numeric"
-                autoComplete="one-time-code"
-                maxLength={6}
-                placeholder="000000"
-                disabled={isVerifying}
-              />
-              {verificationError && (
-                <p className="verification-error" role="alert">{verificationError}</p>
-              )}
-              <button type="submit" className="verification-button" disabled={isVerifying}>
-                Verify Email
-              </button>
-            </form>
-          )}
-          <button
-            type="button"
-            className="verification-secondary-action"
-            onClick={handleContinue}
-            disabled={verificationStatus !== "verified"}
-          >
-            I've verified my email — Continue
-          </button>
-          {email && (
+    <div className="flex min-h-[100dvh] flex-col bg-canvas text-ink">
+      <div className="flex flex-1 items-center justify-center px-4 py-12">
+        <div className="w-full max-w-[30rem] text-center">
+          <div className="auth-rise">
+            <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-dim">
+              Email verification
+            </p>
+            <h1 className="mt-3 font-display text-3xl font-semibold tracking-tight text-ink">
+              Check Your Email
+            </h1>
+            <p className="mx-auto mt-3 max-w-[38ch] text-sm leading-6 text-dim">
+              Verify your email. Cognito sent a six-digit verification code to{' '}
+              <span className="font-medium text-ink">{email || "your email"}</span>.
+              Enter it below to activate your account.
+            </p>
+          </div>
+
+          <div className="auth-rise mt-8" style={{ animationDelay: '140ms' }}>
+            {verificationStatus === "verified" ? (
+              <>
+                <OtpStatusBanner tone="success">
+                  Your email has been verified successfully.
+                </OtpStatusBanner>
+                <button
+                  type="button"
+                  className="brand-press mt-6 h-12 w-full rounded-xl bg-cta text-sm font-semibold text-cta-foreground transition-opacity duration-180 ease-signal hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ink"
+                  onClick={() => navigate('/login', { replace: true })}
+                >
+                  Go To Login
+                </button>
+              </>
+            ) : (
+              <form onSubmit={handleVerifyCode} className="text-left">
+                <OtpCells
+                  id="verification-code"
+                  value={verificationCode}
+                  onChange={(event) => setVerificationCode(event.target.value.replace(/\D/g, '').slice(0, 6))}
+                  disabled={isVerifying}
+                  label="Verification code"
+                />
+                {verificationError && (
+                  <div className="mt-3">
+                    <OtpStatusBanner tone="danger">{verificationError}</OtpStatusBanner>
+                  </div>
+                )}
+                <button
+                  type="submit"
+                  className="brand-press mt-6 h-12 w-full rounded-xl bg-cta text-sm font-semibold text-cta-foreground transition-opacity duration-180 ease-signal hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ink"
+                  disabled={isVerifying}
+                >
+                  Verify Email
+                </button>
+              </form>
+            )}
+          </div>
+
+          <div className="auth-rise mt-8 space-y-3" style={{ animationDelay: '200ms' }}>
             <button
               type="button"
-              className="verification-secondary-action"
-              onClick={handleResendEmail}
-              disabled={resendStatus === 'sending' || resendStatus === 'sent'}
-              style={{ marginTop: '0.75rem', opacity: resendStatus === 'sent' ? 0.7 : 1 }}
+              className="w-full text-xs font-medium text-dim underline decoration-line underline-offset-4 transition-colors duration-180 ease-signal hover:text-ink disabled:cursor-not-allowed disabled:opacity-60"
+              onClick={handleContinue}
+              disabled={verificationStatus !== "verified"}
             >
-              {resendStatus === 'sending' && 'Sending…'}
-              {resendStatus === 'sent' && 'Email resent — check your inbox'}
-              {resendStatus === 'error' && 'Resend failed — try again'}
-              {!resendStatus && 'Resend verification email'}
+              I've verified my email — Continue
             </button>
-          )}
+            {email && (
+              <button
+                type="button"
+                className="w-full text-xs font-medium text-dim underline decoration-line underline-offset-4 transition-colors duration-180 ease-signal hover:text-ink disabled:cursor-not-allowed disabled:opacity-60"
+                onClick={handleResendEmail}
+                disabled={resendStatus === 'sending' || resendStatus === 'sent'}
+              >
+                {resendStatus === 'sending' && 'Sending…'}
+                {resendStatus === 'sent' && 'Email resent — check your inbox'}
+                {resendStatus === 'error' && 'Resend failed — try again'}
+                {!resendStatus && 'Resend verification email'}
+              </button>
+            )}
+          </div>
         </div>
       </div>
     </div>

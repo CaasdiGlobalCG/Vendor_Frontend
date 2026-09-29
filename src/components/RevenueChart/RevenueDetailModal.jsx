@@ -1,6 +1,7 @@
 import React, { useState, useMemo } from "react";
 import { X, BarChart3, CircleDollarSign, TrendingUp, ArrowUpRight, ArrowDownRight, Calendar, FileText, Download } from "lucide-react";
 import { Bar, Line, Pie, Doughnut } from "react-chartjs-2";
+import "../../config/chartSetup";
 import { format } from 'date-fns';
 
 // --- Color Palette (matching RevenueChart) ---

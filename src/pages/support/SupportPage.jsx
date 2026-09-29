@@ -1,12 +1,12 @@
 import { useState, useEffect, useCallback, useRef, useContext } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import {
-  LifeBuoy, Plus, Search, Loader2, ChevronRight, ChevronDown,
-  AlertCircle, Clock, CheckCircle2, MessageSquare, X, Paperclip,
+  LifeBuoy, Plus, Search, AlertCircle, X, Paperclip,
   FolderOpen, Users, CreditCard, FileText, ShieldCheck, Monitor,
 } from 'lucide-react';
 import { VendorContext } from '../../context/VendorContext';
 import { createTicket, listTickets, listReferenceOptions } from '../../services/supportApi';
+import { ListStates, StatusFilterChips, SupportFaqPanel, STATUS_FILTERS, TicketRow } from '../../components/support';
 import SupportTicketDetail from './SupportTicketDetail';
 
 const SLIDE_OVER_MIN_WIDTH = 448;
@@ -21,18 +21,6 @@ function getSlideOverMaxWidth() {
 }
 
 /* ── constants ───────────────────────────────────────────── */
-const STATUS_META = {
-  open:        { label: 'Open',        pill: 'bg-surface-hover text-success',   bar: 'bg-success' },
-  in_progress: { label: 'In Progress', pill: 'bg-surface-hover text-ink',  bar: 'bg-cta' },
-  resolved:    { label: 'Resolved',    pill: 'bg-surface-hover text-ink', bar: 'bg-cta' },
-  closed:      { label: 'Closed',      pill: 'bg-surface-hover text-dim',     bar: 'bg-surface-hover' },
-};
-const PRIORITY_META = {
-  urgent: { pill: 'bg-danger/10 text-danger border border-danger/10' },
-  high:   { pill: 'bg-warning/10 text-warning border border-warning/10' },
-  medium: { pill: 'bg-warning/10 text-warning border border-warning/10' },
-  low:    { pill: 'bg-canvas text-dim border border-line' },
-};
 const CATEGORIES = [
   { value: 'general_enquiry', label: 'General Enquiry' },
   { value: 'sales_enquiry', label: 'Sales RFQ / Enquiry' },
@@ -195,72 +183,6 @@ function useIsLarge() {
     return () => window.removeEventListener('resize', h);
   }, []);
   return val;
-}
-
-/* ── FAQ Accordion Item ──────────────────────────────────── */
-function FaqItem({ icon: Icon, iconBg, iconColor, q, a }) {
-  const [open, setOpen] = useState(false);
-  return (
-    <div className={`rounded-xl border transition ${open ? 'border-success/20 bg-cta' : 'border-line bg-surface'}`}>
-      <button
-        onClick={() => setOpen(v => !v)}
-        className="w-full flex items-center gap-3 px-4 py-3 text-left">
-        <div className={`h-8 w-8 rounded-lg flex items-center justify-center flex-shrink-0 ${iconBg}`}>
-          <Icon size={14} className={iconColor} />
-        </div>
-        <span className="flex-1 text-sm font-semibold text-ink leading-snug">{q}</span>
-        <ChevronDown size={14} className={`flex-shrink-0 text-dim transition-transform ${open ? 'rotate-180' : ''}`} />
-      </button>
-      {open && (
-        <div className="px-4 pb-4 pl-[52px]">
-          <p className="text-xs text-dim leading-relaxed">{a}</p>
-        </div>
-      )}
-    </div>
-  );
-}
-
-/* ── Welcome / FAQ Panel ─────────────────────────────────── */
-function WelcomePanel({ onNewTicket }) {
-  return (
-    <div className="w-full h-full overflow-y-auto bg-surface rounded-2xl border border-line  flex flex-col">
-      {/* Top area */}
-      <div className="px-6 pt-6 pb-5 border-b border-line">
-        <div className="flex items-center gap-3 mb-3">
-          <div className="h-10 w-10 rounded-2xl flex items-center justify-center" style={{background: 'linear-gradient(135deg,rgb(var(--success)),rgb(var(--success)))'}}>
-            <LifeBuoy size={18} className="text-white" />
-          </div>
-          <div>
-            <p className="text-xs text-dim font-medium">Need help?</p>
-            <p className="text-sm font-bold text-ink">Browse common questions below</p>
-          </div>
-        </div>
-        <p className="text-xs text-dim leading-relaxed">
-          Can't find what you need? Our support team is available on business days and typically responds within a few hours.
-        </p>
-        <button
-          onClick={onNewTicket}
-          className="mt-4 w-full flex items-center justify-center gap-2 py-2.5 bg-success hover:bg-success text-white text-sm font-semibold rounded-xl transition">
-          <Plus size={14} />
-          Open a Support Ticket
-        </button>
-      </div>
-
-      {/* FAQ list */}
-      <div className="flex-1 px-4 py-4 space-y-2 overflow-y-auto">
-        <p className="text-[11px] font-bold text-dim uppercase tracking-widest px-1 mb-3">Frequently Asked Questions</p>
-        {FAQ_ITEMS.map((item, i) => (
-          <FaqItem key={i} {...item} />
-        ))}
-      </div>
-
-      {/* Footer */}
-      <div className="px-5 py-3 border-t border-line flex items-center justify-between">
-        <span className="text-[11px] text-dim">Mon – Fri · 9 AM – 6 PM</span>
-        <span className="text-[11px] text-success font-medium">Vendor Support Team</span>
-      </div>
-    </div>
-  );
 }
 
 /* ── Create Ticket Slide-over ────────────────────────────── */
@@ -722,151 +644,89 @@ export default function SupportPage() {
   };
 
   return (
-    <div className="min-h-full lg:h-full flex flex-col bg-surface">
+    <div className="flex min-h-full flex-col bg-canvas lg:h-full">
 
-      {/* ── Compact header card ───────────────────────── */}
-      <div className="flex-shrink-0 px-4 sm:px-5 pt-4 pb-3">
-        <div className="rounded-2xl px-5 sm:px-6 py-4" style={{background: 'linear-gradient(90deg,rgba(9,91,73,1) 0%,rgba(0,0,0,1) 100%)'}}>
-          <div className="flex items-center gap-3">
-            {/* Left: icon + title */}
-            <div className="flex items-center gap-2.5 flex-shrink-0">
-              <div className="h-8 w-8 rounded-xl bg-white/15 flex items-center justify-center border border-white/20">
-                <LifeBuoy size={15} className="text-white" />
-              </div>
-              <div>
-                <p className="text-[10px] text-success font-semibold tracking-widest uppercase leading-none mb-0.5">Support Center</p>
-                <h1 className="text-sm font-bold text-white leading-none">How can we help?</h1>
-              </div>
-            </div>
-
-            {/* Center: search — grows but capped */}
-            <div className="relative w-44 sm:w-56 flex-shrink-0">
-              <Search size={13} className="absolute left-3 top-1/2 -translate-y-1/2  text-dim pointer-events-none" />
-              <input
-                type="text"
-                value={search}
-                onChange={e => setSearch(e.target.value)}
-                placeholder="Search tickets…"
-                className="w-full pl-9 pr-3 py-2 bg-surface rounded-xl text-xs text-ink placeholder:text-dim focus:outline-none focus:ring-2 focus:ring-success/30 " />
-            </div>
-
-            {/* Right: new ticket — pinned to far right */}
-            <button
-              onClick={() => setShowCreate(true)}
-              className="ml-auto flex items-center gap-1.5 px-3.5 py-2 bg-white/20 hover:bg-white/30 text-white text-xs font-bold rounded-xl transition flex-shrink-0 border border-white/20 backdrop-blur-sm">
-              <Plus size={13} />New Ticket
-            </button>
+      {/* ── Header ───────────────────────────────────────── */}
+      <header className="flex-shrink-0 border-b border-line bg-surface">
+        <div className="mx-auto flex w-full max-w-[1400px] flex-wrap items-center gap-3 px-4 py-3 sm:px-6">
+          <span className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl border border-line bg-surface-hover">
+            <LifeBuoy size={16} className="text-ink" aria-hidden="true" />
+          </span>
+          <div className="min-w-0">
+            <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-dim">Support Centre</p>
+            <h1 className="truncate text-sm font-bold text-ink">How can we help?</h1>
           </div>
+
+          <div className="relative ml-auto w-full sm:w-64">
+            <Search size={13} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-dim" aria-hidden="true" />
+            <input
+              type="text"
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+              placeholder="Search tickets…"
+              aria-label="Search tickets"
+              className="w-full rounded-xl border border-line bg-canvas py-2 pl-9 pr-3 text-xs text-ink placeholder:text-dim focus:outline-none focus:ring-2 focus:ring-ink/20" />
+          </div>
+
+          <button
+            onClick={() => setShowCreate(true)}
+            className="flex flex-shrink-0 items-center gap-1.5 rounded-xl bg-cta px-3.5 py-2 text-xs font-bold text-cta-foreground transition-opacity hover:opacity-85">
+            <Plus size={13} aria-hidden="true" />New Ticket
+          </button>
         </div>
-      </div>
+      </header>
 
       {/* ── Main body — always two-column on lg ───────── */}
-      <div className="flex-1 flex flex-col lg:flex-row lg:overflow-hidden gap-3 px-4 sm:px-5 pb-4">
+      <div className="mx-auto flex w-full max-w-[1400px] flex-1 flex-col gap-3 px-4 py-4 sm:px-6 lg:min-h-0 lg:flex-row">
 
         {/* ── Left: List column ──────────────────────── */}
-        <div className="flex flex-col lg:w-[38%] lg:flex-shrink-0 lg:overflow-hidden">
+        <div className="flex flex-col lg:min-h-0 lg:w-[38%] lg:flex-shrink-0">
           {/* Filter chips */}
-          <div className="flex gap-1.5 flex-wrap flex-shrink-0 mb-3">
-            {[
-              { key: 'all',         label: 'All',      Icon: MessageSquare, iconCls: 'text-dim' },
-              { key: 'open',        label: 'Open',     Icon: AlertCircle,   iconCls: 'text-success' },
-              { key: 'in_progress', label: 'Active',   Icon: Clock,         iconCls: 'text-ink' },
-              { key: 'resolved',    label: 'Resolved', Icon: CheckCircle2,  iconCls: 'text-ink' },
-            ].map(({ key, label, Icon, iconCls }) => (
-              <button key={key} onClick={() => setFilterStatus(key)}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold border transition ${
-                  filterStatus === key
-                    ? 'bg-success text-white border-success '
-                    : 'bg-surface text-dim border-line hover:border-success/30'
-                }`}>
-                <Icon size={11} className={filterStatus === key ? 'text-white' : iconCls} />
-                {label}
-                <span className={`ml-0.5 px-1.5 py-0.5 rounded-full text-[10px] font-bold ${
-                  filterStatus === key ? 'bg-white/20 text-white' : 'bg-surface-hover text-dim'
-                }`}>
-                  {key === 'resolved' ? counts.resolved : counts[key]}
-                </span>
-              </button>
-            ))}
+          <div className="mb-3 flex flex-shrink-0 flex-wrap items-center gap-1.5">
+            <StatusFilterChips
+              filters={STATUS_FILTERS}
+              value={filterStatus}
+              counts={counts}
+              onChange={setFilterStatus}
+            />
             <button onClick={() => setShowCreate(true)}
-              className="lg:hidden ml-auto flex items-center gap-1 px-3 py-1.5 bg-success text-white rounded-full text-xs font-semibold">
-              <Plus size={11} />New
+              className="ml-auto flex items-center gap-1 rounded-full bg-cta px-3 py-1.5 text-xs font-semibold text-cta-foreground lg:hidden">
+              <Plus size={11} aria-hidden="true" />New
             </button>
           </div>
 
           {/* Ticket list scroll area */}
-          <div className="lg:flex-1 lg:overflow-y-auto space-y-2 lg:pr-0.5 pb-2">
-            {loading && (
-              <div className="flex justify-center py-16">
-                <Loader2 size={24} className="text-success animate-spin" />
-              </div>
-            )}
-            {error && (
-              <div className="flex items-center gap-3 bg-danger/10 border border-danger/10 rounded-2xl p-4 text-sm text-danger">
-                <AlertCircle size={15} className="flex-shrink-0" />{error}
-              </div>
-            )}
-            {!loading && !error && filtered.length === 0 && (
-              <div className="flex flex-col items-center justify-center py-12 text-center">
-                <div className="h-12 w-12 rounded-2xl bg-surface border border-line flex items-center justify-center mb-3 ">
-                  <LifeBuoy size={20} className="text-dim" />
-                </div>
-                <p className="font-semibold text-ink mb-1 text-sm">{search ? 'No results' : 'No tickets yet'}</p>
-                <p className="text-xs text-dim max-w-[180px]">
-                  {search ? 'Try a different keyword.' : 'Our team is ready to help you.'}
-                </p>
-              </div>
-            )}
+          <div className="space-y-2 pb-2 lg:min-h-0 lg:flex-1 lg:overflow-y-auto lg:pr-0.5">
+            <ListStates
+              loading={loading}
+              error={error}
+              empty={!loading && !error && filtered.length === 0}
+              onRetry={load}
+              emptyTitle={search ? 'No results' : 'No tickets yet'}
+              emptyHint={search ? 'Try a different keyword.' : 'Our team is ready to help you.'}
+            />
             {!loading && !error && filtered.map(ticket => {
-              const s = STATUS_META[ticket.status] || STATUS_META.open;
-              const p = PRIORITY_META[ticket.priority] || PRIORITY_META.medium;
-              const date = ticket.updatedAt || ticket.createdAt;
-              const isSelected = selectedId === ticket.ticketId;
               // Gap 9: unread dot — new agent activity since user last opened this ticket
               const lastRead = localStorage.getItem(`support_read_${ticket.ticketId}`);
               const hasUnread = !['resolved','closed'].includes(ticket.status) &&
                 (!lastRead || (ticket.updatedAt && ticket.updatedAt > lastRead));
               return (
-                <button
+                <TicketRow
                   key={ticket.ticketId}
-                  onClick={() => handleTicketClick(ticket.ticketId)}
-                  className={`w-full rounded-2xl border transition group text-left overflow-hidden ${
-                    isSelected
-                      ? 'bg-surface-hover border-success/30 '
-                      : 'bg-surface border-line hover:border-success/20 '
-                  }`}>
-                  <div className="flex">
-                    <div className={`w-1 flex-shrink-0 ${s.bar}`} />
-                    <div className="flex-1 px-3.5 py-3">
-                      <div className="flex items-start justify-between gap-2">
-                        <div className="min-w-0 flex-1">
-                          <div className="flex items-center gap-1.5 flex-wrap mb-1">
-                            <span className="text-[10px] font-mono text-dim">{ticket.ticketId}</span>
-                            {hasUnread && (
-                              <span className="h-2 w-2 rounded-full bg-success flex-shrink-0" title="New activity" />
-                            )}
-                            <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full uppercase ${s.pill}`}>{s.label}</span>
-                            <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full uppercase ${p.pill}`}>{ticket.priority}</span>
-                          </div>
-                          <p className="text-sm font-semibold text-ink truncate">{ticket.subject}</p>
-                          <p className="text-[11px] text-dim mt-0.5">
-                            {ticket.teamLabel} · {date ? new Date(date).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'}) : ''}
-                          </p>
-                        </div>
-                        <ChevronRight size={14} className={`mt-0.5 transition flex-shrink-0 ${isSelected ? 'text-success' : 'text-dim group-hover:text-success/60'}`} />
-                      </div>
-                    </div>
-                  </div>
-                </button>
+                  ticket={ticket}
+                  active={selectedId === ticket.ticketId}
+                  unread={hasUnread}
+                  onSelect={handleTicketClick}
+                />
               );
             })}
           </div>
         </div>
 
         {/* ── Right: FAQ or Detail panel ─────────────── */}
-        <div className="hidden lg:flex flex-1 overflow-hidden">
+        <div className="hidden flex-1 lg:flex lg:min-h-0">
           {selectedId ? (
-            <div className="w-full h-full rounded-2xl border border-line  overflow-hidden flex">
+            <div className="flex w-full overflow-hidden rounded-xl border border-line bg-surface lg:min-h-0">
               <SupportTicketDetail
                 ticketId={selectedId}
                 isPanel
@@ -875,7 +735,11 @@ export default function SupportPage() {
               />
             </div>
           ) : (
-            <WelcomePanel onNewTicket={() => setShowCreate(true)} />
+            <SupportFaqPanel
+              faqItems={FAQ_ITEMS}
+              onNewTicket={() => setShowCreate(true)}
+              className="w-full"
+            />
           )}
         </div>
       </div>

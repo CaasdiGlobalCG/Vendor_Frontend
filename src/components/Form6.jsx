@@ -2,13 +2,12 @@ import React, { useContext, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Auth } from 'aws-amplify';
 import { VendorContext } from '../context/VendorContext';
-import StepIndicator from './StepIndicator';
-import SidebarContent from './SidebarContent';
+import KycFormShell from './KycFormShell';
 import ResubmitBanner from './ResubmitBanner';
 import config from '../config/env';
 import { resolveUserEmail } from '../utils/resolveUserIdentity';
 import { isResubmitMode, isSectionEditable } from '../utils/resubmitPermissions';
-import { clearKycStep, setKycStep } from './KycFormGuard';
+import { clearKycStep, getKycMaxStep, setKycStep } from './KycFormGuard';
 
 export default function Form6() {
   const navigate = useNavigate();
@@ -174,21 +173,14 @@ export default function Form6() {
   };
 
   return (
-    <div className="flex min-h-screen bg-surface">
-      {/* Left Sidebar */}
-      <SidebarContent />
-
-      {/* Right Content */}
-      <div className="flex-1 flex flex-col">
-        {/* Step Indicator */}
-        <StepIndicator currentStep={6} />
-
-        {/* Form Content */}
-        <div className="w-full max-w-4xl mx-auto px-4 pb-10 bg-surface md:px-0">
-          <h1 className="text-2xl font-bold text-ink mb-8">
-            Additional Details
-          </h1>
-
+    /* Shared KYC shell: black step rail + light content area (design only) */
+    <KycFormShell
+      currentStep={6}
+      maxStep={getKycMaxStep(currentUser?.email)}
+      onStepSelect={(n) => { setKycStep(n, currentUser?.email); navigate(`/Form${n}`); }}
+      title="Additional Details"
+      subtitle="A few last details before you review and submit your profile."
+    >
           <ResubmitBanner sectionKey="additional" />
 
           <form onSubmit={handleSubmit} className="max-w-none space-y-8">
@@ -197,48 +189,48 @@ export default function Form6() {
             {/* Form Fields */}
             <div className="space-y-6">
               {/* Client References */}
-              <div className="flex flex-col md:flex-row items-start gap-6">
-                <div className="w-full md:w-1/3">
-                  <label className="text-sm font-semibold text-ink block mb-1">Client References</label>
-                  <p className="text-xs text-dim">provide client references</p>
+              <div className="flex flex-col gap-4 rounded-xl border border-neutral-200 bg-white p-6 kyc-card kyc-fade-up">
+                <div className="flex flex-wrap items-baseline justify-between gap-2">
+                  <label className="text-sm font-semibold text-neutral-900 block mb-1">Client References</label>
+                  <p className="text-xs text-neutral-500">provide client references</p>
                 </div>
-                <div className="w-full md:w-2/3">
+                <div className="grid w-full gap-4 sm:grid-cols-2">
                   <textarea
                     name="clientReferences"
                     value={formData.clientReferences}
                     onChange={handleInputChange}
-                    className="w-full border border-line rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ink focus:border-transparent resize-none"
+                    className="w-full border border-neutral-200 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-neutral-900 focus:border-transparent resize-none"
                     rows={3}
                   />
                 </div>
               </div>
 
               {/* Special Instructions */}
-              <div className="flex flex-col md:flex-row items-start gap-6">
-                <div className="w-full md:w-1/3">
-                  <label className="text-sm font-semibold text-ink block mb-1">Special Instructions</label>
-                  <p className="text-xs text-dim">provide special instructions or notes</p>
+              <div className="flex flex-col gap-4 rounded-xl border border-neutral-200 bg-white p-6 kyc-card kyc-fade-up">
+                <div className="flex flex-wrap items-baseline justify-between gap-2">
+                  <label className="text-sm font-semibold text-neutral-900 block mb-1">Special Instructions</label>
+                  <p className="text-xs text-neutral-500">provide special instructions or notes</p>
                 </div>
-                <div className="w-full md:w-2/3">
+                <div className="grid w-full gap-4 sm:grid-cols-2">
                   <textarea
                     name="specialInstructions"
                     value={formData.specialInstructions}
                     onChange={handleInputChange}
-                    className="w-full border border-line rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ink focus:border-transparent resize-none"
+                    className="w-full border border-neutral-200 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-neutral-900 focus:border-transparent resize-none"
                     rows={3}
                   />
                 </div>
               </div>
 
               {/* Additional Document */}
-              <div className="flex flex-col md:flex-row items-start gap-6">
-                <div className="w-full md:w-1/3">
-                  <label className="text-sm font-semibold text-ink block mb-1">Additional Document</label>
-                  <p className="text-xs text-dim">provide additional document</p>
+              <div className="flex flex-col gap-4 rounded-xl border border-neutral-200 bg-white p-6 kyc-card kyc-fade-up">
+                <div className="flex flex-wrap items-baseline justify-between gap-2">
+                  <label className="text-sm font-semibold text-neutral-900 block mb-1">Additional Document</label>
+                  <p className="text-xs text-neutral-500">provide additional document</p>
                 </div>
-                <div className="w-full md:w-2/3">
+                <div className="grid w-full gap-4 sm:grid-cols-2">
                   {formData.additionalDocument ? (
-                    <div className="border border-line rounded px-3 py-2">
+                    <div className="border border-neutral-200 rounded px-3 py-2">
                       <div className="text-sm">{formData.additionalDocument.name}</div>
                       <button
                         type="button"
@@ -249,7 +241,7 @@ export default function Form6() {
                       </button>
                     </div>
                   ) : (
-                    <label className="cursor-pointer border border-line rounded px-3 py-2 text-sm hover:border-line transition-colors block">
+                    <label className="cursor-pointer border border-neutral-200 rounded px-3 py-2 text-sm hover:border-neutral-200 transition-colors block">
                       Click to upload additional document
                       <input
                         type="file"
@@ -263,12 +255,12 @@ export default function Form6() {
               </div>
 
               {/* Acknowledgment */}
-              <div className="flex flex-col md:flex-row items-start gap-6">
-                <div className="w-full md:w-1/3">
-                  <label className="text-sm font-semibold text-ink block mb-1">Acknowledgment</label>
-                  <p className="text-xs text-dim">confirm agreement</p>
+              <div className="flex flex-col gap-4 rounded-xl border border-neutral-200 bg-white p-6 kyc-card kyc-fade-up">
+                <div className="flex flex-wrap items-baseline justify-between gap-2">
+                  <label className="text-sm font-semibold text-neutral-900 block mb-1">Acknowledgment</label>
+                  <p className="text-xs text-neutral-500">confirm agreement</p>
                 </div>
-                <div className="w-full md:w-2/3">
+                <div className="grid w-full gap-4 sm:grid-cols-2">
                   <label className="flex items-start gap-3">
                     <input
                       type="checkbox"
@@ -276,11 +268,11 @@ export default function Form6() {
                       checked={formData.acknowledgment}
                       onChange={handleInputChange}
                       required
-                      className="mt-1 h-4 w-4 text-ink border-line rounded focus:ring-ink"
+                      className="mt-1 h-4 w-4 text-neutral-900 border-neutral-200 rounded focus:ring-neutral-900"
                     />
-                    <span className="text-sm text-ink leading-relaxed">
+                    <span className="text-sm text-neutral-900 leading-relaxed">
                       I, the undersigned, hereby confirm that the details provided are accurate and true to the best of my knowledge. I agree to abide by the policies and terms set by{" "}
-                      <span className="font-semibold text-ink">
+                      <span className="font-semibold text-neutral-900">
                         Caasdi Global
                       </span>
                       .
@@ -297,7 +289,7 @@ export default function Form6() {
               <button
                 type="button"
                 onClick={handlePrevious}
-                className="px-8 py-3 text-dim hover:text-ink transition-colors"
+                className="px-8 py-3 text-neutral-500 hover:text-neutral-900 transition-colors"
                 disabled={isSubmitting}
               >
                 Back
@@ -305,18 +297,16 @@ export default function Form6() {
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className={`px-8 py-3 rounded-lg font-medium  focus:outline-none focus:ring-2 focus:ring-ink transition-all ${
+                className={`px-8 py-3 rounded-lg font-medium  focus:outline-none focus:ring-2 focus:ring-neutral-900 transition-all ${
                   isSubmitting 
-                    ? 'bg-cta cursor-not-allowed text-cta-foreground' 
-                    : 'text-cta-foreground bg-black hover:from-black/90 hover:to-black/90'
+                    ? 'bg-neutral-900 cursor-not-allowed text-white' 
+                    : 'text-white bg-black hover:from-black/90 hover:to-black/90'
                 }`}
               >
                 {isSubmitting ? 'Submitting...' : (isResubmit ? 'Resubmit' : 'Submit')}
               </button>
             </div>
           </form>
-        </div>
-      </div>
-    </div>
+    </KycFormShell>
   );
 }

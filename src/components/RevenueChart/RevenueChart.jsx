@@ -1,39 +1,10 @@
 import React, { useEffect, useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { BarChart3, CircleDollarSign, TrendingUp, ArrowRight } from "lucide-react";
-// Import necessary chart types and elements from react-chartjs-2 and chart.js
+// Import necessary chart types from react-chartjs-2
 import { Bar, Line, Pie } from "react-chartjs-2";
-import {
-  Chart as ChartJS,
-  CategoryScale,
-  LinearScale,
-  BarElement,
-  LineElement,
-  PointElement, // Needed for Line chart points
-  ArcElement,   // Needed for Pie chart segments
-  Title,
-  Tooltip,
-  Legend,
-  TimeScale, // Import TimeScale for date handling
-  Filler        // Import Filler for area under line chart (optional)
-} from "chart.js";
-import 'chartjs-adapter-date-fns'; // Import the date adapter
+import "../../config/chartSetup"; // Registers Chart.js scales/elements/plugins
 import { format } from 'date-fns'; // Import format function
-
-// Register all necessary components including TimeScale and Filler
-ChartJS.register(
-  CategoryScale,
-  LinearScale,
-  TimeScale, // Register TimeScale
-  BarElement,
-  LineElement,
-  PointElement,
-  ArcElement,
-  Title,
-  Tooltip,
-  Legend,
-  Filler // Register Filler
-);
 
 // Helper to format currency
 const formatCurrency = (value) => {

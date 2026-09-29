@@ -22,6 +22,7 @@ import {
   ChevronDown,
 } from "lucide-react";
 import { Bar, Line, Doughnut } from "react-chartjs-2";
+import "../../config/chartSetup";
 
 // --- Color Palette ---
 // Monochrome gray scale — readable on both light and dark card surfaces.

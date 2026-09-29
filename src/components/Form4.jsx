@@ -6,12 +6,11 @@ import { uploadFileToS3, deleteFileFromS3 } from "../utils/fileUpload";
 import { resolveUserEmail } from "../utils/resolveUserIdentity";
 import { searchIFSCCode } from "../utils/ifscData";
 import { processChequeOCR } from "../utils/textractOCR";
-import StepIndicator from "./StepIndicator";
-import SidebarContent from "./SidebarContent";
+import KycFormShell from "./KycFormShell";
 import OCRPreviewModal from "./OCRPreviewModal";
 import ResubmitBanner from "./ResubmitBanner";
 import { isResubmitMode, isSectionEditable } from "../utils/resubmitPermissions";
-import { setKycStep } from "./KycFormGuard";
+import { getKycMaxStep, setKycStep } from "./KycFormGuard";
 
 export default function Form4() {
   const navigate = useNavigate();
@@ -382,12 +381,12 @@ export default function Form4() {
   };
 
   const renderField = (label, name, showFieldWarning = false) => (
-    <div className="flex flex-col md:flex-row items-start gap-6">
-      <div className="w-full md:w-1/3">
-        <label className="text-sm font-semibold text-ink block mb-1">{label}</label>
-        <p className="text-xs text-dim">provide {label.toLowerCase()}</p>
+    <div className="flex flex-col gap-4 rounded-xl border border-neutral-200 bg-white p-6 kyc-card kyc-fade-up">
+      <div className="flex flex-wrap items-baseline justify-between gap-2">
+        <label className="text-sm font-semibold text-neutral-900 block mb-1">{label}</label>
+        <p className="text-xs text-neutral-500">provide {label.toLowerCase()}</p>
       </div>
-      <div className="relative w-full md:w-2/3">
+      <div className="relative grid w-full gap-4 sm:grid-cols-2">
         <input
           required
           type="text"
@@ -395,7 +394,7 @@ export default function Form4() {
           value={formData[name]}
           onChange={handleInputChange}
           placeholder={label}
-          className="w-full border border-line rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ink focus:border-transparent"
+          className="w-full border border-neutral-200 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-neutral-900 focus:border-transparent"
         />
         
         {showFieldWarning && (
@@ -412,21 +411,14 @@ export default function Form4() {
   );
 
   return (
-    <div className="flex min-h-screen bg-surface">
-      {/* Left Sidebar */}
-      <SidebarContent />
-
-      {/* Right Content */}
-      <div className="flex-1 flex flex-col">
-        {/* Step Indicator */}
-        <StepIndicator currentStep={4} />
-
-        {/* Form Content */}
-        <div className="w-full max-w-4xl mx-auto px-4 pb-10 bg-surface md:px-0">
-          <h1 className="text-2xl font-bold text-ink mb-8">
-            Bank Details
-          </h1>
-
+    /* Shared KYC shell: black step rail + light content area (design only) */
+    <KycFormShell
+      currentStep={4}
+      maxStep={getKycMaxStep(draftEmail)}
+      onStepSelect={(n) => { setKycStep(n, draftEmail); navigate(`/Form${n}`); }}
+      title="Bank Details"
+      subtitle="Used for payouts and invoice settlement. Nothing is charged here."
+    >
           <ResubmitBanner sectionKey="bank" />
 
           <form onSubmit={handleSubmit} className="max-w-none space-y-8">
@@ -434,21 +426,21 @@ export default function Form4() {
             <fieldset disabled={sectionReadOnly} className="contents space-y-8">
             {/* Bank Information Section */}
             <div className="space-y-6">
-              <div className="flex flex-col md:flex-row items-start gap-6">
-                <div className="w-full md:w-1/3">
-                  <h3 className="text-sm font-semibold text-ink block mb-1">Bank Information</h3>
-                  <p className="text-xs text-dim">Provide your bank details for verification and onboarding.</p>
+              <div className="flex flex-col gap-4 rounded-xl border border-neutral-200 bg-white p-6 kyc-card kyc-fade-up">
+                <div className="flex flex-wrap items-baseline justify-between gap-2">
+                  <h3 className="text-sm font-semibold text-neutral-900 block mb-1">Bank Information</h3>
+                  <p className="text-xs text-neutral-500">Provide your bank details for verification and onboarding.</p>
                 </div>
-                <div className="w-full md:w-2/3"></div>
+                <div className="grid w-full gap-4 sm:grid-cols-2"></div>
               </div>
 
               {/* IFSC Code with Verify Button */}
-              <div className="flex flex-col md:flex-row items-start gap-6">
-                <div className="w-full md:w-1/3">
-                  <label className="text-sm font-semibold text-ink block mb-1">IFSC Code</label>
-                  <p className="text-xs text-dim">Enter and verify IFSC code</p>
+              <div className="flex flex-col gap-4 rounded-xl border border-neutral-200 bg-white p-6 kyc-card kyc-fade-up">
+                <div className="flex flex-wrap items-baseline justify-between gap-2">
+                  <label className="text-sm font-semibold text-neutral-900 block mb-1">IFSC Code</label>
+                  <p className="text-xs text-neutral-500">Enter and verify IFSC code</p>
                 </div>
-                <div className="w-full md:w-2/3">
+                <div className="grid w-full gap-4 sm:grid-cols-2">
                   <div className="flex gap-2">
                     <input
                       required
@@ -457,13 +449,13 @@ export default function Form4() {
                       value={formData.ifscCode}
                       onChange={handleInputChange}
                       placeholder="e.g., HDFC0000001"
-                      className="flex-1 border border-line rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ink focus:border-transparent uppercase"
+                      className="flex-1 border border-neutral-200 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-neutral-900 focus:border-transparent uppercase"
                     />
                     <button
                       type="button"
                       onClick={handleVerifyIFSC}
                       disabled={isVerifying || !formData.ifscCode}
-                      className="px-4 py-2 text-sm font-medium border border-line bg-surface-hover text-ink rounded hover:bg-surface-hover transition-colors disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
+                      className="px-4 py-2 text-sm font-medium border border-neutral-200 bg-neutral-100 text-neutral-900 rounded hover:bg-neutral-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
                     >
                       {isVerifying ? "Verifying..." : "Verify"}
                     </button>
@@ -481,12 +473,12 @@ export default function Form4() {
               </div>
 
               {/* Bank Name - Auto-filled from IFSC */}
-              <div className="flex flex-col md:flex-row items-start gap-6">
-                <div className="w-full md:w-1/3">
-                  <label className="text-sm font-semibold text-ink block mb-1">Bank Name</label>
-                  <p className="text-xs text-dim">Auto-filled from IFSC</p>
+              <div className="flex flex-col gap-4 rounded-xl border border-neutral-200 bg-white p-6 kyc-card kyc-fade-up">
+                <div className="flex flex-wrap items-baseline justify-between gap-2">
+                  <label className="text-sm font-semibold text-neutral-900 block mb-1">Bank Name</label>
+                  <p className="text-xs text-neutral-500">Auto-filled from IFSC</p>
                 </div>
-                <div className="w-full md:w-2/3">
+                <div className="grid w-full gap-4 sm:grid-cols-2">
                   <input
                     type="text"
                     name="bankName"
@@ -494,18 +486,18 @@ export default function Form4() {
                     onChange={handleInputChange}
                     placeholder="Bank name (auto-filled)"
                     disabled
-                    className="w-full border border-line rounded px-3 py-2 text-sm bg-surface-hover text-dim cursor-not-allowed"
+                    className="w-full border border-neutral-200 rounded px-3 py-2 text-sm bg-neutral-100 text-neutral-500 cursor-not-allowed"
                   />
                 </div>
               </div>
 
               {/* Branch Address - Auto-filled from IFSC */}
-              <div className="flex flex-col md:flex-row items-start gap-6">
-                <div className="w-full md:w-1/3">
-                  <label className="text-sm font-semibold text-ink block mb-1">Branch Address</label>
-                  <p className="text-xs text-dim">Auto-filled from IFSC</p>
+              <div className="flex flex-col gap-4 rounded-xl border border-neutral-200 bg-white p-6 kyc-card kyc-fade-up">
+                <div className="flex flex-wrap items-baseline justify-between gap-2">
+                  <label className="text-sm font-semibold text-neutral-900 block mb-1">Branch Address</label>
+                  <p className="text-xs text-neutral-500">Auto-filled from IFSC</p>
                 </div>
-                <div className="w-full md:w-2/3">
+                <div className="grid w-full gap-4 sm:grid-cols-2">
                   <input
                     type="text"
                     name="branchAddress"
@@ -513,18 +505,18 @@ export default function Form4() {
                     onChange={handleInputChange}
                     placeholder="Branch address (auto-filled)"
                     disabled
-                    className="w-full border border-line rounded px-3 py-2 text-sm bg-surface-hover text-dim cursor-not-allowed"
+                    className="w-full border border-neutral-200 rounded px-3 py-2 text-sm bg-neutral-100 text-neutral-500 cursor-not-allowed"
                   />
                 </div>
               </div>
 
               {/* Account Number */}
-              <div className="flex flex-col md:flex-row items-start gap-6">
-                <div className="w-full md:w-1/3">
-                  <label className="text-sm font-semibold text-ink block mb-1">Account Number</label>
-                  <p className="text-xs text-dim">Provide account number</p>
+              <div className="flex flex-col gap-4 rounded-xl border border-neutral-200 bg-white p-6 kyc-card kyc-fade-up">
+                <div className="flex flex-wrap items-baseline justify-between gap-2">
+                  <label className="text-sm font-semibold text-neutral-900 block mb-1">Account Number</label>
+                  <p className="text-xs text-neutral-500">Provide account number</p>
                 </div>
-                <div className="w-full md:w-2/3">
+                <div className="grid w-full gap-4 sm:grid-cols-2">
                   <input
                     required
                     type="text"
@@ -532,18 +524,18 @@ export default function Form4() {
                     value={formData.accountNumber}
                     onChange={handleInputChange}
                     placeholder="Account number (max 16 digits)"
-                    className="w-full border border-line rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ink focus:border-transparent"
+                    className="w-full border border-neutral-200 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-neutral-900 focus:border-transparent"
                   />
                 </div>
               </div>
 
               {/* Account Name */}
-              <div className="flex flex-col md:flex-row items-start gap-6">
-                <div className="w-full md:w-1/3">
-                  <label className="text-sm font-semibold text-ink block mb-1">Account Name</label>
-                  <p className="text-xs text-dim">Provide account name</p>
+              <div className="flex flex-col gap-4 rounded-xl border border-neutral-200 bg-white p-6 kyc-card kyc-fade-up">
+                <div className="flex flex-wrap items-baseline justify-between gap-2">
+                  <label className="text-sm font-semibold text-neutral-900 block mb-1">Account Name</label>
+                  <p className="text-xs text-neutral-500">Provide account name</p>
                 </div>
-                <div className="w-full md:w-2/3">
+                <div className="grid w-full gap-4 sm:grid-cols-2">
                   <input
                     required
                     type="text"
@@ -551,7 +543,7 @@ export default function Form4() {
                     value={formData.accountName}
                     onChange={handleInputChange}
                     placeholder="Account name"
-                    className="w-full border border-line rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ink focus:border-transparent"
+                    className="w-full border border-neutral-200 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-neutral-900 focus:border-transparent"
                   />
                 </div>
               </div>
@@ -559,15 +551,15 @@ export default function Form4() {
 
 
             {/* Blank Cheque Upload with OCR */}
-            <div className="flex flex-col md:flex-row items-start gap-6">
-                <div className="w-full md:w-1/3">
-                  <h3 className="text-sm font-semibold text-ink block mb-1">Blank Cheque</h3>
-                  <p className="text-xs text-dim">Upload a scanned copy of a blank cheque (we'll extract account details with OCR).</p>
+            <div className="flex flex-col gap-4 rounded-xl border border-neutral-200 bg-white p-6 kyc-card kyc-fade-up">
+                <div className="flex flex-wrap items-baseline justify-between gap-2">
+                  <h3 className="text-sm font-semibold text-neutral-900 block mb-1">Blank Cheque</h3>
+                  <p className="text-xs text-neutral-500">Upload a scanned copy of a blank cheque (we'll extract account details with OCR).</p>
                 </div>
-                <div className="w-full md:w-2/3">
+                <div className="grid w-full gap-4 sm:grid-cols-2">
                   {/* File Upload Area */}
                   <label className={`cursor-pointer border-2 border-dashed rounded px-4 py-3 text-sm transition-colors block ${
-                    ocrProcessing ? 'border-info/30 bg-info/10' : 'border-line hover:border-line'
+                    ocrProcessing ? 'border-info/30 bg-info/10' : 'border-neutral-200 hover:border-neutral-200'
                   }`}>
                     {ocrProcessing ? (
                       <div className="space-y-3">
@@ -582,7 +574,7 @@ export default function Form4() {
                             <svg className="w-4 h-4 text-success" fill="currentColor" viewBox="0 0 20 20">
                               <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                             </svg>
-                            <span className="text-sm text-ink">{pendingChequeFile.name}</span>
+                            <span className="text-sm text-neutral-900">{pendingChequeFile.name}</span>
                           </div>
                         )}
                         <p className="text-xs text-info ml-7">This may take up to 30 seconds...</p>
@@ -594,7 +586,7 @@ export default function Form4() {
                             <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                           </svg>
                           <div className="flex-1">
-                            <p className="text-sm font-semibold text-ink">{formData.blankCheque.name}</p>
+                            <p className="text-sm font-semibold text-neutral-900">{formData.blankCheque.name}</p>
                             {formData.blankCheque.uploading ? (
                               <p className="text-xs text-info flex items-center gap-1">
                                 <svg className="w-3 h-3 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -619,7 +611,7 @@ export default function Form4() {
                         </div>
                       </div>
                     ) : (
-                      <div className="flex items-center gap-2 text-dim">
+                      <div className="flex items-center gap-2 text-neutral-500">
                         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
                         </svg>
@@ -636,7 +628,7 @@ export default function Form4() {
                       className="hidden"
                     />
                   </label>
-                  <p className="text-xs text-dim mt-2">Max 5MB • OCR will extract account number and name automatically</p>
+                  <p className="text-xs text-neutral-500 mt-2">Max 5MB • OCR will extract account number and name automatically</p>
                 </div>
               </div>
             </fieldset>
@@ -647,14 +639,14 @@ export default function Form4() {
               <button
                 type="button"
                 onClick={handlePrevious}
-                className="px-8 py-3 text-dim hover:text-ink transition-colors"
+                className="px-8 py-3 text-neutral-500 hover:text-neutral-900 transition-colors"
               >
                 Back
               </button>
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className="text-white px-8 py-3 rounded-lg font-medium bg-black hover:from-black/90 hover:to-black/90 focus:outline-none focus:ring-2 focus:ring-ink disabled:opacity-60 disabled:cursor-not-allowed"
+                className="text-white px-8 py-3 rounded-lg font-medium bg-black hover:from-black/90 hover:to-black/90 focus:outline-none focus:ring-2 focus:ring-neutral-900 disabled:opacity-60 disabled:cursor-not-allowed"
               >
                 {isSubmitting ? "Please wait..." : "Next"}
               </button>
@@ -671,8 +663,6 @@ export default function Form4() {
             onClose={() => setOcrModalOpen(false)}
             isLoading={false}
           />
-        </div>
-      </div>
-    </div>
+    </KycFormShell>
   );
 }

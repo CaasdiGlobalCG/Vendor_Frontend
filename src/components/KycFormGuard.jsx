@@ -6,6 +6,9 @@ import { resolveUserEmail } from "../utils/resolveUserIdentity";
 
 const STEP_KEY = "kycStep"; // global marker — works even when email isn't resolved yet
 const EMAIL_STEP_KEY = (email) => `kycStep_${email}`;
+// furthest step ever reached — powers clickable rail steps + free back-navigation
+const MAX_STEP_KEY = "kycMaxStep";
+const EMAIL_MAX_STEP_KEY = (email) => `kycMaxStep_${email}`;
 
 const clamp = (n) => Math.min(Math.max(n, 1), 6);
 
@@ -21,17 +24,40 @@ export function getKycStep(email) {
   return Number.isNaN(n) ? 1 : clamp(n);
 }
 
+/** Furthest step ever reached — any step <= this stays open for navigation/edits. */
+export function getKycMaxStep(email) {
+  const raw = localStorage.getItem(email ? EMAIL_MAX_STEP_KEY(email) : MAX_STEP_KEY)
+    ?? localStorage.getItem(MAX_STEP_KEY);
+  const n = parseInt(raw || "", 10);
+  // no recorded max yet (users already mid-flow): fall back to current position
+  // so their existing progress still unlocks the rail
+  return Number.isNaN(n) ? getKycStep(email) : clamp(n);
+}
+
 /** Set the current position. Called by Next/Previous and form entry points. */
 export function setKycStep(step, email) {
+  // read max BEFORE overwriting the marker — getKycMaxStep falls back to the
+  // marker when no max is stored, so reading after would always look equal
+  const max = getKycMaxStep(email);
   const v = String(clamp(step));
   localStorage.setItem(STEP_KEY, v);
   if (email) localStorage.setItem(EMAIL_STEP_KEY(email), v);
+  // bump the furthest-reached marker — it never shrinks, so going Back keeps
+  // later steps reachable through the rail
+  if (clamp(step) > max) {
+    localStorage.setItem(MAX_STEP_KEY, v);
+    if (email) localStorage.setItem(EMAIL_MAX_STEP_KEY(email), v);
+  }
 }
 
 /** Called after final submission (Form6 -> /Auditorapprove) — resets the flow. */
 export function clearKycStep(email) {
   localStorage.removeItem(STEP_KEY);
-  if (email) localStorage.removeItem(EMAIL_STEP_KEY(email));
+  localStorage.removeItem(MAX_STEP_KEY);
+  if (email) {
+    localStorage.removeItem(EMAIL_STEP_KEY(email));
+    localStorage.removeItem(EMAIL_MAX_STEP_KEY(email));
+  }
 }
 
 /**
@@ -54,7 +80,10 @@ export default function KycFormGuard({ step, children }) {
       }
       if (cancelled) return;
       const allowed = getKycStep(email);
-      if (step !== allowed) {
+      const maxAllowed = getKycMaxStep(email);
+      // every step already reached stays open — users can jump back via the rail
+      // or URL to edit earlier forms; only never-reached steps bounce
+      if (step > maxAllowed) {
         setRedirectTo(`/Form${allowed}`);
       }
       setReady(true);

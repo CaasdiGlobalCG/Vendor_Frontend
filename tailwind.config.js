@@ -82,12 +82,68 @@ export default {
         'line-active': v('--text-primary'),
         'line-inactive': v('--border-subtle'),
         'line-inactive-darker': v('--text-muted'),
+
+        // ── Operon brand palette (BRAND.md) ───────────────────
+        // Namespaced `op-*` on purpose: the bare names `ink` / `paper` already
+        // exist above as THEME tokens (they flip with light/dark), so reusing
+        // them here would silently override app-wide colours. The brand palette
+        // is a fixed monochrome, so it gets its own namespace.
+        'op-ink': '#000000',
+        'op-paper': '#FFFFFF',
+        'op-cloud': '#F0F0F0',
+        'op-ink-70': 'rgba(0,0,0,0.70)',
+        'op-ink-55': 'rgba(0,0,0,0.55)',
+        'op-ink-40': 'rgba(0,0,0,0.40)',
+        'op-ink-30': 'rgba(0,0,0,0.30)',
+        'op-ink-14': 'rgba(0,0,0,0.14)',
+        'op-ink-08': 'rgba(0,0,0,0.08)',
+        'op-ink-04': 'rgba(0,0,0,0.04)',
+        'op-paper-70': 'rgba(255,255,255,0.70)',
+        'op-paper-55': 'rgba(255,255,255,0.55)',
+        'op-paper-30': 'rgba(255,255,255,0.30)',
+        'op-paper-14': 'rgba(255,255,255,0.14)',
+        'op-paper-08': 'rgba(255,255,255,0.08)',
       },
       fontFamily: {
         sans: ['Inter', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif'],
         inter: ['Inter', 'sans-serif'],
         poppins: ['Inter', 'sans-serif'], // alias — Poppins removed, resolves to Inter
         montserrat: ['Inter', 'sans-serif'], // alias — Montserrat removed
+        // Brand roles (BRAND.md §2): display = Poppins, mono = JetBrains Mono.
+        display: ['Poppins', 'system-ui', 'sans-serif'],
+        mono: ['"JetBrains Mono"', 'ui-monospace', 'SFMono-Regular', 'monospace'],
+      },
+      fontSize: {
+        // Brand type scale (BRAND.md §2). Additive names only — no overrides
+        // of Tailwind defaults, so existing pages are unaffected.
+        'mono-xs': ['10px', { lineHeight: '14px', letterSpacing: '0.08em' }],
+        mono: ['11px', { lineHeight: '14px', letterSpacing: '0.08em' }],
+        'mono-lg': ['12px', { lineHeight: '16px', letterSpacing: '0.06em' }],
+        body: ['17px', { lineHeight: '28px' }],
+        lead: ['20px', { lineHeight: '32px' }],
+        h4: ['22px', { lineHeight: '30px', letterSpacing: '-0.01em' }],
+        h3: ['32px', { lineHeight: '40px', letterSpacing: '-0.015em' }],
+        h2: ['44px', { lineHeight: '48px', letterSpacing: '-0.025em' }],
+        'h2-lg': ['64px', { lineHeight: '60px', letterSpacing: '-0.03em' }],
+        h1: ['48px', { lineHeight: '52px', letterSpacing: '-0.03em' }],
+        'h1-lg': ['72px', { lineHeight: '68px', letterSpacing: '-0.035em' }],
+      },
+      maxWidth: {
+        // NOTE: `prose` is deliberately NOT set here — Tailwind ships
+        // max-w-prose (65ch) and overriding it would shift existing pages.
+        content: '1200px',
+        narrow: '880px',
+        measure: '58ch',
+      },
+      transitionTimingFunction: {
+        signal: 'cubic-bezier(0.22, 0.61, 0.36, 1)',
+      },
+      transitionDuration: {
+        120: '120ms',
+        180: '180ms',
+        240: '240ms',
+        320: '320ms',
+        440: '440ms',
       },
       borderRadius: {
         sm: '6px',

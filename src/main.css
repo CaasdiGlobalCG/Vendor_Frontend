@@ -64,6 +64,70 @@
   }
 }
 
+/* ============================================================
+   Brand motion utilities (BRAND.md §6)
+   Easing `ease-signal`; durations fast 120-180 / base 220-320 /
+   slow 360-520; stagger 50-90ms. Transform + opacity only — no
+   layout properties are animated. All of these are neutralised by
+   the global prefers-reduced-motion block further down.
+   Available to auth screens — components/auth/* currently animate
+   with inline Tailwind transitions.
+   ============================================================ */
+:root {
+  --ease-signal: cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+
+/* Fade + 14px rise — the brand's default entrance (scroll/mount reveal). */
+.auth-rise {
+  animation: authRise 440ms var(--ease-signal) both;
+}
+
+/* Fade only — for text that must not move (numeric labels, metadata). */
+.auth-fade {
+  animation: authFade 320ms var(--ease-signal) both;
+}
+
+/* Lateral entrance ±22px, used by split-panel content. */
+.auth-rise-left {
+  animation: authRiseLeft 440ms var(--ease-signal) both;
+}
+
+/* Hairline draw: scaleX 0 → 1 from the left. Applied to the active
+   underline / rail so structure "draws" instead of appearing. */
+.auth-draw {
+  transform-origin: left center;
+  animation: authDraw 320ms var(--ease-signal) both;
+}
+
+@keyframes authRise {
+  from { opacity: 0; transform: translateY(14px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes authFade {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes authRiseLeft {
+  from { opacity: 0; transform: translateX(-22px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes authDraw {
+  from { transform: scaleX(0); }
+  to   { transform: scaleX(1); }
+}
+
+/* Brand press feedback: scale(0.97) on :active for CTAs. */
+.brand-press {
+  transition: transform 150ms var(--ease-signal), opacity 150ms var(--ease-signal),
+    background-color 150ms var(--ease-signal), color 150ms var(--ease-signal);
+}
+.brand-press:active {
+  transform: scale(0.97);
+}
+
 /* Tabular numerals — amounts, IDs, timers (prevents column jitter) */
 .tnum {
   font-feature-settings: "tnum";
@@ -193,4 +257,53 @@
     opacity: 1;
     transform: none;
   }
+}
+
+/* ---------------------------------------------------------------------------
+   KYC onboarding shell (Form1-6) - restrained motion.
+   All animations are neutralised by the global prefers-reduced-motion override
+   at the bottom of this file, so no per-rule guard is needed here.
+   --------------------------------------------------------------------------- */
+
+/* sections / rail content easing in as a page is opened or a step advances.
+   IMPORTANT: fill-mode must be `backwards`, never `both`/`forwards` — an
+   animation on `transform` keeps a stacking context on the element for as
+   long as it is applied, and a forwards fill applies it FOREVER. That trapped
+   every section card in its own stacking context, so absolutely-positioned
+   dropdowns (SearchableSelect, z-50) rendered BEHIND the next card. With
+   `backwards` the animation only covers the delay period; once it finishes
+   the element has no animated properties and no stacking context. */
+@keyframes kyc-fade-up {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: none; }
+}
+
+/* progress fill grows once on mount, then animates via width transitions */
+@keyframes kyc-bar-grow {
+  from { transform: scaleX(0); }
+  to   { transform: none; }
+}
+
+.kyc-fade-up {
+  animation: kyc-fade-up 0.4s cubic-bezier(0.22, 0.61, 0.36, 1) backwards;
+}
+
+.kyc-progress-bar {
+  transform-origin: left center;
+  animation: kyc-bar-grow 0.7s cubic-bezier(0.22, 0.61, 0.36, 1) backwards;
+  transition: width 0.5s cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+
+/* step markers ease between todo / active / done states */
+.kyc-step {
+  transition: color 0.25s ease, background-color 0.25s ease,
+              border-color 0.25s ease, transform 0.25s ease;
+}
+
+/* section cards ease their border on hover, no lift (borders over shadows) */
+.kyc-card {
+  transition: border-color 0.25s ease;
+}
+.kyc-card:hover {
+  border-color: rgb(163 163 163);
 }

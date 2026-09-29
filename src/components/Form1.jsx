@@ -5,9 +5,8 @@ import { UserContext } from "../context/UserContext";
 import { getStates, getCitiesByState } from "../utils/statesAndCities";
 import { resolveUserIdentity } from "../utils/resolveUserIdentity";
 import { isResubmitMode, isSectionEditable } from "../utils/resubmitPermissions";
-import { setKycStep } from "./KycFormGuard";
-import StepIndicator from "./StepIndicator";
-import SidebarContent from "./SidebarContent";
+import { getKycMaxStep, setKycStep } from "./KycFormGuard";
+import KycFormShell from "./KycFormShell";
 import ResubmitBanner from "./ResubmitBanner";
 
 function Form1() {
@@ -248,10 +247,10 @@ function Form1() {
   };
 
   const renderField = (label, name, type = "text") => (
-    <div className="flex flex-col md:flex-row items-start gap-6">
-      <div className="w-full md:w-1/3">
-        <label className="text-sm font-semibold text-ink block mb-1">{label}</label>
-        <p className="text-xs text-dim">provide {label.toLowerCase()}</p>
+    <div className="flex flex-col gap-4 rounded-xl border border-neutral-200 bg-white p-6 kyc-card kyc-fade-up">
+      <div className="flex flex-wrap items-baseline justify-between gap-2">
+        <label className="text-sm font-semibold text-neutral-900 block mb-1">{label}</label>
+        <p className="text-xs text-neutral-500">provide {label.toLowerCase()}</p>
       </div>
       <input
         required
@@ -260,19 +259,19 @@ function Form1() {
         value={formData[name]}
         onChange={handleInputChange}
         placeholder={label}
-        className="w-full md:w-2/3 border border-line rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ink focus:border-transparent"
+        className="grid w-full gap-4 sm:grid-cols-2 border border-neutral-200 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-neutral-900 focus:border-transparent"
       />
     </div>
   );
 
   // Special render function for phone number field with warning popup
   const renderPhoneField = (label, name) => (
-    <div className="flex flex-col md:flex-row items-start gap-6">
-      <div className="w-full md:w-1/3">
-        <label className="text-sm font-semibold text-ink block mb-1">{label}</label>
-        <p className="text-xs text-dim">provide {label.toLowerCase()}</p>
+    <div className="flex flex-col gap-4 rounded-xl border border-neutral-200 bg-white p-6 kyc-card kyc-fade-up">
+      <div className="flex flex-wrap items-baseline justify-between gap-2">
+        <label className="text-sm font-semibold text-neutral-900 block mb-1">{label}</label>
+        <p className="text-xs text-neutral-500">provide {label.toLowerCase()}</p>
       </div>
-      <div className="w-full md:w-2/3 relative">
+      <div className="grid w-full gap-4 sm:grid-cols-2 relative">
         <input
           required
           type="text"
@@ -281,8 +280,8 @@ function Form1() {
           onChange={handleInputChange}
           placeholder={label}
           maxLength="10"
-          className={`w-full border rounded px-3 py-2 text-sm transition-all focus:outline-none focus:ring-2 focus:ring-ink focus:border-transparent ${
-            showPhoneWarning ? 'border-danger border-2' : 'border-line'
+          className={`w-full border rounded px-3 py-2 text-sm transition-all focus:outline-none focus:ring-2 focus:ring-neutral-900 focus:border-transparent ${
+            showPhoneWarning ? 'border-danger border-2' : 'border-neutral-200'
           }`}
         />
         
@@ -299,21 +298,14 @@ function Form1() {
   );
 
   return (
-    <div className="flex min-h-screen bg-surface">
-      {/* Left Sidebar */}
-      <SidebarContent />
-
-      {/* Right Content */}
-      <div className="flex-1 flex flex-col">
-        {/* Step Indicator */}
-        <StepIndicator currentStep={1} />
-
-        {/* Form Content */}
-        <div className="w-full max-w-4xl mx-auto px-4 pb-10 bg-surface md:px-0">
-          <h1 className="text-2xl font-bold text-ink mb-8">
-            Vendor Details
-          </h1>
-
+    /* Shared KYC shell: black step rail + light content area (design only) */
+    <KycFormShell
+      currentStep={1}
+      maxStep={getKycMaxStep(draftEmail)}
+      onStepSelect={(n) => { setKycStep(n, draftEmail); navigate(`/Form${n}`); }}
+      title="Vendor Details"
+      subtitle="Tell us about your business. Everything here can be edited later from your profile."
+    >
           <ResubmitBanner sectionKey="vendor" />
 
           <form onSubmit={handleSubmit} className="max-w-none space-y-8">
@@ -321,12 +313,12 @@ function Form1() {
             <fieldset disabled={sectionReadOnly} className="contents space-y-8">
             {/* Vendor Information Section */}
             <div className="space-y-6">
-              <div className="flex flex-col md:flex-row items-start gap-6">
-                <div className="w-full md:w-1/3">
-                  <h3 className="text-sm font-semibold text-ink block mb-1">Vendor Information</h3>
-                  <p className="text-xs text-dim">provide vendor info</p>
+              <div className="flex flex-col gap-4 rounded-xl border border-neutral-200 bg-white p-6 kyc-card kyc-fade-up">
+                <div className="flex flex-wrap items-baseline justify-between gap-2">
+                  <h3 className="text-sm font-semibold text-neutral-900 block mb-1">Vendor Information</h3>
+                  <p className="text-xs text-neutral-500">provide vendor info</p>
                 </div>
-                <div className="w-full md:w-2/3">
+                <div className="grid w-full gap-4 sm:grid-cols-2">
                   <input
                     required
                     type="text"
@@ -334,7 +326,7 @@ function Form1() {
                     value={formData.vendorName}
                     onChange={handleInputChange}
                     placeholder="Vendor name"
-                    className="w-full border border-line rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ink focus:border-transparent"
+                    className="w-full border border-neutral-200 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-neutral-900 focus:border-transparent"
                   />
                 </div>
               </div>
@@ -342,12 +334,12 @@ function Form1() {
 
             {/* Primary Contact Section */}
             <div className="space-y-6">
-              <div className="flex flex-col md:flex-row items-start gap-6">
-                <div className="w-full md:w-1/3">
-                  <h3 className="text-sm font-semibold text-ink block mb-1">Primary Contact name</h3>
-                  <p className="text-xs text-dim">provide your name</p>
+              <div className="flex flex-col gap-4 rounded-xl border border-neutral-200 bg-white p-6 kyc-card kyc-fade-up">
+                <div className="flex flex-wrap items-baseline justify-between gap-2">
+                  <h3 className="text-sm font-semibold text-neutral-900 block mb-1">Primary Contact name</h3>
+                  <p className="text-xs text-neutral-500">provide your name</p>
                 </div>
-                <div className="w-full md:w-2/3 space-y-4">
+                <div className="grid w-full gap-4 sm:grid-cols-2">
                   <input
                     required
                     type="text"
@@ -355,7 +347,7 @@ function Form1() {
                     value={formData.firstName}
                     onChange={handleInputChange}
                     placeholder="First name"
-                    className="w-full border border-line rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ink focus:border-transparent"
+                    className="w-full border border-neutral-200 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-neutral-900 focus:border-transparent"
                   />
                   <input
                     required
@@ -364,7 +356,7 @@ function Form1() {
                     value={formData.lastName}
                     onChange={handleInputChange}
                     placeholder="Last name"
-                    className="w-full border border-line rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ink focus:border-transparent"
+                    className="w-full border border-neutral-200 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-neutral-900 focus:border-transparent"
                   />
                 </div>
               </div>
@@ -372,18 +364,18 @@ function Form1() {
 
             {/* Contact Details Section */}
             <div className="space-y-6">
-              <div className="flex flex-col md:flex-row items-start gap-6">
-                <div className="w-full md:w-1/3">
-                  <h3 className="text-sm font-semibold text-ink block mb-1">Contact Details</h3>
-                  <p className="text-xs text-dim">Provide Contact details</p>
+              <div className="flex flex-col gap-4 rounded-xl border border-neutral-200 bg-white p-6 kyc-card kyc-fade-up">
+                <div className="flex flex-wrap items-baseline justify-between gap-2">
+                  <h3 className="text-sm font-semibold text-neutral-900 block mb-1">Contact Details</h3>
+                  <p className="text-xs text-neutral-500">Provide Contact details</p>
                 </div>
-                <div className="w-full md:w-2/3 space-y-4">
+                <div className="grid w-full gap-4 sm:grid-cols-2">
                   <div className="relative flex">
                     <select
                       name="countryCode"
                       value={formData.countryCode}
                       onChange={handleInputChange}
-                      className="border border-line rounded-l px-2 py-2 text-sm bg-canvas focus:outline-none focus:ring-2 focus:ring-ink focus:border-line"
+                      className="border border-neutral-200 rounded-l px-2 py-2 text-sm bg-neutral-50 focus:outline-none focus:ring-2 focus:ring-neutral-900 focus:border-neutral-200"
                     >
                       <option value="+91">+91 (IN)</option>
                       <option value="+1">+1 (US/CA)</option>
@@ -397,8 +389,8 @@ function Form1() {
                       onChange={handleInputChange}
                       placeholder="Phone number"
                       maxLength={PHONE_RULES[formData.countryCode]?.maxLength || 15}
-                      className={`flex-1 border border-l-0 rounded-r px-3 py-2 text-sm transition-all focus:outline-none focus:ring-2 focus:ring-ink focus:border-transparent ${
-                        showPhoneWarning ? 'border-danger border-2' : 'border-line'
+                      className={`flex-1 border border-l-0 rounded-r px-3 py-2 text-sm transition-all focus:outline-none focus:ring-2 focus:ring-neutral-900 focus:border-transparent ${
+                        showPhoneWarning ? 'border-danger border-2' : 'border-neutral-200'
                       }`}
                     />
                     {showPhoneWarning && (
@@ -415,7 +407,7 @@ function Form1() {
                     value={formData.organizationMailId}
                     onChange={handleInputChange}
                     placeholder="Organization mail ID"
-                    className="w-full border border-line rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ink focus:border-transparent"
+                    className="w-full border border-neutral-200 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-neutral-900 focus:border-transparent"
                   />
                 </div>
               </div>
@@ -423,12 +415,12 @@ function Form1() {
 
             {/* Address Section */}
             <div className="space-y-6">
-              <div className="flex flex-col md:flex-row items-start gap-6">
-                <div className="w-full md:w-1/3">
-                  <h3 className="text-sm font-semibold text-ink block mb-1">Address</h3>
-                  <p className="text-xs text-dim">Provide Address details</p>
+              <div className="flex flex-col gap-4 rounded-xl border border-neutral-200 bg-white p-6 kyc-card kyc-fade-up">
+                <div className="flex flex-wrap items-baseline justify-between gap-2">
+                  <h3 className="text-sm font-semibold text-neutral-900 block mb-1">Address</h3>
+                  <p className="text-xs text-neutral-500">Provide Address details</p>
                 </div>
-                <div className="w-full md:w-2/3 space-y-4">
+                <div className="grid w-full gap-4 sm:grid-cols-2">
                   <input
                     required
                     type="text"
@@ -436,18 +428,18 @@ function Form1() {
                     value={formData.address}
                     onChange={handleInputChange}
                     placeholder="Address"
-                    className="w-full border border-line rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ink focus:border-transparent"
+                    className="w-full border border-neutral-200 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-neutral-900 focus:border-transparent"
                   />
                   <select
                     required
                     name="state"
                     value={formData.state}
                     onChange={handleInputChange}
-                    className="w-full border border-line rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ink focus:border-transparent appearance-none bg-surface"
+                    className="w-full border border-neutral-200 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-neutral-900 focus:border-transparent appearance-none bg-white"
                   >
-                    <option value="" className="text-dim">Select State</option>
+                    <option value="" className="text-neutral-500">Select State</option>
                     {states.map((state) => (
-                      <option key={state} value={state} className="text-ink">
+                      <option key={state} value={state} className="text-neutral-900">
                         {state}
                       </option>
                     ))}
@@ -458,13 +450,13 @@ function Form1() {
                     value={formData.city}
                     onChange={handleInputChange}
                     disabled={!formData.state}
-                    className="w-full border border-line rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ink focus:border-transparent appearance-none bg-surface disabled:bg-canvas disabled:cursor-not-allowed disabled:text-dim"
+                    className="w-full border border-neutral-200 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-neutral-900 focus:border-transparent appearance-none bg-white disabled:bg-neutral-50 disabled:cursor-not-allowed disabled:text-neutral-500"
                   >
-                    <option value="" className="text-dim">
+                    <option value="" className="text-neutral-500">
                       {!formData.state ? "Select State first" : "Select City"}
                     </option>
                     {cities.map((city) => (
-                      <option key={city} value={city} className="text-ink">
+                      <option key={city} value={city} className="text-neutral-900">
                         {city}
                       </option>
                     ))}
@@ -476,7 +468,7 @@ function Form1() {
                     value={formData.pincode}
                     onChange={handleInputChange}
                     placeholder="Pincode"
-                    className="w-full border border-line rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ink focus:border-transparent"
+                    className="w-full border border-neutral-200 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-neutral-900 focus:border-transparent"
                   />
                 </div>
               </div>
@@ -505,22 +497,20 @@ function Form1() {
               <button
                 type="button"
                 onClick={() => navigate("/role-selection")}
-                className="px-8 py-3 text-dim hover:text-ink transition-colors"
+                className="px-8 py-3 text-neutral-500 hover:text-neutral-900 transition-colors"
               >
                 Back
               </button>
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className="text-white px-8 py-3 rounded-lg font-medium bg-black hover:from-black/90 hover:to-black/90 focus:outline-none focus:ring-2 focus:ring-ink disabled:opacity-60 disabled:cursor-not-allowed"
+                className="text-white px-8 py-3 rounded-lg font-medium bg-black hover:from-black/90 hover:to-black/90 focus:outline-none focus:ring-2 focus:ring-neutral-900 disabled:opacity-60 disabled:cursor-not-allowed"
               >
                 {isSubmitting ? "Please wait..." : "Next"}
               </button>
             </div>
         </form>
-        </div>
-      </div>
-    </div>
+    </KycFormShell>
   );
 }
 

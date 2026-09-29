@@ -1,231 +1,212 @@
-import React, { useState, useEffect, useContext } from "react";
-import NotificationItem from "./NotificationItem";
-import { ArrowPathIcon } from '@heroicons/react/24/solid'; // For loading indicator
-import { NotificationContext } from "../../context/NotificationContext";
+// ============================================================
+// FILE: NotificationList.jsx
+// PURPOSE: Vendor notifications page body, in the shared "Console" format — hero,
+//          stat strip, accessible filter tablist, and a dense list panel with all
+//          four async states.
+// CONNECTS TO: context/NotificationContext (data + mutations),
+//              components/console/ConsoleShell (shell + Tabs + Stats),
+//              components/dashboard (Panel), components/ui, ./NotificationItem.
+//
+// Fixes carried from the previous version:
+//   - the header band was `bg-black` with `text-ink` labels — black text on black in
+//     light mode (old NotificationList.jsx:119,168,172,176)
+//   - the active filter used `text-success` — colour as navigation state (:157)
+//   - `client` / `pm` filters matched on badge TEXT and could never match any type in
+//     TYPE_META; `saved` was unreachable because nothing can set `isSaved` (:37-56).
+//     Those three are gone; `lead` now matches on the real `type` field, not a label.
+//   - `unreadCount` was recomputed locally instead of using the context value (:66)
+// ============================================================
+
+import { useContext, useMemo, useState } from 'react';
+import { BellOff, RefreshCw } from 'lucide-react';
+import { NotificationContext } from '../../context/NotificationContext';
+import { ConsoleShell } from '../console/ConsoleShell';
+import { Panel } from '../dashboard';
+import { EmptyState, SkeletonTableRow } from '../ui';
+import NotificationItem from './NotificationItem';
+
+// Only filters that can actually match real data. `isImportant` can be true (the
+// context derives it from `priority === 'high'`), so it stays.
+const FILTERS = [
+  { id: 'all', label: 'All' },
+  { id: 'unread', label: 'Unread' },
+  { id: 'pending', label: 'Action needed' },
+  { id: 'important', label: 'Important' },
+  { id: 'lead', label: 'Leads' },
+];
+
+const COPY = {
+  eyebrow: 'Inbox',
+  title: 'Notifications',
+  description: 'Everything that needs your attention, and everything that has already happened.',
+  empty: 'No notifications yet',
+  emptyHint: 'Lead updates, decisions and workspace activity appear here.',
+  noMatch: 'Nothing matches this filter',
+  noMatchHint: 'Try a different filter.',
+  loadFailed: 'Could not load notifications',
+  loadFailedHint: 'The request failed. Try refreshing.',
+  retry: 'Retry',
+  refresh: 'Refresh',
+  markAll: 'Mark all as read',
+};
+
+/** @returns {boolean} does this notification belong to the given filter? */
+function matches(notification, filterId) {
+  switch (filterId) {
+    case 'unread':
+      return !notification.isRead;
+    case 'pending':
+      return notification.isPending;
+    case 'important':
+      return notification.isImportant;
+    case 'lead':
+      // Match the real `type`, not a human-readable badge label.
+      return String(notification.type || '').includes('lead');
+    default:
+      return true;
+  }
+}
 
 export default function NotificationList() {
   const {
-    notifications,
+    notifications = [],
+    unreadCount = 0,
     isLoading,
     error,
     deleteNotification,
     markAllAsRead,
     markAsRead,
-    refreshNotifications
+    refreshNotifications,
   } = useContext(NotificationContext);
 
-  const [filteredNotifications, setFilteredNotifications] = useState([]);
   const [activeFilter, setActiveFilter] = useState('all');
 
-  // Apply filter whenever notifications change
-  useEffect(() => {
-    applyFilter(activeFilter, notifications);
-  }, [notifications, activeFilter]);
+  const visible = useMemo(
+    () => notifications.filter((notification) => matches(notification, activeFilter)),
+    [notifications, activeFilter]
+  );
 
-  // Filtering function
-  const applyFilter = (filterType, notifList = notifications) => {
-    setActiveFilter(filterType);
-    
-    let result = [];
-    switch(filterType) {
-      case 'unread':
-        result = notifList.filter(notification => !notification.isRead);
-        break;
-      case 'important':
-        result = notifList.filter(notification => notification.isImportant);
-        break;
-      case 'saved':
-        result = notifList.filter(notification => notification.isSaved);
-        break;
-      case 'pending':
-        result = notifList.filter(notification => notification.isPending);
-        break;
-      case 'client':
-        result = notifList.filter(notification =>
-          notification.badge && notification.badge.text.toLowerCase().includes('client')
-        );
-        break;
-      case 'pm':
-        result = notifList.filter(notification =>
-          notification.badge && notification.badge.text.toLowerCase().includes('manager')
-        );
-        break;
-      case 'lead':
-        result = notifList.filter(notification =>
-          notification.badge && notification.badge.text.toLowerCase().includes('lead')
-        );
-        break;
-      case 'all':
-      default:
-        result = [...notifList];
-    }
-    setFilteredNotifications(result);
-  };
+  const pendingCount = useMemo(
+    () => notifications.filter((notification) => notification.isPending).length,
+    [notifications]
+  );
 
-  // Calculate unread count
-  const unreadCount = notifications.filter(n => !n.isRead).length;
+  const counts = useMemo(
+    () => ({
+      all: notifications.length,
+      unread: unreadCount,
+      pending: pendingCount,
+    }),
+    [notifications.length, unreadCount, pendingCount]
+  );
 
-  // Filter labels mapping for display
-  const filterLabels = {
-    all: 'All notifications',
-    unread: 'Unread',
-    important: 'Important',
-    pending: 'Pending Approval',
-    lead: 'Leads',
-    client: 'From Client',
-    pm: 'From PM',
-  };
-  const currentFilterLabel = filterLabels[activeFilter] || 'Filter';
-  const pendingCount = notifications.filter(n => n.isPending).length;
+  const stats = [
+    { label: 'Total', value: notifications.length, tone: 'text-ink' },
+    { label: 'Unread', value: unreadCount, tone: 'text-warning' },
+    { label: 'Action needed', value: pendingCount, tone: 'text-danger' },
+    { label: 'Read', value: Math.max(0, notifications.length - unreadCount), tone: 'text-ink' },
+  ];
 
-  // Render loading state
-  if (isLoading) {
-    return (
-      <div className="mx-auto flex max-w-5xl items-center justify-center gap-2 rounded-3xl border border-line bg-surface p-10 text-center text-dim ">
-        <ArrowPathIcon className="h-5 w-5 animate-spin"/> Loading notifications...
-      </div>
-    );
-  }
+  // Action-needed items lead the "All" view; other filters show a flat list.
+  const pending = activeFilter === 'all' ? visible.filter((n) => n.isPending) : [];
+  const rest = activeFilter === 'all' ? visible.filter((n) => !n.isPending) : visible;
 
-  // Render error state
-  if (error) {
-    return (
-      <div className="mx-auto max-w-5xl rounded-3xl border border-danger/20 bg-danger/10 p-6 text-center ">
-        <h3 className="mb-2 text-lg font-semibold text-danger">Error Loading Notifications</h3>
-        <p className="mb-4 text-danger">{error}</p>
-        <button 
-          onClick={refreshNotifications} 
-          className="px-4 py-2 bg-danger/10 text-danger rounded-md hover:bg-danger/20 focus:outline-none focus:ring-2 focus:ring-danger focus:ring-offset-2"
-        >
-          Retry
-        </button>
-      </div>
-    );
-  }
+  const state = error ? 'error' : isLoading && notifications.length === 0 ? 'loading' : 'ready';
 
   return (
-    <section className="mx-auto max-w-5xl overflow-visible rounded-3xl border border-line bg-surface ">
-      <div className="border-b border-line bg-black px-5 py-5 text-white sm:px-6">
-        <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-          <div>
-            <div className="flex items-center gap-3">
-              <h2 className="text-2xl font-semibold text-white">Notifications</h2>
-              {unreadCount > 0 && (
-                <span className="inline-flex items-center justify-center rounded-full border border-white/20 bg-white/12 px-2.5 py-1 text-xs font-semibold text-white">
-                  {unreadCount} unread
-                </span>
-              )}
-            </div>
-            <p className="mt-2 text-sm text-ink">
-              {pendingCount > 0
-                ? `${pendingCount} item${pendingCount === 1 ? '' : 's'} need attention.`
-                : 'Everything is up to date.'}
-            </p>
-          </div>
-
-          <div className="flex flex-wrap items-center gap-2">
-            {typeof markAllAsRead === 'function' && unreadCount > 0 && (
-              <button
-                type="button"
-                onClick={markAllAsRead}
-                className="inline-flex items-center rounded-xl border border-white/20 bg-white/10 px-4 py-2 text-sm font-medium text-white transition hover:bg-white/15"
-              >
-                Mark all as read
-              </button>
+    <ConsoleShell
+      eyebrow={COPY.eyebrow}
+      title={COPY.title}
+      description={COPY.description}
+      stats={stats}
+      tabs={FILTERS}
+      activeTab={activeFilter}
+      onTabChange={setActiveFilter}
+      counts={counts}
+      actions={
+        <>
+          {typeof markAllAsRead === 'function' && unreadCount > 0 && (
+            <button
+              type="button"
+              onClick={markAllAsRead}
+              className="inline-flex items-center gap-1.5 rounded-md border border-line px-3 py-2 text-xs font-medium text-ink transition-colors hover:bg-surface-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ink"
+            >
+              {COPY.markAll}
+            </button>
+          )}
+          <button
+            type="button"
+            onClick={refreshNotifications}
+            className="inline-flex items-center gap-1.5 rounded-md border border-line px-3 py-2 text-xs font-medium text-ink transition-colors hover:bg-surface-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ink"
+          >
+            <RefreshCw size={14} aria-hidden="true" />
+            {COPY.refresh}
+          </button>
+        </>
+      }
+    >
+      <Panel
+        title="Inbox"
+        meta={visible.length ? `${visible.length}/${notifications.length}` : null}
+        state={state}
+        emptyTitle={COPY.empty}
+        emptyHint={COPY.emptyHint}
+        errorHint={error || COPY.loadFailedHint}
+        bodyPadded={false}
+      >
+        {state === 'loading' ? (
+          <table className="w-full">
+            <tbody>
+              <SkeletonTableRow cols={3} />
+              <SkeletonTableRow cols={3} />
+              <SkeletonTableRow cols={3} />
+            </tbody>
+          </table>
+        ) : visible.length === 0 ? (
+          <EmptyState
+            icon={BellOff}
+            title={notifications.length > 0 ? COPY.noMatch : COPY.empty}
+            description={notifications.length > 0 ? COPY.noMatchHint : COPY.emptyHint}
+          />
+        ) : (
+          <>
+            {/* Action-needed group. A <section> with its own <ul> — the previous
+                version nested <li> inside <li>, which is invalid HTML. */}
+            {pending.length > 0 && (
+              <section aria-label="Leads pending approval" className="border-b border-line">
+                <h2 className="flex items-center gap-2 bg-danger/10 px-4 py-2 text-xs font-semibold text-danger">
+                  <span className="h-1.5 w-1.5 rounded-full bg-danger" aria-hidden="true" />
+                  Leads pending approval
+                  <span className="tnum font-normal">({pending.length})</span>
+                </h2>
+                <ul>
+                  {pending.map((notification) => (
+                    <NotificationItem
+                      key={notification.id}
+                      notification={notification}
+                      onDelete={deleteNotification}
+                      onMarkRead={markAsRead}
+                    />
+                  ))}
+                </ul>
+              </section>
             )}
-            <div className="flex items-center gap-2 rounded-xl bg-white/10 p-1">
-              <button 
-                onClick={refreshNotifications}
-                className="inline-flex items-center rounded-lg px-3 py-2 text-sm font-medium text-white/90 transition hover:bg-white/15 hover:text-white"
-                title="Refresh notifications"
-              >
-                <ArrowPathIcon className="mr-2 h-4 w-4" />
-                Refresh
-              </button>
-            </div>
-          </div>
-        </div>
 
-        <div className="mt-5 flex flex-wrap gap-2">
-          {Object.entries(filterLabels).map(([key, label]) => {
-            const isActive = key === activeFilter;
-            return (
-              <button
-                key={key}
-                type="button"
-                onClick={() => applyFilter(key)}
-                className={`rounded-full border px-4 py-2 text-sm font-medium transition ${isActive ? 'border-white/20 bg-surface text-success ' : 'border-white/15 bg-white/8 text-white/90 hover:bg-white/15 hover:text-white'}`}
-              >
-                {label}
-              </button>
-            );
-          })}
-        </div>
-
-        {notifications.length > 0 && (
-          <div className="mt-4 grid gap-3 sm:grid-cols-3">
-            <div className="rounded-2xl border border-white/15 bg-white/10 px-4 py-3 backdrop-blur-sm">
-              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-ink">Total</p>
-              <p className="mt-2 text-2xl font-semibold text-white">{notifications.length}</p>
-            </div>
-            <div className="rounded-2xl border border-white/15 bg-white/10 px-4 py-3 backdrop-blur-sm">
-              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-ink">Unread</p>
-              <p className="mt-2 text-2xl font-semibold text-white">{unreadCount}</p>
-            </div>
-            <div className="rounded-2xl border border-white/15 bg-white/10 px-4 py-3 backdrop-blur-sm">
-              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-ink">Action Needed</p>
-              <p className="mt-2 text-2xl font-semibold text-white">{pendingCount}</p>
-            </div>
-          </div>
-        )}
-      </div>
-      
-      {/* List Container */}
-      <div className="bg-canvas px-3 py-3 sm:px-4 sm:py-4">
-        {filteredNotifications.length > 0 ? (
-          <ul className="space-y-3">
-            {/* Show a section for pending approval items first */}
-            {activeFilter === 'all' && filteredNotifications.some(n => n.isPending) && (
-              <li className="rounded-2xl border border-danger/20 bg-danger/10 p-3">
-                <h3 className="px-2 text-sm font-semibold text-danger">Leads Pending Approval</h3>
-                {filteredNotifications.filter(n => n.isPending).map((notification) => (
-                  <NotificationItem 
-                    key={notification.id} 
-                    notification={notification} 
+            {rest.length > 0 && (
+              <ul>
+                {rest.map((notification) => (
+                  <NotificationItem
+                    key={notification.id}
+                    notification={notification}
                     onDelete={deleteNotification}
-                    onMarkImportant={() => {}}
-                    onSave={() => {}}
                     onMarkRead={markAsRead}
                   />
                 ))}
-              </li>
+              </ul>
             )}
-            
-            {/* Display all other notifications */}
-            {filteredNotifications
-              .filter(n => activeFilter === 'pending' || activeFilter !== 'all' || !n.isPending)
-              .map((notification) => (
-                <NotificationItem 
-                  key={notification.id} 
-                  notification={notification} 
-                  onDelete={deleteNotification}
-                  onMarkImportant={() => {}}
-                  onSave={() => {}}
-                  onMarkRead={markAsRead}
-                />
-            ))}
-          </ul>
-        ) : (
-          // Empty State
-          <div className="rounded-2xl border border-dashed border-line bg-surface px-6 py-16 text-center ">
-            <p className="text-sm text-dim">
-              {notifications.length > 0
-                ? `No notifications match the "${currentFilterLabel.toLowerCase()}" filter.`
-                : 'You have no notifications yet.'}
-            </p>
-          </div>
+          </>
         )}
-      </div>
-    </section>
+      </Panel>
+    </ConsoleShell>
   );
 }

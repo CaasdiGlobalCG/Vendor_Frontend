@@ -1,21 +1,19 @@
+// ============================================================
+// FILE: NotificationPage.jsx
+// PURPOSE: Route entry for /VendorDashboard/notifications.
+// CONNECTS TO: components/NotificationList/NotificationList — which now owns the whole
+//              page shell via components/console/ConsoleShell.
+//
+// The page previously rendered its own PageHero ("Alert Center") ABOVE the list, which
+// stacked a second, oversized hero on top of the Console hero — two headers for one
+// page. The Console shell supplies the hero now, so this file is just the mount point.
+// ============================================================
+
 import React from 'react';
-import NotificationList from '../../components/NotificationList/NotificationList'; // Adjust path if needed
-import { PageHero } from '../../components/ui';
+import NotificationList from '../../components/NotificationList/NotificationList';
 
 const NotificationsPage = () => {
-  return (
-    <div className="min-h-full bg-canvas px-4 py-6 sm:px-6 lg:px-8">
-      <div className="mx-auto max-w-5xl">
-        <PageHero
-          eyebrow="Alert Center"
-          title="Notifications"
-          description="Review alerts, updates, and action items in one place with the same visual language as the main header."
-          className="mb-6"
-        />
-      </div>
-      <NotificationList />
-    </div>
-  );
+  return <NotificationList />;
 };
 
 export default NotificationsPage;

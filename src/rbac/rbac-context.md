@@ -136,11 +136,38 @@ Header nav items are wrapped with `<PermissionGate>`:
 - If `/api/rbac/me` fails, frontend blocks access and shows RBAC access-denied state
 - Users without RBAC membership are blocked from module routes
 - TeamPage shows current user's role info + permission matrix
-- Team member management UI is placeholder (coming Phase 2)
 
-## Phase 2 Will Add
-- Backend member management endpoints
-- InviteMemberModal connected to real API
-- MemberList populated from listMembers endpoint
-- Role change and member removal actions
-- Invitation list with acceptance flow
+> **CORRECTION (28-09-2026).** The two sections below were stale. The Team member management UI is
+> **live**, not a placeholder: member list, invitations, role CRUD, suspension and access-scope editing
+> all ship today. The doc's directory listing and endpoint table are also incomplete — see the
+> corrections below.
+
+## TeamPage — adopted design (28-09-2026)
+- `src/rbac/pages/TeamPage.jsx` was reduced from 1373 to 656 lines: its presentation now comes from
+  `src/components/team/` (`TeamShell`, `Tabs`, `MemberTable`, `InvitationsTab`, `RolesTab`-equivalent,
+  `PermissionsTab`, `ActivityTab`, `team.constants.js`).
+- The **Roles** and **Activity Log** tabs still use the live `rbac/components/RolesTab.jsx` and
+  `ActivityLogTab.jsx` — they carry role CRUD and a paginated audit fetch.
+- The promoted components take optional handler props so the page keeps its real actions:
+  `MemberTable handlers={{onChangeRole,onEditScope,onSuspend,onUnsuspend,onRemove}}` and
+  `InvitationsTab onCancelInvitation`.
+- Status colour is **minimal and meaningful**: only the figure or pill is tinted
+  (`Active` → success, `Suspended`/expired → danger, `Invited`/pending → warning); a neutral count
+  stays ink. Do not tint labels, cells or counts that carry no status.
+
+## Endpoint corrections (code beats docs)
+These exist in `rbac/api/rbacApi.js` but were missing from the table above:
+`POST /api/rbac/members/:id/suspend` (:154) · `POST /api/rbac/members/:id/unsuspend` (:167) ·
+`POST/PUT/DELETE /api/rbac/roles[/:id]` (:199-228) · `GET /api/rbac/audit-logs` (:267).
+
+## Known defects in the live Team UI (reported, not yet fixed)
+`rbac/pages/TeamPage.jsx:404` used `bg-ink text-paper` for the active tab — **`paper` has no Tailwind
+token** (only `op-paper` exists, `tailwind.config.js:92`), so that class was a no-op. The adoption
+replaced that tab bar, so it is fixed on this page. The same class pattern should be checked anywhere
+else it appears.
+Also still outstanding: the permission matrix renders a grid of anonymous checkboxes
+(`EditablePermissionMatrix.jsx:256-289`), no modal has `role="dialog"`/`aria-modal`/Escape (8 files),
+`<th>` lacks `scope="col"` (7 files), `RoleBadge.jsx:15-19` renders four distinct roles identically,
+and the invitations fetch swallows errors so that tab has no error state
+(`TeamPage.jsx:132-136`). Full table in `Documents/Team_Page_Variants_Plan.md` §3.5.
+

@@ -1,10 +1,7 @@
 import React from "react";
-import axios from "axios";
-import { useNavigate } from "react-router-dom";
-import { Link } from "react-router-dom";
 import { useState, useEffect, useContext } from "react";
 import {
-    Mail, Award, Share2, BuildingIcon, MapPin, Phone, ChevronDown, Eye, Download, Settings, Edit,
+    Eye, Download,
     Upload, // Added Upload icon for certification uploads
     X as CloseIcon // Use X as CloseIcon for modal close
 } from "lucide-react";
@@ -12,35 +9,28 @@ import { VendorContext } from "../../context/VendorContext";
 import { UserContext } from "../../context/UserContext";
 // Use a relative path or import from assets folder
 import profileplaceholder from '../../assets/profileplaceholder.jpg' // Adjust the path as necessary
-import AppHeader from "../../components/AppHeader/Appheader";
-import { useLocation } from 'react-router-dom'; // Added useLocation
+import { VendorHeader } from "../../components/vendor-header";
 import UserProfileCard from '../../components/UserProfileCard/UserProfileCard'; // Import the new component
 import VendorTabPanel from '../../components/layout/VendorTabPanel';
 import config from '../../config/env';
 
 export default function CompanyProfile() {
-  const navigate = useNavigate();
   const { currentUser } = useContext(UserContext);
   const { currentUser: vendorUser, vendorData, setVendorData } = useContext(VendorContext);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [dataFetched, setDataFetched] = useState(false);
-  const location = useLocation(); // Added useLocation
-
-  const navigateTo = (path) => {
-    navigate(path);
-  };
 
   // Profile modal state
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
   const [profileData, setProfileData] = useState({
-      name: currentUser?.name || vendorUser?.name || 'Loading...',
-      vendorId: '#Loading',
+      name: currentUser?.name || vendorUser?.name || '',
+      vendorId: '',
       image: profileplaceholder,
-      companyName: 'Loading...',
-      phone: 'Loading...',
-      location: 'Loading...',
-      email: currentUser?.email || vendorUser?.email || 'Loading...',
+      companyName: '',
+      phone: '',
+      location: '',
+      email: currentUser?.email || vendorUser?.email || '',
       gstNumber: '',
       panNumber: '',
   });
@@ -115,7 +105,7 @@ export default function CompanyProfile() {
           const rawVendorId = vendor.vendorId || vendor.id;
           const newProfileData = {
             name: vendor.vendorDetails?.primaryContactName || currentUser?.name || vendorUser?.name || '',
-            vendorId: rawVendorId ? `#${String(rawVendorId).substring(0, 6)}` : '#CXV001',
+            vendorId: rawVendorId ? `#${String(rawVendorId).substring(0, 6)}` : '',
             image: vendor.profileImage?.url || profileplaceholder,
             companyName: vendor.companyDetails?.companyName || vendor.vendorDetails?.companyName || '',
             phone: vendor.vendorDetails?.primaryContactPhone || '',
@@ -563,8 +553,10 @@ const handleCompanySave = async (e) => {
 
   return (
     <div className="min-h-screen bg-canvas font-sans w-full pb-24">
-      {/* Header Banner */}
-      <AppHeader />
+      {/* Header Banner — the combined vendor header, replacing the old AppHeader */}
+      <div className="pt-5 px-5 pb-0">
+        <VendorHeader />
+      </div>
 
       <div className="mx-auto mt-3 flex w-full max-w-[1400px] flex-col gap-5 px-3 py-5 sm:mt-4 sm:gap-6 sm:px-4 sm:py-8 md:px-6 lg:flex-row lg:items-start lg:px-8">
         {/* Profile Card */}

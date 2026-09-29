@@ -22,6 +22,9 @@ import { InviteModal } from '../components/InviteModal';
 import { EditRoleModal } from '../components/EditRoleModal';
 import ActivityLogTab from '../components/ActivityLogTab';
 import RolesTab from '../components/RolesTab';
+import { Plus } from 'lucide-react';
+// Adopted design (variant 1, "Console") — permanent Team-page component set.
+import { TeamShell, MemberTable, InvitationsTab, PermissionsTab } from '../../components/team';
 import { PageHero, heroActionClass, Reveal, RevealFlat } from '../../components/ui';
 import { motion } from 'framer-motion';
 import { RemovalReasonModal } from '../components/RemovalReasonModal';
@@ -330,335 +333,107 @@ export default function TeamPage() {
     });
   }, [members, memberSearch, memberStatusFilter]);
 
-  return (
-    <div className="mx-auto w-full max-w-[1600px] space-y-5 px-3 py-5 sm:px-5 sm:py-6 lg:px-8 xl:px-10">
-      {/* ── Page Header ── */}
-      <PageHero
-        className="animate-hero-in"
-        eyebrow="Administration"
-        title="Team & Permissions"
-        description="Control who can access what, assign the right roles, and keep governance clear as your SaaS team scales."
-        actions={(
-          <PermissionGate module="user_management" action="create">
-            <button onClick={() => setShowInviteModal(true)} className={heroActionClass}>
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-              </svg>
-              Invite Member
-            </button>
-          </PermissionGate>
-        )}
+  // Adapter — the promoted shell expects this shape. Pure reshaping of values the page
+  // already computes: no new data, no changed behaviour.
+  const shellData = useMemo(() => ({
+    members,
+    roles,
+    rolesMeta,
+    invitations,
+    permissions,
+    role,
+    moduleCount,
+    filteredMembers,
+    memberStats: {
+      total: memberStats.total,
+      active: memberStats.active,
+      suspended: memberStats.suspended,
+      pendingInvites: invitations.length,
+    },
+    // Per-slice async state for the promoted tab bodies (Panel expects
+    // 'loading' | 'error' | 'empty' | 'ready').
+    slices: {
+      members: membersLoading ? 'loading' : membersError ? 'error' : members.length === 0 ? 'empty' : 'ready',
+      invitations: invitationsLoading ? 'loading' : invitations.length === 0 ? 'empty' : 'ready',
+      roles: roles.length === 0 ? 'empty' : 'ready',
+      activity: 'ready',
+    },
+    // Local member filters — owned by the page, read by the table's filter rail.
+    memberSearch,
+    setMemberSearch,
+    memberStatusFilter,
+    setMemberStatusFilter,
+    activeTab,
+    setActiveTab,
+    refresh: () => {
+      fetchMembers();
+      fetchRoles();
+      fetchInvitations();
+    },
+    feedback,
+    clearFeedback: () => setFeedback(null),
+  }), [
+    members, roles, rolesMeta, invitations, permissions, role, moduleCount,
+    filteredMembers, memberStats, membersLoading, membersError, invitationsLoading,
+    memberSearch, memberStatusFilter, activeTab, feedback,
+    fetchMembers, fetchRoles, fetchInvitations,
+  ]);
+
+  // Real handlers for the promoted members table — it renders its actions inert unless
+  // these are supplied.
+  const memberHandlers = {
+    onChangeRole: (member) => {
+      setChangingRoleFor(member.userId);
+      setNewRoleId(member.roleId || '');
+    },
+    onEditScope: (member) => openScopeEditor(member),
+    onSuspend: (member) => setSuspensionTarget({ userId: member.userId, email: member.email, mode: 'suspend' }),
+    onUnsuspend: (member) => setSuspensionTarget({ userId: member.userId, email: member.email, mode: 'unsuspend' }),
+    onRemove: (member) => setRemovingMember({ userId: member.userId, email: member.email }),
+  };
+
+  // Roles and Activity keep the live implementations: they carry real role CRUD and
+  // their own paginated audit fetch, which the preview versions deliberately lacked.
+  const tabBody = {
+    members: <MemberTable data={shellData} handlers={memberHandlers} />,
+    invitations: (
+      <InvitationsTab
+        data={shellData}
+        onCancelInvitation={(invitation) => handleCancelInvitation(invitation.inviteId)}
       />
+    ),
+    roles: <RolesTab roles={roles} meta={rolesMeta} onRefresh={fetchRoles} showFeedback={showFeedback} />,
+    matrix: <PermissionsTab data={shellData} />,
+    activity: <ActivityLogTab members={members} />,
+  }[activeTab];
 
-      {/* ── Feedback Toast ── */}
-      {feedback && <FeedbackBanner message={feedback.msg} type={feedback.type} />}
-
-      {/* ── Phase 1 Indicator ── */}
-      {isFallback && <Phase1Banner />}
-
-      {/* ── Team Summary Cards ── hairline grid, staggered reveal */}
-      <Reveal className="grid grid-cols-2 gap-px overflow-hidden rounded-md border border-line bg-line lg:grid-cols-4">
-        <StatTile label="Total Members" value={memberStats.total} tone="teal" />
-        <StatTile label="Active" value={memberStats.active} tone="green" />
-        <StatTile label="Invited" value={memberStats.invited} tone="amber" />
-        <StatTile label="Suspended" value={memberStats.suspended} tone="red" />
-      </Reveal>
-
-      {/* ── Your Access Card ── */}
-      <Reveal className="rounded-md border border-line bg-surface p-4 sm:p-6">
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <h2 className="text-lg font-medium text-ink">Your Access</h2>
-          <span className="inline-flex w-fit items-center rounded-full border border-line bg-canvas px-2.5 py-1 text-xs font-medium text-dim">
-            Authority Level {role?.roleLevel ?? '—'}
-          </span>
-        </div>
-        <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-3 md:gap-6">
-          <InfoBlock label="Account" value={currentUser?.email || '—'} />
-          <div>
-            <p className="text-xs text-dim uppercase tracking-wider mb-1.5">Role</p>
-            <RoleBadge roleId={role?.roleId} roleName={role?.roleName} />
-          </div>
-          <InfoBlock label="Modules Accessible" value={moduleCount} />
-        </div>
-      </Reveal>
-
-      {/* ── Tab Navigation ── underline tabs + sliding ink indicator */}
-      <Reveal className="overflow-x-auto border-b border-line">
-        <nav className="flex w-max min-w-full gap-1" aria-label="Team management tabs">
-          {[
-            { key: 'members', label: 'Members', count: members.length },
-            { key: 'invitations', label: 'Invitations', count: invitations.length },
-            { key: 'roles', label: 'Roles', count: roles.length },
-            { key: 'matrix', label: 'My Permissions' },
-            { key: 'activity', label: 'Activity Log' },
-          ].map(({ key, label, count }) => (
-            <button
-              key={key}
-              onClick={() => setActiveTab(key)}
-              className={`relative inline-flex items-center px-3 pb-3 pt-2 text-sm font-medium whitespace-nowrap transition-colors
-                ${activeTab === key ? 'text-ink' : 'text-dim hover:text-ink'}`}
-            >
-              {label}
-              {count != null && (
-                <span className={`ml-1.5 rounded-full px-1.5 py-0.5 text-xs
-                  ${activeTab === key ? 'bg-ink text-paper' : 'bg-surface-hover text-dim'}`}>
-                  {count}
-                </span>
-              )}
-              {activeTab === key && (
-                <motion.span
-                  layoutId="team-tab-underline"
-                  className="absolute inset-x-0 -bottom-px h-[2px] bg-ink"
-                  transition={{ duration: 0.25, ease: [0.22, 0.61, 0.36, 1] }}
-                />
-              )}
-            </button>
-          ))}
-        </nav>
-      </Reveal>
-
-      {/* ── Tab Content ── */}
-
-      {/* Members Tab */}
-      {activeTab === 'members' && (
-        <Reveal className="overflow-hidden rounded-md border border-line bg-surface">
-          <div className="border-b border-line px-4 py-4 sm:px-6 flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
-            <div>
-              <h2 className="text-lg font-medium text-ink">Team Members</h2>
-              <p className="text-xs text-dim mt-1">
-                {filteredMembers.length} of {members.length} member{members.length !== 1 ? 's' : ''}
-              </p>
-            </div>
-
-            <div className="grid grid-cols-1 gap-2 sm:grid-cols-[minmax(0,1fr)_auto_auto] sm:items-center">
-              <div className="relative">
-                <input
-                  type="text"
-                  value={memberSearch}
-                  onChange={(e) => setMemberSearch(e.target.value)}
-                  placeholder="Search by email or role"
-                  className="h-10 w-full rounded-md border border-line bg-surface pl-9 pr-3 text-sm text-ink focus:border-line focus:outline-none focus:ring-2 focus:ring-ink sm:min-w-[220px] sm:rounded-lg sm:h-9"
-                />
-                <svg className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4  text-dim" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="m21 21-4.35-4.35m1.85-5.65a7.5 7.5 0 1 1-15 0 7.5 7.5 0 0 1 15 0Z" />
-                </svg>
-              </div>
-
-              <select
-                value={memberStatusFilter}
-                onChange={(e) => setMemberStatusFilter(e.target.value)}
-                className="h-10 rounded-md border border-line bg-surface px-3 text-sm text-ink focus:border-line focus:outline-none focus:ring-2 focus:ring-ink sm:h-9 sm:rounded-lg"
-              >
-                <option value="all">All statuses</option>
-                <option value="active">Active</option>
-                <option value="invited">Invited</option>
-                <option value="suspended">Suspended</option>
-              </select>
-
-              <button
-                onClick={fetchMembers}
-                className="h-10 rounded-md border border-line bg-surface-hover px-3 text-xs font-semibold uppercase tracking-wide text-ink transition-colors hover:bg-surface-hover sm:h-9 sm:rounded-lg"
-              >
-                Refresh
-              </button>
-            </div>
-          </div>
-
-          {membersLoading ? (
-            <div className="p-8 text-center">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-line mx-auto mb-3" />
-              <p className="text-sm text-dim">Loading members...</p>
-            </div>
-          ) : membersError ? (
-            <div className="p-8 text-center">
-              <p className="text-sm text-danger mb-2">{membersError}</p>
-              <button onClick={fetchMembers} className="text-xs text-ink hover:underline">Try again</button>
-            </div>
-        ) : members.length === 0 ? (
-          <div className="p-8 text-center text-sm text-dim">
-            No members found. Invite someone to get started.
-          </div>
-        ) : filteredMembers.length === 0 ? (
-          <div className="p-10 text-center">
-            <p className="text-sm font-medium text-ink">No members match your current filters.</p>
-            <button
-              onClick={() => {
-                setMemberSearch('');
-                setMemberStatusFilter('all');
-              }}
-              className="mt-2 text-xs font-medium text-ink hover:text-ink"
-            >
-              Clear search and filters
-            </button>
-          </div>
-        ) : (
+  return (
+    <>
+      <TeamShell
+        data={shellData}
+        actions={
           <>
-          <div className="space-y-3 p-4 sm:p-6 md:hidden">
-            {filteredMembers.map((member) => (
-              <MemberCard
-                key={member.userId}
-                member={member}
-                currentUserId={userId || currentUser?.sub}
-                assignableRoles={assignableRoles}
-                changingRoleFor={changingRoleFor}
-                setChangingRoleFor={setChangingRoleFor}
-                newRoleId={newRoleId}
-                setNewRoleId={setNewRoleId}
-                onRoleChange={handleRoleChange}
-                onSuspend={(uid, email) => setSuspensionTarget({ userId: uid, email, mode: 'suspend' })}
-                onUnsuspend={(uid, email) => setSuspensionTarget({ userId: uid, email, mode: 'unsuspend' })}
-                onStartRemove={(uid, email) => setRemovingMember({ userId: uid, email })}
-                onEditRole={setEditingRoleId}
-                onEditScopes={openScopeEditor}
-              />
-            ))}
-          </div>
-          <div className="hidden overflow-x-auto md:block">
-            <table className="w-full min-w-[1080px] text-sm">
-              <thead className="sticky top-0 z-10 bg-canvas text-dim text-[11px] uppercase">
-                <tr>
-                  <th className="w-[30%] px-4 py-3 text-left font-medium lg:px-5">Member</th>
-                  <th className="w-[15%] px-4 py-3 text-left font-medium lg:px-5">Role</th>
-                  <th className="w-[20%] px-4 py-3 text-left font-medium lg:px-5">Access Scope</th>
-                  <th className="w-[12%] px-4 py-3 text-left font-medium lg:px-5">Status</th>
-                  <th className="w-[13%] px-4 py-3 text-left font-medium lg:px-5">Joined</th>
-                  <th className="w-[10%] px-4 py-3 text-right font-medium lg:px-5">Manage</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-line">
-                {filteredMembers.map((member, index) => (
-                  <MemberRow
-                    key={member.userId}
-                    rowIndex={index}
-                    member={member}
-                    currentUserId={userId || currentUser?.sub}
-                    assignableRoles={assignableRoles}
-                    changingRoleFor={changingRoleFor}
-                    setChangingRoleFor={setChangingRoleFor}
-                    newRoleId={newRoleId}
-                    setNewRoleId={setNewRoleId}
-                    onRoleChange={handleRoleChange}
-                    onSuspend={(uid, email) => setSuspensionTarget({ userId: uid, email, mode: 'suspend' })}
-                    onUnsuspend={(uid, email) => setSuspensionTarget({ userId: uid, email, mode: 'unsuspend' })}
-                    onStartRemove={(uid, email) => setRemovingMember({ userId: uid, email })}
-                    onEditRole={setEditingRoleId}
-                    onEditScopes={openScopeEditor}
-                  />
-                ))}
-              </tbody>
-            </table>
-          </div>
+            <span className="hidden items-center gap-2 text-xs text-dim sm:inline-flex">
+              <span className="font-medium text-ink">{role?.roleName || '—'}</span>
+              <span className="h-3 w-px bg-line" aria-hidden="true" />
+              <span className="tnum">{moduleCount}</span>
+            </span>
+            <PermissionGate module="user_management" action="create">
+              <button
+                type="button"
+                onClick={() => setShowInviteModal(true)}
+                className="inline-flex items-center gap-1.5 rounded-md bg-cta px-3 py-2 text-xs font-semibold text-cta-foreground transition-opacity hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ink"
+              >
+                <Plus size={14} aria-hidden="true" />
+                Invite member
+              </button>
+            </PermissionGate>
           </>
-        )}
-      </Reveal>
-      )}
-
-      {/* Invitations Tab */}
-      {activeTab === 'invitations' && (
-        <PermissionGate module="user_management" action="view">
-          <Reveal className="overflow-hidden rounded-md border border-line bg-surface">
-            <div className="border-b border-line px-4 py-4 sm:px-6">
-              <h2 className="text-lg font-medium text-ink">Pending Invitations</h2>
-              <p className="text-xs text-dim mt-1">
-                {invitations.length} pending
-              </p>
-            </div>
-            {invitationsLoading ? (
-              <div className="p-6 text-center text-sm text-dim">Loading...</div>
-            ) : invitations.length === 0 ? (
-              <div className="p-6 text-center text-sm text-dim">No pending invitations</div>
-            ) : (
-              <>
-              <div className="space-y-3 p-4 sm:p-6 md:hidden">
-                {invitations.map((inv) => (
-                  <InvitationCard
-                    key={inv.inviteId}
-                    invitation={inv}
-                    onCancel={handleCancelInvitation}
-                  />
-                ))}
-              </div>
-              <div className="hidden overflow-x-auto md:block">
-                <table className="w-full text-sm">
-                  <thead className="bg-canvas text-dim text-xs uppercase">
-                    <tr>
-                      <th className="px-6 py-3 text-left font-medium">Email</th>
-                      <th className="px-6 py-3 text-left font-medium">Role</th>
-                      <th className="px-6 py-3 text-left font-medium">Sent</th>
-                      <th className="px-6 py-3 text-left font-medium">Status</th>
-                      <th className="px-6 py-3 text-left font-medium">Expires</th>
-                      <th className="px-6 py-3 text-right font-medium">Action</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-line">
-                    {invitations.map((inv) => (
-                      <tr key={inv.inviteId} className="hover:bg-canvas">
-                        <td className="px-6 py-3 text-ink">{inv.email}</td>
-                        <td className="px-6 py-3"><RoleBadge roleId={inv.roleId} roleName={inv.roleName} size="sm" /></td>
-                        <td className="px-6 py-3">
-                          <span className="text-ink text-xs">{timeAgo(inv.createdAt)}</span>
-                          <span className="block text-dim text-[10px]">{formatDate(inv.createdAt)}</span>
-                        </td>
-                        <td className="px-6 py-3">
-                          {inv.isExpired ? (
-                            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium border bg-danger/10 text-danger border-danger/20">Expired</span>
-                          ) : (
-                            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium border bg-warning/10 text-warning border-warning/20">Pending</span>
-                          )}
-                        </td>
-                        <td className="px-6 py-3 text-dim text-xs">{formatDate(inv.expiresAt)}</td>
-                        <td className="px-6 py-3 text-right">
-                          <PermissionGate module="user_management" action="edit">
-                            <button
-                              onClick={() => handleCancelInvitation(inv.inviteId)}
-                              className="text-xs text-danger hover:text-danger hover:underline font-medium"
-                            >
-                              Cancel
-                            </button>
-                          </PermissionGate>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-              </>
-            )}
-          </Reveal>
-        </PermissionGate>
-      )}
-
-      {/* Roles Tab */}
-      {activeTab === 'roles' && (
-        <Reveal className="overflow-hidden rounded-md border border-line bg-surface p-4 sm:p-6">
-          <RolesTab
-            roles={roles}
-            meta={rolesMeta}
-            onRefresh={fetchRoles}
-            showFeedback={showFeedback}
-          />
-        </Reveal>
-      )}
-
-      {/* My Permissions Tab */}
-      {activeTab === 'matrix' && (
-        <Reveal className="overflow-hidden rounded-md border border-line bg-surface">
-          <div className="border-b border-line px-4 py-4 sm:px-6">
-            <h2 className="text-lg font-medium text-ink">Permission Matrix</h2>
-            <p className="text-xs text-dim mt-1">
-              Your current access levels across all modules
-            </p>
-          </div>
-          <EditablePermissionMatrix permissions={permissions} editable={false} />
-        </Reveal>
-      )}
-
-      {/* Activity Log Tab */}
-      {activeTab === 'activity' && (
-        <Reveal>
-          <ActivityLogTab members={members} />
-        </Reveal>
-      )}
+        }
+      >
+        {isFallback && <Phase1Banner />}
+        {tabBody}
+      </TeamShell>
 
       {/* ── Invite Modal ── */}
       {showInviteModal && (
@@ -723,7 +498,7 @@ export default function TeamPage() {
           onClose={closeScopeEditor}
         />
       )}
-    </div>
+    </>
   );
 }
 
@@ -732,395 +507,6 @@ export default function TeamPage() {
 // ──────────────────────────────────────
 
 /** Single member table row with compact contextual actions */
-function MemberRow({
-  rowIndex,
-  member, currentUserId, assignableRoles,
-  changingRoleFor, setChangingRoleFor, newRoleId, setNewRoleId, onRoleChange,
-  onSuspend, onUnsuspend, onStartRemove, onEditRole, onEditScopes,
-}) {
-  const isSelf = member.userId === currentUserId;
-  const isInvited = member.status === 'invited';
-  const memberInitial = String(member?.email || '?').charAt(0).toUpperCase();
-  return (
-    <RevealFlat as="tr" delay={rowIndex * 40} className="hover:bg-canvas transition-colors">
-      <td className="px-4 py-3 lg:px-5">
-        <div className="flex items-center gap-3">
-          <span className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-line bg-surface-hover text-xs font-semibold text-ink">
-            {memberInitial}
-          </span>
-          <div>
-            <p className="text-sm font-medium text-ink">{member.email}</p>
-            <div className="mt-0.5 flex items-center gap-1.5">
-              {isSelf && <span className="text-[10px] bg-surface-hover text-ink px-1.5 py-0.5 rounded font-medium">You</span>}
-              {isInvited && <span className="text-[10px] bg-warning/10 text-warning px-1.5 py-0.5 rounded font-medium">Pending acceptance</span>}
-            </div>
-          </div>
-        </div>
-      </td>
-      <td className="px-4 py-3 lg:px-5">
-        {changingRoleFor === member.userId ? (
-          <div className="flex items-center gap-2">
-            <select
-              value={newRoleId}
-              onChange={(e) => setNewRoleId(e.target.value)}
-              className="text-xs border border-line rounded px-2 py-1"
-            >
-              <option value="">Select role...</option>
-              {assignableRoles.map((r) => (
-                <option key={r.roleId} value={r.roleId}>{r.roleName}</option>
-              ))}
-            </select>
-            <button
-              onClick={() => onRoleChange(member.userId)}
-              className="rounded-md border border-line bg-surface-hover px-2 py-1 text-xs font-medium text-ink hover:bg-surface-hover"
-            >
-              Save
-            </button>
-            <button
-              onClick={() => setChangingRoleFor(null)}
-              className="rounded-md border border-line bg-surface px-2 py-1 text-xs text-dim hover:bg-canvas"
-            >
-              Cancel
-            </button>
-          </div>
-        ) : (
-          <RoleBadge roleId={member.roleId} roleName={member.roleName} size="sm" />
-        )}
-      </td>
-      <td className="px-4 py-3 lg:px-5">
-        <ScopeSummary
-          projectAccess={member.projectAccess}
-          workspaceAccess={member.workspaceAccess}
-        />
-      </td>
-      <td className="px-4 py-3 lg:px-5">
-        <StatusBadge status={member.status} />
-      </td>
-      <td className="px-4 py-3 text-xs lg:px-5">
-        {isInvited ? (
-          <>
-            <span className="text-warning">{timeAgo(member.joinedAt || member.createdAt)}</span>
-            <span className="block text-dim text-[10px]">Invited {formatDate(member.joinedAt || member.createdAt)}</span>
-          </>
-        ) : (
-          <>
-            <span className="text-dim">{timeAgo(member.joinedAt)}</span>
-            <span className="block text-dim text-[10px]">{formatDate(member.joinedAt)}</span>
-          </>
-        )}
-      </td>
-      <td className="px-4 py-3 text-right lg:px-5">
-        {!isSelf && !isInvited ? (
-          <MemberActionsMenu
-            member={member}
-            changingRoleFor={changingRoleFor}
-            setChangingRoleFor={setChangingRoleFor}
-            setNewRoleId={setNewRoleId}
-            onSuspend={onSuspend}
-            onUnsuspend={onUnsuspend}
-            onStartRemove={onStartRemove}
-            onEditRole={onEditRole}
-            onEditScopes={onEditScopes}
-          />
-        ) : (
-          <span className="text-[11px] text-dim">—</span>
-        )}
-      </td>
-    </RevealFlat>
-  );
-}
-
-function MemberCard({
-  member,
-  currentUserId,
-  assignableRoles,
-  changingRoleFor,
-  setChangingRoleFor,
-  newRoleId,
-  setNewRoleId,
-  onRoleChange,
-  onSuspend,
-  onUnsuspend,
-  onStartRemove,
-  onEditRole,
-  onEditScopes,
-}) {
-  const isSelf = member.userId === currentUserId;
-  const isInvited = member.status === 'invited';
-  const memberInitial = String(member?.email || '?').charAt(0).toUpperCase();
-
-  return (
-    <article className="rounded-lg border border-line bg-surface-hover p-4 ">
-      <div className="flex items-start justify-between gap-3">
-        <div className="flex min-w-0 items-start gap-3">
-          <span className="inline-flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full border border-line bg-surface-hover text-sm font-semibold text-ink">
-            {memberInitial}
-          </span>
-          <div className="min-w-0">
-            <p className="truncate text-sm font-semibold text-ink">{member.email}</p>
-            <div className="mt-1 flex flex-wrap items-center gap-1.5">
-              {isSelf && <span className="rounded bg-surface-hover px-1.5 py-0.5 text-[10px] font-medium text-ink">You</span>}
-              {isInvited && <span className="rounded bg-warning/10 px-1.5 py-0.5 text-[10px] font-medium text-warning">Pending acceptance</span>}
-              <StatusBadge status={member.status} />
-            </div>
-          </div>
-        </div>
-
-        {!isSelf && !isInvited ? (
-          <MemberActionsMenu
-            member={member}
-            changingRoleFor={changingRoleFor}
-            setChangingRoleFor={setChangingRoleFor}
-            setNewRoleId={setNewRoleId}
-            onSuspend={onSuspend}
-            onUnsuspend={onUnsuspend}
-            onStartRemove={onStartRemove}
-            onEditRole={onEditRole}
-            onEditScopes={onEditScopes}
-          />
-        ) : null}
-      </div>
-
-      <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
-        <div className="rounded-md border border-line bg-surface p-3">
-          <p className="text-[11px] uppercase tracking-[0.16em] text-dim">Role</p>
-          <div className="mt-2">
-            {changingRoleFor === member.userId ? (
-              <div className="space-y-2">
-                <select
-                  value={newRoleId}
-                  onChange={(e) => setNewRoleId(e.target.value)}
-                  className="h-10 w-full rounded-md border border-line px-3 text-sm text-ink focus:border-line focus:outline-none focus:ring-2 focus:ring-ink"
-                >
-                  <option value="">Select role...</option>
-                  {assignableRoles.map((role) => (
-                    <option key={role.roleId} value={role.roleId}>{role.roleName}</option>
-                  ))}
-                </select>
-                <div className="grid grid-cols-2 gap-2">
-                  <button
-                    onClick={() => onRoleChange(member.userId)}
-                    className="rounded-md border border-line bg-surface-hover px-3 py-2 text-xs font-semibold text-ink hover:bg-surface-hover"
-                  >
-                    Save
-                  </button>
-                  <button
-                    onClick={() => setChangingRoleFor(null)}
-                    className="rounded-md border border-line bg-surface px-3 py-2 text-xs font-medium text-dim hover:bg-canvas"
-                  >
-                    Cancel
-                  </button>
-                </div>
-              </div>
-            ) : (
-              <RoleBadge roleId={member.roleId} roleName={member.roleName} size="sm" />
-            )}
-          </div>
-        </div>
-
-        <div className="rounded-md border border-line bg-surface p-3">
-          <p className="text-[11px] uppercase tracking-[0.16em] text-dim">Joined</p>
-          <div className="mt-2 text-sm">
-            {isInvited ? (
-              <>
-                <span className="font-medium text-warning">{timeAgo(member.joinedAt || member.createdAt)}</span>
-                <span className="mt-1 block text-[11px] text-dim">Invited {formatDate(member.joinedAt || member.createdAt)}</span>
-              </>
-            ) : (
-              <>
-                <span className="font-medium text-ink">{timeAgo(member.joinedAt)}</span>
-                <span className="mt-1 block text-[11px] text-dim">{formatDate(member.joinedAt)}</span>
-              </>
-            )}
-          </div>
-        </div>
-      </div>
-
-      <div className="mt-3 rounded-md border border-line bg-surface p-3">
-        <p className="text-[11px] uppercase tracking-[0.16em] text-dim">Access scope</p>
-        <div className="mt-2">
-          <ScopeSummary
-            projectAccess={member.projectAccess}
-            workspaceAccess={member.workspaceAccess}
-          />
-        </div>
-      </div>
-    </article>
-  );
-}
-
-function InvitationCard({ invitation, onCancel }) {
-  return (
-    <article className="rounded-lg border border-line bg-surface-hover p-4 ">
-      <div className="flex items-start justify-between gap-3">
-        <div className="min-w-0">
-          <p className="truncate text-sm font-semibold text-ink">{invitation.email}</p>
-          <div className="mt-1 flex flex-wrap items-center gap-2">
-            <RoleBadge roleId={invitation.roleId} roleName={invitation.roleName} size="sm" />
-            <StatusBadge status="invited" />
-          </div>
-        </div>
-        <button
-          type="button"
-          onClick={() => onCancel(invitation.inviteId)}
-          className="rounded-md border border-danger/20 bg-danger/10 px-3 py-2 text-xs font-semibold text-danger hover:bg-danger/10"
-        >
-          Cancel
-        </button>
-      </div>
-
-      <div className="mt-4 grid grid-cols-2 gap-3">
-        <div className="rounded-md border border-line bg-surface p-3">
-          <p className="text-[11px] uppercase tracking-[0.16em] text-dim">Sent</p>
-          <p className="mt-2 text-sm font-medium text-ink">{timeAgo(invitation.createdAt)}</p>
-          <p className="mt-1 text-[11px] text-dim">{formatDate(invitation.createdAt)}</p>
-        </div>
-        <div className="rounded-md border border-line bg-surface p-3">
-          <p className="text-[11px] uppercase tracking-[0.16em] text-dim">Expires</p>
-          <p className="mt-2 text-sm font-medium text-ink">{formatDate(invitation.expiresAt)}</p>
-        </div>
-      </div>
-    </article>
-  );
-}
-
-/** Compact row actions menu to avoid rendering all action buttons at once */
-function MemberActionsMenu({
-  member,
-  changingRoleFor,
-  setChangingRoleFor,
-  setNewRoleId,
-  onSuspend,
-  onUnsuspend,
-  onStartRemove,
-  onEditRole,
-  onEditScopes,
-}) {
-  const { can } = usePermission();
-  const canEditMembers = can('user_management', 'edit');
-  const canManageMembers = can('user_management', 'manage');
-
-  if (!canEditMembers && !canManageMembers) {
-    return <span className="text-[11px] text-dim">No actions</span>;
-  }
-
-  const closeMenu = (event) => {
-    const details = event.currentTarget.closest('details');
-    if (details) details.removeAttribute('open');
-  };
-
-  const runAction = (event, callback) => {
-    callback();
-    closeMenu(event);
-  };
-
-  const actionClass = 'block w-full rounded-md px-3 py-2 text-left text-xs font-medium text-ink transition-colors hover:bg-canvas';
-
-  return (
-    <details className="relative inline-block text-left">
-      <summary className="list-none rounded-lg border border-line bg-surface px-2.5 py-1.5 text-xs font-semibold text-ink  transition-colors hover:bg-canvas cursor-pointer [&::-webkit-details-marker]:hidden">
-        <span className="inline-flex items-center gap-1">
-          Manage
-          <svg className="h-3.5 w-3.5 text-dim" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-            <path fillRule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.51a.75.75 0 01-1.08 0l-4.25-4.51a.75.75 0 01.02-1.06z" clipRule="evenodd" />
-          </svg>
-        </span>
-      </summary>
-
-      <div className="absolute right-0 z-20 mt-1.5 w-44 rounded-md border border-line bg-surface p-1 shadow-xl">
-        {canEditMembers && (
-          <button
-            type="button"
-            onClick={(event) => runAction(event, () => {
-              setChangingRoleFor(member.userId);
-              setNewRoleId(member.roleId);
-            })}
-            className={actionClass}
-          >
-            {changingRoleFor === member.userId ? 'Role editor open' : 'Change role'}
-          </button>
-        )}
-
-        {canManageMembers && (
-          <button
-            type="button"
-            onClick={(event) => runAction(event, () => onEditRole?.(member.roleId))}
-            className={actionClass}
-          >
-            Edit role template
-          </button>
-        )}
-
-        {canEditMembers && (
-          <button
-            type="button"
-            onClick={(event) => runAction(event, () => onEditScopes(member))}
-            className={actionClass}
-          >
-            Edit access scope
-          </button>
-        )}
-
-        {canEditMembers && (member.status === 'suspended' ? (
-          <button
-            type="button"
-            onClick={(event) => runAction(event, () => onUnsuspend(member.userId, member.email))}
-            className={actionClass}
-          >
-            Unsuspend member
-          </button>
-        ) : (
-          <button
-            type="button"
-            onClick={(event) => runAction(event, () => onSuspend(member.userId, member.email))}
-            className={actionClass}
-          >
-            Suspend member
-          </button>
-        ))}
-
-        {canEditMembers && (
-          <button
-            type="button"
-            onClick={(event) => runAction(event, () => onStartRemove(member.userId, member.email))}
-            className="block w-full rounded-md px-3 py-2 text-left text-xs font-medium text-danger transition-colors hover:bg-danger/10"
-          >
-            Remove member
-          </button>
-        )}
-      </div>
-    </details>
-  );
-}
-
-function ScopeSummary({ projectAccess, workspaceAccess }) {
-  const projects = Array.isArray(projectAccess) ? projectAccess : [];
-  const workspaces = Array.isArray(workspaceAccess) ? workspaceAccess : [];
-
-  const projectLabel = projects.includes('*')
-    ? 'All projects'
-    : projects.length > 0
-      ? `${projects.length} project${projects.length > 1 ? 's' : ''}`
-      : 'No projects';
-
-  const workspaceLabel = workspaces.includes('*')
-    ? 'All workspaces'
-    : workspaces.length > 0
-      ? `${workspaces.length} workspace${workspaces.length > 1 ? 's' : ''}`
-      : 'No workspaces';
-
-  return (
-    <div className="flex flex-col gap-1">
-      <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] border bg-info/10 text-info border-info/20 w-fit">
-        {projectLabel}
-      </span>
-      <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] border bg-info/10 text-info border-info/20 w-fit">
-        {workspaceLabel}
-      </span>
-    </div>
-  );
-}
-
 function AccessScopeModal({
   member,
   projects,
@@ -1262,47 +648,6 @@ function AccessScopeModal({
 
 /* InviteModal extracted to ../components/InviteModal.jsx */
 
-function StatTile({ label, value, tone = 'teal' }) {
-  const tones = {
-    teal: 'text-ink',
-    green: 'text-success',
-    amber: 'text-warning',
-    red: 'text-danger',
-  };
-
-  return (
-    <div className="bg-surface px-4 py-4">
-      <p className="text-[11px] uppercase tracking-[0.18em] text-dim">{label}</p>
-      <p className={`mt-2 text-3xl font-semibold leading-none tracking-tight ${tones[tone] || tones.teal}`}>{value}</p>
-    </div>
-  );
-}
-
-/** Simple label + value block for the access card */
-function InfoBlock({ label, value }) {
-  return (
-    <div>
-      <p className="text-xs text-dim uppercase tracking-wider mb-1.5">{label}</p>
-      <p className="text-sm font-medium text-ink">{value}</p>
-    </div>
-  );
-}
-
-/** Member status badge */
-function StatusBadge({ status }) {
-  const styles = {
-    active:    'bg-success/10 text-success border-success/20',
-    invited:   'bg-warning/10 text-warning border-warning/20',
-    suspended: 'bg-danger/10 text-danger border-danger/20',
-  };
-  return (
-    <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium border ${styles[status] || styles.active}`}>
-      {status || 'active'}
-    </span>
-  );
-}
-
-/** Phase 1 indicator banner */
 function Phase1Banner() {
   return (
     <div className="bg-warning/10 border border-warning/20 rounded-lg p-4 flex items-start gap-3">
@@ -1322,45 +667,6 @@ function Phase1Banner() {
 }
 
 /** Feedback toast banner */
-function FeedbackBanner({ message, type }) {
-  const bg = type === 'error' ? 'bg-danger/10 border-danger/20 text-danger' : 'bg-success/10 border-success/20 text-success';
-  return (
-    <div className={`border rounded-lg p-3 text-sm font-medium ${bg}`}>
-      {message}
-    </div>
-  );
-}
-
-/** Format ISO date to readable short format */
-function formatDate(iso) {
-  if (!iso) return '—';
-  try {
-    return new Date(iso).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
-  } catch {
-    return '—';
-  }
-}
-
-/** Convert ISO timestamp to human-readable relative time (e.g. "2 hours ago") */
-function timeAgo(iso) {
-  if (!iso) return '—';
-  try {
-    const diff = Date.now() - new Date(iso).getTime();
-    const mins = Math.floor(diff / 60000);
-    if (mins < 1) return 'Just now';
-    if (mins < 60) return `${mins}m ago`;
-    const hours = Math.floor(mins / 60);
-    if (hours < 24) return `${hours}h ago`;
-    const days = Math.floor(hours / 24);
-    if (days < 30) return `${days}d ago`;
-    const months = Math.floor(days / 30);
-    return `${months}mo ago`;
-  } catch {
-    return '—';
-  }
-}
-
-/** Loading skeleton for the page */
 function TeamPageLoading() {
   return (
     <div className="max-w-6xl mx-auto px-4 sm:px-6 py-6 flex items-center justify-center min-h-[400px]">

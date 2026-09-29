@@ -26,7 +26,7 @@ import { Input } from "/src/components/ui/input";
 import profilePlaceholder from '../../assets/profileplaceholder.jpg' // Adjust the path as necessary
 import { UserContext } from "../../context/UserContext";
 import { VendorContext } from "../../context/VendorContext";
-import AppHeader from "../../components/AppHeader/Appheader";
+import { VendorHeader } from "../../components/vendor-header";
 import UserProfileCard from '../../components/UserProfileCard/UserProfileCard'; // Import the new component
 import VendorTabPanel from '../../components/layout/VendorTabPanel';
 import config from '../../config/env';
@@ -47,10 +47,8 @@ export default function UserPortfolio() {
   const [showAddServiceForm, setShowAddServiceForm] = useState(false);
   const [dynamicFields, setDynamicFields] = useState([]);
   const [customFields, setCustomFields] = useState([]); // ADD THIS LINE
-  const [editProduct, setEditProduct] = useState(null);
   const [showEditServiceDialog, setShowEditServiceDialog] = useState(false);
   const [editServiceData, setEditServiceData] = useState({});
-  const [expandedSections, setExpandedSections] = useState({});
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -275,8 +273,6 @@ const handleProfileFileChange = (e) => {
     }
 };
 
-const [isSaving, setIsSaving] = useState(false);
-
 const handleProfileSave = async () => {
   try {
       // Construct the updated location and phone
@@ -418,20 +414,6 @@ const [editProductData, setEditProductData] = useState(null);
     compliance: "",
     caseStudies: "",
     isFeatured: false,
-  });
-
-  const [editedProduct, setEditedProduct] = useState({
-    name: '',
-    type: '',
-    features: '',
-    customers: '',
-    usageAreas: '',
-    sizes: '',
-    packaging: '',
-    certifications: '',
-    support: '',
-    catalogLink: '',
-    images: [],
   });
 
   const handleProductArrowClick = (productId) => {
@@ -605,18 +587,6 @@ const [editProductData, setEditProductData] = useState(null);
     setCustomFields([...customFields, { label: "", value: "" }]);
   };
   
-  // const handleCustomFieldChange = (index, key, val) => {
-  //   const updated = [...customFields];
-  //   updated[index][key] = val;
-  //   setCustomFields(updated);
-  // };
-  
-  // const handleRemoveCustomField = (index) => {
-  //   const updated = [...customFields];
-  //   updated.splice(index, 1);
-  //   setCustomFields(updated);
-  // };
-  
   const handleAddServiceCustomField = () => { // Define this function
     setNewServiceCustomFields([...newServiceCustomFields, { label: "", value: "" }]);
   };
@@ -631,166 +601,22 @@ const [editProductData, setEditProductData] = useState(null);
     setNewServiceCustomFields(updated);
   };
   
-  // const handleDeleteService = async (serviceId) => {
-  //   try {
-  //     if (!currentUser?.email || !serviceId) {
-  //       alert("Missing required information");
-  //       return;
-  //     }
-      
-  //     if (!window.confirm("Are you sure you want to delete this service?")) {
-  //       return;
-  //     }
-      
-  //     // Send delete request to backend
-  //     const response = await fetch('${config.VENDOR_BACKEND_URL}/api/vendor/services', {
-  //       method: 'DELETE',
-  //       headers: {
-  //         'Content-Type': 'application/json',
-  //       },
-  //       body: JSON.stringify({
-  //         email: currentUser.email,
-  //         serviceId: serviceId
-  //       }),
-  //       credentials: 'include'
-  //     });
-      
-  //     if (!response.ok) {
-  //       throw new Error(`Server responded with status: ${response.status}`);
-  //     }
-      
-  //     const result = await response.json();
-  //     console.log("Service deleted successfully:", result);
-      
-  //     // Remove the service from the services array
-  //     if (result.success) {
-  //       setServices(prevServices => prevServices.filter(s => s.id !== serviceId));
-  //     }
-      
-  //     // Show success message
-  //     alert('Service deleted successfully!');
-  //   } catch (error) {
-  //     console.error('Error deleting service:', error);
-  //     alert('Failed to delete service. Please try again.');
-  //   }
-  // };
-  
-  // const handleUpdateService = async () => {
-  //   try {
-  //     if (!currentUser?.email || !editServiceData?.id) {
-  //       alert("Missing required information");
-  //       return;
-  //     }
-      
-  //     // Create form data for file upload
-  //     const formData = new FormData();
-  //     formData.append('email', currentUser.email);
-  //     formData.append('serviceId', editServiceData.id);
-      
-  //     // Add service data
-  //     formData.append('serviceData', JSON.stringify(editServiceData));
-      
-  //     // Add new service images if any
-  //     const filesToUpload = newImages.filter(img => img !== null);
-  //     filesToUpload.forEach(image => {
-  //       formData.append('serviceImages', image);
-  //     });
-      
-  //     // Send data to backend
-  //     const response = await fetch('${config.VENDOR_BACKEND_URL}/api/vendor/services', {
-  //       method: 'PUT',
-  //       body: formData,
-  //       credentials: 'include'
-  //     });
-      
-  //     if (!response.ok) {
-  //       throw new Error(`Server responded with status: ${response.status}`);
-  //     }
-      
-  //     const result = await response.json();
-  //     console.log("Service updated successfully:", result);
-      
-  //     // Update the service in the services array
-  //     if (result.success && result.data) {
-  //       setServices(prevServices => 
-  //         prevServices.map(s => s.id === result.data.id ? result.data : s)
-  //       );
-  //     }
-      
-  //     // Reset form
-  //     setShowEditServiceDialog(false);
-  //     setEditServiceData(null);
-  //     setNewImages([null, null, null]);
-      
-  //     // Show success message
-  //     alert('Service updated successfully!');
-  //   } catch (error) {
-  //     console.error('Error updating service:', error);
-  //     alert('Failed to update service. Please try again.');
-  //   }
-  // };
 
   const handleServiceArrowClick = (serviceId) => {
     setExpandedServiceId(expandedServiceId === serviceId ? null : serviceId);
   };
-  // This function is already defined elsewhere in the file
-  // function handleServiceImageUpload(e) {
-  //   const files = Array.from(e.target.files);
-  //   setServiceImages(prev => [...prev, ...files]);
-  // }
   
   function handleRemoveServiceImage(index) {
     setServiceImages(prev => prev.filter((_, i) => i !== index));
   }
   
   // Default static data for products and services (fallback data)
-  const defaultProducts = [
-    {
-      id: 1,
-      name: "EcoGrip - Anti-slip Industrial Flooring",
-      category: "Safety Equipment / Building Material",
-      verified: true,
-    },
-    {
-      id: 2,
-      name: "TuffStep - Anti-slip Industrial Coatings",
-      category: "Safety Equipment / Building Material",
-      verified: true,
-    },
-    {
-      id: 3,
-      name: "SecureStride - Industrial Anti-Skid Platforms",
-      category: "Safety Equipment / Building Material",
-      verified: true,
-    },
-    {
-      id: 4,
-      name: "EcoGrip - Anti-slip Industrial Flooring",
-      category: "Safety Equipment / Building Material",
-      verified: true,
-    },
-    {
-      id: 5,
-      name: "TuffStep - Anti-slip Industrial Coatings",
-      category: "Safety Equipment / Building Material",
-      verified: true,
-    },
-    {
-      id: 6,
-      name: "SecureStride - Industrial Anti-Skid Platforms",
-      category: "Safety Equipment / Building Material",
-      verified: true,
-    },
-  ];
 
   // State for products and services
   const [products, setProducts] = useState([]);
   const [productsLoading, setProductsLoading] = useState(false);
   const [productsError, setProductsError] = useState(null);
   
-  // const [services, setServices] = useState([]);
-  // const [servicesLoading, setServicesLoading] = useState(false);
-  // const [servicesError, setServicesError] = useState(null);
 
   // Fetch products from backend (lazy: only when products tab is active)
   useEffect(() => {
@@ -879,138 +705,8 @@ const [editProductData, setEditProductData] = useState(null);
     };
   }, [currentUser?.vendorId]);
 
-  // Default services data
-  const defaultServices = [
-    {
-      id: 101,
-      name: "Custom Interior Design & Space Planning",
-      serviceType: "Interior Design",
-      designPlanning: "Comprehensive space analysis and planning.",
-      residentialDesign: "Tailored design for homes.",
-      commercialDesign: "Office and business space design.",
-      furnitureStyling: "Selection and arrangement of furniture.",
-      lightingDesign: "Custom lighting solutions.",
-      colorConsultation: "Expert color palette advice.",
-      visualization: "3D renderings of design concepts.",
-      projectManagement: "Overseeing the entire project execution.",
-      homeStaging: "Preparing homes for sale.",
-      onlineConsultation: "Virtual design consultations.",
-      sustainableDesign: "Eco-friendly design options.",
-      renovation: "Kitchen and bathroom remodeling.",
-      spaceOptimization: "Maximizing space efficiency.",
-      materialSelection: "Guidance on textiles and materials.",
-      images: ["https://via.placeholder.com/150", "https://via.placeholder.com/150"], // Example image URLs
-      isFeatured: true,
-    },
-    {
-      id: 102,
-      name: "Residential Interior Design",
-      serviceType: "Interior Design",
-      designPlanning: "Detailed planning for residential spaces.",
-      residentialDesign: "Creating beautiful and functional homes.",
-      commercialDesign: null,
-      furnitureStyling: "Selecting comfortable and stylish furniture.",
-      lightingDesign: "Ambient and task lighting design.",
-      colorConsultation: "Choosing the right color schemes.",
-      visualization: "Realistic 3D models of rooms.",
-      projectManagement: "Managing home design projects.",
-      homeStaging: null,
-      onlineConsultation: "Remote design advice.",
-      sustainableDesign: "Environmentally conscious design.",
-      renovation: "Home renovation and remodeling.",
-      spaceOptimization: "Smart space-saving solutions.",
-      materialSelection: "Sourcing quality materials.",
-      images: ["https://via.placeholder.com/150"],
-      isFeatured: false,
-    },
-    {
-      id: 103,
-      name: "Commercial Interior Design",
-      serviceType: "Interior Design",
-      designPlanning: "Strategic planning for business spaces.",
-      residentialDesign: null,
-      commercialDesign: "Designing functional and impressive commercial spaces.",
-      furnitureStyling: "Selecting durable and professional furniture.",
-      lightingDesign: "Effective lighting for workspaces.",
-      colorConsultation: "Brand-aligned color schemes.",
-      visualization: "3D visualizations of commercial spaces.",
-      projectManagement: "Efficient management of commercial projects.",
-      homeStaging: null,
-      onlineConsultation: "Virtual consultations for businesses.",
-      sustainableDesign: "Implementing eco-friendly practices.",
-      renovation: "Office and retail space renovations.",
-      spaceOptimization: "Creating efficient layouts.",
-      materialSelection: "Choosing durable and commercial-grade materials.",
-      images: ["https://via.placeholder.com/150"],
-      isFeatured: true,
-    },
-    {
-      id: 104,
-      name: "Online Interior Consultation",
-      serviceType: "Consultation",
-      designPlanning: "Virtual space planning and advice.",
-      residentialDesign: "Remote home design guidance.",
-      commercialDesign: "Online business space consultation.",
-      furnitureStyling: "Virtual furniture selection assistance.",
-      lightingDesign: "Remote lighting design advice.",
-      colorConsultation: "Online color scheme recommendations.",
-      visualization: "Digital concept boards and mood boards.",
-      projectManagement: "Remote project oversight and guidance.",
-      homeStaging: "Virtual home staging advice for selling.",
-      onlineConsultation: "Comprehensive online design consultations.",
-      sustainableDesign: "Guidance on eco-friendly design choices.",
-      renovation: "Virtual renovation planning support.",
-      spaceOptimization: "Remote space-saving tips and strategies.",
-      materialSelection: "Online material and textile recommendations.",
-      images: [],
-      isFeatured: false,
-    },
-    {
-      id: 105,
-      name: "Kitchen & Bathroom Renovation",
-      serviceType: "Renovation",
-      designPlanning: "Detailed planning for kitchen and bath remodels.",
-      residentialDesign: "Custom kitchen and bathroom designs.",
-      commercialDesign: null,
-      furnitureStyling: "Selection of fixtures and fittings.",
-      lightingDesign: "Task and ambient lighting for kitchens and baths.",
-      colorConsultation: "Color schemes for wet areas.",
-      visualization: "3D models of renovated spaces.",
-      projectManagement: "Managing renovation projects from start to finish.",
-      homeStaging: null,
-      onlineConsultation: "Virtual consultation for renovation ideas.",
-      sustainableDesign: "Eco-friendly material and fixture options.",
-      renovation: "Full kitchen and bathroom renovation services.",
-      spaceOptimization: "Maximizing storage and functionality.",
-      materialSelection: "Sourcing durable and stylish materials.",
-      images: ["https://via.placeholder.com/150"],
-      isFeatured: true,
-    },
-    {
-      id: 106,
-      name: "Furniture Selection & Styling",
-      serviceType: "Styling",
-      designPlanning: "Planning furniture layouts and styles.",
-      residentialDesign: "Choosing furniture for homes.",
-      commercialDesign: "Selecting furniture for offices and businesses.",
-      furnitureStyling: "Expert selection and arrangement of furniture.",
-      lightingDesign: "Integrating lighting with furniture.",
-      colorConsultation: "Coordinating furniture with color palettes.",
-      visualization: "Furniture mood boards and 3D layouts.",
-      projectManagement: null,
-      homeStaging: "Staging homes with appropriate furniture.",
-      onlineConsultation: "Virtual furniture selection advice.",
-      sustainableDesign: "Sourcing sustainable furniture options.",
-      renovation: null,
-      spaceOptimization: "Furniture solutions for maximizing space.",
-      materialSelection: "Guidance on fabric and material choices.",
-      images: ["https://via.placeholder.com/150"],
-      isFeatured: false,
-    },
-  ];
-  
   // State for services
-  const [services, setServices] = useState(defaultServices);
+  const [services, setServices] = useState([]);
   const [servicesLoading, setServicesLoading] = useState(false);
   const [servicesError, setServicesError] = useState(null);
   
@@ -1033,9 +729,9 @@ const [editProductData, setEditProductData] = useState(null);
         });
         
         if (!response.ok) {
-          // If 404, use default data and don't show error
+          // If 404, leave the list empty and don't show an error
           if (response.status === 404) {
-            console.log("Services API not implemented yet, using default data");
+            console.log("Services API not implemented yet; leaving services empty");
             return;
           }
           throw new Error(`Server responded with status: ${response.status}`);
@@ -1050,8 +746,7 @@ const [editProductData, setEditProductData] = useState(null);
         servicesFetchedRef.current = true;
       } catch (error) {
         console.error('Error fetching services:', error);
-        setServicesError('Failed to load services. Using default data.');
-        // Keep using default data on error
+        setServicesError('Failed to load services.');
       } finally {
         setServicesLoading(false);
       }
@@ -1139,13 +834,6 @@ const [editProductData, setEditProductData] = useState(null);
     );
   };
 
-  const toggleSection = (label) => {
-  setExpandedSections((prev) => ({
-    ...prev,
-    [label]: !prev[label],
-  }));
-};
-   
   const handleSaveService = () => {
      console.log("Updated Service Data:", editServiceData);
      console.log("New Images:", newImages);
@@ -1155,13 +843,6 @@ const [editProductData, setEditProductData] = useState(null);
     
     
 
-  // const filteredProducts = products.filter((product) =>
-  //   product.name.toLowerCase().includes(productSearchQuery.toLowerCase())
-  // );
-
-  // const filteredServices = services.filter((service) =>
-  //   service.name.toLowerCase().includes(serviceSearchQuery.toLowerCase())
-  // );
 
   const handleProductInputChange = (e) => {
     const { name, value } = e.target;
@@ -1613,7 +1294,10 @@ const [editProductData, setEditProductData] = useState(null);
 
   return (
     <div className="min-h-screen bg-canvas font-sans w-full pb-24">
-      <AppHeader />
+      {/* Combined vendor header, replacing the old AppHeader */}
+      <div className="pt-5 px-5 pb-0">
+        <VendorHeader />
+      </div>
       
       <div className="mx-auto mt-3 flex w-full max-w-[1400px] flex-col gap-5 px-3 py-5 sm:mt-4 sm:gap-6 sm:px-4 sm:py-8 md:px-6 lg:flex-row lg:items-start lg:px-8">
           
