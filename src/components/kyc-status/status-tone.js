@@ -38,6 +38,27 @@ export const STATUS_TONE = {
     dot: "bg-info",
     text: "text-info",
   },
+  initial_approved: {
+    label: "Visit pending",
+    headline: "Online KYC Approved",
+    chip: "border-info/25 bg-info/10 text-info",
+    dot: "bg-info",
+    text: "text-info",
+  },
+  onsite_pending: {
+    label: "Visit scheduled",
+    headline: "Physical Visit Scheduled",
+    chip: "border-info/25 bg-info/10 text-info",
+    dot: "bg-info",
+    text: "text-info",
+  },
+  onsite_verified: {
+    label: "Compliance review",
+    headline: "Compliance Review in Progress",
+    chip: "border-warning/25 bg-warning/10 text-warning",
+    dot: "bg-warning",
+    text: "text-warning",
+  },
   physical_kyc_scheduled: {
     label: "Visit scheduled",
     headline: "Physical Visit Scheduled",

@@ -10,7 +10,7 @@
 // replaced by the `warning` / `cta` tokens.
 // ============================================================
 
-import { CheckCircle2, ClipboardList, Pencil, Search, XCircle } from "lucide-react";
+import { Calendar, CheckCircle2, ClipboardList, Pencil, Search, XCircle } from "lucide-react";
 
 /** Shared panel shell — hairline card, leading icon, headline and body. */
 function Panel({ icon: Icon, iconClass = "text-dim", title, titleClass = "text-ink", children }) {
@@ -37,6 +37,19 @@ export function OnlineKYCPendingPanel() {
   );
 }
 
+/** Online KYC approved — the auditor will schedule the physical visit. */
+export function VisitSchedulingPanel() {
+  return (
+    <Panel icon={Calendar} iconClass="text-info" title="Online KYC Approved">
+      <p className="mt-2 text-sm leading-6 text-dim">
+        Your documents have been verified and approved. Our audit team will now schedule a
+        physical verification visit to your premises — the date and location will appear here
+        once scheduled.
+      </p>
+    </Panel>
+  );
+}
+
 /** Compliance is reviewing the auditor's findings. */
 export function PhysicalKYCReviewPanel() {
   return (
@@ -50,13 +63,21 @@ export function PhysicalKYCReviewPanel() {
 }
 
 /** The application was approved. */
-export function ApprovedPanel() {
+export function ApprovedPanel({ onGoToDashboard }) {
   return (
     <Panel icon={CheckCircle2} iconClass="text-success" title="Congratulations! You're Approved" titleClass="text-success">
       <p className="mt-2 text-sm leading-6 text-dim">
         Your vendor application has been fully approved after successful completion of both online and physical KYC verification.
         You now have full access to the Caasdi platform.
       </p>
+      {onGoToDashboard && (
+        <button
+          onClick={onGoToDashboard}
+          className="brand-press mt-5 rounded-lg bg-cta px-8 py-3 text-sm font-medium text-cta-foreground transition-colors duration-180 ease-signal hover:bg-cta/90"
+        >
+          Go to dashboard
+        </button>
+      )}
     </Panel>
   );
 }

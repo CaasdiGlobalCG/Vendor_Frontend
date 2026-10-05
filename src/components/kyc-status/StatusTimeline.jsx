@@ -39,19 +39,23 @@ const STEP_ICONS = {
  * @param {Array<{key: string, label: string}>} props.steps - The pipeline stages, in order.
  * @param {number} props.currentIndex - Index of the current stage (from `getStepIndex`).
  * @param {boolean} [props.rejected] - When true, NO stage is marked complete.
+ * @param {boolean} [props.completed] - When true, EVERY stage is marked complete
+ *        (e.g. final "Approved") and the detail renders below the timeline.
  * @param {React.ReactNode} [props.children] - Expanded content for the current stage.
  */
 export function StatusTimeline({
   steps = [],
   currentIndex = 0,
   rejected = false,
+  completed = false,
   children,
 }) {
   // A rejected application is off-pipeline: `getStepIndex('rejected')` returns 0, which would
   // otherwise attach the rejection detail under the "Online KYC Review" node and read as if the
   // vendor were still at stage one. When rejected, no node is current and the detail renders
-  // BELOW the timeline instead.
-  const expandedBelow = rejected && children;
+  // BELOW the timeline instead. The same applies to a fully completed pipeline — the final
+  // "Approved" node should read Completed, not In progress.
+  const expandedBelow = (rejected || completed) && children;
 
   return (
     <div className="min-w-0">
@@ -59,10 +63,10 @@ export function StatusTimeline({
       {steps.map((step, index) => {
         const Icon = STEP_ICONS[step.key] || ClipboardList;
         // A stage is complete only when the vendor has moved past it — and never when rejected.
-        const done = !rejected && index < currentIndex;
-        const active = !rejected && index === currentIndex;
+        const done = !rejected && (completed || index < currentIndex);
+        const active = !rejected && !completed && index === currentIndex;
         // The expanded content attaches to the current node, except when it renders below.
-        const isCurrent = !rejected && index === currentIndex;
+        const isCurrent = active;
 
         return (
           <li key={step.key} className="relative flex gap-4 pb-8 last:pb-0">

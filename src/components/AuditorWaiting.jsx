@@ -16,6 +16,7 @@ import {
   getAdditionalDocRequest,
   uploadAdditionalDocument,
 } from "../services/additionalDocsApi";
+import authFetch from "../utils/authFetch";
 import {
   Building2,
   Calendar,
@@ -30,6 +31,7 @@ import { StatusTimeline } from "./kyc-status/StatusTimeline";
 import {
   OnlineKYCPendingPanel,
   PhysicalKYCReviewPanel,
+  VisitSchedulingPanel,
   ApprovedPanel,
   ResubmitRequestedPanel,
   RejectedPanel,
@@ -47,9 +49,25 @@ const STATUS_STEPS = [
   { key: "approved", label: "Approved", icon: "✅" },
 ];
 
+// Maps the statuses the auditor actually sets (Employee_Main onsite flow:
+// initial_approved → onsite_pending → onsite_verified → approved) onto the
+// timeline steps. The physical_kyc_* module statuses are kept for when that
+// workflow is wired up.
+const STATUS_STEP_INDEX = {
+  pending: 0,
+  in_review: 0,
+  resubmit_requested: 0,
+  initial_approved: 1,
+  physical_kyc_scheduled: 1,
+  onsite_pending: 2,
+  physical_kyc_in_progress: 2,
+  onsite_verified: 3,
+  physical_kyc_review: 3,
+  approved: 4,
+};
+
 function getStepIndex(status) {
-  const idx = STATUS_STEPS.findIndex((s) => s.key === status);
-  return idx === -1 ? 0 : idx;
+  return STATUS_STEP_INDEX[status] ?? 0;
 }
 
 function formatDate(dateStr) {
@@ -69,8 +87,10 @@ function ScheduleCard({ schedule, checklist, onRescheduleRequest }) {
   const [submitting, setSubmitting] = useState(false);
   const [message, setMessage] = useState(null);
 
+  // Reschedule only applies to real physical-KYC schedules (scheduleId) — the
+  // onsite-verification details shown from the vendor record have none.
   const canReschedule =
-    schedule.status === "scheduled" && (schedule.rescheduleCount || 0) < 2;
+    schedule.scheduleId && schedule.status === "scheduled" && (schedule.rescheduleCount || 0) < 2;
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -161,7 +181,7 @@ function ScheduleCard({ schedule, checklist, onRescheduleRequest }) {
         </div>
       )}
 
-      {schedule.rescheduleCount >= 2 && schedule.status === "scheduled" && (
+      {schedule.scheduleId && schedule.rescheduleCount >= 2 && schedule.status === "scheduled" && (
         <p className="mt-4 text-xs text-warning">
           Maximum reschedule attempts reached. Further reschedule is not possible.
         </p>
@@ -417,18 +437,25 @@ export function AdditionalDocsPanel() {
 
 // ─── Main Component ───────────────────────────────────────────────────────────
 
+const POLL_INTERVAL_MS = 15000;
+
 export default function AuditorWaiting() {
   const navigate = useNavigate();
-  const { currentUser } = useContext(VendorContext);
+  const { currentUser, setUser } = useContext(VendorContext);
 
   const [kycData, setKycData] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [fetchError, setFetchError] = useState(null);
 
   const vendorStatus = currentUser?.status || "pending";
   const vendorId = currentUser?.vendorId;
 
+  // Statuses where the vendor has passed online review and is in the
+  // physical-verification pipeline (both the auditor-portal vocabulary and the
+  // physical-KYC module's).
   const PHYSICAL_KYC_STATUSES = [
+    "initial_approved",
+    "onsite_pending",
+    "onsite_verified",
     "physical_kyc_scheduled",
     "physical_kyc_in_progress",
     "physical_kyc_review",
@@ -447,15 +474,57 @@ export default function AuditorWaiting() {
       const data = await getPhysicalKYCStatus(vendorId);
       setKycData(data);
     } catch (err) {
-      setFetchError(err.message);
+      // Optional enrichment only — visit details are also derived from
+      // vendor.onsiteVerification, so a failure here (e.g. the physical-KYC
+      // tables aren't provisioned) must not blank the status panels.
+      console.warn("[AuditorWaiting] Physical KYC status fetch failed:", err?.message);
     } finally {
       setLoading(false);
     }
   }, [vendorId, isPhysicalKYCPhase]);
 
+  // Poll /api/vendor/me so auditor-side changes (visit scheduled, verification
+  // completed, approved/rejected) reflect here without a manual refresh.
+  // setUser no-ops when the merged user is identical, so idle polls are cheap.
+  const refreshVendorStatus = useCallback(async () => {
+    if (!currentUser) return; // hydration still in progress — it will populate state
+    try {
+      const res = await authFetch("/api/vendor/me", { credentials: "include" });
+      if (!res.ok) return;
+      const v = (await res.json())?.data;
+      if (!v) return;
+      setUser({
+        ...currentUser,
+        status: v.status != null ? String(v.status).trim() : currentUser?.status,
+        onsiteVerification: v.onsiteVerification || null,
+        rejectionReason: v.rejectionReason || null,
+        resubmitPermissions: v.resubmitPermissions || null,
+        resubmitRemarks: v.resubmitRemarks || null,
+        additionalDocRequest: v.additionalDocRequest || null,
+        hasFilledForm:
+          typeof v.hasFilledForm === "boolean" ? v.hasFilledForm : currentUser?.hasFilledForm,
+      });
+    } catch {
+      // Transient failure — keep showing the last known status.
+    }
+  }, [currentUser, setUser]);
+
   useEffect(() => {
-    loadKYCData();
-  }, [loadKYCData]);
+    const tick = () => {
+      if (document.visibilityState !== "visible") return;
+      refreshVendorStatus();
+      loadKYCData();
+    };
+    tick();
+    const id = setInterval(tick, POLL_INTERVAL_MS);
+    document.addEventListener("visibilitychange", tick);
+    window.addEventListener("focus", tick);
+    return () => {
+      clearInterval(id);
+      document.removeEventListener("visibilitychange", tick);
+      window.removeEventListener("focus", tick);
+    };
+  }, [refreshVendorStatus, loadKYCData]);
 
   const handleReschedule = async (reason) => {
     if (!kycData?.schedule) throw new Error("No active schedule found");
@@ -468,19 +537,28 @@ export default function AuditorWaiting() {
     navigate("/");
   };
 
+  // Prefer the physical-KYC schedule when one exists; otherwise derive the
+  // displayed visit details from the onsite verification the auditor saved on
+  // the vendor record (Employee_Main flow writes `onsiteVerification`).
+  const onsite = currentUser?.onsiteVerification;
+  const schedule =
+    kycData?.schedule ||
+    (onsite
+      ? {
+          scheduledDate: onsite.visitDate,
+          scheduledTime: onsite.visitTime,
+          location: onsite.visitLocation,
+          auditType: "onsite",
+          status: "scheduled",
+          rescheduleCount: 0,
+        }
+      : null);
+
   const renderContent = () => {
     if (loading) {
       return (
         <div className="flex justify-center items-center py-16">
           <div className="h-10 w-10 animate-spin rounded-full border-4 border-success border-t-transparent" />
-        </div>
-      );
-    }
-
-    if (fetchError) {
-      return (
-        <div className="rounded-xl border border-danger/25 bg-danger/10 p-4 text-sm text-danger">
-          Error loading KYC data: {fetchError}
         </div>
       );
     }
@@ -499,14 +577,22 @@ export default function AuditorWaiting() {
           />
         );
 
+      case "initial_approved":
+        return <VisitSchedulingPanel />;
+
+      case "onsite_pending":
       case "physical_kyc_scheduled":
         return (
           <>
-            <ScheduleCard
-              schedule={kycData?.schedule || {}}
-              checklist={kycData?.checklist}
-              onRescheduleRequest={handleReschedule}
-            />
+            {schedule ? (
+              <ScheduleCard
+                schedule={schedule}
+                checklist={kycData?.checklist}
+                onRescheduleRequest={handleReschedule}
+              />
+            ) : (
+              <VisitSchedulingPanel />
+            )}
             {vendorId && kycData?.schedule && (
               <EvidenceUploadPanel
                 vendorId={vendorId}
@@ -519,9 +605,9 @@ export default function AuditorWaiting() {
       case "physical_kyc_in_progress":
         return (
           <>
-            {kycData?.schedule && (
+            {schedule && (
               <ScheduleCard
-                schedule={kycData.schedule}
+                schedule={schedule}
                 checklist={kycData?.checklist}
                 onRescheduleRequest={handleReschedule}
               />
@@ -535,11 +621,12 @@ export default function AuditorWaiting() {
           </>
         );
 
+      case "onsite_verified":
       case "physical_kyc_review":
         return <PhysicalKYCReviewPanel />;
 
       case "approved":
-        return <ApprovedPanel />;
+        return <ApprovedPanel onGoToDashboard={() => navigate("/VendorDashboard")} />;
 
       case "rejected":
         return <RejectedPanel reason={currentUser?.rejectionReason} />;
@@ -586,6 +673,7 @@ export default function AuditorWaiting() {
               steps={STATUS_STEPS}
               currentIndex={getStepIndex(vendorStatus)}
               rejected={vendorStatus === "rejected"}
+              completed={vendorStatus === "approved"}
             >
               {renderContent()}
             </StatusTimeline>
