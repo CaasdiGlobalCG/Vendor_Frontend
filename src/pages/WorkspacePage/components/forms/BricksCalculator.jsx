@@ -514,7 +514,7 @@ const BricksCalculator = ({ data, nodeId, workspaceId, setNodes }) => {
   // Step 3: Results with detailed calculations - Renders as portal (separate modal)
   const CalculationDetailsModal = () => {
     const modalContent = (
-      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[9999] p-4">
+      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[10000] p-4">
         <div className="bg-surface rounded-lg shadow-2xl max-w-2xl w-full max-h-[85vh] flex flex-col">
           {/* Modal Header */}
           <div className="sticky top-0 bg-info/10 border-b border-info/20 p-4 flex items-center justify-between flex-shrink-0">
@@ -727,7 +727,7 @@ const BricksCalculator = ({ data, nodeId, workspaceId, setNodes }) => {
       </div>
 
       {/* Calculation Modal */}
-      {showCalculationModal && <CalculationDetailsModal />}
+      {showCalculationModal && CalculationDetailsModal()}
     </div>
   );
 

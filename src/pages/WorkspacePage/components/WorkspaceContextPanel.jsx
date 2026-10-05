@@ -290,19 +290,40 @@ const WorkspaceContextPanel = ({
       { id: 'spec-sheet', name: 'Vendor Catalog Block', type: 'document-block', preview: 'Datasheet attachment with compliance tags' },
     ];
 
-    // Cost Calculators list — type 'cost-calculator' is dispatched in ElementNode by name/id
+    // Cost Calculators list — type 'cost-calculator' is dispatched in ElementNode by name/id.
+    // `group` renders a section header inside the Cost Calculators panel so the
+    // (growing) list stays findable. Keep entries ordered by group.
     const calculatorsList = [
-      { id: 'calc-bricks', name: 'Bricks Calculator', type: 'cost-calculator', preview: 'Estimate bricks, cement bags & sand for a brick wall' },
-      { id: 'calc-concrete', name: 'Concrete Calculator', type: 'cost-calculator', preview: 'Estimate cement, sand, and aggregate requirements' },
-      { id: 'calc-blocks', name: 'Concrete Blocks Calculator', type: 'cost-calculator', preview: 'AAC/concrete block count with mortar estimate' },
-      { id: 'calc-flooring', name: 'Flooring Calculator', type: 'cost-calculator', preview: 'Tile count, boxes, cement & sand for flooring' },
-      { id: 'calc-vinyl', name: 'Vinyl Flooring Calculator', type: 'cost-calculator', preview: 'Vinyl planks/sheets required for a floor area' },
-      { id: 'calc-soil', name: 'Soil Excavation Calculator', type: 'cost-calculator', preview: 'Excavation volume and soil disposal estimate' },
-      { id: 'calc-steel', name: 'Steel Estimation Calculator', type: 'cost-calculator', preview: 'Rebar weight and steel quantity for RCC work' },
-      { id: 'calc-paint', name: 'Painting Estimator', type: 'cost-calculator', preview: 'Calculate wall square footage and primer/paint coats' },
-      { id: 'calc-electrical', name: 'Electrical Wiring Estimator', type: 'cost-calculator', preview: 'Conduit length and load point calculator' },
-      { id: 'boq-generator', name: 'BOQ Generator', type: 'boq-generator', preview: 'Generate professional Bill of Quantities with cost breakdown' },
-      { id: 'calc-freight', name: 'Freight Cost Calculator', type: 'logistics-freight-cost', preview: 'Calculate freight costs with fuel surcharge and tolls' },
+      { id: 'calc-concrete', group: 'Concrete & Cement', name: 'Concrete Calculator', type: 'cost-calculator', preview: 'Estimate cement, sand, and aggregate requirements' },
+      { id: 'calc-pcc', group: 'Concrete & Cement', name: 'PCC Calculator', type: 'cost-calculator', preview: 'Plain cement concrete quantities for beds and bases' },
+      { id: 'calc-column', group: 'Concrete & Cement', name: 'Concrete Column Calculator', type: 'cost-calculator', preview: 'RCC column concrete, steel & cost' },
+      { id: 'calc-footing', group: 'Concrete & Cement', name: 'Concrete Footing Calculator', type: 'cost-calculator', preview: 'Isolated footing concrete, steel & cost' },
+      { id: 'calc-stairs', group: 'Concrete & Cement', name: 'Concrete Stairs Calculator', type: 'cost-calculator', preview: 'Straight flight RCC stairs with waist slab' },
+      { id: 'calc-formwork', group: 'Concrete & Cement', name: 'RCC Formwork Calculator', type: 'cost-calculator', preview: 'Shuttering plywood, battens, props & cost' },
+      { id: 'calc-bricks', group: 'Masonry', name: 'Bricks Calculator', type: 'cost-calculator', preview: 'Estimate bricks, cement bags & sand for a brick wall' },
+      { id: 'calc-blocks', group: 'Masonry', name: 'Concrete Blocks Calculator', type: 'cost-calculator', preview: 'AAC/concrete block count with mortar estimate' },
+      { id: 'calc-aac', group: 'Masonry', name: 'AAC Blocks Calculator', type: 'cost-calculator', preview: 'AAC block count, thin-bed adhesive & cost' },
+      { id: 'calc-steel', group: 'Steel & Rebar', name: 'Steel Estimation Calculator', type: 'cost-calculator', preview: 'Rebar weight and steel quantity for RCC work' },
+      { id: 'calc-rebar', group: 'Steel & Rebar', name: 'Rebar / BBS Calculator', type: 'cost-calculator', preview: 'Bar weight from diameter × cutting length × bars' },
+      { id: 'calc-soil', group: 'Earthwork & Aggregates', name: 'Soil Excavation Calculator', type: 'cost-calculator', preview: 'Excavation volume and soil disposal estimate' },
+      { id: 'calc-sand-aggregate', group: 'Earthwork & Aggregates', name: 'Sand & Aggregate Calculator', type: 'cost-calculator', preview: 'Volume to tonnes, truck loads & ordering cost' },
+      { id: 'calc-plaster', group: 'Finishes', name: 'Plaster Calculator', type: 'cost-calculator', preview: 'Cement, sand & water for wall plaster at any thickness' },
+      { id: 'calc-putty', group: 'Finishes', name: 'Putty & Primer Calculator', type: 'cost-calculator', preview: 'Wall putty kg, primer litres & preparation cost' },
+      { id: 'calc-paint', group: 'Finishes', name: 'Painting Estimator', type: 'cost-calculator', preview: 'Calculate wall square footage and primer/paint coats' },
+      { id: 'calc-tiles', group: 'Finishes', name: 'Tiles Calculator', type: 'cost-calculator', preview: 'Tile count, waste allowance & whole boxes' },
+      { id: 'calc-flooring', group: 'Finishes', name: 'Flooring Calculator', type: 'cost-calculator', preview: 'Tile count, boxes, cement & sand for flooring' },
+      { id: 'calc-vinyl', group: 'Finishes', name: 'Vinyl Flooring Calculator', type: 'cost-calculator', preview: 'Vinyl planks/sheets required for a floor area' },
+      { id: 'calc-waterproofing', group: 'Waterproofing & Envelope', name: 'Waterproofing Calculator', type: 'cost-calculator', preview: 'Membrane litres, buckets & application cost' },
+      { id: 'calc-roofing', group: 'Waterproofing & Envelope', name: 'Roofing Calculator', type: 'cost-calculator', preview: 'Corrugated sheet count, fasteners & cost' },
+      { id: 'calc-retaining-wall', group: 'Waterproofing & Envelope', name: 'Retaining Wall Calculator', type: 'cost-calculator', preview: 'RCC cantilever wall — concrete, steel & cost' },
+      { id: 'calc-drywall', group: 'Partitions & Ceilings', name: 'Drywall / Partition Calculator', type: 'cost-calculator', preview: 'Gypsum boards, studs, screws & jointing' },
+      { id: 'calc-decking', group: 'Timber & Framing', name: 'Decking Calculator', type: 'cost-calculator', preview: 'Deck boards, fasteners & laying cost' },
+      { id: 'calc-framing', group: 'Timber & Framing', name: 'Framing Calculator', type: 'cost-calculator', preview: 'Wall studs, plates & timber lengths' },
+      { id: 'calc-lumber', group: 'Timber & Framing', name: 'Lumber Calculator', type: 'cost-calculator', preview: 'Board feet, cubic feet & lumber cost' },
+      { id: 'calc-truss', group: 'Timber & Framing', name: 'Roof Truss Calculator', type: 'cost-calculator', preview: 'Truss count, chord lengths & timber cost' },
+      { id: 'calc-electrical', group: 'MEP', name: 'Electrical Wiring Estimator', type: 'cost-calculator', preview: 'Conduit length and load point calculator' },
+      { id: 'boq-generator', group: 'Cost & Logistics', name: 'BOQ Generator', type: 'boq-generator', preview: 'Generate professional Bill of Quantities with cost breakdown' },
+      { id: 'calc-freight', group: 'Cost & Logistics', name: 'Freight Cost Calculator', type: 'logistics-freight-cost', preview: 'Calculate freight costs with fuel surcharge and tolls' },
     ];
 
     // Smart elements list
@@ -568,37 +589,47 @@ const WorkspaceContextPanel = ({
                   <span className="text-[10px] text-dim">Drag to canvas</span>
                 </div>
 
-                {currentCategoryElements.map((item) => (
-                  <div
-                    key={item.id}
-                    draggable
-                    onDragStart={(e) => handleDragStart(e, item)}
-                    onClick={() => handleDoubleClick(item)}
-                    className="p-3 bg-surface border border-line hover:border-info  hover:bg-info rounded-xl cursor-grab active:cursor-grabbing transition-all group relative"
-                    title="Drag to canvas or click to add"
-                  >
-                    <div className="flex items-start justify-between gap-2">
-                      <div className="flex-1 min-w-0">
-                        <h4 className="text-xs font-semibold text-ink group-hover:text-info mb-1 truncate">
-                          {item.name}
-                        </h4>
-                        <p className="text-[11px] text-dim line-clamp-2 leading-relaxed m-0">
-                          {item.preview}
-                        </p>
-                      </div>
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleDoubleClick(item);
-                        }}
-                        className="opacity-0 group-hover:opacity-100 px-2 py-1 bg-info hover:bg-info text-white rounded text-[10px] font-semibold transition-opacity flex-shrink-0"
-                        title="Place on canvas"
+                {currentCategoryElements.map((item, idx) => {
+                  const prev = idx > 0 ? currentCategoryElements[idx - 1] : null;
+                  const showGroupHeader = item.group && item.group !== (prev?.group);
+                  return (
+                    <React.Fragment key={item.id}>
+                      {showGroupHeader && (
+                        <div className="pt-2 pb-0.5 text-[10px] font-semibold text-dim uppercase tracking-wider">
+                          {item.group}
+                        </div>
+                      )}
+                      <div
+                        draggable
+                        onDragStart={(e) => handleDragStart(e, item)}
+                        onClick={() => handleDoubleClick(item)}
+                        className="p-3 bg-surface border border-line hover:border-info  hover:bg-info rounded-xl cursor-grab active:cursor-grabbing transition-all group relative"
+                        title="Drag to canvas or click to add"
                       >
-                        + Add
-                      </button>
-                    </div>
-                  </div>
-                ))}
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="flex-1 min-w-0">
+                            <h4 className="text-xs font-semibold text-ink group-hover:text-info mb-1 truncate">
+                              {item.name}
+                            </h4>
+                            <p className="text-[11px] text-dim line-clamp-2 leading-relaxed m-0">
+                              {item.preview}
+                            </p>
+                          </div>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleDoubleClick(item);
+                            }}
+                            className="opacity-0 group-hover:opacity-100 px-2 py-1 bg-info hover:bg-info text-white rounded text-[10px] font-semibold transition-opacity flex-shrink-0"
+                            title="Place on canvas"
+                          >
+                            + Add
+                          </button>
+                        </div>
+                      </div>
+                    </React.Fragment>
+                  );
+                })}
 
                 <button
                   onClick={() => setSelectedCategory(null)}

@@ -7,6 +7,25 @@ import FlooringCalculator from '../forms/FlooringCalculator';
 import SoilExcavationCalculator from '../forms/SoilExcavationCalculator';
 import SteelEstimationCalculator from '../forms/SteelEstimationCalculator';
 import VinylFlooringCalculator from '../forms/VinylFlooringCalculator';
+import PlasterCalculator from '../forms/PlasterCalculator';
+import PCCCalculator from '../forms/PCCCalculator';
+import PuttyCalculator from '../forms/PuttyCalculator';
+import SandAggregateCalculator from '../forms/SandAggregateCalculator';
+import ConcreteColumnCalculator from '../forms/ConcreteColumnCalculator';
+import ConcreteFootingCalculator from '../forms/ConcreteFootingCalculator';
+import ConcreteStairsCalculator from '../forms/ConcreteStairsCalculator';
+import RCCFormworkCalculator from '../forms/RCCFormworkCalculator';
+import RebarBBSCalculator from '../forms/RebarBBSCalculator';
+import AACBlocksCalculator from '../forms/AACBlocksCalculator';
+import TilesCalculator from '../forms/TilesCalculator';
+import WaterproofingCalculator from '../forms/WaterproofingCalculator';
+import RoofingCalculator from '../forms/RoofingCalculator';
+import DrywallCalculator from '../forms/DrywallCalculator';
+import RetainingWallCalculator from '../forms/RetainingWallCalculator';
+import DeckingCalculator from '../forms/DeckingCalculator';
+import FramingCalculator from '../forms/FramingCalculator';
+import LumberCalculator from '../forms/LumberCalculator';
+import RoofTrussCalculator from '../forms/RoofTrussCalculator';
 
 const CostCalculatorsModal = ({ isOpen, onClose, onAddToCanvas, workspaceId }) => {
   // State management
@@ -59,6 +78,120 @@ const CostCalculatorsModal = ({ isOpen, onClose, onAddToCanvas, workspaceId }) =
       name: 'Vinyl Calculator',
       description: 'Calculate vinyl material and installation costs',
       icon: <Grid className="w-6 h-6 text-success" />
+    },
+    {
+      id: 'plaster-calculator',
+      name: 'Plaster Calculator',
+      description: 'Cement, sand and water for wall plaster at any thickness',
+      icon: <Layers className="w-6 h-6 text-warning" />
+    },
+    {
+      id: 'pcc-calculator',
+      name: 'PCC Calculator',
+      description: 'Plain cement concrete quantities for beds and bases',
+      icon: <Layers className="w-6 h-6 text-dim" />
+    },
+    {
+      id: 'putty-calculator',
+      name: 'Putty & Primer Calculator',
+      description: 'Wall putty kg, primer litres and preparation cost',
+      icon: <Grid className="w-6 h-6 text-success" />
+    },
+    {
+      id: 'sand-aggregate-calculator',
+      name: 'Sand & Aggregate Calculator',
+      description: 'Volume to tonnes, truck loads and ordering cost',
+      icon: <Package className="w-6 h-6 text-danger" />
+    },
+    {
+      id: 'concrete-column-calculator',
+      name: 'Concrete Column Calculator',
+      description: 'RCC column concrete, steel and cost',
+      icon: <Layers className="w-6 h-6 text-dim" />
+    },
+    {
+      id: 'concrete-footing-calculator',
+      name: 'Concrete Footing Calculator',
+      description: 'Isolated footing concrete, steel and cost',
+      icon: <Layers className="w-6 h-6 text-ink" />
+    },
+    {
+      id: 'concrete-stairs-calculator',
+      name: 'Concrete Stairs Calculator',
+      description: 'Straight flight RCC stairs with waist slab',
+      icon: <Package className="w-6 h-6 text-warning" />
+    },
+    {
+      id: 'rcc-formwork-calculator',
+      name: 'RCC Formwork Calculator',
+      description: 'Shuttering plywood, battens, props and cost',
+      icon: <Grid className="w-6 h-6 text-dim" />
+    },
+    {
+      id: 'rebar-bbs-calculator',
+      name: 'Rebar / BBS Calculator',
+      description: 'Bar weight from diameter, cutting length and bars',
+      icon: <Layers className="w-6 h-6 text-ink" />
+    },
+    {
+      id: 'aac-blocks-calculator',
+      name: 'AAC Blocks Calculator',
+      description: 'AAC block count, thin-bed adhesive and cost',
+      icon: <Package className="w-6 h-6 text-warning" />
+    },
+    {
+      id: 'tiles-calculator',
+      name: 'Tiles Calculator',
+      description: 'Tile count, waste allowance and whole boxes',
+      icon: <Grid className="w-6 h-6 text-warning" />
+    },
+    {
+      id: 'waterproofing-calculator',
+      name: 'Waterproofing Calculator',
+      description: 'Membrane litres, buckets and application cost',
+      icon: <Layers className="w-6 h-6 text-info" />
+    },
+    {
+      id: 'roofing-calculator',
+      name: 'Roofing Calculator',
+      description: 'Corrugated sheet count, fasteners and cost',
+      icon: <Grid className="w-6 h-6 text-ink" />
+    },
+    {
+      id: 'drywall-calculator',
+      name: 'Drywall / Partition Calculator',
+      description: 'Gypsum boards, studs, screws and jointing',
+      icon: <Package className="w-6 h-6 text-ink" />
+    },
+    {
+      id: 'retaining-wall-calculator',
+      name: 'Retaining Wall Calculator',
+      description: 'RCC cantilever wall — concrete, steel and cost',
+      icon: <Layers className="w-6 h-6 text-warning" />
+    },
+    {
+      id: 'decking-calculator',
+      name: 'Decking Calculator',
+      description: 'Deck boards, fasteners and laying cost',
+      icon: <Grid className="w-6 h-6 text-success" />
+    },
+    {
+      id: 'framing-calculator',
+      name: 'Framing Calculator',
+      description: 'Wall studs, plates and timber lengths',
+      icon: <Layers className="w-6 h-6 text-dim" />
+    },
+    {
+      id: 'lumber-calculator',
+      name: 'Lumber Calculator',
+      description: 'Board feet, cubic feet and lumber cost',
+      icon: <Package className="w-6 h-6 text-ink" />
+    },
+    {
+      id: 'roof-truss-calculator',
+      name: 'Roof Truss Calculator',
+      description: 'Truss count, chord lengths and timber cost',
+      icon: <Grid className="w-6 h-6 text-danger" />
     }
   ];
 
@@ -89,6 +222,44 @@ const CostCalculatorsModal = ({ isOpen, onClose, onAddToCanvas, workspaceId }) =
         return <SteelEstimationCalculator data={mockData} nodeId="temp" workspaceId={workspaceId} setNodes={mockSetNodes} />;
       case 'vinyl-calculator':
         return <VinylFlooringCalculator data={mockData} nodeId="temp" workspaceId={workspaceId} setNodes={mockSetNodes} />;
+      case 'plaster-calculator':
+        return <PlasterCalculator data={mockData} nodeId="temp" workspaceId={workspaceId} setNodes={mockSetNodes} />;
+      case 'pcc-calculator':
+        return <PCCCalculator data={mockData} nodeId="temp" workspaceId={workspaceId} setNodes={mockSetNodes} />;
+      case 'putty-calculator':
+        return <PuttyCalculator data={mockData} nodeId="temp" workspaceId={workspaceId} setNodes={mockSetNodes} />;
+      case 'sand-aggregate-calculator':
+        return <SandAggregateCalculator data={mockData} nodeId="temp" workspaceId={workspaceId} setNodes={mockSetNodes} />;
+      case 'concrete-column-calculator':
+        return <ConcreteColumnCalculator data={mockData} nodeId="temp" workspaceId={workspaceId} setNodes={mockSetNodes} />;
+      case 'concrete-footing-calculator':
+        return <ConcreteFootingCalculator data={mockData} nodeId="temp" workspaceId={workspaceId} setNodes={mockSetNodes} />;
+      case 'concrete-stairs-calculator':
+        return <ConcreteStairsCalculator data={mockData} nodeId="temp" workspaceId={workspaceId} setNodes={mockSetNodes} />;
+      case 'rcc-formwork-calculator':
+        return <RCCFormworkCalculator data={mockData} nodeId="temp" workspaceId={workspaceId} setNodes={mockSetNodes} />;
+      case 'rebar-bbs-calculator':
+        return <RebarBBSCalculator data={mockData} nodeId="temp" workspaceId={workspaceId} setNodes={mockSetNodes} />;
+      case 'aac-blocks-calculator':
+        return <AACBlocksCalculator data={mockData} nodeId="temp" workspaceId={workspaceId} setNodes={mockSetNodes} />;
+      case 'tiles-calculator':
+        return <TilesCalculator data={mockData} nodeId="temp" workspaceId={workspaceId} setNodes={mockSetNodes} />;
+      case 'waterproofing-calculator':
+        return <WaterproofingCalculator data={mockData} nodeId="temp" workspaceId={workspaceId} setNodes={mockSetNodes} />;
+      case 'roofing-calculator':
+        return <RoofingCalculator data={mockData} nodeId="temp" workspaceId={workspaceId} setNodes={mockSetNodes} />;
+      case 'drywall-calculator':
+        return <DrywallCalculator data={mockData} nodeId="temp" workspaceId={workspaceId} setNodes={mockSetNodes} />;
+      case 'retaining-wall-calculator':
+        return <RetainingWallCalculator data={mockData} nodeId="temp" workspaceId={workspaceId} setNodes={mockSetNodes} />;
+      case 'decking-calculator':
+        return <DeckingCalculator data={mockData} nodeId="temp" workspaceId={workspaceId} setNodes={mockSetNodes} />;
+      case 'framing-calculator':
+        return <FramingCalculator data={mockData} nodeId="temp" workspaceId={workspaceId} setNodes={mockSetNodes} />;
+      case 'lumber-calculator':
+        return <LumberCalculator data={mockData} nodeId="temp" workspaceId={workspaceId} setNodes={mockSetNodes} />;
+      case 'roof-truss-calculator':
+        return <RoofTrussCalculator data={mockData} nodeId="temp" workspaceId={workspaceId} setNodes={mockSetNodes} />;
       default:
         return null;
     }

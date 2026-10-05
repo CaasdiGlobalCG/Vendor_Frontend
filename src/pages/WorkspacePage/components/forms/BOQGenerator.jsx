@@ -133,7 +133,7 @@ const BOQInputModal = ({ show, onClose, onGenerate }) => {
   };
 
   return ReactDOM.createPortal(
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[9999]"
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[10000]"
       onClick={e => { if (e.target === e.currentTarget) onClose(); }}>
       <div className="bg-surface rounded-xl w-[95vw] max-w-5xl max-h-[90vh] flex flex-col shadow-2xl"
         onClick={e => e.stopPropagation()}>

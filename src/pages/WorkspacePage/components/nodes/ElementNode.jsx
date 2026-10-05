@@ -26,6 +26,25 @@ import BricksCalculator from '../forms/BricksCalculator';
 import ConcreteCalculator from '../forms/ConcreteCalculator';
 import FlooringCalculator from '../forms/FlooringCalculator';
 import SoilExcavationCalculator from '../forms/SoilExcavationCalculator';
+import PlasterCalculator from '../forms/PlasterCalculator';
+import PCCCalculator from '../forms/PCCCalculator';
+import PuttyCalculator from '../forms/PuttyCalculator';
+import SandAggregateCalculator from '../forms/SandAggregateCalculator';
+import ConcreteColumnCalculator from '../forms/ConcreteColumnCalculator';
+import ConcreteFootingCalculator from '../forms/ConcreteFootingCalculator';
+import ConcreteStairsCalculator from '../forms/ConcreteStairsCalculator';
+import RCCFormworkCalculator from '../forms/RCCFormworkCalculator';
+import RebarBBSCalculator from '../forms/RebarBBSCalculator';
+import AACBlocksCalculator from '../forms/AACBlocksCalculator';
+import TilesCalculator from '../forms/TilesCalculator';
+import WaterproofingCalculator from '../forms/WaterproofingCalculator';
+import RoofingCalculator from '../forms/RoofingCalculator';
+import DrywallCalculator from '../forms/DrywallCalculator';
+import RetainingWallCalculator from '../forms/RetainingWallCalculator';
+import DeckingCalculator from '../forms/DeckingCalculator';
+import FramingCalculator from '../forms/FramingCalculator';
+import LumberCalculator from '../forms/LumberCalculator';
+import RoofTrussCalculator from '../forms/RoofTrussCalculator';
 import SteelEstimationCalculator from '../forms/SteelEstimationCalculator';
 import VinylFlooringCalculator from '../forms/VinylFlooringCalculator';
 import PaintingEstimator from '../forms/PaintingEstimator';
@@ -1780,14 +1799,53 @@ const ElementNode = ({ id, data, isConnectable, selected }) => {
           return <PaintingEstimator data={data} nodeId={id} workspaceId={workspaceId} setNodes={setNodes} />;
         } else if (lowerName.includes('electrical') || lowerName.includes('wiring') || lowerId.includes('electrical') || lowerId.includes('wiring')) {
           return <ElectricalWiringEstimator data={data} nodeId={id} workspaceId={workspaceId} setNodes={setNodes} />;
+        } else if (lowerName.includes('rebar') || lowerName.includes('bbs') || lowerId.includes('rebar') || lowerId.includes('bbs')) {
+          return <RebarBBSCalculator data={data} nodeId={id} workspaceId={workspaceId} setNodes={setNodes} />;
+        } else if (lowerName.includes('aac') || lowerId.includes('aac')) {
+          return <AACBlocksCalculator data={data} nodeId={id} workspaceId={workspaceId} setNodes={setNodes} />;
+        } else if (lowerName.includes('tile') || lowerId.includes('tile')) {
+          return <TilesCalculator data={data} nodeId={id} workspaceId={workspaceId} setNodes={setNodes} />;
+        } else if (lowerName.includes('truss') || lowerId.includes('truss')) {
+          // Must precede the roofing branch — "Roof Truss Calculator" contains "roof".
+          return <RoofTrussCalculator data={data} nodeId={id} workspaceId={workspaceId} setNodes={setNodes} />;
+        } else if (lowerName.includes('decking') || lowerName.includes('deck') || lowerId.includes('decking') || lowerId.includes('deck')) {
+          return <DeckingCalculator data={data} nodeId={id} workspaceId={workspaceId} setNodes={setNodes} />;
+        } else if (lowerName.includes('framing') || lowerId.includes('framing')) {
+          return <FramingCalculator data={data} nodeId={id} workspaceId={workspaceId} setNodes={setNodes} />;
+        } else if (lowerName.includes('lumber') || lowerName.includes('board foot') || lowerId.includes('lumber')) {
+          return <LumberCalculator data={data} nodeId={id} workspaceId={workspaceId} setNodes={setNodes} />;
+        } else if (lowerName.includes('waterproof') || lowerId.includes('waterproof')) {
+          return <WaterproofingCalculator data={data} nodeId={id} workspaceId={workspaceId} setNodes={setNodes} />;
+        } else if (lowerName.includes('roofing') || lowerName.includes('roof') || lowerId.includes('roofing') || lowerId.includes('roof')) {
+          return <RoofingCalculator data={data} nodeId={id} workspaceId={workspaceId} setNodes={setNodes} />;
+        } else if (lowerName.includes('drywall') || lowerName.includes('partition') || lowerId.includes('drywall') || lowerId.includes('partition')) {
+          return <DrywallCalculator data={data} nodeId={id} workspaceId={workspaceId} setNodes={setNodes} />;
+        } else if (lowerName.includes('retaining') || lowerId.includes('retaining')) {
+          return <RetainingWallCalculator data={data} nodeId={id} workspaceId={workspaceId} setNodes={setNodes} />;
         } else if (lowerName.includes('brick') || lowerId.includes('brick')) {
           return <BricksCalculator data={data} nodeId={id} workspaceId={workspaceId} setNodes={setNodes} />;
         } else if (lowerName.includes('block') || lowerId.includes('block')) {
           return <ConcreteBlocksCalculator data={data} nodeId={id} workspaceId={workspaceId} setNodes={setNodes} />;
+        } else if (lowerName.includes('column') || lowerId.includes('column')) {
+          return <ConcreteColumnCalculator data={data} nodeId={id} workspaceId={workspaceId} setNodes={setNodes} />;
+        } else if (lowerName.includes('footing') || lowerId.includes('footing')) {
+          return <ConcreteFootingCalculator data={data} nodeId={id} workspaceId={workspaceId} setNodes={setNodes} />;
+        } else if (lowerName.includes('stair') || lowerId.includes('stair')) {
+          return <ConcreteStairsCalculator data={data} nodeId={id} workspaceId={workspaceId} setNodes={setNodes} />;
+        } else if (lowerName.includes('formwork') || lowerName.includes('shuttering') || lowerId.includes('formwork') || lowerId.includes('shuttering')) {
+          return <RCCFormworkCalculator data={data} nodeId={id} workspaceId={workspaceId} setNodes={setNodes} />;
         } else if (lowerName.includes('concrete') || lowerName.includes('cement') || lowerId.includes('concrete') || lowerId.includes('cement')) {
           return <ConcreteCalculator data={data} nodeId={id} workspaceId={workspaceId} setNodes={setNodes} />;
         } else if (lowerName.includes('soil') || lowerName.includes('excavat') || lowerId.includes('soil') || lowerId.includes('excavat')) {
           return <SoilExcavationCalculator data={data} nodeId={id} workspaceId={workspaceId} setNodes={setNodes} />;
+        } else if (lowerName.includes('plaster') || lowerId.includes('plaster')) {
+          return <PlasterCalculator data={data} nodeId={id} workspaceId={workspaceId} setNodes={setNodes} />;
+        } else if (lowerName.includes('pcc') || lowerId.includes('pcc')) {
+          return <PCCCalculator data={data} nodeId={id} workspaceId={workspaceId} setNodes={setNodes} />;
+        } else if (lowerName.includes('putty') || lowerId.includes('putty')) {
+          return <PuttyCalculator data={data} nodeId={id} workspaceId={workspaceId} setNodes={setNodes} />;
+        } else if (lowerName.includes('sand') || lowerName.includes('aggregate') || lowerId.includes('sand') || lowerId.includes('aggregate')) {
+          return <SandAggregateCalculator data={data} nodeId={id} workspaceId={workspaceId} setNodes={setNodes} />;
         } else if (lowerName.includes('flooring') || lowerName.includes('floor') || lowerId.includes('flooring') || lowerId.includes('floor')) {
           return <FlooringCalculator data={data} nodeId={id} workspaceId={workspaceId} setNodes={setNodes} />;
         }

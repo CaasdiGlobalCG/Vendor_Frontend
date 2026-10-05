@@ -308,7 +308,7 @@ const VinylFlooringCalculator = ({ data, nodeId, workspaceId, setNodes }) => {
   // ==================== MODAL COMPONENTS ====================
 
   const ConfigModal = () => (
-    <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center">
+    <div className="fixed inset-0 bg-black bg-opacity-50 z-[10000] flex items-center justify-center">
       <div className="bg-surface rounded-lg shadow-2xl w-full max-w-4xl max-h-[92vh] overflow-y-auto">
         <div className="sticky top-0 bg-surface border-b border-line p-4 flex justify-between items-center">
           <div>
@@ -493,7 +493,7 @@ const VinylFlooringCalculator = ({ data, nodeId, workspaceId, setNodes }) => {
   );
 
   const DetailsModal = () => (
-    <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center">
+    <div className="fixed inset-0 bg-black bg-opacity-50 z-[10000] flex items-center justify-center">
       <div className="bg-surface rounded-lg shadow-2xl w-full max-w-3xl max-h-[92vh] overflow-y-auto">
         <div className="sticky top-0 bg-surface border-b border-line p-4 flex justify-between items-center">
           <h3 className="text-xl font-bold text-ink">Professional Flooring Breakdown</h3>
@@ -640,8 +640,8 @@ const VinylFlooringCalculator = ({ data, nodeId, workspaceId, setNodes }) => {
         </div>
       )}
 
-      {showConfigModal && ReactDOM.createPortal(<ConfigModal />, document.body)}
-      {showDetailsModal && ReactDOM.createPortal(<DetailsModal />, document.body)}
+      {showConfigModal && ReactDOM.createPortal(ConfigModal(), document.body)}
+      {showDetailsModal && ReactDOM.createPortal(DetailsModal(), document.body)}
     </div>
   );
 };
