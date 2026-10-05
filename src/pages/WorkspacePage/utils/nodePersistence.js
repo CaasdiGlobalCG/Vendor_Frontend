@@ -72,7 +72,10 @@ const requiresDurableWrite = (dataPatch) =>
     'deletionReason' in dataPatch ||
     'deletionApprovedAt' in dataPatch ||
     'deletionRejectedAt' in dataPatch ||
-    'deletionRejectedBy' in dataPatch
+    'deletionRejectedBy' in dataPatch ||
+    'workflowStage' in dataPatch ||
+    'commission' in dataPatch ||
+    'items' in dataPatch
   );
 
 /**

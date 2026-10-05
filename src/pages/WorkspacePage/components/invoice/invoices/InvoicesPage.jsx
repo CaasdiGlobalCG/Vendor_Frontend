@@ -2,6 +2,7 @@ import React, { useState, useEffect, useContext, useCallback } from 'react';
 import { Search, Plus, MoreHorizontal, Eye, Edit, Download, Send, Trash2, FileText, Calendar, DollarSign, TrendingUp, ArrowLeft, Copy, Check, AlertCircle, Clock } from 'lucide-react';
 import RecordPaymentForm from '../shared/RecordPaymentForm';
 import { VendorContext } from "../../../../../context/VendorContext.jsx";
+import { resolveWorkspaceActor } from '../../../utils/workspaceActor';
 import NewInvoiceComponent from './NewInvoiceComponent';
 import InvoicesPreviewPanel from './InvoicesPreviewPanel';
 import config from '../../../../../config/env';
@@ -9,6 +10,8 @@ import invoiceFetch from '../utils/invoiceFetch';
 
 const InvoicesPage = (props) => {
   const { currentUser } = useContext(VendorContext);
+  // Per-role scoping — every actor manages their OWN documents (vendorId = owner)
+  const actorOwnerId = resolveWorkspaceActor(currentUser).ownerId;
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedStatus, setSelectedStatus] = useState('all');
   const [invoicesData, setInvoicesData] = useState([]);
@@ -90,11 +93,11 @@ const InvoicesPage = (props) => {
 
   // Debug logging
   console.log('🔍 InvoicesPage - Current user:', currentUser);
-  console.log('🔍 InvoicesPage - Vendor ID:', currentUser?.vendorId);
+  console.log('🔍 InvoicesPage - Vendor ID:', actorOwnerId);
 
   // Fetch invoices from backend
   const fetchInvoices = useCallback(async () => {
-    if (!currentUser?.vendorId) {
+    if (!actorOwnerId) {
       console.log('⏳ Waiting for user authentication...');
       return;
     }
@@ -103,7 +106,7 @@ const InvoicesPage = (props) => {
       setLoading(true);
       console.log('📋 Fetching invoices from backend...');
 
-      const vendorId = currentUser.vendorId;
+      const vendorId = actorOwnerId;
       console.log('🔑 Using vendor ID from auth context:', vendorId);
 
       const headers = {
@@ -157,7 +160,7 @@ const InvoicesPage = (props) => {
     } finally {
       setLoading(false);
     }
-  }, [currentUser?.vendorId, currentUser?.email, currentUser?.name, props?.workspaceId, props?.selectedTask, props?.selectedSubtask]);
+  }, [actorOwnerId, currentUser?.email, currentUser?.name, props?.workspaceId, props?.selectedTask, props?.selectedSubtask]);
 
   useEffect(() => {
     fetchInvoices();
@@ -229,7 +232,7 @@ const InvoicesPage = (props) => {
   }, 0);
 
   // Loading state for authentication
-  if (!currentUser?.vendorId) {
+  if (!actorOwnerId) {
     return (
       <div className="min-h-full bg-gradient-to-br from-surface-hover via-surface-hover to-surface-hover flex items-center justify-center">
         <div className="text-center">
@@ -264,7 +267,7 @@ const InvoicesPage = (props) => {
           <p className="text-dim mb-4">{error}</p>
           <button 
             onClick={() => window.location.reload()} 
-            className="bg-surface text-white px-6 py-3 rounded-xl hover:from-surface hover:to-surface transition-all duration-300"
+            className="bg-cta text-cta-foreground px-6 py-3 rounded-xl hover:opacity-90 transition-all duration-300"
           >
             Try Again
           </button>
@@ -422,7 +425,7 @@ const InvoicesPage = (props) => {
 
   const handleSendToPM = async (invoice) => {
     try {
-      const vendorId = currentUser?.vendorId;
+      const vendorId = actorOwnerId;
       if (!vendorId) throw new Error('Missing vendorId');
 
       const headers = {
@@ -461,6 +464,8 @@ const InvoicesPage = (props) => {
       <NewInvoiceComponent
         onBack={handleBackToInvoices}
         onQuoteCreated={handleInvoiceCreated}
+        workspaceId={props.workspaceId}
+        workspaceName={props.workspaceName}
         initialData={editingInvoice}
         // Don't set duplicateMode for PO conversions - show "New Tax Invoice" instead of "Duplicate"
         duplicateMode={false}
@@ -494,7 +499,7 @@ const InvoicesPage = (props) => {
             </div>
             <button 
               onClick={() => setShowNewInvoice(true)}
-              className="bg-surface text-white px-6 py-3 rounded-xl hover:from-surface hover:to-surface transition-all duration-300 flex items-center space-x-2 shadow-lg hover:shadow-xl transform "
+              className="bg-cta text-cta-foreground px-6 py-3 rounded-xl hover:opacity-90 transition-all duration-300 flex items-center space-x-2 shadow-lg hover:shadow-xl transform "
             >
               <Plus className="w-5 h-5" />
               <span className="font-medium">Create Tax Invoice</span>

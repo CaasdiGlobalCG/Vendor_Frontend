@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useContext } from 'react';
 import { Search, Plus, Package, Eye, Edit, Trash2 } from 'lucide-react';
 import { VendorContext } from "../../../../../context/VendorContext.jsx";
+import { resolveWorkspaceActor } from '../../../utils/workspaceActor';
 import AddItemModal from "../../../../../components/AddItemModal";
 import ItemViewModal from "../../../../../components/ItemViewModal";
 import ItemEditModal from '../../../../../components/ItemEditModal';
@@ -9,6 +10,8 @@ import invoiceFetch from '../utils/invoiceFetch';
 
 const ItemsPage = () => {
   const { currentUser } = useContext(VendorContext);
+  // Per-role scoping — every actor manages their OWN items (vendorId = owner)
+  const actorOwnerId = resolveWorkspaceActor(currentUser).ownerId;
   const [itemsData, setItemsData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -23,7 +26,7 @@ const ItemsPage = () => {
   // Fetch items from backend
   useEffect(() => {
     const fetchItems = async () => {
-      if (!currentUser?.vendorId) {
+      if (!actorOwnerId) {
         console.log('⏳ Waiting for user authentication...');
         return;
       }
@@ -32,7 +35,7 @@ const ItemsPage = () => {
         setLoading(true);
         console.log('📦 Fetching items from workspace backend...');
         
-        const vendorId = currentUser.vendorId;
+        const vendorId = actorOwnerId;
         const headers = {
           'Content-Type': 'application/json',
           'x-user-info': JSON.stringify({
@@ -84,7 +87,7 @@ const ItemsPage = () => {
     };
 
     fetchItems();
-  }, [currentUser?.vendorId]);
+  }, [actorOwnerId]);
 
   // Handle new item added
   const handleItemAdded = (newItem) => {
@@ -147,7 +150,7 @@ const ItemsPage = () => {
     }
 
     try {
-      const vendorId = currentUser?.vendorId;
+      const vendorId = actorOwnerId;
       const headers = {
         'Content-Type': 'application/json',
         'x-user-info': JSON.stringify({

@@ -4,11 +4,14 @@ import { Search, Plus, Users, TrendingUp, TrendingDown, FileText, CreditCard } f
 import NewCustomerForm from './NewCustomerForm';
 import CustomerDetailPage from './CustomerDetailPage';
 import { VendorContext } from '../../../../../context/VendorContext';
+import { resolveWorkspaceActor } from '../../../utils/workspaceActor';
 import config from '../../../../../config/env';
 import invoiceFetch from '../utils/invoiceFetch';
 
 const CustomersPage = () => {
   const { currentUser } = useContext(VendorContext);
+  // Per-role scoping — every actor manages their OWN customers (vendorId = owner)
+  const actorOwnerId = resolveWorkspaceActor(currentUser).ownerId;
   const [customersData, setCustomersData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -24,7 +27,7 @@ const CustomersPage = () => {
   // Fetch customers from API
   useEffect(() => {
     fetchCustomers();
-  }, [currentUser?.vendorId]);
+  }, [actorOwnerId]);
 
   const fetchCustomers = async () => {
     try {
@@ -33,12 +36,12 @@ const CustomersPage = () => {
       
       // Use workspace customers endpoint with authentication
       
-      if (!currentUser?.vendorId) {
+      if (!actorOwnerId) {
         console.log('⏳ Waiting for user authentication...');
         return;
       }
 
-      const vendorId = currentUser.vendorId;
+      const vendorId = actorOwnerId;
       const headers = {
         'Content-Type': 'application/json',
         'x-user-info': JSON.stringify({
@@ -96,7 +99,7 @@ const CustomersPage = () => {
     
     try {
       setLoading(true);
-      const vendorId = currentUser?.vendorId;
+      const vendorId = actorOwnerId;
       
       const headers = {
         'Content-Type': 'application/json',

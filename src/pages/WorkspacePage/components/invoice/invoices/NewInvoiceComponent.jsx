@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useContext } from 'react';
 import { Search, Info, Trash2, Plus, Upload, X, ChevronDown, Edit, Loader2, Edit2, PlusCircle, Save, Settings, Check } from 'lucide-react';
 import { VendorContext } from "../../../../../context/VendorContext.jsx";
+import { resolveWorkspaceActor } from '../../../utils/workspaceActor';
 import { AuthProvider } from '../../../../../context/AuthContext';
 import { convertMeasurementToFeet, needsConversion } from '../../../../../utils/unitConverter';
 import { calculateRatePerSqft, calculateTotalRate, checkRateConsistency, determineCalculationTarget, formatCurrency } from '../../../../../utils/rateCalculator';
@@ -49,6 +50,8 @@ const CAASDI_GLOBAL_CUSTOMER = {
 
 const CustomerSearchModal = ({ open, onClose, onSelect }) => {
   const { currentUser } = useContext(VendorContext);
+  // Per-role scoping — docs are owned by the actor's id, not always the vendor
+  const actorOwnerId = resolveWorkspaceActor(currentUser).ownerId;
   const [search, setSearch] = useState('');
   const [customers, setCustomers] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -61,14 +64,14 @@ const CustomerSearchModal = ({ open, onClose, onSelect }) => {
       const headers = {
         'Content-Type': 'application/json',
         'x-user-info': JSON.stringify({
-          vendorId: currentUser?.vendorId,
+          vendorId: actorOwnerId,
           email: currentUser?.email,
           role: 'vendor',
           name: currentUser?.name
         })
       };
       
-      invoiceFetch(`/api/workspace/customers?vendorId=${currentUser?.vendorId}`, { headers })
+      invoiceFetch(`/api/workspace/customers?vendorId=${actorOwnerId}`, { headers })
         .then((res) => res.json())
         .then((data) => {
           if (data.success) {
@@ -137,6 +140,8 @@ const CustomerSearchModal = ({ open, onClose, onSelect }) => {
 
 const CustomerDropdown = ({ value, onChange }) => {
   const { currentUser } = useContext(VendorContext);
+  // Per-role scoping — docs are owned by the actor's id, not always the vendor
+  const actorOwnerId = resolveWorkspaceActor(currentUser).ownerId;
   const [open, setOpen] = useState(false);
   const [customers, setCustomers] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -146,7 +151,7 @@ const CustomerDropdown = ({ value, onChange }) => {
   const fetchCustomers = async () => {
     setLoading(true);
     try {
-      const vendorId = currentUser?.vendorId;
+      const vendorId = actorOwnerId;
       if (!vendorId) {
         console.error('No vendor ID found');
         setCustomers([]);
@@ -544,6 +549,8 @@ const ReferenceNumberConfigModal = ({ open, onClose, config, onSave }) => {
 // Item Selection Modal Component
 const ItemSelectionModal = ({ open, onClose, onSelect }) => {
   const { currentUser } = useContext(VendorContext);
+  // Per-role scoping — docs are owned by the actor's id, not always the vendor
+  const actorOwnerId = resolveWorkspaceActor(currentUser).ownerId;
   const [search, setSearch] = useState('');
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -556,14 +563,14 @@ const ItemSelectionModal = ({ open, onClose, onSelect }) => {
       const headers = {
         'Content-Type': 'application/json',
         'x-user-info': JSON.stringify({
-          vendorId: currentUser?.vendorId,
+          vendorId: actorOwnerId,
           email: currentUser?.email,
           role: 'vendor',
           name: currentUser?.name
         })
       };
       
-      invoiceFetch(`/api/workspace/items?vendorId=${currentUser?.vendorId}`, { headers })
+      invoiceFetch(`/api/workspace/items?vendorId=${actorOwnerId}`, { headers })
         .then((res) => res.json())
         .then((data) => {
           setItems(data.data || data.items || []);
@@ -575,7 +582,7 @@ const ItemSelectionModal = ({ open, onClose, onSelect }) => {
         })
         .finally(() => setLoading(false));
     }
-  }, [open, fetched, currentUser?.vendorId]);
+  }, [open, fetched, actorOwnerId]);
 
   const filtered = items.filter((item) =>
     (item.name || item.itemName || item.description || '').toLowerCase().includes(search.toLowerCase())
@@ -651,8 +658,10 @@ const ItemSelectionModal = ({ open, onClose, onSelect }) => {
   );
 };
 
-const NewInvoiceComponentInner = ({ onBack, projectId, initialData, duplicateMode = false }) => {
+const NewInvoiceComponentInner = ({ onBack, projectId, workspaceId, workspaceName, initialData, duplicateMode = false }) => {
     const { currentUser } = useContext(VendorContext);
+  // Per-role scoping — docs are owned by the actor's id, not always the vendor
+  const actorOwnerId = resolveWorkspaceActor(currentUser).ownerId;
     
     // Helper function to format address
     const formatAddress = (addressObj) => {
@@ -1000,7 +1009,7 @@ const NewInvoiceComponentInner = ({ onBack, projectId, initialData, duplicateMod
     // Fetch complete customer details when customer is selected
     const fetchCompleteCustomerDetails = async (customerId) => {
         try {
-            const vendorId = currentUser?.vendorId;
+            const vendorId = actorOwnerId;
             if (!vendorId) {
                 console.error('No vendor ID found');
                 return;
@@ -1328,7 +1337,7 @@ const NewInvoiceComponentInner = ({ onBack, projectId, initialData, duplicateMod
             console.log('Saving new config:', newConfig);
             
             // Save to localStorage for vendor-specific config
-            const configKey = `quoteNumberConfig_${currentUser?.vendorId}`;
+            const configKey = `quoteNumberConfig_${actorOwnerId}`;
             localStorage.setItem(configKey, JSON.stringify(newConfig));
             
             setQuoteNumberConfig(newConfig);
@@ -1356,7 +1365,7 @@ const NewInvoiceComponentInner = ({ onBack, projectId, initialData, duplicateMod
             console.log('Saving new reference config:', newConfig);
             
             // Save to localStorage for vendor-specific config
-            const configKey = `referenceNumberConfig_${currentUser?.vendorId}`;
+            const configKey = `referenceNumberConfig_${actorOwnerId}`;
             localStorage.setItem(configKey, JSON.stringify(newConfig));
             
             setReferenceConfig(newConfig);
@@ -1449,7 +1458,7 @@ const NewInvoiceComponentInner = ({ onBack, projectId, initialData, duplicateMod
     useEffect(() => {
         const loadQuoteNumberConfig = async () => {
             try {
-                const configKey = `quoteNumberConfig_${currentUser?.vendorId}`;
+                const configKey = `quoteNumberConfig_${actorOwnerId}`;
                 const savedConfig = localStorage.getItem(configKey);
                 
                 if (savedConfig) {
@@ -1474,16 +1483,16 @@ const NewInvoiceComponentInner = ({ onBack, projectId, initialData, duplicateMod
             }
         };
         
-        if (currentUser?.vendorId) {
+        if (actorOwnerId) {
             loadQuoteNumberConfig();
         }
-    }, [currentUser?.vendorId]);
+    }, [actorOwnerId]);
 
     // Load reference number configuration from localStorage
     useEffect(() => {
         const loadReferenceNumberConfig = async () => {
             try {
-                const configKey = `referenceNumberConfig_${currentUser?.vendorId}`;
+                const configKey = `referenceNumberConfig_${actorOwnerId}`;
                 const savedConfig = localStorage.getItem(configKey);
                 
                 if (savedConfig) {
@@ -1508,10 +1517,10 @@ const NewInvoiceComponentInner = ({ onBack, projectId, initialData, duplicateMod
             }
         };
         
-        if (currentUser?.vendorId) {
+        if (actorOwnerId) {
             loadReferenceNumberConfig();
         }
-    }, [currentUser?.vendorId]);
+    }, [actorOwnerId]);
 
     // Function to increment quote number
     const incrementQuoteNumber = async () => {
@@ -1526,7 +1535,7 @@ const NewInvoiceComponentInner = ({ onBack, projectId, initialData, duplicateMod
                 };
                 
                 // Save updated config
-                const configKey = `quoteNumberConfig_${currentUser?.vendorId}`;
+                const configKey = `quoteNumberConfig_${actorOwnerId}`;
                 localStorage.setItem(configKey, JSON.stringify(newConfig));
                 
                 setQuoteNumberConfig(newConfig);
@@ -1552,7 +1561,7 @@ const NewInvoiceComponentInner = ({ onBack, projectId, initialData, duplicateMod
                 };
                 
                 // Save updated config
-                const configKey = `referenceNumberConfig_${currentUser?.vendorId}`;
+                const configKey = `referenceNumberConfig_${actorOwnerId}`;
                 localStorage.setItem(configKey, JSON.stringify(newConfig));
                 
                 setReferenceConfig(newConfig);
@@ -1779,17 +1788,17 @@ const NewInvoiceComponentInner = ({ onBack, projectId, initialData, duplicateMod
 
         const invoiceData = {
             // Core identification
-            vendorId: currentUser?.vendorId,
+            vendorId: actorOwnerId,
             invoiceId: customQuoteNumber,
             customInvoiceId: customQuoteNumber,
             
             // Customer information
             // For Caasdi Global (fixed customer), use vendorId as customerId since it's the company's own ID
-            customerId: selectedCustomer?.isCaasdiGlobal ? currentUser?.vendorId : (quoteCustomer.originalCustomerId || quoteCustomer.customerId || quoteCustomer.id),
+            customerId: selectedCustomer?.isCaasdiGlobal ? actorOwnerId : (quoteCustomer.originalCustomerId || quoteCustomer.customerId || quoteCustomer.id),
             customerName: quoteCustomer.name || quoteCustomer.displayName || quoteCustomer.companyName,
             gstin: quoteCustomer.gstin || '',
             customerDetails: {
-                customerId: selectedCustomer?.isCaasdiGlobal ? currentUser?.vendorId : (quoteCustomer.originalCustomerId || quoteCustomer.customerId || quoteCustomer.id),
+                customerId: selectedCustomer?.isCaasdiGlobal ? actorOwnerId : (quoteCustomer.originalCustomerId || quoteCustomer.customerId || quoteCustomer.id),
                 name: quoteCustomer.name || quoteCustomer.displayName || quoteCustomer.companyName,
                 companyName: quoteCustomer.companyName || quoteCustomer.name || '',
                 displayName: quoteCustomer.displayName || quoteCustomer.name || quoteCustomer.companyName || '',
@@ -1863,8 +1872,8 @@ const NewInvoiceComponentInner = ({ onBack, projectId, initialData, duplicateMod
             status: 'draft',
             projectId: initialData?.projectId || projectId,
             projectName: initialData?.projectName || projectName,
-            workspaceId: initialData?.workspaceId || null,
-            workspaceName: initialData?.workspaceName || '',
+            workspaceId: initialData?.workspaceId || workspaceId || null,
+            workspaceName: initialData?.workspaceName || workspaceName || '',
             taskId: initialData?.taskId || null,
             taskName: initialData?.taskName || '',
             subtaskId: initialData?.subtaskId || null,
@@ -1872,7 +1881,7 @@ const NewInvoiceComponentInner = ({ onBack, projectId, initialData, duplicateMod
             clientId: initialData?.clientId || null,
             notes: customerNotes,
             termsAndConditions: termsAndConditions,
-            vendorId: currentUser?.vendorId,
+            vendorId: actorOwnerId,
             
             // Company information (if available from context)
             company: {
@@ -1889,7 +1898,7 @@ const NewInvoiceComponentInner = ({ onBack, projectId, initialData, duplicateMod
         console.log('Saving invoice data in StandardPreview format:', invoiceData);
 
         try {
-            const vendorId = currentUser?.vendorId;
+            const vendorId = actorOwnerId;
             const headers = {
                 'Content-Type': 'application/json',
                 'x-user-info': JSON.stringify({
@@ -1961,7 +1970,7 @@ const NewInvoiceComponentInner = ({ onBack, projectId, initialData, duplicateMod
                 customerName: invoiceData.customerName,
                 customerDetails: invoiceData.customerDetails,
                 vendorId: invoiceData.vendorId,
-                currentUserVendorId: currentUser?.vendorId,
+                currentUserVendorId: actorOwnerId,
                 selectedCustomerData: selectedCustomer,
                 isCaasdiGlobal: selectedCustomer?.isCaasdiGlobal
             });

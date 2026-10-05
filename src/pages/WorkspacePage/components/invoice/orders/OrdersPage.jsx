@@ -14,6 +14,7 @@ import {
   ExternalLink
 } from 'lucide-react';
 import { VendorContext } from '../../../../../context/VendorContext.jsx';
+import { resolveWorkspaceActor } from '../../../utils/workspaceActor';
 import invoiceFetch from '../utils/invoiceFetch';
 
 const STAGE_CONFIG = {
@@ -34,6 +35,8 @@ const PIPELINE_STEPS = [
 
 const OrdersPage = ({ workspaceId, selectedTask, selectedSubtask, onRaisePOFromOrder }) => {
   const { currentUser } = useContext(VendorContext);
+  // Per-role scoping — every actor manages their OWN orders (vendorId = owner)
+  const actorOwnerId = resolveWorkspaceActor(currentUser).ownerId;
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -41,7 +44,7 @@ const OrdersPage = ({ workspaceId, selectedTask, selectedSubtask, onRaisePOFromO
   const [expandedOrder, setExpandedOrder] = useState(null);
 
   const fetchOrders = async () => {
-    if (!currentUser?.vendorId) return;
+    if (!actorOwnerId) return;
 
     try {
       setLoading(true);
@@ -50,13 +53,13 @@ const OrdersPage = ({ workspaceId, selectedTask, selectedSubtask, onRaisePOFromO
       const params = new URLSearchParams({ workspaceId });
       if (selectedTask?.id) params.append('taskId', selectedTask.id);
       if (selectedSubtask?.id) params.append('subtaskId', selectedSubtask.id);
-      params.append('vendorId', currentUser.vendorId);
+      params.append('vendorId', actorOwnerId);
       params.append('userRole', 'vendor');
 
       const headers = {
         'Content-Type': 'application/json',
         'x-user-info': JSON.stringify({
-          vendorId: currentUser.vendorId,
+          vendorId: actorOwnerId,
           email: currentUser?.email,
           role: 'vendor',
           name: currentUser?.name
@@ -79,7 +82,7 @@ const OrdersPage = ({ workspaceId, selectedTask, selectedSubtask, onRaisePOFromO
 
   useEffect(() => {
     fetchOrders();
-  }, [workspaceId, selectedTask?.id, selectedSubtask?.id, currentUser?.vendorId]);
+  }, [workspaceId, selectedTask?.id, selectedSubtask?.id, actorOwnerId]);
 
   const filteredOrders = orders.filter(order => {
     if (!searchTerm) return true;

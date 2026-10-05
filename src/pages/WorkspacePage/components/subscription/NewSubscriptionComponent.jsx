@@ -1,11 +1,14 @@
 import React, { useState, useContext, useEffect } from 'react';
 import { X, Settings } from 'lucide-react';
 import { VendorContext } from '../../../../context/VendorContext';
+import { resolveWorkspaceActor } from '../../utils/workspaceActor';
 import config from '../../../../config/env';
 import invoiceFetch from '../invoice/utils/invoiceFetch';
 
 const NewSubscriptionComponent = ({ onBack, initialData, onSubscriptionCreated }) => {
   const { currentUser } = useContext(VendorContext);
+  // Per-role scoping — docs are owned by the actor's id, not always the vendor
+  const actorOwnerId = resolveWorkspaceActor(currentUser).ownerId;
   const [selectedCustomer, setSelectedCustomer] = useState(null);
   const [customers, setCustomers] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -25,21 +28,21 @@ const NewSubscriptionComponent = ({ onBack, initialData, onSubscriptionCreated }
   // Fetch customers
   useEffect(() => {
     const fetchCustomers = async () => {
-      if (!currentUser?.vendorId) return;
+      if (!actorOwnerId) return;
 
       try {
         setLoading(true);
         const headers = {
           'Content-Type': 'application/json',
           'x-user-info': JSON.stringify({
-            vendorId: currentUser.vendorId,
+            vendorId: actorOwnerId,
             email: currentUser?.email,
             role: 'vendor',
             name: currentUser?.name
           })
         };
 
-        const response = await invoiceFetch(`/api/workspace/customers?vendorId=${currentUser.vendorId}`, {
+        const response = await invoiceFetch(`/api/workspace/customers?vendorId=${actorOwnerId}`, {
           headers
         });
 
@@ -57,7 +60,7 @@ const NewSubscriptionComponent = ({ onBack, initialData, onSubscriptionCreated }
     };
 
     fetchCustomers();
-  }, [currentUser?.vendorId]);
+  }, [actorOwnerId]);
 
   const filteredCustomers = customers.filter(c =>
     c.name?.toLowerCase().includes(searchCustomer.toLowerCase()) ||
@@ -79,7 +82,7 @@ const NewSubscriptionComponent = ({ onBack, initialData, onSubscriptionCreated }
 
     try {
       const subscriptionData = {
-        vendorId: currentUser?.vendorId,
+        vendorId: actorOwnerId,
         customerId: selectedCustomer.id || selectedCustomer.customerId,
         customerName: selectedCustomer.name || selectedCustomer.companyName,
         billingCycle,
@@ -96,7 +99,7 @@ const NewSubscriptionComponent = ({ onBack, initialData, onSubscriptionCreated }
       const headers = {
         'Content-Type': 'application/json',
         'x-user-info': JSON.stringify({
-          vendorId: currentUser?.vendorId,
+          vendorId: actorOwnerId,
           email: currentUser?.email,
           role: 'vendor',
           name: currentUser?.name
@@ -282,7 +285,7 @@ const NewSubscriptionComponent = ({ onBack, initialData, onSubscriptionCreated }
             <button
               onClick={handleSaveSubscription}
               disabled={saving}
-              className="flex-1 bg-surface text-white px-6 py-3 rounded-lg hover:from-surface hover:to-surface transition-all disabled:opacity-50"
+              className="flex-1 bg-cta text-cta-foreground px-6 py-3 rounded-lg hover:opacity-90 transition-all disabled:opacity-50"
             >
               {saving ? 'Creating...' : 'Create Subscription'}
             </button>

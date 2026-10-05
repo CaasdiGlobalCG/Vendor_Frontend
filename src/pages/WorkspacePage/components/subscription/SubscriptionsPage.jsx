@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useContext } from 'react';
 import { Search, Plus, MoreHorizontal, Eye, Edit, Pause, Play, Trash2, Calendar, DollarSign, TrendingUp, Copy } from 'lucide-react';
 import { VendorContext } from '../../../../context/VendorContext';
+import { resolveWorkspaceActor } from '../../utils/workspaceActor';
 import NewSubscriptionComponent from './NewSubscriptionComponent';
 import SubscriptionsPreviewPanel from './SubscriptionsPreviewPanel';
 import config from '../../../../config/env';
@@ -8,6 +9,8 @@ import invoiceFetch from '../invoice/utils/invoiceFetch';
 
 const SubscriptionsPage = () => {
   const { currentUser } = useContext(VendorContext);
+  // Per-role scoping — every actor manages their OWN subscriptions (vendorId = owner)
+  const actorOwnerId = resolveWorkspaceActor(currentUser).ownerId;
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedStatus, setSelectedStatus] = useState('all');
   const [subscriptionsData, setSubscriptionsData] = useState([]);
@@ -27,11 +30,11 @@ const SubscriptionsPage = () => {
   // Using relative paths - no API_BASE_URL needed
 
   console.log('🔍 SubscriptionsPage - Current user:', currentUser);
-  console.log('🔍 SubscriptionsPage - Vendor ID:', currentUser?.vendorId);
+  console.log('🔍 SubscriptionsPage - Vendor ID:', actorOwnerId);
 
   // Fetch subscriptions from backend
   useEffect(() => {
-    if (!currentUser?.vendorId) {
+    if (!actorOwnerId) {
       console.log('⏳ Waiting for user authentication...');
       return;
     }
@@ -41,7 +44,7 @@ const SubscriptionsPage = () => {
         setLoading(true);
         console.log('📋 Fetching subscriptions from backend...');
         
-        const vendorId = currentUser.vendorId;
+        const vendorId = actorOwnerId;
         
         const headers = {
           'Content-Type': 'application/json',
@@ -90,7 +93,7 @@ const SubscriptionsPage = () => {
     };
 
     fetchSubscriptions();
-  }, [currentUser?.vendorId]);
+  }, [actorOwnerId]);
 
   const filteredSubscriptions = subscriptionsData.filter(sub => {
     const matchesSearch = sub.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -137,7 +140,7 @@ const SubscriptionsPage = () => {
     .reduce((sum, s) => sum + (parseFloat(String(s.amount || '0').replace('₹', '').replace(/,/g, '')) || 0), 0);
 
   // Loading state for authentication
-  if (!currentUser?.vendorId) {
+  if (!actorOwnerId) {
     return (
       <div className="min-h-full bg-gradient-to-br from-surface-hover via-surface-hover to-surface-hover flex items-center justify-center">
         <div className="text-center">
@@ -172,7 +175,7 @@ const SubscriptionsPage = () => {
           <p className="text-dim mb-4">{error}</p>
           <button 
             onClick={() => window.location.reload()} 
-            className="bg-surface text-white px-6 py-3 rounded-xl hover:from-surface hover:to-surface transition-all duration-300"
+            className="bg-cta text-cta-foreground px-6 py-3 rounded-xl hover:opacity-90 transition-all duration-300"
           >
             Try Again
           </button>
@@ -237,7 +240,7 @@ const SubscriptionsPage = () => {
             </div>
             <button 
               onClick={() => setShowNewSubscription(true)}
-              className="bg-surface text-white px-6 py-3 rounded-xl hover:from-surface hover:to-surface transition-all duration-300 flex items-center space-x-2 shadow-lg hover:shadow-xl transform "
+              className="bg-cta text-cta-foreground px-6 py-3 rounded-xl hover:opacity-90 transition-all duration-300 flex items-center space-x-2 shadow-lg hover:shadow-xl transform "
             >
               <Plus className="w-5 h-5" />
               <span className="font-medium">Create Subscription</span>

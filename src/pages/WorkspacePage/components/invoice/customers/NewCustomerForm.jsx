@@ -2,11 +2,14 @@ import React, { useState, useEffect, useContext } from 'react';
 import { ArrowLeft, X, Upload, Plus, Trash2 } from 'lucide-react';
 import { Country, State } from 'country-state-city';
 import { VendorContext } from "../../../../../context/VendorContext.jsx";
+import { resolveWorkspaceActor } from '../../../utils/workspaceActor';
 import config from "../../../../../config/env";
 import invoiceFetch from '../utils/invoiceFetch';
 
 const NewCustomerForm = ({ onClose, onCustomerCreated, editMode = false, customerData = null }) => {
   const { currentUser } = useContext(VendorContext);
+  // Per-role scoping — docs are owned by the actor's id, not always the vendor
+  const actorOwnerId = resolveWorkspaceActor(currentUser).ownerId;
   const [activeTab, setActiveTab] = useState('basic');
   const [loading, setLoading] = useState(false);
   const [countries, setCountries] = useState([]);
@@ -276,7 +279,7 @@ const NewCustomerForm = ({ onClose, onCustomerCreated, editMode = false, custome
       }
 
       // Use workspace customers endpoint with authentication
-      const vendorId = currentUser?.vendorId;
+      const vendorId = actorOwnerId;
 
       if (!vendorId) {
         throw new Error('Vendor ID not found. Please log in again.');

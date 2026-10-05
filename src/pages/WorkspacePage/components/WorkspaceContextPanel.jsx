@@ -44,6 +44,7 @@ import {
 import TaskTab from './TaskTab';
 import LayersTab from './LayersTab';
 import AssetsTab from './AssetsTab';
+import { DocumentThumbnail, getDocType } from './ElementDocumentPreview';
 
 const WorkspaceContextPanel = ({
   isOpen,
@@ -203,6 +204,13 @@ const WorkspaceContextPanel = ({
       color: 'bg-surface-hover text-ink border-line' 
     },
     {
+      id: 'boq-generator',
+      name: 'BOQ Generator',
+      desc: 'Custom BOQ and ready-made BOQ templates',
+      icon: FileDigit,
+      color: 'bg-indigo-100 text-indigo-800 border-indigo-200'
+    },
+    {
       id: 'smart',
       name: 'Smart Elements',
       desc: 'AI notes, calendar events, approval boards',
@@ -326,6 +334,16 @@ const WorkspaceContextPanel = ({
       { id: 'calc-freight', group: 'Cost & Logistics', name: 'Freight Cost Calculator', type: 'logistics-freight-cost', preview: 'Calculate freight costs with fuel surcharge and tolls' },
     ];
 
+    // BOQ Generator list — placeholder BOQ templates (Custom BOQ button renders above this list)
+    const boqGeneratorList = [
+      { id: 'boq-tpl-blank', name: 'Blank BOQ', type: 'boq-generator', preview: 'Start a Bill of Quantities from scratch' },
+      { id: 'boq-tpl-civil', name: 'Civil Works BOQ', type: 'boq-generator', preview: 'Template — earthwork, RCC, masonry & finishing items' },
+      { id: 'boq-tpl-interior', name: 'Interior Fit-Out BOQ', type: 'boq-generator', preview: 'Template — partitions, flooring, ceiling & joinery' },
+      { id: 'boq-tpl-electrical', name: 'Electrical BOQ', type: 'boq-generator', preview: 'Template — wiring, panels, fixtures & load points' },
+      { id: 'boq-tpl-plumbing', name: 'Plumbing & Sanitary BOQ', type: 'boq-generator', preview: 'Template — piping, fittings & sanitary fixtures' },
+      { id: 'boq-tpl-hvac', name: 'HVAC BOQ', type: 'boq-generator', preview: 'Template — ducting, AHUs, diffusers & insulation' },
+    ];
+
     // Smart elements list
     const rawSmart = pickList(elementOptions.smart, [
       { id: 'smart-note', name: 'Smart AI Note', type: 'smart-note', nodeType: 'smartNote', preview: 'AI-assisted sticky note with auto-suggestions' },
@@ -351,6 +369,7 @@ const WorkspaceContextPanel = ({
       'materials': materialsList,
       'cad-files': cadFilesList,
       'cost-calculators': calculatorsList,
+      'boq-generator': boqGeneratorList,
       'smart': rawSmart,
     };
 
@@ -589,6 +608,54 @@ const WorkspaceContextPanel = ({
                   <span className="text-[10px] text-dim">Drag to canvas</span>
                 </div>
 
+                {selectedCategory === 'boq-generator' && (
+                  <>
+                    <button
+                      type="button"
+                      onClick={() => onTemplateSelect?.('custom-boq')}
+                      className="w-full flex items-center justify-center gap-1.5 py-2 text-xs font-semibold text-white bg-black hover:bg-slate-800 rounded-lg transition-colors"
+                    >
+                      <Plus className="w-3.5 h-3.5" />
+                      Custom BOQ
+                    </button>
+                    {/* Civil Work BOQ — template-style card, opens the sectioned wizard */}
+                    <div
+                      role="button"
+                      tabIndex={0}
+                      onClick={() => onTemplateSelect?.('civil-boq')}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' || e.key === ' ') {
+                          e.preventDefault();
+                          onTemplateSelect?.('civil-boq');
+                        }
+                      }}
+                      className="p-3 bg-surface border border-line hover:border-info rounded-xl cursor-pointer transition-all group relative"
+                      title="Open the Civil Work BOQ wizard"
+                    >
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="flex-1 min-w-0">
+                          <h4 className="text-xs font-semibold text-ink group-hover:text-info mb-1 truncate">
+                            Civil Work BOQ
+                          </h4>
+                          <p className="text-[11px] text-dim line-clamp-2 leading-relaxed m-0">
+                            Sectioned estimate — measurements auto-compute qty per unit
+                          </p>
+                        </div>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onTemplateSelect?.('civil-boq');
+                          }}
+                          className="opacity-0 group-hover:opacity-100 px-2 py-1 bg-info hover:bg-info text-white rounded text-[10px] font-semibold transition-opacity flex-shrink-0"
+                          title="Open wizard"
+                        >
+                          + Add
+                        </button>
+                      </div>
+                    </div>
+                  </>
+                )}
+
                 {currentCategoryElements.map((item, idx) => {
                   const prev = idx > 0 ? currentCategoryElements[idx - 1] : null;
                   const showGroupHeader = item.group && item.group !== (prev?.group);
@@ -611,9 +678,13 @@ const WorkspaceContextPanel = ({
                             <h4 className="text-xs font-semibold text-ink group-hover:text-info mb-1 truncate">
                               {item.name}
                             </h4>
-                            <p className="text-[11px] text-dim line-clamp-2 leading-relaxed m-0">
-                              {item.preview}
-                            </p>
+                            {getDocType(item) ? (
+                              <DocumentThumbnail element={item} className="mt-1.5" />
+                            ) : (
+                              <p className="text-[11px] text-dim line-clamp-2 leading-relaxed m-0">
+                                {item.preview}
+                              </p>
+                            )}
                           </div>
                           <button
                             onClick={(e) => {

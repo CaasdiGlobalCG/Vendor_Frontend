@@ -3,6 +3,7 @@ import { Download, Send, Settings, Edit2, X, Upload } from 'lucide-react';
 import html2pdf from 'html2pdf.js';
 import StandardPreview from '../shared/StandardPreview.jsx';
 import { VendorContext } from '../../../../../context/VendorContext';
+import { resolveWorkspaceActor } from '../../../utils/workspaceActor';
 import invoiceFetch from '../utils/invoiceFetch';
 import operonLogo from '../../../../../assets/operon-symbol-black.png';
 
@@ -51,7 +52,7 @@ export default function QuotesPreviewPanel({ quotes, selectedQuoteId, onSelectQu
       })();
 
       const currentUser = vendorUser || storageUser;
-      const vendorId = currentUser?.vendorId || currentUser?.id;
+      const vendorId = resolveWorkspaceActor(currentUser).ownerId || currentUser?.id;
       const invoiceId = selectedQuote.invoiceId || selectedQuote.id;
 
       console.log('📤 Sending invoice to PM:', invoiceId);

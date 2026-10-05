@@ -18,6 +18,7 @@ import {
   FileText
 } from 'lucide-react';
 import { VendorContext } from '../../../../../context/VendorContext.jsx';
+import { resolveWorkspaceActor } from '../../../utils/workspaceActor';
 import config from "../../../../../config/env";
 import StandardPreview from '../shared/StandardPreview.jsx';
 import invoiceFetch from '../utils/invoiceFetch';
@@ -25,6 +26,8 @@ import operonLogo from '../../../../../assets/operon-symbol-black.png';
 
 const PurchaseOrdersPage = ({ workspaceId, workspaceName, selectedTask, selectedSubtask, sourceQuote, onSourceConsumed, onConvertToInvoice }) => {
   const { currentUser } = useContext(VendorContext);
+  // Per-role scoping — every actor manages their OWN documents (vendorId = owner)
+  const actorOwnerId = resolveWorkspaceActor(currentUser).ownerId;
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedStatus, setSelectedStatus] = useState('all');
   const [purchaseOrdersData, setPurchaseOrdersData] = useState([]);
@@ -55,7 +58,7 @@ const PurchaseOrdersPage = ({ workspaceId, workspaceName, selectedTask, selected
   // Using relative paths - no API_BASE_URL needed
 
   const fetchPurchaseOrders = async () => {
-    if (!currentUser?.vendorId) {
+    if (!actorOwnerId) {
       console.log('⏳ Waiting for user authentication...');
       return;
     }
@@ -64,7 +67,7 @@ const PurchaseOrdersPage = ({ workspaceId, workspaceName, selectedTask, selected
       setLoading(true);
       console.log('📋 Fetching purchase orders from backend...');
 
-      const vendorId = currentUser.vendorId;
+      const vendorId = actorOwnerId;
       const headers = {
         'Content-Type': 'application/json',
         'x-user-info': JSON.stringify({
@@ -130,7 +133,7 @@ const PurchaseOrdersPage = ({ workspaceId, workspaceName, selectedTask, selected
   // Fetch purchase orders from backend
   useEffect(() => {
     fetchPurchaseOrders();
-  }, [currentUser?.vendorId]);
+  }, [actorOwnerId]);
 
   const filteredOrders = purchaseOrdersData.filter((order) => {
     const normalizedSearch = searchTerm.trim().toLowerCase();
@@ -210,12 +213,12 @@ const PurchaseOrdersPage = ({ workspaceId, workspaceName, selectedTask, selected
   };
 
   const handleSendPO = async () => {
-    if (!highlightedQuote || !currentUser?.vendorId) return;
+    if (!highlightedQuote || !actorOwnerId) return;
 
     try {
       setSendingPo(true);
 
-      const vendorId = currentUser.vendorId;
+      const vendorId = actorOwnerId;
       const headers = {
         'Content-Type': 'application/json',
         'x-user-info': JSON.stringify({
@@ -389,7 +392,7 @@ const PurchaseOrdersPage = ({ workspaceId, workspaceName, selectedTask, selected
   };
 
   const handleApproveAndSendPO = async (order) => {
-    if (!order?.id || !currentUser?.vendorId) {
+    if (!order?.id || !actorOwnerId) {
       console.error('❌ Missing order ID or vendor ID');
       setApprovalError('Missing required information to approve PO');
       return;
@@ -400,7 +403,7 @@ const PurchaseOrdersPage = ({ workspaceId, workspaceName, selectedTask, selected
       setApprovalError(null);
       setApprovalMessage(null);
 
-      const vendorId = currentUser.vendorId;
+      const vendorId = actorOwnerId;
       const headers = {
         'Content-Type': 'application/json',
         'x-user-info': JSON.stringify({
@@ -558,7 +561,7 @@ const PurchaseOrdersPage = ({ workspaceId, workspaceName, selectedTask, selected
               </h1>
               <p className="text-dim mt-2">Manage and track all your purchase orders</p>
             </div>
-            <button className="bg-surface text-white px-6 py-3 rounded-xl hover:from-surface hover:to-surface transition-all duration-300 flex items-center space-x-2 shadow-lg hover:shadow-xl transform ">
+            <button className="bg-cta text-cta-foreground px-6 py-3 rounded-xl hover:opacity-90 transition-all duration-300 flex items-center space-x-2 shadow-lg hover:shadow-xl transform ">
               <Plus className="w-5 h-5" />
               <span className="font-medium">Create Purchase Order</span>
             </button>

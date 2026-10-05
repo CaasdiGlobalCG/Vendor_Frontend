@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import { X, TrendingUp, Layers, FileCheck, FileText } from 'lucide-react';
 
 const localDay = (ts) => {
@@ -43,6 +43,10 @@ const buildDayList = (workspace) => {
 
 const ProgressSidebar = ({ open, onClose, workspace = {}, selectedDay, onSelectDay, onOpenReport }) => {
   const days = useMemo(() => buildDayList(workspace), [workspace]);
+  const [picked, setPicked] = useState([]); // selected dates for combined report
+
+  const togglePick = (date) =>
+    setPicked((prev) => prev.includes(date) ? prev.filter((d) => d !== date) : [...prev, date]);
 
   if (!open) return null;
 
@@ -96,7 +100,17 @@ const ProgressSidebar = ({ open, onClose, workspace = {}, selectedDay, onSelectD
                 <span className={`text-sm font-semibold ${active ? 'text-success' : 'text-ink'}`}>
                   {d.label}
                 </span>
-                {active && <span className="text-[10px] font-medium text-success">highlighting</span>}
+                <div className="flex items-center gap-2">
+                  {active && <span className="text-[10px] font-medium text-success">highlighting</span>}
+                  <input
+                    type="checkbox"
+                    checked={picked.includes(d.date)}
+                    onChange={() => togglePick(d.date)}
+                    onClick={(e) => e.stopPropagation()}
+                    className="w-3.5 h-3.5 accent-blue-500 cursor-pointer"
+                    title="Include in combined report"
+                  />
+                </div>
               </div>
               <p className="text-xs text-dim mt-0.5">{formatDay(d.date)}</p>
               <div className="flex items-center gap-3 mt-2 text-[11px] text-dim">
@@ -124,6 +138,31 @@ const ProgressSidebar = ({ open, onClose, workspace = {}, selectedDay, onSelectD
           );
         })}
       </div>
+
+      {/* Combined report for picked days */}
+      {picked.length > 0 && onOpenReport && (
+        <div className="border-t border-line p-3">
+          <button
+            onClick={() => {
+              const pickedDays = days.filter((d) => picked.includes(d.date));
+              onOpenReport({
+                dates: pickedDays.map((d) => d.date).sort(),
+                label: pickedDays.map((d) => d.label).join(' + '),
+              });
+            }}
+            className="w-full flex items-center justify-center gap-1.5 text-xs font-semibold text-white bg-info rounded-lg py-2 hover:bg-info/90 transition-colors"
+          >
+            <FileText className="w-3.5 h-3.5" />
+            Report for {picked.length} day{picked.length !== 1 ? 's' : ''}
+          </button>
+          <button
+            onClick={() => setPicked([])}
+            className="w-full mt-1 text-[11px] text-dim hover:text-ink transition-colors"
+          >
+            Clear selection
+          </button>
+        </div>
+      )}
     </div>
   );
 };

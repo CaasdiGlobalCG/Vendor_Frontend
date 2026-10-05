@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import ReactFlow, { Background } from 'reactflow';
+import ReactFlow, { Background, Controls } from 'reactflow';
 import 'reactflow/dist/style.css';
 import { X, Calendar, FileText, PlusCircle, Image as ImageIcon } from 'lucide-react';
 import config from '../../../../config/env';
@@ -365,24 +365,32 @@ const ProgressTimelineModal = ({ isOpen, onClose, workspace = {}, workspaceId })
             {dayCanvasNodes.length === 0 ? (
               <p className="text-xs text-dim">No elements on the canvas carry this date — nothing to snapshot.</p>
             ) : (
-              <div className="border border-line rounded-lg overflow-hidden" style={{ height: 320 }}>
+              <>
+              <div className="border border-line rounded-lg overflow-hidden" style={{ height: 560 }}>
                 <ReactFlow
                   nodes={dayCanvasNodes}
                   edges={dayCanvasEdges}
                   nodeTypes={snapshotNodeTypes}
                   edgeTypes={snapshotEdgeTypes}
                   fitView
-                  fitViewOptions={{ padding: 0.2 }}
+                  fitViewOptions={{ padding: 0.15 }}
+                  minZoom={0.05}
+                  maxZoom={2}
                   nodesDraggable={false}
                   nodesConnectable={false}
                   elementsSelectable={false}
-                  zoomOnScroll={false}
+                  zoomOnScroll
+                  zoomOnPinch
+                  panOnScroll={false}
                   panOnDrag
                   proOptions={{ hideAttribution: true }}
                 >
                   <Background gap={16} color="#e2e8f0" />
+                  <Controls showInteractive={false} position="bottom-right" />
                 </ReactFlow>
               </div>
+              <p className="text-[10px] text-dim mt-1">Scroll to zoom, drag to pan — all elements added this day</p>
+              </>
             )}
           </div>
         </div>

@@ -27,6 +27,7 @@ const ElementsSidebar = ({ isOpen, onClose, onElementSelect, userRole, currentUs
     { id: 'materials', name: 'Materials', icon: Package, color: 'bg-warning/10 text-warning' },
     { id: 'uploads', name: 'Uploads', icon: Upload, color: 'bg-info/10 text-info' },
     { id: 'cost-calculators', name: 'Cost Calculators', icon: Calculator, color: 'bg-surface-hover text-ink' },
+    { id: 'boq-generator', name: 'BOQ Generator', icon: FileDigit, color: 'bg-indigo-100 text-indigo-800' },
     { id: 'logistics', name: 'Logistics', icon: Package, color: 'bg-info/10 text-info' },
     { id: 'smart', name: 'Smart Elements', icon: Sparkles, color: 'bg-warning/10 text-warning' },
     { id: 'other', name: 'other elements', icon: Grid, color: 'bg-surface-hover text-ink' }

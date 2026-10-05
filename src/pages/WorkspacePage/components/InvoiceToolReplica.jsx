@@ -4,13 +4,14 @@ import {
   RotateCcw, History, CreditCard, ShoppingCart, Package2, Truck, 
   Clock, Calendar, Filter, RefreshCw, Download, BarChart2, PieChart, 
   TrendingUp, AlertCircle, CheckCircle, Clock as ClockIcon, Calendar as CalendarIcon,
-  ArrowUpRight, ArrowDownRight, MoreHorizontal, ChevronDown, ChevronUp, X
+  ArrowUpRight, ArrowDownRight, ArrowLeft, MoreHorizontal, ChevronDown, ChevronUp, X
 } from 'lucide-react';
 import { DateRange } from 'react-date-range';
 import 'react-date-range/dist/styles.css';
 import 'react-date-range/dist/theme/default.css';
 import { format, subDays, addDays } from 'date-fns';
 import { VendorContext } from '../../../context/VendorContext';
+import { resolveWorkspaceActor } from '../utils/workspaceActor';
 import operonLogo from '../../../assets/operon-symbol-black.png';
 import { useNotifications } from '../../../hooks/useNotifications';
 import config from '../../../config/env';
@@ -25,10 +26,17 @@ import PurchaseOrdersPage from './invoice/purchase-orders/PurchaseOrdersPage';
 import OrdersPage from './invoice/orders/OrdersPage';
 import ActivityFullScreen from './ActivityFullScreen';
 
-const InvoiceToolReplica = ({ onClose, workspaceId, workspaceName, selectedTask, selectedSubtask }) => {
+const InvoiceToolReplica = ({ onClose, workspaceId, workspaceName, selectedTask, selectedSubtask, initialTab }) => {
   const { currentUser } = useContext(VendorContext);
+  // Per-role scoping — every actor manages their OWN documents (vendorId = owner)
+  const actorOwnerId = resolveWorkspaceActor(currentUser).ownerId;
   const { notifications, unreadCount, markAsRead } = useNotifications();
-  const [activeTab, setActiveTab] = useState('home');
+  const [activeTab, setActiveTab] = useState(initialTab || 'home');
+
+  // Jump to a tab requested while the tool was already open or via prop
+  useEffect(() => {
+    if (initialTab) setActiveTab(initialTab);
+  }, [initialTab]);
   const [isLoading, setIsLoading] = useState(true);
   const [showNotificationDropdown, setShowNotificationDropdown] = useState(false);
   const notificationDropdownRef = useRef(null);
@@ -57,7 +65,7 @@ const InvoiceToolReplica = ({ onClose, workspaceId, workspaceName, selectedTask,
     const fetchDashboardData = async () => {
       try {
         setIsLoading(true);
-        const vendorId = currentUser?.vendorId;
+        const vendorId = actorOwnerId;
         if (!vendorId) return;
 
         const [statsRes, salesRes, paymentsRes, customersRes, activityRes, upcomingRes] = await Promise.all([
@@ -99,7 +107,7 @@ const InvoiceToolReplica = ({ onClose, workspaceId, workspaceName, selectedTask,
     const interval = setInterval(fetchDashboardData, 5 * 60 * 1000);
     
     return () => clearInterval(interval);
-  }, [currentUser?.vendorId, dateRange]);
+  }, [actorOwnerId, dateRange]);
 
   const handleRefresh = () => {
     // Force refresh data
@@ -788,8 +796,8 @@ const InvoiceToolReplica = ({ onClose, workspaceId, workspaceName, selectedTask,
         {/* Header */}
         <div className="p-6 border-b border-line">
           <div className="flex items-center">
-            <div className="w-8 h-8 bg-cta rounded-lg flex items-center justify-center mr-3">
-              <span className="text-cta-foreground font-bold text-sm">CG</span>
+            <div className="w-8 h-8 bg-surface rounded-lg flex items-center justify-center mr-3 p-1">
+              <img src={operonLogo} alt="Operon" className="w-full h-full object-contain" />
             </div>
             <span className="text-lg font-semibold">Invoice</span>
           </div>
@@ -806,8 +814,8 @@ const InvoiceToolReplica = ({ onClose, workspaceId, workspaceName, selectedTask,
                     onClick={() => setActiveTab(item.id)}
                     className={`w-full flex items-center px-4 py-3 text-left rounded-lg transition-colors ${
                       activeTab === item.id
-                        ? 'bg-cta text-cta-foreground'
-                        : 'text-ink hover:bg-cta hover:text-cta-foreground'
+                        ? 'bg-white/15 text-cta-foreground font-medium'
+                        : 'text-cta-foreground/70 hover:bg-white/10 hover:text-cta-foreground'
                     }`}
                   >
                     <IconComponent className="w-5 h-5 mr-3" />
@@ -826,6 +834,14 @@ const InvoiceToolReplica = ({ onClose, workspaceId, workspaceName, selectedTask,
         <div className="bg-surface border-b border-line px-6 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center flex-1">
+              <button
+                onClick={onClose}
+                className="flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-ink border border-line rounded-lg hover:bg-surface-hover transition-colors"
+                title="Back to workspace"
+              >
+                <ArrowLeft className="w-4 h-4" />
+                Back to Workspace
+              </button>
             </div>
             <div className="flex items-center space-x-4">
             </div>

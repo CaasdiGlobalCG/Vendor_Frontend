@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { VendorContext } from '../../../../../context/VendorContext.jsx';
+import { resolveWorkspaceActor } from '../../../utils/workspaceActor';
 import config from '../../../../../config/env';
 import { 
 //
@@ -17,6 +18,8 @@ import invoiceFetch from '../utils/invoiceFetch';
 
 const NewPurchaseRequisitionForm = ({ onBack, workspaceId }) => {
   const { currentUser } = useContext(VendorContext);
+  // Per-role scoping — docs are owned by the actor's id, not always the vendor
+  const actorOwnerId = resolveWorkspaceActor(currentUser).ownerId;
   const navigate = useNavigate();
   
   // Form state - updated to match the required structure
@@ -38,7 +41,7 @@ const NewPurchaseRequisitionForm = ({ onBack, workspaceId }) => {
     deliveryAddress: '',
     purpose: '',
     status: 'draft',
-    vendorId: currentUser?.vendorId || '',
+    vendorId: actorOwnerId || '',
     workspaceId: workspaceId || ''
   });
 
@@ -56,10 +59,10 @@ const NewPurchaseRequisitionForm = ({ onBack, workspaceId }) => {
 
   // Set vendor ID when component mounts
   useEffect(() => {
-    if (currentUser?.vendorId) {
+    if (actorOwnerId) {
       setFormData(prev => ({
         ...prev,
-        vendorId: currentUser.vendorId
+        vendorId: actorOwnerId
       }));
     }
   }, [currentUser]);
@@ -153,7 +156,7 @@ const NewPurchaseRequisitionForm = ({ onBack, workspaceId }) => {
       if (!workspaceId) {
         throw new Error('Workspace ID is missing');
       }
-      if (!currentUser?.vendorId) {
+      if (!actorOwnerId) {
         throw new Error('Vendor information is missing');
       }
       if (!formData.deliveryAddress) {
@@ -167,7 +170,7 @@ const NewPurchaseRequisitionForm = ({ onBack, workspaceId }) => {
       const payload = {
         // Top-level required fields
         title: formData.title,
-        vendorId: currentUser?.vendorId,
+        vendorId: actorOwnerId,
         workspaceId: workspaceId,
         
         // Additional fields
@@ -206,7 +209,7 @@ const NewPurchaseRequisitionForm = ({ onBack, workspaceId }) => {
                      (formData.priority === 'medium' ? 'Medium' : 'Low'),
         
         // Ensure these are included for compatibility
-        vendor_id: currentUser?.vendorId,
+        vendor_id: actorOwnerId,
         project_id: workspaceId
       };
 
@@ -216,7 +219,7 @@ const NewPurchaseRequisitionForm = ({ onBack, workspaceId }) => {
         headers: {
           'Content-Type': 'application/json',
           'x-user-info': JSON.stringify({
-            vendorId: currentUser.vendorId,
+            vendorId: actorOwnerId,
             email: currentUser.email,
             role: 'vendor',
             name: currentUser.name

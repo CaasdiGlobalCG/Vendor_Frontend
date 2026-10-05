@@ -232,6 +232,13 @@ const WorkspaceHeader = ({
     window.location.href = 'http://localhost:3001/dashboard';
   } else {
     navigate('/VendorDashboard');
+    // Safety net: if the router pushed the URL but this page is still
+    // mounted, force a real navigation.
+    setTimeout(() => {
+      if (document.querySelector('[data-workspace-header]')) {
+        window.location.assign('/VendorDashboard');
+      }
+    }, 250);
   }
 };
 

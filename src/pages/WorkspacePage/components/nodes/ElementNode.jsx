@@ -50,6 +50,7 @@ import VinylFlooringCalculator from '../forms/VinylFlooringCalculator';
 import PaintingEstimator from '../forms/PaintingEstimator';
 import ElectricalWiringEstimator from '../forms/ElectricalWiringEstimator';
 import BOQGenerator from '../forms/BOQGenerator';
+import CustomBOQDocument from '../forms/CustomBOQDocument';
 import CostCalculatorSummary from '../forms/CostCalculatorSummary';
 import ShipmentCard from '../forms/ShipmentCard';
 import FreightCostCalculator from '../forms/FreightCostCalculator';
@@ -502,7 +503,12 @@ const ElementNode = ({ id, data, isConnectable, selected }) => {
     // Check URL parameters first (for PMs and clients accessing vendor frontend)
     const urlParams = new URLSearchParams(window.location.search);
     const urlUserRole = urlParams.get('userRole');
+    const urlUserId = urlParams.get('userId') || '';
     
+    // Finance staff enter via CAS-style links but carry FIN-* user ids
+    if (urlUserRole === 'finance' || urlUserId.startsWith('FIN-')) {
+      return 'finance';
+    }
     if (urlUserRole && ['vendor', 'pm', 'client'].includes(urlUserRole)) {
       return urlUserRole;
     }
@@ -1785,6 +1791,17 @@ const ElementNode = ({ id, data, isConnectable, selected }) => {
       case 'boq-generator':
         return <BOQGenerator />;
 
+      case 'custom-boq':
+        return (
+          <CustomBOQDocument
+            boq={data.customBOQData}
+            role={getCurrentUserRole()}
+            nodeId={id}
+            setNodes={setNodes}
+            workspaceId={workspaceId}
+          />
+        );
+
       case 'calculator': // legacy panel type — route through the same dispatch below
       case 'cost-calculator':
         // Render different calculators based on element name or id
@@ -2606,6 +2623,12 @@ const ElementNode = ({ id, data, isConnectable, selected }) => {
     // BOQ Generator has special flexible sizing
     if (data.type === 'boq-generator') {
       return `${baseClasses} ${recentlyUpdatedClass} p-4 w-full h-full min-w-[600px] max-w-[95vw] flex flex-col`;
+    }
+
+    // Custom BOQ document grows with its content — no internal scroll, the
+    // node expands vertically so every line item is visible at once.
+    if (data.type === 'custom-boq') {
+      return `${baseClasses} ${recentlyUpdatedClass} p-4 w-full h-auto min-w-[600px] max-w-[95vw] flex flex-col`;
     }
 
     // All elements fill the resized node dimensions (NodeResizer sets style w/h).

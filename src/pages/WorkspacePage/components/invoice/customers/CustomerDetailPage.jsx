@@ -22,11 +22,14 @@ import {
   ChevronDown
 } from 'lucide-react';
 import { VendorContext } from "../../../../../context/VendorContext";
+import { resolveWorkspaceActor } from '../../../utils/workspaceActor';
 import config from '../../../../../config/env';
 import invoiceFetch from '../utils/invoiceFetch';
 
 const CustomerDetailPage = ({ customerId, onClose, onCustomerUpdated }) => {
   const { currentUser } = useContext(VendorContext);
+  // Per-role scoping — every actor manages their OWN customers (vendorId = owner)
+  const actorOwnerId = resolveWorkspaceActor(currentUser).ownerId;
   const [customer, setCustomer] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -58,7 +61,7 @@ const CustomerDetailPage = ({ customerId, onClose, onCustomerUpdated }) => {
   const fetchCustomerDetails = async () => {
     try {
       setLoading(true);
-      const vendorId = currentUser?.vendorId;
+      const vendorId = actorOwnerId;
       
       const headers = {
         'Content-Type': 'application/json',
@@ -94,7 +97,7 @@ const CustomerDetailPage = ({ customerId, onClose, onCustomerUpdated }) => {
 
   const fetchCustomerTimeline = async () => {
     try {
-      const vendorId = currentUser?.vendorId;
+      const vendorId = actorOwnerId;
       
       const headers = {
         'Content-Type': 'application/json',
@@ -195,7 +198,7 @@ const CustomerDetailPage = ({ customerId, onClose, onCustomerUpdated }) => {
   const handleSave = async (field) => {
     try {
       setSaving(true);
-      const vendorId = currentUser?.vendorId;
+      const vendorId = actorOwnerId;
       
       const headers = {
         'Content-Type': 'application/json',
@@ -386,7 +389,7 @@ const CustomerDetailPage = ({ customerId, onClose, onCustomerUpdated }) => {
   const saveCustomer = async () => {
     try {
       setSaving(true);
-      const vendorId = currentUser?.vendorId;
+      const vendorId = actorOwnerId;
       
       const headers = {
         'Content-Type': 'application/json',

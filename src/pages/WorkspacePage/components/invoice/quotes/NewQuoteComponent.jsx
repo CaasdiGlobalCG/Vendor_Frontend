@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useContext, useRef } from 'react';
 import { Search, Info, Trash2, Plus, Upload, X, ChevronDown, Edit, Loader2, Edit2, PlusCircle, Save, Settings, Check, Eye } from 'lucide-react';
 import { VendorContext } from '../../../../../context/VendorContext';
+import { resolveWorkspaceActor } from '../../../utils/workspaceActor';
 import { AuthProvider } from '../../../../../context/AuthContext';
 import { convertMeasurementToFeet, needsConversion } from '../../../../../utils/unitConverter';
 import { calculateRatePerSqft, calculateTotalRate, checkRateConsistency, determineCalculationTarget, formatCurrency } from '../../../../../utils/rateCalculator';
@@ -49,6 +50,8 @@ const CAASDI_GLOBAL_CUSTOMER = {
 
 const CustomerSearchModal = ({ open, onClose, onSelect }) => {
   const { currentUser } = useContext(VendorContext);
+  // Per-role scoping — docs are owned by the actor's id, not always the vendor
+  const actorOwnerId = resolveWorkspaceActor(currentUser).ownerId;
   const [search, setSearch] = useState('');
   const [customers, setCustomers] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -61,14 +64,14 @@ const CustomerSearchModal = ({ open, onClose, onSelect }) => {
       const headers = {
         'Content-Type': 'application/json',
         'x-user-info': JSON.stringify({
-          vendorId: currentUser?.vendorId,
+          vendorId: actorOwnerId,
           email: currentUser?.email,
           role: 'vendor',
           name: currentUser?.name
         })
       };
       
-      invoiceFetch(`/api/workspace/customers?vendorId=${currentUser?.vendorId}`, { headers })
+      invoiceFetch(`/api/workspace/customers?vendorId=${actorOwnerId}`, { headers })
         .then((res) => res.json())
         .then((data) => {
           if (data.success) {
@@ -373,6 +376,8 @@ const ReferenceNumberConfigModal = ({ open, onClose, config, onSave }) => {
 // Item Selection Modal Component
 const ItemSelectionModal = ({ open, onClose, onSelect }) => {
   const { currentUser } = useContext(VendorContext);
+  // Per-role scoping — docs are owned by the actor's id, not always the vendor
+  const actorOwnerId = resolveWorkspaceActor(currentUser).ownerId;
   const [search, setSearch] = useState('');
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -393,14 +398,14 @@ const ItemSelectionModal = ({ open, onClose, onSelect }) => {
       const headers = {
         'Content-Type': 'application/json',
         'x-user-info': JSON.stringify({
-          vendorId: currentUser?.vendorId,
+          vendorId: actorOwnerId,
           email: currentUser?.email,
           role: 'vendor',
           name: currentUser?.name
         })
       };
       
-      invoiceFetch(`/api/workspace/items?vendorId=${currentUser?.vendorId}`, { headers })
+      invoiceFetch(`/api/workspace/items?vendorId=${actorOwnerId}`, { headers })
         .then((res) => res.json())
         .then((data) => {
           setItems(data.data || data.items || []);
@@ -412,7 +417,7 @@ const ItemSelectionModal = ({ open, onClose, onSelect }) => {
         })
         .finally(() => setLoading(false));
     }
-  }, [open, fetched, currentUser?.vendorId]);
+  }, [open, fetched, actorOwnerId]);
 
   const handleAddNewItem = () => {
     if (!newItemData.name.trim()) {
@@ -618,6 +623,8 @@ const NewQuoteComponentInner = ({
   selectedSubtask
 }) => {
     const { currentUser } = useContext(VendorContext);
+  // Per-role scoping — docs are owned by the actor's id, not always the vendor
+  const actorOwnerId = resolveWorkspaceActor(currentUser).ownerId;
     
     // Helper function to format address
     const formatAddress = (addressObj) => {
@@ -827,7 +834,7 @@ const NewQuoteComponentInner = ({
     // Fetch complete customer details when customer is selected
     const fetchCompleteCustomerDetails = async (customerId) => {
         try {
-            const vendorId = currentUser?.vendorId;
+            const vendorId = actorOwnerId;
             if (!vendorId) {
                 console.error('No vendor ID found');
                 return;
@@ -1148,7 +1155,7 @@ const NewQuoteComponentInner = ({
             console.log('Saving new config:', newConfig);
             
             // Save to localStorage for vendor-specific config
-            const configKey = `quoteNumberConfig_${currentUser?.vendorId}`;
+            const configKey = `quoteNumberConfig_${actorOwnerId}`;
             localStorage.setItem(configKey, JSON.stringify(newConfig));
             
             setQuoteNumberConfig(newConfig);
@@ -1176,7 +1183,7 @@ const NewQuoteComponentInner = ({
             console.log('Saving new reference config:', newConfig);
             
             // Save to localStorage for vendor-specific config
-            const configKey = `referenceNumberConfig_${currentUser?.vendorId}`;
+            const configKey = `referenceNumberConfig_${actorOwnerId}`;
             localStorage.setItem(configKey, JSON.stringify(newConfig));
             
             setReferenceConfig(newConfig);
@@ -1281,7 +1288,7 @@ const NewQuoteComponentInner = ({
     useEffect(() => {
         const loadQuoteNumberConfig = async () => {
             try {
-                const configKey = `quoteNumberConfig_${currentUser?.vendorId}`;
+                const configKey = `quoteNumberConfig_${actorOwnerId}`;
                 const savedConfig = localStorage.getItem(configKey);
                 
                 if (savedConfig) {
@@ -1306,16 +1313,16 @@ const NewQuoteComponentInner = ({
             }
         };
         
-        if (currentUser?.vendorId) {
+        if (actorOwnerId) {
             loadQuoteNumberConfig();
         }
-    }, [currentUser?.vendorId]);
+    }, [actorOwnerId]);
 
     // Load reference number configuration from localStorage
     useEffect(() => {
         const loadReferenceNumberConfig = async () => {
             try {
-                const configKey = `referenceNumberConfig_${currentUser?.vendorId}`;
+                const configKey = `referenceNumberConfig_${actorOwnerId}`;
                 const savedConfig = localStorage.getItem(configKey);
                 
                 if (savedConfig) {
@@ -1340,10 +1347,10 @@ const NewQuoteComponentInner = ({
             }
         };
         
-        if (currentUser?.vendorId) {
+        if (actorOwnerId) {
             loadReferenceNumberConfig();
         }
-    }, [currentUser?.vendorId]);
+    }, [actorOwnerId]);
 
 
     // Function to generate PDF using the *same* StandardPreview layout (html2pdf)
@@ -1504,7 +1511,7 @@ const NewQuoteComponentInner = ({
 
         const quotationData = {
             // Core identification
-            vendorId: currentUser?.vendorId,
+            vendorId: actorOwnerId,
             quotationId: customQuoteNumber,
             customQuoteId: customQuoteNumber,
             
@@ -1600,7 +1607,7 @@ const NewQuoteComponentInner = ({
             subtaskName: selectedSubtask?.name || '',
             notes: customerNotes,
             termsAndConditions: termsAndConditions,
-            vendorId: currentUser?.vendorId,
+            vendorId: actorOwnerId,
             
             // Company information (if available from context)
             company: {
@@ -1675,13 +1682,13 @@ const NewQuoteComponentInner = ({
             if (quoteNumberConfig.autoGenerate) {
                 const nextNumber = (parseInt(quoteNumberConfig.nextNumber) + 1).toString();
                 const newConfig = { ...quoteNumberConfig, nextNumber };
-                localStorage.setItem(`quoteNumberConfig_${currentUser?.vendorId}`, JSON.stringify(newConfig));
+                localStorage.setItem(`quoteNumberConfig_${actorOwnerId}`, JSON.stringify(newConfig));
                 setQuoteNumberConfig(newConfig);
             }
             if (referenceConfig.autoGenerate) {
                 const nextNumber = (parseInt(referenceConfig.nextNumber) + 1).toString();
                 const newConfig = { ...referenceConfig, nextNumber };
-                localStorage.setItem(`referenceNumberConfig_${currentUser?.vendorId}`, JSON.stringify(newConfig));
+                localStorage.setItem(`referenceNumberConfig_${actorOwnerId}`, JSON.stringify(newConfig));
                 setReferenceConfig(newConfig);
             }
         } catch (error) {
@@ -1693,7 +1700,7 @@ const NewQuoteComponentInner = ({
     // a PDF. Called every 5s, on close, and on unmount/page-unload.
     const performAutoSave = async ({ force = false, keepalive = false } = {}) => {
         if (savedManuallyRef.current || autoSaveInFlightRef.current || manualSaveInFlightRef.current || saving) return;
-        if (!currentUser?.vendorId || !selectedCustomer) return;
+        if (!actorOwnerId || !selectedCustomer) return;
 
         const draftId = autoSavedQuotationIdRef.current;
         // Never create a brand-new draft for an untouched form
@@ -1724,7 +1731,7 @@ const NewQuoteComponentInner = ({
         const headers = {
             'Content-Type': 'application/json',
             'x-user-info': JSON.stringify({
-                vendorId: currentUser.vendorId,
+                vendorId: actorOwnerId,
                 email: currentUser?.email,
                 role: 'vendor',
                 name: currentUser?.name
@@ -1831,7 +1838,7 @@ const NewQuoteComponentInner = ({
         console.log('Saving quotation data in StandardPreview format:', quotationData);
 
         try {
-            const vendorId = currentUser?.vendorId;
+            const vendorId = actorOwnerId;
             const headers = {
                 'Content-Type': 'application/json',
                 'x-user-info': JSON.stringify({

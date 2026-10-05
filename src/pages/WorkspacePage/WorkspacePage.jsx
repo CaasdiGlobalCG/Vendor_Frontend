@@ -21,6 +21,8 @@ import './components/WorkspaceShell.css';
 import ShareProgressModal from '../../components/ShareProgressModal';
 import { Sparkles, FileText, Calendar, CheckCircle, StickyNote, ClipboardCheck, PanelLeft, PanelRight, Maximize2, ZoomIn, Eye, Layout, HelpCircle, Keyboard } from 'lucide-react';
 import ManageBOQModal from './components/ManageBOQModal';
+import CustomBOQModal from './components/CustomBOQModal';
+import CivilBOQModal from './components/CivilBOQModal';
 import CommandPalette from './components/CommandPalette';
 import AICanvasBuilderModal from './components/modals/AICanvasBuilderModal';
 import KeyboardShortcutsOverlay from './components/KeyboardShortcutsOverlay';
@@ -52,6 +54,7 @@ import useVideoCall from '../../hooks/useVideoCall';
 import config from '../../config/env';
 import authFetch from '../../utils/authFetch';
 import { notifyWorkspaceEvent, getWorkspaceById } from './utils/workspaceApi';
+import { resolveWorkspaceActor } from './utils/workspaceActor';
 import { findSubtaskContainingNode } from './utils/nodePersistence';
 
 const WorkspacePage = () => {
@@ -103,6 +106,17 @@ const WorkspacePage = () => {
     window.history.replaceState({}, '', url.toString());
   }, [workspaceId, shareParams]);
   
+  // Canvas document nodes (quotation/invoice/etc.) can ask to open the invoice
+  // tool on a specific tab for editing (DocumentNode "Edit" button).
+  useEffect(() => {
+    const handler = (e) => {
+      if (e.detail?.tab) setInvoiceToolTab(e.detail.tab);
+      handleTemplateSelect('quotations-invoices');
+    };
+    document.addEventListener('openInvoiceTool', handler);
+    return () => document.removeEventListener('openInvoiceTool', handler);
+  }, []);
+
   // Enhanced PM and CAS detection for cross-origin access
   const urlParams = new URLSearchParams(location.search);
   const urlUserRole = urlParams.get('userRole');
@@ -110,6 +124,7 @@ const WorkspacePage = () => {
   const urlUserId = urlParams.get('userId');
   const urlUserName = urlParams.get('userName');
   const urlUserEmail = urlParams.get('userEmail');
+  const urlClientId = urlParams.get('clientId');
   // 'extHandoff' (not 'handoff') — App.jsx owns ?handoff= for client→vendor switches
   const urlHandoff = urlParams.get('extHandoff');
   // Set by the client app when it deep-links into this hosted workspace
@@ -149,6 +164,18 @@ const WorkspacePage = () => {
     email: urlUserEmail ? decodeURIComponent(urlUserEmail) : '',
     role: 'cas',
     accessedFrom: 'trunky-dashboard'
+  } : null;
+
+  // Synthesize a client user from share-link params (same pattern as CAS/PM) —
+  // without it currentUser stays null and the canvas WebSocket never connects
+  // (permanent "Offline" badge, no live updates).
+  const urlClientUser = (urlUserRole === 'client' && urlClientId) ? {
+    id: urlClientId,
+    userId: urlClientId,
+    name: urlUserName ? decodeURIComponent(urlUserName) : 'Client',
+    email: urlUserEmail ? decodeURIComponent(urlUserEmail) : '',
+    role: 'client',
+    accessedFrom: 'client-dashboard'
   } : null;
 
   // Client detection will be done after workspace loads (in useState and useEffect)
@@ -200,8 +227,10 @@ const WorkspacePage = () => {
       setUser(pmUserFromUrl);
     } else if (casUser && !currentUser?.role) {
       setUser(casUser);
+    } else if (urlClientUser && !currentUser?.role) {
+      setUser(urlClientUser);
     }
-  }, [pmUserFromStorage, pmUserFromUrl, casUser, currentUser?.role, setUser]);
+  }, [pmUserFromStorage, pmUserFromUrl, casUser, urlClientUser, currentUser?.role, setUser]);
 
   // ── External handoff exchange (PM / CAS opening from the Employee app) ──
   // The Employee backend issues a one-time code appended as ?extHandoff=<code>.
@@ -429,8 +458,11 @@ const WorkspacePage = () => {
   const [showLayoutsPanel, setShowLayoutsPanel] = useState(false);
   const [showTextPanel, setShowTextPanel] = useState(false);
   const [showInvoiceTool, setShowInvoiceTool] = useState(false);
+  const [invoiceToolTab, setInvoiceToolTab] = useState(null);
   const [selectedTextElement, setSelectedTextElement] = useState(null);
   const [showManageBOQModal, setShowManageBOQModal] = useState(false);
+  const [showCustomBOQModal, setShowCustomBOQModal] = useState(false);
+  const [showCivilBOQModal, setShowCivilBOQModal] = useState(false);
   const [showProcurementRFQModal, setShowProcurementRFQModal] = useState(false);
   const [showExecutionRequestModal, setShowExecutionRequestModal] = useState(false);
   const [showWorkflowBuilderModal, setShowWorkflowBuilderModal] = useState(false);
@@ -541,13 +573,15 @@ const workspaceForProgress = useMemo(() => {
       window.location.href = externalReturnUrl;
       return;
     }
-    if (isPM) {
-      navigate('/PMDashboard');
-    } else if (isCAS) {
-      navigate('/CASDashboard');
-    } else {
-      navigate('/VendorDashboard');
-    }
+    const target = isPM ? '/PMDashboard' : isCAS ? '/CASDashboard' : '/VendorDashboard';
+    navigate(target);
+    // Safety net: if the router pushed the URL but the route tree didn't
+    // re-render (workspace header still mounted), force a real navigation.
+    setTimeout(() => {
+      if (document.querySelector('[data-workspace-header]')) {
+        window.location.assign(target);
+      }
+    }, 250);
   }, [externalReturnUrl, isPM, isCAS, navigate]);
 
   const isWorkspaceCompleted = workspace?.status === 'completed';
@@ -705,24 +739,26 @@ const workspaceForProgress = useMemo(() => {
   // Fetch invoices and quotes data
   useEffect(() => {
     const fetchData = async () => {
-      if (!currentUser?.vendorId) {
-        console.log('⏳ Waiting for vendorId...');
+      // Per-role document scoping — every actor sees THEIR OWN documents.
+      // vendorId doubles as the owner key on the backend.
+      const actorOwnerId = resolveWorkspaceActor(currentUser).ownerId;
+      if (!actorOwnerId && !detectedClientId) {
+        console.log('⏳ Waiting for actor id...');
         return;
       }
-      
+
       setLoading(true);
       setError(null);
-      
+
       try {
-        // Prepare headers with user info
-        // Use clientId if available (when user is a client), otherwise use vendorId
-        const userId = detectedClientId || currentUser.vendorId;
+        // Use clientId if available (when user is a client), otherwise the actor's owner id
+        const userId = detectedClientId || actorOwnerId;
         const userRole = detectedClientId ? 'client' : 'vendor';
-        
+
         const headers = {
           'Content-Type': 'application/json',
           'x-user-info': JSON.stringify({
-            vendorId: currentUser.vendorId,
+            vendorId: actorOwnerId,
             clientId: detectedClientId || undefined,
             email: currentUser?.email,
             role: userRole,
@@ -732,9 +768,13 @@ const workspaceForProgress = useMemo(() => {
         };
         
         console.log('🔑 Using', userRole, 'ID:', userId);
-        
-        // Fetch invoices
-        const invoicesRes = await fetch(`/api/workspace/invoices?vendorId=${userId}`, {
+
+        // Scope element documents to this workspace so vendors only see
+        // quotations/invoices created in the workspace they're working in.
+        const wsParam = (workspaceId && workspaceId !== 'undefined') ? `&workspaceId=${workspaceId}` : '';
+
+        // Fetch invoices (scoped to this workspace — only docs created here appear in elements)
+        const invoicesRes = await fetch(`/api/workspace/invoices?vendorId=${userId}${wsParam}`, {
           headers: headers
         });
         
@@ -748,7 +788,7 @@ const workspaceForProgress = useMemo(() => {
         setInvoices(invoicesData.data || []);
         
         // Fetch quotes (using quotations endpoint to match other components)
-        const quotesRes = await fetch(`/api/workspace/quotations?vendorId=${currentUser.vendorId}`, {
+        const quotesRes = await fetch(`/api/workspace/quotations?vendorId=${userId}${wsParam}`, {
           headers: headers
         });
         
@@ -762,7 +802,7 @@ const workspaceForProgress = useMemo(() => {
         setQuotes(quotesData.data || []);
         
         // Fetch credit notes
-        const creditNotesRes = await fetch(`/api/workspace/credit-notes?vendorId=${currentUser.vendorId}`, {
+        const creditNotesRes = await fetch(`/api/workspace/credit-notes?vendorId=${userId}`, {
           headers: headers
         });
         
@@ -773,7 +813,7 @@ const workspaceForProgress = useMemo(() => {
         }
         
         // Fetch purchase orders
-        const purchaseOrdersRes = await fetch(`/api/workspace/purchase-orders?vendorId=${currentUser.vendorId}`, {
+        const purchaseOrdersRes = await fetch(`/api/workspace/purchase-orders?vendorId=${userId}${wsParam}`, {
           headers: headers
         });
         
@@ -792,7 +832,7 @@ const workspaceForProgress = useMemo(() => {
     };
     
     fetchData();
-  }, [currentUser?.vendorId, detectedClientId]);
+  }, [currentUser?.vendorId, currentUser?.pmId, detectedClientId, workspaceId]);
 
   // Helper function to get status color
   const getStatusColor = (status = '') => {
@@ -1092,50 +1132,6 @@ const workspaceForProgress = useMemo(() => {
             ]
           }
         }
-      ]
-    },
-    tables: {
-      name: 'Tables',
-      elements: [
-        { id: 'basic-table', name: 'Basic Table', type: 'table', preview: 'Simple data table' },
-        { id: 'data-table', name: 'Data Table', type: 'table', preview: 'Advanced data table' },
-        { id: 'pivot-table', name: 'Pivot Table', type: 'table', preview: 'Pivot analysis table' },
-        { id: 'calendar', name: 'Calendar', type: 'calendar', preview: 'Date picker calendar' }
-      ]
-    },
-    charts: {
-      name: 'Charts',
-      elements: [
-        { id: 'bar-chart', name: 'Bar Chart', type: 'chart', preview: 'Vertical bar chart' },
-        { id: 'line-chart', name: 'Line Chart', type: 'chart', preview: 'Trend line chart' },
-        { id: 'pie-chart', name: 'Pie Chart', type: 'chart', preview: 'Circular data chart' },
-        { id: 'area-chart', name: 'Area Chart', type: 'chart', preview: 'Filled area chart' },
-        { id: 'scatter-plot', name: 'Scatter Plot', type: 'chart', preview: 'Data point scatter' }
-      ]
-    },
-    icons: {
-      name: 'Icons',
-      elements: [
-        { id: 'basic-icons', name: 'Basic Icons', type: 'icon', preview: 'Simple icon set' },
-        { id: 'social-icons', name: 'Social Icons', type: 'icon', preview: 'Social media icons' },
-        { id: 'navigation-icons', name: 'Navigation', type: 'icon', preview: 'Menu and nav icons' },
-        { id: 'action-icons', name: 'Action Icons', type: 'icon', preview: 'Button and action icons' }
-      ]
-    },
-    list: {
-      name: 'List',
-      elements: [
-        { id: 'simple-list', name: 'Simple List', type: 'list', preview: 'Basic list display' },
-        { id: 'numbered-list', name: 'Numbered List', type: 'list', preview: 'Ordered list' },
-        { id: 'bullet-list', name: 'Bullet List', type: 'list', preview: 'Unordered list' },
-        { id: 'card-list', name: 'Card List', type: 'list', preview: 'Card-based list' }
-      ]
-    },
-    other: {
-      name: 'Other Elements',
-      elements: [
-        { id: 'grid', name: 'Grid', type: 'grid', preview: 'Layout grid system' },
-        { id: 'button', name: 'Button', type: 'button', preview: 'Action button' }
       ]
     },
     tables: {
@@ -2219,8 +2215,32 @@ const workspaceForProgress = useMemo(() => {
 
   const handleTemplateSelect = (templateId) => {
     if (templateId === 'quotations-invoices') {
-      // Navigate to invoices route instead of showing overlay
+      // Navigate to invoices route AND open the overlay directly — the
+      // pathname effect that mirrors the URL into showInvoiceTool can miss
+      // when the router keeps this component mounted across the route
+      // change, which left the URL at /invoices with no UI until reload.
       navigate(`/VendorDashboard/workspace/${workspaceId}/invoices`);
+      setShowInvoiceTool(true);
+      setIsContextPanelOpen(false);
+      // Close other panels
+      setShowTextPanel(false);
+      setShowLayoutsPanel(false);
+      setShowElementsSidebar(false);
+      setShowElementsPanel(false);
+      setSelectedCategory(null);
+    } else if (templateId === 'custom-boq') {
+      // Open Custom BOQ wizard modal
+      setShowCustomBOQModal(true);
+      setIsContextPanelOpen(false);
+      // Close other panels
+      setShowTextPanel(false);
+      setShowLayoutsPanel(false);
+      setShowElementsSidebar(false);
+      setShowElementsPanel(false);
+      setSelectedCategory(null);
+    } else if (templateId === 'civil-boq') {
+      // Open Civil Work BOQ wizard modal (sectioned, measurement-driven)
+      setShowCivilBOQModal(true);
       setIsContextPanelOpen(false);
       // Close other panels
       setShowTextPanel(false);
@@ -2855,6 +2875,18 @@ const workspaceForProgress = useMemo(() => {
         }}
       />
 
+      {/* Custom BOQ wizard (Elements → BOQ Generator → Custom BOQ) */}
+      <CustomBOQModal
+        isOpen={showCustomBOQModal}
+        onClose={() => setShowCustomBOQModal(false)}
+      />
+
+      {/* Civil Work BOQ wizard (Elements → BOQ Generator → Civil Work BOQ) */}
+      <CivilBOQModal
+        isOpen={showCivilBOQModal}
+        onClose={() => setShowCivilBOQModal(false)}
+      />
+
       <ProcurementRFQModal
         isOpen={showProcurementRFQModal}
         onClose={() => setShowProcurementRFQModal(false)}
@@ -2964,6 +2996,7 @@ const workspaceForProgress = useMemo(() => {
         workspace={workspaceForProgress}
         workspaceId={workspaceId}
         date={reportDay?.date}
+        dates={reportDay?.dates}
         dayLabel={reportDay?.label}
         generatedBy={currentUser?.name || currentUser?.email}
       />
@@ -2993,7 +3026,7 @@ const workspaceForProgress = useMemo(() => {
             }
           }
         }}
-        onOpenReport={(d) => setReportDay({ date: d.date, label: d.label })}
+        onOpenReport={(d) => setReportDay({ date: d.date ?? null, dates: d.dates ?? null, label: d.label })}
       />
 
       {/* Client Review Progress Modal */}
@@ -3020,12 +3053,16 @@ const workspaceForProgress = useMemo(() => {
       {/* Invoice Tool Full Screen */}
       {showInvoiceTool && (
         <div className="fixed inset-0 z-50 bg-surface">
-          <InvoiceToolReplica 
-            onClose={() => navigate(location.pathname.replace('/invoices', ''))}
+          <InvoiceToolReplica
+            onClose={() => {
+              navigate(location.pathname.replace('/invoices', ''));
+              setShowInvoiceTool(false);
+            }}
             workspaceId={workspaceId}
             workspaceName={workspaceDisplayName}
             selectedTask={selectedTask}
             selectedSubtask={selectedSubtask}
+            initialTab={invoiceToolTab}
           />
         </div>
       )}

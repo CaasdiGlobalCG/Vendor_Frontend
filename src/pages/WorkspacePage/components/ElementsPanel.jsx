@@ -2,6 +2,9 @@ import React, { useRef, useState } from 'react';
 import { Grid, Table, BarChart3, Square, List, X, GitBranch, Package, Upload, FileText, Image, FileSpreadsheet, Plus, File, Settings, Workflow, FileDigit, FileCheck, Clock, AlertCircle, ClipboardList, FileSpreadsheet as FileSpreadsheetIcon, Sparkles, Calendar, CheckCircle, StickyNote, ClipboardCheck, Minus, ArrowDown, Box, LayoutGrid, CheckSquare, TrendingUp, Calculator, Layers } from 'lucide-react';
 import { useUpload } from './forms/UploadManager';
 import ManageBOQModal from './ManageBOQModal';
+import CustomBOQModal from './CustomBOQModal';
+import CivilBOQModal from './CivilBOQModal';
+import { DocumentThumbnail, getDocType } from './ElementDocumentPreview';
 
 // Get file type icon
 const getFileIcon = (fileName) => {
@@ -507,6 +510,14 @@ const createSerializableElement = (element) => {
     };
   }
 
+  // Business documents (quotation, invoice, credit-note, PO) carry their full
+  // record spread across the element itself — copy it through so the canvas
+  // node (DocumentNode / StandardPreview) can render the real document.
+  if (getDocType(element)) {
+    const { id: _id, name: _name, type: _type, preview: _preview, nodeType: _nt, ...docFields } = element;
+    Object.assign(cleanElement, docFields);
+  }
+
   return cleanElement;
 };
 
@@ -666,6 +677,9 @@ const DraggableElement = ({ element }) => {
         {element.type === 'cost-calculator' && element.elementIcon && (
           element.elementIcon
         )}
+        {element.type === 'boq-generator' && (
+          <FileDigit className="w-6 h-6 text-indigo-600" />
+        )}
         {element.type === 'logistics-shipment' && (
           <Package className="w-6 h-6 text-info" />
         )}
@@ -696,9 +710,13 @@ const DraggableElement = ({ element }) => {
       </div>
       
       {/* Element Preview */}
-      <div className="text-left">
-        <p className="text-xs text-dim leading-relaxed line-clamp-2">{element.preview}</p>
-      </div>
+      {getDocType(element) ? (
+        <DocumentThumbnail element={element} />
+      ) : (
+        <div className="text-left">
+          <p className="text-xs text-dim leading-relaxed line-clamp-2">{element.preview}</p>
+        </div>
+      )}
       
       {/* Action Hint */}
       <div className="flex items-center justify-between pt-2 border-t border-line">
@@ -724,6 +742,8 @@ const ElementsPanel = ({
 }) => {
   // Initialize state for the modal
   const [showManageBOQ, setShowManageBOQ] = useState(false);
+  const [showCustomBOQ, setShowCustomBOQ] = useState(false);
+  const [showCivilBOQ, setShowCivilBOQ] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [documentTypeFilter, setDocumentTypeFilter] = useState('all'); // 'all', 'quotations', 'invoices', 'credit-notes', 'purchase-orders'
   
@@ -1077,6 +1097,18 @@ const ElementsPanel = ({
         { id: 'calc-freight', name: 'Freight Cost Calculator', type: 'logistics-freight-cost', preview: 'Calculate freight costs with fuel surcharge and tolls' }
       ]
     },
+    'boq-generator': {
+      name: 'BOQ Generator',
+      icon: <FileDigit className="w-5 h-5" />,
+      elements: [
+        { id: 'boq-tpl-blank', name: 'Blank BOQ', type: 'boq-generator', preview: 'Start a Bill of Quantities from scratch' },
+        { id: 'boq-tpl-civil', name: 'Civil Works BOQ', type: 'boq-generator', preview: 'Template — earthwork, RCC, masonry & finishing items' },
+        { id: 'boq-tpl-interior', name: 'Interior Fit-Out BOQ', type: 'boq-generator', preview: 'Template — partitions, flooring, ceiling & joinery' },
+        { id: 'boq-tpl-electrical', name: 'Electrical BOQ', type: 'boq-generator', preview: 'Template — wiring, panels, fixtures & load points' },
+        { id: 'boq-tpl-plumbing', name: 'Plumbing & Sanitary BOQ', type: 'boq-generator', preview: 'Template — piping, fittings & sanitary fixtures' },
+        { id: 'boq-tpl-hvac', name: 'HVAC BOQ', type: 'boq-generator', preview: 'Template — ducting, AHUs, diffusers & insulation' }
+      ]
+    },
     logistics: {
       name: 'Logistics',
       icon: <Package className="w-5 h-5" />,
@@ -1400,6 +1432,66 @@ const ElementsPanel = ({
           </div>
         ) : (
           <div className="space-y-2">
+            {selectedCategory === 'boq-generator' && (
+              <>
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    setShowCustomBOQ(true);
+                  }}
+                  className="w-full flex items-center justify-center space-x-1.5 p-2 bg-black text-white rounded-lg hover:bg-slate-800 transition-all duration-200"
+                >
+                  <Plus className="w-3.5 h-3.5" />
+                  <span className="text-xs font-medium">Custom BOQ</span>
+                </button>
+                {/* Civil Work BOQ — template-style card, opens the sectioned wizard */}
+                <div
+                  role="button"
+                  tabIndex={0}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    setShowCivilBOQ(true);
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault();
+                      setShowCivilBOQ(true);
+                    }
+                  }}
+                  className="group p-5 bg-surface rounded-xl border border-line hover:border-info transition-all duration-300 cursor-pointer relative flex flex-col space-y-3 hover:bg-gradient-to-br hover:from-black hover:to-surface"
+                  title="Click to open the Civil Work BOQ wizard"
+                >
+                  <div className="flex items-center space-x-3">
+                    <div className="w-14 h-14 bg-gradient-to-br from-amber-50 to-surface rounded-xl border border-line flex items-center justify-center flex-shrink-0 group-hover:border-amber-600/30 transition-all duration-300">
+                      <FileDigit className="w-6 h-6 text-amber-700" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-semibold text-ink group-hover:text-info transition-colors truncate">
+                        Civil Work BOQ
+                      </p>
+                    </div>
+                  </div>
+                  <div className="text-left">
+                    <p className="text-xs text-dim leading-relaxed line-clamp-2">
+                      Sectioned estimate — earthwork, RCC, masonry &amp; more; qty auto-computes from measurements per unit
+                    </p>
+                  </div>
+                  <div className="flex items-center justify-between pt-2 border-t border-line">
+                    <p className="text-xs text-dim group-hover:text-info transition-colors">
+                      Click to open wizard
+                    </p>
+                    <div className="flex items-center space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <div className="w-1.5 h-1.5 bg-info rounded-full"></div>
+                      <div className="w-1.5 h-1.5 bg-info rounded-full"></div>
+                      <div className="w-1.5 h-1.5 bg-info rounded-full"></div>
+                    </div>
+                  </div>
+                </div>
+              </>
+            )}
             {filteredElements.length > 0 ? (
               filteredElements.map((element) => (
                 <DraggableElement key={element.id} element={element} />
@@ -1434,6 +1526,18 @@ const ElementsPanel = ({
           setShowManageBOQ(false);
         }}
         onTablesExtracted={handleBOQData}
+      />
+
+      {/* Custom BOQ Wizard Modal */}
+      <CustomBOQModal
+        isOpen={showCustomBOQ}
+        onClose={() => setShowCustomBOQ(false)}
+      />
+
+      {/* Civil Work BOQ Wizard Modal */}
+      <CivilBOQModal
+        isOpen={showCivilBOQ}
+        onClose={() => setShowCivilBOQ(false)}
       />
     </div>
   );

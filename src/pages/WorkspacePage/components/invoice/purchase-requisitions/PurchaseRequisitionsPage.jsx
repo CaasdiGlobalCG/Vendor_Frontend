@@ -11,6 +11,7 @@ import {
   IndianRupee
 } from 'lucide-react';
 import { VendorContext } from "../../../../../context/VendorContext.jsx";
+import { resolveWorkspaceActor } from '../../../utils/workspaceActor';
 import config from '../../../../../config/env';
 import { useNavigate, useParams } from 'react-router-dom';
 import NewPurchaseRequisitionForm from './NewPurchaseRequisitionForm';
@@ -18,6 +19,8 @@ import invoiceFetch from '../utils/invoiceFetch';
 
 const PurchaseRequisitionsPage = () => {
   const { currentUser } = useContext(VendorContext);
+  // Per-role scoping — every actor manages their OWN documents (vendorId = owner)
+  const actorOwnerId = resolveWorkspaceActor(currentUser).ownerId;
   const navigate = useNavigate();
   const { workspaceId } = useParams();
   const [requisitionsData, setRequisitionsData] = useState([]);
@@ -71,7 +74,7 @@ const PurchaseRequisitionsPage = () => {
 
   // Fetch purchase requisitions from backend
   const fetchRequisitions = async () => {
-    if (!currentUser?.vendorId) {
+    if (!actorOwnerId) {
       console.log('⏳ Waiting for user authentication...');
       return;
     }
@@ -80,7 +83,7 @@ const PurchaseRequisitionsPage = () => {
       setLoading(true);
       console.log('📋 Fetching purchase requisitions from backend...');
 
-      const vendorId = currentUser.vendorId;
+      const vendorId = actorOwnerId;
       const response = await invoiceFetch(`/api/workspace/purchase-requisitions?vendorId=${vendorId}`, {
         headers: {
           'Content-Type': 'application/json',
@@ -122,7 +125,7 @@ const PurchaseRequisitionsPage = () => {
 
   useEffect(() => {
     fetchRequisitions();
-  }, [currentUser?.vendorId]);
+  }, [actorOwnerId]);
 
   // Removed unused filteredRequisitions logic (search and status filters were not implemented)
 

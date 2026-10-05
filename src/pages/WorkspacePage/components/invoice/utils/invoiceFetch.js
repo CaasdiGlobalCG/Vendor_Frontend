@@ -52,5 +52,25 @@ export default async function invoiceFetch(url, options = {}) {
   if (token) {
     headers.Authorization = `Bearer ${token}`;
   }
+  // Carry the workspace actor identity for external viewers — external
+  // FIN-/CAS/PM links have no own token, so the ambient session's role differs
+  // from the actor's. The backend uses these to stamp creatorRole/creatorUserId
+  // and for FIN- gated actions (x-actor-id).
+  try {
+    const params = new URLSearchParams(window.location.search);
+    const pmId = params.get('pmId');
+    const clientId = params.get('clientId');
+    const actorId = params.get('userId') || pmId || clientId;
+    // Role from userRole param, else inferred from which id param carried
+    // the actor (pm links use pmId=, client links clientId=, FIN-* = finance)
+    const actorRole = params.get('userRole')
+      || (params.get('userId')?.startsWith('FIN-') || actorId?.startsWith('FIN-') ? 'finance' : null)
+      || (pmId ? 'pm' : null)
+      || (clientId ? 'client' : null);
+    if (actorId && !headers['x-actor-id']) headers['x-actor-id'] = actorId;
+    if (actorRole && !headers['x-actor-role']) headers['x-actor-role'] = actorRole;
+  } catch {
+    // non-browser env — skip
+  }
   return authFetch(url, { ...options, headers });
 }

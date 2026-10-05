@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useContext, useCallback } from 'react';
 import { Search, Info, Trash2, Plus, Upload, X, ChevronDown, Edit, Loader2, Edit2, PlusCircle, Save, Settings, Check } from 'lucide-react';
 import { VendorContext } from "../../../../../context/VendorContext.jsx";
+import { resolveWorkspaceActor } from '../../../utils/workspaceActor';
 import { AuthProvider } from '../../../../../context/AuthContext';
 import { convertMeasurementToFeet, needsConversion } from "../../../../../utils/unitConverter";
 import { calculateRatePerSqft, calculateTotalRate, checkRateConsistency, determineCalculationTarget, formatCurrency } from "../../../../../utils/rateCalculator";
@@ -9,6 +10,8 @@ import invoiceFetch from '../utils/invoiceFetch';
 
 const CustomerSearchModal = ({ open, onClose, onSelect }) => {
   const { currentUser } = useContext(VendorContext);
+  // Per-role scoping — docs are owned by the actor's id, not always the vendor
+  const actorOwnerId = resolveWorkspaceActor(currentUser).ownerId;
   const [search, setSearch] = useState('');
   const [customers, setCustomers] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -21,14 +24,14 @@ const CustomerSearchModal = ({ open, onClose, onSelect }) => {
       const headers = {
         'Content-Type': 'application/json',
         'x-user-info': JSON.stringify({
-          vendorId: currentUser?.vendorId,
+          vendorId: actorOwnerId,
           email: currentUser?.email,
           role: 'vendor',
           name: currentUser?.name
         })
       };
       
-      invoiceFetch(`/api/workspace/customers?vendorId=${currentUser?.vendorId}`, { headers })
+      invoiceFetch(`/api/workspace/customers?vendorId=${actorOwnerId}`, { headers })
         .then((res) => res.json())
         .then((data) => {
           if (data.success) {
@@ -97,6 +100,8 @@ const CustomerSearchModal = ({ open, onClose, onSelect }) => {
 
 const CustomerDropdown = ({ value, onChange }) => {
   const { currentUser } = useContext(VendorContext);
+  // Per-role scoping — docs are owned by the actor's id, not always the vendor
+  const actorOwnerId = resolveWorkspaceActor(currentUser).ownerId;
   const [open, setOpen] = useState(false);
   const [customers, setCustomers] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -106,7 +111,7 @@ const CustomerDropdown = ({ value, onChange }) => {
   const fetchCustomers = async () => {
     setLoading(true);
     try {
-      const vendorId = currentUser?.vendorId;
+      const vendorId = actorOwnerId;
       if (!vendorId) {
         console.error('No vendor ID found');
         setCustomers([]);
@@ -478,6 +483,8 @@ const ReferenceNumberConfigModal = ({ open, onClose, config, onSave }) => {
 // Item Selection Modal Component
 const ItemSelectionModal = ({ open, onClose, onSelect }) => {
   const { currentUser } = useContext(VendorContext);
+  // Per-role scoping — docs are owned by the actor's id, not always the vendor
+  const actorOwnerId = resolveWorkspaceActor(currentUser).ownerId;
   const [search, setSearch] = useState('');
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -490,14 +497,14 @@ const ItemSelectionModal = ({ open, onClose, onSelect }) => {
       const headers = {
         'Content-Type': 'application/json',
         'x-user-info': JSON.stringify({
-          vendorId: currentUser?.vendorId,
+          vendorId: actorOwnerId,
           email: currentUser?.email,
           role: 'vendor',
           name: currentUser?.name
         })
       };
       
-      invoiceFetch(`/api/workspace/items?vendorId=${currentUser?.vendorId}`, { headers })
+      invoiceFetch(`/api/workspace/items?vendorId=${actorOwnerId}`, { headers })
         .then((res) => res.json())
         .then((data) => {
           setItems(data.data || data.items || []);
@@ -509,7 +516,7 @@ const ItemSelectionModal = ({ open, onClose, onSelect }) => {
         })
         .finally(() => setLoading(false));
     }
-  }, [open, fetched, currentUser?.vendorId]);
+  }, [open, fetched, actorOwnerId]);
 
   const filtered = items.filter((item) =>
     (item.name || item.itemName || item.description || '').toLowerCase().includes(search.toLowerCase())
@@ -587,6 +594,8 @@ const ItemSelectionModal = ({ open, onClose, onSelect }) => {
 
 const NewCreditNoteComponentInner = ({ onBack, onCreditNoteCreated, projectId, initialData, duplicateMode = false }) => {
     const { currentUser } = useContext(VendorContext);
+  // Per-role scoping — docs are owned by the actor's id, not always the vendor
+  const actorOwnerId = resolveWorkspaceActor(currentUser).ownerId;
     
     // Helper function to format address
     const formatAddress = (addressObj) => {
@@ -816,19 +825,19 @@ const NewCreditNoteComponentInner = ({ onBack, onCreditNoteCreated, projectId, i
 
     // Function to fetch quotes for the current vendor and filter by customer ID
     const fetchQuotes = useCallback(async (customerId) => {
-        if (!currentUser?.vendorId) {
+        if (!actorOwnerId) {
             console.log('No vendor ID found in user context');
             return;
         }
         
-        console.log(`Fetching workspace quotations for vendor ID: ${currentUser.vendorId}${customerId ? ` and filtering by customer ID: ${customerId}` : ''}`);
+        console.log(`Fetching workspace quotations for vendor ID: ${actorOwnerId}${customerId ? ` and filtering by customer ID: ${customerId}` : ''}`);
         
         try {
-            const response = await invoiceFetch(`/api/workspace/quotations?vendorId=${currentUser.vendorId}`, {
+            const response = await invoiceFetch(`/api/workspace/quotations?vendorId=${actorOwnerId}`, {
                 headers: {
                     'Content-Type': 'application/json',
                     'x-user-info': JSON.stringify({
-                        vendorId: currentUser.vendorId,
+                        vendorId: actorOwnerId,
                         email: currentUser?.email,
                         role: 'vendor',
                         name: currentUser?.name
@@ -980,7 +989,7 @@ const NewCreditNoteComponentInner = ({ onBack, onCreditNoteCreated, projectId, i
     // Fetch complete customer details when customer is selected
     const fetchCompleteCustomerDetails = async (customerId) => {
         try {
-            const vendorId = currentUser?.vendorId;
+            const vendorId = actorOwnerId;
             if (!vendorId) {
                 console.error('No vendor ID found');
                 return;
@@ -1284,7 +1293,7 @@ const NewCreditNoteComponentInner = ({ onBack, onCreditNoteCreated, projectId, i
             console.log('Saving new config:', newConfig);
             
             // Save to localStorage for vendor-specific config
-            const configKey = `quoteNumberConfig_${currentUser?.vendorId}`;
+            const configKey = `quoteNumberConfig_${actorOwnerId}`;
             localStorage.setItem(configKey, JSON.stringify(newConfig));
             
             setQuoteNumberConfig(newConfig);
@@ -1312,7 +1321,7 @@ const NewCreditNoteComponentInner = ({ onBack, onCreditNoteCreated, projectId, i
             console.log('Saving new reference config:', newConfig);
             
             // Save to localStorage for vendor-specific config
-            const configKey = `referenceNumberConfig_${currentUser?.vendorId}`;
+            const configKey = `referenceNumberConfig_${actorOwnerId}`;
             localStorage.setItem(configKey, JSON.stringify(newConfig));
             
             setReferenceConfig(newConfig);
@@ -1405,7 +1414,7 @@ const NewCreditNoteComponentInner = ({ onBack, onCreditNoteCreated, projectId, i
     useEffect(() => {
         const loadQuoteNumberConfig = async () => {
             try {
-                const configKey = `quoteNumberConfig_${currentUser?.vendorId}`;
+                const configKey = `quoteNumberConfig_${actorOwnerId}`;
                 const savedConfig = localStorage.getItem(configKey);
                 
                 if (savedConfig) {
@@ -1430,16 +1439,16 @@ const NewCreditNoteComponentInner = ({ onBack, onCreditNoteCreated, projectId, i
             }
         };
         
-        if (currentUser?.vendorId) {
+        if (actorOwnerId) {
             loadQuoteNumberConfig();
         }
-    }, [currentUser?.vendorId]);
+    }, [actorOwnerId]);
 
     // Load reference number configuration from localStorage
     useEffect(() => {
         const loadReferenceNumberConfig = async () => {
             try {
-                const configKey = `referenceNumberConfig_${currentUser?.vendorId}`;
+                const configKey = `referenceNumberConfig_${actorOwnerId}`;
                 const savedConfig = localStorage.getItem(configKey);
                 
                 if (savedConfig) {
@@ -1464,10 +1473,10 @@ const NewCreditNoteComponentInner = ({ onBack, onCreditNoteCreated, projectId, i
             }
         };
         
-        if (currentUser?.vendorId) {
+        if (actorOwnerId) {
             loadReferenceNumberConfig();
         }
-    }, [currentUser?.vendorId]);
+    }, [actorOwnerId]);
 
     // Function to increment quote number
     const incrementQuoteNumber = async () => {
@@ -1482,7 +1491,7 @@ const NewCreditNoteComponentInner = ({ onBack, onCreditNoteCreated, projectId, i
                 };
                 
                 // Save updated config
-                const configKey = `quoteNumberConfig_${currentUser?.vendorId}`;
+                const configKey = `quoteNumberConfig_${actorOwnerId}`;
                 localStorage.setItem(configKey, JSON.stringify(newConfig));
                 
                 setQuoteNumberConfig(newConfig);
@@ -1508,7 +1517,7 @@ const NewCreditNoteComponentInner = ({ onBack, onCreditNoteCreated, projectId, i
                 };
                 
                 // Save updated config
-                const configKey = `referenceNumberConfig_${currentUser?.vendorId}`;
+                const configKey = `referenceNumberConfig_${actorOwnerId}`;
                 localStorage.setItem(configKey, JSON.stringify(newConfig));
                 
                 setReferenceConfig(newConfig);
@@ -1607,7 +1616,7 @@ const NewCreditNoteComponentInner = ({ onBack, onCreditNoteCreated, projectId, i
 
         const creditNoteData = {
             // Core identification
-            vendorId: currentUser?.vendorId,
+            vendorId: actorOwnerId,
             creditNoteId: customQuoteNumber,
             customCreditNoteId: customQuoteNumber,
             creditNoteNumber: customQuoteNumber,
@@ -1705,7 +1714,7 @@ const NewCreditNoteComponentInner = ({ onBack, onCreditNoteCreated, projectId, i
         console.log('Saving credit note data in StandardPreview format:', creditNoteData);
 
         try {
-            const vendorId = currentUser?.vendorId;
+            const vendorId = actorOwnerId;
             const headers = {
                 'Content-Type': 'application/json',
                 'x-user-info': JSON.stringify({

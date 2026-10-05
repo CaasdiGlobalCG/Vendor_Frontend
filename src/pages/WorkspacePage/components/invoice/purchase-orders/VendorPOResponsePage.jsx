@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { VendorContext } from "../../../../../context/VendorContext";
+import { resolveWorkspaceActor } from '../../../utils/workspaceActor';
 import {
 // //
   ArrowLeftIcon,
@@ -14,6 +15,8 @@ import invoiceFetch from '../utils/invoiceFetch';
 
 const VendorPOResponsePage = () => {
   const { currentUser } = useContext(VendorContext);
+  // Per-role scoping — every actor manages their OWN documents (vendorId = owner)
+  const actorOwnerId = resolveWorkspaceActor(currentUser).ownerId;
   const navigate = useNavigate();
 
   const [purchaseOrders, setPurchaseOrders] = useState([]);
@@ -36,7 +39,7 @@ const VendorPOResponsePage = () => {
     try {
       setLoading(true);
       const response = await invoiceFetch(
-        `/api/workspace/purchase-orders?vendorId=${currentUser.vendorId}`,
+        `/api/workspace/purchase-orders?vendorId=${actorOwnerId}`,
         {
           headers: {
             'Authorization': `Bearer ${localStorage.getItem('token')}`

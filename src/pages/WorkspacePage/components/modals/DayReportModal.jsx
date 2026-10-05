@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import ReactFlow, { Background } from 'reactflow';
+import ReactFlow, { Background, Controls } from 'reactflow';
 import 'reactflow/dist/style.css';
 import { X, Download, FileText, Layers, FileCheck, Users, Trash2, CheckCircle, Clock } from 'lucide-react';
 import { toPng } from 'html-to-image';
@@ -55,31 +55,40 @@ const ACTION_LABEL = (a) =>
   : a.actionType === 'move' ? 'moved an element'
   : a.action?.replace(/_/g, ' ') || a.actionType || 'changed something';
 
-const DayReportModal = ({ isOpen, onClose, workspace = {}, workspaceId, date, dayLabel, generatedBy }) => {
+const DayReportModal = ({ isOpen, onClose, workspace = {}, workspaceId, date, dates, dayLabel, generatedBy }) => {
   const [activities, setActivities] = useState([]);
   const [loading, setLoading] = useState(false);
   const [downloading, setDownloading] = useState(false);
   const reportRef = useRef(null);
 
   const wsId = workspaceId || workspace?.workspaceId || workspace?.id;
-  const isOverall = !date; // date === null → whole-workspace report
+  // date = single day · dates = picked-day set · neither = overall report
+  const dateSet = Array.isArray(dates) && dates.length ? new Set(dates) : null;
+  const isOverall = !date && !dateSet;
+  const isMulti = Boolean(dateSet);
+  const dateScope = (day) => (date ? day === date : dateSet ? dateSet.has(day) : true);
 
-  // Full activity feed — selected day, or the whole workspace for overall
+  // Full activity feed — single day, picked-day range, or whole workspace
   useEffect(() => {
     if (!isOpen || !wsId) return;
     let cancelled = false;
     setLoading(true);
-    const range = date ? `?startDate=${date}&endDate=${date}&` : '?';
+    const sorted = dates ? [...dates].sort() : null;
+    const range = date
+      ? `?startDate=${date}&endDate=${date}&`
+      : sorted
+        ? `?startDate=${sorted[0]}&endDate=${sorted[sorted.length - 1]}&`
+        : '?';
     fetch(`${config.VENDOR_BACKEND_URL}/api/workspaces/${wsId}/activities${range}limit=500`)
       .then((r) => (r.ok ? r.json() : {}))
       .then((d) => { if (!cancelled) setActivities(Array.isArray(d.activities) ? d.activities : []); })
       .catch(() => { if (!cancelled) setActivities([]); })
       .finally(() => { if (!cancelled) setLoading(false); });
     return () => { cancelled = true; };
-  }, [isOpen, wsId, date]);
+  }, [isOpen, wsId, date, dates]);
 
   const report = useMemo(() => {
-    const onDay = (ts) => !date || localDay(ts) === date;
+    const onDay = (ts) => dateScope(localDay(ts));
     const tasks = workspace?.tasks || [];
 
     // Elements added on this day — or every element for the overall report
@@ -96,18 +105,18 @@ const DayReportModal = ({ isOpen, onClose, workspace = {}, workspaceId, date, da
     ));
     elements.sort((a, b) => new Date(a.at) - new Date(b.at));
 
-    // Progress submissions for the day (or all of them)
+    // Progress submissions in scope (day / picked days / all)
     const allSubmissions = workspace?.progress_submissions || [];
     const submissions = allSubmissions
-      .filter((s) => !date || (s.progressDate || localDay(s.submittedAt)) === date)
+      .filter((s) => dateScope(s.progressDate || localDay(s.submittedAt)))
       .sort((a, b) => new Date(a.submittedAt) - new Date(b.submittedAt));
     const taskName = (id) => tasks.find((t) => t.id === id)?.name || '';
     const subtaskName = (tid, sid) => tasks.find((t) => t.id === tid)?.subtasks?.find((s) => s.id === sid)?.name || '';
 
-    // Reviews acted on this day — or every reviewed submission for overall
+    // Reviews acted on in scope — or every reviewed submission for overall
     const reviewed = allSubmissions.filter((s) =>
-      date
-        ? [s.pmApprovedAt, s.clientApprovedAt, s.reviewedAt].some((t) => t && localDay(t) === date)
+      !isOverall
+        ? [s.pmApprovedAt, s.clientApprovedAt, s.reviewedAt].some((t) => t && dateScope(localDay(t)))
         : s.reviewStatus && s.reviewStatus !== 'pending'
     );
 
@@ -130,27 +139,30 @@ const DayReportModal = ({ isOpen, onClose, workspace = {}, workspaceId, date, da
       if (!people.has(k)) people.set(k, { name: k, activities: 0, elements: 0, updates: 0 });
       people.get(k)[key] += 1;
     };
-    activities.forEach((a) => bump(a.userName, 'activities'));
+    activities.filter((a) => dateScope(localDay(a.timestamp || a.createdAt))).forEach((a) => bump(a.userName, 'activities'));
     elements.forEach((e) => bump(e.by, 'elements'));
     submissions.forEach((s) => bump(s.vendorId, 'updates'));
     const contributors = [...people.values()].sort((a, b) => (b.activities + b.elements + b.updates) - (a.activities + a.elements + a.updates));
 
-    const deletions = activities.filter((a) => a.actionType === 'delete' || a.action === 'element_removed');
-    const timeline = activities.slice().sort((a, b) => new Date(a.timestamp || a.createdAt) - new Date(b.timestamp || b.createdAt));
+    const deletions = activities.filter((a) => dateScope(localDay(a.timestamp || a.createdAt)) && (a.actionType === 'delete' || a.action === 'element_removed'));
+    const timeline = activities
+      .filter((a) => dateScope(localDay(a.timestamp || a.createdAt)))
+      .sort((a, b) => new Date(a.timestamp || a.createdAt) - new Date(b.timestamp || b.createdAt));
 
     const times = timeline.map((a) => new Date(a.timestamp || a.createdAt).getTime()).filter(Boolean);
     const span = times.length ? { first: Math.min(...times), last: Math.max(...times) } : null;
 
     return { elements, submissions, reviewed, contributors, deletions, timeline, span, taskName, subtaskName, daysBreakdown };
-  }, [workspace, date, activities]);
+  }, [workspace, date, dates, activities]);
 
   // Day snapshot: the real canvas nodes added on this date, rendered with the
   // workspace's own node components (same look as the live canvas).
   const snapshotNodes = useMemo(() => {
     const found = [];
-    (workspace?.nodes || []).forEach((n) => { if (!date || localDay(n?.data?.addedAt) === date) found.push(n); });
+    const inScope = (n) => dateScope(localDay(n?.data?.addedAt));
+    (workspace?.nodes || []).forEach((n) => { if (inScope(n)) found.push(n); });
     (workspace?.tasks || []).forEach((t) => (t?.subtasks || []).forEach((s) =>
-      (s?.canvasData?.nodes || []).forEach((n) => { if (!date || localDay(n?.data?.addedAt) === date) found.push(n); })
+      (s?.canvasData?.nodes || []).forEach((n) => { if (inScope(n)) found.push(n); })
     ));
     const ids = new Set(found.map((n) => n.id));
     const edges = [];
@@ -167,7 +179,7 @@ const DayReportModal = ({ isOpen, onClose, workspace = {}, workspaceId, date, da
       })),
       edges,
     };
-  }, [workspace, date]);
+  }, [workspace, date, dates]);
 
   const downloadPdf = async () => {
     if (!reportRef.current || downloading) return;
@@ -197,7 +209,7 @@ const DayReportModal = ({ isOpen, onClose, workspace = {}, workspaceId, date, da
         if (y > 0) pdf.addPage([pageW, pageH], 'portrait');
         pdf.addImage(canvas.toDataURL('image/png'), 'PNG', 0, 0, pageW, h * scale);
       }
-      pdf.save(date ? `progress-report-${date}.pdf` : 'progress-report-overall.pdf');
+      pdf.save(date ? `progress-report-${date}.pdf` : isMulti ? `progress-report-${dates.join('_')}.pdf` : 'progress-report-overall.pdf');
     } catch (e) {
       console.error('PDF export failed:', e);
     } finally {
@@ -213,7 +225,7 @@ const DayReportModal = ({ isOpen, onClose, workspace = {}, workspaceId, date, da
         {/* Toolbar */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-line">
           <h2 className="text-lg font-semibold text-ink flex items-center gap-2">
-            <FileText className="w-5 h-5 text-info" /> {isOverall ? 'Overall Progress Report' : 'Daily Progress Report'}
+            <FileText className="w-5 h-5 text-info" /> {isOverall ? 'Overall Progress Report' : isMulti ? 'Combined Progress Report' : 'Daily Progress Report'}
           </h2>
           <div className="flex items-center gap-2">
             <button
@@ -239,7 +251,9 @@ const DayReportModal = ({ isOpen, onClose, workspace = {}, workspaceId, date, da
                 <div>
                   <p className="text-xs font-semibold text-info uppercase tracking-wide">{dayLabel || (isOverall ? 'Overall Report' : 'Progress Report')}</p>
                   <h1 className="text-2xl font-bold text-slate-900 mt-1">{workspace?.title || 'Workspace'}</h1>
-                  <p className="text-sm text-slate-500 mt-1">{isOverall ? 'All days combined' : fmtDay(date)}</p>
+                  <p className="text-sm text-slate-500 mt-1">
+                    {isOverall ? 'All days combined' : isMulti ? [...dates].sort().map(fmtDay).join('  ·  ') : fmtDay(date)}
+                  </p>
                 </div>
                 <div className="text-right text-xs text-slate-400">
                   <p>Generated {new Date().toLocaleString('en-IN')}</p>
@@ -268,8 +282,8 @@ const DayReportModal = ({ isOpen, onClose, workspace = {}, workspaceId, date, da
               ))}
             </div>
 
-            {/* Per-day breakdown — overall report only */}
-            {isOverall && report?.daysBreakdown?.length > 0 && (
+            {/* Per-day breakdown — overall & combined reports */}
+            {!date && report?.daysBreakdown?.length > 0 && (
               <section className="mb-8">
                 <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wide border-b border-slate-200 pb-2 mb-3">
                   Day-by-Day Breakdown
@@ -371,24 +385,32 @@ const DayReportModal = ({ isOpen, onClose, workspace = {}, workspaceId, date, da
               {snapshotNodes.nodes.length === 0 ? (
                 <p className="text-xs text-slate-400">No elements on the canvas carry this date.</p>
               ) : (
-                <div className="border border-slate-200 rounded-lg overflow-hidden" style={{ height: 320 }}>
+                <>
+                <div className="border border-slate-200 rounded-lg overflow-hidden" style={{ height: 560 }}>
                   <ReactFlow
                     nodes={snapshotNodes.nodes}
                     edges={snapshotNodes.edges}
                     nodeTypes={snapshotNodeTypes}
                     edgeTypes={snapshotEdgeTypes}
                     fitView
-                    fitViewOptions={{ padding: 0.2 }}
+                    fitViewOptions={{ padding: 0.15 }}
+                    minZoom={0.05}
+                    maxZoom={2}
                     nodesDraggable={false}
                     nodesConnectable={false}
                     elementsSelectable={false}
-                    zoomOnScroll={false}
+                    zoomOnScroll
+                    zoomOnPinch
+                    panOnScroll={false}
                     panOnDrag
                     proOptions={{ hideAttribution: true }}
                   >
                     <Background gap={16} color="#e2e8f0" />
+                    <Controls showInteractive={false} position="bottom-right" />
                   </ReactFlow>
                 </div>
+                <p className="text-[10px] text-slate-400 mt-1">Scroll to zoom, drag to pan — all elements added on the selected day(s)</p>
+                </>
               )}
             </section>
 
@@ -447,7 +469,7 @@ const DayReportModal = ({ isOpen, onClose, workspace = {}, workspaceId, date, da
             {/* Footer */}
             <div className="mt-8 pt-4 border-t border-slate-200 flex items-center justify-between text-[10px] text-slate-400">
               <span>Caasdi Global — Workspace progress report</span>
-              <span className="flex items-center gap-1"><Clock className="w-3 h-3" /> {isOverall ? 'All days' : fmtDay(date)}</span>
+              <span className="flex items-center gap-1"><Clock className="w-3 h-3" /> {isOverall ? 'All days' : isMulti ? `${dates.length} days` : fmtDay(date)}</span>
             </div>
           </div>
         </div>

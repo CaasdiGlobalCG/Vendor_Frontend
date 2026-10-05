@@ -14,6 +14,7 @@ import {
   LifeBuoy
 } from 'lucide-react';
 import { VendorContext } from "../../../../../context/VendorContext.jsx";
+import { resolveWorkspaceActor } from '../../../utils/workspaceActor';
 import NewCreditNoteComponent from './NewCreditNoteComponent';
 import CreditNotesPreviewPanel from './CreditNotesPreviewPanel';
 import config from '../../../../../config/env';
@@ -21,6 +22,8 @@ import invoiceFetch from '../utils/invoiceFetch';
 
 const CreditNotesPage = () => {
   const { currentUser } = useContext(VendorContext);
+  // Per-role scoping — every actor manages their OWN documents (vendorId = owner)
+  const actorOwnerId = resolveWorkspaceActor(currentUser).ownerId;
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState('');
   const [showNewCreditNote, setShowNewCreditNote] = useState(false);
@@ -42,12 +45,12 @@ const CreditNotesPage = () => {
 
   // Debug logging
   console.log('🔍 CreditNotesPage - Current user:', currentUser);
-  console.log('🔍 CreditNotesPage - Vendor ID:', currentUser?.vendorId);
+  console.log('🔍 CreditNotesPage - Vendor ID:', actorOwnerId);
 
   // Fetch credit notes from backend
   useEffect(() => {
     // Only fetch if we have a current user with vendorId
-    if (!currentUser?.vendorId) {
+    if (!actorOwnerId) {
       console.log('⏳ Waiting for user authentication...');
       return;
     }
@@ -58,7 +61,7 @@ const CreditNotesPage = () => {
         console.log('📋 Fetching credit notes from backend...');
         
         // Get vendorId from authentication context
-        const vendorId = currentUser.vendorId;
+        const vendorId = actorOwnerId;
         
         console.log('🔑 Using vendor ID from auth context:', vendorId);
         
@@ -111,15 +114,15 @@ const CreditNotesPage = () => {
     };
 
     fetchCreditNotes();
-  }, [currentUser?.vendorId]);
+  }, [actorOwnerId]);
 
   const handleBackToCreditNotes = () => {
     setShowNewCreditNote(false);
     // Refresh credit notes list
-    if (currentUser?.vendorId) {
+    if (actorOwnerId) {
       const fetchCreditNotes = async () => {
         try {
-          const vendorId = currentUser.vendorId;
+          const vendorId = actorOwnerId;
           const headers = {
             'Content-Type': 'application/json',
             'x-user-info': JSON.stringify({
@@ -483,7 +486,7 @@ const CreditNotesPage = () => {
                                   const headers = {
                                     'Content-Type': 'application/json',
                                     'x-user-info': JSON.stringify({
-                                      vendorId: currentUser.vendorId,
+                                      vendorId: actorOwnerId,
                                       email: currentUser?.email,
                                       role: 'vendor',
                                       name: currentUser?.name,

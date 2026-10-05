@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useContext } from 'react';
 import { Search, Plus, MoreHorizontal, Eye, Edit, Download, Trash2, FileText, Calendar, DollarSign, TrendingUp, ArrowLeft, Send, Package2 } from 'lucide-react';
 import { VendorContext } from "../../../../../context/VendorContext.jsx";
+import { resolveWorkspaceActor } from '../../../utils/workspaceActor';
 import NewQuoteComponent from './NewQuoteComponent';
 import QuotesPreviewPanel from './QuotesPreviewPanel';
 import config from '../../../../../config/env';
@@ -8,6 +9,8 @@ import invoiceFetch from '../utils/invoiceFetch';
 
 const QuotesPage = ({ workspaceId, workspaceName, selectedTask, selectedSubtask, onRaisePOFromQuote }) => {
   const { currentUser } = useContext(VendorContext);
+  // Per-role scoping — every actor manages their OWN documents (vendorId = owner)
+  const actorOwnerId = resolveWorkspaceActor(currentUser).ownerId;
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedStatus, setSelectedStatus] = useState('all');
   const [quotesData, setQuotesData] = useState([]);
@@ -27,12 +30,12 @@ const QuotesPage = ({ workspaceId, workspaceName, selectedTask, selectedSubtask,
 
   // Debug logging
   console.log('🔍 QuotesPage - Current user:', currentUser);
-  console.log('🔍 QuotesPage - Vendor ID:', currentUser?.vendorId);
+  console.log('🔍 QuotesPage - Vendor ID:', actorOwnerId);
 
   // Function to fetch quotes
   const fetchQuotes = async () => {
     // Only fetch if we have a current user with vendorId
-    if (!currentUser?.vendorId) {
+    if (!actorOwnerId) {
       console.log('⏳ Waiting for user authentication...');
       return;
     }
@@ -42,7 +45,7 @@ const QuotesPage = ({ workspaceId, workspaceName, selectedTask, selectedSubtask,
       console.log('📋 Fetching quotes from backend...');
 
       // Get vendorId from authentication context
-      const vendorId = currentUser.vendorId;
+      const vendorId = actorOwnerId;
 
       console.log('🔑 Using vendor ID from auth context:', vendorId);
 
@@ -104,7 +107,7 @@ const QuotesPage = ({ workspaceId, workspaceName, selectedTask, selectedSubtask,
   // Initial fetch when component mounts or vendorId changes
   useEffect(() => {
     fetchQuotes();
-  }, [currentUser?.vendorId]);  // Only re-run when vendorId changes
+  }, [actorOwnerId]);  // Only re-run when vendorId changes
 
   const filteredQuotes = quotesData.filter(quote => {
     const matchesSearch = quote.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -139,7 +142,7 @@ const QuotesPage = ({ workspaceId, workspaceName, selectedTask, selectedSubtask,
       case 'invoiced':
         return {
           bg: 'bg-black',
-          text: 'text-ink',
+          text: 'text-white',
           border: 'border-line',
           dot: 'bg-cta'
         };
@@ -165,7 +168,7 @@ const QuotesPage = ({ workspaceId, workspaceName, selectedTask, selectedSubtask,
   }, 0);
 
   // Loading state for authentication
-  if (!currentUser?.vendorId) {
+  if (!actorOwnerId) {
     return (
       <div className="min-h-full bg-gradient-to-br from-surface-hover via-surface-hover to-surface-hover flex items-center justify-center">
         <div className="text-center">
@@ -200,7 +203,7 @@ const QuotesPage = ({ workspaceId, workspaceName, selectedTask, selectedSubtask,
           <p className="text-dim mb-4">{error}</p>
           <button
             onClick={() => window.location.reload()}
-            className="bg-surface text-white px-6 py-3 rounded-xl hover:from-surface hover:to-surface transition-all duration-300"
+            className="bg-cta text-cta-foreground px-6 py-3 rounded-xl hover:opacity-90 transition-all duration-300"
           >
             Try Again
           </button>
@@ -230,7 +233,7 @@ const QuotesPage = ({ workspaceId, workspaceName, selectedTask, selectedSubtask,
 
   const handleSendToPM = async (quote) => {
     try {
-      const vendorId = currentUser.vendorId;
+      const vendorId = actorOwnerId;
       const quotationId = quote.quotationId || quote.id;
 
       console.log('📤 Sending quote to PM:', quotationId);
@@ -290,7 +293,7 @@ const QuotesPage = ({ workspaceId, workspaceName, selectedTask, selectedSubtask,
       const headers = {
         'Content-Type': 'application/json',
         'x-user-info': JSON.stringify({
-          vendorId: currentUser.vendorId,
+          vendorId: actorOwnerId,
           email: currentUser?.email,
           role: 'vendor',
           name: currentUser?.name
@@ -300,7 +303,7 @@ const QuotesPage = ({ workspaceId, workspaceName, selectedTask, selectedSubtask,
       const response = await invoiceFetch(`/api/workspace/quotations/${quotationId}`, {
         method: 'DELETE',
         headers: headers,
-        body: JSON.stringify({ vendorId: currentUser.vendorId })
+        body: JSON.stringify({ vendorId: actorOwnerId })
       });
 
       const result = await response.json();
@@ -359,7 +362,7 @@ const QuotesPage = ({ workspaceId, workspaceName, selectedTask, selectedSubtask,
             </div>
             <button
               onClick={() => setShowNewQuote(true)}
-              className="bg-surface text-white px-6 py-3 rounded-xl hover:from-surface hover:to-surface transition-all duration-300 flex items-center space-x-2 shadow-lg hover:shadow-xl transform "
+              className="bg-cta text-cta-foreground px-6 py-3 rounded-xl hover:opacity-90 transition-all duration-300 flex items-center space-x-2 shadow-lg hover:shadow-xl transform "
             >
               <Plus className="w-5 h-5" />
               <span className="font-medium">New Quotation</span>
@@ -375,7 +378,7 @@ const QuotesPage = ({ workspaceId, workspaceName, selectedTask, selectedSubtask,
                   <p className="text-2xl font-bold text-ink">{stats.totalQuotes || quotesData.length}</p>
                   <p className="text-xs text-success mt-1">↗ +{stats.thisMonthQuotes || 12}% this month</p>
                 </div>
-                <div className="w-12 h-12 bg-surface rounded-xl flex items-center justify-center">
+                <div className="w-12 h-12 bg-black rounded-xl flex items-center justify-center">
                   <FileText className="w-6 h-6 text-white" />
                 </div>
               </div>
@@ -401,7 +404,7 @@ const QuotesPage = ({ workspaceId, workspaceName, selectedTask, selectedSubtask,
                   <p className="text-2xl font-bold text-ink">{stats.approvedQuotes || quotesData.filter(q => q.status.toLowerCase() === 'approved by pm').length}</p>
                   <p className="text-xs text-success mt-1">↗ +15% this month</p>
                 </div>
-                <div className="w-12 h-12 bg-surface rounded-xl flex items-center justify-center">
+                <div className="w-12 h-12 bg-black rounded-xl flex items-center justify-center">
                   <TrendingUp className="w-6 h-6 text-white" />
                 </div>
               </div>
@@ -471,7 +474,7 @@ const QuotesPage = ({ workspaceId, workspaceName, selectedTask, selectedSubtask,
                   <tr key={quote.id} className="hover:bg-gradient-to-r hover:from-surface-hover hover:to-surface-hover transition-all duration-300 group">
                     <td className="py-5 px-6">
                       <div className="flex items-center space-x-4">
-                        <div className="w-10 h-10 bg-surface rounded-xl flex items-center justify-center ">
+                        <div className="w-10 h-10 bg-black rounded-xl flex items-center justify-center ">
                           <FileText className="w-5 h-5 text-white" />
                         </div>
                         <div>
@@ -579,7 +582,7 @@ const QuotesPage = ({ workspaceId, workspaceName, selectedTask, selectedSubtask,
               </div>
               <h3 className="text-lg font-semibold text-ink mb-2">No quotes found</h3>
               <p className="text-dim mb-6">Try adjusting your search or filter criteria</p>
-              <button className="bg-surface text-white px-6 py-3 rounded-xl hover:from-surface hover:to-surface transition-all duration-300 ">
+              <button className="bg-cta text-cta-foreground px-6 py-3 rounded-xl hover:opacity-90 transition-all duration-300 ">
                 Create New Quote
               </button>
             </div>
@@ -596,7 +599,7 @@ const QuotesPage = ({ workspaceId, workspaceName, selectedTask, selectedSubtask,
               <button className="px-4 py-2 text-sm text-dim hover:text-ink bg-white/80 backdrop-blur-sm rounded-xl border border-line hover:bg-surface transition-all duration-200 disabled:opacity-50" disabled>
                 Previous
               </button>
-              <button className="px-4 py-2 text-sm bg-surface text-white rounded-xl transition-all duration-200">
+              <button className="px-4 py-2 text-sm bg-cta text-cta-foreground rounded-xl transition-all duration-200">
                 1
               </button>
               <button className="px-4 py-2 text-sm text-dim hover:text-ink bg-white/80 backdrop-blur-sm rounded-xl border border-line hover:bg-surface transition-all duration-200 disabled:opacity-50" disabled>

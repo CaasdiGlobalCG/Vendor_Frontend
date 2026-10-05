@@ -275,10 +275,19 @@ const edgeTypes = {
   // Resolve the effective user role — URL param wins so shared PM/client links
   // work, mirroring ElementNode.getCurrentUserRole.
   const getCurrentUserRole = useCallback(() => {
-    const urlUserRole = new URLSearchParams(window.location.search).get('userRole');
+    const urlParams = new URLSearchParams(window.location.search);
+    const urlUserRole = urlParams.get('userRole');
+    const urlUserId = urlParams.get('userId') || '';
+    // Finance staff enter via CAS-style links but carry FIN-* user ids
+    if (urlUserRole === 'finance' || urlUserId.startsWith('FIN-')) {
+      return 'finance';
+    }
     if (urlUserRole && ['vendor', 'pm', 'client'].includes(urlUserRole)) {
       return urlUserRole;
     }
+    // Bare pmId/clientId links without a userRole tag still mean that role
+    if (!urlUserRole && urlParams.get('pmId')) return 'pm';
+    if (!urlUserRole && urlParams.get('clientId')) return 'client';
     return userRole || currentUser?.role || 'vendor';
   }, [userRole, currentUser?.role]);
 
@@ -925,9 +934,35 @@ const edgeTypes = {
     localStorage.setItem('workspace-canvas-performance', performanceMode ? 'on' : 'off');
   }, [performanceMode]);
 
+  // Business-document nodes (quotation/invoice/creditNote/purchaseOrder) follow
+  // the workspace pipeline vendor → finance → pm → client. node.data.workflowStage
+  // is 'vendor' when dropped and advanced by the DocumentNode action buttons.
+  // Each stage is visible to that role plus everyone further downstream — and
+  // always to the vendor who created it.
+  const DOC_NODE_TYPES = new Set(['quotation', 'invoice', 'creditNote', 'purchaseOrder']);
+  // Flow order: vendor → PM review → finance commission → back to PM → client
+  const DOC_ROLE_RANK = { vendor: 0, cas: 0, pm: 1, finance: 2, client: 3 };
+  const DOC_STAGE_RANK = { vendor: 0, pm: 1, finance: 2, client: 3 };
+
+  const hiddenDocNodeIds = React.useMemo(() => {
+    const role = getCurrentUserRole();
+    const roleRank = DOC_ROLE_RANK[role] ?? 0; // unknown roles default to vendor-level
+    const hidden = new Set();
+    nodes.forEach((n) => {
+      if (!DOC_NODE_TYPES.has(n.type)) return;
+      const stageRank = DOC_STAGE_RANK[n.data?.workflowStage || 'vendor'] ?? 0;
+      if (stageRank < roleRank) hidden.add(n.id);
+    });
+    return hidden;
+  }, [nodes, getCurrentUserRole]);
+
   const renderedEdges = React.useMemo(() => {
     // Ensure every edge renders with an arrowhead matching its stroke color
-    const withMarkers = edges.map((edge) => ({
+    const withMarkers = edges
+      // Drop edges that touch a doc node the current viewer can't see —
+      // React Flow still draws "floating" edges to filtered-out nodes.
+      .filter((edge) => !hiddenDocNodeIds.has(edge.source) && !hiddenDocNodeIds.has(edge.target))
+      .map((edge) => ({
       ...edge,
       markerEnd: edge.markerEnd || {
         type: MarkerType.ArrowClosed,
@@ -942,11 +977,15 @@ const edgeTypes = {
       animated: false,
       className: edge.className === 'auto-connected-edge' ? '' : edge.className,
     }));
-  }, [edges, performanceMode]);
+  }, [edges, performanceMode, hiddenDocNodeIds]);
 
   // Elements (elementNode) can only be removed with PM approval, so they are
   // marked non-deletable for other roles — React Flow then skips them during
   // keyboard deletes (deleteKeyCode) instead of emitting remove changes.
+  // BOQ release is one-way — remember released node ids so a stale WS
+  // full-state snapshot can't re-hide a BOQ the client was already shown.
+  const releasedBoqNodeIdsRef = useRef(new Set());
+
   const renderedNodes = React.useMemo(() => {
     // Node callbacks can't be persisted in node.data (functions don't survive
     // JSON serialization to the backend), so inject them at render time.
@@ -954,7 +993,27 @@ const edgeTypes = {
       'quotation', 'invoice', 'purchaseOrder', 'creditNote',
       'smartNote', 'infoCard', 'formCard',
     ]);
-    return nodes.map((node) => {
+    const role = getCurrentUserRole();
+    return nodes
+      .filter((node) => {
+        // Custom BOQs stay hidden from the client until released. Released when
+        // either the BOQ workflow reaches 'sent_to_client' (PM's send button) or
+        // the node's standard approval chain reaches pm_approved / client_approved.
+        if (role === 'client' && node.data?.type === 'custom-boq') {
+          if (releasedBoqNodeIdsRef.current.has(node.id)) return true;
+          const boqStatus = node.data?.customBOQData?.status;
+          const approvalStatus = node.data?.approvalStatus;
+          const hasCommission = Boolean(node.data?.customBOQData?.commission);
+          const released =
+            boqStatus === 'sent_to_client' ||
+            (hasCommission && ['pm_approved', 'client_approved'].includes(approvalStatus));
+          if (released) releasedBoqNodeIdsRef.current.add(node.id);
+          return released;
+        }
+        if (hiddenDocNodeIds.has(node.id)) return false;
+        return true;
+      })
+      .map((node) => {
       let out = node;
       if (node.type === 'elementNode' && getCurrentUserRole() !== 'pm') {
         out = { ...out, deletable: false };
@@ -997,7 +1056,7 @@ const edgeTypes = {
       }
       return out;
     });
-  }, [nodes, getCurrentUserRole, setNodes, setEdges]);
+  }, [nodes, hiddenDocNodeIds, getCurrentUserRole, setNodes, setEdges]);
 
   // Wrapped cleanup function using the helper
   const cleanupOrphanedNodes = useCallback((nodesToClean) => {
@@ -1239,6 +1298,11 @@ const edgeTypes = {
     if (canvasWebSocket?.isConnected && canvasWebSocket?.initSnapshot && nodes.length > 0) {
       const taskId = selectedTask?.id || null;
       const subtaskId = selectedSubtask?.id || null;
+      // View-only users (clients) never seed the room snapshot — a stale local
+      // copy would corrupt the shared state for editors — and they don't pull
+      // full-state either: their canvas is authoritative from the HTTP load and
+      // live ops still arrive via onRemoteOperation.
+      if (!canEdit) return;
       canvasWebSocket.initSnapshot({ nodes, edges, zoomLevel, taskId, subtaskId });
       // Pull the authoritative room snapshot — no-op if we just initialized it,
       // resyncs us with other collaborators' changes after a reconnect.
@@ -1282,7 +1346,18 @@ const edgeTypes = {
     canvasWebSocket.setOnFullState((data) => {
       isApplyingRemoteRef.current = true;
       try {
-        if (data.nodes) setNodesRaw(data.nodes);
+        if (Array.isArray(data.nodes)) {
+          setNodesRaw((current) => {
+            // A stale/empty server snapshot must not wipe a populated canvas —
+            // e.g. the WS room rebuilt after reconnect while the DB still has
+            // the real nodes (shows as elements flashing in then vanishing).
+            if (data.nodes.length === 0 && current.length > 0) {
+              console.warn('⚠️ Ignoring empty WS full-state snapshot — keeping local nodes');
+              return current;
+            }
+            return data.nodes;
+          });
+        }
         if (data.edges) setEdgesRaw(data.edges);
         if (data.zoomLevel != null) updateZoomLevel(data.zoomLevel);
       } finally {
@@ -1589,6 +1664,18 @@ const edgeTypes = {
       type: nodeType,
       position,
       data: {
+        // Business-document elements (quotation/invoice/credit-note/PO) carry
+        // their full record on the element — copy it into node.data so
+        // DocumentNode/StandardPreview can render the real document.
+        ...((isQuotation || isInvoice || isCreditNote || isPurchaseOrder) && element),
+        // Business documents enter the pipeline at 'vendor' — invisible to
+        // finance/PM/client until the vendor sends them forward. Purchase
+        // orders flow the other way (PM raises → sends to vendor), so a
+        // PM-dropped PO starts at the 'pm' stage.
+        ...((isQuotation || isInvoice || isCreditNote || isPurchaseOrder) && {
+          workflowStage: element.workflowStage
+            || (isPurchaseOrder && getCurrentUserRole() === 'pm' ? 'pm' : 'vendor')
+        }),
         name: element.name,
         type: element.type,
         preview: previewText,
@@ -1651,6 +1738,10 @@ const edgeTypes = {
         // Store floor plan data
         ...(element.type === 'floor-plan' && {
           floorPlanData: element.floorPlanData || customData?.floorPlanData || { files: [] }
+        }),
+        // Store Custom BOQ document data
+        ...(element.type === 'custom-boq' && {
+          customBOQData: element.customBOQData || customData?.customBOQData || null
         }),
         // Store icon ID for icon elements
         ...(element.type === 'icon' && { id: element.id }),
@@ -4886,6 +4977,7 @@ const edgeTypes = {
         'smart-note': { w: 340, h: 320 },
         materials: { w: 400, h: 340 },
         'boq-generator': { w: 400, h: 360 },
+        'custom-boq': { w: 640, h: 420 },
         'form-card': { w: 380, h: 340 },
         'calendar-event': { w: 340, h: 300 },
       };
