@@ -304,40 +304,6 @@ export default function Form3() {
       <FileUploadField label="Office / Premises Photos" hint="Photos of operational premises (JPG/PNG/ZIP)" fieldName="officePhotos" value={spDetails.officePhotos} onUpload={uploadSPFile} onDelete={deleteSPFile} accept="image/*,.zip" />
 
       <TextField label="Team Size" hint="Total number of employees / contractors" name="teamSize" value={spDetails.teamSize} onChange={handleSPChange} placeholder="e.g. 50" type="number" />
-
-      <FileUploadField label="Org Chart" hint="Organisational chart showing team structure (PDF/PNG)" fieldName="orgChart" value={spDetails.orgChart} onUpload={uploadSPFile} onDelete={deleteSPFile} accept=".pdf,.png,.jpg,.pptx" />
-
-      <FileUploadField label="Key Personnel CVs" hint="CVs of project leads / key personnel (PDF/ZIP)" fieldName="keyPersonnelCVs" value={spDetails.keyPersonnelCVs} onUpload={uploadSPFile} onDelete={deleteSPFile} accept=".pdf,.zip" />
-
-      <div className="flex flex-col gap-4 rounded-xl border border-neutral-200 bg-white p-6 kyc-card kyc-fade-up">
-        <div className="flex flex-wrap items-baseline justify-between gap-2">
-          <label className="text-sm font-semibold text-neutral-900 block mb-1">Professional Licences / Certifications</label>
-          <p className="text-xs text-neutral-500">ISO 9001, ISO 27001, CA/CS/Legal bar, IT security certs, etc.</p>
-        </div>
-        <div className="grid w-full gap-4 sm:grid-cols-2 space-y-2">
-          {spDetails.professionalLicences.map((lic, i) => (
-            <div key={i} className="flex items-center justify-between border border-neutral-200 rounded px-3 py-2">
-              <div>
-                <p className="text-sm">{lic.name}</p>
-                <p className="text-xs text-success">{lic.uploading ? "Uploading..." : "✓ Uploaded"}</p>
-              </div>
-              <button type="button" onClick={() => removeSPLicence(i)} className="text-danger text-xs hover:text-danger">Remove</button>
-            </div>
-          ))}
-          <label className="cursor-pointer border border-dashed border-neutral-200 rounded px-3 py-2 text-sm text-neutral-500 hover:border-neutral-200 transition-colors block">
-            + Add Licence / Certificate
-            <input type="file" className="hidden" accept=".pdf,.jpg,.png,.doc,.docx" onChange={(e) => { if (e.target.files?.[0]) addSPLicence(e.target.files[0]); }} />
-          </label>
-        </div>
-      </div>
-
-      <TextAreaField label="Technology / Tool Stack" hint="Software, platforms, CRM/ERP tools used for service delivery" name="techStackDeclaration" value={spDetails.techStackDeclaration} onChange={handleSPChange} placeholder="List the software, platforms, and tools used in service delivery..." />
-
-      <TextAreaField label="Data Security Policy" hint="Firewall, access controls, data handling, encryption practices" name="dataSecurityPolicy" value={spDetails.dataSecurityPolicy} onChange={handleSPChange} placeholder="Describe your data security and IT infrastructure measures..." />
-
-      <FileUploadField label="Data Security Policy Document" hint="Upload policy document (PDF)" fieldName="dataSecurityPolicyDoc" value={spDetails.dataSecurityPolicyDoc} onUpload={uploadSPFile} onDelete={deleteSPFile} accept=".pdf,.doc,.docx" />
-
-      <TextAreaField label="Sub-contractor / 3rd Party Disclosure" hint="Identify if critical services are outsourced to third parties" name="subcontractorDisclosure" value={spDetails.subcontractorDisclosure} onChange={handleSPChange} placeholder="List any sub-contractors or critical third-party service dependencies..." />
     </div>
   );
 
