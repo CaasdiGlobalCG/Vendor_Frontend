@@ -17,7 +17,9 @@ import MaterialsRenderer from '../forms/MaterialsRenderer';
 import UploadsRenderer from '../forms/UploadsRenderer';
 import FileRenderer from '../forms/FileRenderer';
 import TaskCardRenderer from '../forms/TaskCardRenderer';
+import TaskBoardRenderer from '../forms/TaskBoardRenderer';
 import MaterialSpecCard from '../forms/MaterialSpecCard';
+import VendorCatalogCard from '../forms/VendorCatalogCard';
 import ImageBlockRenderer from '../forms/ImageBlockRenderer';
 import DocumentBlockRenderer from '../forms/DocumentBlockRenderer';
 import CadFilesRenderer from '../forms/CadFilesRenderer';
@@ -831,6 +833,11 @@ const ElementNode = ({ id, data, isConnectable, selected }) => {
 
   const handleEdit = () => {
     setShowMenuDropdown(false);
+    // Task cards open their config modal in edit mode (CanvasWorkspace hosts it)
+    if (isTaskLikeElement && data.type !== 'task-board') {
+      document.dispatchEvent(new CustomEvent('editTaskCardNode', { detail: { nodeId: id } }));
+      return;
+    }
     // The element is already in edit mode by default when selected
     // This can trigger any additional edit-specific behavior if needed
     console.log('Edit element:', id);
@@ -1784,9 +1791,15 @@ const ElementNode = ({ id, data, isConnectable, selected }) => {
       case 'card':
         return <MaterialSpecCard data={data} nodeId={id} workspaceId={workspaceId} setNodes={setNodes} />;
 
+      case 'vendor-catalog':
+        return <VendorCatalogCard data={data} nodeId={id} workspaceId={workspaceId} setNodes={setNodes} role={getCurrentUserRole()} />;
+
       case 'task-card':
       case 'task-card-progress':
-        return <TaskCardRenderer data={data} />;
+        return <TaskCardRenderer data={data} nodeId={id} workspaceId={workspaceId} setNodes={setNodes} />;
+
+      case 'task-board':
+        return <TaskBoardRenderer data={data} nodeId={id} workspaceId={workspaceId} />;
       
       case 'boq-generator':
         return <BOQGenerator />;
@@ -2612,6 +2625,11 @@ const ElementNode = ({ id, data, isConnectable, selected }) => {
   }
 
   // Determine wrapper classes based on element type
+  // Task-type elements render as self-contained persona-style cards — the
+  // element chrome (deadline/important/preview line) is redundant with the
+  // card's own UI, so it's trimmed for these types.
+  const isTaskLikeElement = ['task-card', 'task-card-progress', 'task-board'].includes(data.type);
+
   const getWrapperClasses = () => {
     const baseClasses = `${isImportant ? 'bg-warning/10' : 'bg-surface'} border-2 rounded-xl shadow-xl relative group transition-all`;
     const isOverdue = deadline && calculateTimeLeft(deadline)?.isExpired;
@@ -2647,6 +2665,12 @@ const ElementNode = ({ id, data, isConnectable, selected }) => {
 
     if (data.type === 'form-template') {
       return `${baseClasses} ${recentlyUpdatedClass} p-6 w-full h-full min-w-[450px] flex flex-col`;
+    }
+
+    // Task cards/board are self-contained cards — size the shell to content
+    // instead of filling whatever dimensions the node box was resized to.
+    if (['task-card', 'task-card-progress', 'task-board'].includes(data.type)) {
+      return `${baseClasses} ${recentlyUpdatedClass} p-4 w-full h-auto min-w-[320px] flex flex-col`;
     }
 
     return `${baseClasses} ${recentlyUpdatedClass} p-6 w-full h-full min-w-[320px] flex flex-col`;
@@ -3004,30 +3028,34 @@ const ElementNode = ({ id, data, isConnectable, selected }) => {
               </>
             )}
             {/* Mark as Important button */}
-            <button
-              onClick={async () => {
-                const newImportantState = !isImportant;
-                console.log('🌟 Mark as Important clicked:', { currentState: isImportant, newState: newImportantState, nodeId: id });
-                setIsImportant(newImportantState);
-                console.log('📝 State updated to:', newImportantState);
-                await persistIsImportantLocal(newImportantState);
-                console.log('✅ isImportant persisted successfully');
-              }}
-              className={`ml-2 px-2 py-1 rounded border text-xs font-medium transition-colors duration-150 ${isImportant ? 'bg-warning text-white border-warning' : 'bg-surface text-warning border-warning hover:bg-warning/10'}`}
-              title={isImportant ? 'Unmark as Important' : 'Mark as Important'}
-            >
-              {isImportant ? '★ Important' : '☆ Mark Important'}
-            </button>
+            {!isTaskLikeElement && (
+              <button
+                onClick={async () => {
+                  const newImportantState = !isImportant;
+                  console.log('🌟 Mark as Important clicked:', { currentState: isImportant, newState: newImportantState, nodeId: id });
+                  setIsImportant(newImportantState);
+                  console.log('📝 State updated to:', newImportantState);
+                  await persistIsImportantLocal(newImportantState);
+                  console.log('✅ isImportant persisted successfully');
+                }}
+                className={`ml-2 px-2 py-1 rounded border text-xs font-medium transition-colors duration-150 ${isImportant ? 'bg-warning text-white border-warning' : 'bg-surface text-warning border-warning hover:bg-warning/10'}`}
+                title={isImportant ? 'Unmark as Important' : 'Mark as Important'}
+              >
+                {isImportant ? '★ Important' : '☆ Mark Important'}
+              </button>
+            )}
             {/* Deadline Button */}
-            <button
-              onClick={() => setShowDeadlineInput((v) => !v)}
-              className="ml-2 px-2 py-1 rounded border text-xs font-medium transition-colors duration-150 bg-surface text-info border-info hover:bg-info/10"
-              title="Set Deadline"
-            >
-              {deadline ? 'Edit Deadline' : 'Set Deadline'}
-            </button>
+            {!isTaskLikeElement && (
+              <button
+                onClick={() => setShowDeadlineInput((v) => !v)}
+                className="ml-2 px-2 py-1 rounded border text-xs font-medium transition-colors duration-150 bg-surface text-info border-info hover:bg-info/10"
+                title="Set Deadline"
+              >
+                {deadline ? 'Edit Deadline' : 'Set Deadline'}
+              </button>
+            )}
           </div>
-          <p className="text-sm text-dim mt-2">{data.preview}</p>
+          {!isTaskLikeElement && <p className="text-sm text-dim mt-2">{data.preview}</p>}
           {/* Deadline Input UI */}
           {showDeadlineInput && (
             <div className="mt-2 flex flex-col items-center">

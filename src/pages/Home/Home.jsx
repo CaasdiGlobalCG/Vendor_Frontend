@@ -13,6 +13,7 @@ import { VendorHeader } from "../../components/vendor-header";
 import UserProfileCard from '../../components/UserProfileCard/UserProfileCard'; // Import the new component
 import VendorTabPanel from '../../components/layout/VendorTabPanel';
 import config from '../../config/env';
+import { getMissingCompanyFields, downloadCompanyDetailsPdf } from '../../utils/companyDetails';
 
 export default function CompanyProfile() {
   const { currentUser } = useContext(UserContext);
@@ -63,6 +64,7 @@ export default function CompanyProfile() {
   const [saving, setSaving] = useState(false);
   const [companyError, setCompanyError] = useState(null);
   const [companySuccessMessage, setCompanySuccessMessage] = useState("");
+  const [downloadMessage, setDownloadMessage] = useState("");
   
   // First useEffect just to log context values
   useEffect(() => {
@@ -120,12 +122,15 @@ export default function CompanyProfile() {
           
           // Update the vendor data in context
           setVendorData({
+            vendorId: vendor.vendorId || vendor.id || vendorData?.vendorId,
             vendorDetails: vendor.vendorDetails || {},
             companyDetails: vendor.companyDetails || {},
             serviceProductDetails: vendor.serviceProductDetails || {},
             bankDetails: vendor.bankDetails || {},
             complianceCertifications: vendor.complianceCertifications || {},
-            additionalDetails: vendor.additionalDetails || {}
+            additionalDetails: vendor.additionalDetails || {},
+            status: vendor.status,
+            profileImage: vendor.profileImage || null
           });
           
           // Set company form data
@@ -362,7 +367,8 @@ const handleProfileSave = async () => {
         setVendorData({
             ...vendorData,
             vendorDetails: vendorUpdateData.vendorDetails,
-            companyDetails: vendorUpdateData.companyDetails
+            companyDetails: vendorUpdateData.companyDetails,
+            ...(result?.data?.profileImage ? { profileImage: result.data.profileImage } : {})
         });
         
         // Update profile image if a new one was uploaded
@@ -550,6 +556,23 @@ const handleCompanySave = async (e) => {
     }
 };
 
+// Download company details as a PDF — only allowed once every field shown in
+// the panel is filled; otherwise the vendor is told to complete them first.
+const handleDownloadCompanyDetails = () => {
+    const missing = getMissingCompanyFields(vendorData.companyDetails);
+    if (missing.length > 0) {
+        setDownloadMessage(`Please fill the company details first — missing: ${missing.join(', ')}`);
+        return;
+    }
+    try {
+        downloadCompanyDetailsPdf(vendorData);
+        setDownloadMessage("");
+    } catch (err) {
+        console.error("Error downloading company details:", err);
+        setDownloadMessage("Failed to download company details. Please try again.");
+    }
+};
+
 
   return (
     <div className="min-h-screen bg-canvas font-sans w-full pb-24">
@@ -574,7 +597,11 @@ const handleCompanySave = async (e) => {
           description="Manage the business information shown across your vendor portfolio."
           actions={(
             <div className="flex w-full items-center justify-between gap-2 sm:w-auto sm:justify-end">
-              <button className="rounded-full p-2 transition-colors hover:bg-surface-hover">
+              <button
+                onClick={handleDownloadCompanyDetails}
+                className="rounded-full p-2 transition-colors hover:bg-surface-hover"
+                title="Download company details"
+              >
                 <Download className="w-5 h-5 text-dim" />
               </button>
               <button 
@@ -588,6 +615,11 @@ const handleCompanySave = async (e) => {
           bodyClassName="p-4 sm:p-6"
         >
 
+          {downloadMessage && (
+            <div className="mb-4 rounded border border-danger bg-danger/10 px-4 py-3 text-sm text-danger">
+              {downloadMessage}
+            </div>
+          )}
           <div className="space-y-4 text-sm">
             <DetailRow 
               title="Industry Type" 

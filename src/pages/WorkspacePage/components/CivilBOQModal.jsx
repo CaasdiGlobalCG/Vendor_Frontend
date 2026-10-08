@@ -1,5 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import { X, ArrowLeft, ArrowRight, Plus, Trash2, FileDigit, FileText } from 'lucide-react';
+import GstRateOption from './GstRateOption';
 
 /**
  * Civil Work BOQ wizard — sectioned, measurement-driven BOQ.
@@ -90,6 +91,9 @@ const CivilBOQModal = ({ isOpen, onClose }) => {
   const [customSections, setCustomSections] = useState([]);
   const [newSectionName, setNewSectionName] = useState('');
   const [notes, setNotes] = useState('');
+  // GST treatment of the posted rates — inclusive requires a GST %
+  const [gstMode, setGstMode] = useState('exclusive');
+  const [gstPercent, setGstPercent] = useState('');
 
   // Fixed sections + any custom sections the vendor adds
   const allSections = useMemo(
@@ -114,7 +118,11 @@ const CivilBOQModal = ({ isOpen, onClose }) => {
 
   const canProceed = () => {
     if (step === 0) return boqName.trim().length > 0;
-    if (step === 1) return items.some((item) => item.name.trim().length > 0);
+    if (step === 1)
+      return (
+        items.some((item) => item.name.trim().length > 0) &&
+        parseFloat(gstPercent) > 0 // GST % is needed for both inclusive & exclusive
+      );
     return true;
   };
 
@@ -155,6 +163,8 @@ const CivilBOQModal = ({ isOpen, onClose }) => {
     setCustomSections([]);
     setNewSectionName('');
     setNotes('');
+    setGstMode('exclusive');
+    setGstPercent('');
     onClose?.();
   };
 
@@ -197,6 +207,10 @@ const CivilBOQModal = ({ isOpen, onClose }) => {
       sections: usedSections,
       items: boqItems,
       notes: notes.trim(),
+      gst: {
+        mode: gstMode,
+        percent: parseFloat(gstPercent) || 0,
+      },
       total: boqItems.reduce((s, i) => s + i.amount, 0),
       // Lifecycle: pending_finance → commission_added → sent_to_client
       status: 'pending_finance',
@@ -208,7 +222,11 @@ const CivilBOQModal = ({ isOpen, onClose }) => {
         detail: {
           type: 'custom-boq',
           name,
-          preview: `${boqItems.length} item${boqItems.length === 1 ? '' : 's'} · ${usedSections.length} sections · ${formatINR(customBOQData.total)}`,
+          preview: `${boqItems.length} item${boqItems.length === 1 ? '' : 's'} · ${usedSections.length} sections · ${formatINR(
+            gstMode === 'exclusive'
+              ? customBOQData.total * (1 + (parseFloat(gstPercent) || 0) / 100)
+              : customBOQData.total
+          )}${gstMode === 'exclusive' ? ' incl. GST' : ''}`,
           customBOQData,
         },
       })
@@ -424,6 +442,12 @@ const CivilBOQModal = ({ isOpen, onClose }) => {
 
           {step === 1 && (
             <div className="space-y-3">
+              <GstRateOption
+                mode={gstMode}
+                percent={gstPercent}
+                onModeChange={setGstMode}
+                onPercentChange={setGstPercent}
+              />
               <p className="text-[11px] text-dim">
                 Qty auto-computes from measurements based on unit —{' '}
                 <span className="font-medium">Cum/Cft: Nos×L×B×D</span>,{' '}
@@ -487,15 +511,52 @@ const CivilBOQModal = ({ isOpen, onClose }) => {
                     })}
                   </tbody>
                   <tfoot>
-                    <tr className="border-t border-line bg-canvas">
-                      <td colSpan={9} className="px-2 py-2 text-right text-xs font-semibold text-ink">
-                        Grand Total
-                      </td>
-                      <td className="px-2 py-2 text-right text-xs font-bold text-ink whitespace-nowrap">
-                        {formatINR(grandTotal)}
-                      </td>
-                      <td />
-                    </tr>
+                    {gstMode === 'exclusive' && parseFloat(gstPercent) > 0 ? (
+                      <>
+                        <tr className="border-t border-line bg-canvas">
+                          <td colSpan={9} className="px-2 py-1.5 text-right text-xs text-dim">
+                            Subtotal
+                          </td>
+                          <td className="px-2 py-1.5 text-right text-xs font-medium text-ink whitespace-nowrap">
+                            {formatINR(grandTotal)}
+                          </td>
+                          <td />
+                        </tr>
+                        <tr className="bg-canvas">
+                          <td colSpan={9} className="px-2 py-1.5 text-right text-xs text-dim">
+                            GST @ {gstPercent}%
+                          </td>
+                          <td className="px-2 py-1.5 text-right text-xs font-medium text-ink whitespace-nowrap">
+                            {formatINR((grandTotal * (parseFloat(gstPercent) || 0)) / 100)}
+                          </td>
+                          <td />
+                        </tr>
+                        <tr className="border-t border-line bg-canvas">
+                          <td colSpan={9} className="px-2 py-2 text-right text-xs font-semibold text-ink">
+                            Grand Total (incl. GST)
+                          </td>
+                          <td className="px-2 py-2 text-right text-xs font-bold text-ink whitespace-nowrap">
+                            {formatINR(grandTotal * (1 + (parseFloat(gstPercent) || 0) / 100))}
+                          </td>
+                          <td />
+                        </tr>
+                      </>
+                    ) : (
+                      <tr className="border-t border-line bg-canvas">
+                        <td colSpan={9} className="px-2 py-2 text-right text-xs font-semibold text-ink">
+                          Grand Total
+                          {gstMode === 'inclusive' && parseFloat(gstPercent) > 0 && (
+                            <span className="text-dim font-normal">
+                              {' '}(incl. GST @ {gstPercent}%: {formatINR((grandTotal * (parseFloat(gstPercent) || 0)) / (100 + (parseFloat(gstPercent) || 0)))})
+                            </span>
+                          )}
+                        </td>
+                        <td className="px-2 py-2 text-right text-xs font-bold text-ink whitespace-nowrap">
+                          {formatINR(grandTotal)}
+                        </td>
+                        <td />
+                      </tr>
+                    )}
                   </tfoot>
                 </table>
               </div>
@@ -558,9 +619,37 @@ const CivilBOQModal = ({ isOpen, onClose }) => {
                     {items.filter((i) => i.name.trim()).length}
                   </span>
                 </div>
+                <div className="flex justify-between">
+                  <span className="text-dim">Rates</span>
+                  <span className="font-medium text-ink">
+                    {gstMode === 'inclusive'
+                      ? `Inclusive of GST @ ${gstPercent || 0}%`
+                      : 'Exclusive of GST'}
+                  </span>
+                </div>
+                {gstMode === 'exclusive' && parseFloat(gstPercent) > 0 && (
+                  <>
+                    <div className="flex justify-between">
+                      <span className="text-dim">Subtotal</span>
+                      <span className="font-medium text-ink">{formatINR(grandTotal)}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-dim">GST @ {gstPercent}%</span>
+                      <span className="font-medium text-ink">
+                        {formatINR((grandTotal * (parseFloat(gstPercent) || 0)) / 100)}
+                      </span>
+                    </div>
+                  </>
+                )}
                 <div className="flex justify-between border-t border-line pt-1.5">
-                  <span className="text-dim">Grand Total</span>
-                  <span className="font-bold text-ink">{formatINR(grandTotal)}</span>
+                  <span className="text-dim">Grand Total{gstMode === 'exclusive' ? ' (incl. GST)' : ''}</span>
+                  <span className="font-bold text-ink">
+                    {formatINR(
+                      gstMode === 'exclusive'
+                        ? grandTotal * (1 + (parseFloat(gstPercent) || 0) / 100)
+                        : grandTotal
+                    )}
+                  </span>
                 </div>
               </div>
             </div>

@@ -31,7 +31,6 @@ import GroupingToolbar from './GroupingToolbar';
 import ContextMenu from './ContextMenu';
 import HelperLines from './HelperLines';
 import { exportCanvasAsPng, exportCanvasAsPdf } from '../utils/canvasExport';
-import TaskCardConfigModal from './modals/TaskCardConfigModal';
 import ProcurementRFQDetailsModal from './modals/ProcurementRFQDetailsModal';
 import ExecutionRequestDetailsModal from './modals/ExecutionRequestDetailsModal';
 import { getFlowchartTemplate } from '../utils/flowchartTemplates';
@@ -867,9 +866,7 @@ const edgeTypes = {
   // Layout modal state
   const [showLayoutModal, setShowLayoutModal] = useState(false);
   const [pendingLayoutElement, setPendingLayoutElement] = useState(null);
-  const [showTaskCardModal, setShowTaskCardModal] = useState(false);
-  const [pendingTaskCardElement, setPendingTaskCardElement] = useState(null);
-  const [pendingTaskCardInitialData, setPendingTaskCardInitialData] = useState(null);
+
   const [showProcurementRFQDetailsModal, setShowProcurementRFQDetailsModal] = useState(false);
   const [selectedProcurementRFQNode, setSelectedProcurementRFQNode] = useState(null);
   const [showExecutionRequestDetailsModal, setShowExecutionRequestDetailsModal] = useState(false);
@@ -2218,45 +2215,6 @@ const edgeTypes = {
     setPendingLayoutElement(null);
     setPendingPosition(null);
   };
-  const handleTaskCardConfigConfirm = async (taskCardConfig) => {
-    if (pendingTaskCardElement && pendingPosition) {
-      const finalPosition = findNonCollidingPosition(pendingPosition, 300, 250);
-      const newNode = createElementNode(pendingTaskCardElement, finalPosition, { taskCardData: taskCardConfig });
-      setNodes((nds) => nds.concat(newNode));
-      
-      // Auto-connect to previous element
-      autoConnectNewNode(newNode);
-
-      await trackActivity(
-        'element_added',
-        'create',
-        'element',
-        {
-          elementId: newNode.id,
-          elementType: 'task-card',
-          position: pendingPosition,
-          details: {
-            elementName: pendingTaskCardElement.name || 'Task Card',
-            canvasAction: true,
-            taskData: taskCardConfig
-          }
-        }
-      );
-    }
-
-    setShowTaskCardModal(false);
-    setPendingTaskCardElement(null);
-    setPendingTaskCardInitialData(null);
-    setPendingPosition(null);
-  };
-
-  const handleTaskCardModalClose = () => {
-    setShowTaskCardModal(false);
-    setPendingTaskCardElement(null);
-    setPendingTaskCardInitialData(null);
-    setPendingPosition(null);
-  };
-
 
   const openEdgeLabelModal = useCallback((edgeId, currentLabel = '') => {
     // Find the edge to get its current style
@@ -4319,10 +4277,14 @@ const edgeTypes = {
 
       if (element.type === 'task-card' || element.type === 'task-card-progress') {
         console.log('📝 Task card element detected, creating default card');
-        const taskCardData = element.taskCardData || pendingTaskCardInitialData || {};
+        const taskCardData = element.taskCardData || {};
         const newNode = createElementNode(element, targetPosition, { taskCardData });
         setNodes((nds) => nds.concat(newNode));
-        autoConnectNewNode(newNode);
+        isUpdatingNodesLocallyRef.current = true;
+        setTimeout(() => {
+          isUpdatingNodesLocallyRef.current = false;
+        }, 100);
+        autoConnectNewNode(newNode); // reads lastAddedNodeIdRef itself — don't pre-set it
         trackActivity('element_added', 'create', 'element', {
           elementId: newNode.id,
           elementType: element.type,
@@ -4349,11 +4311,14 @@ const edgeTypes = {
     };
 
     document.addEventListener('elementDoubleClick', handleElementDoubleClick);
-    
+
     return () => {
       document.removeEventListener('elementDoubleClick', handleElementDoubleClick);
     };
   },  [getAutoPlacementPosition, setNodes, canEdit, notifyViewOnly]);
+
+  // (Task card "Edit" expands the card itself — handled inside
+  // TaskCardRenderer; the config modal is only for the drag-create flow.)
 
   useEffect(() => {
     const handleAddProcurementRFQNode = async (event) => {
@@ -4969,6 +4934,7 @@ const edgeTypes = {
       const AI_NODE_SIZE = {
         'form-template': { w: 440, h: 660 },
         'task-card': { w: 420, h: 640 },
+        'task-board': { w: 800, h: 480 },
         'approval-board': { w: 480, h: 400 },
         'turnkey-workflow': { w: 440, h: 500 },
         table: { w: 400, h: 340 },
@@ -5569,11 +5535,35 @@ const edgeTypes = {
         }
 
         if (element.type === 'task-card' || element.type === 'task-card-progress') {
-          console.log('📝 Task card element detected in drop, showing configuration modal');
-          setPendingTaskCardElement(element);
-          setPendingTaskCardInitialData(element.taskCardData || null);
-          setPendingPosition(findNonCollidingPosition(position, 300, 250));
-          setShowTaskCardModal(true);
+          console.log('📝 Task card dropped — placing card directly (inline editing on the card)');
+          const taskCardData = element.taskCardData || {};
+          const newNode = createElementNode(
+            element,
+            findNonCollidingPosition(position, 300, 250),
+            { taskCardData }
+          );
+
+          // Same protection as the generic drop path: hold the local-update
+          // flag so the canvas sync can't wipe it, then auto-connect.
+          // NOTE: autoConnectNewNode reads lastAddedNodeIdRef as the *previous*
+          // node and updates it itself — don't set it beforehand.
+          setNodes((nds) => nds.concat(newNode));
+          isUpdatingNodesLocallyRef.current = true;
+          setTimeout(() => {
+            isUpdatingNodesLocallyRef.current = false;
+          }, 100);
+          autoConnectNewNode(newNode);
+
+          trackActivity('element_added', 'create', 'element', {
+            elementId: newNode.id,
+            elementType: element.type,
+            position,
+            details: {
+              elementName: element.name,
+              canvasAction: true,
+              taskData: taskCardData
+            }
+          });
           return;
         }
 

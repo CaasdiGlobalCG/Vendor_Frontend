@@ -3,6 +3,7 @@ import config from '../../config/env';
 
 import {
     ChevronDown, Eye, Download, Edit, Plus,
+    Building2, Clock, Tag, Users,
     X as CloseIcon // Use X as CloseIcon for modal close
 } from "lucide-react";
 import { TrashIcon } from '@heroicons/react/24/outline';
@@ -12,6 +13,7 @@ import profilePlaceholder from '../../assets/profileplaceholder.jpg'
 import { VendorHeader } from "../../components/vendor-header";
 import UserProfileCard from '../../components/UserProfileCard/UserProfileCard'; // Import the new component
 import VendorTabPanel from '../../components/layout/VendorTabPanel';
+import { resolveMediaUrl } from '../../utils/mediaUrl';
 
 const countryCodes = [
     { code: '+1', country: 'USA' },
@@ -28,6 +30,25 @@ const countryStateData = {
     'Japan': ['Tokyo', 'Osaka', 'Kyoto'],
     // Add more countries and their states
 };
+
+// Small icon + label + value cell used in the project card meta row
+const MetaItem = ({ icon, label, value }) => (
+    <div className="rounded-lg border border-line bg-canvas px-3 py-2">
+        <div className="flex items-center gap-1.5 text-[10px] font-medium uppercase tracking-wide text-dim">
+            {icon}
+            {label}
+        </div>
+        <div className="mt-1 truncate text-xs font-semibold text-ink" title={value}>{value}</div>
+    </div>
+);
+
+// Titled text block for the expanded project details (objective, impact, etc.)
+const DetailBlock = ({ title, text }) => (
+    <div className="rounded-lg border border-line bg-canvas p-3">
+        <h4 className="mb-1 text-[10px] font-medium uppercase tracking-wide text-dim">{title}</h4>
+        <p className="whitespace-pre-line text-sm leading-relaxed text-ink">{text}</p>
+    </div>
+);
 
 export default function UserProjectPage() {
     const { currentUser } = useContext(UserContext);
@@ -122,12 +143,15 @@ export default function UserProjectPage() {
                     
                     // Update the vendor data in context
                     setVendorData({
+                        vendorId: vendor.vendorId || vendor.id || vendorData?.vendorId,
                         vendorDetails: vendor.vendorDetails || {},
                         companyDetails: vendor.companyDetails || {},
                         serviceProductDetails: vendor.serviceProductDetails || {},
                         bankDetails: vendor.bankDetails || {},
                         complianceCertifications: vendor.complianceCertifications || {},
-                        additionalDetails: vendor.additionalDetails || {}
+                        additionalDetails: vendor.additionalDetails || {},
+                        status: vendor.status,
+                        profileImage: vendor.profileImage || null
                     });
                     
                     setDataFetched(true);
@@ -344,7 +368,8 @@ export default function UserProjectPage() {
             setVendorData({
                 ...vendorData,
                 vendorDetails: vendorUpdateData.vendorDetails,
-                companyDetails: vendorUpdateData.companyDetails
+                companyDetails: vendorUpdateData.companyDetails,
+                ...(result?.data?.profileImage ? { profileImage: result.data.profileImage } : {})
             });
             
             // Update profile image if a new one was uploaded
@@ -705,37 +730,8 @@ export default function UserProjectPage() {
         }
     };
     
-    // Add this helper function to safely handle URL creation for photos
-    const getPhotoUrl = (photo) => {
-        if (!photo) return '';
-        
-        if (typeof photo === 'string') {
-            return photo; // Return the URL string directly
-        }
-        
-        if (photo instanceof File) {
-            try {
-                return URL.createObjectURL(photo);
-            } catch (error) {
-                console.error('Error creating object URL:', error);
-                return '';
-            }
-        }
-        
-        // Handle blob or other object types
-        if (photo instanceof Blob) {
-            try {
-                return URL.createObjectURL(photo);
-            } catch (error) {
-                console.error('Error creating object URL for blob:', error);
-                return '';
-            }
-        }
-        
-        // Return empty string as fallback
-        console.warn('Unknown photo type:', photo);
-        return '';
-    };
+    // Resolves photo URLs for strings, backend { url } objects, and File/Blob previews
+    const getPhotoUrl = resolveMediaUrl;
 
     return (
         <>
@@ -1020,74 +1016,83 @@ export default function UserProjectPage() {
                                             </svg>
                                         </div>
                                     ) : projects.length > 0 ? (
-                                        projects.map((project) => (
-                                            <div key={project.id || project._id} className="bg-surface border border-line rounded-lg  hover:border-line transition-all duration-200 overflow-hidden">
+                                        projects.map((project) => {
+                                            const photoUrls = (project.photos || [])
+                                                .map(getPhotoUrl)
+                                                .filter(Boolean);
+                                            const coverPhoto = photoUrls[0];
+                                            return (
+                                            <div key={project.id || project._id} className="bg-surface border border-line rounded-xl hover:shadow-md transition-all duration-200 overflow-hidden">
+                                                {/* Cover photo */}
+                                                {coverPhoto && (
+                                                    <div className="relative h-44 bg-surface-hover">
+                                                        <img
+                                                            src={coverPhoto}
+                                                            alt={project.title || 'Project cover'}
+                                                            className="w-full h-full object-cover"
+                                                        />
+                                                        <div className="absolute inset-0 bg-gradient-to-t from-black/45 via-black/0 to-black/0" />
+                                                        {project.isNew && (
+                                                            <span className="absolute left-3 top-3 rounded-full bg-surface px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wide text-ink">New</span>
+                                                        )}
+                                                        {photoUrls.length > 1 && (
+                                                            <span className="absolute bottom-3 right-3 rounded-full bg-black/60 px-2.5 py-1 text-xs font-medium text-white">
+                                                                +{photoUrls.length - 1} photo{photoUrls.length - 1 > 1 ? 's' : ''}
+                                                            </span>
+                                                        )}
+                                                    </div>
+                                                )}
+
                                                 {/* Card Header */}
-                                                <div className="p-4 border-b border-line">
-                                                    <div className="flex justify-between items-start mb-2">
-                                                        <div className="flex-1">
-                                                            <h3 className="font-semibold text-ink text-base">
-                                                                {project.title}
-                                                            </h3>
-                                                            {project.isNew && (
-                                                                <span className="inline-block mt-2 bg-surface-hover text-ink text-xs px-2.5 py-1 rounded-full font-medium">NEW</span>
-                                                            )}
+                                                <div className="p-4 sm:p-5 border-b border-line">
+                                                    <div className="flex justify-between items-start gap-3">
+                                                        <div className="flex-1 min-w-0">
+                                                            <div className="flex items-center gap-2 flex-wrap">
+                                                                <h3 className="font-semibold text-ink text-base">
+                                                                    {project.title}
+                                                                </h3>
+                                                                {project.isNew && !coverPhoto && (
+                                                                    <span className="bg-surface-hover text-ink text-[10px] px-2.5 py-1 rounded-full font-semibold uppercase tracking-wide">New</span>
+                                                                )}
+                                                            </div>
+                                                            <p className="mt-1 text-sm text-dim line-clamp-2">
+                                                                {project.description}
+                                                            </p>
                                                         </div>
-                                                        <div className="flex gap-2 ml-4">
+                                                        <div className="flex gap-1 flex-shrink-0">
                                                             <button
                                                                 onClick={() => handleProjectEditClick(project)}
-                                                                className="text-dim hover:text-ink p-1 hover:bg-surface-hover rounded transition-colors"
+                                                                className="text-dim hover:text-ink p-1.5 hover:bg-surface-hover rounded transition-colors"
                                                                 title="Edit Project"
                                                             >
                                                                 <Edit size={16} />
                                                             </button>
                                                             <button
                                                                 onClick={() => handleDeleteProject(project._id || project.id)}
-                                                                className="text-dim hover:text-danger p-1 hover:bg-surface-hover rounded transition-colors"
+                                                                className="text-dim hover:text-danger p-1.5 hover:bg-surface-hover rounded transition-colors"
                                                                 title="Delete Project"
                                                             >
                                                                 <TrashIcon className="h-4 w-4" />
                                                             </button>
                                                         </div>
                                                     </div>
-                                                    <p className="text-xs text-dim line-clamp-2">
-                                                        {project.description}
-                                                    </p>
                                                 </div>
 
                                                 {/* Card Content */}
-                                                <div className="p-4 space-y-3">
-                                                    <div className="grid grid-cols-2 gap-3">
-                                                        {project.client && (
-                                                            <>
-                                                                <div className="text-xs font-medium text-dim uppercase tracking-wide">Client</div>
-                                                                <div className="font-semibold text-ink text-xs">{project.client}</div>
-                                                            </>
-                                                        )}
-                                                        {project.duration && (
-                                                            <>
-                                                                <div className="text-xs font-medium text-dim uppercase tracking-wide">Duration</div>
-                                                                <div className="font-semibold text-ink text-xs">{project.duration}</div>
-                                                            </>
-                                                        )}
-                                                        {project.category && (
-                                                            <>
-                                                                <div className="text-xs font-medium text-dim uppercase tracking-wide">Category</div>
-                                                                <div className="font-semibold text-ink text-xs">{project.category}</div>
-                                                            </>
-                                                        )}
-                                                        {project.team && (
-                                                            <>
-                                                                <div className="text-xs font-medium text-dim uppercase tracking-wide">Team</div>
-                                                                <div className="font-semibold text-ink text-xs">{project.team}</div>
-                                                            </>
-                                                        )}
-                                                    </div>
+                                                <div className="p-4 sm:p-5">
+                                                    {(project.client || project.duration || project.category || project.team) && (
+                                                        <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+                                                            {project.client && <MetaItem icon={<Building2 size={13} />} label="Client" value={project.client} />}
+                                                            {project.duration && <MetaItem icon={<Clock size={13} />} label="Duration" value={project.duration} />}
+                                                            {project.category && <MetaItem icon={<Tag size={13} />} label="Category" value={project.category} />}
+                                                            {project.team && <MetaItem icon={<Users size={13} />} label="Team" value={project.team} />}
+                                                        </div>
+                                                    )}
 
                                                     {/* Expandable Details */}
                                                     <button
                                                         onClick={() => toggleProjectExpansion(project.id || project._id)}
-                                                        className="w-full mt-4 pt-4 border-t border-line text-ink hover:text-ink text-sm font-medium flex items-center justify-center gap-2 transition-colors"
+                                                        className="w-full mt-4 pt-4 border-t border-line text-ink hover:text-dim text-sm font-medium flex items-center justify-center gap-2 transition-colors"
                                                     >
                                                         {expandedProjects[project.id || project._id] ? 'Show Less' : 'Show More Details'}
                                                         <ChevronDown 
@@ -1098,35 +1103,14 @@ export default function UserProjectPage() {
 
                                                     {/* Expandable Content */}
                                                     {expandedProjects[project.id || project._id] && (
-                                                        <div className="pt-4 border-t border-line space-y-4">
-                                                            {project.objective && (
-                                                                <div>
-                                                                    <h4 className="text-xs font-medium text-dim uppercase tracking-wide mb-1">Objective</h4>
-                                                                    <p className="text-sm text-ink">{project.objective}</p>
-                                                                </div>
-                                                            )}
-                                                            {project.features && (
-                                                                <div>
-                                                                    <h4 className="text-xs font-medium text-dim uppercase tracking-wide mb-1">Key Features</h4>
-                                                                    <p className="text-sm text-ink">{project.features}</p>
-                                                                </div>
-                                                            )}
-                                                            {project.impact && (
-                                                                <div>
-                                                                    <h4 className="text-xs font-medium text-dim uppercase tracking-wide mb-1">Impact</h4>
-                                                                    <p className="text-sm text-ink">{project.impact}</p>
-                                                                </div>
-                                                            )}
-                                                            {project.deliverables && (
-                                                                <div>
-                                                                    <h4 className="text-xs font-medium text-dim uppercase tracking-wide mb-1">Deliverables</h4>
-                                                                    <p className="text-sm text-ink">{project.deliverables}</p>
-                                                                </div>
-                                                            )}
-                                                            {project.compliance && (
-                                                                <div>
-                                                                    <h4 className="text-xs font-medium text-dim uppercase tracking-wide mb-1">Compliance</h4>
-                                                                    <p className="text-sm text-ink">{project.compliance}</p>
+                                                        <div className="pt-4 space-y-4">
+                                                            {(project.objective || project.features || project.impact || project.deliverables || project.compliance) && (
+                                                                <div className="grid gap-3 sm:grid-cols-2">
+                                                                    {project.objective && <DetailBlock title="Objective" text={project.objective} />}
+                                                                    {project.features && <DetailBlock title="Key Features" text={project.features} />}
+                                                                    {project.impact && <DetailBlock title="Impact" text={project.impact} />}
+                                                                    {project.deliverables && <DetailBlock title="Deliverables" text={project.deliverables} />}
+                                                                    {project.compliance && <DetailBlock title="Compliance" text={project.compliance} />}
                                                                 </div>
                                                             )}
 
@@ -1153,23 +1137,30 @@ export default function UserProjectPage() {
                                                             )}
 
                                                             {/* Photos */}
-                                                            {project.photos && project.photos.length > 0 && (
+                                                            {photoUrls.length > 0 && (
                                                                 <div className="pt-2">
                                                                     <h4 className="text-xs font-medium text-dim uppercase tracking-wide mb-2">Photos</h4>
-                                                                    <div className="grid grid-cols-3 gap-2">
-                                                                        {project.photos.slice(0, 3).map((photo, index) => (
-                                                                            <div key={`photo-${index}`} className="relative group">
+                                                                    <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
+                                                                        {photoUrls.slice(0, 4).map((url, index) => (
+                                                                            <a
+                                                                                key={`photo-${index}`}
+                                                                                href={url}
+                                                                                target="_blank"
+                                                                                rel="noopener noreferrer"
+                                                                                className="relative group block"
+                                                                                title="View photo"
+                                                                            >
                                                                                 <img
-                                                                                    src={getPhotoUrl(photo)}
+                                                                                    src={url}
                                                                                     alt={`Project Photo ${index + 1}`}
-                                                                                    className="w-full h-20 object-cover rounded border border-line"
+                                                                                    className="w-full h-20 object-cover rounded border border-line group-hover:opacity-90 transition-opacity"
                                                                                 />
-                                                                                {project.photos.length > 3 && index === 2 && (
+                                                                                {photoUrls.length > 4 && index === 3 && (
                                                                                     <div className="absolute inset-0 bg-black bg-opacity-50 rounded flex items-center justify-center">
-                                                                                        <span className="text-white text-sm font-medium">+{project.photos.length - 3}</span>
+                                                                                        <span className="text-white text-sm font-medium">+{photoUrls.length - 4}</span>
                                                                                     </div>
                                                                                 )}
-                                                                            </div>
+                                                                            </a>
                                                                         ))}
                                                                     </div>
                                                                 </div>
@@ -1178,7 +1169,8 @@ export default function UserProjectPage() {
                                                     )}
                                                 </div>
                                             </div>
-                                        ))
+                                            );
+                                        })
                                     ) : (
                                         <div>
                                             <div className="text-center py-12 bg-canvas rounded-lg border border-line">

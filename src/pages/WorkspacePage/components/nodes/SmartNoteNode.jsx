@@ -1,31 +1,50 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
-import { persistIsImportant, persistDeadline, formatTimeLeft, getTimeLeft } from '../../utils/nodePersistence';
+import React, { useState, useRef, useEffect, useContext } from 'react';
+import { persistIsImportant, persistDeadline, persistNodeDataPatch, formatTimeLeft, getTimeLeft } from '../../utils/nodePersistence';
+import { getWorkspaceById, updateWorkspace } from '../../utils/workspaceApi';
+import { VendorContext } from '../../../../context/VendorContext';
 import { Handle, Position, useReactFlow } from 'reactflow';
-import { Maximize2, Minimize2, X, Sparkles, MoreVertical, Save, Trash2, Tag, Clock, Check, Plus } from 'lucide-react';
+import { Maximize2, Minimize2, X, Sparkles, Tag, Clock, Plus } from 'lucide-react';
 // Using a simple textarea for now to avoid dependency issues
-import { Resizable } from 'react-resizable';
 import Draggable from 'react-draggable';
 
 const SmartNoteNode = ({ id, data, isConnectable, selected }) => {
   const workspaceId = data.workspaceId;  // Get workspaceId from node data
   const { setNodes } = useReactFlow();
+  const { currentUser } = useContext(VendorContext) || {};
+  const urlParams = new URLSearchParams(window.location.search);
+  const urlUserId =
+    urlParams.get('userId') || urlParams.get('clientId') || urlParams.get('pmId');
+  const myUserId =
+    currentUser?.id || currentUser?.userId || currentUser?.pmId ||
+    currentUser?.vendorId || currentUser?.email || urlUserId || null;
   const [saving, setSaving] = useState(false);
   const [isImportant, setIsImportant] = useState(data.isImportant || false);
   const [deadline, setDeadline] = useState(data.deadline || null);
   const [showDeadlineInput, setShowDeadlineInput] = useState(false);
   const [timeLeft, setTimeLeft] = useState(null);
   const deadlineJustSetRef = useRef(false);
-  const [content, setContent] = useState('');
-  const [isExpanded, setIsExpanded] = useState(true);
+  const [content, setContent] = useState(data.content || '');
   const [isMinimized, setIsMinimized] = useState(false);
-  const [isProcessing, setIsProcessing] = useState(false);
-  const [tags, setTags] = useState([]);
-  const [reminder, setReminder] = useState(null);
+  const [processingAction, setProcessingAction] = useState(null);
+  const [aiResult, setAiResult] = useState(null); // { action, text, data }
+  const [aiError, setAiError] = useState(null);
+  const [tags, setTags] = useState(data.tags || []);
   const [showTagInput, setShowTagInput] = useState(false);
   const [newTag, setNewTag] = useState('');
   const [position, setPosition] = useState({ x: 0, y: 0 });
   const [size, setSize] = useState({ width: 300, height: 200 });
+
+  // Keep content/tags in sync with persisted node data (collab updates,
+  // canvas reload) — but don't fight an in-flight local edit.
+  const editingRef = useRef(false);
+  useEffect(() => {
+    if (!editingRef.current && data.content !== undefined && data.content !== content) {
+      setContent(data.content);
+    }
+    if (data.tags && JSON.stringify(data.tags) !== JSON.stringify(tags)) {
+      setTags(data.tags);
+    }
+  }, [data.content, data.tags]);
   
   // Update time left display every second
   useEffect(() => {
@@ -82,47 +101,126 @@ const SmartNoteNode = ({ id, data, isConnectable, selected }) => {
     }
   };
   
-  const handleAIAction = async (action) => {
-    if (!content.trim()) return;
-    
-    setIsProcessing(true);
+  const getToken = async () => {
     try {
-      // TODO: Implement AI API calls
-      console.log(`Performing ${action} on:`, content);
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // Handle different AI actions
-      switch(action) {
-        case 'summarize':
-          // TODO: Call summarize API
-          break;
-        case 'extract':
-          // TODO: Call extract API
-          break;
-        case 'reminder':
-          // TODO: Handle reminder creation
-          break;
-        default:
-          break;
+      const { Auth } = await import('aws-amplify');
+      const session = await Auth.currentSession();
+      return session.getIdToken().getJwtToken();
+    } catch {
+      return localStorage.getItem('authToken') || localStorage.getItem('token') || '';
+    }
+  };
+
+  // Durable persist of node data (content/tags) — durable write is required
+  // because collaborators' canvases and reloads read from the backend.
+  const persistNote = async (patch) => {
+    if (!workspaceId) return;
+    try {
+      await persistNodeDataPatch(id, patch, setNodes, workspaceId);
+    } catch (err) {
+      console.error('Failed to persist smart note:', err);
+    }
+  };
+
+  const persistContent = () => {
+    editingRef.current = false;
+    if (content !== (data.content || '')) persistNote({ content });
+  };
+
+  const handleAIAction = async (action) => {
+    if (action === 'reminder') return handleCreateReminder();
+    if (!content.trim()) return;
+
+    setProcessingAction(action);
+    setAiError(null);
+    try {
+      const token = await getToken();
+      const res = await fetch('/api/workspace/ai/assist', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify({ action, prompt: content, workspaceId }),
+      });
+      const json = await res.json().catch(() => ({}));
+      if (!res.ok || !json.success) {
+        throw new Error(json.message || `AI request failed (${res.status})`);
       }
+      setAiResult({ action, text: json.text, data: json.data });
     } catch (error) {
       console.error('AI Action failed:', error);
+      setAiError(error.message || 'AI action failed');
     } finally {
-      setIsProcessing(false);
+      setProcessingAction(null);
     }
+  };
+
+  // Create a workspace calendar reminder from this note (date = note deadline
+  // or today). Personal visibility — only the creator sees it and gets the
+  // bell notification via the workspace due-reminder check.
+  const handleCreateReminder = async () => {
+    if (!content.trim() || !workspaceId) return;
+    setProcessingAction('reminder');
+    setAiError(null);
+    try {
+      const dateKey = deadline
+        ? String(deadline).slice(0, 10)
+        : new Date().toISOString().slice(0, 10);
+      const ws = await getWorkspaceById(workspaceId);
+      const events = ws?.calendarEvents || ws?.workspace?.calendarEvents || [];
+      const event = {
+        id: `cal-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+        kind: 'reminder',
+        title: content.split('\n')[0].slice(0, 80) || 'Note reminder',
+        date: dateKey,
+        notes: content.slice(0, 300),
+        color: '#f59e0b',
+        done: false,
+        visibility: 'personal',
+        createdBy: currentUser?.name || currentUser?.email || 'You',
+        createdById: myUserId,
+        createdAt: new Date().toISOString(),
+      };
+      await updateWorkspace(workspaceId, { calendarEvents: [...events, event] });
+      window.dispatchEvent(
+        new CustomEvent('vd:calendar-updated', { detail: { workspaceId } })
+      );
+      setAiResult({
+        action: 'reminder',
+        text: `Reminder created for ${dateKey}${deadline ? '' : ' (today — set a deadline for a future date)'}`,
+      });
+    } catch (err) {
+      console.error('Failed to create reminder:', err);
+      setAiError('Could not create the reminder');
+    } finally {
+      setProcessingAction(null);
+    }
+  };
+
+  const applySummary = (mode) => {
+    if (!aiResult?.text) return;
+    const next =
+      mode === 'replace' ? aiResult.text : `${content}\n\n— Summary —\n${aiResult.text}`;
+    setContent(next);
+    persistNote({ content: next });
+    setAiResult(null);
   };
 
   const handleAddTag = (e) => {
     if (e.key === 'Enter' && newTag.trim()) {
-      setTags([...tags, { id: Date.now(), name: newTag.trim() }]);
+      const next = [...tags, { id: Date.now(), name: newTag.trim() }];
+      setTags(next);
+      persistNote({ tags: next });
       setNewTag('');
       setShowTagInput(false);
     }
   };
 
   const handleRemoveTag = (tagId) => {
-    setTags(tags.filter(tag => tag.id !== tagId));
+    const next = tags.filter(tag => tag.id !== tagId);
+    setTags(next);
+    persistNote({ tags: next });
   };
 
   const handleDragStop = (e, data) => {
@@ -316,11 +414,73 @@ const SmartNoteNode = ({ id, data, isConnectable, selected }) => {
         <div className="p-3">
           <textarea
             value={content}
-            onChange={(e) => setContent(e.target.value)}
+            onChange={(e) => { editingRef.current = true; setContent(e.target.value); }}
+            onBlur={persistContent}
             placeholder="Start typing or use AI actions..."
             className="w-full min-h-[100px] p-2 border border-line rounded focus:outline-none focus:ring-2 focus:ring-warning/30 focus:border-transparent"
             style={{ resize: 'vertical' }}
           />
+
+          {/* AI result — summary / extracted info / reminder confirmation */}
+          {aiResult && (
+            <div className="mt-2 rounded-lg border border-warning/30 bg-warning/5 p-2.5">
+              <div className="flex items-center justify-between mb-1">
+                <span className="text-[10px] font-semibold text-warning uppercase tracking-wide flex items-center gap-1">
+                  <Sparkles size={11} />
+                  {aiResult.action === 'summarize'
+                    ? 'Summary'
+                    : aiResult.action === 'extract'
+                      ? 'Key info'
+                      : 'Reminder'}
+                </span>
+                <button
+                  onClick={() => setAiResult(null)}
+                  className="text-warning hover:text-ink"
+                  title="Dismiss"
+                >
+                  <X size={12} />
+                </button>
+              </div>
+              {aiResult.text && (
+                <p className="text-xs text-ink whitespace-pre-line">{aiResult.text}</p>
+              )}
+              {aiResult.data && (
+                <div className="mt-2 space-y-1.5">
+                  {Object.entries(aiResult.data).map(([key, list]) =>
+                    Array.isArray(list) && list.length ? (
+                      <div key={key} className="flex flex-wrap items-center gap-1">
+                        <span className="text-[9px] font-semibold text-warning uppercase">{key}:</span>
+                        {list.map((item, i) => (
+                          <span key={i} className="px-1.5 py-0.5 rounded bg-warning/15 text-warning text-[10px]">
+                            {String(item)}
+                          </span>
+                        ))}
+                      </div>
+                    ) : null
+                  )}
+                </div>
+              )}
+              {aiResult.action === 'summarize' && (
+                <div className="flex gap-1.5 mt-2">
+                  <button
+                    onClick={() => applySummary('replace')}
+                    className="px-2 py-1 text-[10px] font-medium bg-warning text-white rounded hover:opacity-90"
+                  >
+                    Replace note
+                  </button>
+                  <button
+                    onClick={() => applySummary('append')}
+                    className="px-2 py-1 text-[10px] font-medium border border-warning/30 text-warning rounded hover:bg-warning/10"
+                  >
+                    Append
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
+          {aiError && (
+            <p className="mt-2 text-[10px] text-danger">{aiError}</p>
+          )}
         </div>
 
         {/* Footer */}
@@ -351,11 +511,11 @@ const SmartNoteNode = ({ id, data, isConnectable, selected }) => {
               <button
                 key={action.id}
                 onClick={() => handleAIAction(action.id)}
-                disabled={isProcessing}
+                disabled={!!processingAction}
                 className="p-1.5 rounded hover:bg-warning/20 text-warning hover:text-warning disabled:opacity-50 disabled:cursor-not-allowed"
                 title={action.label}
               >
-                {isProcessing && action.id === 'summarize' ? (
+                {processingAction === action.id ? (
                   <div className="w-4 h-4 border-2 border-warning border-t-transparent rounded-full animate-spin"></div>
                 ) : (
                   action.icon

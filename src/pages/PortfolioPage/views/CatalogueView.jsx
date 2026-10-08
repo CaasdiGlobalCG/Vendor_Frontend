@@ -30,7 +30,9 @@ import {
   ChevronUp,
   X,
   X as CloseIcon,
-  Award
+  Award,
+  Package,
+  Wrench
 } from "lucide-react";
 import ServiceEditDialog from "../../UserProductPage/ServiceEditDialog";
 import ProductEditDialog from "../../UserProductPage/ProductEditDialog";
@@ -44,6 +46,7 @@ import { UserContext } from "../../../context/UserContext";
 import { VendorContext } from "../../../context/VendorContext";
 import config from '../../../config/env';
 import { redirectToSalesWithHandoff } from '../../../utils/handoffToSales';
+import { resolveMediaUrl } from '../../../utils/mediaUrl';
 import VendorTabPanel from '../../../components/layout/VendorTabPanel';
 
 export default function CatalogueView({ editProfileSignal = 0 }) {
@@ -161,12 +164,15 @@ const [selectedCountry, setSelectedCountry] = useState('');
               
               // Update the vendor data in context
               setVendorData({
+                  vendorId: vendor.vendorId || vendor.id || vendorData?.vendorId,
                   vendorDetails: vendor.vendorDetails || {},
                   companyDetails: vendor.companyDetails || {},
                   serviceProductDetails: vendor.serviceProductDetails || {},
                   bankDetails: vendor.bankDetails || {},
                   complianceCertifications: vendor.complianceCertifications || {},
-                  additionalDetails: vendor.additionalDetails || {}
+                  additionalDetails: vendor.additionalDetails || {},
+                  status: vendor.status,
+                  profileImage: vendor.profileImage || null
               });
               
               setDataFetched(true);
@@ -268,9 +274,15 @@ const [selectedCountry, setSelectedCountry] = useState('');
 
 // The profile card now lives in the PortfolioPage shell. Its Edit button bumps
 // `editProfileSignal`; this opens the view's own Edit Profile modal via the handler that
-// already existed here, so no modal logic moved.
+// already existed here, so no modal logic moved. The ref seeds to the current
+// value on mount so a signal consumed by a previous view doesn't re-open the
+// modal when the user switches tabs.
+const lastEditSignalRef = useRef(editProfileSignal);
 useEffect(() => {
-    if (editProfileSignal > 0) handleProfileEditClick();
+    if (editProfileSignal > lastEditSignalRef.current) {
+        lastEditSignalRef.current = editProfileSignal;
+        handleProfileEditClick();
+    }
 }, [editProfileSignal]);
 
 const handleProfileCloseModal = () => {
@@ -365,7 +377,8 @@ const handleProfileSave = async () => {
       setVendorData({
           ...vendorData,
           vendorDetails: vendorUpdateData.vendorDetails,
-          companyDetails: vendorUpdateData.companyDetails
+          companyDetails: vendorUpdateData.companyDetails,
+          ...(result?.data?.profileImage ? { profileImage: result.data.profileImage } : {})
       });
       
       // Update profile image if a new one was uploaded
@@ -800,6 +813,20 @@ const [editProductData, setEditProductData] = useState(null);
     (currentServicePage - 1) * itemsPerPage,
     currentServicePage * itemsPerPage
   );
+
+  // Machinery & Equipment comes from the vendor record's manufacturer section
+  // (serviceProductDetails.manufacturerDetails.machineryDetails). The context's
+  // initial data seeds one empty machine row, so the tab only shows when at
+  // least one machine has real content.
+  const machineryList = (vendorData?.serviceProductDetails?.manufacturerDetails?.machineryDetails || [])
+    .filter((m) => m && Object.values(m).some((v) => v != null && String(v).trim() !== ''));
+  const hasMachinery = machineryList.length > 0;
+
+  // If the vendor record resolves without machinery while that tab is active,
+  // fall back to products so no empty panel is shown.
+  useEffect(() => {
+    if (activeTab === 'machinery' && !hasMachinery) setActiveTab('products');
+  }, [activeTab, hasMachinery]);
 
   useEffect(() => {
     setCurrentProductPage(1);
@@ -1323,12 +1350,12 @@ const [editProductData, setEditProductData] = useState(null);
       >
             <Tabs defaultValue="products" value={activeTab} onValueChange={setActiveTab} className="w-full">
               <div className="border-b border-line px-4 py-4 sm:px-6">
-                <TabsList className="grid h-auto w-full grid-cols-2 rounded-2xl bg-surface-hover p-1 sm:w-fit">
+                <TabsList className={`grid h-auto w-full ${hasMachinery ? 'grid-cols-3' : 'grid-cols-2'} rounded-2xl bg-surface-hover p-1 sm:w-fit`}>
                   <TabsTrigger
                     value="products"
                     className="rounded-xl px-4 py-2.5 text-sm font-medium text-dim transition-all data-[state=active]:bg-surface data-[state=active]:text-ink data-[state=active]: sm:px-6"
                   >
-                    Products
+                    B2B Catalog
                   </TabsTrigger>
                   <TabsTrigger
                     value="services"
@@ -1336,6 +1363,14 @@ const [editProductData, setEditProductData] = useState(null);
                   >
                     Services
                   </TabsTrigger>
+                  {hasMachinery && (
+                    <TabsTrigger
+                      value="machinery"
+                      className="rounded-xl px-4 py-2.5 text-sm font-medium text-dim transition-all data-[state=active]:bg-surface data-[state=active]:text-ink data-[state=active]: sm:px-6"
+                    >
+                      Machinery
+                    </TabsTrigger>
+                  )}
                 </TabsList>
               </div>
 
@@ -1375,13 +1410,28 @@ const [editProductData, setEditProductData] = useState(null);
                   </Button>
                 </div>
                 <div className="space-y-3 p-6">
-                  {paginatedProducts.map((product) => (
+                  {paginatedProducts.map((product) => {
+                    const productImageUrls = (product.images || [])
+                      .map(resolveMediaUrl)
+                      .filter(Boolean);
+                    return (
                     <div key={product.id}>
-                      <div className="border border-line rounded-lg p-4  hover:border-line transition-all duration-200 bg-surface">
+                      <div className="border border-line rounded-xl bg-surface overflow-hidden hover:shadow-md transition-all duration-200">
                         {/* Header Row */}
-                        <div className="flex justify-between items-start">
-                          <div className="flex-1">
-                            <div className="flex items-center gap-2">
+                        <div className="flex items-start gap-4 p-4 sm:p-5">
+                          {productImageUrls[0] ? (
+                            <img
+                              src={productImageUrls[0]}
+                              alt={product.name}
+                              className="h-20 w-20 flex-shrink-0 rounded-lg border border-line object-cover sm:h-24 sm:w-24"
+                            />
+                          ) : (
+                            <div className="flex h-20 w-20 flex-shrink-0 items-center justify-center rounded-lg border border-line bg-surface-hover sm:h-24 sm:w-24">
+                              <Package className="h-6 w-6 text-dim" />
+                            </div>
+                          )}
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2 flex-wrap">
                               <h3 className="text-base font-semibold text-ink">{product.name}</h3>
                               <svg
                                 xmlns="http://www.w3.org/2000/svg"
@@ -1403,24 +1453,29 @@ const [editProductData, setEditProductData] = useState(null);
                                 />
                               </svg>
                               {product.verified && (
-                                <svg 
-                                  xmlns="http://www.w3.org/2000/svg" 
-                                  width="16" 
-                                  height="16" 
-                                  fill="currentColor" 
-                                  className="text-info" 
-                                  viewBox="0 0 16 16"
-                                >
-                                  <path d="M10.97 4.97a.75.75 0 0 1 1.07 1.05l-3.99 4.99a.75.75 0 0 1-1.08.02L4.324 8.384a.75.75 0 1 1 1.06-1.06l2.094 2.093 3.473-4.425a.267.267 0 0 1 .02-.022z"/>
-                                </svg>
+                                <span className="inline-flex items-center gap-1 rounded-full bg-success/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-success">
+                                  <svg
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    width="10"
+                                    height="10"
+                                    fill="currentColor"
+                                    viewBox="0 0 16 16"
+                                  >
+                                    <path d="M10.97 4.97a.75.75 0 0 1 1.07 1.05l-3.99 4.99a.75.75 0 0 1-1.08.02L4.324 8.384a.75.75 0 1 1 1.06-1.06l2.094 2.093 3.473-4.425a.267.267 0 0 1 .02-.022z"/>
+                                  </svg>
+                                  Published
+                                </span>
                               )}
                             </div>
-                            <p className="text-xs text-dim mt-1">{product.category}</p>
+                            <p className="text-xs text-dim mt-0.5">{product.category}</p>
+                            {productImageUrls.length > 1 && (
+                              <p className="mt-1 text-[11px] text-dim">{productImageUrls.length} images</p>
+                            )}
                           </div>
 
                           {/* Expand / Collapse Icon */}
                           <div
-                            className="cursor-pointer ml-4"
+                            className="cursor-pointer ml-2 flex-shrink-0 rounded-full p-1 hover:bg-surface-hover transition-colors"
                             onClick={() => handleProductArrowClick(product.id)}
                           >
                             {expandedProductId === product.id ? (
@@ -1433,7 +1488,7 @@ const [editProductData, setEditProductData] = useState(null);
 
                         {/* Expanded Content */}
                         {expandedProductId === product.id && (
-                          <div className="mt-4 pt-4 border-t border-line transition-all duration-300 ease-in-out">
+                          <div className="px-4 pb-4 sm:px-5 sm:pb-5 pt-4 border-t border-line transition-all duration-300 ease-in-out">
                             {/* Info Grid */}
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
                               <div className="text-dim">Product name</div>
@@ -1480,17 +1535,24 @@ const [editProductData, setEditProductData] = useState(null);
                             </div>
 
                             {/* Images */}
-                            {product.images && product.images.length > 0 && (
+                            {productImageUrls.length > 0 && (
                               <div className="mt-6 pt-6 border-t border-line">
                                 <p className="text-xs font-semibold text-dim mb-3 uppercase tracking-wide">Images</p>
                                 <div className="flex flex-wrap gap-3">
-                                  {product.images.map((image, index) => (
-                                    <img
+                                  {productImageUrls.map((url, index) => (
+                                    <a
                                       key={index}
-                                      src={(typeof image === 'string' ? image : image?.url) || "https://via.placeholder.com/120"}
-                                      alt={`Product ${index + 1}`}
-                                      className="w-24 h-24 object-cover rounded-md border border-line hover:border-line transition-colors"
-                                    />
+                                      href={url}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      title="View image"
+                                    >
+                                      <img
+                                        src={url}
+                                        alt={`Product ${index + 1}`}
+                                        className="w-24 h-24 object-cover rounded-md border border-line hover:opacity-90 transition-opacity"
+                                      />
+                                    </a>
                                   ))}
                                 </div>
                               </div>
@@ -1512,7 +1574,8 @@ const [editProductData, setEditProductData] = useState(null);
                         )}
                       </div>
                     </div>
-                  ))}
+                    );
+                  })}
                 </div>
                 {renderPaginationControls(currentProductPage, totalProductPages, (page) => {
                   setExpandedProductId(null);
@@ -1541,13 +1604,28 @@ const [editProductData, setEditProductData] = useState(null);
                   </Button>
                 </div>
                 <div className="space-y-3 p-6">
-                  {paginatedServices.map((service) => (
+                  {paginatedServices.map((service) => {
+                    const serviceImageUrls = (service.images || [])
+                      .map(resolveMediaUrl)
+                      .filter(Boolean);
+                    return (
                     <div key={service.id}>
-                      <div className="border border-line rounded-lg p-4  hover:border-line transition-all duration-200 bg-surface">
+                      <div className="border border-line rounded-xl bg-surface overflow-hidden hover:shadow-md transition-all duration-200">
                         {/* Header: Name, Edit, Dropdown */}
-                        <div className="flex justify-between items-start">
-                          <div className="flex-1">
-                            <div className="flex items-center gap-2">
+                        <div className="flex items-start gap-4 p-4 sm:p-5">
+                          {serviceImageUrls[0] ? (
+                            <img
+                              src={serviceImageUrls[0]}
+                              alt={service.name}
+                              className="h-20 w-20 flex-shrink-0 rounded-lg border border-line object-cover sm:h-24 sm:w-24"
+                            />
+                          ) : (
+                            <div className="flex h-20 w-20 flex-shrink-0 items-center justify-center rounded-lg border border-line bg-surface-hover sm:h-24 sm:w-24">
+                              <Wrench className="h-6 w-6 text-dim" />
+                            </div>
+                          )}
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2 flex-wrap">
                               <h3 className="text-base font-semibold text-ink">{service.name}</h3>
                               <svg
                                 xmlns="http://www.w3.org/2000/svg"
@@ -1584,13 +1662,19 @@ const [editProductData, setEditProductData] = useState(null);
                                 />
                               </svg>
                             </div>
-                            <p className="text-sm text-dim">
-                              {service.description ? service.description.substring(0, 50) + "..." : "No description"}
+                            {service.serviceType && (
+                              <p className="mt-0.5 text-xs text-dim">{service.serviceType}</p>
+                            )}
+                            <p className="mt-1 text-sm text-dim line-clamp-2">
+                              {service.description ? service.description.substring(0, 100) + (service.description.length > 100 ? "..." : "") : "No description"}
                             </p>
+                            {serviceImageUrls.length > 1 && (
+                              <p className="mt-1 text-[11px] text-dim">{serviceImageUrls.length} images</p>
+                            )}
                           </div>
 
                           <div
-                            className="cursor-pointer"
+                            className="cursor-pointer ml-2 flex-shrink-0 rounded-full p-1 hover:bg-surface-hover transition-colors"
                             onClick={() =>
                               setExpandedServiceId(expandedServiceId === service.id ? null : service.id)
                             }
@@ -1605,65 +1689,120 @@ const [editProductData, setEditProductData] = useState(null);
 
                         {/* Expanded Section */}
                         {expandedServiceId === service.id && (
-                          <div className="mt-6 transition-all duration-500 ease-in-out">
+                          <div className="px-4 pb-4 sm:px-5 sm:pb-5 pt-4 border-t border-line transition-all duration-500 ease-in-out">
                             <h2 className="text-lg font-semibold text-ink mb-4">Service Details</h2>
-                            <div className="grid grid-cols-2 gap-y-4 gap-x-8 text-sm text-ink">
-                              <div>Service Type</div>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-y-4 gap-x-8 text-sm text-ink">
+                              <div className="text-dim">Service Type</div>
                               <div className="font-semibold text-ink">{service.serviceType || "Not specified"}</div>
-                              <div>Description / Scope of Work</div>
+                              <div className="text-dim">Description / Scope of Work</div>
                               <div className="font-semibold text-ink">{service.description || "Not specified"}</div>
-                              <div>Industries / Clients Served</div>
+                              <div className="text-dim">Industries / Clients Served</div>
                               <div className="font-semibold text-ink">{service.industries || "Not specified"}</div>
-                              <div>Project Size / Budget Range</div>
+                              <div className="text-dim">Project Size / Budget Range</div>
                               <div className="font-semibold text-ink">{service.budgetRange || "Not specified"}</div>
-                              <div>Delivery Method</div>
+                              <div className="text-dim">Delivery Method</div>
                               <div className="font-semibold text-ink">{service.deliveryMethod || "Not specified"}</div>
-                              <div>Tools / Materials Used</div>
+                              <div className="text-dim">Tools / Materials Used</div>
                               <div className="font-semibold text-ink">{service.materials || "Not specified"}</div>
-                              <div>Packages / Pricing Models</div>
+                              <div className="text-dim">Packages / Pricing Models</div>
                               <div className="font-semibold text-ink">{service.pricing || "Not specified"}</div>
-                              <div>Compliance & Standards Followed</div>
+                              <div className="text-dim">Compliance & Standards Followed</div>
                               <div className="font-semibold text-ink">{service.compliance || "Not specified"}</div>
-                              <div>Success Stories / Case Studies</div>
+                              <div className="text-dim">Success Stories / Case Studies</div>
                               <div className="font-semibold text-ink">{service.caseStudies || "Not specified"}</div>
-                              
-                              {/* Delete button */}
-                              <div className="mt-6 col-span-2 flex justify-end">
-                                <button
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    handleDeleteService(service.id);
-                                  }}
-                                  className="px-4 py-2 bg-danger hover:bg-danger text-white rounded"
-                                >
-                                  Delete Service
-                                </button>
-                              </div>
                             </div>
 
-                            {service.images && service.images.length > 0 && (
-                              <div className="flex gap-6 mt-8">
-                                {service.images.map((image, index) => (
-                                  <img
-                                    key={index}
-                                    src={image}
-                                    alt={`Service ${service.name} - ${index + 1}`}
-                                    className="w-44 h-36 object-cover border-2 border-transparent rounded"
-                                  />
-                                ))}
+                            {serviceImageUrls.length > 0 && (
+                              <div className="mt-6 pt-6 border-t border-line">
+                                <p className="text-xs font-semibold text-dim mb-3 uppercase tracking-wide">Images</p>
+                                <div className="flex flex-wrap gap-3">
+                                  {serviceImageUrls.map((url, index) => (
+                                    <a
+                                      key={index}
+                                      href={url}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      title="View image"
+                                    >
+                                      <img
+                                        src={url}
+                                        alt={`Service ${service.name} - ${index + 1}`}
+                                        className="h-24 w-24 rounded-md border border-line object-cover hover:opacity-90 transition-opacity"
+                                      />
+                                    </a>
+                                  ))}
+                                </div>
                               </div>
                             )}
+
+                            {/* Delete button */}
+                            <div className="mt-6 pt-6 border-t border-line flex justify-end">
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleDeleteService(service.id);
+                                }}
+                                className="px-4 py-2 text-xs font-medium bg-danger/10 hover:bg-danger/10 text-danger rounded-md transition-colors"
+                              >
+                                Delete Service
+                              </button>
+                            </div>
                           </div>
                         )}
                       </div>
                     </div>
-                  ))}
+                    );
+                  })}
                 </div>
                 {renderPaginationControls(currentServicePage, totalServicePages, (page) => {
                   setExpandedServiceId(null);
                   setCurrentServicePage(page);
                 })}
               </TabsContent>
+
+              {/* Machinery Tab Content — only mounted when the vendor's
+                  manufacturer details contain at least one filled machine */}
+              {hasMachinery && (
+                <TabsContent value="machinery" className="p-0 m-0">
+                  <div className="space-y-3 p-6">
+                    {machineryList.map((machine, index) => (
+                      <div key={index} className="rounded-xl border border-line bg-surface p-4 sm:p-5 hover:shadow-md transition-all duration-200">
+                        <div className="flex items-center gap-3">
+                          <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg border border-line bg-surface-hover">
+                            <Wrench className="h-5 w-5 text-dim" />
+                          </div>
+                          <div className="min-w-0">
+                            <h3 className="text-base font-semibold text-ink">
+                              {machine.machineName || `Machine ${index + 1}`}
+                            </h3>
+                            {machine.manufacturerName && (
+                              <p className="text-xs text-dim">{machine.manufacturerName}</p>
+                            )}
+                          </div>
+                        </div>
+                        <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-y-4 gap-x-8 text-sm">
+                          <div className="text-dim">Model number</div>
+                          <div className="font-semibold text-ink">{machine.modelNumber || "Not specified"}</div>
+                          <div className="text-dim">Serial number</div>
+                          <div className="font-semibold text-ink">{machine.serialNumber || "Not specified"}</div>
+                          <div className="text-dim">Contact</div>
+                          <div className="font-semibold text-ink">{machine.contact || "Not specified"}</div>
+                          <div className="text-dim">Purchase date</div>
+                          <div className="font-semibold text-ink">{machine.purchaseDate || "Not specified"}</div>
+                          <div className="text-dim">Warranty</div>
+                          <div className="font-semibold text-ink">
+                            {machine.warrantyStart || machine.warrantyEnd
+                              ? `${machine.warrantyStart || '—'} to ${machine.warrantyEnd || '—'}`
+                              : "Not specified"}
+                          </div>
+                          <div className="text-dim">Maintenance details</div>
+                          <div className="font-semibold text-ink">{machine.maintenanceDetails || "Not specified"}</div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </TabsContent>
+              )}
             </Tabs>
       </VendorTabPanel>
       </div>

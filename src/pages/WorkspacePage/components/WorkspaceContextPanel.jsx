@@ -44,6 +44,7 @@ import {
 import TaskTab from './TaskTab';
 import LayersTab from './LayersTab';
 import AssetsTab from './AssetsTab';
+import TaskCardsOverview from './TaskCardsOverview';
 import { DocumentThumbnail, getDocType } from './ElementDocumentPreview';
 
 const WorkspaceContextPanel = ({
@@ -289,13 +290,14 @@ const WorkspaceContextPanel = ({
     const taskCardsList = [
       { id: 'task-card-item', name: 'Task Card', type: 'task-card', preview: 'Deliverable task with assignee, priority and due date' },
       { id: 'task-card-prog', name: 'Progress Card', type: 'task-card-progress', preview: 'Milestone card with percentage completion tracker' },
+      { id: 'task-board', name: 'Task Board', type: 'task-board', preview: 'Kanban board — all canvas task cards grouped by status, drag between columns' },
     ];
 
     // Materials list
     const materialsList = [
       { id: 'boq-table', name: 'BOQ Pricing Table', type: 'table', preview: 'Itemized material quantity and rate schedule' },
       { id: 'material-spec', name: 'Material Spec Card', type: 'card', preview: 'Grade, manufacturer, and technical specs' },
-      { id: 'spec-sheet', name: 'Vendor Catalog Block', type: 'document-block', preview: 'Datasheet attachment with compliance tags' },
+      { id: 'spec-sheet', name: 'Vendor Catalog Block', type: 'vendor-catalog', preview: 'Showcase catalogue products with datasheets & compliance tags' },
     ];
 
     // Cost Calculators list — type 'cost-calculator' is dispatched in ElementNode by name/id.
@@ -349,7 +351,6 @@ const WorkspaceContextPanel = ({
       { id: 'smart-note', name: 'Smart AI Note', type: 'smart-note', nodeType: 'smartNote', preview: 'AI-assisted sticky note with auto-suggestions' },
       { id: 'calendar-event', name: 'Calendar Milestone', type: 'calendar-event', nodeType: 'calendarNode', preview: 'Schedule site meetings and inspection checkpoints' },
       { id: 'approval-board', name: 'Approval Sign-off Board', type: 'approval-board', nodeType: 'approvalBoard', preview: 'Multi-party approval verification card' },
-      { id: 'ai-helper', name: 'AI Workflow Assistant', type: 'ai-helper', nodeType: 'aiHelper', preview: 'Generate workflows, checklists, and scope with AI' },
     ]);
 
     // CAD Files list
@@ -986,6 +987,13 @@ const WorkspaceContextPanel = ({
               workspace={workspace}
               userRole={userRole}
               onLeaveWorkspace={onLeaveWorkspace}
+            />
+            {/* Global overview of every Task Card on the canvas — filterable
+                by status/assignee/label, click a row to zoom to the card */}
+            <TaskCardsOverview
+              canvasElements={canvasElements}
+              onZoomToElement={onZoomToElement}
+              selectedSubtask={selectedSubtask}
             />
           </div>
         </div>

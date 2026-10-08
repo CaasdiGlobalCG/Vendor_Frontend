@@ -189,20 +189,6 @@ const TaskCardConfigModal = ({
     setLabels((prev) => prev.filter((_, i) => i !== index));
   };
 
-  const addActivityEntry = () => {
-    setActivityEntries((prev) => [...prev, { id: generateId('activity'), action: '', metaSummary: '' }]);
-  };
-
-  const updateActivityEntry = (id, field, value) => {
-    setActivityEntries((prev) =>
-      prev.map((entry) => (entry.id === id ? { ...entry, [field]: value } : entry))
-    );
-  };
-
-  const removeActivityEntry = (id) => {
-    setActivityEntries((prev) => prev.filter((entry) => entry.id !== id));
-  };
-
   const toggleAction = (action) => {
     setSelectedActions((prev) =>
       prev.includes(action)
@@ -527,40 +513,6 @@ const TaskCardConfigModal = ({
                     className="border border-line rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-info/30 text-sm"
                   />
                   <button type="button" onClick={() => removeLabel(index)} className="text-dim hover:text-danger">
-                    <Trash2 className="w-4 h-4" />
-                  </button>
-                </div>
-              ))}
-            </div>
-          </section>
-
-          <section className="space-y-3">
-            <header className="flex items-center justify-between">
-              <h3 className="text-sm font-semibold text-ink flex items-center space-x-2"><CheckCircle className="w-4 h-4 text-ink" /><span>Activity Log</span></h3>
-              <button type="button" onClick={addActivityEntry} className="inline-flex items-center space-x-1 text-xs font-medium text-info hover:text-info">
-                <Plus className="w-4 h-4" />
-                <span>Add entry</span>
-              </button>
-            </header>
-            <div className="space-y-2">
-              {activityEntries.length === 0 && (
-                <p className="text-xs text-dim">No manual activity entries. A default "Task created" log will be generated.</p>
-              )}
-              {activityEntries.map((entry) => (
-                <div key={entry.id} className="grid grid-cols-1 md:grid-cols-[2fr,2fr,auto] gap-3 items-center bg-surface border border-line rounded-lg px-3 py-2">
-                  <input
-                    value={entry.action}
-                    onChange={(e) => updateActivityEntry(entry.id, 'action', e.target.value)}
-                    placeholder="Activity description"
-                    className="border border-line rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-info/30 text-sm"
-                  />
-                  <input
-                    value={entry.metaSummary}
-                    onChange={(e) => updateActivityEntry(entry.id, 'metaSummary', e.target.value)}
-                    placeholder="Optional notes / metadata"
-                    className="border border-line rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-info/30 text-sm"
-                  />
-                  <button type="button" onClick={() => removeActivityEntry(entry.id)} className="text-dim hover:text-danger justify-self-end">
                     <Trash2 className="w-4 h-4" />
                   </button>
                 </div>

@@ -1,9 +1,10 @@
-import React, { useContext, useEffect, useState, useCallback } from "react";
+import React, { useContext, useEffect, useState, useCallback, useRef } from "react";
 import {
   ArrowRight,
   Building2,
   LifeBuoy,
   TrendingUp,
+  X,
 } from 'lucide-react';
 // Adopted design (variant 1, "Ops cockpit") now lives in a permanent component set.
 import {
@@ -23,6 +24,7 @@ import { Reveal } from "../../components/ui";
 import { AdditionalDocsPanel } from "../../components/AuditorWaiting";
 
 import { VendorContext } from "../../context/VendorContext";
+import { getMissingCompanyFields } from "../../utils/companyDetails";
 import { useLocation, useNavigate } from "react-router-dom";
 import config from '../../config/env';
 
@@ -42,6 +44,11 @@ const writeCache = (key, value) => {
   try { sessionStorage.setItem(key, JSON.stringify(value)); } catch {}
 };
 
+// "Remind me later" snoozes the prompt for 3 hours. The snooze timestamp is
+// persisted per vendor so it survives reloads and revisits.
+const COMPANY_PROMPT_SNOOZE_MS = 3 * 60 * 60 * 1000;
+const companyPromptSnoozeKey = (vendorId) => `vd_company_prompt_snooze_until_${vendorId || 'unknown'}`;
+
 export const VendorDashboard = () => {
   const { currentUser, vendorData, setVendorData, setUser } = useContext(VendorContext);
   const [vendorName, setVendorName] = useState("");
@@ -60,6 +67,13 @@ export const VendorDashboard = () => {
   // State to track API call status
   const [vendorInfoFetched, setVendorInfoFetched] = useState(false);
   const [projectsFetched, setProjectsFetched] = useState(false);
+
+  // Company-details completion prompt
+  const [missingCompanyFields, setMissingCompanyFields] = useState([]);
+  const [showCompanyDetailsPrompt, setShowCompanyDetailsPrompt] = useState(false);
+  const companyDetailsChecked = useRef(false);
+  const companyPromptTimer = useRef(null);
+  const vendorDataRef = useRef(vendorData);
   
   const location = useLocation();
   const navigate = useNavigate();
@@ -192,6 +206,67 @@ export const VendorDashboard = () => {
       fetchVendorInfo();
     }
   }, [currentUser, setVendorData, setUser, vendorData, vendorInfoFetched]);
+
+  // Keep a ref to the latest vendor record so a snooze timer re-checks fresh
+  // data instead of the values captured when it was scheduled.
+  useEffect(() => {
+    vendorDataRef.current = vendorData;
+  }, [vendorData]);
+
+  // Re-show the prompt after `delayMs` if company details are still incomplete.
+  const scheduleCompanyPrompt = (delayMs) => {
+    clearTimeout(companyPromptTimer.current);
+    companyPromptTimer.current = setTimeout(() => {
+      const missing = getMissingCompanyFields(vendorDataRef.current?.companyDetails);
+      if (missing.length > 0) {
+        setMissingCompanyFields(missing);
+        setShowCompanyDetailsPrompt(true);
+      }
+    }, delayMs);
+  };
+
+  // Once the vendor record is loaded, check the company details shown on the
+  // portfolio page and prompt the vendor to complete anything missing.
+  useEffect(() => {
+    if (companyDetailsChecked.current || !vendorData?.vendorId) return;
+    companyDetailsChecked.current = true;
+
+    // Team members view the org's record — the prompt targets the vendor admin.
+    if (currentUser?.isTeamMember) return;
+
+    const missing = getMissingCompanyFields(vendorData.companyDetails);
+    if (missing.length === 0) return;
+    setMissingCompanyFields(missing);
+
+    // Respect an active "remind me later" snooze — re-show when it expires.
+    const snoozeUntil = Number(localStorage.getItem(companyPromptSnoozeKey(vendorData.vendorId)) || 0);
+    const remaining = snoozeUntil - Date.now();
+    if (remaining > 0) scheduleCompanyPrompt(remaining);
+    else setShowCompanyDetailsPrompt(true);
+  }, [vendorData, currentUser]);
+
+  // Lock page scroll while the company-details prompt is open.
+  useEffect(() => {
+    document.body.style.overflow = showCompanyDetailsPrompt ? 'hidden' : 'unset';
+    return () => { document.body.style.overflow = 'unset'; };
+  }, [showCompanyDetailsPrompt]);
+
+  // Clear any pending re-prompt timer on unmount.
+  useEffect(() => () => clearTimeout(companyPromptTimer.current), []);
+
+  // Dismiss the prompt and snooze it for 3 hours — persisted so the snooze
+  // survives reloads, and scheduled so it re-opens even if the vendor stays
+  // on the dashboard the whole time.
+  const handleCompanyPromptLater = () => {
+    setShowCompanyDetailsPrompt(false);
+    try {
+      localStorage.setItem(
+        companyPromptSnoozeKey(vendorData?.vendorId),
+        String(Date.now() + COMPANY_PROMPT_SNOOZE_MS)
+      );
+    } catch {}
+    scheduleCompanyPrompt(COMPANY_PROMPT_SNOOZE_MS);
+  };
   
   // Function to fetch projects and their real workspace statuses
   const fetchProjects = useCallback(async () => {
@@ -554,6 +629,58 @@ export const VendorDashboard = () => {
           <span>Support</span>
         </button>
       </div>
+
+      {/* Company-details completion prompt — opens once per dashboard visit when
+          fields sourced from the vendor record are still empty. */}
+      {showCompanyDetailsPrompt && (
+        <div className="fixed inset-0 bg-cta backdrop-blur-sm z-50 flex items-center justify-center p-4 sm:p-6">
+          <div className="bg-surface rounded-xl shadow-xl w-full max-w-md flex flex-col overflow-hidden">
+            <div className="flex justify-between items-center px-6 py-4 border-b border-line flex-shrink-0 bg-surface">
+              <h2 className="text-xl font-semibold text-ink">Complete your company details</h2>
+              <button
+                onClick={handleCompanyPromptLater}
+                className="text-dim hover:text-ink transition-colors"
+                aria-label="Close"
+              >
+                <X size={20} />
+              </button>
+            </div>
+            <div className="p-6 bg-surface">
+              <p className="text-sm text-dim">
+                Please fill the company details — some information is missing from
+                your vendor profile. Complete it so clients can see your full
+                company profile.
+              </p>
+              {missingCompanyFields.length > 0 && (
+                <ul className="mt-4 space-y-1.5 text-sm text-ink">
+                  {missingCompanyFields.map((label) => (
+                    <li key={label} className="flex items-center gap-2">
+                      <span className="h-1.5 w-1.5 rounded-full bg-ink" />
+                      {label}
+                    </li>
+                  ))}
+                </ul>
+              )}
+              <div className="flex justify-end gap-3 pt-6 mt-6 border-t border-line">
+                <button
+                  type="button"
+                  onClick={handleCompanyPromptLater}
+                  className="px-4 py-2 bg-surface-hover text-ink rounded-md hover:bg-surface-hover focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-line transition-colors"
+                >
+                  Remind me later
+                </button>
+                <button
+                  type="button"
+                  onClick={() => navigate('/portfolio?tab=company')}
+                  className="px-4 py-2 bg-black text-white rounded-md hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-ink transition-opacity"
+                >
+                  Fill company details
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

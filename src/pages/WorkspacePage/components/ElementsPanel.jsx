@@ -917,16 +917,6 @@ const ElementsPanel = ({
           color: 'bg-success/10 border-success/20 text-success hover:bg-success/10',
           nodeType: 'approvalBoard',
           data: { label: 'Approval Board' }
-        },
-        {
-          id: 'ai-helper',
-          name: 'AI Helper',
-          type: 'ai-helper',
-          preview: 'Summarize, suggest next steps, or generate flows with AI',
-          icon: <Sparkles className="w-4 h-4 mr-2 text-ink" />,
-          color: 'bg-surface-hover border-line text-ink hover:bg-surface-hover',
-          nodeType: 'aiHelper',
-          data: { label: 'AI Helper' }
         }
       ]
     },
@@ -1060,6 +1050,12 @@ const ElementsPanel = ({
               }
             ]
           }
+        },
+        {
+          id: 'task-board',
+          name: 'Task Board',
+          type: 'task-board',
+          preview: 'Kanban board — all canvas task cards grouped by status, drag between columns'
         }
       ]
     },

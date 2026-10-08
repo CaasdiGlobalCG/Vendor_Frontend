@@ -147,12 +147,15 @@ const [selectedCountry, setSelectedCountry] = useState('');
               
               // Update the vendor data in context
               setVendorData({
+                  vendorId: vendor.vendorId || vendor.id || vendorData?.vendorId,
                   vendorDetails: vendor.vendorDetails || {},
                   companyDetails: vendor.companyDetails || {},
                   serviceProductDetails: vendor.serviceProductDetails || {},
                   bankDetails: vendor.bankDetails || {},
                   complianceCertifications: vendor.complianceCertifications || {},
-                  additionalDetails: vendor.additionalDetails || {}
+                  additionalDetails: vendor.additionalDetails || {},
+                  status: vendor.status,
+                  profileImage: vendor.profileImage || null
               });
               
               setDataFetched(true);
@@ -344,7 +347,8 @@ const handleProfileSave = async () => {
       setVendorData({
           ...vendorData,
           vendorDetails: vendorUpdateData.vendorDetails,
-          companyDetails: vendorUpdateData.companyDetails
+          companyDetails: vendorUpdateData.companyDetails,
+          ...(result?.data?.profileImage ? { profileImage: result.data.profileImage } : {})
       });
       
       // Update profile image if a new one was uploaded

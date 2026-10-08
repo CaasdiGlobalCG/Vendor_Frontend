@@ -25,6 +25,7 @@ import CustomBOQModal from './components/CustomBOQModal';
 import CivilBOQModal from './components/CivilBOQModal';
 import CommandPalette from './components/CommandPalette';
 import AICanvasBuilderModal from './components/modals/AICanvasBuilderModal';
+import WorkspaceAIAssistant from './components/WorkspaceAIAssistant';
 import KeyboardShortcutsOverlay from './components/KeyboardShortcutsOverlay';
 import { ToastProvider } from './components/ToastProvider';
 import { UploadProvider } from './components/forms/UploadManager';
@@ -947,16 +948,6 @@ const workspaceForProgress = useMemo(() => {
           color: 'bg-success/10 border-success/20 text-success hover:bg-success/10',
           nodeType: 'approvalBoard',
           data: { label: 'Approval Board' }
-        },
-        { 
-          id: 'ai-helper', 
-          name: 'AI Helper', 
-          type: 'ai-helper', 
-          preview: 'Summarize, suggest next steps, or generate flows with AI',
-          icon: <Sparkles className="w-4 h-4 mr-2 text-ink" />,
-          color: 'bg-surface-hover border-line text-ink hover:bg-surface-hover',
-          nodeType: 'aiHelper',
-          data: { label: 'AI Helper' }
         }
       ]
     },
@@ -1131,6 +1122,12 @@ const workspaceForProgress = useMemo(() => {
               }
             ]
           }
+        },
+        {
+          id: 'task-board',
+          name: 'Task Board',
+          type: 'task-board',
+          preview: 'Kanban board — all canvas task cards grouped by status, drag between columns'
         }
       ]
     },
@@ -1711,6 +1708,13 @@ const workspaceForProgress = useMemo(() => {
   const [showAIBuilder, setShowAIBuilder] = useState(false);
   const [showShortcutsOverlay, setShowShortcutsOverlay] = useState(false);
 
+  // AI Helper node "Generate a flow" hands off to the full AI Canvas Builder
+  useEffect(() => {
+    const openBuilder = () => setShowAIBuilder(true);
+    document.addEventListener('openAICanvasBuilder', openBuilder);
+    return () => document.removeEventListener('openAICanvasBuilder', openBuilder);
+  }, []);
+
   // Build command palette commands list
   const paletteCommands = useMemo(() => [
     { id: 'focus-mode', label: focusMode ? 'Exit Focus Mode' : 'Enter Focus Mode', category: 'Layout', icon: <Maximize2 className="w-4 h-4" />, shortcut: 'Ctrl+Shift+H', keywords: ['focus', 'hide', 'panels', 'canvas'], action: () => setFocusMode(p => !p) },
@@ -1726,9 +1730,7 @@ const workspaceForProgress = useMemo(() => {
     { id: 'post-services', label: 'Post Service', category: 'Actions', icon: <FileText className="w-4 h-4" />, keywords: ['post', 'service', 'publish'], action: () => setShowPostServicesModal(true) },
     { id: 'shortcuts', label: 'Show Keyboard Shortcuts', category: 'Help', icon: <Keyboard className="w-4 h-4" />, shortcut: '?', keywords: ['keyboard', 'shortcuts', 'help', 'keys'], action: () => setShowShortcutsOverlay(true) },
     { id: 'ai-canvas-builder', label: 'AI Canvas Builder', category: 'Canvas', icon: <Sparkles className="w-4 h-4" />, keywords: ['ai', 'generate', 'flow', 'build', 'canvas', 'agent', 'auto'], action: () => setShowAIBuilder(true) },
-    { id: 'ai-helper', label: 'Add AI Helper Block', category: 'Canvas', icon: <Sparkles className="w-4 h-4" />, keywords: ['ai', 'helper', 'summarize', 'suggest', 'generate', 'flow', 'assistant'], action: () => {
-      document.dispatchEvent(new CustomEvent('addElementToCanvas', { detail: { type: 'ai-helper', name: 'AI Helper', nodeType: 'aiHelper', data: { label: 'AI Helper' } } }));
-    }},
+    { id: 'ai-assistant', label: 'Ask AI Assistant', category: 'Canvas', icon: <Sparkles className="w-4 h-4" />, keywords: ['ai', 'assistant', 'summarize', 'suggest', 'ask', 'helper'], action: () => document.dispatchEvent(new CustomEvent('openAIAssistant')) },
     // Canvas elements — "Go to" commands zoom to the node on the canvas
     ...(canvasNodes || [])
       .filter(n => n?.id && n?.data?.name)
@@ -3183,6 +3185,15 @@ const workspaceForProgress = useMemo(() => {
         isOpen={showAIBuilder}
         onClose={() => setShowAIBuilder(false)}
         canvasElements={canvasNodes}
+      />
+
+      {/* Top-bar AI Assistant — canvas-aware summarize/extract/ask/suggest.
+          Opens via 'openAIAssistant' document event (TopBar button, command
+          palette). No canvas node needed. */}
+      <WorkspaceAIAssistant
+        workspaceId={workspaceId}
+        taskName={selectedTask?.name}
+        subtaskName={selectedSubtask?.name}
       />
 
       {/* Keyboard Shortcuts Overlay */}

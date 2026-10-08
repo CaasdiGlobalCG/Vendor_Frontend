@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useMemo } from 'react';
 import {
   ChevronLeft,
   ChevronDown,
@@ -23,6 +23,7 @@ import {
 import config from '../../../config/env';
 import { Auth } from 'aws-amplify';
 import operonLogo from '../../../assets/operon-symbol-black.png';
+import WorkspaceCalendar from './WorkspaceCalendar';
 
 const WorkspaceTopBar = ({
   workspace,
@@ -66,6 +67,387 @@ const WorkspaceTopBar = ({
   const notificationsRef = useRef(null);
   const [showCollaborators, setShowCollaborators] = useState(false);
   const collaboratorsRef = useRef(null);
+  const [showCalendar, setShowCalendar] = useState(false);
+  // Viewer identity for calendar items — must match the notification system
+  // (useWebSocketNotifications: id || userId || pmId || vendorId) so targeted
+  // notifications land in the right mailbox. Declared before the reminders
+  // effect below (its dep array evaluates during render).
+  const urlIdentityParams = new URLSearchParams(window.location.search);
+  const urlUserId =
+    urlIdentityParams.get('userId') ||
+    urlIdentityParams.get('clientId') ||
+    urlIdentityParams.get('pmId');
+  const myCalendarUserId =
+    currentUser?.id ||
+    currentUser?.userId ||
+    currentUser?.pmId ||
+    currentUser?.vendorId ||
+    currentUser?.clientId ||
+    currentUser?.email ||
+    urlUserId ||
+    null;
+
+  // All plausible IDs for the viewer — canonical ID resolution differs per
+  // role (vendorId vs pmId vs Cognito sub), so visibility checks should try
+  // the whole set, not just the first hit.
+  const myCalendarIds = [
+    currentUser?.id,
+    currentUser?.userId,
+    currentUser?.pmId,
+    currentUser?.vendorId,
+    currentUser?.clientId,
+    currentUser?.email,
+    urlUserId,
+  ].filter(Boolean);
+
+  // User-created calendar items (event/task/reminder) — persisted on the
+  // workspace record as `calendarEvents` via PUT /api/workspaces/:id
+  const [userCalendarEvents, setUserCalendarEvents] = useState([]);
+  const [calendarSaving, setCalendarSaving] = useState(false);
+
+  useEffect(() => {
+    setUserCalendarEvents(
+      Array.isArray(workspace?.calendarEvents) ? workspace.calendarEvents : []
+    );
+  }, [workspace?.calendarEvents]);
+
+  const getAuthToken = async () => {
+    try {
+      const session = await Auth.currentSession();
+      return session.getIdToken().getJwtToken();
+    } catch {
+      return localStorage.getItem('authToken') || localStorage.getItem('token') || '';
+    }
+  };
+
+  const persistCalendarEvents = async (next) => {
+    setUserCalendarEvents(next); // optimistic
+    if (!workspace?.workspaceId) return;
+    setCalendarSaving(true);
+    try {
+      const token = await getAuthToken();
+      await fetch(`${config.VENDOR_BACKEND_URL}/api/workspaces/${workspace.workspaceId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify({ calendarEvents: next }),
+      });
+    } catch (err) {
+      console.error('Calendar save failed:', err);
+    } finally {
+      setCalendarSaving(false);
+    }
+  };
+
+  // Canvas elements (Calendar Event node, Smart Note reminder) write
+  // calendarEvents directly to the workspace via PUT — they emit this so the
+  // bell/calendar refetches immediately instead of waiting for the next
+  // workspace prop refresh.
+  useEffect(() => {
+    const onCalendarUpdated = async (e) => {
+      if (!workspace?.workspaceId) return;
+      if (e.detail?.workspaceId !== workspace.workspaceId) return;
+      try {
+        const token = await getAuthToken();
+        const res = await fetch(`${config.VENDOR_BACKEND_URL}/api/workspaces/${workspace.workspaceId}`, {
+          headers: token ? { Authorization: `Bearer ${token}` } : {},
+        });
+        const fresh = await res.json().catch(() => null);
+        const ws = fresh?.workspace || fresh;
+        if (Array.isArray(ws?.calendarEvents)) {
+          setUserCalendarEvents(ws.calendarEvents);
+        }
+      } catch (err) {
+        console.error('Failed to refresh calendarEvents:', err);
+      }
+    };
+    window.addEventListener('vd:calendar-updated', onCalendarUpdated);
+    return () => window.removeEventListener('vd:calendar-updated', onCalendarUpdated);
+  }, [workspace?.workspaceId]);
+
+  // Creating a reminder pings the workspace members who can see it —
+  // "Everyone" → pm/vendor/client roles, "Selected people" → their user IDs.
+  const notifyReminder = async (ev) => {
+    if (!workspace?.workspaceId || ev.visibility === 'personal') return;
+    try {
+      const token = await getAuthToken();
+      const dateLabel = new Date(`${ev.date}T00:00:00`).toLocaleDateString('en-IN', {
+        day: 'numeric',
+        month: 'short',
+      });
+      const body = {
+        excludeUserId: myCalendarUserId, // creator already knows
+        notification: {
+          type: 'calendar_reminder',
+          title: `Reminder: ${ev.title}`,
+          message: `${ev.createdBy || 'A member'} added a reminder for ${dateLabel}`,
+          data: { date: ev.date },
+        },
+      };
+      if (ev.visibility === 'selected') {
+        body.roles = [];
+        body.targetUserIds = ev.visibleToIds || [];
+      }
+      const res = await fetch(`${config.VENDOR_BACKEND_URL}/api/workspaces/${workspace.workspaceId}/notify`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify(body),
+      });
+      if (!res.ok) console.warn('Reminder notify failed:', res.status, await res.text().catch(() => ''));
+    } catch (err) {
+      console.error('Reminder notification failed:', err);
+    }
+  };
+
+  const addCalendarEvent = (ev) => {
+    persistCalendarEvents([...userCalendarEvents, ev]);
+    if (ev.kind === 'reminder') notifyReminder(ev);
+  };
+
+  // Fire due/overdue reminders when the workspace loads — personal → creator
+  // only, selected → chosen people + creator, shared → everyone who opens it.
+  // Deduped per event+user via localStorage so each reminder pings once.
+  useEffect(() => {
+    if (userCalendarEvents.length === 0) {
+      if (workspace?.workspaceId)
+        console.log('🔔 Reminder check: no calendarEvents on workspace — reminder may not have persisted');
+      return;
+    }
+    if (!workspace?.workspaceId || !myCalendarUserId) {
+      console.log('🔔 Reminder check skipped:', {
+        workspaceId: workspace?.workspaceId,
+        myId: myCalendarUserId,
+      });
+      return;
+    }
+    const todayKey = new Date().toISOString().slice(0, 10);
+    const canSee = (e) => {
+      const v = e.visibility || 'shared';
+      if (v === 'shared' || !e.createdById) return true;
+      const mine = e.createdById === myCalendarUserId;
+      if (mine) return true;
+      if (v === 'selected') return (e.visibleToIds || []).includes(myCalendarUserId);
+      return false;
+    };
+    const due = userCalendarEvents.filter((e) => {
+      if (e.kind !== 'reminder' || !e.date) return false;
+      if (String(e.date).slice(0, 10) > todayKey) return false; // future
+      return canSee(e);
+    });
+
+    // "Notify me N minutes before" offsets on events/tasks — fires when
+    // (occurrence start − offset) has passed and the item is still relevant
+    // (started within the last hour or hasn't started yet).
+    const occursOnDay = (e, key) => {
+      if (!e?.date) return false;
+      if (e.date === key) return true;
+      const r = e.recurrence;
+      if (!r || r === 'none' || key < e.date) return false;
+      const [sy, sm, sd] = String(e.date).slice(0, 10).split('-').map(Number);
+      const [y, m, d] = key.split('-').map(Number);
+      const diff = Math.round((Date.UTC(y, m - 1, d) - Date.UTC(sy, sm - 1, sd)) / 86400000);
+      return (
+        (r === 'daily' && diff >= 0) ||
+        (r === 'weekly' && diff % 7 === 0) ||
+        (r === 'monthly' && d === sd) ||
+        (r === 'yearly' && d === sd && m === sm)
+      );
+    };
+    const now = Date.now();
+    const timed = [];
+    userCalendarEvents.forEach((e) => {
+      if (e.kind === 'reminder' || !(e.remindersMinutes || []).length) return;
+      if (!canSee(e) || !occursOnDay(e, todayKey)) return;
+      const startTs = new Date(`${todayKey}T${e.startTime || '09:00'}:00`).getTime();
+      (e.remindersMinutes || []).forEach((mins) => {
+        if (now >= startTs - mins * 60000 && now <= startTs + 3600000) {
+          timed.push({ e, mins, startTs });
+        }
+      });
+    });
+
+    // v2 flag key — earlier buggy runs set cal-rem: flags before the notify
+    // POST succeeded, permanently suppressing reminders; the new key ignores
+    // those stale flags and includes the date so a re-dated reminder refires.
+    const flag = (e, suffix = '') =>
+      `cal-rem2:${workspace.workspaceId}:${myCalendarUserId}:${e.id}:${String(e.date).slice(0, 10)}${suffix}`;
+    const fresh = due.filter((e) => !localStorage.getItem(flag(e)));
+    const freshTimed = timed.filter(
+      (j) => !localStorage.getItem(flag(j.e, `:${j.mins}:${todayKey}`))
+    );
+    console.log('🔔 Reminder check:', {
+      total: userCalendarEvents.length,
+      due: due.length,
+      fresh: fresh.length,
+      timed: freshTimed.length,
+      myId: myCalendarUserId,
+    });
+    if (fresh.length === 0 && freshTimed.length === 0) return;
+
+    (async () => {
+      const token = await getAuthToken();
+      console.log('🔔 Reminders due:', fresh.map((e) => e.title), '→ notifying', myCalendarUserId);
+      for (const e of fresh) {
+        const overdue = String(e.date).slice(0, 10) < todayKey;
+        try {
+          const res = await fetch(
+            `${config.VENDOR_BACKEND_URL}/api/workspaces/${workspace.workspaceId}/notify`,
+            {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                ...(token ? { Authorization: `Bearer ${token}` } : {}),
+              },
+              body: JSON.stringify({
+                roles: [],
+                targetUserIds: [myCalendarUserId],
+                notification: {
+                  type: 'calendar_reminder',
+                  title: overdue
+                    ? `Overdue reminder: ${e.title}`
+                    : `Reminder due today: ${e.title}`,
+                  message:
+                    e.notes ||
+                    `${e.createdBy || 'Workspace'} reminder scheduled for ${e.date}`,
+                  data: { date: e.date, overdue },
+                  priority: overdue ? 'high' : 'medium',
+                },
+              }),
+            }
+          );
+          // Flag only after success — a failed push stays eligible next load
+          if (res.ok) {
+            localStorage.setItem(flag(e), '1');
+          } else {
+            console.warn(
+              'Due-reminder notify failed:',
+              res.status,
+              await res.text().catch(() => '')
+            );
+          }
+        } catch (err) {
+          console.warn('Due-reminder notify error:', err);
+        }
+      }
+      for (const { e, mins, startTs } of freshTimed) {
+        const untilStart = Math.round((startTs - now) / 60000);
+        try {
+          const res = await fetch(
+            `${config.VENDOR_BACKEND_URL}/api/workspaces/${workspace.workspaceId}/notify`,
+            {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                ...(token ? { Authorization: `Bearer ${token}` } : {}),
+              },
+              body: JSON.stringify({
+                roles: [],
+                targetUserIds: [myCalendarUserId],
+                notification: {
+                  type: 'calendar_reminder',
+                  title: `Reminder: ${e.title}`,
+                  message:
+                    untilStart > 0
+                      ? `Starts in ${untilStart} min${e.location ? ` · ${e.location}` : ''}`
+                      : `${e.kind === 'task' ? 'Task' : 'Event'} started — ${e.title}`,
+                  data: { date: todayKey, offsetMinutes: mins, eventId: e.id },
+                  priority: 'medium',
+                },
+              }),
+            }
+          );
+          if (res.ok) {
+            localStorage.setItem(flag(e, `:${mins}:${todayKey}`), '1');
+          } else {
+            console.warn('Timed-reminder notify failed:', res.status);
+          }
+        } catch (err) {
+          console.warn('Timed-reminder notify error:', err);
+        }
+      }
+    })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [workspace?.workspaceId, userCalendarEvents, myCalendarUserId]);
+  const updateCalendarEvent = (ev) =>
+    persistCalendarEvents(userCalendarEvents.map((e) => (e.id === ev.id ? ev : e)));
+  const deleteCalendarEvent = (id) =>
+    persistCalendarEvents(userCalendarEvents.filter((e) => e.id !== id));
+
+  // Merge user-created items with task/subtask deadlines AND canvas Task Cards.
+  // Task cards are derived read-only — the card on the canvas owns the data,
+  // so its due date/status/assignee always stay in sync automatically.
+  const calendarEvents = useMemo(() => {
+    // Collect task-card nodes from a node list (canvas nodes carry
+    // data.taskCardData). `ctx` labels where the card lives.
+    const taskCardEvents = (nodes, ctx) =>
+      (Array.isArray(nodes) ? nodes : [])
+        .map((n) => n?.data?.taskCardData)
+        .filter((tc) => tc?.dueDate)
+        .map((tc) => {
+          const done = /^(completed|complete|done)$/i.test(tc.status || '');
+          return {
+            id: `tcard-${tc.id || `${ctx}-${tc.title}-${tc.dueDate}`}`,
+            date: String(tc.dueDate).slice(0, 10),
+            title: tc.title || 'Task card',
+            color: done ? '#10b981' : tc.priority === 'High' ? '#ef4444' : '#8b5cf6',
+            kind: 'task',
+            done,
+            meta: [
+              `Task card · ${ctx}`,
+              tc.status,
+              tc.assignedTo ? `@ ${tc.assignedTo}` : null,
+              tc.priority,
+            ]
+              .filter(Boolean)
+              .join(' · '),
+            readonly: true, // owns its data — edit on the card itself
+          };
+        });
+
+    const evs = (workspace?.tasks || []).flatMap((t) => {
+      const rows = [];
+      const taskName = t.name || t.title || '';
+      const d = t.dueDate || t.endDate || t.deadline;
+      if (d) {
+        rows.push({
+          date: String(d).slice(0, 10),
+          title: taskName || 'Task',
+          color: '#6366f1',
+          meta: 'Task deadline',
+          kind: 'event',
+          readonly: true,
+        });
+      }
+      // Task cards on this task's own canvas
+      rows.push(...taskCardEvents(t.canvasData?.nodes, taskName || 'Task'));
+      (t.subtasks || []).forEach((st) => {
+        const sd = st.dueDate || st.endDate || st.deadline;
+        if (sd) {
+          rows.push({
+            date: String(sd).slice(0, 10),
+            title: st.name || st.title || 'Subtask',
+            color: '#0ea5e9',
+            meta: `Subtask · ${taskName}`,
+            kind: 'event',
+            readonly: true,
+          });
+        }
+        // Task cards inside each subtask canvas
+        rows.push(
+          ...taskCardEvents(st.canvasData?.nodes, `${taskName} › ${st.name || st.title || 'Subtask'}`)
+        );
+      });
+      return rows;
+    });
+    // Task cards dropped on the root canvas (no task/subtask)
+    evs.push(...taskCardEvents(workspace?.nodes, 'Root canvas'));
+    return evs.concat(userCalendarEvents);
+  }, [workspace?.tasks, workspace?.nodes, userCalendarEvents]);
 
   // Close overflow on click outside
   useEffect(() => {
@@ -102,6 +484,8 @@ const WorkspaceTopBar = ({
       case 'workspace_message':
       case 'comment_mention':
         return MessageSquare;
+      case 'calendar_reminder':
+        return Bell;
       case 'approval_request':
         return Send;
       case 'approval_result':
@@ -155,6 +539,7 @@ const WorkspaceTopBar = ({
   };
 
   return (
+    <>
     <header className="ws-topbar" data-workspace-topbar>
       {/* Back Button */}
       <button
@@ -402,6 +787,15 @@ const WorkspaceTopBar = ({
         )}
       </button>
 
+      {/* Calendar — Google-calendar-style view of workspace dates */}
+      <button
+        onClick={() => setShowCalendar(true)}
+        className={`ws-icon-btn ${showCalendar ? 'active' : ''}`}
+        title="Workspace calendar"
+      >
+        <Calendar className="w-4 h-4" />
+      </button>
+
       {/* Help / Tutorial button */}
       <button
         data-tour="help-btn"
@@ -529,6 +923,16 @@ const WorkspaceTopBar = ({
         </button>
       )}
 
+      {/* AI Assistant — summarize/extract/ask about the current canvas */}
+      <button
+        onClick={() => document.dispatchEvent(new CustomEvent('openAIAssistant'))}
+        className="ws-btn-secondary"
+        title="AI Assistant — summarize, extract, or ask about this canvas"
+      >
+        <Sparkles className="w-3.5 h-3.5 text-ink" />
+        <span>AI Assistant</span>
+      </button>
+
       {/* Post Services - separate button */}
       {onOpenPostServices && (
         <button
@@ -572,6 +976,24 @@ const WorkspaceTopBar = ({
         </button>
       )}
     </header>
+
+    {/* Workspace calendar — Google-calendar-style month view: events, tasks
+        and reminders are persisted on the workspace record (calendarEvents) */}
+    <WorkspaceCalendar
+      isOpen={showCalendar}
+      onClose={() => setShowCalendar(false)}
+      events={calendarEvents}
+      onAddEvent={addCalendarEvent}
+      onUpdateEvent={updateCalendarEvent}
+      onDeleteEvent={deleteCalendarEvent}
+      canEdit={!shouldDisableEditing}
+      currentUser={currentUser}
+      myId={myCalendarUserId}
+      myIds={myCalendarIds}
+      myRole={currentUser?.role || currentUser?.userType || urlIdentityParams.get('userRole') || urlIdentityParams.get('userType') || 'vendor'}
+      collaborators={workspaceCollaborators}
+    />
+    </>
   );
 };
 

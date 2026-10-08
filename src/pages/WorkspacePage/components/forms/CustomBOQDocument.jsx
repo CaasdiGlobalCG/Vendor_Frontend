@@ -168,6 +168,19 @@ const CustomBOQDocument = ({ boq, role = 'vendor', nodeId, setNodes, workspaceId
   const shownItems = role === 'client' && clientItems ? clientItems : (canVendorEdit ? editableItems : items);
   const shownTotal = role === 'client' ? clientTotal : (canVendorEdit ? editTotal : vendorTotal);
 
+  // GST treatment declared at creation (customBOQData.gst: { mode, percent })
+  // Inclusive → the % is known, so the GST component can be back-calculated:
+  // component = total × pct / (100 + pct).
+  // Exclusive → GST is added on top of the item total: total × pct / 100.
+  const gst = boq?.gst;
+  const gstPct = parseFloat(gst?.percent) || 0;
+  const gstInclusive = gst?.mode === 'inclusive' && gstPct > 0;
+  const gstExclusive = gst?.mode === 'exclusive' && gstPct > 0;
+  const gstComponent = gstInclusive ? (shownTotal * gstPct) / (100 + gstPct) : null;
+  const gstOnTotal = gstExclusive ? (shownTotal * gstPct) / 100 : 0;
+  const displayTotal = gstExclusive ? shownTotal + gstOnTotal : shownTotal;
+  const gstLabel = gstInclusive ? `Rates inclusive of GST @ ${gstPct}%` : null;
+
   const persistBoq = async (updatedBoq) => {
     if (!nodeId || !workspaceId) return;
     setSaving(true);
@@ -436,12 +449,39 @@ const CustomBOQDocument = ({ boq, role = 'vendor', nodeId, setNodes, workspaceId
         exportItems.forEach((item, idx) => rows.push(itemRow(item, idx)));
       }
 
+      // Exclusive rates → GST is added on top of the item total to form the
+      // grand total; inclusive rates keep the total and show the component.
+      const exportGstExclusive = gst?.mode === 'exclusive' && gstPct > 0;
+      const exportGstAmount = exportGstExclusive ? (exportTotal * gstPct) / 100 : 0;
+      const exportGrandTotal = exportGstExclusive ? exportTotal + exportGstAmount : exportTotal;
+
+      if (exportGstExclusive) {
+        mergeRow(rows.length);
+        rows.push([cell(`Subtotal (exclusive of GST): ${formatINR(exportTotal)}`, noteLineStyle)]);
+        mergeRow(rows.length);
+        rows.push([cell(`GST @ ${gstPct}%: ${formatINR(exportGstAmount)}`, noteLineStyle)]);
+      }
+
       rows.push([
         cell('', totalStyle),
-        cell('TOTAL', { ...totalStyle, alignment: { horizontal: 'right', vertical: 'center' } }),
+        cell(exportGstExclusive ? 'TOTAL (incl. GST)' : 'TOTAL', { ...totalStyle, alignment: { horizontal: 'right', vertical: 'center' } }),
         cell('', totalStyle), cell('', totalStyle), cell('', totalStyle), cell('', totalStyle),
-        cell(exportTotal, { ...totalStyle, font: { bold: true, sz: 12, color: { rgb: 'FFFFFF' } } }),
+        cell(exportGrandTotal, { ...totalStyle, font: { bold: true, sz: 12, color: { rgb: 'FFFFFF' } } }),
       ]);
+
+      // GST treatment line under the total (inclusive only — exclusive is
+      // already expressed by the subtotal/GST rows above)
+      if (gst?.mode === 'inclusive' && gstPct > 0) {
+        const component = (exportTotal * gstPct) / (100 + gstPct);
+        mergeRow(rows.length);
+        rows.push([
+          cell(
+            `Rates inclusive of GST @ ${gstPct}%` +
+              (role === 'client' ? '' : ` — GST component: ${formatINR(component)}`),
+            noteLineStyle
+          ),
+        ]);
+      }
 
       if (noteLines.length) {
         rows.push([]); // spacer
@@ -738,17 +778,47 @@ const CustomBOQDocument = ({ boq, role = 'vendor', nodeId, setNodes, workspaceId
                 </td>
               </tr>
             )}
+            {gstExclusive && (
+              <>
+                <tr className="bg-canvas">
+                  <td colSpan={(isCivil ? 8 : 7) + (canVendorEdit ? 1 : 0) - 1} className="border border-line px-2 py-1.5 text-right text-xs text-dim">
+                    Subtotal (exclusive of GST)
+                  </td>
+                  <td className="border border-line px-2 py-1.5 text-right text-xs font-medium text-ink whitespace-nowrap">
+                    {formatINR(shownTotal)}
+                  </td>
+                </tr>
+                <tr className="bg-canvas">
+                  <td colSpan={(isCivil ? 8 : 7) + (canVendorEdit ? 1 : 0) - 1} className="border border-line px-2 py-1.5 text-right text-xs text-dim">
+                    GST @ {gstPct}%
+                  </td>
+                  <td className="border border-line px-2 py-1.5 text-right text-xs font-medium text-ink whitespace-nowrap">
+                    {formatINR(gstOnTotal)}
+                  </td>
+                </tr>
+              </>
+            )}
             <tr className="bg-success text-white">
               <td colSpan={(isCivil ? 8 : 7) + (canVendorEdit ? 1 : 0) - 1} className="border border-line px-2 py-2 text-right font-bold text-xs tracking-wide">
-                TOTAL
+                TOTAL{gstExclusive ? ' (incl. GST)' : ''}
               </td>
               <td className="border border-line px-2 py-2 text-right font-bold text-sm whitespace-nowrap">
-                {formatINR(shownTotal)}
+                {formatINR(displayTotal)}
               </td>
             </tr>
           </tbody>
         </table>
       </div>
+
+      {/* GST treatment line — declared when the BOQ was created */}
+      {gstLabel && (
+        <div className="px-3 py-1.5 border-t border-line bg-canvas text-[11px] text-dim">
+          {gstLabel}
+          {gstInclusive && gstComponent != null && role !== 'client' && (
+            <span> — GST component of total: {formatINR(gstComponent)}</span>
+          )}
+        </div>
+      )}
 
       {/* Vendor edit toolbar — add rows / sections / save (pre-commission only) */}
       {canVendorEdit && (

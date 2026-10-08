@@ -1,83 +1,128 @@
-import React, { useState, useCallback, useRef, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
-import { persistIsImportant, persistDeadline, formatTimeLeft, getTimeLeft } from '../../utils/nodePersistence';
+import React, { useState, useMemo, useRef, useEffect, useContext } from 'react';
+import { createPortal } from 'react-dom';
+import { persistIsImportant, persistDeadline, persistNodeDataPatch, formatTimeLeft, getTimeLeft } from '../../utils/nodePersistence';
+import { notifyWorkspaceEvent } from '../../utils/workspaceApi';
+import { VendorContext } from '../../../../context/VendorContext';
 import { Handle, Position, useReactFlow } from 'reactflow';
-import { CheckCircle, Clock, AlertCircle, X, Plus, MoreVertical, Mail, User, Check, Trash2, ChevronRight } from 'lucide-react';
+import { CheckCircle, Clock, AlertCircle, XCircle, X, Plus, User, Check, ChevronRight, FileText } from 'lucide-react';
 
-// Sample data structure
-const initialColumns = {
-  submitted: {
-    id: 'submitted',
-    title: 'Submitted',
-    items: [
-      { id: 'item-1', title: 'Design Draft', status: 'submitted', assignedTo: 'client@example.com', submittedDate: '2023-10-15' },
-      { id: 'item-2', title: 'Budget Proposal', status: 'submitted', assignedTo: 'finance@example.com', submittedDate: '2023-10-16' },
-    ],
-  },
-  underReview: {
-    id: 'underReview',
-    title: 'Under Review',
-    items: [
-      { id: 'item-3', title: 'Contract Draft', status: 'underReview', assignedTo: 'legal@example.com', submittedDate: '2023-10-14' },
-    ],
-  },
-  approved: {
-    id: 'approved',
-    title: 'Approved',
-    items: [
-      { id: 'item-4', title: 'Project Kickoff', status: 'approved', assignedTo: 'pm@example.com', approvedDate: '2023-10-10' },
-    ],
-  },
-};
+// Real workspace approval lifecycle — same statuses ElementNode stamps:
+//   sent_to_pm → pm_approved → client_approved   (rejected at any stage)
+// Manual items use the semantic equivalents: submitted → pm_approved → …
+const COLUMNS = [
+  { id: 'submitted', title: 'Submitted', Icon: Clock, color: 'text-info', accept: ['submitted', 'sent_to_pm'] },
+  { id: 'pm_approved', title: 'PM Approved', Icon: AlertCircle, color: 'text-warning', accept: ['pm_approved'] },
+  { id: 'client_approved', title: 'Client Approved', Icon: CheckCircle, color: 'text-success', accept: ['client_approved'] },
+  { id: 'rejected', title: 'Rejected', Icon: XCircle, color: 'text-danger', accept: ['rejected'] },
+];
 
-const columnOrder = ['submitted', 'underReview', 'approved'];
+const columnFor = (status) =>
+  COLUMNS.find((c) => c.accept.includes(status)) || COLUMNS[0];
+
+// Next stage when an item is approved at its current status
+const nextStatus = (status) =>
+  status === 'submitted' || status === 'sent_to_pm'
+    ? 'pm_approved'
+    : status === 'pm_approved'
+      ? 'client_approved'
+      : null;
 
 const ApprovalBoardNode = ({ id, data, isConnectable, selected }) => {
-  const workspaceId = data.workspaceId;  // Get workspaceId from node data
-  const { setNodes } = useReactFlow();
+  const workspaceId = data.workspaceId;
+  const { setNodes, getNodes } = useReactFlow();
+  const { currentUser } = useContext(VendorContext) || {};
+  // Client/PM sessions may not populate VendorContext — fall back to the
+  // workspace URL params (?userId= &userType=client).
+  const urlParams = new URLSearchParams(window.location.search);
+  // Clients arrive with ?clientId=&userRole=client; PMs may use ?userId= or ?pmId=
+  const urlUserId =
+    urlParams.get('userId') || urlParams.get('clientId') || urlParams.get('pmId');
+  const urlUserType = urlParams.get('userType') || urlParams.get('userRole');
+  const myUserId =
+    currentUser?.id || currentUser?.userId || currentUser?.pmId ||
+    currentUser?.vendorId || currentUser?.email || urlUserId || null;
+  const myName = currentUser?.name || currentUser?.email || 'You';
+  const myRole = currentUser?.role || currentUser?.userType || urlUserType || 'vendor';
+  const myIds = [
+    currentUser?.id, currentUser?.userId, currentUser?.pmId,
+    currentUser?.vendorId, currentUser?.clientId, currentUser?.email, urlUserId,
+  ].filter(Boolean);
+
+  // Who may decide at each stage — PM-side roles approve submitted items,
+  // only the client can give final sign-off. Vendors never approve.
+  const PM_ROLES = ['pm', 'cas', 'admin', 'project_manager', 'projectmanager'];
+  const isPMSide = PM_ROLES.includes(String(myRole).toLowerCase());
+  const isClient = String(myRole).toLowerCase() === 'client';
+  const canDecide = (status) =>
+    status === 'submitted' || status === 'sent_to_pm'
+      ? isPMSide
+      : status === 'pm_approved'
+        ? isClient
+        : false;
+  const canResubmit = (item) =>
+    item.status === 'rejected' &&
+    (myIds.includes(item.submittedById) || (!isClient && !isPMSide));
+
   const [saving, setSaving] = useState(false);
   const [isImportant, setIsImportant] = useState(data.isImportant || false);
   const [deadline, setDeadline] = useState(data.deadline || null);
   const [showDeadlineInput, setShowDeadlineInput] = useState(false);
   const [timeLeft, setTimeLeft] = useState(null);
   const deadlineJustSetRef = useRef(false);
-  const [columns, setColumns] = useState(initialColumns);
   const [showAddModal, setShowAddModal] = useState(false);
-  const [isEditing, setIsEditing] = useState(true);
-  const [newItem, setNewItem] = useState({ 
-    title: '', 
-    description: '',
-    assignedTo: '',
-    dueDate: ''
-  });
-  const [selectedItem, setSelectedItem] = useState(null);
-  const [showMoveMenu, setShowMoveMenu] = useState({ show: false, itemId: null });
-  const [showItemDetails, setShowItemDetails] = useState({ show: false, item: null });
+  const [newItem, setNewItem] = useState({ title: '', description: '', dueDate: '' });
+  const [moveMenuFor, setMoveMenuFor] = useState(null); // manual item id
+  const [detailItem, setDetailItem] = useState(null); // { ...item, source, columnId }
+  const [rejectReason, setRejectReason] = useState('');
+  const [showRejectInput, setShowRejectInput] = useState(false);
+
+  const manualItems = data.approvalItems || [];
+
+  // Live canvas elements with a real approvalStatus — read-only dashboard rows
+  const elementItems = useMemo(() => {
+    try {
+      return (getNodes() || [])
+        .filter((n) => {
+          const s = n.data?.approvalStatus;
+          return s && s !== 'pending' && n.id !== id;
+        })
+        .map((n) => ({
+          id: `el-${n.id}`,
+          nodeId: n.id,
+          source: 'element',
+          title:
+            n.data?.label || n.data?.name || n.data?.title || n.data?.type || 'Element',
+          status: n.data.approvalStatus,
+          assignedTo: n.data.submittedBy || n.data.approvedBy || '—',
+          description: n.data.rejectionReason || n.data.preview || '',
+          submittedDate: n.data.submittedAt || n.data.updatedAt || '',
+          rejectReason: n.data.rejectionReason,
+        }));
+    } catch {
+      return [];
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [getNodes, id, data]);
+
+  const allItems = [...manualItems.map((i) => ({ ...i, source: 'manual' })), ...elementItems];
+
+  const itemsInColumn = (col) =>
+    allItems.filter((i) => columnFor(i.status).id === col.id);
 
   // Update time left display every second
   useEffect(() => {
     if (!deadline) return;
-    
-    const updateTimer = () => {
-      const time = getTimeLeft(deadline);
-      setTimeLeft(time);
-    };
-    
+    const updateTimer = () => setTimeLeft(getTimeLeft(deadline));
     updateTimer();
     const interval = setInterval(updateTimer, 1000);
     return () => clearInterval(interval);
   }, [deadline]);
 
-  // Sync deadline and isImportant from node data
   useEffect(() => {
     if (deadlineJustSetRef.current) return;
-    
-    if (data.deadline && data.deadline !== deadline) {
-      setDeadline(data.deadline);
-    }
-    if (data.isImportant !== undefined && data.isImportant !== isImportant) {
+    if (data.deadline && data.deadline !== deadline) setDeadline(data.deadline);
+    if (data.isImportant !== undefined && data.isImportant !== isImportant)
       setIsImportant(data.isImportant);
-    }
   }, [data.deadline, data.isImportant]);
 
   const persistIsImportantLocal = async (important) => {
@@ -99,9 +144,7 @@ const ApprovalBoardNode = ({ id, data, isConnectable, selected }) => {
       deadlineJustSetRef.current = true;
       await persistDeadline(id, newDeadline, setNodes, workspaceId);
       setDeadline(newDeadline instanceof Date ? newDeadline.toISOString() : newDeadline);
-      setTimeout(() => {
-        deadlineJustSetRef.current = false;
-      }, 2000);
+      setTimeout(() => { deadlineJustSetRef.current = false; }, 2000);
     } catch (err) {
       console.error('Failed to persist deadline:', err);
     } finally {
@@ -109,142 +152,144 @@ const ApprovalBoardNode = ({ id, data, isConnectable, selected }) => {
     }
   };
 
-  const moveItem = (itemId, fromColumnId, toColumnId) => {
-    if (fromColumnId === toColumnId) return;
-    
-    setColumns(prevColumns => {
-      const fromColumn = { ...prevColumns[fromColumnId] };
-      const toColumn = { ...prevColumns[toColumnId] };
-      
-      const itemIndex = fromColumn.items.findIndex(item => item.id === itemId);
-      if (itemIndex === -1) return prevColumns;
-      
-      const [movedItem] = fromColumn.items.splice(itemIndex, 1);
-      
-      // Update item status based on the target column
-      const updatedItem = {
-        ...movedItem,
-        status: toColumn.id,
-        ...(toColumn.id === 'approved' && { approvedDate: new Date().toISOString().split('T')[0] })
-      };
-      
-      return {
-        ...prevColumns,
-        [fromColumnId]: {
-          ...fromColumn,
-          items: [...fromColumn.items]
-        },
-        [toColumnId]: {
-          ...toColumn,
-          items: [...toColumn.items, updatedItem]
-        }
-      };
-    });
-    
-    setShowMoveMenu({ show: false, itemId: null });
-  };
+  const persistItems = (items) =>
+    persistNodeDataPatch(id, { approvalItems: items }, setNodes, workspaceId);
 
+  // ---- Add a manual approval request ----
   const handleAddItem = () => {
-    if (!newItem.title) return;
-
-    const newItemObj = {
-      id: `item-${Date.now()}`,
-      title: newItem.title,
-      description: newItem.description || '',
+    if (!newItem.title.trim()) return;
+    const item = {
+      id: `ap-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+      title: newItem.title.trim(),
+      description: newItem.description.trim(),
       status: 'submitted',
-      assignedTo: newItem.assignedTo || 'Unassigned',
-      submittedDate: new Date().toISOString().split('T')[0],
+      submittedBy: myName,
+      submittedById: myUserId,
+      submittedAt: new Date().toISOString(),
       dueDate: newItem.dueDate || '',
-      comments: []
+      history: [
+        { status: 'submitted', by: myName, role: myRole, at: new Date().toISOString() },
+      ],
     };
+    persistItems([...manualItems, item]);
 
-    setColumns(prevColumns => ({
-      ...prevColumns,
-      submitted: {
-        ...prevColumns.submitted,
-        items: [...prevColumns.submitted.items, newItemObj],
-      },
-    }));
-    
-    // Reset form and close modal
-    setNewItem({ 
-      title: '', 
-      description: '',
-      assignedTo: '',
-      dueDate: ''
-    });
+    // Notify approvers — first stage is the PM
+    notifyWorkspaceEvent({
+      workspaceId,
+      roles: ['pm'],
+      excludeUserId: myUserId,
+      type: 'approval_request',
+      title: `Approval requested: ${item.title}`,
+      message: `${myName} submitted "${item.title}" for approval on the ${data.label || 'Approval Board'}.`,
+      data: { boardNodeId: id, itemId: item.id },
+      priority: 'high',
+    }).catch(() => {});
+
+    setNewItem({ title: '', description: '', dueDate: '' });
     setShowAddModal(false);
   };
 
-  const handleDeleteItem = (columnId, itemId) => {
-    if (window.confirm('Are you sure you want to delete this item?')) {
-      setColumns(prevColumns => {
-        const column = { ...prevColumns[columnId] };
-        const newItems = column.items.filter(item => item.id !== itemId);
-        
-        return {
-          ...prevColumns,
-          [columnId]: {
-            ...column,
-            items: newItems,
-          },
-        };
-      });
+  const handleDeleteItem = (itemId) => {
+    if (!window.confirm('Delete this approval request?')) return;
+    persistItems(manualItems.filter((i) => i.id !== itemId));
+    if (detailItem?.id === itemId) setDetailItem(null);
+  };
+
+  // Move a manual item to another stage (or re-submit a rejected one)
+  const moveManualItem = (itemId, toStatus, reason) => {
+    const next = manualItems.map((i) =>
+      i.id === itemId
+        ? {
+            ...i,
+            status: toStatus,
+            rejectReason: reason || undefined,
+            history: [
+              ...(i.history || []),
+              { status: toStatus, by: myName, role: myRole, at: new Date().toISOString(), reason: reason || undefined },
+            ],
+          }
+        : i
+    );
+    persistItems(next);
+    setMoveMenuFor(null);
+
+    const item = manualItems.find((i) => i.id === itemId);
+    if (!item) return;
+    const nextCol = columnFor(toStatus);
+    notifyWorkspaceEvent({
+      workspaceId,
+      roles:
+        toStatus === 'pm_approved'
+          ? ['client']
+          : toStatus === 'rejected'
+            ? ['vendor', 'pm', 'client']
+            : ['pm'],
+      excludeUserId: myUserId,
+      type: 'approval_status',
+      title: `"${item.title}" → ${nextCol.title}`,
+      message: reason
+        ? `${myName} ${toStatus === 'rejected' ? 'rejected' : 'updated'} "${item.title}": ${reason}`
+        : `${myName} moved "${item.title}" to ${nextCol.title}.`,
+      data: { boardNodeId: id, itemId },
+      priority: toStatus === 'rejected' ? 'high' : 'medium',
+    }).catch(() => {});
+  };
+
+  // Approve / reject — manual items patch the board node, element items patch
+  // their source node's approvalStatus (same field the real flow uses).
+  const decide = (item, approve, reason) => {
+    const to = approve ? nextStatus(item.status) : 'rejected';
+    if (!to) return;
+
+    const patch =
+      to === 'rejected'
+        ? { approvalStatus: 'rejected', rejectionReason: reason || '', rejectedBy: myName, rejectedAt: new Date().toISOString() }
+        : { approvalStatus: to, [`${to === 'pm_approved' ? 'pmApprovedBy' : 'clientApprovedBy'}`]: myName };
+
+    if (item.source === 'element') {
+      persistNodeDataPatch(item.nodeId, patch, setNodes, workspaceId);
+    } else {
+      moveManualItem(item.id, to, reason);
+      return; // moveManualItem already notified
     }
+
+    // Element item — notify the submitter side
+    notifyWorkspaceEvent({
+      workspaceId,
+      roles: to === 'pm_approved' ? ['client'] : ['vendor', 'pm'],
+      excludeUserId: myUserId,
+      type: 'approval_status',
+      title: `"${item.title}" ${approve ? 'approved' : 'rejected'}`,
+      message: reason
+        ? `${myName} rejected "${item.title}": ${reason}`
+        : `${myName} approved "${item.title}"${to === 'pm_approved' ? ' — now pending client sign-off' : ''}.`,
+      data: { elementNodeId: item.nodeId, boardNodeId: id },
+      priority: approve ? 'medium' : 'high',
+    }).catch(() => {});
   };
 
-  const handleSendNotification = (item) => {
-    // Here you would integrate with your email notification system
-    console.log(`Sending notification about ${item.title} to ${item.assignedTo}`);
-    alert(`Notification sent to ${item.assignedTo} about: ${item.title}`);
+  const getStatusBadge = (status) => {
+    const col = columnFor(status);
+    const I = col.Icon;
+    return (
+      <span className={`inline-flex items-center gap-1 text-[10px] font-medium ${col.color}`}>
+        <I className="w-3 h-3" />
+        {col.title}
+      </span>
+    );
   };
 
-  const getStatusIcon = (status) => {
-    switch (status) {
-      case 'submitted':
-        return <Clock className="w-4 h-4 text-info" />;
-      case 'underReview':
-        return <AlertCircle className="w-4 h-4 text-warning" />;
-      case 'approved':
-        return <CheckCircle className="w-4 h-4 text-success" />;
-      default:
-        return null;
-    }
-  };
-
-  // Toggle move menu for an item
-  const toggleMoveMenu = (e, itemId) => {
-    e.stopPropagation();
-    setShowMoveMenu(prev => ({
-      show: prev.itemId === itemId ? !prev.show : true,
-      itemId
-    }));
-  };
-
-  // Show item details in a modal
-  const showDetails = (item, columnId) => {
-    setShowItemDetails({
-      show: true,
-      item: { ...item, currentColumn: columnId }
-    });
-  };
-
-  // Close all modals
-  const closeModals = () => {
-    setShowAddModal(false);
-    setShowItemDetails({ show: false, item: null });
-  };
+  const isOverdue = (d) => d && new Date(d) < new Date(new Date().toDateString());
 
   return (
-    <div className="bg-surface rounded-lg border border-line  overflow-hidden w-full max-w-4xl">
-      {/* Sequence Number Badge - Top left corner */}
+    <div className="w-[1150px] max-w-[92vw] relative">
       {data.sequenceNumber && (
-        <div className="absolute -top-4 -left-4 z-20 w-8 h-8 bg-black text-white rounded-full flex items-center justify-center text-sm font-bold shadow-lg border-2 border-white hover:shadow-xl transition-shadow">
+        <div className="absolute -top-4 -left-4 z-20 w-8 h-8 bg-black text-white rounded-full flex items-center justify-center text-sm font-bold shadow-lg border-2 border-white">
           {data.sequenceNumber}
         </div>
       )}
-      <Handle type="target" position={Position.Top} />
-      
+      <Handle type="target" position={Position.Top} isConnectable={isConnectable} />
+      <div className="bg-surface rounded-lg border border-line overflow-hidden">
       {/* Header */}
       <div className="bg-info text-white p-3 flex items-center justify-between">
         <div className="flex items-center space-x-2">
@@ -252,7 +297,7 @@ const ApprovalBoardNode = ({ id, data, isConnectable, selected }) => {
           <span className="font-medium">Approval Board</span>
         </div>
         <div className="flex space-x-2">
-          <button 
+          <button
             onClick={async () => {
               setIsImportant(!isImportant);
               await persistIsImportantLocal(!isImportant);
@@ -262,26 +307,19 @@ const ApprovalBoardNode = ({ id, data, isConnectable, selected }) => {
           >
             {isImportant ? '★' : '☆'}
           </button>
-          <button 
+          <button
             onClick={() => setShowDeadlineInput(!showDeadlineInput)}
             className="p-2 rounded bg-surface text-info hover:bg-info/10"
             title="Set Deadline"
           >
             <Clock className="w-4 h-4" />
           </button>
-          <button 
+          <button
             onClick={() => setShowAddModal(true)}
             className="px-3 py-1 bg-surface text-info text-sm rounded hover:bg-info/10 flex items-center space-x-1"
           >
             <Plus className="w-4 h-4" />
-            <span>Add Task</span>
-          </button>
-          <button 
-            onClick={() => setIsEditing(!isEditing)}
-            className={`p-2 rounded ${isEditing ? 'bg-info' : 'bg-info hover:bg-info'}`}
-            title={isEditing ? 'Editing Mode: On' : 'Click to edit'}
-          >
-            <MoreVertical className="w-4 h-4" />
+            <span>Request Approval</span>
           </button>
         </div>
       </div>
@@ -292,7 +330,7 @@ const ApprovalBoardNode = ({ id, data, isConnectable, selected }) => {
           <input
             type="datetime-local"
             className="border rounded px-2 py-1 text-xs flex-1"
-            value={deadline ? new Date(deadline).toISOString().slice(0,16) : ''}
+            value={deadline ? new Date(deadline).toISOString().slice(0, 16) : ''}
             onChange={(e) => setDeadline(e.target.value)}
             disabled={saving}
           />
@@ -317,120 +355,130 @@ const ApprovalBoardNode = ({ id, data, isConnectable, selected }) => {
       )}
 
       {/* Board */}
-      <div className="flex p-4 space-x-4 overflow-x-auto">
-        {columnOrder.map((columnId) => {
-          const column = columns[columnId];
-          const itemCount = column.items.length;
-          
+      <div className="grid grid-cols-4 gap-4 p-4">
+        {COLUMNS.map((column) => {
+          const items = itemsInColumn(column);
           return (
-            <div key={column.id} className="flex-1 min-w-64">
-              <div className="bg-canvas rounded-lg p-3 h-full">
-                <div className="flex items-center justify-between mb-3">
-                  <div className="flex items-center space-x-2">
-                    <span className="font-medium text-sm">{column.title}</span>
-                    <span className="bg-surface text-dim text-xs px-2 py-0.5 rounded-full">
-                      {itemCount}
-                    </span>
-                  </div>
+            <div key={column.id} className="min-w-0">
+              <div className="bg-canvas rounded-lg p-3 h-full min-h-[160px]">
+                <div className="flex items-center space-x-2 mb-3 pb-2 border-b border-line">
+                  <column.Icon className={`w-4 h-4 ${column.color}`} />
+                  <span className="font-medium text-sm truncate">{column.title}</span>
+                  <span className="ml-auto bg-surface text-dim text-[10px] px-2 py-0.5 rounded-full">
+                    {items.length}
+                  </span>
                 </div>
-                
-                <div className="space-y-2 min-h-20">
-                  {column.items.map((item) => (
-                    <div 
-                      key={item.id} 
-                      className="bg-surface p-3 rounded border   transition-shadow cursor-pointer relative group"
-                      onClick={() => showDetails(item, columnId)}
+
+                <div className="space-y-2.5">
+                  {items.map((item) => (
+                    <div
+                      key={item.id}
+                      className="bg-surface p-3 rounded border transition-shadow cursor-pointer relative group"
+                      onClick={() => { setDetailItem(item); setShowRejectInput(false); setRejectReason(''); }}
                     >
-                      {isEditing && (
-                        <div className="absolute top-1 right-1 flex space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                          <div className="relative">
-                            <button
-                              onClick={(e) => toggleMoveMenu(e, item.id)}
-                              className="p-1 text-dim hover:text-info rounded-full hover:bg-info/10"
-                              title="Move to section"
-                            >
-                              <ChevronRight className="w-4 h-4" />
-                            </button>
-                            
-                            {showMoveMenu.show && showMoveMenu.itemId === item.id && (
-                              <div className="absolute right-0 mt-1 w-40 bg-surface rounded-md shadow-lg z-10 border">
-                                {columnOrder
-                                  .filter(id => id !== columnId) // Don't show current column
-                                  .map((targetColumnId) => {
-                                    const targetColumn = columns[targetColumnId];
-                                    return (
-                                      <button
-                                        key={targetColumnId}
-                                        onClick={(e) => {
-                                          e.stopPropagation();
-                                          moveItem(item.id, columnId, targetColumnId);
-                                        }}
-                                        className="w-full text-left px-4 py-2 text-sm text-ink hover:bg-info/10 flex items-center justify-between"
-                                      >
-                                        {targetColumn.title}
-                                        {getStatusIcon(targetColumnId)}
-                                      </button>
-                                    );
-                                  })}
-                              </div>
-                            )}
-                          </div>
-                          
+                      {/* Quick actions */}
+                      <div className="absolute top-1 right-1 flex space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                        {item.source === 'manual' && item.status !== 'client_approved' && (
+                          (canDecide(item.status) || canResubmit(item)) && (
+                            <div className="relative">
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setMoveMenuFor(moveMenuFor === item.id ? null : item.id);
+                                }}
+                                className="p-1 text-dim hover:text-info rounded-full hover:bg-info/10"
+                                title="Move to stage"
+                              >
+                                <ChevronRight className="w-4 h-4" />
+                              </button>
+                              {moveMenuFor === item.id && (
+                                <div className="absolute right-0 mt-1 w-44 bg-surface rounded-md shadow-lg z-10 border">
+                                  {COLUMNS.filter((c) => {
+                                    if (c.id === columnFor(item.status).id) return false;
+                                    if (canResubmit(item) && c.id === 'submitted') return true;
+                                    return canDecide(item.status);
+                                  }).map((c) => (
+                                    <button
+                                      key={c.id}
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        moveManualItem(item.id, c.id);
+                                      }}
+                                      className="w-full text-left px-3 py-2 text-xs text-ink hover:bg-info/10 flex items-center justify-between"
+                                    >
+                                      {c.title}
+                                      <c.Icon className={`w-3 h-3 ${c.color}`} />
+                                    </button>
+                                  ))}
+                                </div>
+                              )}
+                            </div>
+                          )
+                        )}
+                        {item.source === 'manual' && (myIds.includes(item.submittedById) || isPMSide) && (
                           <button
                             onClick={(e) => {
                               e.stopPropagation();
-                              handleDeleteItem(columnId, item.id);
+                              handleDeleteItem(item.id);
                             }}
-                            className="p-1 text-danger hover:text-danger rounded-full hover:bg-danger/10"
-                            title="Delete item"
+                            className="p-1 text-dim hover:text-danger rounded-full hover:bg-danger/10"
+                            title="Delete request"
                           >
                             <X className="w-4 h-4" />
                           </button>
-                        </div>
-                      )}
-                      
-                      <div className="flex items-start justify-between">
-                        <h4 className="font-medium text-sm pr-6">{item.title}</h4>
-                        {getStatusIcon(item.status)}
+                        )}
                       </div>
-                      
+
+                      <h4 className="font-medium text-sm leading-snug pr-6 break-words">
+                        {item.title}
+                      </h4>
+
                       {item.description && (
-                        <p className="mt-1 text-xs text-dim line-clamp-2">
+                        <p className="mt-1 text-[11px] text-dim line-clamp-2 break-words">
                           {item.description}
                         </p>
                       )}
-                      
-                      <div className="mt-2 flex items-center justify-between text-xs text-dim">
-                        <div className="flex items-center space-x-1 truncate">
-                          <User className="w-3 h-3 flex-shrink-0 text-dim" />
-                          <span className="truncate">{item.assignedTo}</span>
-                        </div>
-                        
-                        {item.dueDate && (
-                          <div className="text-xs text-warning bg-warning/10 px-1.5 py-0.5 rounded">
-                            Due: {new Date(item.dueDate).toLocaleDateString()}
+
+                      <div className="mt-2.5 pt-2 border-t border-line/60 space-y-1">
+                        <div className="flex items-center justify-between gap-2 text-[11px]">
+                          <div className="flex items-center gap-1 min-w-0 text-dim">
+                            <User className="w-3 h-3 flex-shrink-0" />
+                            <span className="truncate" title={item.submittedBy || item.assignedTo}>
+                              {item.submittedBy || item.assignedTo || '—'}
+                            </span>
                           </div>
-                        )}
+                          {item.dueDate && (
+                            <span
+                              className={`flex-shrink-0 text-[10px] px-1.5 py-0.5 rounded whitespace-nowrap ${
+                                isOverdue(item.dueDate) && item.status !== 'client_approved'
+                                  ? 'bg-danger/10 text-danger font-medium'
+                                  : 'bg-warning/10 text-warning'
+                              }`}
+                            >
+                              {new Date(item.dueDate).toLocaleDateString('en-IN', {
+                                day: 'numeric', month: 'short',
+                              })}
+                            </span>
+                          )}
+                        </div>
+                        <div className="flex items-center justify-between gap-2 text-[10px] text-dim">
+                          {item.source === 'element' ? (
+                            <span className="flex items-center gap-1">
+                              <FileText className="w-3 h-3" /> Canvas element
+                            </span>
+                          ) : (
+                            item.submittedAt && (
+                              <span>Submitted {new Date(item.submittedAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}</span>
+                            )
+                          )}
+                        </div>
                       </div>
-                      
-                      {item.submittedDate && (
-                        <div className="mt-1 text-xs text-dim">
-                          Submitted: {new Date(item.submittedDate).toLocaleDateString()}
-                        </div>
-                      )}
-                      
-                      {item.approvedDate && (
-                        <div className="mt-1 text-xs text-success flex items-center">
-                          <Check className="w-3 h-3 mr-1" />
-                          Approved: {new Date(item.approvedDate).toLocaleDateString()}
-                        </div>
-                      )}
                     </div>
                   ))}
-                  
-                  {column.items.length === 0 && (
-                    <div className="text-center text-dim text-sm py-4">
-                      No items in this section
+
+                  {items.length === 0 && (
+                    <div className="text-center text-dim text-[11px] py-6 border border-dashed border-line rounded">
+                      No items
                     </div>
                   )}
                 </div>
@@ -439,17 +487,26 @@ const ApprovalBoardNode = ({ id, data, isConnectable, selected }) => {
           );
         })}
       </div>
-      
-      <Handle type="source" position={Position.Bottom} />
-      
-      {/* Add Task Modal */}
-      {showAddModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-surface rounded-lg w-full max-w-md">
-            <div className="p-4 border-b">
-              <h3 className="text-lg font-medium">Add New Task</h3>
+      </div>
+
+      <Handle type="source" position={Position.Bottom} isConnectable={isConnectable} />
+
+      {/* Add Request Modal — portal escapes the node's transform/overflow */}
+      {showAddModal && createPortal(
+        <div
+          className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4"
+          onClick={() => setShowAddModal(false)}
+        >
+          <div
+            className="bg-surface rounded-xl w-full max-w-md shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="p-4 border-b flex items-center justify-between">
+              <h3 className="text-lg font-medium">Request Approval</h3>
+              <button onClick={() => setShowAddModal(false)} className="text-dim hover:text-ink">
+                <X className="w-4 h-4" />
+              </button>
             </div>
-            
             <div className="p-4 space-y-4">
               <div>
                 <label className="block text-sm font-medium text-ink mb-1">Title *</label>
@@ -457,49 +514,38 @@ const ApprovalBoardNode = ({ id, data, isConnectable, selected }) => {
                   type="text"
                   value={newItem.title}
                   onChange={(e) => setNewItem({ ...newItem, title: e.target.value })}
-                  placeholder="Task title"
+                  placeholder="e.g. Final floor plan, Invoice INV-004"
                   className="w-full p-2 border rounded focus:ring-2 focus:ring-info/20 focus:border-info/30 outline-none"
+                  autoFocus
                 />
               </div>
-              
               <div>
                 <label className="block text-sm font-medium text-ink mb-1">Description</label>
                 <textarea
                   value={newItem.description}
                   onChange={(e) => setNewItem({ ...newItem, description: e.target.value })}
-                  placeholder="Task description"
+                  placeholder="What should the approver check?"
                   rows={3}
                   className="w-full p-2 border rounded focus:ring-2 focus:ring-info/20 focus:border-info/30 outline-none"
                 />
               </div>
-              
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-ink mb-1">Assigned To</label>
-                  <input
-                    type="email"
-                    value={newItem.assignedTo}
-                    onChange={(e) => setNewItem({ ...newItem, assignedTo: e.target.value })}
-                    placeholder="Email address"
-                    className="w-full p-2 border rounded focus:ring-2 focus:ring-info/20 focus:border-info/30 outline-none"
-                  />
-                </div>
-                
-                <div>
-                  <label className="block text-sm font-medium text-ink mb-1">Due Date</label>
-                  <input
-                    type="date"
-                    value={newItem.dueDate}
-                    onChange={(e) => setNewItem({ ...newItem, dueDate: e.target.value })}
-                    className="w-full p-2 border rounded focus:ring-2 focus:ring-info/20 focus:border-info/30 outline-none"
-                  />
-                </div>
+              <div>
+                <label className="block text-sm font-medium text-ink mb-1">Due Date</label>
+                <input
+                  type="date"
+                  value={newItem.dueDate}
+                  onChange={(e) => setNewItem({ ...newItem, dueDate: e.target.value })}
+                  className="w-full p-2 border rounded focus:ring-2 focus:ring-info/20 focus:border-info/30 outline-none"
+                />
               </div>
+              <p className="text-[11px] text-dim">
+                Approval flow: Submitted → PM Approved → Client Approved. The PM is
+                notified when you submit.
+              </p>
             </div>
-            
             <div className="p-4 bg-canvas flex justify-end space-x-2 rounded-b-lg">
               <button
-                onClick={closeModals}
+                onClick={() => setShowAddModal(false)}
                 className="px-4 py-2 text-sm text-dim hover:bg-surface-hover rounded"
               >
                 Cancel
@@ -507,122 +553,129 @@ const ApprovalBoardNode = ({ id, data, isConnectable, selected }) => {
               <button
                 onClick={handleAddItem}
                 className="px-4 py-2 bg-info text-white text-sm rounded hover:bg-info disabled:opacity-50"
-                disabled={!newItem.title}
+                disabled={!newItem.title.trim()}
               >
-                Add Task
+                Submit for Approval
               </button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
-      
-      {/* Task Details Modal */}
-      {showItemDetails.show && showItemDetails.item && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-surface rounded-lg w-full max-w-2xl max-h-[90vh] flex flex-col">
-            <div className="p-4 border-b flex justify-between items-center">
-              <h3 className="text-lg font-medium">{showItemDetails.item.title}</h3>
-              <button 
-                onClick={closeModals}
-                className="text-dim hover:text-dim"
-              >
-                <X className="w-5 h-5" />
+
+      {/* Item Detail Modal — portal escapes the node's transform/overflow */}
+      {detailItem && createPortal(
+        <div
+          className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4"
+          onClick={() => setDetailItem(null)}
+        >
+          <div
+            className="bg-surface rounded-xl w-full max-w-md max-h-[85vh] overflow-y-auto shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="p-4 border-b flex items-start justify-between gap-2">
+              <div>
+                <h3 className="text-lg font-medium">{detailItem.title}</h3>
+                <div className="mt-1">{getStatusBadge(detailItem.status)}</div>
+              </div>
+              <button onClick={() => setDetailItem(null)} className="text-dim hover:text-ink">
+                <X className="w-4 h-4" />
               </button>
             </div>
-            
-            <div className="p-6 overflow-y-auto">
-              <div className="space-y-6">
+
+            <div className="p-4 space-y-3 text-sm">
+              {detailItem.description && (
+                <p className="text-ink">{detailItem.description}</p>
+              )}
+              <div className="grid grid-cols-2 gap-2 text-xs text-dim">
+                <span>Submitted by: <span className="text-ink">{detailItem.submittedBy || detailItem.assignedTo || '—'}</span></span>
+                {detailItem.submittedDate && (
+                  <span>On: <span className="text-ink">{new Date(detailItem.submittedDate).toLocaleDateString()}</span></span>
+                )}
+                {detailItem.dueDate && (
+                  <span>Due: <span className={isOverdue(detailItem.dueDate) ? 'text-danger font-medium' : 'text-ink'}>{new Date(detailItem.dueDate).toLocaleDateString()}</span></span>
+                )}
+              </div>
+              {detailItem.rejectReason && (
+                <p className="text-xs text-danger bg-danger/10 rounded px-2 py-1.5">
+                  Rejected: {detailItem.rejectReason}
+                </p>
+              )}
+
+              {/* History trail */}
+              {(detailItem.history || []).length > 0 && (
                 <div>
-                  <h4 className="text-sm font-medium text-dim mb-2">DESCRIPTION</h4>
-                  <p className="text-ink">
-                    {showItemDetails.item.description || 'No description provided.'}
-                  </p>
-                </div>
-                
-                <div className="grid grid-cols-2 gap-6">
-                  <div>
-                    <h4 className="text-sm font-medium text-dim mb-2">STATUS</h4>
-                    <div className="flex items-center">
-                      {getStatusIcon(showItemDetails.item.status)}
-                      <span className="ml-2 capitalize">{showItemDetails.item.status}</span>
-                    </div>
-                  </div>
-                  
-                  <div>
-                    <h4 className="text-sm font-medium text-dim mb-2">ASSIGNED TO</h4>
-                    <div className="flex items-center">
-                      <User className="w-4 h-4 text-dim mr-2" />
-                      <span>{showItemDetails.item.assignedTo}</span>
-                    </div>
-                  </div>
-                  
-                  {showItemDetails.item.submittedDate && (
-                    <div>
-                      <h4 className="text-sm font-medium text-dim mb-2">SUBMITTED</h4>
-                      <div>
-                        {new Date(showItemDetails.item.submittedDate).toLocaleDateString()}
+                  <p className="text-[10px] font-semibold text-dim uppercase tracking-wide mb-1.5">History</p>
+                  <div className="space-y-1.5">
+                    {detailItem.history.map((h, i) => (
+                      <div key={i} className="flex items-start gap-2 text-xs">
+                        <span className={`w-1.5 h-1.5 rounded-full mt-1.5 ${columnFor(h.status).color.replace('text-', 'bg-')}`} />
+                        <div>
+                          <span className="text-ink">{h.by}</span>
+                          <span className="text-dim"> → {columnFor(h.status).title}</span>
+                          <span className="text-dim"> · {new Date(h.at).toLocaleString()}</span>
+                          {h.reason && <p className="text-danger text-[10px] mt-0.5">{h.reason}</p>}
+                        </div>
                       </div>
-                    </div>
-                  )}
-                  
-                  {showItemDetails.item.dueDate && (
-                    <div>
-                      <h4 className="text-sm font-medium text-dim mb-2">DUE DATE</h4>
-                      <div className={new Date(showItemDetails.item.dueDate) < new Date() ? 'text-danger' : ''}>
-                        {new Date(showItemDetails.item.dueDate).toLocaleDateString()}
-                      </div>
-                    </div>
-                  )}
+                    ))}
+                  </div>
                 </div>
-                
-                {isEditing && (
-                  <div>
-                    <h4 className="text-sm font-medium text-dim mb-3">ACTIONS</h4>
-                    <div className="flex flex-wrap gap-2">
-                      {columnOrder
-                        .filter(id => id !== showItemDetails.item.status) // Don't show current status
-                        .map((status) => (
-                          <button
-                            key={status}
-                            onClick={() => {
-                              moveItem(showItemDetails.item.id, showItemDetails.item.status, status);
-                              closeModals();
-                            }}
-                            className="px-3 py-1.5 text-xs bg-info/10 text-info rounded-md hover:bg-info/10 flex items-center"
-                          >
-                            Move to {status.charAt(0).toUpperCase() + status.slice(1)}
-                            <ChevronRight className="w-3.5 h-3.5 ml-1" />
-                          </button>
-                        ))}
-                        
+              )}
+            </div>
+
+            {/* Decision actions — only the stage's approver role sees them */}
+            {nextStatus(detailItem.status) && canDecide(detailItem.status) && (
+              <div className="p-4 bg-canvas border-t space-y-2 rounded-b-lg">
+                {showRejectInput ? (
+                  <div className="space-y-2">
+                    <textarea
+                      value={rejectReason}
+                      onChange={(e) => setRejectReason(e.target.value)}
+                      placeholder="Reason for rejection (required)"
+                      rows={2}
+                      className="w-full p-2 border rounded text-sm focus:ring-2 focus:ring-danger/20 focus:border-danger/30 outline-none"
+                      autoFocus
+                    />
+                    <div className="flex gap-2 justify-end">
                       <button
-                        onClick={() => {
-                          if (window.confirm('Are you sure you want to delete this item?')) {
-                            handleDeleteItem(showItemDetails.item.status, showItemDetails.item.id);
-                            closeModals();
-                          }
-                        }}
-                        className="px-3 py-1.5 text-xs bg-danger/10 text-danger rounded-md hover:bg-danger/10 flex items-center"
+                        onClick={() => { setShowRejectInput(false); setRejectReason(''); }}
+                        className="px-3 py-1.5 text-xs text-dim hover:bg-surface-hover rounded"
                       >
-                        <Trash2 className="w-3.5 h-3.5 mr-1" />
-                        Delete
+                        Back
+                      </button>
+                      <button
+                        onClick={() => { decide(detailItem, false, rejectReason.trim()); setDetailItem(null); }}
+                        disabled={!rejectReason.trim()}
+                        className="px-3 py-1.5 text-xs bg-danger text-white rounded hover:opacity-90 disabled:opacity-40"
+                      >
+                        Confirm Reject
                       </button>
                     </div>
                   </div>
+                ) : (
+                  <div className="flex gap-2 justify-end">
+                    <button
+                      onClick={() => setShowRejectInput(true)}
+                      className="px-4 py-2 text-sm border border-danger text-danger rounded hover:bg-danger/10"
+                    >
+                      Reject
+                    </button>
+                    <button
+                      onClick={() => { decide(detailItem, true); setDetailItem(null); }}
+                      className="px-4 py-2 text-sm bg-success text-white rounded hover:opacity-90 flex items-center gap-1"
+                    >
+                      <Check className="w-4 h-4" />
+                      {detailItem.status === 'submitted' || detailItem.status === 'sent_to_pm'
+                        ? 'Approve (PM)'
+                        : 'Approve (Client)'}
+                    </button>
+                  </div>
                 )}
               </div>
-            </div>
-            
-            <div className="p-4 bg-canvas border-t flex justify-end">
-              <button
-                onClick={closeModals}
-                className="px-4 py-2 bg-info text-white text-sm rounded hover:bg-info"
-              >
-                Close
-              </button>
-            </div>
+            )}
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );

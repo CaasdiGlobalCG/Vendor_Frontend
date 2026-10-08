@@ -8,7 +8,7 @@
 //          ../../../assets/profileplaceholder.jpg. Local DetailRow helper.
 // ============================================================
 import React from "react";
-import { useState, useEffect, useContext } from "react";
+import { useState, useEffect, useContext, useRef } from "react";
 import {
     Eye, Download,
     Upload, // Added Upload icon for certification uploads
@@ -20,6 +20,7 @@ import { UserContext } from "../../../context/UserContext";
 import profileplaceholder from '../../../assets/profileplaceholder.jpg' // Adjust the path as necessary
 import config from '../../../config/env';
 import VendorTabPanel from '../../../components/layout/VendorTabPanel';
+import { getMissingCompanyFields, downloadCompanyDetailsPdf } from '../../../utils/companyDetails';
 
 /**
  * Company view for the consolidated Portfolio page.
@@ -81,6 +82,7 @@ export default function CompanyView({ editProfileSignal = 0 }) {
   const [saving, setSaving] = useState(false);
   const [companyError, setCompanyError] = useState(null);
   const [companySuccessMessage, setCompanySuccessMessage] = useState("");
+  const [downloadMessage, setDownloadMessage] = useState("");
   
   // First useEffect just to log context values
   useEffect(() => {
@@ -138,12 +140,15 @@ export default function CompanyView({ editProfileSignal = 0 }) {
           
           // Update the vendor data in context
           setVendorData({
+            vendorId: vendor.vendorId || vendor.id || vendorData?.vendorId,
             vendorDetails: vendor.vendorDetails || {},
             companyDetails: vendor.companyDetails || {},
             serviceProductDetails: vendor.serviceProductDetails || {},
             bankDetails: vendor.bankDetails || {},
             complianceCertifications: vendor.complianceCertifications || {},
-            additionalDetails: vendor.additionalDetails || {}
+            additionalDetails: vendor.additionalDetails || {},
+            status: vendor.status,
+            profileImage: vendor.profileImage || null
           });
           
           // Set company form data
@@ -269,9 +274,15 @@ export default function CompanyView({ editProfileSignal = 0 }) {
 
 // The profile card now lives in the PortfolioPage shell. Its Edit button bumps
 // `editProfileSignal`; this opens the view's own Edit Profile modal via the handler that
-// already existed here, so no modal logic moved.
+// already existed here, so no modal logic moved. The ref seeds to the current
+// value on mount so a signal consumed by a previous view doesn't re-open the
+// modal when the user switches tabs.
+const lastEditSignalRef = useRef(editProfileSignal);
 useEffect(() => {
-    if (editProfileSignal > 0) handleProfileEditClick();
+    if (editProfileSignal > lastEditSignalRef.current) {
+        lastEditSignalRef.current = editProfileSignal;
+        handleProfileEditClick();
+    }
 }, [editProfileSignal]);
 
 const handleProfileCloseModal = () => {
@@ -387,7 +398,8 @@ const handleProfileSave = async () => {
         setVendorData({
             ...vendorData,
             vendorDetails: vendorUpdateData.vendorDetails,
-            companyDetails: vendorUpdateData.companyDetails
+            companyDetails: vendorUpdateData.companyDetails,
+            ...(result?.data?.profileImage ? { profileImage: result.data.profileImage } : {})
         });
         
         // Update profile image if a new one was uploaded
@@ -575,6 +587,23 @@ const handleCompanySave = async (e) => {
     }
 };
 
+// Download company details as a PDF — only allowed once every field shown in
+// the panel is filled; otherwise the vendor is told to complete them first.
+const handleDownloadCompanyDetails = () => {
+    const missing = getMissingCompanyFields(vendorData.companyDetails);
+    if (missing.length > 0) {
+        setDownloadMessage(`Please fill the company details first — missing: ${missing.join(', ')}`);
+        return;
+    }
+    try {
+        downloadCompanyDetailsPdf(vendorData);
+        setDownloadMessage("");
+    } catch (err) {
+        console.error("Error downloading company details:", err);
+        setDownloadMessage("Failed to download company details. Please try again.");
+    }
+};
+
 
   return (
     <>
@@ -584,7 +613,11 @@ const handleCompanySave = async (e) => {
         description="Manage the business information shown across your vendor portfolio."
         actions={(
           <div className="flex w-full items-center justify-between gap-2 sm:w-auto sm:justify-end">
-            <button className="rounded-full p-2 transition-colors hover:bg-surface-hover">
+            <button
+              onClick={handleDownloadCompanyDetails}
+              className="rounded-full p-2 transition-colors hover:bg-surface-hover"
+              title="Download company details"
+            >
               <Download className="w-5 h-5 text-dim" />
             </button>
             <button 
@@ -597,6 +630,11 @@ const handleCompanySave = async (e) => {
         )}
         bodyClassName="p-4 sm:p-6"
       >
+          {downloadMessage && (
+            <div className="mb-4 rounded border border-danger bg-danger/10 px-4 py-3 text-sm text-danger">
+              {downloadMessage}
+            </div>
+          )}
           <div className="space-y-4 text-sm">
             <DetailRow 
               title="Industry Type" 
