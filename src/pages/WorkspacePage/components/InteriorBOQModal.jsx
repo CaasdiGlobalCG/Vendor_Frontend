@@ -1,46 +1,36 @@
 import React, { useMemo, useState } from 'react';
 import { X, ArrowLeft, ArrowRight, Plus, Trash2, FileDigit, FileText, Minus } from 'lucide-react';
 import GstRateOption from './GstRateOption';
+import { UNIT_DIMS, computeItemQty, computeGrossQty, computeDeduction, measurementLabel } from './CivilBOQModal';
 
 /**
- * Civil Work BOQ wizard — sectioned, measurement-driven BOQ.
+ * Interior Fit-Out BOQ wizard — sectioned, measurement-driven BOQ.
  *
  * Follows the shared BOQ contract (see CUSTOM_BOQ_FLOW.md): emits a
- * 'custom-boq' node whose customBOQData carries `variant: 'civil'`,
+ * 'custom-boq' node whose customBOQData carries `variant: 'interior'`,
  * `sections[]`, and a flattened `items[]` (each item keeps a `section` label
  * and a globally-unique `itemNo` so finance item-wise commission keys stay
- * unchanged).
+ * unchanged). Same lifecycle and renderer as Custom/Civil BOQ.
  */
 
-// Fixed civil sections — vendors can also append custom sections below these.
-const CIVIL_SECTIONS = [
-  'Earthwork & Excavation',
-  'PCC & RCC Work',
-  'Masonry Work',
-  'Plastering & Pointing',
-  'Flooring & Tiling',
-  'Doors & Windows',
-  'Waterproofing',
-  'Plumbing Works',
-  'Electrical Works',
-  'Painting & Finishing',
+// Fixed interior sections — vendors can also append custom sections below these.
+const INTERIOR_SECTIONS = [
+  'Demolition & Site Prep',
+  'Partitions & Drywall',
+  'Flooring & Skirting',
+  'False Ceiling & Grid',
+  'Doors & Joinery',
+  'Painting & Wall Finishes',
+  'Electrical & Fixtures',
+  'HVAC & Ventilation',
+  'Modular Furniture & Joinery',
+  'Loose Furniture & Décor',
+  'Washrooms & Plumbing',
+  'Branding & Signage',
   'Miscellaneous',
 ];
 
-// Per-unit measurement: which dimensions feed qty (qty = Nos × dims)
-export const UNIT_DIMS = {
-  'Cum': ['length', 'breadth', 'depth'],   // Nos × L × B × D
-  'Cft': ['length', 'breadth', 'depth'],
-  'Sq.m': ['length', 'breadth'],           // Nos × L × B
-  'Sq.ft': ['length', 'breadth'],
-  'R.ft': ['length'],                      // Nos × L
-  'Mtr': ['length'],
-  // Dimensionless units take a direct qty
-  'Nos': [], 'Pt': [], 'TR': [], 'Kg': [], 'Ton': [], 'Ltr': [], 'Bag': [],
-  'Day': [], 'Month': [], 'Set': [], 'LS': [],
-};
-
-const CIVIL_UNITS = Object.keys(UNIT_DIMS);
+const INTERIOR_UNITS = Object.keys(UNIT_DIMS);
 
 const DIM_LABEL = { length: 'L', breadth: 'B', depth: 'D' };
 
@@ -54,7 +44,7 @@ const makeItem = (section) => ({
   section,
   name: '',
   description: '',
-  unit: 'Cum',
+  unit: 'Sq.ft',
   nos: '',
   length: '',
   breadth: '',
@@ -66,54 +56,17 @@ const makeItem = (section) => ({
   deduction: { label: 'Openings', nos: '', length: '', breadth: '', depth: '' },
 });
 
-// Gross measured qty — before deductions
-export const computeGrossQty = (item) => {
-  const dims = UNIT_DIMS[item.unit] || [];
-  if (!dims.length) return parseFloat(item.qty) || 0;
-  const nos = parseFloat(item.nos) || 1;
-  return dims.reduce((acc, d) => acc * (parseFloat(item[d]) || 0), nos);
-};
-
-// Deduction qty — same dims as the item's unit (openings for areas,
-// voids for volumes); 0 when unused or the unit is dimensionless
-export const computeDeduction = (item) => {
-  const dims = UNIT_DIMS[item.unit] || [];
-  const d = item.deduction;
-  if (!dims.length || !d) return 0;
-  const nos = parseFloat(d.nos) || 0;
-  if (!nos) return 0;
-  return dims.reduce((acc, dim) => acc * (parseFloat(d[dim]) || 0), nos);
-};
-
-// Net payable qty (IS 1200): gross measured minus deductions
-export const computeItemQty = (item) =>
-  Math.max(0, computeGrossQty(item) - computeDeduction(item));
-
-const fmtDim = (p) => (Number.isInteger(p) ? p : p.toFixed(2));
-
-export const measurementLabel = (item) => {
-  const dims = UNIT_DIMS[item.unit] || [];
-  if (!dims.length) return null;
-  const parts = [parseFloat(item.nos) || 1, ...dims.map((d) => parseFloat(item[d]) || 0)];
-  let label = parts.map(fmtDim).join(' × ');
-  if (computeDeduction(item) > 0) {
-    const dp = [parseFloat(item.deduction.nos) || 0, ...dims.map((d) => parseFloat(item.deduction[d]) || 0)];
-    label += ` − ${dp.map(fmtDim).join(' × ')}`;
-  }
-  return label;
-};
-
 const itemAmount = (item) => computeItemQty(item) * (parseFloat(item.rate) || 0);
 
 const inputCls =
   'w-full rounded border border-line bg-surface px-1.5 py-1.5 text-xs outline-none placeholder:text-dim focus:border-info';
 
-const CivilBOQModal = ({ isOpen, onClose }) => {
+const InteriorBOQModal = ({ isOpen, onClose }) => {
   const [step, setStep] = useState(0);
   const [boqName, setBoqName] = useState('');
   const [boqDescription, setBoqDescription] = useState('');
   // Flat item list; each item carries its `section` label
-  const [items, setItems] = useState([makeItem(CIVIL_SECTIONS[0])]);
+  const [items, setItems] = useState([makeItem(INTERIOR_SECTIONS[0])]);
   const [customSections, setCustomSections] = useState([]);
   const [newSectionName, setNewSectionName] = useState('');
   const [notes, setNotes] = useState('');
@@ -123,7 +76,7 @@ const CivilBOQModal = ({ isOpen, onClose }) => {
 
   // Fixed sections + any custom sections the vendor adds
   const allSections = useMemo(
-    () => [...CIVIL_SECTIONS, ...customSections],
+    () => [...INTERIOR_SECTIONS, ...customSections],
     [customSections]
   );
 
@@ -183,7 +136,7 @@ const CivilBOQModal = ({ isOpen, onClose }) => {
     setCustomSections((prev) => prev.filter((s) => s !== name));
     setItems((prev) => {
       const remaining = prev.filter((item) => item.section !== name);
-      return remaining.length ? remaining : [makeItem(CIVIL_SECTIONS[0])];
+      return remaining.length ? remaining : [makeItem(INTERIOR_SECTIONS[0])];
     });
   };
 
@@ -191,7 +144,7 @@ const CivilBOQModal = ({ isOpen, onClose }) => {
     setStep(0);
     setBoqName('');
     setBoqDescription('');
-    setItems([makeItem(CIVIL_SECTIONS[0])]);
+    setItems([makeItem(INTERIOR_SECTIONS[0])]);
     setCustomSections([]);
     setNewSectionName('');
     setNotes('');
@@ -201,7 +154,7 @@ const CivilBOQModal = ({ isOpen, onClose }) => {
   };
 
   const handleGenerate = () => {
-    const name = boqName.trim() || 'Civil Work BOQ';
+    const name = boqName.trim() || 'Interior Fit-Out BOQ';
     const filled = items.filter((item) => item.name.trim().length > 0);
 
     // Flatten in section order with a globally-unique itemNo
@@ -247,10 +200,10 @@ const CivilBOQModal = ({ isOpen, onClose }) => {
     });
 
     const customBOQData = {
-      variant: 'civil',
+      variant: 'interior',
       name,
       description: boqDescription.trim(),
-      purpose: 'Civil Works',
+      purpose: 'Interior Fit-Out',
       sections: usedSections,
       items: boqItems,
       notes: notes.trim(),
@@ -313,7 +266,7 @@ const CivilBOQModal = ({ isOpen, onClose }) => {
             onChange={(e) => updateItem(item.id, 'unit', e.target.value)}
             className={inputCls}
           >
-            {CIVIL_UNITS.map((unit) => (
+            {INTERIOR_UNITS.map((unit) => (
               <option key={unit} value={unit}>
                 {unit}
               </option>
@@ -490,11 +443,11 @@ const CivilBOQModal = ({ isOpen, onClose }) => {
         {/* Header */}
         <div className="flex justify-between items-center px-4 py-3 border-b border-line">
           <div className="flex items-center gap-2">
-            <div className="p-1.5 rounded-lg bg-amber-100 text-amber-800">
+            <div className="p-1.5 rounded-lg bg-violet-100 text-violet-800">
               <FileDigit className="w-4 h-4" />
             </div>
             <div>
-              <h2 className="text-sm font-semibold text-ink">Civil Work BOQ</h2>
+              <h2 className="text-sm font-semibold text-ink">Interior Fit-Out BOQ</h2>
               <p className="text-[11px] text-dim">
                 Step {step + 1} of {STEPS.length} — {STEPS[step]}
               </p>
@@ -548,7 +501,7 @@ const CivilBOQModal = ({ isOpen, onClose }) => {
                   type="text"
                   value={boqName}
                   onChange={(e) => setBoqName(e.target.value)}
-                  placeholder="e.g. Villa Renovation – Civil Works BOQ"
+                  placeholder="e.g. Office Fit-Out – Interior BOQ"
                   className="w-full rounded-lg border border-line bg-surface px-3 py-2 text-xs text-ink outline-none placeholder:text-dim focus:border-info focus:ring-1 focus:ring-info/30"
                   autoFocus
                 />
@@ -559,13 +512,13 @@ const CivilBOQModal = ({ isOpen, onClose }) => {
                   rows={3}
                   value={boqDescription}
                   onChange={(e) => setBoqDescription(e.target.value)}
-                  placeholder="Scope of civil works, site references, inclusions…"
+                  placeholder="Scope of fit-out works, space references, inclusions…"
                   className="w-full rounded-lg border border-line bg-surface px-3 py-2 text-xs text-ink outline-none placeholder:text-dim focus:border-info focus:ring-1 focus:ring-info/30 resize-none"
                 />
               </div>
               <div className="rounded-lg border border-line bg-canvas p-3 text-[11px] text-dim">
-                Fixed civil sections are included automatically — you'll fill items under
-                Earthwork, PCC/RCC, Masonry, Plastering, Flooring and more on the next step,
+                Fixed interior sections are included automatically — you'll fill items under
+                Partitions, Flooring, Ceiling, Joinery, Electrical and more on the next step,
                 and you can add your own sections if needed.
               </div>
             </div>
@@ -581,9 +534,9 @@ const CivilBOQModal = ({ isOpen, onClose }) => {
               />
               <p className="text-[11px] text-dim">
                 Qty auto-computes from measurements per IS 1200 mensuration —{' '}
-                <span className="font-medium">Cum/Cft: Nos×L×B×D</span>,{' '}
                 <span className="font-medium">Sq.m/Sq.ft: Nos×L×B</span>,{' '}
-                <span className="font-medium">R.ft/Mtr: Nos×L</span>, other units take a direct qty.
+                <span className="font-medium">R.ft/Mtr: Nos×L</span>,{' '}
+                <span className="font-medium">Cum/Cft: Nos×L×B×D</span>, other units take a direct qty.
               </p>
 
               <div className="overflow-x-auto border border-line rounded-lg">
@@ -687,7 +640,7 @@ const CivilBOQModal = ({ isOpen, onClose }) => {
                             </span>
                           )}
                         </td>
-                        <td className="px-2 py-2 text-right text-xs font-bold text-ink whitespace-nowrap">
+                        <td className="px-2 py-2 text-right text-xs font-bold text-ink">
                           {formatINR(grandTotal)}
                         </td>
                         <td />
@@ -697,14 +650,14 @@ const CivilBOQModal = ({ isOpen, onClose }) => {
                 </table>
               </div>
 
-              {/* Custom section — vendor can extend beyond the fixed civil sections */}
+              {/* Custom section — vendor can extend beyond the fixed interior sections */}
               <div className="flex items-center gap-2">
                 <input
                   type="text"
                   value={newSectionName}
                   onChange={(e) => setNewSectionName(e.target.value)}
                   onKeyDown={(e) => e.key === 'Enter' && addCustomSection()}
-                  placeholder="New section name (e.g. Demolition, Site Clearance)"
+                  placeholder="New section name (e.g. Glass Partitions, Fire Alarm)"
                   className="w-64 rounded border border-line bg-surface px-2 py-1.5 text-xs outline-none placeholder:text-dim focus:border-info"
                 />
                 <button
@@ -737,11 +690,11 @@ const CivilBOQModal = ({ isOpen, onClose }) => {
               <div className="rounded-lg border border-line bg-canvas p-3 text-xs space-y-1.5">
                 <div className="flex justify-between">
                   <span className="text-dim">BOQ Name</span>
-                  <span className="font-medium text-ink">{boqName.trim() || 'Civil Work BOQ'}</span>
+                  <span className="font-medium text-ink">{boqName.trim() || 'Interior Fit-Out BOQ'}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-dim">Purpose</span>
-                  <span className="font-medium text-ink">Civil Works</span>
+                  <span className="font-medium text-ink">Interior Fit-Out</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-dim">Sections</span>
@@ -830,4 +783,4 @@ const CivilBOQModal = ({ isOpen, onClose }) => {
   );
 };
 
-export default CivilBOQModal;
+export default InteriorBOQModal;

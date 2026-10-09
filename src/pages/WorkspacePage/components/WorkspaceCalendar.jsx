@@ -1,4 +1,5 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import {
   X,
   ChevronLeft,
@@ -13,6 +14,8 @@ import {
   EyeOff,
   MapPin,
   Link2,
+  Info,
+  Pencil,
 } from 'lucide-react';
 
 const WEEKDAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
@@ -59,11 +62,25 @@ const occursOn = (e, dateKey) => {
   if (e.date === dateKey) return true;
   const r = e.recurrence;
   if (!r || r === 'none' || dateKey < e.date) return false;
+
+  // Recurrence end: { type:'on', date } | { type:'after', count }
+  const end = e.recurrenceEnd;
+  if (end?.type === 'on' && end.date && dateKey > end.date) return false;
+
   const [sy, sm, sd] = String(e.date).slice(0, 10).split('-').map(Number);
   const [y, m, d] = dateKey.split('-').map(Number);
   const diffDays = Math.round(
     (Date.UTC(y, m - 1, d) - Date.UTC(sy, sm - 1, sd)) / 86400000
   );
+  // Nth occurrence (1-based) — needed for "ends after N occurrences"
+  const nth = {
+    daily: diffDays + 1,
+    weekly: Math.floor(diffDays / 7) + 1,
+    monthly: (m - sm) + 12 * (y - sy) + 1,
+    yearly: y - sy + 1,
+  }[r];
+  if (end?.type === 'after' && end.count && nth > end.count) return false;
+
   switch (r) {
     case 'daily': return diffDays >= 0;
     case 'weekly': return diffDays % 7 === 0;
@@ -71,6 +88,16 @@ const occursOn = (e, dateKey) => {
     case 'yearly': return d === sd && m === sm;
     default: return false;
   }
+};
+
+// "until 15 Nov" / "for 10×" — short end label for detail views
+const recurrenceEndLabel = (e) => {
+  const end = e?.recurrenceEnd;
+  if (!end) return '';
+  if (end.type === 'on' && end.date)
+    return ` · until ${new Date(`${end.date}T00:00:00`).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}`;
+  if (end.type === 'after' && end.count) return ` · ${end.count}×`;
+  return '';
 };
 
 const fmtTime = (t) => {
@@ -124,12 +151,30 @@ const WorkspaceCalendar = ({
     meetingLink: '',
     remindersMinutes: [30],
     busyStatus: 'busy',
+    recurrenceEndType: 'never',   // 'never' | 'on' | 'after'
+    recurrenceEndDate: '',
+    recurrenceEndCount: 10,
     notes: '',
     color: KINDS.event.color,
     visibility: 'shared',
     visibleToIds: [],
   });
   const [form, setForm] = useState(emptyForm);
+  const [dayPopup, setDayPopup] = useState(null); // { key, x, y } — anchored day-details popup
+  const [editingId, setEditingId] = useState(null); // event id when editing
+  const scrollCooldownRef = useRef(0); // debounce month-scroll
+
+  // Viewer's normalised identity set + PM-side flag — shared by the
+  // visibility filter and the "who may edit" check.
+  const normId = (s) => String(s || '').trim().toLowerCase();
+  const myNormIds = useMemo(() =>
+    (myIdsProp?.length ? myIdsProp : myId ? [myId] : []).map(normId).filter(Boolean),
+  [myIdsProp, myId]); // eslint-disable-line react-hooks/exhaustive-deps
+  const isPMSide = ['pm', 'cas', 'admin', 'project_manager', 'projectmanager']
+    .includes(String(myRole || '').toLowerCase());
+  const canEditItem = (e) =>
+    !e.readonly &&
+    ((e.createdById && myNormIds.includes(normId(e.createdById))) || isPMSide);
 
   useEffect(() => {
     if (isOpen) {
@@ -154,13 +199,15 @@ const WorkspaceCalendar = ({
     return out;
   }, [cursor]);
 
-  // Deduped collaborator list for the "who can see" picker — same identity
-  // key used by the task-card assignee dropdown (vendorId || userId || email).
+  // Deduped collaborator list for the "who can see" picker. `ids` carries
+  // every plausible identity (vendorId/userId/pmId/clientId/email) so the
+  // selected-visibility check hits whichever one the viewer resolves as.
   const collabList = useMemo(() => {
     const seen = new Set();
     return (collaborators || [])
       .map((c) => ({
-        id: c.vendorId || c.userId || c.pmId || c.email,
+        id: c.vendorId || c.userId || c.pmId || c.clientId || c.email,
+        ids: [c.vendorId, c.userId, c.pmId, c.clientId, c.id, c.email].filter(Boolean),
         name: c.name || c.email || 'Unknown',
       }))
       .filter((c) => c.id && !seen.has(c.id) && seen.add(c.id));
@@ -168,23 +215,26 @@ const WorkspaceCalendar = ({
 
   // Visibility: 'shared' → everyone; 'personal' → creator only;
   // 'selected' → creator + chosen people. The creator always sees their own
-  // items. If the viewer's identity isn't resolvable, don't hide anything
-  // (same as pre-visibility behaviour).
+  // items. IDs are compared case-insensitively (emails collide otherwise).
+  // 'selected' is enforced strictly — if the viewer isn't in visibleToIds
+  // they don't see it, even when identity resolution is partial. The
+  // legacy fail-open (unresolvable viewer AND unresolvable creator) only
+  // applies to 'personal' items so old data doesn't vanish.
   const visibleEvents = useMemo(() => {
-    const ids = myIdsProp?.length ? myIdsProp : (myId ? [myId] : []);
-    // PM-side roles oversee the workspace — they see every event, invited or not
-    const isPMSide = ['pm', 'cas', 'admin', 'project_manager', 'projectmanager']
-      .includes(String(myRole || '').toLowerCase());
     return (events || []).filter((e) => {
       const v = e?.visibility || 'shared';
-      if (isPMSide) return true;
       if (v === 'shared') return true;
-      if (!e.createdById || ids.length === 0) return true;
-      if (ids.includes(e.createdById)) return true;
-      if (v === 'selected') return (e.visibleToIds || []).some((vid) => ids.includes(vid));
-      return false; // personal + not mine
+      const creatorOk = e.createdById && myNormIds.includes(normId(e.createdById));
+      if (v === 'selected') {
+        const list = (e.visibleToIds || []).map(normId).filter(Boolean);
+        return Boolean(creatorOk) || list.some((vid) => myNormIds.includes(vid));
+      }
+      // personal
+      if (creatorOk) return true;
+      if (!e.createdById || myNormIds.length === 0) return true;
+      return false;
     });
-  }, [events, myId, myIdsProp, myRole]);
+  }, [events, myNormIds]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const eventsByDay = useMemo(() => {
     const map = {};
@@ -213,6 +263,7 @@ const WorkspaceCalendar = ({
   };
 
   const openCreate = (dateKey, kind = 'event') => {
+    setEditingId(null);
     setForm({
       ...emptyForm(),
       kind,
@@ -222,11 +273,74 @@ const WorkspaceCalendar = ({
     setShowCreate(true);
   };
 
+  // Load an existing item into the create form for editing — creator (+ PM-side)
+  const openEdit = (e) => {
+    setForm({
+      kind: e.kind || 'event',
+      title: e.title || '',
+      date: e.date || '',
+      startTime: e.startTime || '',
+      endTime: e.endTime || '',
+      allDay: !!e.allDay,
+      recurrence: e.recurrence || 'none',
+      recurrenceEndType: e.recurrenceEnd?.type || 'never',
+      recurrenceEndDate: e.recurrenceEnd?.date || '',
+      recurrenceEndCount: e.recurrenceEnd?.count || 10,
+      location: e.location || '',
+      meetingLink: e.meetingLink || '',
+      remindersMinutes: e.remindersMinutes || [],
+      busyStatus: e.busyStatus || 'busy',
+      notes: e.notes || '',
+      color: e.color || KINDS[e.kind]?.color || KINDS.event.color,
+      visibility: e.visibility || 'shared',
+      visibleToIds: e.visibleToIds || [],
+    });
+    setEditingId(e.id);
+    setDayPopup(null);
+    setShowCreate(true);
+  };
+
   const setKind = (kind) =>
     setForm((f) => ({ ...f, kind, color: KINDS[kind].color }));
 
   const submitCreate = () => {
     if (!form.title.trim() || !form.date) return;
+
+    if (editingId) {
+      // Edit — keep the original identity fields, update the rest
+      const original = (events || []).find((e) => e.id === editingId) || {};
+      onUpdateEvent?.({
+        ...original,
+        kind: form.kind,
+        title: form.title.trim(),
+        date: form.date,
+        allDay: form.kind === 'event' ? form.allDay : false,
+        startTime: form.kind === 'event' && !form.allDay ? form.startTime || null : null,
+        endTime: form.kind === 'event' && !form.allDay ? form.endTime || null : null,
+        recurrence: form.recurrence && form.recurrence !== 'none' ? form.recurrence : undefined,
+        recurrenceEnd:
+          form.recurrence !== 'none' && form.recurrenceEndType !== 'never'
+            ? {
+                type: form.recurrenceEndType,
+                date: form.recurrenceEndType === 'on' ? form.recurrenceEndDate || undefined : undefined,
+                count: form.recurrenceEndType === 'after' ? Number(form.recurrenceEndCount) || undefined : undefined,
+              }
+            : undefined,
+        location: form.location.trim() || undefined,
+        meetingLink: form.meetingLink.trim() || undefined,
+        remindersMinutes: form.remindersMinutes.length ? form.remindersMinutes : undefined,
+        busyStatus: form.kind === 'event' ? form.busyStatus : undefined,
+        notes: form.notes.trim(),
+        color: form.color || KINDS[form.kind].color,
+        visibility: form.visibility || 'shared',
+        visibleToIds: form.visibility === 'selected' ? form.visibleToIds : undefined,
+        updatedAt: new Date().toISOString(),
+      });
+      setEditingId(null);
+      setShowCreate(false);
+      return;
+    }
+
     onAddEvent?.({
       id: `cal-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
       kind: form.kind,
@@ -236,6 +350,14 @@ const WorkspaceCalendar = ({
       startTime: form.kind === 'event' && !form.allDay ? form.startTime || null : null,
       endTime: form.kind === 'event' && !form.allDay ? form.endTime || null : null,
       recurrence: form.recurrence && form.recurrence !== 'none' ? form.recurrence : undefined,
+      recurrenceEnd:
+        form.recurrence !== 'none' && form.recurrenceEndType !== 'never'
+          ? {
+              type: form.recurrenceEndType,
+              date: form.recurrenceEndType === 'on' ? form.recurrenceEndDate || undefined : undefined,
+              count: form.recurrenceEndType === 'after' ? Number(form.recurrenceEndCount) || undefined : undefined,
+            }
+          : undefined,
       location: form.location.trim() || undefined,
       meetingLink: form.meetingLink.trim() || undefined,
       remindersMinutes: form.remindersMinutes.length ? form.remindersMinutes : undefined,
@@ -346,7 +468,25 @@ const WorkspaceCalendar = ({
                 </div>
               ))}
             </div>
-            <div className="grid grid-cols-7 flex-1 auto-rows-fr overflow-y-auto">
+            {/* Scroll wheel on the grid moves through months — like Google
+                Calendar's continuous scroll. Cooldown so one flick = one
+                month, not ten. */}
+            <div
+              className="grid grid-cols-7 flex-1 auto-rows-fr overflow-y-auto"
+              onWheel={(e) => {
+                const now = Date.now();
+                if (now - scrollCooldownRef.current < 500) return;
+                // Only hijack scrolling when the grid can't scroll further
+                // that direction — otherwise let normal overflow scroll run
+                const el = e.currentTarget;
+                const atTop = el.scrollTop <= 0;
+                const atBottom = el.scrollTop + el.clientHeight >= el.scrollHeight - 1;
+                if ((e.deltaY > 0 && atBottom) || (e.deltaY < 0 && atTop)) {
+                  scrollCooldownRef.current = now;
+                  shiftMonth(e.deltaY > 0 ? 1 : -1);
+                }
+              }}
+            >
               {weeks.flat().map((d) => {
                 const key = dayKey(d);
                 const inMonth = d.getMonth() === cursor.getMonth();
@@ -357,12 +497,23 @@ const WorkspaceCalendar = ({
                   <button
                     key={key}
                     type="button"
-                    onClick={() => setSelectedKey(key)}
+                    onClick={(e) => {
+                      setSelectedKey(key);
+                      if (!dayEvents.length) {
+                        // Empty day → straight to the create form
+                        if (canEdit) openCreate(key);
+                      } else {
+                        // Day with items → pop up their full details,
+                        // anchored just below the cell
+                        const r = e.currentTarget.getBoundingClientRect();
+                        setDayPopup({ key, x: r.left + r.width / 2, y: r.bottom + 6 });
+                      }
+                    }}
                     onDoubleClick={() => canEdit && openCreate(key)}
                     className={`relative flex flex-col items-center px-2 py-2 border-b border-r border-line text-left transition-colors min-h-[96px] ${
                       isSelected ? 'bg-info/5' : 'hover:bg-canvas'
                     } ${!inMonth ? 'opacity-40' : ''}`}
-                    title={canEdit ? 'Click to select · double-click to add an item' : undefined}
+                    title={canEdit ? 'Click an empty day to add an item' : undefined}
                   >
                     <span
                       className={`w-7 h-7 flex items-center justify-center rounded-full text-xs font-medium ${
@@ -406,7 +557,7 @@ const WorkspaceCalendar = ({
             {showCreate ? (
               <>
                 <p className="text-[11px] font-semibold text-dim uppercase tracking-wide">
-                  New {KINDS[form.kind].label}
+                  {editingId ? 'Edit' : 'New'} {KINDS[form.kind].label}
                 </p>
 
                 {/* Kind selector — Event / Task / Reminder (Google style) */}
@@ -481,6 +632,42 @@ const WorkspaceCalendar = ({
                       <option key={v} value={v}>{label}</option>
                     ))}
                   </select>
+
+                  {/* Recurrence end — only for repeating items, like Google
+                      Calendar's "Ends: never / on date / after N" */}
+                  {form.recurrence !== 'none' && (
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-[10px] font-semibold text-dim uppercase tracking-wide flex-shrink-0">Ends</span>
+                      <select
+                        value={form.recurrenceEndType}
+                        onChange={(e) => setForm((f) => ({ ...f, recurrenceEndType: e.target.value }))}
+                        className={`${inputCls} flex-1`}
+                      >
+                        <option value="never">Never</option>
+                        <option value="on">On date</option>
+                        <option value="after">After occurrences</option>
+                      </select>
+                      {form.recurrenceEndType === 'on' && (
+                        <input
+                          type="date"
+                          value={form.recurrenceEndDate}
+                          min={form.date || undefined}
+                          onChange={(e) => setForm((f) => ({ ...f, recurrenceEndDate: e.target.value }))}
+                          className={`${inputCls} w-32 flex-shrink-0`}
+                        />
+                      )}
+                      {form.recurrenceEndType === 'after' && (
+                        <input
+                          type="number"
+                          min={1}
+                          value={form.recurrenceEndCount}
+                          onChange={(e) => setForm((f) => ({ ...f, recurrenceEndCount: e.target.value }))}
+                          className={`${inputCls} w-16 flex-shrink-0`}
+                          title="Number of occurrences"
+                        />
+                      )}
+                    </div>
+                  )}
 
                   {/* Notification offsets — "notify me N min before" like
                       Google Calendar; fires a workspace bell notification */}
@@ -617,11 +804,14 @@ const WorkspaceCalendar = ({
                               type="checkbox"
                               checked={form.visibleToIds.includes(c.id)}
                               onChange={(e) =>
+                                // Store every plausible ID for the person —
+                                // the viewer may resolve as email while we
+                                // keyed on vendorId, or vice versa.
                                 setForm((f) => ({
                                   ...f,
                                   visibleToIds: e.target.checked
-                                    ? [...f.visibleToIds, c.id]
-                                    : f.visibleToIds.filter((id) => id !== c.id),
+                                    ? [...new Set([...f.visibleToIds, ...c.ids])]
+                                    : f.visibleToIds.filter((id) => !c.ids.includes(id)),
                                 }))
                               }
                               className="w-3.5 h-3.5 accent-info"
@@ -646,11 +836,11 @@ const WorkspaceCalendar = ({
                     disabled={!form.title.trim() || !form.date}
                     className="flex-1 py-2 text-xs font-semibold text-white bg-black rounded-lg hover:bg-slate-800 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
                   >
-                    Save
+                    {editingId ? 'Update' : 'Save'}
                   </button>
                   <button
                     type="button"
-                    onClick={() => setShowCreate(false)}
+                    onClick={() => { setShowCreate(false); setEditingId(null); }}
                     className="px-4 py-2 text-xs font-medium text-ink border border-line rounded-lg hover:bg-surface-hover transition-colors"
                   >
                     Cancel
@@ -718,7 +908,17 @@ const WorkspaceCalendar = ({
                             >
                               {e.title}
                             </span>
-                            {!e.readonly && onDeleteEvent && (
+                            {canEdit && canEditItem(e) && (
+                              <button
+                                type="button"
+                                onClick={() => openEdit(e)}
+                                className="opacity-0 group-hover/item:opacity-100 text-dim hover:text-info transition-opacity flex-shrink-0"
+                                title="Edit"
+                              >
+                                <Pencil className="w-3 h-3" />
+                              </button>
+                            )}
+                            {!e.readonly && canEditItem(e) && onDeleteEvent && (
                               <button
                                 type="button"
                                 onClick={() => onDeleteEvent(e.id)}
@@ -747,7 +947,7 @@ const WorkspaceCalendar = ({
                               </span>
                             )}
                             {e.recurrence && (
-                              <span className="text-info">{recurrenceLabel(e.recurrence)}</span>
+                              <span className="text-info">{recurrenceLabel(e.recurrence)}{recurrenceEndLabel(e)}</span>
                             )}
                             {e.busyStatus === 'free' && (
                               <span className="text-success">Free</span>
@@ -809,6 +1009,152 @@ const WorkspaceCalendar = ({
           </div>
         </div>
       </div>
+
+      {/* Day-details popup — clicking a populated cell anchors this under it */}
+      {dayPopup && createPortal(
+        <>
+          <div className="fixed inset-0 z-[90]" onClick={() => setDayPopup(null)} />
+          <div
+            className="fixed z-[91] w-80 bg-surface rounded-xl border border-line shadow-2xl overflow-hidden"
+            style={{
+              left: Math.min(Math.max(dayPopup.x - 160, 8), window.innerWidth - 328),
+              top: Math.min(dayPopup.y, window.innerHeight - 360),
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between px-3.5 py-2.5 border-b border-line bg-canvas">
+              <p className="text-[11px] font-semibold text-ink">
+                {new Date(`${dayPopup.key}T00:00:00`).toLocaleDateString('en-IN', {
+                  weekday: 'short', day: 'numeric', month: 'short',
+                })}
+              </p>
+              <button onClick={() => setDayPopup(null)} className="p-1 rounded text-dim hover:text-ink hover:bg-surface-hover">
+                <X className="w-3.5 h-3.5" />
+              </button>
+            </div>
+
+            <div className="max-h-72 overflow-y-auto p-2.5 space-y-2">
+              {(eventsByDay[dayPopup.key] || []).map((e, i) => {
+                const meta = KINDS[e.kind] || KINDS.event;
+                const KindIcon = meta.Icon;
+                const isTask = e.kind === 'task';
+                const color = e.color || meta.color;
+                return (
+                  <div key={e.id || i} className="rounded-xl border border-line bg-surface overflow-hidden group/item">
+                    {/* color accent bar */}
+                    <div className="h-1" style={{ backgroundColor: color }} />
+
+                    <div className="px-3.5 pt-2.5 pb-3">
+                      {/* kind chip + actions */}
+                      <div className="flex items-center gap-1.5 mb-1.5">
+                        <span
+                          className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[9px] font-bold uppercase tracking-wide"
+                          style={{ backgroundColor: `${color}1a`, color }}
+                        >
+                          <KindIcon className="w-2.5 h-2.5" />{meta.label}
+                        </span>
+                        {e.busyStatus === 'free' && (
+                          <span className="px-1.5 py-0.5 rounded-md text-[9px] font-bold uppercase tracking-wide bg-success/10 text-success">Free</span>
+                        )}
+                        {e.visibility === 'personal' && (
+                          <span className="px-1.5 py-0.5 rounded-md text-[9px] font-bold uppercase tracking-wide bg-warning/10 text-warning flex items-center gap-0.5">
+                            <EyeOff className="w-2.5 h-2.5" />Only you
+                          </span>
+                        )}
+                        {e.visibility === 'selected' && (
+                          <span className="px-1.5 py-0.5 rounded-md text-[9px] font-bold uppercase tracking-wide bg-info/10 text-info flex items-center gap-0.5">
+                            <EyeOff className="w-2.5 h-2.5" />Shared · {(e.visibleToIds || []).length}
+                          </span>
+                        )}
+                        <span className="flex-1" />
+                        {isTask && !e.readonly && (
+                          <button type="button"
+                            onClick={() => onUpdateEvent?.({ ...e, done: !e.done })}
+                            className="p-1 rounded hover:bg-surface-hover flex-shrink-0"
+                            title={e.done ? 'Mark not done' : 'Mark done'}>
+                            <CheckSquare className={`w-3.5 h-3.5 ${e.done ? 'text-success' : 'text-dim'}`} />
+                          </button>
+                        )}
+                        {canEdit && canEditItem(e) && (
+                          <button type="button" onClick={() => openEdit(e)}
+                            className="p-1 rounded text-dim hover:text-info hover:bg-info/10 flex-shrink-0" title="Edit">
+                            <Pencil className="w-3.5 h-3.5" />
+                          </button>
+                        )}
+                        {!e.readonly && canEditItem(e) && onDeleteEvent && (
+                          <button type="button" onClick={() => { onDeleteEvent(e.id); setDayPopup(null); }}
+                            className="p-1 rounded text-dim hover:text-danger hover:bg-danger/10 flex-shrink-0" title="Delete">
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        )}
+                      </div>
+
+                      {/* title */}
+                      <p className={`text-[13px] font-semibold text-ink leading-snug break-words ${e.done ? 'line-through text-dim' : ''}`}>
+                        {e.title}
+                      </p>
+
+                      {/* detail rows — one per line, never crammed */}
+                      <div className="mt-2 space-y-1.5 text-[11px] text-dim">
+                        {(e.allDay || e.startTime) && (
+                          <p className="flex items-center gap-2">
+                            <Clock className="w-3 h-3 flex-shrink-0 text-dim" />
+                            {e.allDay ? 'All day' : `${fmtTime(e.startTime)}${e.endTime ? ` – ${fmtTime(e.endTime)}` : ''}`}
+                          </p>
+                        )}
+                        {e.recurrence && (
+                          <p className="flex items-center gap-2">
+                            <CalendarDays className="w-3 h-3 flex-shrink-0 text-dim" />
+                            {recurrenceLabel(e.recurrence)}{recurrenceEndLabel(e)}
+                          </p>
+                        )}
+                        {e.location && (
+                          <p className="flex items-center gap-2">
+                            <MapPin className="w-3 h-3 flex-shrink-0 text-dim" />
+                            <span className="break-words min-w-0">{e.location}</span>
+                          </p>
+                        )}
+                        {e.meetingLink && (
+                          <p className="flex items-center gap-2">
+                            <Link2 className="w-3 h-3 flex-shrink-0 text-info" />
+                            <a href={e.meetingLink} target="_blank" rel="noreferrer"
+                              className="text-info hover:underline break-all min-w-0">Join meeting</a>
+                          </p>
+                        )}
+                        {e.notes && (
+                          <p className="flex items-start gap-2">
+                            <AlignLeft className="w-3 h-3 mt-0.5 flex-shrink-0 text-dim" />
+                            <span className="break-words min-w-0 whitespace-pre-wrap">{e.notes}</span>
+                          </p>
+                        )}
+                        {e.meta && (
+                          <p className="flex items-center gap-2">
+                            <Info className="w-3 h-3 flex-shrink-0 text-dim" />{e.meta}
+                          </p>
+                        )}
+                        {e.createdBy && (
+                          <p className="pt-1.5 border-t border-line/60 text-[10px]">
+                            Created by {e.createdBy}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            {canEdit && (
+              <button type="button"
+                onClick={() => { openCreate(dayPopup.key); setDayPopup(null); }}
+                className="w-full flex items-center justify-center gap-1.5 px-3 py-2 text-[11px] font-medium text-info hover:bg-info/5 border-t border-line">
+                <Plus className="w-3 h-3" /> Add to this day
+              </button>
+            )}
+          </div>
+        </>,
+        document.body
+      )}
     </div>
   );
 };

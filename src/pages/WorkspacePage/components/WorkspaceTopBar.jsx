@@ -226,12 +226,14 @@ const WorkspaceTopBar = ({
       return;
     }
     const todayKey = new Date().toISOString().slice(0, 10);
+    const myIdSet = myCalendarIds.map((s) => String(s).trim().toLowerCase());
     const canSee = (e) => {
       const v = e.visibility || 'shared';
-      if (v === 'shared' || !e.createdById) return true;
-      const mine = e.createdById === myCalendarUserId;
-      if (mine) return true;
-      if (v === 'selected') return (e.visibleToIds || []).includes(myCalendarUserId);
+      if (v === 'shared') return true;
+      const norm = (s) => String(s || '').trim().toLowerCase();
+      if (e.createdById && myIdSet.includes(norm(e.createdById))) return true;
+      if (v === 'selected')
+        return (e.visibleToIds || []).some((vid) => myIdSet.includes(norm(vid)));
       return false;
     };
     const due = userCalendarEvents.filter((e) => {

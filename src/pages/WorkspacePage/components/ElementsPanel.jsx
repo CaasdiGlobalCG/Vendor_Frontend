@@ -4,6 +4,10 @@ import { useUpload } from './forms/UploadManager';
 import ManageBOQModal from './ManageBOQModal';
 import CustomBOQModal from './CustomBOQModal';
 import CivilBOQModal from './CivilBOQModal';
+import InteriorBOQModal from './InteriorBOQModal';
+import ElectricalBOQModal from './ElectricalBOQModal';
+import PlumbingBOQModal from './PlumbingBOQModal';
+import HVACBOQModal from './HVACBOQModal';
 import { DocumentThumbnail, getDocType } from './ElementDocumentPreview';
 
 // Get file type icon
@@ -744,6 +748,10 @@ const ElementsPanel = ({
   const [showManageBOQ, setShowManageBOQ] = useState(false);
   const [showCustomBOQ, setShowCustomBOQ] = useState(false);
   const [showCivilBOQ, setShowCivilBOQ] = useState(false);
+  const [showInteriorBOQ, setShowInteriorBOQ] = useState(false);
+  const [showElectricalBOQ, setShowElectricalBOQ] = useState(false);
+  const [showPlumbingBOQ, setShowPlumbingBOQ] = useState(false);
+  const [showHVACBOQ, setShowHVACBOQ] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [documentTypeFilter, setDocumentTypeFilter] = useState('all'); // 'all', 'quotations', 'invoices', 'credit-notes', 'purchase-orders'
   
@@ -1096,14 +1104,7 @@ const ElementsPanel = ({
     'boq-generator': {
       name: 'BOQ Generator',
       icon: <FileDigit className="w-5 h-5" />,
-      elements: [
-        { id: 'boq-tpl-blank', name: 'Blank BOQ', type: 'boq-generator', preview: 'Start a Bill of Quantities from scratch' },
-        { id: 'boq-tpl-civil', name: 'Civil Works BOQ', type: 'boq-generator', preview: 'Template — earthwork, RCC, masonry & finishing items' },
-        { id: 'boq-tpl-interior', name: 'Interior Fit-Out BOQ', type: 'boq-generator', preview: 'Template — partitions, flooring, ceiling & joinery' },
-        { id: 'boq-tpl-electrical', name: 'Electrical BOQ', type: 'boq-generator', preview: 'Template — wiring, panels, fixtures & load points' },
-        { id: 'boq-tpl-plumbing', name: 'Plumbing & Sanitary BOQ', type: 'boq-generator', preview: 'Template — piping, fittings & sanitary fixtures' },
-        { id: 'boq-tpl-hvac', name: 'HVAC BOQ', type: 'boq-generator', preview: 'Template — ducting, AHUs, diffusers & insulation' }
-      ]
+      elements: []
     },
     logistics: {
       name: 'Logistics',
@@ -1486,6 +1487,182 @@ const ElementsPanel = ({
                     </div>
                   </div>
                 </div>
+                {/* Interior Fit-Out BOQ — template-style card, opens the sectioned wizard */}
+                <div
+                  role="button"
+                  tabIndex={0}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    setShowInteriorBOQ(true);
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault();
+                      setShowInteriorBOQ(true);
+                    }
+                  }}
+                  className="group p-5 bg-surface rounded-xl border border-line hover:border-info transition-all duration-300 cursor-pointer relative flex flex-col space-y-3 hover:bg-gradient-to-br hover:from-black hover:to-surface"
+                  title="Click to open the Interior Fit-Out BOQ wizard"
+                >
+                  <div className="flex items-center space-x-3">
+                    <div className="w-14 h-14 bg-gradient-to-br from-violet-50 to-surface rounded-xl border border-line flex items-center justify-center flex-shrink-0 group-hover:border-violet-600/30 transition-all duration-300">
+                      <FileDigit className="w-6 h-6 text-violet-700" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-semibold text-ink group-hover:text-info transition-colors truncate">
+                        Interior Fit-Out BOQ
+                      </p>
+                    </div>
+                  </div>
+                  <div className="text-left">
+                    <p className="text-xs text-dim leading-relaxed line-clamp-2">
+                      Sectioned estimate — partitions, flooring, ceiling, joinery &amp; more; qty auto-computes from measurements per unit
+                    </p>
+                  </div>
+                  <div className="flex items-center justify-between pt-2 border-t border-line">
+                    <p className="text-xs text-dim group-hover:text-info transition-colors">
+                      Click to open wizard
+                    </p>
+                    <div className="flex items-center space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <div className="w-1.5 h-1.5 bg-info rounded-full"></div>
+                      <div className="w-1.5 h-1.5 bg-info rounded-full"></div>
+                      <div className="w-1.5 h-1.5 bg-info rounded-full"></div>
+                    </div>
+                  </div>
+                </div>
+                {/* Electrical BOQ — template-style card, opens the sectioned wizard */}
+                <div
+                  role="button"
+                  tabIndex={0}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    setShowElectricalBOQ(true);
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault();
+                      setShowElectricalBOQ(true);
+                    }
+                  }}
+                  className="group p-5 bg-surface rounded-xl border border-line hover:border-info transition-all duration-300 cursor-pointer relative flex flex-col space-y-3 hover:bg-gradient-to-br hover:from-black hover:to-surface"
+                  title="Click to open the Electrical BOQ wizard"
+                >
+                  <div className="flex items-center space-x-3">
+                    <div className="w-14 h-14 bg-gradient-to-br from-yellow-50 to-surface rounded-xl border border-line flex items-center justify-center flex-shrink-0 group-hover:border-yellow-600/30 transition-all duration-300">
+                      <FileDigit className="w-6 h-6 text-yellow-700" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-semibold text-ink group-hover:text-info transition-colors truncate">
+                        Electrical BOQ
+                      </p>
+                    </div>
+                  </div>
+                  <div className="text-left">
+                    <p className="text-xs text-dim leading-relaxed line-clamp-2">
+                      Sectioned estimate — conduit, points, DBs, fixtures &amp; earthing; qty per IS 1200 Pt 15
+                    </p>
+                  </div>
+                  <div className="flex items-center justify-between pt-2 border-t border-line">
+                    <p className="text-xs text-dim group-hover:text-info transition-colors">
+                      Click to open wizard
+                    </p>
+                    <div className="flex items-center space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <div className="w-1.5 h-1.5 bg-info rounded-full"></div>
+                      <div className="w-1.5 h-1.5 bg-info rounded-full"></div>
+                      <div className="w-1.5 h-1.5 bg-info rounded-full"></div>
+                    </div>
+                  </div>
+                </div>
+                {/* Plumbing & Sanitary BOQ — template-style card, opens the sectioned wizard */}
+                <div
+                  role="button"
+                  tabIndex={0}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    setShowPlumbingBOQ(true);
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault();
+                      setShowPlumbingBOQ(true);
+                    }
+                  }}
+                  className="group p-5 bg-surface rounded-xl border border-line hover:border-info transition-all duration-300 cursor-pointer relative flex flex-col space-y-3 hover:bg-gradient-to-br hover:from-black hover:to-surface"
+                  title="Click to open the Plumbing & Sanitary BOQ wizard"
+                >
+                  <div className="flex items-center space-x-3">
+                    <div className="w-14 h-14 bg-gradient-to-br from-cyan-50 to-surface rounded-xl border border-line flex items-center justify-center flex-shrink-0 group-hover:border-cyan-600/30 transition-all duration-300">
+                      <FileDigit className="w-6 h-6 text-cyan-700" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-semibold text-ink group-hover:text-info transition-colors truncate">
+                        Plumbing &amp; Sanitary BOQ
+                      </p>
+                    </div>
+                  </div>
+                  <div className="text-left">
+                    <p className="text-xs text-dim leading-relaxed line-clamp-2">
+                      Sectioned estimate — piping, drainage, sanitary fixtures &amp; valves; qty per IS 1200 Pt 16
+                    </p>
+                  </div>
+                  <div className="flex items-center justify-between pt-2 border-t border-line">
+                    <p className="text-xs text-dim group-hover:text-info transition-colors">
+                      Click to open wizard
+                    </p>
+                    <div className="flex items-center space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <div className="w-1.5 h-1.5 bg-info rounded-full"></div>
+                      <div className="w-1.5 h-1.5 bg-info rounded-full"></div>
+                      <div className="w-1.5 h-1.5 bg-info rounded-full"></div>
+                    </div>
+                  </div>
+                </div>
+                {/* HVAC BOQ — template-style card, opens the sectioned wizard */}
+                <div
+                  role="button"
+                  tabIndex={0}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    setShowHVACBOQ(true);
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault();
+                      setShowHVACBOQ(true);
+                    }
+                  }}
+                  className="group p-5 bg-surface rounded-xl border border-line hover:border-info transition-all duration-300 cursor-pointer relative flex flex-col space-y-3 hover:bg-gradient-to-br hover:from-black hover:to-surface"
+                  title="Click to open the HVAC BOQ wizard"
+                >
+                  <div className="flex items-center space-x-3">
+                    <div className="w-14 h-14 bg-gradient-to-br from-sky-50 to-surface rounded-xl border border-line flex items-center justify-center flex-shrink-0 group-hover:border-sky-600/30 transition-all duration-300">
+                      <FileDigit className="w-6 h-6 text-sky-700" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-semibold text-ink group-hover:text-info transition-colors truncate">
+                        HVAC BOQ
+                      </p>
+                    </div>
+                  </div>
+                  <div className="text-left">
+                    <p className="text-xs text-dim leading-relaxed line-clamp-2">
+                      Sectioned estimate — ducting, AHUs, diffusers &amp; insulation; qty per IS 1200 / SMACNA
+                    </p>
+                  </div>
+                  <div className="flex items-center justify-between pt-2 border-t border-line">
+                    <p className="text-xs text-dim group-hover:text-info transition-colors">
+                      Click to open wizard
+                    </p>
+                    <div className="flex items-center space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <div className="w-1.5 h-1.5 bg-info rounded-full"></div>
+                      <div className="w-1.5 h-1.5 bg-info rounded-full"></div>
+                      <div className="w-1.5 h-1.5 bg-info rounded-full"></div>
+                    </div>
+                  </div>
+                </div>
               </>
             )}
             {filteredElements.length > 0 ? (
@@ -1534,6 +1711,30 @@ const ElementsPanel = ({
       <CivilBOQModal
         isOpen={showCivilBOQ}
         onClose={() => setShowCivilBOQ(false)}
+      />
+
+      {/* Interior Fit-Out BOQ Wizard Modal */}
+      <InteriorBOQModal
+        isOpen={showInteriorBOQ}
+        onClose={() => setShowInteriorBOQ(false)}
+      />
+
+      {/* Electrical BOQ Wizard Modal */}
+      <ElectricalBOQModal
+        isOpen={showElectricalBOQ}
+        onClose={() => setShowElectricalBOQ(false)}
+      />
+
+      {/* Plumbing & Sanitary BOQ Wizard Modal */}
+      <PlumbingBOQModal
+        isOpen={showPlumbingBOQ}
+        onClose={() => setShowPlumbingBOQ(false)}
+      />
+
+      {/* HVAC BOQ Wizard Modal */}
+      <HVACBOQModal
+        isOpen={showHVACBOQ}
+        onClose={() => setShowHVACBOQ(false)}
       />
     </div>
   );

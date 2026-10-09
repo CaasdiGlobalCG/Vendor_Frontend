@@ -23,6 +23,10 @@ import { Sparkles, FileText, Calendar, CheckCircle, StickyNote, ClipboardCheck, 
 import ManageBOQModal from './components/ManageBOQModal';
 import CustomBOQModal from './components/CustomBOQModal';
 import CivilBOQModal from './components/CivilBOQModal';
+import InteriorBOQModal from './components/InteriorBOQModal';
+import ElectricalBOQModal from './components/ElectricalBOQModal';
+import PlumbingBOQModal from './components/PlumbingBOQModal';
+import HVACBOQModal from './components/HVACBOQModal';
 import CommandPalette from './components/CommandPalette';
 import AICanvasBuilderModal from './components/modals/AICanvasBuilderModal';
 import WorkspaceAIAssistant from './components/WorkspaceAIAssistant';
@@ -464,6 +468,10 @@ const WorkspacePage = () => {
   const [showManageBOQModal, setShowManageBOQModal] = useState(false);
   const [showCustomBOQModal, setShowCustomBOQModal] = useState(false);
   const [showCivilBOQModal, setShowCivilBOQModal] = useState(false);
+  const [showInteriorBOQModal, setShowInteriorBOQModal] = useState(false);
+  const [showElectricalBOQModal, setShowElectricalBOQModal] = useState(false);
+  const [showPlumbingBOQModal, setShowPlumbingBOQModal] = useState(false);
+  const [showHVACBOQModal, setShowHVACBOQModal] = useState(false);
   const [showProcurementRFQModal, setShowProcurementRFQModal] = useState(false);
   const [showExecutionRequestModal, setShowExecutionRequestModal] = useState(false);
   const [showWorkflowBuilderModal, setShowWorkflowBuilderModal] = useState(false);
@@ -2250,6 +2258,46 @@ const workspaceForProgress = useMemo(() => {
       setShowElementsSidebar(false);
       setShowElementsPanel(false);
       setSelectedCategory(null);
+    } else if (templateId === 'interior-boq') {
+      // Open Interior Fit-Out BOQ wizard modal (sectioned, measurement-driven)
+      setShowInteriorBOQModal(true);
+      setIsContextPanelOpen(false);
+      // Close other panels
+      setShowTextPanel(false);
+      setShowLayoutsPanel(false);
+      setShowElementsSidebar(false);
+      setShowElementsPanel(false);
+      setSelectedCategory(null);
+    } else if (templateId === 'electrical-boq') {
+      // Open Electrical BOQ wizard modal (sectioned, IS 1200 Pt 15)
+      setShowElectricalBOQModal(true);
+      setIsContextPanelOpen(false);
+      // Close other panels
+      setShowTextPanel(false);
+      setShowLayoutsPanel(false);
+      setShowElementsSidebar(false);
+      setShowElementsPanel(false);
+      setSelectedCategory(null);
+    } else if (templateId === 'plumbing-boq') {
+      // Open Plumbing & Sanitary BOQ wizard modal (sectioned, IS 1200 Pt 16)
+      setShowPlumbingBOQModal(true);
+      setIsContextPanelOpen(false);
+      // Close other panels
+      setShowTextPanel(false);
+      setShowLayoutsPanel(false);
+      setShowElementsSidebar(false);
+      setShowElementsPanel(false);
+      setSelectedCategory(null);
+    } else if (templateId === 'hvac-boq') {
+      // Open HVAC BOQ wizard modal (sectioned, IS 1200 / SMACNA)
+      setShowHVACBOQModal(true);
+      setIsContextPanelOpen(false);
+      // Close other panels
+      setShowTextPanel(false);
+      setShowLayoutsPanel(false);
+      setShowElementsSidebar(false);
+      setShowElementsPanel(false);
+      setSelectedCategory(null);
     } else if (templateId === 'boq') {
       // Open Manage BOQ modal
       setShowManageBOQModal(true);
@@ -2887,6 +2935,30 @@ const workspaceForProgress = useMemo(() => {
       <CivilBOQModal
         isOpen={showCivilBOQModal}
         onClose={() => setShowCivilBOQModal(false)}
+      />
+
+      {/* Interior Fit-Out BOQ wizard (Elements → BOQ Generator → Interior) */}
+      <InteriorBOQModal
+        isOpen={showInteriorBOQModal}
+        onClose={() => setShowInteriorBOQModal(false)}
+      />
+
+      {/* Electrical BOQ wizard (Elements → BOQ Generator → Electrical) */}
+      <ElectricalBOQModal
+        isOpen={showElectricalBOQModal}
+        onClose={() => setShowElectricalBOQModal(false)}
+      />
+
+      {/* Plumbing & Sanitary BOQ wizard (Elements → BOQ Generator → Plumbing) */}
+      <PlumbingBOQModal
+        isOpen={showPlumbingBOQModal}
+        onClose={() => setShowPlumbingBOQModal(false)}
+      />
+
+      {/* HVAC BOQ wizard (Elements → BOQ Generator → HVAC) */}
+      <HVACBOQModal
+        isOpen={showHVACBOQModal}
+        onClose={() => setShowHVACBOQModal(false)}
       />
 
       <ProcurementRFQModal

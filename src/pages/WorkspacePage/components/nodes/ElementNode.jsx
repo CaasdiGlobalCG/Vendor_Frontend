@@ -518,6 +518,44 @@ const ElementNode = ({ id, data, isConnectable, selected }) => {
     // Fall back to context
     return currentUser?.role || 'vendor';
   };
+
+  // Live summary line for custom-boq nodes — "N items · ₹X → ₹Y proposed
+  // (round N)" during negotiation. Client-proposed numbers are on
+  // commission-inclusive pricing: vendor sees them divided back to vendor
+  // scale so the markup is never exposed.
+  const boqSummaryLine = () => {
+    const boq = data.customBOQData;
+    if (!boq) return data.preview;
+    const inr = (v) =>
+      `₹${(Number(v) || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+    const items = boq.items || [];
+    const gstPct = parseFloat(boq.gst?.percent) || 0;
+    const exclusive = boq.gst?.mode === 'exclusive' && gstPct > 0;
+    const role = getCurrentUserRole();
+    const vendorTotal = items.reduce((s, i) => s + (Number(i.amount) || 0), 0);
+    const clientTotal = boq.commission?.clientTotal ?? vendorTotal;
+    // vendor sees own total; pm/finance/client see the client-facing total
+    const base = role === 'vendor' ? vendorTotal : clientTotal;
+    const shown = exclusive ? base * (1 + gstPct / 100) : base;
+    let line = `${items.length} item${items.length === 1 ? '' : 's'} · ${inr(shown)}${exclusive ? ' incl. GST' : ''}`;
+
+    const st = boq.status;
+    const neg = boq.negotiation?.current;
+    if (['negotiation_requested', 'sent_to_finance', 'vendor_review'].includes(st) && neg) {
+      let proposed = neg.proposedTotal;
+      if (role === 'vendor' && proposed !== undefined) {
+        proposed = proposed / (1 + (Number(boq.commission?.percent) || 0) / 100);
+      }
+      line += proposed !== undefined
+        ? ` → ${inr(proposed)} proposed (round ${boq.negotiation?.round || 1})`
+        : ` · negotiating (round ${boq.negotiation?.round || 1})`;
+    } else if (st === 'vendor_rejected') {
+      line += ' · negotiation declined';
+    } else if (st === 'client_approved') {
+      line += ' · approved';
+    }
+    return line;
+  };
   
   // Check if element is locked (cannot be edited)
   const isElementLocked = () => {
@@ -2673,6 +2711,12 @@ const ElementNode = ({ id, data, isConnectable, selected }) => {
       return `${baseClasses} ${recentlyUpdatedClass} p-4 w-full h-auto min-w-[320px] flex flex-col`;
     }
 
+    // Material Spec + Vendor Catalog — content-driven: taller as rows are
+    // added, wider floor so spec tables don't crush into narrow columns
+    if (['card', 'vendor-catalog'].includes(data.type)) {
+      return `${baseClasses} ${recentlyUpdatedClass} p-4 w-full h-auto min-w-[420px] flex flex-col`;
+    }
+
     return `${baseClasses} ${recentlyUpdatedClass} p-6 w-full h-full min-w-[320px] flex flex-col`;
   };
 
@@ -3055,7 +3099,13 @@ const ElementNode = ({ id, data, isConnectable, selected }) => {
               </button>
             )}
           </div>
-          {!isTaskLikeElement && <p className="text-sm text-dim mt-2">{data.preview}</p>}
+          {!isTaskLikeElement && (
+            <p className="text-sm text-dim mt-2">
+              {/* BOQ nodes get a live line — static preview string never
+                  reflects commission/negotiation state */}
+              {data.type === 'custom-boq' ? boqSummaryLine() : data.preview}
+            </p>
+          )}
           {/* Deadline Input UI */}
           {showDeadlineInput && (
             <div className="mt-2 flex flex-col items-center">

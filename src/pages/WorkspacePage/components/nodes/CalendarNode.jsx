@@ -110,8 +110,9 @@ const CalendarNode = ({ id, data, isConnectable, selected }) => {
   const canSeeEvent =
     !data.calendarEventId ||                       // unsaved → creator editing
     isCreator ||
-    isPMSide ||                                    // PM sees all workspace events
-    evVisibility === 'everyone' ||
+    evVisibility === 'everyone' || evVisibility === 'shared' ||
+    // 'selected'/'personal' are strict — PM/CAS bypass does NOT apply here;
+    // an invited PM still matches via invitedIds.
     (evVisibility === 'selected' && invitedIds.some((vid) => myIds.includes(vid))) ||
     (calEventVisibleToIds || []).some((vid) => myIds.includes(vid));
 

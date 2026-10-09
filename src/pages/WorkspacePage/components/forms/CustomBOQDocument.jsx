@@ -3,7 +3,7 @@ import { Download, FileDigit, Percent, Send, Clock, ShieldCheck, Loader2, Plus, 
 import * as XLSX from 'xlsx-js-style';
 import { persistNodeDataPatch } from '../../utils/nodePersistence';
 import { notifyWorkspaceEvent } from '../../utils/workspaceApi';
-import { UNIT_DIMS, computeItemQty, measurementLabel } from '../CivilBOQModal';
+import { UNIT_DIMS, computeItemQty, computeGrossQty, computeDeduction, measurementLabel } from '../CivilBOQModal';
 
 const formatINR = (value) =>
   `₹${(Number(value) || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
@@ -17,6 +17,61 @@ const STATUS_META = {
   pending_finance: { label: 'Awaiting finance commission', badge: 'bg-amber-100 text-amber-800 border-amber-200' },
   commission_added: { label: 'Commission added — pending PM', badge: 'bg-blue-100 text-blue-800 border-blue-200' },
   sent_to_client: { label: 'Shared with client', badge: 'bg-green-100 text-green-800 border-green-200' },
+  negotiation_requested: { label: 'Client negotiating', badge: 'bg-orange-100 text-orange-800 border-orange-200' },
+  sent_to_finance: { label: 'Forwarded to finance', badge: 'bg-purple-100 text-purple-800 border-purple-200' },
+  vendor_review: { label: 'Awaiting vendor revision', badge: 'bg-amber-100 text-amber-800 border-amber-200' },
+  vendor_revised: { label: 'Vendor revised — re-commission', badge: 'bg-blue-100 text-blue-800 border-blue-200' },
+  vendor_rejected: { label: 'Vendor rejected negotiation', badge: 'bg-red-100 text-red-800 border-red-200' },
+  client_approved: { label: 'Client approved', badge: 'bg-green-100 text-green-800 border-green-200' },
+};
+
+// What the client proposed this negotiation round — target total, per-item
+// proposed rates next to current rates, and the note.
+//
+// IMPORTANT: the client negotiates on CLIENT-facing prices (commission baked
+// in). The vendor must never see commission-inclusive numbers — `vendorView`
+// divides proposed rates back down by that item's commission % so the vendor
+// sees the proposal expressed on their own rate scale. PM/finance see the raw
+// client-scale figures (both sides are internal to them).
+const ProposalSummary = ({ current, items, commission, formatINR, vendorView = false }) => {
+  const proposed = current?.proposedRates || {};
+  const pctByItem = new Map((commission?.items || []).map((ci) => [ci.itemNo, ci.percent || 0]));
+  const blendedPct = Number(commission?.percent) || 0;
+  // client-scale → vendor-scale
+  const toVendorRate = (itemNo, clientRate) => {
+    const pct = pctByItem.get(itemNo) ?? blendedPct;
+    return clientRate / (1 + pct / 100);
+  };
+  const rows = items.filter((i) => proposed[i.itemNo] !== undefined);
+  const shownTotal = vendorView && current?.proposedTotal !== undefined
+    ? current.proposedTotal / (1 + blendedPct / 100)
+    : current?.proposedTotal;
+  return (
+    <div className="rounded-lg border border-line bg-surface px-2.5 py-2 text-[11px] space-y-1">
+      {shownTotal !== undefined && (
+        <p className="text-ink">
+          {vendorView ? 'Target total (approx, on your rates)' : 'Target total'}:{' '}
+          <span className="font-bold">{formatINR(shownTotal)}</span>
+        </p>
+      )}
+      {rows.length > 0 && (
+        <div className="space-y-0.5">
+          {rows.map((i) => {
+            const proposedRate = vendorView ? toVendorRate(i.itemNo, proposed[i.itemNo]) : proposed[i.itemNo];
+            return (
+              <p key={i.itemNo} className="flex justify-between gap-2 text-dim">
+                <span className="truncate">{i.itemNo}. {i.name}</span>
+                <span className="whitespace-nowrap">
+                  {formatINR(i.rate)} → <span className="text-ink font-medium">{formatINR(proposedRate)}</span>
+                </span>
+              </p>
+            );
+          })}
+        </div>
+      )}
+      {current?.note && <p className="text-dim italic">"{current.note}"</p>}
+    </div>
+  );
 };
 
 /**
@@ -43,9 +98,21 @@ const CustomBOQDocument = ({ boq, role = 'vendor', nodeId, setNodes, workspaceId
   const items = useMemo(() => (Array.isArray(boq?.items) ? boq.items : []), [boq?.items]);
   const status = boq?.status || 'pending_finance';
   const commission = boq?.commission || null;
+  const negotiation = boq?.negotiation || null;
+  const negRound = negotiation?.round || 0;
 
-  // Civil variant: sectioned BOQ — items carry a `section` label
-  const isCivil = boq?.variant === 'civil';
+  // Negotiation UI state
+  const [negotiating, setNegotiating] = useState(false);   // client form open
+  const [proposedRates, setProposedRates] = useState({});  // {itemNo: rate}
+  const [proposedTotal, setProposedTotal] = useState('');
+  const [negNote, setNegNote] = useState('');
+  const [rejecting, setRejecting] = useState(false);       // vendor reject form
+  const [rejectReason, setRejectReason] = useState('');
+  const [revising, setRevising] = useState(false);         // vendor edit mode
+
+  // Sectioned variants (civil, interior, electrical): items carry a `section`
+  // label and measurement-derived qty — every `isCivil` path covers all of them
+  const isCivil = ['civil', 'interior', 'electrical', 'plumbing', 'hvac'].includes(boq?.variant);
   const sectionOrder = useMemo(() => {
     if (!isCivil) return [];
     const declared = (boq.sections || []).map((s) => s.name);
@@ -159,14 +226,31 @@ const CustomBOQDocument = ({ boq, role = 'vendor', nodeId, setNodes, workspaceId
   }, [items, commission]);
 
   const clientTotal = commission?.clientTotal ?? vendorTotal;
+  const commissionByItemNo = useMemo(
+    () => new Map((commission?.items || []).map((ci) => [ci.itemNo, ci])),
+    [commission]
+  );
 
-  const canFinanceEdit = role === 'finance' && status === 'pending_finance';
+  const canFinanceEdit = role === 'finance' && ['pending_finance', 'vendor_revised'].includes(status);
   const canPmSend = role === 'pm' && status === 'commission_added';
-  // Vendor may edit line items until finance locks them by adding commission
-  const canVendorEdit = role === 'vendor' && status === 'pending_finance';
+  // Vendor may edit line items until finance locks them by adding commission —
+  // or when revising during a negotiation round (status 'vendor_review')
+  const canVendorEdit = role === 'vendor' && (status === 'pending_finance' || revising);
+
+  // Negotiation chain: client → PM → finance → vendor → back up
+  const clientCanAct = role === 'client' && ['sent_to_client', 'vendor_rejected'].includes(status);
+  const clientWaiting = role === 'client' && ['negotiation_requested', 'sent_to_finance', 'vendor_review'].includes(status);
+  const pmForward = role === 'pm' && status === 'negotiation_requested';
+  const finForward = role === 'finance' && status === 'sent_to_finance';
+  const vendorActs = role === 'vendor' && status === 'vendor_review';
+  const lastRejection = (negotiation?.history || []).filter(h => h.action === 'reject').pop();
   const showCommissionPanel = (role === 'finance' || role === 'pm') && commission;
-  const shownItems = role === 'client' && clientItems ? clientItems : (canVendorEdit ? editableItems : items);
-  const shownTotal = role === 'client' ? clientTotal : (canVendorEdit ? editTotal : vendorTotal);
+  // Once commission is applied, pm/finance/client all see the table in
+  // client-facing pricing — vendor keeps the base-rate view.
+  const clientPriced = ['client', 'pm', 'finance'].includes(role) && clientItems;
+  const shownItems = clientPriced ? clientItems : (canVendorEdit ? editableItems : items);
+  const shownTotal = clientPriced ? clientTotal : (canVendorEdit ? editTotal : vendorTotal);
+  const isInternalPriced = ['pm', 'finance'].includes(role) && commission;
 
   // GST treatment declared at creation (customBOQData.gst: { mode, percent })
   // Inclusive → the % is known, so the GST component can be back-calculated:
@@ -275,6 +359,10 @@ const CustomBOQDocument = ({ boq, role = 'vendor', nodeId, setNodes, workspaceId
         length: parseFloat(it.length) || null,
         breadth: parseFloat(it.breadth) || null,
         depth: parseFloat(it.depth) || null,
+        // IS 1200 deduction fields — carried through so net qty stays correct
+        deduction: it.deduction || undefined,
+        grossQty: isCivil ? computeGrossQty(it) : undefined,
+        deductionQty: isCivil ? computeDeduction(it) : undefined,
         measurement: isCivil ? measurementLabel(it) : undefined,
         qty,
         rate,
@@ -287,9 +375,34 @@ const CustomBOQDocument = ({ boq, role = 'vendor', nodeId, setNodes, workspaceId
       items: normalized,
       ...(isCivil ? { sections } : {}),
       total,
+      ...(revising
+        ? {
+            status: 'vendor_revised',
+            negotiation: pushHistory({
+              round: negRound,
+              action: 'revise',
+              by: 'vendor',
+              revisedTotal: total,
+              at: new Date().toISOString(),
+            }),
+          }
+        : {}),
       updatedAt: new Date().toISOString(),
     });
     setEditItems(null);
+    if (revising) {
+      setRevising(false);
+      notifyWorkspaceEvent({
+        workspaceId,
+        roles: ['finance'],
+        type: 'boq_vendor_revised',
+        title: 'Vendor revised BOQ',
+        message: `Vendor submitted a revised "${boq?.name || 'BOQ'}" — re-apply commission.`,
+        data: { nodeId, boqName: boq?.name, round: negRound },
+        priority: 'high',
+        actionRequired: true,
+      });
+    }
   };
 
   const handleSendToClient = async () => {
@@ -310,6 +423,132 @@ const CustomBOQDocument = ({ boq, role = 'vendor', nodeId, setNodes, workspaceId
     });
   };
 
+  // ---------- Negotiation loop (client → pm → finance → vendor → back) ----------
+
+  const pushHistory = (entry) => ({
+    round: negRound + (entry.action === 'negotiate' ? 1 : 0),
+    current: entry.action === 'negotiate'
+      ? { proposedTotal: entry.proposedTotal, proposedRates: entry.proposedRates, note: entry.note, at: entry.at }
+      : negotiation?.current || null,
+    history: [...(negotiation?.history || []), entry],
+  });
+
+  // Client: approve the released BOQ outright
+  const handleClientApprove = async () => {
+    await persistBoq({
+      ...boq,
+      status: 'client_approved',
+      negotiation: negotiation
+        ? { ...negotiation, status: 'resolved', current: null }
+        : { status: 'resolved', history: [] },
+      clientApprovedAt: new Date().toISOString(),
+    });
+    notifyWorkspaceEvent({
+      workspaceId,
+      roles: ['pm', 'finance', 'vendor'],
+      type: 'boq_client_approved',
+      title: 'BOQ approved by client',
+      message: `Client approved "${boq?.name || 'BOQ'}" — no further changes needed.`,
+      data: { nodeId, boqName: boq?.name },
+      priority: 'high',
+    });
+  };
+
+  // Client: propose a target total + per-item rates → PM
+  const handleClientNegotiate = async () => {
+    const rates = Object.fromEntries(
+      Object.entries(proposedRates)
+        .map(([k, v]) => [k, parseFloat(v)])
+        .filter(([, v]) => !Number.isNaN(v) && v >= 0)
+    );
+    const total = parseFloat(proposedTotal);
+    if (!rates[0] && Number.isNaN(total) && !negNote.trim()) return;
+    const entry = {
+      round: negRound + 1,
+      action: 'negotiate',
+      by: 'client',
+      proposedTotal: Number.isNaN(total) ? undefined : total,
+      proposedRates: rates,
+      note: negNote.trim(),
+      at: new Date().toISOString(),
+    };
+    await persistBoq({
+      ...boq,
+      status: 'negotiation_requested',
+      negotiation: pushHistory(entry),
+    });
+    setNegotiating(false);
+    notifyWorkspaceEvent({
+      workspaceId,
+      roles: ['pm'],
+      type: 'boq_negotiation',
+      title: 'BOQ negotiation requested',
+      message: `Client wants to negotiate "${boq?.name || 'BOQ'}"${entry.proposedTotal ? ` — target ${formatINR(entry.proposedTotal)}` : ''}.`,
+      data: { nodeId, boqName: boq?.name, round: entry.round },
+      priority: 'high',
+      actionRequired: true,
+    });
+  };
+
+  // PM → finance
+  const handlePmForward = async () => {
+    const entry = { round: negRound, action: 'forward_pm', by: 'pm', at: new Date().toISOString() };
+    await persistBoq({ ...boq, status: 'sent_to_finance', negotiation: pushHistory(entry) });
+    notifyWorkspaceEvent({
+      workspaceId,
+      roles: ['finance'],
+      type: 'boq_negotiation',
+      title: 'BOQ negotiation — needs vendor revision',
+      message: `PM forwarded a client negotiation for "${boq?.name || 'BOQ'}".`,
+      data: { nodeId, boqName: boq?.name, round: negRound },
+      priority: 'high',
+      actionRequired: true,
+    });
+  };
+
+  // Finance → vendor
+  const handleFinanceRequest = async () => {
+    const entry = { round: negRound, action: 'forward_finance', by: 'finance', at: new Date().toISOString() };
+    await persistBoq({ ...boq, status: 'vendor_review', negotiation: pushHistory(entry) });
+    notifyWorkspaceEvent({
+      workspaceId,
+      roles: ['vendor'],
+      type: 'boq_negotiation',
+      title: 'Client negotiated — revision requested',
+      message: `Finance requested a revision of "${boq?.name || 'BOQ'}" after client negotiation.`,
+      data: { nodeId, boqName: boq?.name, round: negRound },
+      priority: 'high',
+      actionRequired: true,
+    });
+  };
+
+  // Vendor: reject the negotiation — loop resets to sent_to_client
+  const handleVendorReject = async () => {
+    const entry = {
+      round: negRound,
+      action: 'reject',
+      by: 'vendor',
+      note: rejectReason.trim(),
+      at: new Date().toISOString(),
+    };
+    await persistBoq({
+      ...boq,
+      status: 'vendor_rejected',
+      negotiation: pushHistory(entry),
+    });
+    setRejecting(false);
+    setRejectReason('');
+    notifyWorkspaceEvent({
+      workspaceId,
+      roles: ['pm', 'finance'],
+      type: 'boq_negotiation_rejected',
+      title: 'Vendor declined negotiation',
+      message: `Vendor rejected the negotiation for "${boq?.name || 'BOQ'}"${entry.note ? `: ${entry.note}` : '.'}`,
+      data: { nodeId, boqName: boq?.name, round: negRound },
+      priority: 'high',
+    });
+  };
+
   if (!boq) {
     return <div className="text-xs text-dim p-3">No BOQ data</div>;
   }
@@ -322,8 +561,8 @@ const CustomBOQDocument = ({ boq, role = 'vendor', nodeId, setNodes, workspaceId
       const thinBorder = { style: 'thin', color: { rgb: 'CBD5E1' } };
       const allBorders = { top: thinBorder, bottom: thinBorder, left: thinBorder, right: thinBorder };
       const numFmt = '#,##0.00';
-      const exportItems = role === 'client' ? shownItems : items;
-      const exportTotal = role === 'client' ? shownTotal : vendorTotal;
+      const exportItems = clientPriced ? shownItems : items;
+      const exportTotal = clientPriced ? shownTotal : vendorTotal;
 
       const titleStyle = {
         font: { bold: true, sz: 16, color: { rgb: 'FFFFFF' } },
@@ -594,9 +833,21 @@ const CustomBOQDocument = ({ boq, role = 'vendor', nodeId, setNodes, workspaceId
                   <td className="border border-line px-2 py-1.5 text-right text-ink">{formatQty(item.qty)}</td>
                   <td className="border border-line px-2 py-1.5 text-right text-ink">
                     {(Number(item.rate) || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+                    {/* pm/finance: shown rate is commission-inclusive — keep the
+                        vendor base visible as a small reference line */}
+                    {isInternalPriced && commissionByItemNo.get(item.itemNo) && (
+                      <div className="text-[9px] text-dim font-normal">
+                        base {(Number(commissionByItemNo.get(item.itemNo).rate) || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+                      </div>
+                    )}
                   </td>
                   <td className="border border-line px-2 py-1.5 text-right font-semibold text-ink">
                     {(Number(item.amount) || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+                    {isInternalPriced && commissionByItemNo.get(item.itemNo) && (
+                      <div className="text-[9px] text-dim font-normal">
+                        base {(Number(commissionByItemNo.get(item.itemNo).rate || 0) * (Number(item.qty) || 0)).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+                      </div>
+                    )}
                   </td>
                 </tr>
               );
@@ -1013,6 +1264,230 @@ const CustomBOQDocument = ({ boq, role = 'vendor', nodeId, setNodes, workspaceId
             <div className="flex items-center gap-1.5 text-[11px] text-success font-medium">
               <Send size={12} />
               Sent to client{boq.sentToClientAt ? ` on ${new Date(boq.sentToClientAt).toLocaleDateString('en-IN')}` : ''}
+            </div>
+          )}
+          {pmForward && negotiation?.current && (
+            <div className="mt-2">
+              <div className="flex items-center gap-1.5 text-[11px] font-semibold text-orange-800 mb-1.5">
+                <Clock size={12} />
+                Client negotiation — round {negRound}
+              </div>
+              {/* PM sees client-scale figures — the proposal is on client-facing rates */}
+              <ProposalSummary current={negotiation.current} items={clientItems || items} commission={commission} formatINR={formatINR} />
+              <button
+                type="button"
+                onClick={handlePmForward}
+                disabled={saving}
+                className="mt-2 w-full px-3 py-1.5 rounded text-xs font-semibold bg-purple-700 hover:bg-purple-800 text-white flex items-center justify-center gap-1.5 transition-colors disabled:opacity-40"
+              >
+                {saving ? <Loader2 size={11} className="animate-spin" /> : <Send size={11} />}
+                Forward to Finance
+              </button>
+            </div>
+          )}
+          {['sent_to_finance', 'vendor_review', 'vendor_revised'].includes(status) && (
+            <div className="mt-2 flex items-center gap-1.5 text-[11px] text-dim">
+              <Clock size={12} />
+              Negotiation in progress — with {
+                status === 'sent_to_finance' ? 'finance' :
+                status === 'vendor_review' ? 'vendor' : 'finance (re-commission)'
+              }
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Finance — forward the client negotiation to the vendor */}
+      {finForward && negotiation?.current && (
+        <div className="border-t border-line px-3 py-2.5 bg-purple-50/60">
+          <div className="flex items-center gap-1.5 text-[11px] font-semibold text-purple-900 mb-1.5">
+            <Percent size={12} />
+            Client negotiation — round {negRound}
+          </div>
+          {/* Finance sees client-scale figures — both sides are internal */}
+          <ProposalSummary current={negotiation.current} items={clientItems || items} commission={commission} formatINR={formatINR} />
+          <button
+            type="button"
+            onClick={handleFinanceRequest}
+            disabled={saving}
+            className="mt-2 w-full px-3 py-1.5 rounded text-xs font-semibold bg-amber-600 hover:bg-amber-700 text-white flex items-center justify-center gap-1.5 transition-colors disabled:opacity-40"
+          >
+            {saving ? <Loader2 size={11} className="animate-spin" /> : <Send size={11} />}
+            Request Vendor Revision
+          </button>
+        </div>
+      )}
+
+      {/* Vendor — client proposal visible; revise or reject */}
+      {vendorActs && !revising && (
+        <div className="border-t border-line px-3 py-2.5 bg-orange-50/60">
+          <div className="flex items-center gap-1.5 text-[11px] font-semibold text-orange-900 mb-1.5">
+            <Clock size={12} />
+            Client requested a revision — round {negRound}
+          </div>
+          {negotiation?.current && (
+            /* Client proposed on commission-inclusive pricing — convert back
+               to vendor-rate scale so the markup is never exposed */
+            <ProposalSummary current={negotiation.current} items={items} commission={commission} formatINR={formatINR} vendorView />
+          )}
+          <div className="flex gap-2 mt-2">
+            <button
+              type="button"
+              onClick={() => { setEditItems(items); setRevising(true); }}
+              className="flex-1 px-3 py-1.5 rounded text-xs font-semibold bg-blue-700 hover:bg-blue-800 text-white transition-colors"
+            >
+              Revise BOQ
+            </button>
+            <button
+              type="button"
+              onClick={() => setRejecting((r) => !r)}
+              className="flex-1 px-3 py-1.5 rounded text-xs font-semibold border border-danger/30 text-danger hover:bg-danger/5 transition-colors"
+            >
+              Reject
+            </button>
+          </div>
+          {rejecting && (
+            <div className="mt-2 space-y-1.5">
+              <input
+                value={rejectReason}
+                onChange={(e) => setRejectReason(e.target.value)}
+                placeholder="Reason (optional) — shown to PM & client"
+                className="w-full rounded border border-line bg-surface px-2 py-1.5 text-[11px] outline-none focus:border-info"
+              />
+              <button
+                type="button"
+                onClick={handleVendorReject}
+                disabled={saving}
+                className="w-full px-3 py-1.5 rounded text-xs font-semibold bg-danger hover:bg-danger/90 text-white transition-colors disabled:opacity-40"
+              >
+                {saving ? <Loader2 size={11} className="animate-spin" /> : null}
+                Confirm rejection
+              </button>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Client — approve or negotiate the released BOQ */}
+      {role === 'client' && (
+        <div className="border-t border-line px-3 py-2.5 bg-canvas">
+          {status === 'client_approved' && (
+            <div className="flex items-center gap-1.5 text-[11px] text-success font-medium">
+              <ShieldCheck size={12} />
+              You approved this BOQ{boq.clientApprovedAt ? ` on ${new Date(boq.clientApprovedAt).toLocaleDateString('en-IN')}` : ''}
+            </div>
+          )}
+          {status === 'vendor_rejected' && lastRejection && (
+            <div className="mb-2 rounded-lg border border-danger/20 bg-danger/5 px-3 py-2 text-[11px] text-ink">
+              Vendor declined the revision request{lastRejection.note ? `: "${lastRejection.note}"` : ''}.
+              Approve the current BOQ or negotiate again.
+            </div>
+          )}
+          {clientWaiting && (
+            <div className="flex items-center gap-1.5 text-[11px] text-dim">
+              <Clock size={12} />
+              Your negotiation is under review — {
+                status === 'negotiation_requested' ? 'with the PM' :
+                status === 'sent_to_finance' ? 'with finance' : 'with the vendor'
+              }.
+            </div>
+          )}
+          {clientCanAct && !negotiating && (
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={handleClientApprove}
+                disabled={saving}
+                className="flex-1 px-3 py-1.5 rounded text-xs font-semibold bg-success hover:bg-success/90 text-white flex items-center justify-center gap-1.5 transition-colors disabled:opacity-40"
+              >
+                {saving ? <Loader2 size={11} className="animate-spin" /> : <ShieldCheck size={11} />}
+                Approve BOQ
+              </button>
+              <button
+                type="button"
+                onClick={() => setNegotiating(true)}
+                className="flex-1 px-3 py-1.5 rounded text-xs font-semibold border border-info/30 text-info hover:bg-info/5 transition-colors"
+              >
+                Negotiate
+              </button>
+            </div>
+          )}
+
+          {/* Negotiate form — target total + per-item proposed rates + note */}
+          {clientCanAct && negotiating && (
+            <div className="space-y-2">
+              <div className="flex items-center gap-1.5 text-[11px] font-semibold text-ink">
+                <Percent size={12} /> Propose a revision
+              </div>
+              <div className="rounded-lg border border-line bg-surface overflow-hidden">
+                <table className="w-full text-[11px]">
+                  <thead>
+                    <tr className="bg-canvas text-dim">
+                      <th className="px-2 py-1 text-left font-semibold">Item</th>
+                      <th className="px-2 py-1 text-right font-semibold">Current</th>
+                      <th className="px-2 py-1 text-right font-semibold w-24">Proposed</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {shownItems.map((item) => (
+                      <tr key={item.itemNo} className="border-t border-line">
+                        <td className="px-2 py-1 text-ink font-medium truncate max-w-[140px]">
+                          {item.itemNo}. {item.name}
+                        </td>
+                        <td className="px-2 py-1 text-right text-dim whitespace-nowrap">
+                          {(Number(item.rate) || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+                        </td>
+                        <td className="px-2 py-1">
+                          <input
+                            type="number"
+                            min="0"
+                            step="0.01"
+                            value={proposedRates[item.itemNo] ?? ''}
+                            onChange={(e) =>
+                              setProposedRates((p) => ({ ...p, [item.itemNo]: e.target.value }))
+                            }
+                            placeholder="Rate"
+                            className="w-full rounded border border-line bg-surface px-1.5 py-1 text-[11px] text-right outline-none focus:border-info"
+                          />
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+              <input
+                type="number"
+                min="0"
+                value={proposedTotal}
+                onChange={(e) => setProposedTotal(e.target.value)}
+                placeholder={`Target total (current ${formatINR(displayTotal)})`}
+                className="w-full rounded border border-line bg-surface px-2 py-1.5 text-[11px] outline-none focus:border-info"
+              />
+              <textarea
+                rows={2}
+                value={negNote}
+                onChange={(e) => setNegNote(e.target.value)}
+                placeholder="Note to PM (optional)"
+                className="w-full rounded border border-line bg-surface px-2 py-1.5 text-[11px] outline-none focus:border-info resize-none"
+              />
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={handleClientNegotiate}
+                  disabled={saving}
+                  className="flex-1 px-3 py-1.5 rounded text-xs font-semibold bg-black hover:bg-slate-800 text-white transition-colors disabled:opacity-40"
+                >
+                  {saving ? <Loader2 size={11} className="animate-spin" /> : <Send size={11} />}
+                  Send to PM
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setNegotiating(false)}
+                  className="px-3 py-1.5 rounded text-xs font-medium border border-line hover:bg-surface-hover"
+                >
+                  Cancel
+                </button>
+              </div>
             </div>
           )}
         </div>

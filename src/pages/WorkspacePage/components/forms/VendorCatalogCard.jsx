@@ -81,7 +81,7 @@ const productToItem = (p) => {
     tags: certs.map(label => ({ label, status: 'pending' })),
     source: 'catalog',
     details: {
-      description: get('description'),
+      description: get('description', 'shortDescription', 'detailedDescription'),
       availableSizes: get('availableSizes', 'sizes'),
       packagingDelivery: get('packagingDelivery', 'packaging'),
       usageAreas: get('usageAreas', 'usage'),
@@ -91,6 +91,39 @@ const productToItem = (p) => {
       catalogDemo: get('catalogDemo'),
       status: p.status || '',
       customFields: p.customFields || info.customFields || {},
+      // Products-table snapshot — surfaced in the info modal
+      brand: get('brand'),
+      brandMaterial: get('brandMaterial'),
+      sku: get('sku'),
+      currency: p.currency || 'INR',
+      minPrice: p.procurementPricing?.finalMinPricePerUnit ?? p.finalMinPricePerUnit ?? get('minPricePerUnit'),
+      maxPrice: p.procurementPricing?.finalMaxPricePerUnit ?? p.finalMaxPricePerUnit ?? get('maxPricePerUnit'),
+      minOrderQuantity: get('minOrderQuantity'),
+      supplyAbility: get('supplyAbilityPerMonth'),
+      supplyUnit: get('supplyUnit'),
+      leadTime: get('leadTime'),
+      packagingDetails: get('packagingDetails'),
+      deliveryMethods: Array.isArray(p.deliveryMethods) ? p.deliveryMethods : [],
+      portOfDispatch: get('portOfDispatch'),
+      warranty: p.warrantyPolicy?.hasWarranty === 'yes'
+        ? {
+            months: p.warrantyPolicy.periodMonths,
+            type: p.warrantyPolicy.type,
+            service: p.warrantyPolicy.serviceOption,
+            maxClaims: p.warrantyPolicy.maxClaims,
+          }
+        : null,
+      sample: p.samplePolicy?.sampleAvailable
+        ? {
+            free: p.samplePolicy.freeSampleQuantity,
+            max: p.samplePolicy.maxSampleQuantity,
+            chargeable: !!p.samplePolicy.chargeableAboveFreeLimit,
+          }
+        : null,
+      specs: (Array.isArray(p.specificationTable) ? p.specificationTable : [])
+        .filter(s => s && (s.property || s.value)),
+      colorOptions: (Array.isArray(p.colorOptions) ? p.colorOptions : [])
+        .map(c => c?.colorCode).filter(Boolean),
     },
   };
 };
@@ -106,12 +139,21 @@ const VendorCatalogCard = ({ data, nodeId, workspaceId, setNodes, role }) => {
   const [uploadingIndex, setUploadingIndex] = useState(null);
   const [customTag, setCustomTag] = useState('');
   const [infoIndex, setInfoIndex] = useState(null);
+  const [liveDetails, setLiveDetails] = useState({}); // productId → fresh details
   const fileInputRef = useRef(null);
   const pendingUploadIndex = useRef(null);
   const autoFetchedRef = useRef(false);
 
   const isPM = PM_ROLES.includes(role);
   const items = catalogData.items || [];
+  // View-mode list: only APPROVED products; manual items (vendor-authored,
+  // no status) always show
+  const visibleItems = items.filter((it) => {
+    const st = (it.details?.status || '').toUpperCase();
+    return it.source === 'manual' || !st || st === 'APPROVED';
+  });
+  // view index → real item index in `items`
+  const itemIndex = (viewIdx) => items.indexOf(visibleItems[viewIdx]);
 
   const updateItem = (index, name, value) => {
     setCatalogData(prev => ({
@@ -168,7 +210,9 @@ const VendorCatalogCard = ({ data, nodeId, workspaceId, setNodes, role }) => {
       headers: token ? { Authorization: `Bearer ${token}` } : {},
     });
     const json = await res.json().catch(() => ({}));
-    return json?.data || json?.products || (Array.isArray(json) ? json : []);
+    const list = json?.data || json?.products || (Array.isArray(json) ? json : []);
+    // Only approved products are sellable/verifiable — hide pending/draft/rejected
+    return list.filter(p => (p.status || '').toUpperCase() === 'APPROVED');
   };
 
   const openCatalog = async () => {
@@ -536,8 +580,35 @@ const VendorCatalogCard = ({ data, nodeId, workspaceId, setNodes, role }) => {
     document.body
   ) : null;
 
+  // When the info modal opens, try refreshing that product's details from
+  // the products table (vendor token-scoped — fails silently for PM/client,
+  // who fall back to the persisted snapshot).
+  React.useEffect(() => {
+    const it = infoIndex !== null ? items[infoIndex] : null;
+    const pid = it?.productId;
+    if (!pid || liveDetails[pid]) return;
+    (async () => {
+      try {
+        const list = await fetchVendorProducts();
+        const p = list.find(x => (x.productId || x.id) === pid);
+        if (p) {
+          const fresh = productToItem(p).details;
+          setLiveDetails(prev => ({ ...prev, [pid]: fresh }));
+        }
+      } catch { /* keep stored snapshot */ }
+    })();
+  }, [infoIndex]); // eslint-disable-line react-hooks/exhaustive-deps
+
   // ---------- PRODUCT INFO MODAL ----------
   const infoItem = infoIndex !== null ? items[infoIndex] : null;
+  const infoDetails = infoItem
+    ? { ...(infoItem.details || {}), ...(liveDetails[infoItem.productId] || {}) }
+    : null;
+  const hasDetails = infoDetails && Object.values(infoDetails).some(
+    v => v !== undefined && v !== null && v !== '' &&
+      !(Array.isArray(v) && v.length === 0) &&
+      !(typeof v === 'object' && !Array.isArray(v) && Object.keys(v).length === 0)
+  );
   const infoModal = infoItem ? createPortal(
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-black/35" onClick={() => setInfoIndex(null)} />
@@ -548,9 +619,11 @@ const VendorCatalogCard = ({ data, nodeId, workspaceId, setNodes, role }) => {
             : <span className="w-12 h-12 rounded-lg bg-info/10 text-info flex items-center justify-center flex-shrink-0"><Package className="w-5 h-5" /></span>}
           <div className="flex-1 min-w-0">
             <p className="text-sm font-semibold text-ink">{infoItem.productName}</p>
-            {infoItem.category && <p className="text-[10px] uppercase tracking-wide text-dim">{infoItem.category}</p>}
-            {infoItem.details?.status && (
-              <span className="inline-block mt-1 px-1.5 py-0.5 rounded text-[9px] font-bold bg-surface-hover text-dim uppercase">{infoItem.details.status}</span>
+            <p className="text-[10px] uppercase tracking-wide text-dim">
+              {[infoDetails?.brand, infoItem.category].filter(Boolean).join(' · ')}
+            </p>
+            {infoDetails?.status && (
+              <span className="inline-block mt-1 px-1.5 py-0.5 rounded text-[9px] font-bold bg-surface-hover text-dim uppercase">{infoDetails.status}</span>
             )}
           </div>
           <button onClick={() => setInfoIndex(null)} className="p-1.5 hover:bg-surface-hover rounded-lg text-dim hover:text-ink">
@@ -566,15 +639,107 @@ const VendorCatalogCard = ({ data, nodeId, workspaceId, setNodes, role }) => {
             </button>
           )}
 
+          {/* Product facts — brand / price / supply, straight from the products table */}
+          {(infoDetails?.brand || infoDetails?.sku || infoDetails?.minPrice !== undefined || infoDetails?.minOrderQuantity || infoDetails?.supplyAbility || infoDetails?.leadTime) && (
+            <div className="rounded-md border border-line overflow-hidden">
+              {[
+                ['Brand', [infoDetails.brand, infoDetails.brandMaterial].filter(Boolean).join(' · ') || null],
+                ['SKU', infoDetails.sku || null],
+                ['Price range', (infoDetails.minPrice || infoDetails.maxPrice)
+                  ? `${infoDetails.currency || '₹'}${infoDetails.minPrice || '—'} – ${infoDetails.currency || '₹'}${infoDetails.maxPrice || '—'} / unit`
+                  : null],
+                ['Min. order', infoDetails.minOrderQuantity ? `${infoDetails.minOrderQuantity} ${infoDetails.supplyUnit || 'units'}` : null],
+                ['Supply ability', infoDetails.supplyAbility ? `${infoDetails.supplyAbility} ${infoDetails.supplyUnit || 'units'}/month` : null],
+                ['Lead time', infoDetails.leadTime || null],
+              ].filter(([, v]) => v).map(([label, v], i, arr) => (
+                <div key={label} className={`flex text-xs ${i % 2 ? 'bg-canvas' : 'bg-surface'} ${i < arr.length - 1 ? 'border-b border-line' : ''}`}>
+                  <span className="w-2/5 px-2.5 py-1.5 text-dim">{label}</span>
+                  <span className="flex-1 px-2.5 py-1.5 font-medium text-ink">{v}</span>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {(infoDetails?.packagingDetails || (infoDetails?.deliveryMethods || []).length > 0 || infoDetails?.portOfDispatch) && (
+            <div>
+              <p className={labelCls}>Packaging &amp; delivery</p>
+              {infoDetails.packagingDetails && (
+                <p className="text-xs text-ink mb-1">{infoDetails.packagingDetails}</p>
+              )}
+              {(infoDetails.deliveryMethods || []).length > 0 && (
+                <div className="flex flex-wrap gap-1 mb-1">
+                  {infoDetails.deliveryMethods.map(m => (
+                    <span key={m} className="px-1.5 py-0.5 rounded-full text-[9px] font-medium bg-canvas border border-line text-ink">{m}</span>
+                  ))}
+                </div>
+              )}
+              {infoDetails.portOfDispatch && (
+                <p className="text-[10px] text-dim">Port of dispatch: {infoDetails.portOfDispatch}</p>
+              )}
+            </div>
+          )}
+
+          {(infoDetails?.warranty || infoDetails?.sample) && (
+            <div className="grid grid-cols-2 gap-2">
+              {infoDetails.warranty && (
+                <div className="rounded-md border border-line px-2 py-1.5 bg-canvas">
+                  <p className={labelCls}>Warranty</p>
+                  <p className="text-xs font-medium text-ink">
+                    {infoDetails.warranty.months || '—'} months{infoDetails.warranty.type ? ` · ${infoDetails.warranty.type}` : ''}
+                  </p>
+                  {infoDetails.warranty.service && (
+                    <p className="text-[10px] text-dim">{infoDetails.warranty.service}</p>
+                  )}
+                </div>
+              )}
+              {infoDetails.sample && (
+                <div className="rounded-md border border-line px-2 py-1.5 bg-canvas">
+                  <p className={labelCls}>Samples</p>
+                  <p className="text-xs font-medium text-ink">
+                    Free: {infoDetails.sample.free ?? 0} · Max: {infoDetails.sample.max ?? '—'}
+                  </p>
+                  <p className="text-[10px] text-dim">
+                    {infoDetails.sample.chargeable ? 'Chargeable beyond free limit' : 'Samples available'}
+                  </p>
+                </div>
+              )}
+            </div>
+          )}
+
+          {(infoDetails?.specs || []).length > 0 && (
+            <div>
+              <p className={labelCls}>Specifications</p>
+              <div className="border border-line rounded-md overflow-hidden">
+                {infoDetails.specs.map((s, i) => (
+                  <div key={i} className={`flex text-xs ${i % 2 ? 'bg-canvas' : 'bg-surface'}`}>
+                    <span className="w-2/5 px-2.5 py-1.5 text-dim border-r border-line">{s.property || '—'}</span>
+                    <span className="flex-1 px-2.5 py-1.5 text-ink">{s.value || '—'}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {(infoDetails?.colorOptions || []).length > 0 && (
+            <div>
+              <p className={labelCls}>Colours</p>
+              <div className="flex gap-1.5">
+                {infoDetails.colorOptions.map((c, i) => (
+                  <span key={i} className="w-5 h-5 rounded-full border border-line" style={{ background: c }} title={c} />
+                ))}
+              </div>
+            </div>
+          )}
+
           {[
-            ['Description', infoItem.details?.description],
-            ['Available sizes', infoItem.details?.availableSizes],
-            ['Packaging / delivery', infoItem.details?.packagingDelivery],
-            ['Usage areas', infoItem.details?.usageAreas],
-            ['Target customers', infoItem.details?.targetCustomers],
-            ['Certifications', infoItem.details?.certifications],
-            ['Support services', infoItem.details?.supportServices],
-            ['Catalogue demo', infoItem.details?.catalogDemo],
+            ['Description', infoDetails?.description],
+            ['Available sizes', infoDetails?.availableSizes],
+            ['Packaging / delivery', infoDetails?.packagingDelivery],
+            ['Usage areas', infoDetails?.usageAreas],
+            ['Target customers', infoDetails?.targetCustomers],
+            ['Certifications', infoDetails?.certifications],
+            ['Support services', infoDetails?.supportServices],
+            ['Catalogue demo', infoDetails?.catalogDemo],
           ].filter(([, v]) => v).map(([label, v]) => (
             <div key={label}>
               <p className={labelCls}>{label}</p>
@@ -591,11 +756,11 @@ const VendorCatalogCard = ({ data, nodeId, workspaceId, setNodes, role }) => {
             </div>
           )}
 
-          {Object.keys(infoItem.details?.customFields || {}).length > 0 && (
+          {Object.keys(infoDetails?.customFields || {}).length > 0 && (
             <div>
               <p className={labelCls}>Custom fields</p>
               <div className="border border-line rounded-md overflow-hidden">
-                {Object.entries(infoItem.details.customFields).map(([k, v], i) => (
+                {Object.entries(infoDetails.customFields).map(([k, v], i) => (
                   <div key={k} className={`flex text-xs ${i % 2 ? 'bg-canvas' : 'bg-surface'}`}>
                     <span className="w-2/5 px-2 py-1.5 text-dim border-r border-line">{k}</span>
                     <span className="flex-1 px-2 py-1.5 text-ink">{String(v)}</span>
@@ -618,7 +783,7 @@ const VendorCatalogCard = ({ data, nodeId, workspaceId, setNodes, role }) => {
             </div>
           )}
 
-          {!infoItem.details && !infoItem.datasheet && !(infoItem.features || []).length && !(infoItem.tags || []).length && (
+          {!hasDetails && !infoItem.datasheet && !(infoItem.features || []).length && !(infoItem.tags || []).length && (
             <p className="text-[11px] text-dim italic text-center py-2">
               No product details stored — this item was added manually or before catalogue sync.
             </p>
@@ -662,24 +827,28 @@ const VendorCatalogCard = ({ data, nodeId, workspaceId, setNodes, role }) => {
       <div className="p-3 space-y-3 max-h-[420px] overflow-y-auto">
         {items.length === 0 ? (
           <p className="text-xs text-dim">
-            Your catalogue products load here automatically. No products found — add them in Portfolio → B2B Catalog.
+            Your catalogue products load here automatically. No approved products found — add & get products approved in Portfolio → B2B Catalog.
           </p>
-        ) : (
-          items.map((it, i) => (
-            <div key={it.id} className={i > 0 ? 'pt-3 border-t border-line' : ''}>
+        ) : visibleItems.map((it, i) => (
+          <div key={it.id} className={i > 0 ? 'pt-3 border-t border-line' : ''}>
               <div className="flex items-center gap-2 mb-1.5">
-                {it.productImage
-                  ? <img src={it.productImage} alt="" className="w-8 h-8 rounded-lg object-cover border border-line flex-shrink-0" />
-                  : <span className="w-8 h-8 rounded-lg bg-info/10 text-info flex items-center justify-center flex-shrink-0"><Package className="w-4 h-4" /></span>}
-                <div className="flex-1 min-w-0">
-                  <p className="text-xs font-semibold text-ink truncate">{it.productName || `Item ${i + 1}`}</p>
-                  {it.category && <p className="text-[9px] uppercase tracking-wide text-dim">{it.category}</p>}
+                {/* Click the product (image or name) → full product detail modal */}
+                <div
+                  role="button" tabIndex={0}
+                  onClick={(e) => { e.stopPropagation(); setInfoIndex(itemIndex(i)); }}
+                  onKeyDown={(e) => { if (e.key === 'Enter') { e.stopPropagation(); setInfoIndex(itemIndex(i)); } }}
+                  className="flex items-center gap-2 flex-1 min-w-0 cursor-pointer rounded-md -m-1 p-1 hover:bg-info/5 transition-colors"
+                  title="View product details"
+                >
+                  {it.productImage
+                    ? <img src={it.productImage} alt="" className="w-8 h-8 rounded-lg object-cover border border-line flex-shrink-0" />
+                    : <span className="w-8 h-8 rounded-lg bg-info/10 text-info flex items-center justify-center flex-shrink-0"><Package className="w-4 h-4" /></span>}
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs font-semibold text-ink truncate">{it.productName || `Item ${i + 1}`}</p>
+                    {it.category && <p className="text-[9px] uppercase tracking-wide text-dim">{it.category}</p>}
+                  </div>
+                  <Info className="w-3.5 h-3.5 text-dim flex-shrink-0" />
                 </div>
-                <button type="button" onClick={(e) => { e.stopPropagation(); setInfoIndex(i); }}
-                  className="p-1 rounded text-dim hover:text-info hover:bg-info/10 flex-shrink-0"
-                  title="Product details">
-                  <Info className="w-3.5 h-3.5" />
-                </button>
                 {it.datasheet && (
                   <button type="button" onClick={(e) => { e.stopPropagation(); openDatasheet(it.datasheet); }}
                     className="flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium text-info hover:bg-info/10 flex-shrink-0"
@@ -702,7 +871,7 @@ const VendorCatalogCard = ({ data, nodeId, workspaceId, setNodes, role }) => {
                       {isPM && t.status !== 'verified' && (
                         <button
                           type="button"
-                          onClick={(e) => { e.stopPropagation(); verifyTag(i, t.label); }}
+                          onClick={(e) => { e.stopPropagation(); verifyTag(itemIndex(i), t.label); }}
                           title="Mark verified"
                           className="ml-0.5 underline decoration-dotted hover:text-info"
                         >
@@ -715,7 +884,7 @@ const VendorCatalogCard = ({ data, nodeId, workspaceId, setNodes, role }) => {
               )}
             </div>
           ))
-        )}
+        }
       </div>
     </div>
   );

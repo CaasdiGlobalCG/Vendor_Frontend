@@ -1002,7 +1002,7 @@ const edgeTypes = {
           const approvalStatus = node.data?.approvalStatus;
           const hasCommission = Boolean(node.data?.customBOQData?.commission);
           const released =
-            boqStatus === 'sent_to_client' ||
+            ['sent_to_client', 'vendor_rejected', 'client_approved'].includes(boqStatus) ||
             (hasCommission && ['pm_approved', 'client_approved'].includes(approvalStatus));
           if (released) releasedBoqNodeIdsRef.current.add(node.id);
           return released;

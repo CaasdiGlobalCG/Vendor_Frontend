@@ -1010,23 +1010,51 @@ const MaterialSpecCard = ({ data, nodeId, workspaceId, setNodes }) => {
                     </p>
                   )}
 
-                  {specRows.length > 0 && (
-                    <div className="border border-line rounded-md overflow-hidden mt-2">
-                      {specRows.map((row, j) => {
-                        const hasQC = row.actual !== undefined && row.actual !== '';
-                        return (
-                          <div key={j} className={`flex items-center text-xs ${j % 2 === 0 ? 'bg-surface' : 'bg-canvas'}`}>
-                            <span className="flex-1 px-2 py-1.5 text-dim border-r border-line">{row.key}</span>
-                            <span className="w-16 px-2 py-1.5 font-medium text-ink border-r border-line" title="Required">{row.value || '—'}</span>
-                            <span className="w-16 px-2 py-1.5 text-ink border-r border-line" title="Actual">{row.actual || '—'}</span>
-                            <span className={`w-12 text-center text-[9px] font-bold uppercase border rounded mx-1 my-0.5 py-0.5 ${RESULT_BADGE[row.result || 'pending']}`}>
-                              {hasQC || row.result !== 'pending' ? (row.result || 'pending') : ''}
-                            </span>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  )}
+                  {specRows.length > 0 && (() => {
+                    const showQC = specRows.some(
+                      r => (r.actual !== undefined && r.actual !== '') || (r.result && r.result !== 'pending')
+                    );
+                    return (
+                      // real table — columns sized to content, cells on one
+                      // line; scrolls horizontally only if it outgrows the card
+                      <div className="border border-line rounded-md overflow-x-auto mt-2">
+                        <table className="min-w-full w-max border-collapse text-xs">
+                          <thead>
+                            <tr className="bg-surface-hover text-[9px] font-bold uppercase tracking-wide text-dim">
+                              <th className="px-2.5 py-1.5 text-left border-b border-line">Spec</th>
+                              <th className="px-2.5 py-1.5 text-left border-b border-l border-line">Req'd</th>
+                              {showQC && <th className="px-2.5 py-1.5 text-left border-b border-l border-line">Actual</th>}
+                              {showQC && <th className="px-2.5 py-1.5 text-center border-b border-l border-line w-14">Result</th>}
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {specRows.map((row, j) => {
+                              const hasQC = row.actual !== undefined && row.actual !== '';
+                              const badge = row.result && row.result !== 'pending' ? row.result : (hasQC ? 'pending' : '');
+                              return (
+                                <tr key={j} className={j % 2 === 0 ? 'bg-surface' : 'bg-canvas'}>
+                                  <td className="px-2.5 py-1.5 text-dim whitespace-nowrap">{row.key}</td>
+                                  <td className="px-2.5 py-1.5 font-medium text-ink border-l border-line whitespace-nowrap">{row.value || '—'}</td>
+                                  {showQC && (
+                                    <td className="px-2.5 py-1.5 text-ink border-l border-line whitespace-nowrap">{row.actual || '—'}</td>
+                                  )}
+                                  {showQC && (
+                                    <td className="px-2.5 py-1.5 border-l border-line text-center">
+                                      {badge && (
+                                        <span className={`inline-block text-[9px] font-bold uppercase border rounded px-1.5 py-0.5 whitespace-nowrap ${RESULT_BADGE[badge]}`}>
+                                          {badge}
+                                        </span>
+                                      )}
+                                    </td>
+                                  )}
+                                </tr>
+                              );
+                            })}
+                          </tbody>
+                        </table>
+                      </div>
+                    );
+                  })()}
 
                   {(mat.attachments || []).length > 0 && (
                     <div className="mt-2 space-y-1">
