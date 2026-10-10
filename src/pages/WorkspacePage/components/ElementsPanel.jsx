@@ -1,5 +1,5 @@
 import React, { useRef, useState } from 'react';
-import { Grid, Table, BarChart3, Square, List, X, GitBranch, Package, Upload, FileText, Image, FileSpreadsheet, Plus, File, Settings, Workflow, FileDigit, FileCheck, Clock, AlertCircle, ClipboardList, FileSpreadsheet as FileSpreadsheetIcon, Sparkles, Calendar, CheckCircle, StickyNote, ClipboardCheck, Minus, ArrowDown, Box, LayoutGrid, CheckSquare, TrendingUp, Calculator, Layers } from 'lucide-react';
+import { Grid, Table, BarChart3, Square, List, X, GitBranch, Package, Upload, FileText, Image, FileSpreadsheet, Plus, File, Settings, Workflow, FileDigit, FileCheck, Clock, AlertCircle, ClipboardList, FileSpreadsheet as FileSpreadsheetIcon, Sparkles, Calendar, CheckCircle, StickyNote, ClipboardCheck, ArrowDown, Box, LayoutGrid, CheckSquare, TrendingUp, Calculator, Layers } from 'lucide-react';
 import { useUpload } from './forms/UploadManager';
 import ManageBOQModal from './ManageBOQModal';
 import CustomBOQModal from './CustomBOQModal';
@@ -659,9 +659,6 @@ const DraggableElement = ({ element }) => {
         )}
         {(element.type === 'approval-board' || element.nodeType === 'approvalBoard') && (
           <ClipboardCheck className="w-6 h-6 text-success" />
-        )}
-        {element.type === 'divider' && (
-          <Minus className="w-6 h-6 text-dim" />
         )}
         {element.type === 'spacer' && (
           <ArrowDown className="w-6 h-6 text-dim" />

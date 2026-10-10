@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useEffect, useContext, useRef, useImperativeHandle, forwardRef } from 'react';
-import { Plus, Save, Eye, X, Users, Grid, Maximize2, Minimize2, Check, Gauge, Download, FileText, AlignHorizontalDistributeCenter, Sparkles, Trash2, TrendingUp } from 'lucide-react';
+import { Plus, Save, Eye, X, Users, Grid, Maximize2, Minimize2, Check, Gauge, Download, FileText, AlignHorizontalDistributeCenter, Sparkles, Trash2, TrendingUp, Link2 } from 'lucide-react';
 import { toJpeg } from 'html-to-image';
 import { VendorContext } from '../../../context/VendorContext';
 import ReactFlow, {
@@ -36,6 +36,8 @@ import ExecutionRequestDetailsModal from './modals/ExecutionRequestDetailsModal'
 import { getFlowchartTemplate } from '../utils/flowchartTemplates';
 import { getWorkspaceById, notifyWorkspaceEvent } from '../utils/workspaceApi';
 import { registerCanvasEmitter, unregisterCanvasEmitter, persistNodeDataPatch, markTextNodeForFocus } from '../utils/nodePersistence';
+import { buildAuthorMeta } from '../utils/nodeAuthor';
+import { isLocked, isVisibleToRole } from '../utils/nodeVisibility';
 import config from '../../../config/env';
 import RemoteCursor from './RemoteCursor';
 import { useToast } from './ToastProvider';
@@ -904,6 +906,8 @@ const edgeTypes = {
   const [manuallySelectedNodes, setManuallySelectedNodes] = useState([]);
   const [isTextModeActive, setIsTextModeActive] = useState(false);
   const [textModeConfig, setTextModeConfig] = useState(null);
+  // Field link pick-mode: { sourceNodeId, sourceLabel } — next node click links it
+  const [linkPickMode, setLinkPickMode] = useState(null);
 
   // Saving state
   const [saveStatus, setSaveStatus] = useState('idle'); // 'idle', 'saving', 'saved', 'error'
@@ -990,13 +994,18 @@ const edgeTypes = {
       'quotation', 'invoice', 'purchaseOrder', 'creditNote',
       'smartNote', 'infoCard', 'formCard',
     ]);
-    const role = getCurrentUserRole();
+    const viewerRole = getCurrentUserRole();
+    // Audience filtering happens here rather than in `nodes` state so that a
+    // restricted viewer's save still carries the nodes they cannot see — the
+    // server also preserves them (see modules/workspace/utils/nodeVisibility.js).
     return nodes
       .filter((node) => {
+        if (!isVisibleToRole(node.data, viewerRole)) return false;
+
         // Custom BOQs stay hidden from the client until released. Released when
         // either the BOQ workflow reaches 'sent_to_client' (PM's send button) or
         // the node's standard approval chain reaches pm_approved / client_approved.
-        if (role === 'client' && node.data?.type === 'custom-boq') {
+        if (viewerRole === 'client' && node.data?.type === 'custom-boq') {
           if (releasedBoqNodeIdsRef.current.has(node.id)) return true;
           const boqStatus = node.data?.customBOQData?.status;
           const approvalStatus = node.data?.approvalStatus;
@@ -1012,6 +1021,9 @@ const edgeTypes = {
       })
       .map((node) => {
       let out = node;
+      if (isLocked(node.data)) {
+        out = { ...out, draggable: false, deletable: false };
+      }
       if (node.type === 'elementNode' && getCurrentUserRole() !== 'pm') {
         out = { ...out, deletable: false };
       }
@@ -1722,6 +1734,13 @@ const edgeTypes = {
         ...(element.type === 'chart' && { id: element.id }),
         // Store list ID for list elements
         ...(element.type === 'list' && { id: element.id }),
+        // Store table ID for table elements — drives which table renderer runs
+        // (Excel Grid / Data Table / Pivot Table). Without this every table
+        // rendered identically because data.id was undefined.
+        ...(element.type === 'table' && {
+          id: element.id,
+          tableType: element.tableType || element.id
+        }),
         ...(isTaskCard && taskCardData && { taskCardData }),
         ...(isImageBlock && imageBlockData && { imageBlockData: JSON.parse(JSON.stringify(imageBlockData)) }),
         // Store CAD files data
@@ -2677,7 +2696,8 @@ const edgeTypes = {
         ...node.data,
         flowchartGroup: flowchartGroupId,
         flowchartType: element.id,
-        flowchartName: template.name
+        flowchartName: template.name,
+        ...buildAuthorMeta(currentUser)
       }
     }));
 
@@ -2924,7 +2944,10 @@ const edgeTypes = {
             flowchartGroup: selectedFlowchartGroup,
             flowchartType: flowchartType,
             flowchartName: flowchartName,
-            workspaceId: workspace?.workspaceId
+            workspaceId: workspace?.workspaceId,
+            workspaceCollaborators: workspaceCollaboratorsRef.current || [],
+            comments: [],
+            ...buildAuthorMeta(currentUser)
           }
         };
         break;
@@ -2944,6 +2967,14 @@ const edgeTypes = {
 
   // Handle canvas click to hide flowchart toolbar and context menu
   const onPaneClick = useCallback((event) => {
+    // Clicking empty canvas cancels element link pick-mode
+    if (linkPickMode) {
+      document.dispatchEvent(new CustomEvent('activateElementLinkMode', {
+        detail: { active: false, sourceNodeId: linkPickMode.sourceNodeId }
+      }));
+      return;
+    }
+
     // If text mode is active, place a caption-style text node at the click
     // point and let the user type immediately (Figma-style text tool)
     if (isTextModeActive && reactFlowInstance) {
@@ -2967,7 +2998,10 @@ const edgeTypes = {
           color: textModeConfig?.color || '#111827',
           backgroundColor: 'transparent',
           formats: [],
-          workspaceId: workspace?.workspaceId
+          workspaceId: workspace?.workspaceId,
+          workspaceCollaborators: workspaceCollaboratorsRef.current || [],
+          comments: [],
+          ...buildAuthorMeta(currentUser)
         }
       };
 
@@ -2989,7 +3023,7 @@ const edgeTypes = {
     setShowFlowchartToolbar(false);
     setSelectedFlowchartGroup(null);
     setContextMenu({ isVisible: false, position: { x: 0, y: 0 }, selectedNodes: [] });
-  }, [isTextModeActive, reactFlowInstance, textModeConfig, setNodes, workspace?.workspaceId]);
+  }, [isTextModeActive, reactFlowInstance, textModeConfig, setNodes, workspace?.workspaceId, currentUser, linkPickMode]);
 
   // Handle right-click context menu
   const onNodeContextMenu = useCallback((event, node) => {
@@ -3387,6 +3421,22 @@ const edgeTypes = {
   const onNodeClick = useCallback((event, node) => {
     event.stopPropagation();
 
+    // Link pick-mode consumes the click: report the picked element back to the
+    // requesting field and exit the mode (clicking the source node is ignored)
+    if (linkPickMode) {
+      if (node.id !== linkPickMode.sourceNodeId) {
+        document.dispatchEvent(new CustomEvent('elementLinkPicked', {
+          detail: {
+            sourceNodeId: linkPickMode.sourceNodeId,
+            targetId: node.id,
+            targetName: node.data?.name || node.data?.title || node.data?.type || 'Element'
+          }
+        }));
+        setLinkPickMode(null);
+      }
+      return;
+    }
+
     if (node?.data?.type === 'procurement-rfq-request' && node?.data?.procurementRFQData) {
       setSelectedProcurementRFQNode(node.data);
       setShowProcurementRFQDetailsModal(true);
@@ -3415,7 +3465,7 @@ const edgeTypes = {
       // Otherwise, select the entire flowchart group
       selectFlowchartGroup(node.data.flowchartGroup);
     }
-  }, [isSelectionMode, handleManualNodeSelection]);
+  }, [isSelectionMode, handleManualNodeSelection, linkPickMode]);
 
   const handleEdgeClick = useCallback((event, edge) => {
     event.stopPropagation();
@@ -3898,6 +3948,55 @@ const edgeTypes = {
     }
   }, []);
 
+  // Force-reload the visible canvas from the server. Used by the top-bar
+  // Refresh button — the normal sync effect intentionally skips same-subtask
+  // reloads to protect local state, so manual refresh needs its own path.
+  // Pending WS ops are flushed first so in-flight edits aren't lost.
+  const refreshCanvasFromServer = useCallback(async () => {
+    if (!workspace?.workspaceId) return;
+    const requestId = ++canvasSyncRequestRef.current;
+    try {
+      batcherRef.current?.flush();
+      canvasWebSocket?.emitOperation?.({ type: 'FLUSH' });
+      // Give the server a moment to persist flushed ops before reading back.
+      await new Promise(resolve => setTimeout(resolve, 250));
+      const freshWorkspace = await getWorkspaceById(workspace.workspaceId);
+      const targetSubtaskId = selectedSubtask?.id;
+      let freshCanvasData = null;
+      if (targetSubtaskId) {
+        for (const task of freshWorkspace?.tasks || []) {
+          const st = (task.subtasks || []).find(s => s?.id === targetSubtaskId);
+          if (st) { freshCanvasData = st.canvasData; break; }
+        }
+        if (!freshCanvasData) freshCanvasData = { nodes: [], edges: [], zoomLevel: 100 };
+      } else {
+        freshCanvasData = {
+          nodes: freshWorkspace?.nodes || [],
+          edges: freshWorkspace?.edges || [],
+          zoomLevel: freshWorkspace?.zoomLevel || 100
+        };
+      }
+      // A newer subtask switch or refresh superseded this request.
+      if (canvasSyncRequestRef.current !== requestId) return;
+      skipNextSyncRef.current = true;
+      const nodesToLoad = cleanupOrphanedNodesHelper(freshCanvasData?.nodes || []);
+      const collabs = workspaceCollaboratorsRef.current;
+      const nodesWithCollabs = collabs.length > 0
+        ? nodesToLoad.map(n => ({ ...n, data: { ...n.data, workspaceCollaborators: collabs } }))
+        : nodesToLoad;
+      setNodesRaw(nodesWithCollabs);
+      setCanvasLoadedCounter(c => c + 1);
+      setEdgesRaw(Array.isArray(freshCanvasData?.edges) ? freshCanvasData.edges : []);
+      updateZoomLevel(freshCanvasData?.zoomLevel || 100);
+      lastAddedNodeIdRef.current = nodesWithCollabs.length > 0
+        ? nodesWithCollabs[nodesWithCollabs.length - 1].id
+        : null;
+      console.log('✅ Canvas refreshed from server:', nodesWithCollabs.length, 'nodes');
+    } catch (err) {
+      console.error('❌ Manual canvas refresh failed:', err);
+    }
+  }, [workspace?.workspaceId, selectedSubtask?.id, canvasWebSocket, updateZoomLevel]);
+
   useImperativeHandle(ref, () => ({
     zoomIn: handleZoomIn,
     zoomOut: handleZoomOut,
@@ -3905,6 +4004,7 @@ const edgeTypes = {
     setZoomLevel: handleSetZoomLevel,
     getNodes: () => nodes,
     getEdges: () => edges,
+    refreshCanvas: refreshCanvasFromServer,
     addProcurementRFQNode: addProcurementRFQNodeToCanvas,
     addExecutionRequestNode: addExecutionRequestNodeToCanvas,
     addDrawingFilesToCanvas,
@@ -3987,7 +4087,10 @@ const edgeTypes = {
           color: textData.color,
           backgroundColor: textData.backgroundColor,
           formats: textData.formats,
-          workspaceId: workspace?.workspaceId
+          workspaceId: workspace?.workspaceId,
+          workspaceCollaborators: workspaceCollaboratorsRef.current || [],
+          comments: [],
+          ...buildAuthorMeta(currentUser)
         },
       };
       
@@ -4000,7 +4103,7 @@ const edgeTypes = {
     return () => {
       document.removeEventListener('textElementDrop', handleTextElementDrop);
     };
-  }, [setNodes, canEdit, notifyViewOnly]);
+  }, [setNodes, canEdit, notifyViewOnly, currentUser, workspace?.workspaceId]);
 
   // Handle direct table add events from BOQ modal (single and batch)
   useEffect(() => {
@@ -4238,14 +4341,14 @@ const edgeTypes = {
         setShowLayoutModal(true);
         return;
       }
-      
+
       // Check if it's a flowchart element
       if (isFlowchartElement(element)) {
         console.log('🔄 Flowchart element detected, creating template');
         createFlowchartTemplate(element, targetPosition);
         return;
       }
-      
+
       // Check if it's a turnkey element
       if (element.category === 'turnkey' || element.type?.startsWith('turnkey-')) {
         console.log('🎯 Turnkey element detected, creating turnkey node');
@@ -4834,6 +4937,22 @@ const edgeTypes = {
     return () => document.removeEventListener('activateTextMode', handleActivateTextMode);
   }, [canEdit, notifyViewOnly]);
 
+  // Element link pick-mode: a form field asks the user to click the element
+  // it should be "related to" (instead of picking from a dropdown of hundreds)
+  useEffect(() => {
+    const handleActivateLinkPick = (event) => {
+      if (!canEdit) {
+        notifyViewOnly('element link mode');
+        return;
+      }
+      const { active, sourceNodeId, sourceLabel } = event.detail || {};
+      setLinkPickMode(active && sourceNodeId ? { sourceNodeId, sourceLabel } : null);
+    };
+
+    document.addEventListener('activateElementLinkMode', handleActivateLinkPick);
+    return () => document.removeEventListener('activateElementLinkMode', handleActivateLinkPick);
+  }, [canEdit, notifyViewOnly]);
+
   // Listen for text element selection from TextPanel
   useEffect(() => {
     const handleSelectTextElement = (event) => {
@@ -5124,6 +5243,14 @@ const edgeTypes = {
         return;
       }
 
+      // Escape cancels element link pick-mode and notifies the source field
+      if (event.key === 'Escape' && linkPickMode) {
+        document.dispatchEvent(new CustomEvent('activateElementLinkMode', {
+          detail: { active: false, sourceNodeId: linkPickMode.sourceNodeId }
+        }));
+        return;
+      }
+
       // Delete/Backspace: React Flow removes deletable selection itself
       // (deleteKeyCode) and onNodesChange routes vendors through the approval
       // flow. Only elementNode needs a manual nudge — it carries
@@ -5145,7 +5272,7 @@ const edgeTypes = {
 
     document.addEventListener('keydown', handleKeyPress);
     return () => document.removeEventListener('keydown', handleKeyPress);
-  }, [nodes, edges, onNodesDelete, onEdgesDelete, setEdges, canEdit, notifyViewOnly, filterDirectlyDeletableNodes, isTextModeActive]);
+  }, [nodes, edges, onNodesDelete, onEdgesDelete, setEdges, canEdit, notifyViewOnly, filterDirectlyDeletableNodes, isTextModeActive, linkPickMode]);
 
   // Handle connections between nodes
   const onConnect = useCallback((params) => {
@@ -5396,7 +5523,9 @@ const edgeTypes = {
                 fontUrl: asset.s3Url,
                 canvasAction: true,
                 assetId: asset.assetId || asset.id,
-                category: asset.category
+                category: asset.category,
+                workspaceCollaborators: workspaceCollaboratorsRef.current || [],
+                ...buildAuthorMeta(currentUser)
               },
             };
           }
@@ -5938,7 +6067,7 @@ const edgeTypes = {
       <div 
         ref={canvasContainerRef}
         data-tour="canvas"
-        className={`flex-1 relative overflow-hidden ${isTextModeActive ? 'text-cursor-mode' : ''}`}
+        className={`flex-1 relative overflow-hidden ${isTextModeActive ? 'text-cursor-mode' : ''} ${linkPickMode ? 'link-cursor-mode' : ''}`}
         style={{ 
           width: '100%', 
           height: '100%',
@@ -5951,6 +6080,14 @@ const edgeTypes = {
         onDragLeave={onDragLeave}
         onMouseMove={handleCanvasMouseMove}
       >
+        {/* Link pick-mode banner */}
+        {linkPickMode && (
+          <div className="absolute top-3 left-1/2 -translate-x-1/2 z-30 flex items-center gap-2 px-4 py-2 rounded-full bg-info text-white text-xs shadow-lg pointer-events-none">
+            <Link2 className="w-3.5 h-3.5" />
+            Click an element to link it{linkPickMode.sourceLabel ? ` to “${linkPickMode.sourceLabel}”` : ''} — Esc to cancel
+          </div>
+        )}
+
         <div
           ref={canvasOverlayRef}
           className={`absolute inset-0 z-20 ${isPenMode ? 'pointer-events-auto cursor-crosshair touch-none' : 'pointer-events-none'}`}

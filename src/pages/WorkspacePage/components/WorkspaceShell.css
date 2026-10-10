@@ -43,6 +43,7 @@
 .ws-shell {
   display: grid;
   grid-template-rows: 56px 1fr 34px;
+  grid-template-columns: minmax(0, 1fr);
   height: 100vh;
   width: 100vw;
   overflow: hidden;
@@ -296,6 +297,7 @@ button.ws-avatars {
 .ws-body {
   display: flex;
   min-height: 0;
+  min-width: 0;
   height: 100%;
   width: 100%;
   position: relative;
@@ -567,6 +569,12 @@ button.ws-avatars {
 /* Text-placement mode — I-beam cursor over the canvas pane */
 .text-cursor-mode .react-flow__pane {
   cursor: text !important;
+}
+
+/* Element link pick-mode — crosshair over the canvas and its nodes */
+.link-cursor-mode .react-flow__pane,
+.link-cursor-mode .react-flow__node {
+  cursor: crosshair !important;
 }
 
 .ws-canvas-empty {

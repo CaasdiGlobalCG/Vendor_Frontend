@@ -49,8 +49,8 @@ const ElementsSidebar = ({ isOpen, onClose, onElementSelect, userRole, currentUs
       { id: 'turnkey-resource', name: 'Resource Allocation', type: 'turnkey-resource', preview: 'Resource and team assignment' }
     ],
     forms: elementOptions.forms || [
-      { id: 'textarea', name: 'TextArea', type: 'textarea', preview: 'Large text input area' },
-      { id: 'textbox', name: 'TextBox', type: 'input', preview: 'Single line text input' },
+      { id: 'textarea', name: 'Comment', type: 'textarea', preview: 'Large text input area' },
+      { id: 'textbox', name: 'TextBox', type: 'textbox', preview: 'Bordered text box for display text' },
       { id: 'input', name: 'Input', type: 'input', preview: 'Generic input field' },
       { id: 'radio', name: 'Select one', type: 'radio', preview: 'Radio button selection' },
       { id: 'checkbox', name: 'Select Many', type: 'checkbox', preview: 'Multiple choice selection' },

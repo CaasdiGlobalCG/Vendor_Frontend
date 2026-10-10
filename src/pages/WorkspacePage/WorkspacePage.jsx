@@ -9,7 +9,6 @@ import {
   WorkspaceRightSidebar,
   ElementsSidebar,
   ElementsPanel,
-  LayoutsPanel,
   TextPanel,
   WorkspaceTopBar,
   WorkspaceDock,
@@ -60,6 +59,7 @@ import config from '../../config/env';
 import authFetch from '../../utils/authFetch';
 import { notifyWorkspaceEvent, getWorkspaceById } from './utils/workspaceApi';
 import { resolveWorkspaceActor } from './utils/workspaceActor';
+import { describeAudience } from './utils/nodeVisibility';
 import { findSubtaskContainingNode } from './utils/nodePersistence';
 
 const WorkspacePage = () => {
@@ -460,7 +460,7 @@ const WorkspacePage = () => {
   const [showElementsSidebar, setShowElementsSidebar] = useState(false);
   const [showElementsPanel, setShowElementsPanel] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState(null);
-  const [showLayoutsPanel, setShowLayoutsPanel] = useState(false);
+
   const [showTextPanel, setShowTextPanel] = useState(false);
   const [showInvoiceTool, setShowInvoiceTool] = useState(false);
   const [invoiceToolTab, setInvoiceToolTab] = useState(null);
@@ -696,6 +696,15 @@ const workspaceForProgress = useMemo(() => {
       console.error('❌ Failed to refetch workspace:', error);
     }
   }, [workspaceId, selectedTask, selectedSubtask, buildAuthHeaders]);
+
+  // Top-bar Refresh button: pull fresh workspace metadata AND force the canvas
+  // to reload nodes/edges from the server. refetchWorkspace alone updates
+  // task/subtask state but the canvas sync effect skips same-subtask reloads,
+  // so the canvas stayed stale without this.
+  const handleManualRefresh = useCallback(async () => {
+    await refetchWorkspace();
+    await window?.canvasWorkspaceRef?.current?.refreshCanvas?.();
+  }, [refetchWorkspace]);
   
   // Listen for workspace unlock notifications and refresh workspace data
   useEffect(() => {
@@ -968,13 +977,14 @@ const workspaceForProgress = useMemo(() => {
     forms: {
       name: 'Forms',
       elements: [
-        { id: 'textarea', name: 'TextArea', type: 'textarea', preview: 'Large text input area' },
-        { id: 'textbox', name: 'TextBox', type: 'input', preview: 'Single line text input' },
-        { id: 'input', name: 'Input', type: 'input', preview: 'Generic input field' },
-        { id: 'radio', name: 'Select one', type: 'radio', preview: 'Radio button selection' },
-        { id: 'checkbox', name: 'Select Many', type: 'checkbox', preview: 'Multiple choice selection' },
-        { id: 'dropdown', name: 'Dropdown', type: 'select', preview: 'Select from options' },
-        { id: 'button', name: 'Button', type: 'button', preview: 'Action button' }
+        { id: 'textarea', name: 'Comment', type: 'textarea', preview: 'Multi-line comment box for descriptions and notes' },
+        { id: 'textbox', name: 'Text Box', type: 'textbox', preview: 'Bordered text box for display text' },
+        { id: 'input', name: 'Input Field', type: 'input', preview: 'Single-line text entry field' },
+        { id: 'form-card', name: 'Form Card', type: 'form-card', nodeType: 'formCard', preview: 'Custom form with configurable fields and saved responses' },
+        { id: 'button', name: 'Action Button', type: 'button', preview: 'Clickable call-to-action button' },
+        { id: 'dropdown', name: 'Select Dropdown', type: 'select', preview: 'Select a single option from a dropdown list' },
+        { id: 'radio', name: 'Radio Choice', type: 'radio', preview: 'Single-choice radio button options' },
+        { id: 'checkbox', name: 'Checkbox Group', type: 'checkbox', preview: 'Multiple selection checkboxes' }
       ]
     },
     'cad-files': {
@@ -1142,9 +1152,9 @@ const workspaceForProgress = useMemo(() => {
     tables: {
       name: 'Tables',
       elements: [
-        { id: 'basic-table', name: 'Basic Table', type: 'table', preview: 'Simple data table' },
-        { id: 'data-table', name: 'Data Table', type: 'table', preview: 'Advanced data table' },
-        { id: 'pivot-table', name: 'Pivot Table', type: 'table', preview: 'Pivot analysis table' },
+        { id: 'basic-table', name: 'Excel Grid', type: 'table', preview: 'Editable spreadsheet — formulas, add/remove rows & columns' },
+        { id: 'data-table', name: 'Data Table', type: 'table', preview: 'Sortable, filterable, paginated table for larger datasets' },
+        { id: 'pivot-table', name: 'Pivot Table', type: 'table', preview: 'Group-by summary with sum/avg/count aggregation' },
         { id: 'calendar', name: 'Calendar', type: 'calendar', preview: 'Date picker calendar' }
       ]
     },
@@ -1732,16 +1742,31 @@ const workspaceForProgress = useMemo(() => {
     { id: 'add-task', label: 'Add New Task', category: 'Tasks', icon: <CheckCircle className="w-4 h-4" />, keywords: ['create', 'task', 'new'], action: () => setShowAddTaskModal(true) },
     { id: 'add-subtask', label: 'Add Subtask', category: 'Tasks', icon: <FileText className="w-4 h-4" />, keywords: ['create', 'subtask', 'new'], action: () => selectedTask && setShowAddSubtaskModal(true) },
     { id: 'elements', label: 'Open Elements Panel', category: 'Panels', icon: <Layout className="w-4 h-4" />, keywords: ['elements', 'sidebar', 'components', 'drag'], action: () => handleElementsClick() },
-    { id: 'layouts', label: 'Open Layouts Panel', category: 'Panels', icon: <Layout className="w-4 h-4" />, keywords: ['layouts', 'template', 'grid'], action: () => handleLayoutsClick() },
     { id: 'text', label: 'Open Text Panel', category: 'Panels', icon: <FileText className="w-4 h-4" />, keywords: ['text', 'annotation', 'label'], action: () => handleTextClick() },
     { id: 'templates', label: 'Open Templates Panel', category: 'Panels', icon: <Sparkles className="w-4 h-4" />, keywords: ['templates', 'flowchart', 'preset'], action: () => handleTemplatesClick() },
     { id: 'post-services', label: 'Post Service', category: 'Actions', icon: <FileText className="w-4 h-4" />, keywords: ['post', 'service', 'publish'], action: () => setShowPostServicesModal(true) },
     { id: 'shortcuts', label: 'Show Keyboard Shortcuts', category: 'Help', icon: <Keyboard className="w-4 h-4" />, shortcut: '?', keywords: ['keyboard', 'shortcuts', 'help', 'keys'], action: () => setShowShortcutsOverlay(true) },
     { id: 'ai-canvas-builder', label: 'AI Canvas Builder', category: 'Canvas', icon: <Sparkles className="w-4 h-4" />, keywords: ['ai', 'generate', 'flow', 'build', 'canvas', 'agent', 'auto'], action: () => setShowAIBuilder(true) },
     { id: 'ai-assistant', label: 'Ask AI Assistant', category: 'Canvas', icon: <Sparkles className="w-4 h-4" />, keywords: ['ai', 'assistant', 'summarize', 'suggest', 'ask', 'helper'], action: () => document.dispatchEvent(new CustomEvent('openAIAssistant')) },
+    // Canvas text — searchable by the words written on the canvas. Text nodes
+    // are excluded from the generic "Go to" list below because every one of
+    // them shares the name "Text", which made that list useless for notes.
+    ...(canvasNodes || [])
+      .filter(n => n?.type === 'textNode' && String(n?.data?.content || '').trim())
+      .map(n => {
+        const content = String(n.data.content).trim();
+        return {
+          id: `text-${n.id}`,
+          label: content.length > 60 ? `${content.slice(0, 60)}…` : content,
+          category: 'Canvas Text',
+          icon: <StickyNote className="w-4 h-4" />,
+          keywords: ['text', 'caption', 'note', 'annotation', content.toLowerCase(), describeAudience(n.data).toLowerCase()],
+          action: () => document.dispatchEvent(new CustomEvent('zoomToElement', { detail: { elementId: n.id } }))
+        };
+      }),
     // Canvas elements — "Go to" commands zoom to the node on the canvas
     ...(canvasNodes || [])
-      .filter(n => n?.id && n?.data?.name)
+      .filter(n => n?.id && n?.data?.name && n?.type !== 'textNode')
       .map(n => ({
         id: `goto-${n.id}`,
         label: `Go to ${n.data.name}`,
@@ -2158,22 +2183,11 @@ const workspaceForProgress = useMemo(() => {
 
   const handleElementsClick = () => {
     setShowElementsSidebar(true);
-    setShowLayoutsPanel(false); // Close layouts if open
-    setShowInvoiceTool(false);
-  };
-
-  const handleLayoutsClick = () => {
-    setShowLayoutsPanel(true);
-    setShowElementsSidebar(false);
-    setShowElementsPanel(false);
-    setSelectedCategory(null);
-    setShowTextPanel(false);
     setShowInvoiceTool(false);
   };
 
   const handleTextClick = () => {
     setShowTextPanel(true);
-    setShowLayoutsPanel(false);
     setShowElementsSidebar(false);
     setShowElementsPanel(false);
     setSelectedCategory(null);
@@ -2193,7 +2207,6 @@ const workspaceForProgress = useMemo(() => {
     setDockActiveTab('templates');
     setIsContextPanelOpen(true);
     setShowTextPanel(false);
-    setShowLayoutsPanel(false);
     setShowElementsSidebar(false);
     setShowElementsPanel(false);
     setSelectedCategory(null);
@@ -2203,7 +2216,6 @@ const workspaceForProgress = useMemo(() => {
   const handleWorkflowBuilderClick = () => {
     setShowWorkflowBuilderModal(true);
     setShowTextPanel(false);
-    setShowLayoutsPanel(false);
     setShowElementsSidebar(false);
     setShowElementsPanel(false);
     setSelectedCategory(null);
@@ -2234,7 +2246,6 @@ const workspaceForProgress = useMemo(() => {
       setIsContextPanelOpen(false);
       // Close other panels
       setShowTextPanel(false);
-      setShowLayoutsPanel(false);
       setShowElementsSidebar(false);
       setShowElementsPanel(false);
       setSelectedCategory(null);
@@ -2244,7 +2255,6 @@ const workspaceForProgress = useMemo(() => {
       setIsContextPanelOpen(false);
       // Close other panels
       setShowTextPanel(false);
-      setShowLayoutsPanel(false);
       setShowElementsSidebar(false);
       setShowElementsPanel(false);
       setSelectedCategory(null);
@@ -2254,7 +2264,6 @@ const workspaceForProgress = useMemo(() => {
       setIsContextPanelOpen(false);
       // Close other panels
       setShowTextPanel(false);
-      setShowLayoutsPanel(false);
       setShowElementsSidebar(false);
       setShowElementsPanel(false);
       setSelectedCategory(null);
@@ -2304,7 +2313,6 @@ const workspaceForProgress = useMemo(() => {
       setIsContextPanelOpen(false);
       // Close other panels
       setShowTextPanel(false);
-      setShowLayoutsPanel(false);
       setShowElementsSidebar(false);
       setShowElementsPanel(false);
       setSelectedCategory(null);
@@ -2312,7 +2320,6 @@ const workspaceForProgress = useMemo(() => {
       setShowProcurementRFQModal(true);
       setIsContextPanelOpen(false);
       setShowTextPanel(false);
-      setShowLayoutsPanel(false);
       setShowElementsSidebar(false);
       setShowElementsPanel(false);
       setSelectedCategory(null);
@@ -2320,7 +2327,6 @@ const workspaceForProgress = useMemo(() => {
       setShowCostCalculatorsModal(true);
       setIsContextPanelOpen(false);
       setShowTextPanel(false);
-      setShowLayoutsPanel(false);
       setShowElementsSidebar(false);
       setShowElementsPanel(false);
       setSelectedCategory(null);
@@ -2329,7 +2335,6 @@ const workspaceForProgress = useMemo(() => {
       setShowExecutionRequestModal(true);
       setIsContextPanelOpen(false);
       setShowTextPanel(false);
-      setShowLayoutsPanel(false);
       setShowElementsSidebar(false);
       setShowElementsPanel(false);
       setSelectedCategory(null);
@@ -2346,7 +2351,6 @@ const workspaceForProgress = useMemo(() => {
     setShowElementsPanel(true); // Show the ElementsPanel
     
     // Close other panels
-    setShowLayoutsPanel(false);
     setShowTextPanel(false);
     setShowInvoiceTool(false);
 
@@ -2653,7 +2657,7 @@ const workspaceForProgress = useMemo(() => {
           lastSavedAt={lastSavedAt}
           workspaceCollaborators={workspaceCollaborators}
           onBackToDashboard={handleBackToDashboard}
-          onRefresh={refetchWorkspace}
+          onRefresh={handleManualRefresh}
           onOpenTutorial={() => setShowTutorial(true)}
           onToggleActivityDrawer={() => setRightPanelPinned(p => !p)}
           isActivityDrawerOpen={rightPanelPinned}
@@ -2901,11 +2905,6 @@ const workspaceForProgress = useMemo(() => {
         />
       )}
 
-      {/* Layouts Panel */}
-      <LayoutsPanel
-        isOpen={showLayoutsPanel}
-        onClose={() => setShowLayoutsPanel(false)}
-      />
 
       {/* Text Panel */}
       <TextPanel

@@ -1,6 +1,20 @@
 import React, { useState, useEffect } from 'react';
+import { formatAuthorLine, formatAddedAt } from '../utils/nodeAuthor';
+import {
+  AUDIENCE_ROLES,
+  ROLE_LABELS,
+  describeAudience,
+  getAudience,
+  getReadabilityWarnings,
+  toggleAudienceRole,
+} from '../utils/nodeVisibility';
 import {
   Type,
+  Info,
+  Lock,
+  Unlock,
+  AlertTriangle,
+  UserCheck,
   Bold,
   Italic,
   Underline,
@@ -69,6 +83,16 @@ const ColorRow = ({ color, onChange }) => {
   );
 };
 
+// One-click typography presets. The inspector exposes ~20 raw controls, which
+// is too many for the common case of labelling a board — these bundles set the
+// few properties that actually differ between heading / caption / note.
+export const TEXT_PRESETS = [
+  { id: 'heading', label: 'Heading', fontSize: '24', fontWeight: 'bold', color: '#111827', backgroundColor: 'transparent' },
+  { id: 'subheading', label: 'Sub-heading', fontSize: '18', fontWeight: 'semibold', color: '#1F2937', backgroundColor: 'transparent' },
+  { id: 'caption', label: 'Caption', fontSize: '12', fontWeight: 'regular', color: '#6B7280', backgroundColor: 'transparent' },
+  { id: 'note', label: 'Note', fontSize: '12', fontWeight: 'regular', color: '#92400E', backgroundColor: '#FEF3C7' },
+];
+
 const TextPanel = ({ isOpen, onClose, selectedTextElement, onUpdateTextElement }) => {
   const [selectedFont, setSelectedFont] = useState('Arial');
   const [selectedSize, setSelectedSize] = useState('16');
@@ -92,6 +116,9 @@ const TextPanel = ({ isOpen, onClose, selectedTextElement, onUpdateTextElement }
   const [strokeColor, setStrokeColor] = useState('#000000');
   const [strokeWidth, setStrokeWidth] = useState('0');
   const [shadow, setShadow] = useState(false);
+  const [audience, setAudience] = useState([...AUDIENCE_ROLES]);
+  const [locked, setLocked] = useState(false);
+  const [assigneeId, setAssigneeId] = useState('');
 
   // Font families
   const fonts = [
@@ -128,6 +155,9 @@ const TextPanel = ({ isOpen, onClose, selectedTextElement, onUpdateTextElement }
       setStrokeColor(selectedTextElement.strokeColor || '#000000');
       setStrokeWidth(String(selectedTextElement.strokeWidth ?? '0'));
       setShadow(!!selectedTextElement.shadow);
+      setAudience(getAudience(selectedTextElement));
+      setLocked(selectedTextElement.locked === true);
+      setAssigneeId(selectedTextElement.assignee?.vendorId || '');
     }
   }, [selectedTextElement]);
 
@@ -186,6 +216,55 @@ const TextPanel = ({ isOpen, onClose, selectedTextElement, onUpdateTextElement }
       onUpdateTextElement({
         ...selectedTextElement,
         [property]: value
+      });
+    }
+  };
+
+  const handleToggleAudience = (role) => {
+    if (!selectedTextElement) return;
+    const next = toggleAudienceRole(selectedTextElement, role);
+    setAudience(next);
+    updateTextProperty('visibleTo', next);
+  };
+
+  const handleToggleLock = () => {
+    if (!selectedTextElement) return;
+    const next = !locked;
+    setLocked(next);
+    updateTextProperty('locked', next);
+  };
+
+  const handleAssigneeChange = (vendorId) => {
+    setAssigneeId(vendorId);
+    if (!vendorId) {
+      updateTextProperty('assignee', null);
+      return;
+    }
+    const person = (selectedTextElement?.workspaceCollaborators || []).find(
+      (c) => String(c.vendorId || c.id) === String(vendorId)
+    );
+    updateTextProperty('assignee', {
+      vendorId,
+      name: person?.name || '',
+      email: person?.email || '',
+    });
+  };
+
+  // Presets change several properties at once, so they sync the local
+  // inspector state and push the whole bundle to the node in one update.
+  const applyPreset = (preset) => {
+    setSelectedSize(preset.fontSize);
+    setFontWeight(preset.fontWeight);
+    setTextColor(preset.color);
+    setBackgroundColor(preset.backgroundColor);
+
+    if (selectedTextElement && onUpdateTextElement) {
+      onUpdateTextElement({
+        ...selectedTextElement,
+        fontSize: preset.fontSize,
+        fontWeight: preset.fontWeight,
+        color: preset.color,
+        backgroundColor: preset.backgroundColor
       });
     }
   };
@@ -281,6 +360,9 @@ const TextPanel = ({ isOpen, onClose, selectedTextElement, onUpdateTextElement }
     : activeFormats.has('align-right') ? 'right'
     : activeFormats.has('align-justify') ? 'justify' : 'left';
 
+  const readabilityWarnings = getReadabilityWarnings(selectedTextElement);
+  const collaborators = selectedTextElement.workspaceCollaborators || [];
+
   const weights = [
     { value: 'regular', label: 'Regular' },
     { value: 'medium', label: 'Medium' },
@@ -300,7 +382,33 @@ const TextPanel = ({ isOpen, onClose, selectedTextElement, onUpdateTextElement }
         </div>
       </div>
 
+      {/* Authorship — stamped on the node when it was created */}
+      {selectedTextElement.addedBy && (
+        <div className="flex-shrink-0 flex items-start gap-2 px-4 py-2 border-b border-line text-[11px] text-dim">
+          <Info className="w-3.5 h-3.5 mt-0.5 shrink-0" />
+          <span>
+            Added by <span className="font-medium text-ink">{formatAuthorLine(selectedTextElement)}</span>
+            {' · '}
+            {formatAddedAt(selectedTextElement.addedAt)}
+          </span>
+        </div>
+      )}
+
       <div className="flex-1 overflow-y-auto">
+        {/* Readability guardrails */}
+        {readabilityWarnings.length > 0 && (
+          <div className="px-4 py-3 border-b border-line">
+            <div className="flex items-start gap-2 rounded-md border border-warning/30 bg-warning/10 px-2.5 py-2 text-[11px] text-warning">
+              <AlertTriangle className="w-3.5 h-3.5 mt-0.5 shrink-0" />
+              <div className="space-y-0.5">
+                {readabilityWarnings.map((warning) => (
+                  <div key={warning}>{warning}</div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Position */}
         <div className="px-4 py-3 border-b border-line">
           <div className="text-[11px] font-medium text-dim mb-2">Position</div>
@@ -340,6 +448,22 @@ const TextPanel = ({ isOpen, onClose, selectedTextElement, onUpdateTextElement }
         {/* Typography */}
         <div className="px-4 py-3 border-b border-line">
           <div className="text-[11px] font-medium text-dim mb-2">Typography</div>
+
+          {/* Presets */}
+          <div className="text-[10px] text-dim mb-1">Presets</div>
+          <div className="flex flex-wrap gap-1 mb-3">
+            {TEXT_PRESETS.map((preset) => (
+              <button
+                key={preset.id}
+                type="button"
+                onClick={() => applyPreset(preset)}
+                className="px-2 py-1 rounded-md border border-line bg-canvas text-[11px] text-ink hover:border-info hover:text-info transition-colors"
+                title={`Apply ${preset.label} style`}
+              >
+                {preset.label}
+              </button>
+            ))}
+          </div>
 
           {/* Font family */}
           <div className="relative mb-2">
@@ -441,6 +565,70 @@ const TextPanel = ({ isOpen, onClose, selectedTextElement, onUpdateTextElement }
             />
             <span className="text-xs text-ink">Drop shadow</span>
           </label>
+        </div>
+
+        {/* Visibility & ownership */}
+        <div className="px-4 py-3 border-b border-line">
+          <div className="text-[11px] font-medium text-dim mb-2">Who can see this</div>
+          <div className="flex flex-wrap gap-1 mb-1.5">
+            {AUDIENCE_ROLES.map((role) => {
+              const active = audience.includes(role);
+              return (
+                <button
+                  key={role}
+                  type="button"
+                  onClick={() => handleToggleAudience(role)}
+                  aria-pressed={active}
+                  className={`px-2 py-1 rounded-md border text-[11px] transition-colors ${
+                    active
+                      ? 'border-info/40 bg-info/10 text-info'
+                      : 'border-line bg-canvas text-dim hover:text-ink'
+                  }`}
+                  title={active ? `Hide from ${ROLE_LABELS[role]}` : `Show to ${ROLE_LABELS[role]}`}
+                >
+                  {ROLE_LABELS[role]}
+                </button>
+              );
+            })}
+          </div>
+          <p className="text-[10px] leading-snug text-dim">
+            {describeAudience(selectedTextElement) === 'Everyone'
+              ? 'Visible to every collaborator on this workspace.'
+              : `Visible to ${describeAudience(selectedTextElement)}. Hidden nodes stay saved — they are only filtered out for the excluded roles.`}
+          </p>
+
+          <div className="mt-3 text-[11px] font-medium text-dim mb-2">Ownership</div>
+          <select
+            value={assigneeId}
+            onChange={(e) => handleAssigneeChange(e.target.value)}
+            className="w-full px-2 py-1.5 bg-canvas rounded-md text-xs text-ink focus:outline-none focus:ring-1 focus:ring-info appearance-none"
+            title="Assign this note to a collaborator"
+          >
+            <option value="">Unassigned</option>
+            {collaborators.map((person) => {
+              const id = person.vendorId || person.id;
+              return (
+                <option key={id} value={id}>
+                  {person.name || person.email || id}
+                </option>
+              );
+            })}
+          </select>
+
+          <button
+            type="button"
+            onClick={handleToggleLock}
+            aria-pressed={locked}
+            className={`mt-2 w-full flex items-center justify-center gap-1.5 rounded-md border px-2 py-1.5 text-[11px] transition-colors ${
+              locked
+                ? 'border-warning/40 bg-warning/10 text-warning'
+                : 'border-line bg-canvas text-dim hover:text-ink'
+            }`}
+            title={locked ? 'Unlock to move or edit' : 'Lock position and content'}
+          >
+            {locked ? <Lock className="w-3.5 h-3.5" /> : <Unlock className="w-3.5 h-3.5" />}
+            {locked ? 'Locked' : 'Lock this note'}
+          </button>
         </div>
 
         {/* Text mode controls */}

@@ -40,6 +40,7 @@
     "file-saver": "^2.0.5",
     "framer-motion": "^12.5.0",
     "gsap": "^3.12.7",
+    "hot-formula-parser": "^4.0.0",
     "html-to-image": "^1.11.13",
     "html2canvas-pro": "^2.4.2",
     "html2pdf.js": "^0.12.1",

@@ -13,7 +13,6 @@ export { default as LayerContentView } from './LayerContentView';
 export { default as BreadcrumbNavigation } from './BreadcrumbNavigation';
 export { default as ElementsSidebar } from './ElementsSidebar';
 export { default as ElementsPanel } from './ElementsPanel';
-export { default as LayoutsPanel } from './LayoutsPanel';
 export { default as TextPanel } from './TextPanel';
 export { default as PostServicesModal } from './modals/PostServicesModal';
 export { default as WorkspaceTopBar } from './WorkspaceTopBar';

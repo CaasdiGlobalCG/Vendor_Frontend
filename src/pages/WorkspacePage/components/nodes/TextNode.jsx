@@ -1,6 +1,10 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
-import { persistIsImportant, persistDeadline, persistTextContent, emitLiveTextPatch, consumeTextNodeFocus, formatTimeLeft, getTimeLeft } from '../../utils/nodePersistence';
+import { persistIsImportant, persistDeadline, persistTextContent, persistNodeDataPatch, emitLiveTextPatch, consumeTextNodeFocus, formatTimeLeft, getTimeLeft } from '../../utils/nodePersistence';
+import { formatAuthorLine, formatAddedAt } from '../../utils/nodeAuthor';
+import { describeAudience, isAudienceRestricted, isLocked } from '../../utils/nodeVisibility';
+import CommentThread from '../comments/CommentThread';
+import { MessageCircle, Info, Lock, Eye, UserCheck } from 'lucide-react';
 import { Handle, Position, useReactFlow } from 'reactflow';
 
 const TextNode = ({ id, data, isConnectable, selected }) => {
@@ -15,6 +19,62 @@ const TextNode = ({ id, data, isConnectable, selected }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [editContent, setEditContent] = useState('');
   const textSaveTimeoutRef = useRef(null);
+  const [showComments, setShowComments] = useState(false);
+  const [showInfo, setShowInfo] = useState(false);
+
+  // Comments live on the node data (same shape ElementNode uses), so the
+  // existing @mention notification endpoint works unchanged for text nodes.
+  const nodeComments = data.comments || [];
+  const unresolvedCommentCount = nodeComments.filter((c) => !c.resolved).length;
+
+  const handleAddComment = async (nodeId, comment) => {
+    const updatedComments = [...nodeComments, comment];
+    try {
+      await persistNodeDataPatch(nodeId, { comments: updatedComments }, setNodes, workspaceId);
+      if (comment.mentionedUserIds && comment.mentionedUserIds.length > 0) {
+        try {
+          await fetch('/api/workspace/comments/mention', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              workspaceId,
+              nodeId,
+              elementName: data.name || data.type || 'text',
+              commentText: comment.text,
+              authorName: comment.authorName,
+              mentionedUserIds: comment.mentionedUserIds,
+            }),
+          });
+        } catch (err) {
+          console.error('Failed to send mention notifications:', err);
+        }
+      }
+    } catch (err) {
+      console.error('Failed to add comment:', err);
+    }
+  };
+
+  const handleResolveComment = async (nodeId, commentId) => {
+    const updatedComments = nodeComments.map((c) =>
+      c.id === commentId
+        ? { ...c, resolved: !c.resolved, resolvedAt: !c.resolved ? new Date().toISOString() : null }
+        : c
+    );
+    try {
+      await persistNodeDataPatch(nodeId, { comments: updatedComments }, setNodes, workspaceId);
+    } catch (err) {
+      console.error('Failed to resolve comment:', err);
+    }
+  };
+
+  const handleDeleteComment = async (nodeId, commentId) => {
+    const updatedComments = nodeComments.filter((c) => c.id !== commentId);
+    try {
+      await persistNodeDataPatch(nodeId, { comments: updatedComments }, setNodes, workspaceId);
+    } catch (err) {
+      console.error('Failed to delete comment:', err);
+    }
+  };
 
   // Update time left display every second
   useEffect(() => {
@@ -182,7 +242,12 @@ const TextNode = ({ id, data, isConnectable, selected }) => {
     return 'left';
   };
 
+  // Locked notes are read-only: no drag, no edit, no delete from the canvas.
+  const locked = isLocked(data);
+  const audienceRestricted = isAudienceRestricted(data);
+
   const handleDoubleClick = () => {
+    if (locked) return;
     setIsEditing(true);
   };
 
@@ -291,13 +356,105 @@ const TextNode = ({ id, data, isConnectable, selected }) => {
     </>
   );
 
+  const authorLine = formatAuthorLine(data);
+
+  // Comments + authorship affordances, shared by the caption and card renders.
+  // Comments are stored on node.data.comments — the same shape ElementNode
+  // uses, so the @mention notification endpoint needs no changes.
+  const metaOverlay = (
+    <>
+      <button
+        type="button"
+        onClick={(e) => { e.stopPropagation(); setShowComments((v) => !v); }}
+        className={`absolute -bottom-2 -left-2 z-20 flex items-center gap-0.5 rounded-full border-2 border-white px-1.5 py-0.5 text-[10px] font-bold transition-opacity ${
+          unresolvedCommentCount > 0
+            ? 'bg-info text-white opacity-100'
+            : 'bg-surface text-dim opacity-0 group-hover:opacity-100'
+        }`}
+        title={unresolvedCommentCount > 0 ? `${unresolvedCommentCount} unresolved comment(s)` : 'Add a comment'}
+      >
+        <MessageCircle className="w-3 h-3" />
+        {unresolvedCommentCount > 0 && <span>{unresolvedCommentCount}</span>}
+      </button>
+
+      {/* Audience / lock / assignee state — always visible when set */}
+      <div className="absolute -top-3 -right-3 z-20 flex items-center gap-1">
+        {audienceRestricted && (
+          <span
+            className="flex items-center gap-0.5 rounded-full border border-info/30 bg-info/10 px-1.5 py-0.5 text-[10px] font-medium text-info"
+            title={`Visible to ${describeAudience(data)}`}
+          >
+            <Eye className="w-3 h-3" />
+            <span>{describeAudience(data)}</span>
+          </span>
+        )}
+        {data.assignee?.name && (
+          <span
+            className="flex items-center gap-0.5 rounded-full border border-success/30 bg-success/10 px-1.5 py-0.5 text-[10px] font-medium text-success"
+            title={`Assigned to ${data.assignee.name}`}
+          >
+            <UserCheck className="w-3 h-3" />
+            <span>{data.assignee.name}</span>
+          </span>
+        )}
+        {locked && (
+          <span
+            className="flex items-center rounded-full border border-warning/30 bg-warning/10 px-1.5 py-0.5 text-[10px] font-medium text-warning"
+            title="Locked — position and content are fixed"
+          >
+            <Lock className="w-3 h-3" />
+          </span>
+        )}
+      </div>
+
+      {authorLine && (
+        <div className="absolute -top-2 -left-2 z-20 opacity-0 transition-opacity group-hover:opacity-100">
+          <button
+            type="button"
+            onClick={(e) => { e.stopPropagation(); setShowInfo((v) => !v); }}
+            className="flex items-center gap-1 rounded-full border border-line bg-surface px-1.5 py-0.5 text-[10px] text-dim hover:text-ink"
+            title={`Added by ${authorLine}`}
+          >
+            <Info className="w-3 h-3" />
+          </button>
+          {showInfo && (
+            <div className="absolute left-0 top-full z-50 mt-1 w-48 rounded-lg border border-line bg-surface p-2 text-[11px] shadow-lg">
+              <div className="font-medium text-ink">{authorLine}</div>
+              {data.addedByEmail && <div className="text-dim">{data.addedByEmail}</div>}
+              <div className="mt-1 text-dim">Added {formatAddedAt(data.addedAt)}</div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {showComments && (
+        <div
+          className="absolute top-0 -right-[320px] z-50"
+          style={{ width: 300 }}
+          onClick={(e) => e.stopPropagation()}
+        >
+          <CommentThread
+            nodeId={id}
+            comments={nodeComments}
+            collaborators={data.workspaceCollaborators || []}
+            onAddComment={handleAddComment}
+            onResolve={handleResolveComment}
+            onDeleteComment={handleDeleteComment}
+            isLocked={false}
+            onClose={() => setShowComments(false)}
+          />
+        </div>
+      )}
+    </>
+  );
+
   // Caption mode — created by the text tool: bare text on the canvas, no card
   // chrome and no connection handles. Single click selects it (opens the left
   // text inspector); a second click or double-click enters editing.
   if (data.caption) {
     return (
       <div
-        className="relative"
+        className="relative group"
         style={{
           opacity: data.opacity != null ? Math.max(0, Math.min(100, Number(data.opacity))) / 100 : 1,
           transform: data.rotation ? `rotate(${Number(data.rotation) || 0}deg)` : undefined,
@@ -312,8 +469,8 @@ const TextNode = ({ id, data, isConnectable, selected }) => {
             outline: selected ? '1.5px dashed #3b82f6' : 'none',
             outlineOffset: 3,
           }}
-          onClick={() => { if (selected && !isEditing) setIsEditing(true); }}
-          onDoubleClick={() => { if (!isEditing) setIsEditing(true); }}
+          onClick={() => { if (selected && !isEditing && !locked) setIsEditing(true); }}
+          onDoubleClick={() => { if (!isEditing && !locked) setIsEditing(true); }}
         >
           {isEditing ? (
             <textarea
@@ -338,6 +495,7 @@ const TextNode = ({ id, data, isConnectable, selected }) => {
             editContent
           )}
         </div>
+        {metaOverlay}
       </div>
     );
   }
@@ -355,6 +513,7 @@ const TextNode = ({ id, data, isConnectable, selected }) => {
       }}
     >
       {connectionHandles}
+      {metaOverlay}
       
       {/* Text Content — vertical alignment fills the box when a height is set */}
       <div

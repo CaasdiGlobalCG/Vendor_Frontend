@@ -4,16 +4,12 @@ import {
   Search, 
   Square, 
   Table, 
-  Image as ImageIcon, 
-  Minus, 
-  MousePointer, 
+  Image as ImageIcon,
+  MousePointer,
   BarChart3, 
   FileText, 
-  AlignLeft, 
-  Grid3X3, 
-  Columns, 
-  Rows, 
-  Plus, 
+  AlignLeft,
+  Plus,
   GitBranch, 
   Settings, 
   Trash2,
@@ -126,14 +122,13 @@ const WorkspaceContextPanel = ({
     { type: 'info-card', label: 'Info Card', icon: Square, nodeType: 'infoCard', preview: 'Display key information with title and content' },
     { type: 'table', label: 'Table', icon: Table },
     { type: 'image-block', label: 'Image', icon: ImageIcon },
-    { type: 'divider', label: 'Divider', icon: Minus },
   ];
 
   // Quick Input Chips
   const inputChips = [
     { type: 'button', label: 'Button', icon: MousePointer },
     { type: 'chart', label: 'Chart', icon: BarChart3 },
-    { type: 'textarea', label: 'TextArea', icon: FileText },
+    { type: 'textarea', label: 'Comment', icon: FileText },
     { type: 'input', label: 'Input', icon: AlignLeft },
   ];
 
@@ -169,15 +164,8 @@ const WorkspaceContextPanel = ({
       icon: BarChart3,
       color: 'bg-info/10 text-info border-info/20' 
     },
-    { 
-      id: 'flowcharts', 
-      name: 'Flowcharts & Logic', 
-      desc: 'Process flow, decision trees, stage gates', 
-      icon: GitBranch,
-      color: 'bg-info/10 text-info border-info/20' 
-    },
-    { 
-      id: 'task-card', 
+    {
+      id: 'task-card',
       name: 'Task Cards', 
       desc: 'Action items, milestone cards, status', 
       icon: ClipboardCheck,
@@ -253,8 +241,9 @@ const WorkspaceContextPanel = ({
 
     // Forms list
     const formsList = pickList(elementOptions.forms, [
-      { id: 'textarea', name: 'Text Area', type: 'textarea', preview: 'Multi-line text box for descriptions and notes' },
-      { id: 'textbox', name: 'Text Input', type: 'input', preview: 'Single-line text entry field' },
+      { id: 'textarea', name: 'Comment', type: 'textarea', preview: 'Multi-line comment box for descriptions and notes' },
+      { id: 'textbox', name: 'Text Box', type: 'textbox', preview: 'Bordered text box for display text' },
+      { id: 'input', name: 'Input Field', type: 'input', preview: 'Single-line text entry field' },
       { id: 'form-card', name: 'Form Card', type: 'form-card', nodeType: 'formCard', preview: 'Structured form with multiple input fields' },
       { id: 'button', name: 'Action Button', type: 'button', preview: 'Clickable call-to-action button' },
       { id: 'dropdown', name: 'Select Dropdown', type: 'select', preview: 'Select a single option from a dropdown list' },
@@ -264,9 +253,9 @@ const WorkspaceContextPanel = ({
 
     // Tables list
     const tablesList = pickList(elementOptions.tables, [
-      { id: 'basic-table', name: 'Basic Data Table', type: 'table', tableType: 'basic', preview: 'Simple structured rows and columns' },
-      { id: 'data-table', name: 'Advanced Data Table', type: 'table', tableType: 'data', preview: 'Sortable, filterable project data grid' },
-      { id: 'pivot-table', name: 'Pivot Summary Table', type: 'table', tableType: 'pivot', preview: 'Multi-dimensional data aggregation' },
+      { id: 'basic-table', name: 'Excel Grid', type: 'table', tableType: 'basic', preview: 'Editable spreadsheet — formulas, add/remove rows & columns' },
+      { id: 'data-table', name: 'Data Table', type: 'table', tableType: 'data', preview: 'Sortable, filterable, paginated table for larger datasets' },
+      { id: 'pivot-table', name: 'Pivot Table', type: 'table', tableType: 'pivot', preview: 'Group-by summary with sum/avg/count aggregation' },
       { id: 'calendar', name: 'Schedule Calendar', type: 'calendar', preview: 'Milestone, delivery, and inspection date picker' },
     ]);
 
@@ -279,13 +268,6 @@ const WorkspaceContextPanel = ({
       { id: 'scatter-plot', name: 'Scatter Plot', type: 'chart', chartType: 'scatter', preview: 'Quality and cost correlation analysis' },
     ]);
 
-    // Flowcharts list
-    const flowchartsList = [
-      { id: 'flow-process', name: 'Process Flow Block', type: 'flowchart', preview: 'Sequential stage-by-stage workflow block' },
-      { id: 'flow-decision', name: 'Decision Branch', type: 'flowchart', preview: 'Conditional Yes / No approval fork' },
-      { id: 'flow-stage', name: 'Milestone Gate', type: 'flowchart', preview: 'Gatekeeper inspection and validation checkpoint' },
-    ];
-
     // Task Card list
     const taskCardsList = [
       { id: 'task-card-item', name: 'Task Card', type: 'task-card', preview: 'Deliverable task with assignee, priority and due date' },
@@ -295,7 +277,6 @@ const WorkspaceContextPanel = ({
 
     // Materials list
     const materialsList = [
-      { id: 'boq-table', name: 'BOQ Pricing Table', type: 'table', preview: 'Itemized material quantity and rate schedule' },
       { id: 'material-spec', name: 'Material Spec Card', type: 'card', preview: 'Grade, manufacturer, and technical specs' },
       { id: 'spec-sheet', name: 'Vendor Catalog Block', type: 'vendor-catalog', preview: 'Showcase catalogue products with datasheets & compliance tags' },
     ];
@@ -358,7 +339,6 @@ const WorkspaceContextPanel = ({
       'forms': formsList,
       'tables': tablesList,
       'charts': chartsList,
-      'flowcharts': flowchartsList,
       'task-card': taskCardsList,
       'materials': materialsList,
       'cad-files': cadFilesList,
@@ -480,14 +460,6 @@ const WorkspaceContextPanel = ({
       icon: Sparkles,
       color: 'violet',
     },
-  ];
-
-  // Layout Patterns
-  const layoutPatterns = [
-    { type: 'rows', name: 'Row Stack', desc: 'Vertical sequential blocks', icon: Rows },
-    { type: 'columns', name: 'Columns (Split)', desc: 'Side-by-side comparison', icon: Columns },
-    { type: 'grid', name: '2 × 2 Grid', desc: 'Balanced card layout', icon: Grid3X3 },
-    { type: 'frame', name: 'Container Frame', desc: 'Group bounded area', icon: Square },
   ];
 
   return (
@@ -1047,47 +1019,6 @@ const WorkspaceContextPanel = ({
                 <span className="w-5 h-5 rounded-full bg-surface-hover text-ink font-bold flex items-center justify-center text-[10px]">3</span>
                 <span>Client Final Approval</span>
               </div>
-            </div>
-          </div>
-        </>
-      )}
-
-      {/* 5. LAYOUTS TAB */}
-      {activeTab === 'layouts' && (
-        <>
-          <div className="ws-panel-head">
-            <div>
-              <h3 className="ws-panel-title">Layouts</h3>
-              <p className="ws-panel-desc">Pre-configured structural wireframes.</p>
-            </div>
-            <button onClick={onClose} className="ws-icon-btn" title="Close panel">
-              <X className="w-4 h-4" />
-            </button>
-          </div>
-
-          <div className="ws-panel-body">
-            <div className="space-y-2.5">
-              {layoutPatterns.map((pat) => {
-                const Icon = pat.icon;
-                const layoutData = { type: pat.type, name: pat.name, label: pat.name };
-                return (
-                  <div
-                    key={pat.type}
-                    draggable
-                    onDragStart={(e) => handleDragStart(e, layoutData)}
-                    onClick={() => handleDoubleClick(layoutData)}
-                    className="p-3 bg-surface border border-line hover:border-info/30 hover:bg-info rounded-lg cursor-grab active:cursor-grabbing transition-all flex items-start gap-3"
-                  >
-                    <div className="p-2 bg-canvas rounded-md text-dim">
-                      <Icon className="w-4 h-4" />
-                    </div>
-                    <div>
-                      <p className="text-xs font-semibold text-ink m-0">{pat.name}</p>
-                      <p className="text-[11px] text-dim m-0 mt-0.5">{pat.desc}</p>
-                    </div>
-                  </div>
-                );
-              })}
             </div>
           </div>
         </>

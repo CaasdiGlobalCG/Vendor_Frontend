@@ -1,14 +1,25 @@
 import React, { useState, useContext, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { useParams } from 'react-router-dom';
 import { getWorkspaceById, notifyWorkspaceEvent } from '../../utils/workspaceApi';
 import { persistIsImportant, persistDeadline, persistTextContent, persistNodeDataPatch, persistNodeDeletion, getTimeLeft as calculateTimeLeft, formatTimeLeft } from '../../utils/nodePersistence';
 import { Handle, Position, useReactFlow, NodeResizer } from 'reactflow';
 import * as XLSX from 'xlsx';
-import { Download, Eye, ExternalLink, X, ArrowRight, Check, X as XIcon, Menu, Star, Heart, Info, HelpCircle, Lock, Send, MoreVertical, Copy, Edit2, Trash2, FileText, MessageCircle, FileSpreadsheet } from 'lucide-react';
+import { Download, Eye, ExternalLink, X, ArrowRight, Check, X as XIcon, Menu, Star, Heart, Info, HelpCircle, Lock, Send, MoreVertical, Copy, Edit2, Trash2, FileText, MessageCircle, FileSpreadsheet, FileDown, UserCheck, Link2 } from 'lucide-react';
 import { useToastOptional } from '../ToastProvider';
 import CommentThread from '../comments/CommentThread';
+import FieldAccessPanel from '../forms/FieldAccessPanel';
+import {
+  buildViewerIdentity,
+  getFieldAccessState,
+  appendAnswer,
+  formatAnswerValue,
+  resolveViewerRole,
+  canConfigureFieldAccess
+} from '../../utils/fieldAccess';
 import { VendorContext } from '../../../../context/VendorContext';
 import FormTemplate from '../forms/FormTemplate';
+import TextBoxField from '../forms/TextBoxField';
 import TableRenderer from '../forms/TableRenderer';
 import CalendarRenderer from '../forms/CalendarRenderer';
 import ChartRenderer from '../forms/ChartRenderer';
@@ -62,11 +73,13 @@ import ExceptionDelayReport from '../forms/ExceptionDelayReport';
 import CarrierPerformanceScorecard from '../forms/CarrierPerformanceScorecard';
 
 import TablePreviewModal from '../modals/TablePreviewModal';
-import { createTableHelpers, defaultTableData } from '../../utils/tableUtils';
+import GoogleSheetsExportModal from '../modals/GoogleSheetsExportModal';
+import { aoaToCSV, downloadCSV } from '../../utils/csvExport';
+import { defaultTableData } from '../../utils/tableUtils';
 
 const ElementNode = ({ id, data, isConnectable, selected }) => {
   const workspaceId = data.workspaceId;  // Get workspaceId from node data
-  const { setNodes, setEdges } = useReactFlow();
+  const { setNodes, setEdges, getNodes } = useReactFlow();
   const [saving, setSaving] = useState(false);
   // Important state for highlighting
   const [isImportant, setIsImportant] = useState(false);
@@ -140,7 +153,7 @@ const ElementNode = ({ id, data, isConnectable, selected }) => {
     // eslint-disable-next-line
   }, [data.deadline, data.isImportant]);
   // Get current user from context
-  const { currentUser } = useContext(VendorContext);
+  const { currentUser } = useContext(VendorContext) || {};
   const [inputValue, setInputValue] = useState(data?.inputValue || '');
   const [textareaValue, setTextareaValue] = useState(data?.textareaValue || '');
   const [commentBoxOpen, setCommentBoxOpen] = useState(!data?.textareaValue?.trim()); // open if empty, closed if already has content
@@ -205,6 +218,87 @@ const ElementNode = ({ id, data, isConnectable, selected }) => {
   const [radioOptions, setRadioOptions] = useState(data?.radioOptions || ['Option 1', 'Option 2']);
   const [checkboxOptions, setCheckboxOptions] = useState(data?.checkboxOptions || ['Option 1', 'Option 2', 'Option 3']);
   const [checkedItems, setCheckedItems] = useState(data?.checkedItems || {});
+
+  // ── Per-field access control: who should answer this field ──
+  const [showFieldAccess, setShowFieldAccess] = useState(false);
+  const [fieldAnswers, setFieldAnswers] = useState(data?.fieldAnswers || []);
+
+  useEffect(() => {
+    setFieldAnswers(data?.fieldAnswers || []);
+  }, [data?.fieldAnswers]);
+
+  const fieldAccess = data?.fieldAccess || null;
+  const viewerIdentity = buildViewerIdentity(
+    currentUser,
+    typeof window !== 'undefined' ? window.location.search : ''
+  );
+
+  // Get current user role from URL parameters or context — must be defined
+  // before canConfigureAccess below, which calls it eagerly during render.
+  const getCurrentUserRole = () => resolveViewerRole(
+    currentUser,
+    typeof window !== 'undefined' ? window.location.search : ''
+  );
+
+  // Computed lazily (called during render, after isElementLocked/getCurrentUserRole exist)
+  const computeFieldAccessState = () => getFieldAccessState({
+    fieldAccess,
+    fieldAnswers,
+    viewer: viewerIdentity,
+    isLocked: isElementLocked(),
+    isPM: getCurrentUserRole() === 'pm'
+  });
+
+  // Only the element's creator or a PM may configure who answers / who sees
+  const canConfigureAccess = canConfigureFieldAccess({
+    data,
+    viewer: viewerIdentity,
+    isPM: getCurrentUserRole() === 'pm'
+  });
+
+  const accessCollaborators = (data?.workspaceCollaborators || []).filter(
+    (c, i, arr) => arr.findIndex(x => (x.vendorId || x.userId || x.email) === (c.vendorId || c.userId || c.email)) === i
+  );
+
+  const relatedElementOptions = () => {
+    try {
+      return (getNodes?.() || [])
+        .filter(n => n.id !== id && (n.data?.name || n.data?.title))
+        .map(n => ({ id: n.id, name: n.data.name || n.data.title }));
+    } catch {
+      return [];
+    }
+  };
+
+  const persistFieldAccess = async (next) => {
+    const payload = next
+      ? {
+          ...next,
+          createdBy: next.createdBy || {
+            name: viewerIdentity.name,
+            email: viewerIdentity.email,
+            role: viewerIdentity.role
+          }
+        }
+      : null;
+    try {
+      setNodes(nds => nds.map(n => (n.id === id ? { ...n, data: { ...n.data, fieldAccess: payload } } : n)));
+      await persistNodeDataPatch(id, { fieldAccess: payload }, setNodes, workspaceId);
+    } catch (err) {
+      console.error('Failed to save field access:', err);
+    }
+  };
+
+  const recordFieldAnswer = async (value) => {
+    const mode = fieldAccess?.answerMode === 'poll' ? 'poll' : 'single';
+    const next = appendAnswer({ fieldAnswers, viewer: viewerIdentity, value, mode });
+    setFieldAnswers(next);
+    try {
+      await persistNodeDataPatch(id, { fieldAnswers: next }, setNodes, workspaceId);
+    } catch (err) {
+      console.error('Failed to record answer:', err);
+    }
+  };
 
   // Auto-save refs for debouncing
   const textareaTimeoutRef = useRef(null);
@@ -366,15 +460,9 @@ const ElementNode = ({ id, data, isConnectable, selected }) => {
   const [buttonAssignee, setButtonAssignee] = useState(data?.buttonAssignee || null);
   const [isEditingButton, setIsEditingButton] = useState(false);
   
-  // Table state
-  const [tableData, setTableData] = useState(defaultTableData);
-  const [sortColumn, setSortColumn] = useState(null);
-  const [sortDirection, setSortDirection] = useState('asc');
-  const [filterText, setFilterText] = useState('');
-  const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage, setItemsPerPage] = useState(5);
-  const [editingCell, setEditingCell] = useState(null);
-  const [expandedRows, setExpandedRows] = useState(new Set());
+  // Table state — tableData is a fallback for Excel export when the node has
+  // no customTableData yet; live editing lives inside TableRenderer components.
+  const [tableData] = useState(defaultTableData);
   
   // Calendar state
   const [selectedDate, setSelectedDate] = useState(new Date());
@@ -500,24 +588,8 @@ const ElementNode = ({ id, data, isConnectable, selected }) => {
     return false;
   };
   
-  // Get current user role from URL parameters or context
-  const getCurrentUserRole = () => {
-    // Check URL parameters first (for PMs and clients accessing vendor frontend)
-    const urlParams = new URLSearchParams(window.location.search);
-    const urlUserRole = urlParams.get('userRole');
-    const urlUserId = urlParams.get('userId') || '';
-    
-    // Finance staff enter via CAS-style links but carry FIN-* user ids
-    if (urlUserRole === 'finance' || urlUserId.startsWith('FIN-')) {
-      return 'finance';
-    }
-    if (urlUserRole && ['vendor', 'pm', 'client'].includes(urlUserRole)) {
-      return urlUserRole;
-    }
-    
-    // Fall back to context
-    return currentUser?.role || 'vendor';
-  };
+  // getCurrentUserRole is defined earlier (before its first eager call site)
+  // via resolveViewerRole — same URL-param + context logic.
 
   // Live summary line for custom-boq nodes — "N items · ₹X → ₹Y proposed
   // (round N)" during negotiation. Client-proposed numbers are on
@@ -556,7 +628,6 @@ const ElementNode = ({ id, data, isConnectable, selected }) => {
     }
     return line;
   };
-  
   // Check if element is locked (cannot be edited)
   const isElementLocked = () => {
     const approvalStatus = data.approvalStatus || 'draft';
@@ -869,6 +940,12 @@ const ElementNode = ({ id, data, isConnectable, selected }) => {
     window.dispatchEvent(event);
   };
 
+  // Edit affordance — menu "Edit" activates the element's edit surface.
+  // editSignal increments → child components (TextBoxField, tables) react via useEffect.
+  const textareaRef = useRef(null);
+  const inputRef = useRef(null);
+  const [editSignal, setEditSignal] = useState(0);
+
   const handleEdit = () => {
     setShowMenuDropdown(false);
     // Task cards open their config modal in edit mode (CanvasWorkspace hosts it)
@@ -876,9 +953,30 @@ const ElementNode = ({ id, data, isConnectable, selected }) => {
       document.dispatchEvent(new CustomEvent('editTaskCardNode', { detail: { nodeId: id } }));
       return;
     }
-    // The element is already in edit mode by default when selected
-    // This can trigger any additional edit-specific behavior if needed
-    console.log('Edit element:', id);
+    if (isElementLocked()) return;
+    switch (data.type) {
+      case 'textarea':
+        textareaRef.current?.focus();
+        break;
+      case 'input':
+        inputRef.current?.focus();
+        break;
+      case 'textbox':
+      case 'table':
+        setEditSignal(s => s + 1);
+        break;
+      case 'select':
+      case 'dropdown':
+      case 'radio':
+      case 'checkbox':
+        setIsEditingField(true);
+        break;
+      case 'button':
+        setIsEditingButton(true);
+        break;
+      default:
+        break;
+    }
   };
 
   const handleDelete = async () => {
@@ -1292,8 +1390,24 @@ const ElementNode = ({ id, data, isConnectable, selected }) => {
     }
   };
 
+  // CSV download — same AOA payload as the other exports, shared escaping util
+  const handleDownloadCSV = (e) => {
+    e?.stopPropagation?.();
+    try {
+      const filename = `${(data.name || 'table').replace(/[^a-z0-9]+/gi, '_')}.csv`;
+      downloadCSV(filename, aoaToCSV(getTableExportAOA()));
+      toast?.success?.('CSV file downloaded');
+    } catch (err) {
+      console.error('❌ CSV export failed:', err);
+      toast?.error?.('Failed to export CSV');
+    }
+  };
+
   // Google Sheets has no unauthenticated "import via URL" endpoint, so we copy the
-  // table as TSV to the clipboard and open a new sheet — paste drops it into cells.
+  // table as TSV to the clipboard, open a new sheet, and keep a dialog on screen
+  // explaining the paste step — a transient toast was too easy to miss.
+  const [sheetsExport, setSheetsExport] = useState(null); // { copied: boolean }
+
   const handleExportGoogleSheets = async (e) => {
     e?.stopPropagation?.();
     const tsv = getTableExportAOA()
@@ -1321,46 +1435,48 @@ const ElementNode = ({ id, data, isConnectable, selected }) => {
     }
 
     window.open('https://sheets.new', '_blank', 'noopener,noreferrer');
-
-    if (copied) {
-      toast?.info?.('Table copied to clipboard — in the Google Sheet, click a cell and press Cmd+V (Mac) or Ctrl+V to paste it', 6000);
-    } else {
-      toast?.error?.('Could not copy the table automatically — use the Excel download icon instead', 6000);
-    }
+    setSheetsExport({ copied });
   };
 
-  // Create table helpers
-  const tableHelpers = createTableHelpers(
-    tableData,
-    setTableData,
-    sortColumn,
-    setSortColumn,
-    sortDirection,
-    setSortDirection,
-    filterText,
-    itemsPerPage,
-    currentPage,
-    setEditingCell,
-    expandedRows,
-    setExpandedRows
-  );
-
   // Editable field label shown above form controls — persisted as data.fieldLabel
+  const [isEditingLabel, setIsEditingLabel] = useState(false);
+
   const renderFieldLabel = (fallback) => {
+    const text = fieldLabel || fallback;
     if (isElementLocked()) {
-      const text = fieldLabel || fallback;
       return text ? <div className="text-xs font-semibold text-dim mb-1">{text}</div> : null;
     }
+    if (isEditingLabel) {
+      return (
+        <input
+          type="text"
+          value={fieldLabel}
+          placeholder={fallback}
+          autoFocus
+          onChange={(e) => setFieldLabel(e.target.value)}
+          onBlur={() => setIsEditingLabel(false)}
+          onKeyDown={(e) => {
+            e.stopPropagation();
+            if (e.key === 'Enter' || e.key === 'Escape') setIsEditingLabel(false);
+          }}
+          onClick={(e) => e.stopPropagation()}
+          className="text-xs font-semibold text-ink mb-1 w-full bg-transparent outline-none border-b border-info/40 placeholder-dim pb-0.5"
+        />
+      );
+    }
     return (
-      <input
-        type="text"
-        value={fieldLabel}
-        placeholder={fallback}
-        onChange={(e) => setFieldLabel(e.target.value)}
-        onKeyDown={(e) => e.stopPropagation()}
+      <div
+        className="text-xs font-semibold text-ink mb-1 flex items-center gap-1.5 cursor-text group/flabel"
         onClick={(e) => e.stopPropagation()}
-        className="text-xs font-semibold text-dim mb-1 w-full bg-transparent outline-none border-b border-transparent focus:border-info/30 placeholder-dim pb-0.5"
-      />
+        onDoubleClick={(e) => {
+          e.stopPropagation();
+          setIsEditingLabel(true);
+        }}
+        title="Double-click to edit label"
+      >
+        <span>{text}</span>
+        <Edit2 className="w-3 h-3 text-dim opacity-0 group-hover/flabel:opacity-100 transition-opacity flex-shrink-0" />
+      </div>
     );
   };
 
@@ -1417,23 +1533,122 @@ const ElementNode = ({ id, data, isConnectable, selected }) => {
       </button>
     );
 
+  const handleSaveTable = async (cols, rows, config) => {
+    const patch = { customTableData: { columns: cols, data: rows, config } };
+    if (!workspaceId) {
+      console.warn('⚠️ Table save skipped — no workspaceId');
+      return;
+    }
+    try {
+      await persistNodeDataPatch(id, patch, setNodes, workspaceId);
+    } catch (err) {
+      console.error('❌ Failed to persist table data:', err);
+    }
+  };
+
+  /**
+   * Per-field access control UI — assignment button, waiting/answered status,
+   * reason, related-element chip, and the assign panel itself.
+   * `allowPoll` enables the one-person / multi-person toggle (Checkbox Group).
+   */
+  const renderFieldAccessControl = (allowPoll = false) => {
+    const st = computeFieldAccessState();
+    const locked = isElementLocked();
+
+    return (
+      <div className="mt-2 space-y-1.5" onClick={(e) => e.stopPropagation()}>
+        {st.assigned && !st.answered && (
+          <p className="text-[11px] text-dim flex items-center gap-1">
+            <UserCheck className="w-3 h-3 text-info" />
+            Waiting for <span className="font-medium text-ink">{st.waitingFor}</span> to answer
+          </p>
+        )}
+
+        {st.answered && (
+          st.restricted ? (
+            <p className="text-[11px] text-dim flex items-center gap-1 px-1.5 py-0.5 rounded bg-surface-hover w-fit">
+              <Lock className="w-3 h-3" /> Answer restricted
+            </p>
+          ) : (
+            <div className="text-[11px] space-y-0.5">
+              <p className="flex items-center gap-1.5 flex-wrap">
+                <span className="px-1.5 py-0.5 rounded bg-success/10 text-success font-medium">
+                  {formatAnswerValue(st.lastAnswer?.value)}
+                </span>
+                <span className="text-dim">
+                  by {st.lastAnswer?.by}
+                  {st.lastAnswer?.at ? ` · ${new Date(st.lastAnswer.at).toLocaleDateString()}` : ''}
+                </span>
+              </p>
+              {st.pollMode && st.answers.length > 1 && (
+                <ul className="pl-1 space-y-0.5 text-ink">
+                  {st.answers.map((a, i) => (
+                    <li key={i} className="flex items-center gap-1">
+                      <span className="font-medium">{a.by}</span>
+                      <span className="text-dim">chose</span>
+                      <span>{formatAnswerValue(a.value)}</span>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          )
+        )}
+
+        {st.assigned && !st.restricted && fieldAccess?.reason && (
+          <p className="text-[11px] text-dim italic">“{fieldAccess.reason}”</p>
+        )}
+
+        {st.assigned && !st.restricted && fieldAccess?.relatedNodeId && (
+          <button
+            onClick={() => document.dispatchEvent(new CustomEvent('zoomToElement', { detail: { elementId: fieldAccess.relatedNodeId } }))}
+            className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-info/10 text-info text-[10px] hover:bg-info/20"
+            title="Jump to the related element"
+          >
+            <Link2 className="w-2.5 h-2.5" /> Related element
+          </button>
+        )}
+
+        {!locked && !showFieldAccess && canConfigureAccess && (
+          <button
+            onClick={() => setShowFieldAccess(true)}
+            className="text-[11px] text-info hover:underline flex items-center gap-1"
+          >
+            <UserCheck className="w-3 h-3" />
+            {st.assigned ? 'Change who answers' : 'Assign to someone'}
+          </button>
+        )}
+
+        {!locked && showFieldAccess && canConfigureAccess && (
+          <FieldAccessPanel
+            access={fieldAccess}
+            collaborators={accessCollaborators}
+            elements={relatedElementOptions()}
+            sourceNodeId={id}
+            sourceLabel={data?.name || data?.title || 'this field'}
+            allowPoll={allowPoll}
+            onSave={async (next) => {
+              await persistFieldAccess(next);
+              setShowFieldAccess(false);
+            }}
+            onClear={async () => {
+              await persistFieldAccess(null);
+              setShowFieldAccess(false);
+            }}
+            onClose={() => setShowFieldAccess(false)}
+          />
+        )}
+      </div>
+    );
+  };
+
   const renderTableElement = () => {
     return (
       <TableRenderer
         data={data}
-        tableData={tableData}
-        sortColumn={sortColumn}
-        sortDirection={sortDirection}
-        filterText={filterText}
-        currentPage={currentPage}
-        itemsPerPage={itemsPerPage}
-        editingCell={editingCell}
-        expandedRows={expandedRows}
-        {...tableHelpers}
-        setFilterText={setFilterText}
-        setItemsPerPage={setItemsPerPage}
-        setCurrentPage={setCurrentPage}
-        setEditingCell={setEditingCell}
+        locked={isElementLocked()}
+        onSave={handleSaveTable}
+        editSignal={editSignal}
       />
     );
   };
@@ -1519,25 +1734,52 @@ const ElementNode = ({ id, data, isConnectable, selected }) => {
         );
       
       case 'textbox':
-      case 'input':
+        return (
+          <div>
+            {renderFieldLabel('Text box')}
+            <TextBoxField
+              value={inputValue}
+              label={fieldLabel}
+              onTextChange={setInputValue}
+              onLabelChange={setFieldLabel}
+              locked={isLocked}
+              editSignal={editSignal}
+            />
+          </div>
+        );
+
+      case 'input': {
+        const st = computeFieldAccessState();
+        const answerable = !isLocked && st.canAnswer;
         return (
           <div>
             {renderFieldLabel('Field label')}
             <input
+              ref={inputRef}
               type="text"
-              value={inputValue}
-              onChange={(e) => !isLocked && setInputValue(e.target.value)}
+              value={st.restricted ? '' : inputValue}
+              onChange={(e) => answerable && setInputValue(e.target.value)}
+              onBlur={() => {
+                if (fieldAccess && answerable && inputValue) recordFieldAnswer(inputValue);
+              }}
               className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-info focus:border-info text-sm bg-surface ${
-                isLocked ? 'border-line bg-canvas text-dim cursor-not-allowed' : 'border-line'
+                !answerable ? 'border-line bg-canvas text-dim cursor-not-allowed' : 'border-line'
               }`}
-              placeholder={isLocked ? "Element is locked" : "Enter value..."}
+              placeholder={
+                isLocked ? 'Element is locked'
+                  : st.restricted ? 'Answer restricted'
+                  : st.assigned && !st.canAnswer ? `Waiting for ${st.waitingFor}`
+                  : 'Enter value...'
+              }
               onClick={(e) => e.stopPropagation()}
               onKeyDown={(e) => e.stopPropagation()}
               onFocus={(e) => e.stopPropagation()}
-              readOnly={isLocked}
+              readOnly={!answerable}
             />
+            {renderFieldAccessControl(false)}
           </div>
         );
+      }
       
       case 'button':
         return (
@@ -1593,7 +1835,9 @@ const ElementNode = ({ id, data, isConnectable, selected }) => {
         return renderDocumentElement();
 
       case 'select':
-      case 'dropdown':
+      case 'dropdown': {
+        const st = computeFieldAccessState();
+        const answerable = !isLocked && st.canAnswer;
         return (
           <div>
             {renderFieldLabel('Dropdown')}
@@ -1602,17 +1846,26 @@ const ElementNode = ({ id, data, isConnectable, selected }) => {
             ) : (
               <>
                 <select
-                  value={selectValue}
-                  onChange={(e) => !isLocked && setSelectValue(e.target.value)}
+                  value={st.restricted ? '' : selectValue}
+                  onChange={(e) => {
+                    if (!answerable) return;
+                    setSelectValue(e.target.value);
+                    if (fieldAccess) recordFieldAnswer(e.target.value);
+                  }}
                   className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-info focus:border-info text-sm bg-surface ${
-                    isLocked ? 'border-line bg-canvas text-dim cursor-not-allowed' : 'border-line'
+                    !answerable ? 'border-line bg-canvas text-dim cursor-not-allowed' : 'border-line'
                   }`}
                   onClick={(e) => e.stopPropagation()}
                   onKeyDown={(e) => e.stopPropagation()}
                   onFocus={(e) => e.stopPropagation()}
-                  disabled={isLocked}
+                  disabled={!answerable}
                 >
-                  <option value="">{isLocked ? "Element is locked" : "Select an option"}</option>
+                  <option value="">
+                    {isLocked ? 'Element is locked'
+                      : st.restricted ? 'Answer restricted'
+                      : st.assigned && !st.canAnswer ? `Waiting for ${st.waitingFor}`
+                      : 'Select an option'}
+                  </option>
                   {selectOptions.map((option, index) => (
                     <option key={index} value={option}>
                       {option}
@@ -1620,12 +1873,17 @@ const ElementNode = ({ id, data, isConnectable, selected }) => {
                   ))}
                 </select>
                 {renderEditOptionsLink()}
+                {renderFieldAccessControl(false)}
               </>
             )}
           </div>
         );
+      }
       
-      case 'checkbox':
+      case 'checkbox': {
+        const st = computeFieldAccessState();
+        const answerable = !isLocked && st.canAnswer;
+        const shownChecked = st.restricted ? {} : checkedItems;
         return (
           <div>
             {renderFieldLabel('Select all that apply')}
@@ -1638,35 +1896,47 @@ const ElementNode = ({ id, data, isConnectable, selected }) => {
                     <label
                       key={index}
                       className={`flex items-center gap-2.5 px-2.5 py-1.5 rounded-lg border transition-colors ${
-                        checkedItems[option]
+                        shownChecked[option]
                           ? 'border-info/30 bg-info/10'
                           : 'border-line hover:border-line hover:bg-canvas'
-                      } ${isLocked ? 'cursor-not-allowed opacity-70' : 'cursor-pointer'}`}
+                      } ${!answerable ? 'cursor-not-allowed opacity-70' : 'cursor-pointer'}`}
                     >
                       <input
                         type="checkbox"
-                        checked={checkedItems[option] || false}
-                        onChange={(e) => !isLocked && setCheckedItems({
-                          ...checkedItems,
-                          [option]: e.target.checked
-                        })}
+                        checked={shownChecked[option] || false}
+                        onChange={(e) => {
+                          if (!answerable) return;
+                          const next = { ...checkedItems, [option]: e.target.checked };
+                          setCheckedItems(next);
+                          if (fieldAccess) {
+                            recordFieldAnswer(Object.keys(next).filter(k => next[k]));
+                          }
+                        }}
                         className="w-4 h-4 rounded border-line text-info focus:ring-info"
                         onClick={(e) => e.stopPropagation()}
                         onKeyDown={(e) => e.stopPropagation()}
                         onFocus={(e) => e.stopPropagation()}
-                        disabled={isLocked}
+                        disabled={!answerable}
                       />
-                      <span className={`text-sm ${isLocked ? 'text-dim' : 'text-ink'}`}>{option}</span>
+                      <span className={`text-sm ${!answerable ? 'text-dim' : 'text-ink'}`}>{option}</span>
                     </label>
                   ))}
                 </div>
+                {st.assigned && !answerable && !st.answered && !isLocked && (
+                  <p className="text-[11px] text-dim mt-1">Waiting for {st.waitingFor}</p>
+                )}
                 {renderEditOptionsLink()}
+                {renderFieldAccessControl(true)}
               </>
             )}
           </div>
         );
+      }
       
-      case 'radio':
+      case 'radio': {
+        const st = computeFieldAccessState();
+        const answerable = !isLocked && st.canAnswer;
+        const shownRadio = st.restricted ? '' : radioValue;
         return (
           <div>
             {renderFieldLabel('Select one')}
@@ -1679,32 +1949,41 @@ const ElementNode = ({ id, data, isConnectable, selected }) => {
                     <label
                       key={index}
                       className={`flex items-center gap-2.5 px-2.5 py-1.5 rounded-lg border transition-colors ${
-                        radioValue === option
+                        shownRadio === option
                           ? 'border-info/30 bg-info/10'
                           : 'border-line hover:border-line hover:bg-canvas'
-                      } ${isLocked ? 'cursor-not-allowed opacity-70' : 'cursor-pointer'}`}
+                      } ${!answerable ? 'cursor-not-allowed opacity-70' : 'cursor-pointer'}`}
                     >
                       <input
                         type="radio"
                         name={`radio-${id}`}
                         value={option}
-                        checked={radioValue === option}
-                        onChange={(e) => !isLocked && setRadioValue(e.target.value)}
+                        checked={shownRadio === option}
+                        onChange={(e) => {
+                          if (!answerable) return;
+                          setRadioValue(e.target.value);
+                          if (fieldAccess) recordFieldAnswer(e.target.value);
+                        }}
                         className="w-4 h-4 border-line text-info focus:ring-info"
                         onClick={(e) => e.stopPropagation()}
                         onKeyDown={(e) => e.stopPropagation()}
                         onFocus={(e) => e.stopPropagation()}
-                        disabled={isLocked}
+                        disabled={!answerable}
                       />
-                      <span className={`text-sm ${isLocked ? 'text-dim' : 'text-ink'}`}>{option}</span>
+                      <span className={`text-sm ${!answerable ? 'text-dim' : 'text-ink'}`}>{option}</span>
                     </label>
                   ))}
                 </div>
+                {st.assigned && !answerable && !st.answered && !isLocked && (
+                  <p className="text-[11px] text-dim mt-1">Waiting for {st.waitingFor}</p>
+                )}
                 {renderEditOptionsLink()}
+                {renderFieldAccessControl(false)}
               </>
             )}
           </div>
         );
+      }
       
       case 'form-template':
         console.log('📋 Rendering FormTemplate with data:', { 
@@ -2588,6 +2867,9 @@ const ElementNode = ({ id, data, isConnectable, selected }) => {
                       <button onClick={handleDuplicate} className="w-full px-3 py-1.5 text-left text-xs text-ink hover:bg-canvas flex items-center space-x-2">
                         <Copy className="w-3 h-3 text-dim" /><span>Duplicate</span>
                       </button>
+                      <button onClick={handleEdit} className="w-full px-3 py-1.5 text-left text-xs text-ink hover:bg-canvas flex items-center space-x-2">
+                        <Edit2 className="w-3 h-3 text-dim" /><span>Edit</span>
+                      </button>
                       <button onClick={() => { const newImportantState = !isImportant; setIsImportant(newImportantState); persistIsImportant(id, newImportantState, setNodes, workspaceId).catch(err => console.error('Failed to persist:', err)); }}
                         className="w-full px-3 py-1.5 text-left text-xs text-ink hover:bg-canvas flex items-center space-x-2">
                         <Star className="w-3 h-3 text-warning" /><span>{isImportant ? 'Unmark Important' : 'Mark Important'}</span>
@@ -2605,6 +2887,7 @@ const ElementNode = ({ id, data, isConnectable, selected }) => {
             <div className="px-3 py-2">
               <div className="flex items-end space-x-2">
                 <textarea
+                  ref={textareaRef}
                   value={textareaValue}
                   onChange={(e) => !isLocked && setTextareaValue(e.target.value)}
                   className={`flex-1 text-sm leading-relaxed bg-transparent border-0 resize-none focus:outline-none focus:ring-0 p-0 placeholder-dim ${
@@ -3063,6 +3346,13 @@ const ElementNode = ({ id, data, isConnectable, selected }) => {
                   <FileSpreadsheet className="w-4 h-4" />
                 </button>
                 <button
+                  onClick={handleDownloadCSV}
+                  className="p-1 text-dim hover:text-success hover:bg-success/10 rounded-full transition-all duration-200"
+                  title="Download CSV"
+                >
+                  <FileDown className="w-4 h-4" />
+                </button>
+                <button
                   onClick={handleDownloadExcel}
                   className="p-1 text-dim hover:text-info hover:bg-info/10 rounded-full transition-all duration-200"
                   title="Download Excel (.xlsx)"
@@ -3375,6 +3665,20 @@ const ElementNode = ({ id, data, isConnectable, selected }) => {
             onClose={() => setShowComments(false)}
           />
         </div>
+      )}
+
+      {/* Google Sheets export — paste-instruction dialog.
+          Portaled to body: React Flow's node transform would trap a
+          position:fixed overlay inside the node box otherwise. */}
+      {sheetsExport && isTableElement() && createPortal(
+        <GoogleSheetsExportModal
+          open={Boolean(sheetsExport)}
+          copied={sheetsExport.copied}
+          onClose={() => setSheetsExport(null)}
+          onCsv={() => { setSheetsExport(null); handleDownloadCSV(); }}
+          onExcel={() => { setSheetsExport(null); handleDownloadExcel(); }}
+        />,
+        document.body
       )}
 
       {/* Table Preview Modal */}

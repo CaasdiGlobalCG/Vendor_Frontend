@@ -450,6 +450,13 @@ const WorkspaceTopBar = ({
     evs.push(...taskCardEvents(workspace?.nodes, 'Root canvas'));
     return evs.concat(userCalendarEvents);
   }, [workspace?.tasks, workspace?.nodes, userCalendarEvents]);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+
+  const handleRefreshClick = async () => {
+    if (isRefreshing || !onRefresh) return;
+    setIsRefreshing(true);
+    try { await onRefresh(); } finally { setIsRefreshing(false); }
+  };
 
   // Close overflow on click outside
   useEffect(() => {
@@ -580,11 +587,12 @@ const WorkspaceTopBar = ({
       {/* Refresh button if available */}
       {onRefresh && (
         <button
-          onClick={onRefresh}
+          onClick={handleRefreshClick}
+          disabled={isRefreshing}
           className="ws-icon-btn text-dim hover:text-ink"
           title="Refresh workspace"
         >
-          <RotateCw className="w-4 h-4" />
+          <RotateCw className={`w-4 h-4 ${isRefreshing ? 'animate-spin' : ''}`} />
         </button>
       )}
 
