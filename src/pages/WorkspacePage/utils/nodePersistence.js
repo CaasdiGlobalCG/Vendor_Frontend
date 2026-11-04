@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { dismissOrderDocs } from './b2bDismissedDocs';
 import { updateWorkspace, getWorkspaceById } from './workspaceApi';
 import { createNodeUpdateOp } from './operationManager';
 
@@ -19,6 +20,13 @@ export const registerCanvasEmitter = (emitOp, taskId, subtaskId) => {
   _globalTaskId = taskId;
   _globalSubtaskId = subtaskId;
 };
+
+/**
+ * The task and subtask the open canvas belongs to, or nulls when none is registered.
+ * Uploads are stored per subtask, so an element whose own data lacks the ids
+ * (older or template-made nodes) falls back to this.
+ */
+export const getActiveCanvasScope = () => ({ taskId: _globalTaskId, subtaskId: _globalSubtaskId });
 
 /**
  * Called on unmount / when WebSocket disconnects.
@@ -75,7 +83,24 @@ const requiresDurableWrite = (dataPatch) =>
     'deletionRejectedBy' in dataPatch ||
     'workflowStage' in dataPatch ||
     'commission' in dataPatch ||
-    'items' in dataPatch
+    'items' in dataPatch ||
+    'status' in dataPatch ||
+    'paymentTerms' in dataPatch ||
+    'issuerDetails' in dataPatch ||
+    'customerDetails' in dataPatch ||
+    'termsAndConditions' in dataPatch ||
+    'customerNotes' in dataPatch ||
+    'clientDecision' in dataPatch ||
+    'revisionRequest' in dataPatch ||
+    'poType' in dataPatch ||
+    'clientPOFile' in dataPatch ||
+    'poAutoCheck' in dataPatch ||
+    'paymentStatus' in dataPatch ||
+    'amountPaid' in dataPatch ||
+    'razorpayPayment' in dataPatch ||
+    'invoiceId' in dataPatch ||
+    'purchaseOrderId' in dataPatch ||
+    'pmPOFile' in dataPatch
   );
 
 /**
@@ -148,6 +173,51 @@ const saveSubtaskCanvas = async (workspaceId, taskId, subtaskId, canvasData) => 
  * @param {string} workspaceId
  * @param {object} [options]
  */
+/**
+ * Show a patch on the node right away and return a function that takes it
+ * back. The undo only touches keys that still hold the value we set, so a
+ * newer edit made while the save was in flight is never overwritten.
+ */
+const applyOptimisticPatch = (nodeId, dataPatch, setNodes) => {
+  if (typeof setNodes !== 'function' || !dataPatch) return () => {};
+  const keys = Object.keys(dataPatch);
+  let previous = null;
+  setNodes((currentNodes) =>
+    currentNodes.map((node) => {
+      if (node.id !== nodeId) return node;
+      // Updaters may run twice (StrictMode): remember the values from the first run only
+      if (!previous) {
+        previous = {};
+        keys.forEach((k) => {
+          previous[k] = { had: !!node.data && k in node.data, value: node.data?.[k] };
+        });
+      }
+      return { ...node, data: { ...(node.data || {}), ...dataPatch } };
+    })
+  );
+  return () =>
+    setNodes((currentNodes) =>
+      currentNodes.map((node) => {
+        if (node.id !== nodeId || !previous) return node;
+        const data = { ...(node.data || {}) };
+        keys.forEach((k) => {
+          if (!Object.is(data[k], dataPatch[k])) return; // changed again since: leave it
+          if (previous[k].had) data[k] = previous[k].value;
+          else delete data[k];
+        });
+        return { ...node, data };
+      })
+    );
+};
+
+const notifySaveFailed = (error) => {
+  try {
+    window.dispatchEvent(new CustomEvent('workspace-save-failed', { detail: { error } }));
+  } catch {
+    /* no window (tests / SSR) */
+  }
+};
+
 export const persistNodeDataPatch = async (nodeId, dataPatch, setNodes, workspaceId, options = {}) => {
   if (!workspaceId || !nodeId) return;
 
@@ -157,6 +227,10 @@ export const persistNodeDataPatch = async (nodeId, dataPatch, setNodes, workspac
     console.log('⏸️ Skipping persistNodeDataPatch - approval submission in progress');
     return;
   }
+
+  // Optimistic: the change is on screen before anything is sent or saved, and is
+  // taken back (below) if the durable save fails.
+  const rollback = applyOptimisticPatch(nodeId, dataPatch, setNodes);
 
   // ---- Always emit via WebSocket when available ----
   // The op broadcasts the change to collaborators in real time (e.g. the PM's
@@ -168,28 +242,52 @@ export const persistNodeDataPatch = async (nodeId, dataPatch, setNodes, workspac
     const op = createNodeUpdateOp(nodeId, dataPatch, _globalTaskId, _globalSubtaskId);
     _globalEmitOp(op);
 
-    // Update local React state immediately (optimistic)
-    if (typeof setNodes === 'function') {
-      setNodes((currentNodes) =>
-        currentNodes.map((node) =>
-          node.id === nodeId
-            ? { ...node, data: { ...(node.data || {}), ...(dataPatch || {}) } }
-            : node
-        )
-      );
-    }
-
     // Non-durable patches are done — WS op + optimistic update suffice.
     if (!requiresDurableWrite(dataPatch)) return;
   }
 
   // ---- Durable path: HTTP read-then-write ----
+  try {
+    const workspace = await getWorkspaceById(workspaceId);
+    const subtaskLocation = findSubtaskContainingNode(workspace, nodeId);
 
-  const workspace = await getWorkspaceById(workspaceId);
-  const subtaskLocation = findSubtaskContainingNode(workspace, nodeId);
+    if (subtaskLocation?.taskId && subtaskLocation?.subtaskId) {
+      const updatedNodes = (subtaskLocation.canvasData.nodes || []).map((node) => {
+        if (node.id !== nodeId) return node;
+        return {
+          ...node,
+          data: {
+            ...(node.data || {}),
+            ...(dataPatch || {})
+          }
+        };
+      });
 
-  if (subtaskLocation?.taskId && subtaskLocation?.subtaskId) {
-    const updatedNodes = (subtaskLocation.canvasData.nodes || []).map((node) => {
+      await saveSubtaskCanvas(workspaceId, subtaskLocation.taskId, subtaskLocation.subtaskId, {
+        ...subtaskLocation.canvasData,
+        nodes: updatedNodes
+      });
+
+      if (typeof setNodes === 'function') {
+        setNodes((currentNodes) =>
+          currentNodes.map((node) =>
+            node.id === nodeId
+              ? {
+                  ...node,
+                  data: {
+                    ...(node.data || {}),
+                    ...(dataPatch || {})
+                  }
+                }
+              : node
+          )
+        );
+      }
+
+      return;
+    }
+
+    const updatedNodes = (workspace.nodes || []).map((node) => {
       if (node.id !== nodeId) return node;
       return {
         ...node,
@@ -200,9 +298,10 @@ export const persistNodeDataPatch = async (nodeId, dataPatch, setNodes, workspac
       };
     });
 
-    await saveSubtaskCanvas(workspaceId, subtaskLocation.taskId, subtaskLocation.subtaskId, {
-      ...subtaskLocation.canvasData,
-      nodes: updatedNodes
+    await updateWorkspace(workspaceId, {
+      nodes: updatedNodes,
+      edges: workspace.edges || [],
+      zoomLevel: workspace.zoomLevel || 100
     });
 
     if (typeof setNodes === 'function') {
@@ -220,41 +319,10 @@ export const persistNodeDataPatch = async (nodeId, dataPatch, setNodes, workspac
         )
       );
     }
-
-    return;
-  }
-
-  const updatedNodes = (workspace.nodes || []).map((node) => {
-    if (node.id !== nodeId) return node;
-    return {
-      ...node,
-      data: {
-        ...(node.data || {}),
-        ...(dataPatch || {})
-      }
-    };
-  });
-
-  await updateWorkspace(workspaceId, {
-    nodes: updatedNodes,
-    edges: workspace.edges || [],
-    zoomLevel: workspace.zoomLevel || 100
-  });
-
-  if (typeof setNodes === 'function') {
-    setNodes((currentNodes) =>
-      currentNodes.map((node) =>
-        node.id === nodeId
-          ? {
-              ...node,
-              data: {
-                ...(node.data || {}),
-                ...(dataPatch || {})
-              }
-            }
-          : node
-      )
-    );
+  } catch (error) {
+    rollback();
+    notifySaveFailed(error);
+    throw error;
   }
 };
 
@@ -267,6 +335,9 @@ export const persistNodeDataPatch = async (nodeId, dataPatch, setNodes, workspac
  */
 export const persistNodeDeletion = async (nodeId, setNodes, setEdges, workspaceId) => {
   if (!workspaceId || !nodeId) return;
+
+  // A marketplace order document must stay off the canvas for everyone once removed
+  dismissOrderDocs(workspaceId, [nodeId]);
 
   // Emit NODE_DELETE so the shared WS snapshot drops the node, the deletion is
   // marked (stale snapshots can't resurrect it on flush), and collaborators

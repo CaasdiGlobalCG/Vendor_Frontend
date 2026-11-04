@@ -5,7 +5,8 @@ import { formatAuthorLine, formatAddedAt } from '../../utils/nodeAuthor';
 import { describeAudience, isAudienceRestricted, isLocked } from '../../utils/nodeVisibility';
 import CommentThread from '../comments/CommentThread';
 import { MessageCircle, Info, Lock, Eye, UserCheck } from 'lucide-react';
-import { Handle, Position, useReactFlow } from 'reactflow';
+import { useReactFlow } from 'reactflow';
+import NodeHandles from './NodeHandles';
 
 const TextNode = ({ id, data, isConnectable, selected }) => {
   const workspaceId = data.workspaceId;  // Get workspaceId from node data
@@ -286,73 +287,7 @@ const TextNode = ({ id, data, isConnectable, selected }) => {
   // Connection Handles - shared by card and caption renders
   const connectionHandles = (
     <>
-      <Handle
-        type="source"
-        position={Position.Top}
-        id="top-out"
-        style={{ left: '48%' }}
-        className="w-3 h-3 !bg-cta !border-2 !border-white opacity-0 group-hover:opacity-100 transition-opacity hover:!bg-cta"
-        isConnectable={isConnectable}
-      />
-      <Handle
-        type="target"
-        position={Position.Top}
-        id="top-in"
-        style={{ left: '52%' }}
-        className="w-3 h-3 !bg-cta !border-2 !border-white opacity-0 group-hover:opacity-100 transition-opacity hover:!bg-cta"
-        isConnectable={isConnectable}
-      />
-
-      <Handle
-        type="source"
-        position={Position.Right}
-        id="right-out"
-        style={{ top: '48%' }}
-        className="w-3 h-3 !bg-cta !border-2 !border-white opacity-0 group-hover:opacity-100 transition-opacity hover:!bg-cta"
-        isConnectable={isConnectable}
-      />
-      <Handle
-        type="target"
-        position={Position.Right}
-        id="right-in"
-        style={{ top: '52%' }}
-        className="w-3 h-3 !bg-cta !border-2 !border-white opacity-0 group-hover:opacity-100 transition-opacity hover:!bg-cta"
-        isConnectable={isConnectable}
-      />
-
-      <Handle
-        type="source"
-        position={Position.Bottom}
-        id="bottom-out"
-        style={{ left: '48%' }}
-        className="w-3 h-3 !bg-cta !border-2 !border-white opacity-0 group-hover:opacity-100 transition-opacity hover:!bg-cta"
-        isConnectable={isConnectable}
-      />
-      <Handle
-        type="target"
-        position={Position.Bottom}
-        id="bottom-in"
-        style={{ left: '52%' }}
-        className="w-3 h-3 !bg-cta !border-2 !border-white opacity-0 group-hover:opacity-100 transition-opacity hover:!bg-cta"
-        isConnectable={isConnectable}
-      />
-
-      <Handle
-        type="source"
-        position={Position.Left}
-        id="left-out"
-        style={{ top: '48%' }}
-        className="w-3 h-3 !bg-cta !border-2 !border-white opacity-0 group-hover:opacity-100 transition-opacity hover:!bg-cta"
-        isConnectable={isConnectable}
-      />
-      <Handle
-        type="target"
-        position={Position.Left}
-        id="left-in"
-        style={{ top: '52%' }}
-        className="w-3 h-3 !bg-cta !border-2 !border-white opacity-0 group-hover:opacity-100 transition-opacity hover:!bg-cta"
-        isConnectable={isConnectable}
-      />
+      <NodeHandles isConnectable={isConnectable} defaultSource="top" defaultTarget="top" />
     </>
   );
 

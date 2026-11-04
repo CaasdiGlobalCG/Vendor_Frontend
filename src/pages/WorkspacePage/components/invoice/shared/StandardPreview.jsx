@@ -107,6 +107,19 @@ export default function StandardPreview({
         : resolvedVendorName;
     const vendorEmail = currentUser?.email || '';
 
+    // PM-edited issuer override — when the PM rewrites the company block on a
+    // workspace document it's stored on the record as issuerDetails and takes
+    // precedence over the logged-in vendor's identity.
+    const issuer = quote?.issuerDetails || null;
+    const issuerName = issuer?.name || vendorName;
+
+    // Payment terms: legacy string OR the structured option object
+    // ({ option, label, advancePercent }) stored by the finance editor.
+    const paymentTermsText =
+      typeof quote?.paymentTerms === 'string'
+        ? quote.paymentTerms
+        : quote?.paymentTerms?.label || null;
+
     const isInvoice = docType === 'invoice';
     const isCreditNote = docType === 'creditnote';
     const isPurchaseOrder = docType === 'purchaseorder' || docType === 'po';
@@ -251,8 +264,8 @@ export default function StandardPreview({
     // Calculate colspan for footer rows
     const getColspan = () => {
         let baseCols = isIntraState ? 7 : 6;
-        if (quote.items.some(item => item.ratePerSqft)) baseCols += 1;
-        if (quote.items.some(item => item.measurements)) baseCols += 1;
+        if (items.some(item => item.ratePerSqft)) baseCols += 1;
+        if (items.some(item => item.measurements)) baseCols += 1;
         return baseCols;
     };
     
@@ -268,8 +281,11 @@ export default function StandardPreview({
                                 {/* Show vendor identity for both quotes and invoices */}
                                 {isQuote || isInvoice ? (
                                   <div className="flex flex-col gap-1 mb-2">
-                                    <div className="font-bold text-xl">{vendorName}</div>
-                                    {vendorEmail && <div className="text-xs">{vendorEmail}</div>}
+                                    <div className="font-bold text-xl">{issuerName}</div>
+                                    {issuer?.address && <div className="text-xs whitespace-pre-line">{issuer.address}</div>}
+                                    {issuer?.country && <div className="text-xs">{issuer.country}</div>}
+                                    {issuer?.gstin && <div className="text-xs">GSTIN: {issuer.gstin}</div>}
+                                    {(issuer?.email || vendorEmail) && <div className="text-xs">{issuer?.email || vendorEmail}</div>}
                                   </div>
                                 ) : (
                                   <>
@@ -366,8 +382,8 @@ export default function StandardPreview({
                                             <th className="p-2 border font-semibold text-left">HSN/SAC</th>
                                             <th className="p-2 border font-semibold text-right">Qty</th>
                                             <th className="p-2 border font-semibold text-right">Rate</th>
-                                            {quote.items.some(item => item.ratePerSqft) && <th className="p-2 border font-semibold text-right">Rate/Sqft</th>}
-                                            {quote.items.some(item => item.measurements) && <th className="p-2 border font-semibold text-center">Measurements</th>}
+                                            {items.some(item => item.ratePerSqft) && <th className="p-2 border font-semibold text-right">Rate/Sqft</th>}
+                                            {items.some(item => item.measurements) && <th className="p-2 border font-semibold text-center">Measurements</th>}
                                             {showCgstSgst && <th className="p-2 border font-semibold text-right">CGST</th>}
                                             {showCgstSgst && <th className="p-2 border font-semibold text-right">SGST</th>}
                                             {showIgst && <th className="p-2 border font-semibold text-right">IGST</th>}
@@ -375,7 +391,7 @@ export default function StandardPreview({
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        {quote.items.map((item, index) => (
+                                        {items.map((item, index) => (
                                             <tr key={index} style={{ pageBreakInside: 'avoid' }}>
                                                 <td className="p-2 border">{index + 1}</td>
                                                 <td className="p-2 border">
@@ -395,8 +411,8 @@ export default function StandardPreview({
                                           <td className="p-2 border">{item.hsn || item.hsnSac || item.hsnCode || '-'}</td>
                                                 <td className="p-2 border text-right">{formatQuantity(item.quantity)}</td>
                                                 <td className="p-2 border text-right">{formatCurrency(item.rate)}</td>
-                                                {quote.items.some(item => item.ratePerSqft) && <td className="p-2 border text-right">{item.ratePerSqft ? formatCurrency(item.ratePerSqft) : '-'}</td>}
-                                                {quote.items.some(item => item.measurements) && <td className="p-2 border text-center">{item.measurements || '-'}</td>}
+                                                {items.some(item => item.ratePerSqft) && <td className="p-2 border text-right">{item.ratePerSqft ? formatCurrency(item.ratePerSqft) : '-'}</td>}
+                                                {items.some(item => item.measurements) && <td className="p-2 border text-center">{item.measurements || '-'}</td>}
                                                 {showCgstSgst && <td className="p-2 border text-right">{formatCurrency(item.cgstAmount)}<br/><span className="text-dim text-xs">@{item.cgstRate}%</span></td>}
                                                 {showCgstSgst && <td className="p-2 border text-right">{formatCurrency(item.sgstAmount)}<br/><span className="text-dim text-xs">@{item.sgstRate}%</span></td>}
                                                 {showIgst && <td className="p-2 border text-right">{formatCurrency(item.igstAmount)}<br/><span className="text-dim text-xs">@{item.igstRate}%</span></td>}
@@ -437,6 +453,23 @@ export default function StandardPreview({
                                             <td colSpan={getColspan()} className="text-right p-2 border font-semibold">Total</td>
                                             <td className="text-right p-2 border font-bold">{formatCurrency(grandTotal)}</td>
                                         </tr>
+                                        {/* Advance already collected on the linked quote — deducted so the
+                                            client is billed only the balance. PM toggles visibility via the
+                                            "Advance paid" checkbox (payment math always deducts it); both
+                                            rows disappear once the invoice is fully settled. */}
+                                        {Number(quote.advancePaid) > 0 && quote.showAdvancePaid !== false
+                                            && Math.max(grandTotal - Number(quote.advancePaid) - (Number(quote.amountPaid) || 0), 0) > 0 && (
+                                            <>
+                                                <tr>
+                                                    <td colSpan={getColspan()} className="text-right p-2 border font-semibold">Advance Paid</td>
+                                                    <td className="text-right p-2 border text-success">(-) {formatCurrency(Number(quote.advancePaid))}</td>
+                                                </tr>
+                                                <tr>
+                                                    <td colSpan={getColspan()} className="text-right p-2 border font-semibold">Balance Due</td>
+                                                    <td className="text-right p-2 border font-bold">{formatCurrency(Math.max(grandTotal - Number(quote.advancePaid) - (Number(quote.amountPaid) || 0), 0))}</td>
+                                                </tr>
+                                            </>
+                                        )}
                                     </tfoot>
                                 </table>
                                 </div>
@@ -454,6 +487,12 @@ export default function StandardPreview({
                                     <div className="font-semibold text-xs">Notes</div>
                                     <div className="text-xs mt-1">{notes || quote.notes || 'Looking forward for your business.'}</div>
                                 </div>
+                                {paymentTermsText && (
+                                  <div className="mb-2">
+                                    <div className="font-semibold text-xs">Payment Terms</div>
+                                    <div className="whitespace-pre-line text-xs mt-1 text-ink">{paymentTermsText}</div>
+                                  </div>
+                                )}
                                 <div className="font-semibold text-xs mt-6 mb-1">Terms & Conditions</div>
                                 <div className="whitespace-pre-line text-xs text-ink">
                                     {terms ? formatTermsAndConditions(terms) : 'Payment Terms: All invoices issued by the Company must be paid in full within 7 days from the date of the invoice. Late payments may incur additional charges or interest as permitted by applicable law.\n\nServices/Goods: The Company agrees to provide the goods or services as specified in the invoice or related agreement. The Client agrees to accept and pay for these goods or services in accordance with these terms.\n\nLate Payment: If payment is not received within the 15 days period, the Company reserves the right to suspend services, withhold delivery of goods, or pursue legal remedies to recover the outstanding amount.\n\nDisputes: Any disputes regarding the invoice or services must be reported in writing within 5 days of receiving the invoice. The Client agrees to pay any undisputed portion of the invoice within the 25-day payment period.'}
@@ -465,10 +504,17 @@ export default function StandardPreview({
                                     {discount > 0 && <div className="flex justify-between"><span>Discount(2.00%)</span><span>(-) {formatCurrency(discount)}</span></div>}
                                     {amountWithheld > 0 && <div className="flex justify-between"><span>Amount Withheld (Section 194 I)</span><span className="text-danger">(-) {formatCurrency(amountWithheld)}</span></div>}
                                     <div className="flex justify-between font-bold border-t border-line pt-1 mt-1"><span>Total</span><span>₹{formatCurrency(grandTotal)}</span></div>
+                                    {Number(quote.advancePaid) > 0 && quote.showAdvancePaid !== false
+                                        && Math.max(grandTotal - Number(quote.advancePaid) - (Number(quote.amountPaid) || 0), 0) > 0 && (
+                                        <>
+                                            <div className="flex justify-between"><span>Advance Paid</span><span className="text-success">(-) {formatCurrency(Number(quote.advancePaid))}</span></div>
+                                            <div className="flex justify-between font-bold"><span>Balance Due</span><span>₹{formatCurrency(Math.max(grandTotal - Number(quote.advancePaid) - (Number(quote.amountPaid) || 0), 0))}</span></div>
+                                        </>
+                                    )}
                                 </div>
                                 <div className="mt-8 text-right text-xs text-ink signature-section" style={{borderTop: '1px solid #ccc', paddingTop: '4px'}}>
                                     <div>Authorized Signature</div>
-                                    <div className="mt-2 font-semibold text-sm">{vendorName}</div>
+                                    <div className="mt-2 font-semibold text-sm">{issuerName}</div>
                                     <div className="mt-8">
                                         <div className="border-t border-line w-32 ml-auto mb-2"></div>
                                         <div className="text-xs text-dim">Vendor/Client Signature</div>

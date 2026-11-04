@@ -1,5 +1,6 @@
 import React, { useState, useCallback, useContext, memo } from 'react';
-import { Handle, Position, useReactFlow } from 'reactflow';
+import { useReactFlow } from 'reactflow';
+import NodeHandles from './NodeHandles';
 import { Sparkles, ChevronDown, ChevronUp, Copy, Check } from 'lucide-react';
 import { VendorContext } from '../../../../context/VendorContext';
 import { persistNodeDataPatch } from '../../utils/nodePersistence';
@@ -190,8 +191,7 @@ const AIHelperNode = memo(({ id, data, isConnectable, selected }) => {
     <div className={`bg-gradient-to-br from-black to-black rounded-xl border-2 shadow-lg transition-all duration-200 min-w-[280px] max-w-[340px] ${
       selected ? 'border-line shadow-purple-200/50' : 'border-line'
     }`}>
-      <Handle type="target" position={Position.Top} isConnectable={isConnectable} className="!bg-cta !w-2.5 !h-2.5 !border-2 !border-white" />
-      <Handle type="source" position={Position.Bottom} isConnectable={isConnectable} className="!bg-cta !w-2.5 !h-2.5 !border-2 !border-white" />
+      <NodeHandles isConnectable={isConnectable} />
 
       {/* Header */}
       <div className="flex items-center justify-between px-3 py-2 border-b border-line">

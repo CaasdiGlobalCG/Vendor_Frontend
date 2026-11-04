@@ -87,18 +87,24 @@ const LeadDetailPage = () => {
                             vendorBoqAttachment: data.lead.vendorBoqAttachment,
                             vendorQuotationResponse: data.lead.vendorQuotationResponse,
                             vendorQuotationApprovalStatus: data.lead.vendorQuotationApprovalStatus,
-                            vendorQuotationRejectionReason: data.lead.vendorQuotationRejectionReason
+                            vendorQuotationRejectionReason: data.lead.vendorQuotationRejectionReason,
+                            vendorSubmissions: data.lead.vendorSubmissions,
+                            financeReview: data.lead.financeReview,
+                            clientReview: data.lead.clientReview
                         });
 
                         // Restore submitted state only while submission is locked
                         // (pending PM review / final decision). When the PM sends
                         // the lead back for revision the upload forms must
                         // reappear so the vendor can resubmit.
+                        // Multiple proposals are allowed until the PM forwards
+                        // any to finance or a client review is in flight.
+                        const downstreamLocked = !!(data.lead.financeReview || data.lead.clientReview);
                         const resubmittable =
-                            !data.lead.status ||
-                            data.lead.status === 'sent' ||
-                            data.lead.status === 'pm_rejected_for_revision' ||
-                            data.lead.vendorQuotationApprovalStatus === 'rejected';
+                            !downstreamLocked &&
+                            (!data.lead.status ||
+                            ['sent', 'vendor_accepted', 'pm_rejected_for_revision'].includes(data.lead.status) ||
+                            data.lead.vendorQuotationApprovalStatus === 'rejected');
 
                         if (!resubmittable && data.lead.vendorBoqAttachment?.fileUrl) {
                             setUploadedVendorBoq({
@@ -397,15 +403,29 @@ const LeadDetailPage = () => {
                 );
             }
 
-            setUploadedVendorQuotation({
-                quotationFileUrl,
-                fileName: vendorQuotationFile.name,
-                uploadedAt: new Date().toISOString()
-            });
+            const submittedAt = new Date().toISOString();
             setVendorQuotationFile(null);
-            setFreshLeadData(prev => ({ ...(prev || {}), status: 'vendor_accepted' }));
-            
-            alert('Your quotation has been uploaded and sent to PM for review!');
+            setVendorBoqFile(null);
+            // Reset the two-step form so another proposal can be added, and
+            // record the new proposal locally for the proposals list.
+            const newSubmission = {
+                submissionId: data?.submissionId || data?.data?.submissionId || `local-${Date.now()}`,
+                boqUrl: uploadedVendorBoq.boqFileUrl,
+                boqFileName: uploadedVendorBoq.fileName,
+                quotationUrl: quotationFileUrl,
+                quotationFileName: vendorQuotationFile.name,
+                submittedAt,
+                status: 'submitted'
+            };
+            setUploadedVendorBoq(null);
+            setUploadedVendorQuotation(null);
+            setFreshLeadData(prev => ({
+                ...(prev || {}),
+                status: 'vendor_accepted',
+                vendorSubmissions: [...(prev?.vendorSubmissions || leadDetails?.vendorSubmissions || []), newSubmission]
+            }));
+
+            alert('Your quotation has been uploaded and sent to PM for review! You can submit another proposal below.');
         } catch (error) {
             console.error('Error uploading vendor quotation:', error);
             setVendorQuotationError(error.message || 'Failed to upload quotation. Please try again.');
@@ -468,8 +488,22 @@ const LeadDetailPage = () => {
             }
 
             // Update local state with the new lead data
-            setUploadedQuotation(data.quotation || null);
-            setFreshLeadData(prev => ({ ...(prev || {}), status: 'vendor_accepted' }));
+            setUploadedQuotation(null);
+            setQuotationFile(null);
+            const pmSubmission = {
+                submissionId: data?.submissionId || data?.data?.submissionId || `local-${Date.now()}`,
+                boqUrl: leadDetails?.boqAttachment?.fileUrl || leadDetails?.boqFileUrl || null,
+                boqSource: 'pm',
+                quotationUrl: pdfUrl,
+                quotationFileName: quotationFile?.name || 'quotation.pdf',
+                submittedAt: new Date().toISOString(),
+                status: 'submitted'
+            };
+            setFreshLeadData(prev => ({
+                ...(prev || {}),
+                status: 'vendor_accepted',
+                vendorSubmissions: [...(prev?.vendorSubmissions || leadDetails?.vendorSubmissions || []), pmSubmission]
+            }));
             
             // Update leadDetails in location state to persist the new status
             if (location.state) {
@@ -509,16 +543,17 @@ const LeadDetailPage = () => {
 
     const isPending = leadDetails.status === null;
 
-    // Vendor may submit/resubmit only while the lead is awaiting their response:
-    // freshly sent, sent back by PM for revision, or vendor-BOQ quotation rejected.
-    // Locked while pending PM review (vendor_accepted) and after a final decision.
+    // Vendor may submit/resubmit while the lead is awaiting their response or
+    // under PM review — multiple proposals are allowed until the PM forwards to
+    // finance or a client review exists. Locked after a final decision.
     const leadStatus = leadDetails?.status;
     const quoteApprovalStatus = leadDetails?.vendorQuotationApprovalStatus;
+    const downstreamLocked = !!(leadDetails?.financeReview || leadDetails?.clientReview);
     const canSubmit =
-        !leadStatus ||
-        leadStatus === 'sent' ||
-        leadStatus === 'pm_rejected_for_revision' ||
-        quoteApprovalStatus === 'rejected';
+        !downstreamLocked &&
+        (!leadStatus ||
+        ['sent', 'vendor_accepted', 'pm_rejected_for_revision'].includes(leadStatus) ||
+        quoteApprovalStatus === 'rejected');
     const pmApproved = leadStatus === 'pm_approved' || quoteApprovalStatus === 'approved';
     const vendorBoqRejected = quoteApprovalStatus === 'rejected';
     const rejectionReasonText = leadDetails?.rejectionReason || leadDetails?.vendorQuotationRejectionReason;
@@ -626,6 +661,58 @@ const LeadDetailPage = () => {
                     Detailed Bill of Quantities (BOQ) is available in the downloadable PDF document linked above (if provided).
                 </div>
             </div>
+
+            {/* Your submitted proposals — a vendor can send multiple BOQ+quotation
+                proposals per lead until the PM forwards to finance */}
+            {(leadDetails?.vendorSubmissions?.length > 0) && (
+                <div className="mb-10 p-4 rounded-lg border border-line bg-surface">
+                    <h3 className="text-sm font-semibold text-ink mb-1">
+                        Your Proposals ({leadDetails.vendorSubmissions.length})
+                    </h3>
+                    <p className="text-xs text-dim mb-3">
+                        {downstreamLocked
+                            ? 'These proposals are under review. No further proposals can be added.'
+                            : 'Each proposal pairs a BOQ with its quotation. You can add another proposal below.'}
+                    </p>
+                    <div className="space-y-2">
+                        {leadDetails.vendorSubmissions.map((sub, idx) => (
+                            <div
+                                key={sub.submissionId || idx}
+                                className="flex flex-wrap items-center justify-between gap-2 rounded-md border border-line bg-canvas px-3 py-2"
+                            >
+                                <div className="flex items-center gap-2 min-w-0">
+                                    <PaperClipIcon className="h-4 w-4 text-info flex-shrink-0" />
+                                    <div className="min-w-0">
+                                        <p className="text-sm font-medium text-ink">Proposal {idx + 1}</p>
+                                        <p className="text-xs text-dim truncate">
+                                            {[sub.boqFileName || (sub.boqSource === 'pm' ? 'PM BOQ' : null), sub.quotationFileName]
+                                                .filter(Boolean)
+                                                .join(' • ')}
+                                        </p>
+                                    </div>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                    {sub.boqUrl && (
+                                        <a href={sub.boqUrl} target="_blank" rel="noopener noreferrer"
+                                            className="text-xs font-medium text-info hover:underline">
+                                            BOQ
+                                        </a>
+                                    )}
+                                    {sub.quotationUrl && (
+                                        <a href={sub.quotationUrl} target="_blank" rel="noopener noreferrer"
+                                            className="text-xs font-medium text-info hover:underline">
+                                            Quotation
+                                        </a>
+                                    )}
+                                    <span className="text-[10px] text-dim">
+                                        {sub.submittedAt ? new Date(sub.submittedAt).toLocaleString() : ''}
+                                    </span>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            )}
 
             {/* Vendor BOQ Upload Section (always available - mandatory if PM hasn't provided BOQ, optional if PM has) */}
             {true && (

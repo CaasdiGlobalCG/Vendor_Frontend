@@ -24,9 +24,16 @@ const tutorialSteps = [
     icon: "✏️"
   },
   {
-    title: "Templates Library",
-    description: "Jumpstart your document with pre-built templates for quotations, purchase orders, RFQ responses, and BOQ.",
+    title: "Tools",
+    description: "Open forms and tools: quotations and invoices, BOQ, cost calculators, RFQ, work orders and site logs.",
     target: "[data-tour='templates-btn']",
+    position: "right",
+    icon: "🧰"
+  },
+  {
+    title: "Templates",
+    description: "Start from a ready-made layout for construction, interiors, manufacturing or retail, or save your own canvas as a template.",
+    target: "[data-tour='template-library-btn']",
     position: "right",
     icon: "📋"
   },

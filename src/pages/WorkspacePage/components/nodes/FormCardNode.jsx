@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef, useContext } from 'react';
-import { useReactFlow, Handle, Position, NodeResizer } from 'reactflow';
+import { useReactFlow, NodeResizer } from 'reactflow';
+import NodeHandles from './NodeHandles';
 import { Edit2, Save, Plus, Trash2, RotateCcw, MoreVertical, MessageCircle, UserCheck, Lock, Link2, Type, Hash, Mail, Phone, Calendar, AlignLeft, CheckCircle2, GripVertical, Send, Info, Copy } from 'lucide-react';
 import { notifyWorkspaceEvent } from '../../utils/workspaceApi';
 import {
@@ -26,7 +27,7 @@ const DEFAULT_FIELDS = [
   { id: 'field2', label: 'Field 2', type: 'text', required: false }
 ];
 
-const FormCardNode = ({ id, data, selected, isConnectable }) => {
+const FormCardNode = ({ id, data, selected, isConnectable = true }) => {
   const { setNodes, getNodes } = useReactFlow();
   const workspaceId = data?.workspaceId || null;
   const { currentUser } = useContext(VendorContext) || {};
@@ -428,14 +429,6 @@ const FormCardNode = ({ id, data, selected, isConnectable }) => {
     );
   };
 
-  const handleStyle = 'w-3 h-3 !bg-cta !border-2 !border-white opacity-0 group-hover:opacity-100 transition-opacity hover:!bg-cta';
-  const handleSides = [
-    ['top', Position.Top, { left: '50%' }],
-    ['right', Position.Right, { top: '50%' }],
-    ['bottom', Position.Bottom, { left: '50%' }],
-    ['left', Position.Left, { top: '50%' }]
-  ];
-
   const responseCount = Object.values(responses).filter(v => v?.toString().trim()).length;
 
   return (
@@ -456,12 +449,7 @@ const FormCardNode = ({ id, data, selected, isConnectable }) => {
         handleClassName="!w-3 !h-3 !bg-info !border-2 !border-white !rounded-md"
       />
 
-      {handleSides.map(([side, pos, style]) => (
-        <React.Fragment key={side}>
-          <Handle type="source" position={pos} id={`${side}-out`} style={style} className={handleStyle} isConnectable={isConnectable} />
-          <Handle type="target" position={pos} id={`${side}-in`} style={style} className={handleStyle} isConnectable={isConnectable} />
-        </React.Fragment>
-      ))}
+      <NodeHandles isConnectable={isConnectable} />
 
       {/* Info & status cluster — top-right corner, same as other elements */}
       <div className="absolute -top-3 -right-3 z-20 flex items-center space-x-1">
@@ -703,7 +691,7 @@ const FormCardNode = ({ id, data, selected, isConnectable }) => {
                   <select
                     value={field.type}
                     onChange={(e) => handleFieldChange(field.id, 'type', e.target.value)}
-                    className="px-1.5 py-1 border border-line rounded-md text-xs bg-surface focus:outline-none focus:ring-1 focus:ring-info/40"
+                    className="nodrag px-1.5 py-1 border border-line rounded-md text-xs bg-surface focus:outline-none focus:ring-1 focus:ring-info/40"
                   >
                     <option value="text">Text</option>
                     <option value="number">Number</option>

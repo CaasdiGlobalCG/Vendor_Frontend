@@ -18,6 +18,14 @@ const shortcuts = [
     { keys: ['Right-click drag'], desc: 'Pan canvas' },
     { keys: ['Space + drag'], desc: 'Pan canvas (alt)' },
     { keys: ['Delete'], desc: 'Remove selected element' },
+    { keys: ['Shift', '2'], desc: 'Zoom to selection (or fit all)' },
+  ]},
+  { category: 'Present mode', items: [
+    { keys: ['→', 'Space'], desc: 'Next slide' },
+    { keys: ['←'], desc: 'Previous slide' },
+    { keys: ['Home', 'End'], desc: 'First / last slide' },
+    { keys: ['O'], desc: 'Overview' },
+    { keys: ['Esc'], desc: 'Exit presenting or client view' },
   ]},
 ];
 

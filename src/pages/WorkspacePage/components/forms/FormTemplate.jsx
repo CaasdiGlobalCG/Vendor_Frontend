@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { persistNodeDataPatch } from '../../utils/nodePersistence';
 import { useReactFlow } from 'reactflow';
+import Field from '../ui/Field';
+import { TextInput, TextArea } from '../ui/controls';
 
 const FormTemplate = ({ nodeId, workspaceId, onSubmitSuccess, initialFormData = null }) => {
   const { setNodes } = useReactFlow();
@@ -15,7 +17,8 @@ const FormTemplate = ({ nodeId, workspaceId, onSubmitSuccess, initialFormData = 
   });
 
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [submitMessage, setSubmitMessage] = useState(null);
+  const [submitMessage, setSubmitMessage] = useState(null); // { type: 'success' | 'error', text }
+  const [touched, setTouched] = useState({});
   const [isFormSubmitted, setIsFormSubmitted] = useState(!!initialFormData && Object.keys(initialFormData).length > 0);
 
   // Load saved form data if available
@@ -29,6 +32,19 @@ const FormTemplate = ({ nodeId, workspaceId, onSubmitSuccess, initialFormData = 
     }
   }, [JSON.stringify(initialFormData)]);
 
+  const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  const validate = (values) => {
+    const errors = {};
+    if (!values.firstName?.trim()) errors.firstName = 'First name is required';
+    if (!values.lastName?.trim()) errors.lastName = 'Last name is required';
+    if (!values.email?.trim()) errors.email = 'Email is required';
+    else if (!EMAIL.test(values.email.trim())) errors.email = 'Enter a valid email address';
+    return errors;
+  };
+  const errors = validate(formData);
+  const touch = (field) => setTouched((prev) => ({ ...prev, [field]: true }));
+  const errorFor = (field) => (touched[field] ? errors[field] : undefined);
+
   const handleInputChange = (field, value) => {
     setFormData(prev => ({
       ...prev,
@@ -39,10 +55,15 @@ const FormTemplate = ({ nodeId, workspaceId, onSubmitSuccess, initialFormData = 
   const handleSubmit = async (e) => {
     e.preventDefault();
     e.stopPropagation();
-    
+
+    if (Object.keys(errors).length > 0) {
+      setTouched({ firstName: true, lastName: true, email: true });
+      return;
+    }
+
     if (!nodeId || !workspaceId) {
       console.warn('⚠️ Cannot submit form: Missing nodeId or workspaceId');
-      alert('Error: Cannot save form data. Please try again.');
+      setSubmitMessage({ type: 'error', text: 'Cannot save this form right now. Please try again.' });
       return;
     }
 
@@ -82,7 +103,7 @@ const FormTemplate = ({ nodeId, workspaceId, onSubmitSuccess, initialFormData = 
       // Mark form as submitted
       setIsFormSubmitted(true);
       
-      setSubmitMessage('✅ Form ' + (isFormSubmitted ? 'updated' : 'submitted') + ' and saved successfully!');
+      setSubmitMessage({ type: 'success', text: `Form ${isFormSubmitted ? 'updated' : 'submitted'} and saved.` });
       
       // Call optional callback
       if (onSubmitSuccess) {
@@ -95,7 +116,7 @@ const FormTemplate = ({ nodeId, workspaceId, onSubmitSuccess, initialFormData = 
       }, 3000);
     } catch (error) {
       console.error('❌ Error saving form data:', error);
-      setSubmitMessage('❌ Error ' + (isFormSubmitted ? 'updating' : 'saving') + ' form. Please try again.');
+      setSubmitMessage({ type: 'error', text: `Could not ${isFormSubmitted ? 'update' : 'save'} the form. Please try again.` });
       setTimeout(() => {
         setSubmitMessage(null);
       }, 3000);
@@ -105,168 +126,120 @@ const FormTemplate = ({ nodeId, workspaceId, onSubmitSuccess, initialFormData = 
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4 w-full">
-      {/* Name Fields */}
+    <form onSubmit={handleSubmit} noValidate className="w-full space-y-4">
       <div className="grid grid-cols-2 gap-3">
-        <div>
-          <label className="block text-sm font-medium text-ink mb-1">
-            First Name *
-          </label>
-          <input
-            type="text"
+        <Field label="First name" required error={errorFor('firstName')} htmlFor={`${nodeId}-firstName`}>
+          <TextInput
+            id={`${nodeId}-firstName`}
             value={formData.firstName}
             onChange={(e) => handleInputChange('firstName', e.target.value)}
-            className="w-full p-2 border-2 border-line rounded-lg focus:outline-none focus:ring-2 focus:ring-info focus:border-info text-sm"
+            onBlur={() => touch('firstName')}
+            invalid={!!errorFor('firstName')}
             placeholder="John"
-            onClick={(e) => e.stopPropagation()}
-            onKeyDown={(e) => e.stopPropagation()}
-            onFocus={(e) => e.stopPropagation()}
-            required
+            autoComplete="given-name"
           />
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-ink mb-1">
-            Last Name *
-          </label>
-          <input
-            type="text"
+        </Field>
+        <Field label="Last name" required error={errorFor('lastName')} htmlFor={`${nodeId}-lastName`}>
+          <TextInput
+            id={`${nodeId}-lastName`}
             value={formData.lastName}
             onChange={(e) => handleInputChange('lastName', e.target.value)}
-            className="w-full p-2 border-2 border-line rounded-lg focus:outline-none focus:ring-2 focus:ring-info focus:border-info text-sm"
+            onBlur={() => touch('lastName')}
+            invalid={!!errorFor('lastName')}
             placeholder="Doe"
-            onClick={(e) => e.stopPropagation()}
-            onKeyDown={(e) => e.stopPropagation()}
-            onFocus={(e) => e.stopPropagation()}
-            required
+            autoComplete="family-name"
           />
-        </div>
+        </Field>
       </div>
 
-      {/* Contact Fields */}
-      <div>
-        <label className="block text-sm font-medium text-ink mb-1">
-          Email Address *
-        </label>
-        <input
+      <Field label="Email address" required error={errorFor('email')} htmlFor={`${nodeId}-email`}>
+        <TextInput
+          id={`${nodeId}-email`}
           type="email"
           value={formData.email}
           onChange={(e) => handleInputChange('email', e.target.value)}
-          className="w-full p-2 border-2 border-line rounded-lg focus:outline-none focus:ring-2 focus:ring-info focus:border-info text-sm"
+          onBlur={() => touch('email')}
+          invalid={!!errorFor('email')}
           placeholder="john.doe@example.com"
-          onClick={(e) => e.stopPropagation()}
-          onKeyDown={(e) => e.stopPropagation()}
-          onFocus={(e) => e.stopPropagation()}
-          required
+          autoComplete="email"
         />
+      </Field>
+
+      <div className="grid grid-cols-2 gap-3">
+        <Field label="Phone number" htmlFor={`${nodeId}-phone`}>
+          <TextInput
+            id={`${nodeId}-phone`}
+            type="tel"
+            value={formData.phone}
+            onChange={(e) => handleInputChange('phone', e.target.value)}
+            placeholder="+1 (555) 123-4567"
+            autoComplete="tel"
+          />
+        </Field>
+        <Field label="Company" htmlFor={`${nodeId}-company`}>
+          <TextInput
+            id={`${nodeId}-company`}
+            value={formData.company}
+            onChange={(e) => handleInputChange('company', e.target.value)}
+            placeholder="Acme Corporation"
+            autoComplete="organization"
+          />
+        </Field>
       </div>
 
-      <div>
-        <label className="block text-sm font-medium text-ink mb-1">
-          Phone Number
-        </label>
-        <input
-          type="tel"
-          value={formData.phone}
-          onChange={(e) => handleInputChange('phone', e.target.value)}
-          className="w-full p-2 border-2 border-line rounded-lg focus:outline-none focus:ring-2 focus:ring-info focus:border-info text-sm"
-          placeholder="+1 (555) 123-4567"
-          onClick={(e) => e.stopPropagation()}
-          onKeyDown={(e) => e.stopPropagation()}
-          onFocus={(e) => e.stopPropagation()}
-        />
-      </div>
-
-      <div>
-        <label className="block text-sm font-medium text-ink mb-1">
-          Company
-        </label>
-        <input
-          type="text"
-          value={formData.company}
-          onChange={(e) => handleInputChange('company', e.target.value)}
-          className="w-full p-2 border-2 border-line rounded-lg focus:outline-none focus:ring-2 focus:ring-info focus:border-info text-sm"
-          placeholder="Acme Corporation"
-          onClick={(e) => e.stopPropagation()}
-          onKeyDown={(e) => e.stopPropagation()}
-          onFocus={(e) => e.stopPropagation()}
-        />
-      </div>
-
-      {/* Message Field */}
-      <div>
-        <label className="block text-sm font-medium text-ink mb-1">
-          Message
-        </label>
-        <textarea
+      <Field label="Message" htmlFor={`${nodeId}-message`}>
+        <TextArea
+          id={`${nodeId}-message`}
           value={formData.message}
           onChange={(e) => handleInputChange('message', e.target.value)}
-          className="w-full p-2 border-2 border-line rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-info focus:border-info text-sm"
-          rows="3"
+          rows={3}
+          className="!min-h-[80px]"
           placeholder="Tell us about your inquiry..."
-          onClick={(e) => e.stopPropagation()}
-          onKeyDown={(e) => e.stopPropagation()}
-          onFocus={(e) => e.stopPropagation()}
         />
-      </div>
+      </Field>
 
-      {/* Terms Checkbox */}
-      <div className="flex items-start space-x-2">
+      <label htmlFor={`${nodeId}-terms`} className="flex cursor-pointer items-start gap-2.5 text-[13px] text-ink">
         <input
           type="checkbox"
-          id="terms"
+          id={`${nodeId}-terms`}
           checked={formData.agreeToTerms}
           onChange={(e) => handleInputChange('agreeToTerms', e.target.checked)}
-          className="w-4 h-4 text-info border-2 border-line rounded focus:ring-info mt-0.5"
           onClick={(e) => e.stopPropagation()}
           onKeyDown={(e) => e.stopPropagation()}
-          onFocus={(e) => e.stopPropagation()}
+          className="mt-0.5 h-4 w-4 rounded border-line accent-[rgb(var(--status-info))] focus:outline-none focus-visible:ring-2 focus-visible:ring-info/40"
         />
-        <label htmlFor="terms" className="text-sm text-ink">
-          I agree to the{' '}
-          <span className="text-info hover:text-info cursor-pointer underline">
-            Terms of Service
-          </span>{' '}
-          and{' '}
-          <span className="text-info hover:text-info cursor-pointer underline">
-            Privacy Policy
-          </span>
-        </label>
-      </div>
+        <span>
+          I agree to the <span className="text-info underline underline-offset-2">Terms of Service</span> and{' '}
+          <span className="text-info underline underline-offset-2">Privacy Policy</span>
+        </span>
+      </label>
 
-      {/* Submit Button */}
-      <div className="pt-2 space-y-2">
+      <div className="space-y-2 border-t border-line pt-4">
         {submitMessage && (
-          <div className={`p-3 rounded-lg text-sm font-medium text-center ${
-            submitMessage.includes('Error') 
-              ? 'bg-danger/10 text-danger' 
-              : 'bg-success/10 text-success'
-          }`}>
-            {submitMessage}
+          <div
+            role={submitMessage.type === 'error' ? 'alert' : 'status'}
+            className={`rounded-lg px-3 py-2 text-xs font-medium ${
+              submitMessage.type === 'error' ? 'bg-danger/10 text-danger' : 'bg-success/10 text-success'
+            }`}
+          >
+            {submitMessage.text}
           </div>
         )}
-        <button
-          type="submit"
-          disabled={isSubmitting}
-          className={`w-full px-6 py-3 text-sm font-medium rounded-lg transition-all duration-200   focus:outline-none focus:ring-2 focus:ring-offset-2 ${
-            isSubmitting 
-              ? 'bg-cta text-dim cursor-not-allowed' 
-              : isFormSubmitted
-              ? 'bg-black text-cta-foreground hover:from-black hover:to-black focus:ring-warning'
-              : 'bg-black text-white hover:from-black hover:to-black focus:ring-info'
-          }`}
-          onClick={(e) => e.stopPropagation()}
-        >
-          {isSubmitting 
-            ? (isFormSubmitted ? 'Updating...' : 'Submitting...') 
-            : (isFormSubmitted ? '✏️ Update Form' : '📝 Submit Form')
-          }
-        </button>
+        <div className="flex justify-end">
+          <button
+            type="submit"
+            disabled={isSubmitting}
+            onClick={(e) => e.stopPropagation()}
+            className="inline-flex h-9 items-center rounded-lg bg-cta px-4 text-[13px] font-medium text-cta-foreground transition-opacity hover:opacity-90 focus:outline-none focus-visible:ring-2 focus-visible:ring-info/40 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            {isSubmitting
+              ? isFormSubmitted ? 'Updating…' : 'Submitting…'
+              : isFormSubmitted ? 'Update form' : 'Submit form'}
+          </button>
+        </div>
       </div>
     </form>
   );
 };
 
 export default FormTemplate;
-
-
-

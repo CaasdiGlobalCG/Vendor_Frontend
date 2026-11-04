@@ -35,8 +35,19 @@ import {
   ClipboardList,
   ShieldCheck,
   CloudSun,
-  FileDigit
+  FileDigit,
+  HardHat,
+  Printer,
+  Sofa,
+  Wheat,
+  Type
 } from 'lucide-react';
+import { getBasicsElements } from '../utils/blockElements';
+import { getPrintingElements } from '../utils/printingElements';
+import { getFoodElements } from '../utils/foodElements';
+import { getInteriorElements } from '../utils/interiorElements';
+import { getConstructionElements } from '../utils/constructionElements';
+import TemplateLibrary from './templates/TemplateLibrary';
 import TaskTab from './TaskTab';
 import LayersTab from './LayersTab';
 import AssetsTab from './AssetsTab';
@@ -61,6 +72,7 @@ const WorkspaceContextPanel = ({
   memberOptions,
   workspace,
   userRole,
+  canEditCanvas = true,
   onLeaveWorkspace,
   // Canvas elements for Layers
   canvasElements = [],
@@ -106,6 +118,11 @@ const WorkspaceContextPanel = ({
 
   // Helper to trigger double click or button click add
   const handleDoubleClick = (elementData) => {
+    // BOQ wizards open a dialog instead of dropping an element on the canvas
+    if (elementData?.templateId) {
+      onTemplateSelect?.(elementData.templateId);
+      return;
+    }
     const cleanElement = {
       ...elementData,
       id: elementData.id || `${elementData.type || 'element'}-${Date.now()}-${Math.random().toString(36).substr(2, 4)}`,
@@ -136,6 +153,13 @@ const WorkspaceContextPanel = ({
   // CAS member has been invited to the workspace by the PM (visible to all roles).
   const categories = useMemo(() => {
     const baseCategories = [
+    {
+      id: 'basics',
+      name: 'Basics',
+      desc: 'Heading, divider, status, progress, KPI',
+      icon: Type,
+      color: 'bg-surface-hover text-ink border-line'
+    },
     {
       id: 'invoices-quotes',
       name: 'Invoices & Quotes', 
@@ -183,7 +207,7 @@ const WorkspaceContextPanel = ({
       name: 'CAD Files', 
       desc: 'Upload & scan .dwg .dxf .step .iges .stl .obj', 
       icon: FileDigit,
-      color: 'bg-slate-50 text-slate-700 border-slate-200' 
+      color: 'bg-surface-hover text-ink border-line' 
     },
     { 
       id: 'cost-calculators', 
@@ -205,6 +229,34 @@ const WorkspaceContextPanel = ({
       desc: 'AI notes, calendar events, approval boards',
       icon: Sparkles,
       color: 'bg-surface-hover text-ink border-line' 
+    },
+    {
+      id: 'printing-signage',
+      name: 'Printing and signage',
+      desc: 'Proof markup, artwork approval, elevations, colours',
+      icon: Printer,
+      color: 'bg-surface-hover text-ink border-line'
+    },
+    {
+      id: 'food-fmcg',
+      name: 'Food and FMCG',
+      desc: 'Batch records, expiry, temperature, licences, recall trace',
+      icon: Wheat,
+      color: 'bg-surface-hover text-ink border-line'
+    },
+    {
+      id: 'interiors-furniture',
+      name: 'Interiors and furniture',
+      desc: 'Scope sheets, finish schedules, moodboards, measurements',
+      icon: Sofa,
+      color: 'bg-surface-hover text-ink border-line'
+    },
+    {
+      id: 'construction',
+      name: 'Construction',
+      desc: 'Snag lists, inspections, pour cards, measurements, bills, permits',
+      icon: HardHat,
+      color: 'bg-surface-hover text-ink border-line'
     },
     ];
 
@@ -231,13 +283,9 @@ const WorkspaceContextPanel = ({
       return fallback;
     };
 
-    // Invoices and Quotes list (dynamic from props or comprehensive fallbacks)
-    const invQuotesList = pickList(elementOptions['invoices-quotes'], [
-          { id: 'new-quotation', name: 'Quotation Document', type: 'quotation', nodeType: 'quotation', preview: 'Line items, unit rates, taxes, and terms', categoryId: 'quotations' },
-          { id: 'new-invoice', name: 'Tax Invoice', type: 'invoice', nodeType: 'invoice', preview: 'Billable invoice with payment status and milestone details', categoryId: 'invoices' },
-          { id: 'credit-note', name: 'Credit Note', type: 'credit-note', nodeType: 'creditNote', preview: 'Adjustment for returns, discounts or invoice revisions', categoryId: 'credit-notes' },
-          { id: 'purchase-order', name: 'Purchase Order (PO)', type: 'purchase-order', nodeType: 'purchaseOrder', preview: 'Formal procurement order issued to supplier', categoryId: 'purchase-orders' },
-        ]);
+    // Invoices and Quotes list — only real documents created in this
+    // workspace (no template fallbacks; empty state shows when none exist)
+    const invQuotesList = pickList(elementOptions['invoices-quotes'], []);
 
     // Forms list
     const formsList = pickList(elementOptions.forms, [
@@ -308,17 +356,32 @@ const WorkspaceContextPanel = ({
       { id: 'calc-roofing', group: 'Waterproofing & Envelope', name: 'Roofing Calculator', type: 'cost-calculator', preview: 'Corrugated sheet count, fasteners & cost' },
       { id: 'calc-retaining-wall', group: 'Waterproofing & Envelope', name: 'Retaining Wall Calculator', type: 'cost-calculator', preview: 'RCC cantilever wall — concrete, steel & cost' },
       { id: 'calc-drywall', group: 'Partitions & Ceilings', name: 'Drywall / Partition Calculator', type: 'cost-calculator', preview: 'Gypsum boards, studs, screws & jointing' },
+      { id: 'calc-false-ceiling', group: 'Partitions & Ceilings', name: 'False Ceiling Calculator', type: 'cost-calculator', preview: 'Boards or tiles, GI channels, screws & ceiling cost' },
       { id: 'calc-decking', group: 'Timber & Framing', name: 'Decking Calculator', type: 'cost-calculator', preview: 'Deck boards, fasteners & laying cost' },
       { id: 'calc-framing', group: 'Timber & Framing', name: 'Framing Calculator', type: 'cost-calculator', preview: 'Wall studs, plates & timber lengths' },
       { id: 'calc-lumber', group: 'Timber & Framing', name: 'Lumber Calculator', type: 'cost-calculator', preview: 'Board feet, cubic feet & lumber cost' },
       { id: 'calc-truss', group: 'Timber & Framing', name: 'Roof Truss Calculator', type: 'cost-calculator', preview: 'Truss count, chord lengths & timber cost' },
       { id: 'calc-electrical', group: 'MEP', name: 'Electrical Wiring Estimator', type: 'cost-calculator', preview: 'Conduit length and load point calculator' },
+      { id: 'calc-plumbing-pipe', group: 'MEP', name: 'Plumbing Pipe Calculator', type: 'cost-calculator', preview: 'Pipe lengths, fittings and cost for a plumbing run' },
+      { id: 'calc-tiling-labour', group: 'Labour & Pricing', name: 'Tiling Labour Calculator', type: 'cost-calculator', preview: 'Mason & helper days, duration and wage cost for tiling' },
+      { id: 'calc-labour-productivity', group: 'Labour & Pricing', name: 'Labour Productivity Calculator', type: 'cost-calculator', preview: 'Crew-days, duration and labour cost per unit of work' },
+      { id: 'calc-gst-margin', group: 'Labour & Pricing', name: 'GST & Margin Calculator', type: 'cost-calculator', preview: 'Markup or margin on cost, GST split, or back out GST' },
+      { id: 'calc-unit-converter', group: 'Labour & Pricing', name: 'Unit Converter', type: 'cost-calculator', preview: 'sq ft ↔ sq m, cu ft ↔ cu m, acre, cent, quintal & more' },
       { id: 'boq-generator', group: 'Cost & Logistics', name: 'BOQ Generator', type: 'boq-generator', preview: 'Generate professional Bill of Quantities with cost breakdown' },
       { id: 'calc-freight', group: 'Cost & Logistics', name: 'Freight Cost Calculator', type: 'logistics-freight-cost', preview: 'Calculate freight costs with fuel surcharge and tolls' },
     ];
 
-    // BOQ Generator list — placeholder BOQ templates (Custom BOQ button renders above this list)
-    const boqGeneratorList = [];
+    // BOQ Generator list — the Custom BOQ and the ready-made BOQ wizards. These are drawn
+    // by the dedicated block in the panel (they open a wizard instead of dropping an
+    // element), but they are listed here so the category count and search are right.
+    const boqGeneratorList = [
+      { id: 'boq-tpl-custom', templateId: 'custom-boq', name: 'Custom BOQ', type: 'boq-template', preview: 'Build your own Bill of Quantities from scratch' },
+      { id: 'boq-tpl-civil', templateId: 'civil-boq', name: 'Civil Work BOQ', type: 'boq-template', preview: 'Sectioned estimate — measurements auto-compute qty per unit' },
+      { id: 'boq-tpl-interior', templateId: 'interior-boq', name: 'Interior Fit-Out BOQ', type: 'boq-template', preview: 'Partitions, flooring, ceiling, joinery & more' },
+      { id: 'boq-tpl-electrical', templateId: 'electrical-boq', name: 'Electrical BOQ', type: 'boq-template', preview: 'Electrical wiring, fixtures and panels' },
+      { id: 'boq-tpl-plumbing', templateId: 'plumbing-boq', name: 'Plumbing & Sanitary BOQ', type: 'boq-template', preview: 'Plumbing and sanitary works' },
+      { id: 'boq-tpl-hvac', templateId: 'hvac-boq', name: 'HVAC BOQ', type: 'boq-template', preview: 'Heating, ventilation and air conditioning' },
+    ];
 
     // Smart elements list
     const rawSmart = pickList(elementOptions.smart, [
@@ -335,6 +398,7 @@ const WorkspaceContextPanel = ({
     ]);
 
     const map = {
+      'basics': getBasicsElements(),
       'invoices-quotes': invQuotesList,
       'forms': formsList,
       'tables': tablesList,
@@ -345,6 +409,10 @@ const WorkspaceContextPanel = ({
       'cost-calculators': calculatorsList,
       'boq-generator': boqGeneratorList,
       'smart': rawSmart,
+      'printing-signage': getPrintingElements(),
+      'food-fmcg': getFoodElements(),
+      'interiors-furniture': getInteriorElements(),
+      'construction': getConstructionElements(),
     };
 
     // Turnkey elements are only exposed when a Turnkey CAS member is in the workspace
@@ -532,13 +600,13 @@ const WorkspaceContextPanel = ({
                       draggable
                       onDragStart={(e) => handleDragStart(e, item)}
                       onClick={() => handleDoubleClick(item)}
-                      className="p-3 bg-surface border border-line hover:border-info  hover:bg-info rounded-xl cursor-grab active:cursor-grabbing transition-all group relative"
+                      className="p-3 bg-surface border border-line hover:border-ink/25 hover:bg-surface-hover rounded-xl cursor-grab active:cursor-grabbing transition-colors group relative"
                       title="Drag to canvas or click to add"
                     >
                       <div className="flex items-start justify-between gap-2">
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-1.5 mb-1">
-                            <span className="text-xs font-semibold text-ink group-hover:text-info truncate">
+                            <span className="text-xs font-semibold text-ink truncate">
                               {item.name}
                             </span>
                             <span className="text-[10px] px-1.5 py-0.5 rounded bg-surface-hover text-dim font-medium">
@@ -579,7 +647,7 @@ const WorkspaceContextPanel = ({
                     <button
                       type="button"
                       onClick={() => onTemplateSelect?.('custom-boq')}
-                      className="w-full flex items-center justify-center gap-1.5 py-2 text-xs font-semibold text-white bg-black hover:bg-slate-800 rounded-lg transition-colors"
+                      className="w-full flex items-center justify-center gap-1.5 py-2 text-xs font-semibold bg-cta text-cta-foreground hover:opacity-90 rounded-lg transition-colors"
                     >
                       <Plus className="w-3.5 h-3.5" />
                       Custom BOQ
@@ -762,7 +830,15 @@ const WorkspaceContextPanel = ({
                   </>
                 )}
 
-                {currentCategoryElements.map((item, idx) => {
+                {currentCategoryElements.length === 0 && (
+                  <div className="text-center py-8 text-xs text-dim">
+                    {selectedCategory === 'invoices-quotes'
+                      ? 'No quotes or documents created in this workspace yet.'
+                      : 'No elements in this category.'}
+                  </div>
+                )}
+
+                {(selectedCategory === 'boq-generator' ? [] : currentCategoryElements).map((item, idx) => {
                   const prev = idx > 0 ? currentCategoryElements[idx - 1] : null;
                   const showGroupHeader = item.group && item.group !== (prev?.group);
                   return (
@@ -776,12 +852,12 @@ const WorkspaceContextPanel = ({
                         draggable
                         onDragStart={(e) => handleDragStart(e, item)}
                         onClick={() => handleDoubleClick(item)}
-                        className="p-3 bg-surface border border-line hover:border-info  hover:bg-info rounded-xl cursor-grab active:cursor-grabbing transition-all group relative"
+                        className="p-3 bg-surface border border-line hover:border-ink/25 hover:bg-surface-hover rounded-xl cursor-grab active:cursor-grabbing transition-colors group relative"
                         title="Drag to canvas or click to add"
                       >
                         <div className="flex items-start justify-between gap-2">
                           <div className="flex-1 min-w-0">
-                            <h4 className="text-xs font-semibold text-ink group-hover:text-info mb-1 truncate">
+                            <h4 className="text-xs font-semibold text-ink mb-1 truncate">
                               {item.name}
                             </h4>
                             {getDocType(item) ? (
@@ -883,18 +959,18 @@ const WorkspaceContextPanel = ({
                       <div
                         key={cat.id}
                         onClick={() => setSelectedCategory(cat.id)}
-                        className="flex items-center justify-between p-2.5 bg-surface hover:bg-info border border-line hover:border-info/30 rounded-lg cursor-pointer transition-all text-xs group"
+                        className="flex items-center justify-between p-2.5 bg-surface hover:bg-surface-hover border border-line hover:border-ink/25 rounded-lg cursor-pointer transition-colors text-xs group focus:outline-none focus-visible:ring-2 focus-visible:ring-info/40"
                         title={`Click to open ${cat.name} elements`}
                       >
                         <div className="flex items-center gap-2.5 min-w-0">
                           <div className={`p-1.5 rounded-md border flex-shrink-0 ${cat.color}`}>
                             <CatIcon className="w-3.5 h-3.5" />
                           </div>
-                          <span className="font-medium text-ink group-hover:text-info truncate">
+                          <span className="font-medium text-ink truncate">
                             {cat.name}
                           </span>
                         </div>
-                        <div className="flex items-center gap-1.5 flex-shrink-0 text-dim group-hover:text-info">
+                        <div className="flex items-center gap-1.5 flex-shrink-0 text-dim group-hover:text-ink transition-colors">
                           <span className="text-[10.5px]">
                             {count} items
                           </span>
@@ -940,12 +1016,21 @@ const WorkspaceContextPanel = ({
       )}
 
       {/* 3. TEMPLATES TAB */}
+      {activeTab === 'template-library' && (
+        <TemplateLibrary
+          canEdit={userRole !== 'client' && canEditCanvas}
+          isVendor={userRole === 'vendor'}
+          workspaceId={workspace?.workspaceId || workspace?.id}
+          onClose={onClose}
+        />
+      )}
+
       {activeTab === 'templates' && (
         <>
           <div className="ws-panel-head">
             <div>
-              <h3 className="ws-panel-title">Templates</h3>
-              <p className="ws-panel-desc">Choose a template to get started.</p>
+              <h3 className="ws-panel-title">Tools</h3>
+              <p className="ws-panel-desc">Forms, BOQ, calculators and workflow tools.</p>
             </div>
             <button onClick={onClose} className="ws-icon-btn" title="Close panel">
               <X className="w-4 h-4" />
@@ -960,24 +1045,24 @@ const WorkspaceContextPanel = ({
                   <button
                     key={tpl.id}
                     onClick={() => onTemplateSelect && onTemplateSelect(tpl.id)}
-                    className="w-full p-3 bg-surface border border-line hover:border-info/30 hover:bg-info rounded-lg transition-all flex items-start gap-3 text-left group"
+                    className="w-full p-3 bg-surface border border-line hover:border-ink/25 hover:bg-surface-hover rounded-lg transition-colors flex items-start gap-3 text-left group"
                     title={tpl.name}
                   >
                     <div className={`p-2 rounded-md flex-shrink-0 ${tpl.color}`}>
                       <TplIcon className="w-4 h-4" />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="text-xs font-semibold text-ink m-0 group-hover:text-info">{tpl.name}</p>
+                      <p className="text-xs font-semibold text-ink m-0">{tpl.name}</p>
                       <p className="text-[11px] text-dim m-0 mt-0.5 leading-relaxed">{tpl.description}</p>
                     </div>
-                    <ChevronRight className="w-3.5 h-3.5 text-dim group-hover:text-info flex-shrink-0 mt-1" />
+                    <ChevronRight className="w-3.5 h-3.5 text-dim group-hover:text-ink flex-shrink-0 mt-1" />
                   </button>
                 );
               })}
             </div>
 
             <div className="ws-hint-box">
-              More templates coming soon.
+              More tools coming soon.
             </div>
           </div>
         </>
@@ -1082,7 +1167,7 @@ const WorkspaceContextPanel = ({
                   <div
                     key={el.id}
                     onClick={() => onZoomToElement && onZoomToElement(el.id)}
-                    className="flex items-center justify-between p-2 bg-surface border border-line hover:border-info/30 rounded-lg text-xs cursor-pointer hover:bg-info transition-colors group"
+                    className="flex items-center justify-between p-2 bg-surface border border-line hover:border-ink/25 rounded-lg text-xs cursor-pointer hover:bg-surface-hover transition-colors group"
                   >
                     <div className="flex items-center gap-2 truncate">
                       <Square className="w-3.5 h-3.5 text-dim" />

@@ -6,6 +6,7 @@ import { toCSV, downloadCSV } from '../../utils/csvExport';
 import useDataView from './datatable/useDataView';
 import ColumnFilterMenu from './datatable/ColumnFilterMenu';
 import ColumnVisibilityMenu from './datatable/ColumnVisibilityMenu';
+import { CellValue, numericColumns } from './cellDisplay';
 
 /**
  * DataTable — sortable / filterable / paginated table for larger datasets.
@@ -28,6 +29,7 @@ const DataTable = ({ columns: columnsProp = [], rows: rowsProp = [], config: con
   const filterRef = useRef(null);
 
   const grid = useMemo(() => evaluateGrid(rowsToGrid(cols, rows)), [cols, rows]);
+  const numericCols = useMemo(() => numericColumns(grid, cols.length), [grid, cols.length]);
   const rowById = useMemo(() => new Map(rows.map((r, i) => [r.id ?? i, { row: r, eval: grid[i] }])), [rows, grid]);
 
   // View state changes bubble into config — persisted with the table on save
@@ -206,7 +208,7 @@ const DataTable = ({ columns: columnsProp = [], rows: rowsProp = [], config: con
                             className="w-full px-2 py-1 text-xs bg-surface focus:outline-none focus:ring-1 focus:ring-info"
                           />
                         ) : (
-                          <div className="px-2 py-1.5 text-ink truncate max-w-[220px]">{String(ev?.[ci] ?? '')}</div>
+                          <div className={`px-2 py-1.5 text-ink truncate max-w-[220px] ${numericCols[ci] ? 'text-right tabular-nums' : ''}`}><CellValue value={ev?.[ci]} /></div>
                         )}
                       </td>
                     );

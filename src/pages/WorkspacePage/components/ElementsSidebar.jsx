@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Search, Grid, Table, BarChart3, Square, List, X, GitBranch, Package, Upload, Settings, FileText, ClipboardList, Image as ImageIcon, Sparkles, Calculator, Layers, Plus, Box, FileDigit } from 'lucide-react';
+import { Search, Grid, Table, BarChart3, Square, List, X, GitBranch, Package, Upload, Settings, FileText, ClipboardList, Image as ImageIcon, Sparkles, Calculator, Layers, Plus, Box, FileDigit, Type } from 'lucide-react';
 
 
 const ElementsSidebar = ({ isOpen, onClose, onElementSelect, userRole, currentUser, elementOptions = {}, hasTurnkeyMember = false }) => {
@@ -13,6 +13,7 @@ const ElementsSidebar = ({ isOpen, onClose, onElementSelect, userRole, currentUs
   console.log('🎯 Turnkey category visible:', showTurnkeyCategory);
 
   const baseElementCategories = [
+    { id: 'basics', name: 'Basics', icon: Type, color: 'bg-surface-hover text-ink' },
     { id: 'invoices-quotes', name: 'Invoices and Quotations', icon: FileText, color: 'bg-surface-hover text-ink' },
     { id: 'forms', name: 'Forms', icon: Grid, color: 'bg-warning/10 text-warning' },
     { id: 'tables', name: 'Tables', icon: Table, color: 'bg-surface-hover text-ink' },

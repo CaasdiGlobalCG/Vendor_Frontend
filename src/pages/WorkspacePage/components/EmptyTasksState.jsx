@@ -21,7 +21,7 @@ const EmptyTasksState = ({ onCreateTask }) => {
 
   if (showCreateForm) {
     return (
-      <div className="flex-1 flex items-center justify-center bg-canvas">
+      <div className="absolute inset-0 flex items-center justify-center overflow-y-auto bg-canvas px-4 pb-8 pt-16">
         <div className="max-w-md w-full mx-4">
           <div className="bg-surface rounded-lg shadow-lg p-6">
             <div className="text-center mb-6">
@@ -83,8 +83,9 @@ const EmptyTasksState = ({ onCreateTask }) => {
     );
   }
 
+  // One thing to do. (The page around this is not a flex column, so it fills the area and centres itself.)
   return (
-    <div className="flex-1 flex items-center justify-center bg-canvas">
+    <div className="absolute inset-0 flex items-center justify-center overflow-y-auto bg-canvas px-4 pb-8 pt-16">
       <div className="text-center max-w-md mx-4">
         <FolderPlus className="h-16 w-16 text-dim mx-auto mb-4" />
         <h3 className="text-xl font-semibold text-ink mb-2">No Tasks Yet</h3>

@@ -725,3 +725,44 @@ button.ws-avatars {
   border-radius: inherit;
   background-color: rgba(16, 185, 129, 0.08);
 }
+
+/* ============================================================
+   Canvas library chrome (zoom controls, minimap) follows the theme.
+   React Flow ships light-only styles, so map them onto the same
+   tokens the rest of the workspace uses; this works in both modes.
+   The selectors are prefixed with `.react-flow` so they outrank the
+   library's own single-class rules regardless of stylesheet order.
+   ============================================================ */
+.react-flow .react-flow__controls {
+  background: rgb(var(--surface-card));
+  border: 1px solid rgb(var(--border-subtle));
+  border-radius: 8px;
+  overflow: hidden;
+}
+.react-flow .react-flow__controls-button {
+  background: rgb(var(--surface-card));
+  border-bottom: 1px solid rgb(var(--border-subtle));
+  color: rgb(var(--text-primary));
+  fill: currentColor;
+}
+.react-flow .react-flow__controls-button:hover {
+  background: rgb(var(--surface-hover));
+}
+.react-flow .react-flow__controls-button svg {
+  fill: currentColor;
+  max-width: 14px;
+  max-height: 14px;
+}
+.react-flow .react-flow__controls-button:disabled svg {
+  opacity: 0.4;
+}
+.react-flow .react-flow__minimap {
+  background: rgb(var(--surface-card));
+}
+.react-flow .react-flow__attribution {
+  background: rgb(var(--surface-card) / 0.8);
+  color: rgb(var(--text-muted));
+}
+.react-flow .react-flow__attribution a {
+  color: rgb(var(--text-muted));
+}

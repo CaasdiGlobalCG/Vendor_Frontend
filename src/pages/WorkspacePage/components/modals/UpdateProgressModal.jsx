@@ -57,16 +57,10 @@ const UpdateProgressModal = ({ isOpen, onClose, workspaceId, projectId, taskId, 
           workDone: '',
           workPending: '',
           progressDate: todayStr(),
-          proofOfCompletion: null
+          proofOfCompletion: null,
+          documents: []
         });
-        setCompletionFormData({
-          markCompleted: false,
-          completionDescription: '',
-          completionFiles: null
-        });
-        setShowCompletionForm(false);
         setError(null);
-        setCompletionError(null);
         setSuccessMessage(null);
       }
     }, [isOpen]);
@@ -78,7 +72,8 @@ const UpdateProgressModal = ({ isOpen, onClose, workspaceId, projectId, taskId, 
     workDone: '',
     workPending: '',
     progressDate: todayStr(),
-    proofOfCompletion: null
+    proofOfCompletion: null,
+    documents: []
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState(null);
@@ -133,16 +128,6 @@ const UpdateProgressModal = ({ isOpen, onClose, workspaceId, projectId, taskId, 
     setShowPreviousSubmissions(true);
   };
 
-  // State for project completion form
-  const [showCompletionForm, setShowCompletionForm] = useState(false);
-  const [completionFormData, setCompletionFormData] = useState({
-    markCompleted: false,
-    completionDescription: '',
-    completionFiles: null
-  });
-  const [isCompletionSubmitting, setIsCompletionSubmitting] = useState(false);
-  const [completionError, setCompletionError] = useState(null);
-
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({
@@ -152,32 +137,18 @@ const UpdateProgressModal = ({ isOpen, onClose, workspaceId, projectId, taskId, 
   };
 
   const handleFileChange = (e) => {
-    const file = e.target.files[0];
-    if (file) {
+    const picked = Array.from(e.target.files || []);
+    if (picked.length) {
       setFormData(prev => ({
         ...prev,
-        proofOfCompletion: file
+        documents: [...(prev.documents || []), ...picked].slice(0, 10)
       }));
     }
+    e.target.value = '';
   };
 
-  const handleCompletionInputChange = (e) => {
-    const { name, value, type, checked } = e.target;
-    setCompletionFormData(prev => ({
-      ...prev,
-      [name]: type === 'checkbox' ? checked : value
-    }));
-  };
-
-  const handleCompletionFileChange = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      setCompletionFormData(prev => ({
-        ...prev,
-        completionFiles: file
-      }));
-    }
-  };
+  const removeDocument = (index) =>
+    setFormData(prev => ({ ...prev, documents: (prev.documents || []).filter((_, i) => i !== index) }));
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -212,13 +183,23 @@ const UpdateProgressModal = ({ isOpen, onClose, workspaceId, projectId, taskId, 
       submitData.append('projectId', projectId || '');
       submitData.append('taskId', selectedTaskId);
       submitData.append('subtaskId', selectedSubtaskId || '');
-      submitData.append('reviewStatus', 'pending'); // Add review status
+      (formData.documents || []).forEach((file) => submitData.append('documents', file));
 
-      if (formData.proofOfCompletion) {
-        submitData.append('proofOfCompletion', formData.proofOfCompletion);
+      // The canvas as it is right now goes along with the proof, automatically. It can only be
+      // taken for the subtask whose canvas is open.
+      if (selectedSubtaskId && selectedSubtaskId === subtaskId) {
+        try {
+          const dataUrl = await window?.canvasWorkspaceRef?.current?.captureSnapshot?.({ width: 1600, height: 900, quality: 0.8 });
+          if (dataUrl) {
+            const blob = await (await fetch(dataUrl)).blob();
+            submitData.append('snapshot', blob, `canvas-${selectedSubtaskId}.jpg`);
+          }
+        } catch (snapErr) {
+          console.warn('Canvas snapshot skipped:', snapErr?.message);
+        }
       }
 
-      const response = await invoiceFetch(`${config.VENDOR_BACKEND_URL}/api/workspace/update-progress`, {
+      const response = await invoiceFetch(`${config.VENDOR_BACKEND_URL}/api/workspace/progress/submit`, {
         method: 'POST',
         headers: {
           'x-user-info': JSON.stringify({
@@ -232,14 +213,16 @@ const UpdateProgressModal = ({ isOpen, onClose, workspaceId, projectId, taskId, 
       });
 
       if (!response.ok) {
-        throw new Error('Failed to update progress');
+        let serverMessage = '';
+        try { serverMessage = (await response.clone().json())?.message || ''; } catch {}
+        throw new Error(serverMessage || 'Failed to update progress');
       }
 
       const result = await response.json();
 
       if (result.success) {
         // Show success message
-        setSuccessMessage('Progress submitted successfully! PM will review and approve. Please wait.');
+        setSuccessMessage('Progress submitted. The Project Manager reviews it first, then the client. Both you and the client are e-mailed at each step.');
         
         // Reset form
         setFormData({
@@ -248,7 +231,8 @@ const UpdateProgressModal = ({ isOpen, onClose, workspaceId, projectId, taskId, 
           workDone: '',
           workPending: '',
           progressDate: todayStr(),
-          proofOfCompletion: null
+          proofOfCompletion: null,
+          documents: []
         });
 
         // Call onUpdate callback if provided
@@ -272,100 +256,18 @@ const UpdateProgressModal = ({ isOpen, onClose, workspaceId, projectId, taskId, 
     }
   };
 
-  const handleCompletionSubmit = async () => {
-
-    if (!completionFormData.completionDescription.trim()) {
-      setCompletionError('Description is required');
-      return;
-    }
-
-    setIsCompletionSubmitting(true);
-    setCompletionError(null);
-
-    try {
-      const submitData = new FormData();
-      submitData.append('workspaceId', workspaceId);
-      submitData.append('projectId', projectId);
-      submitData.append('vendorId', currentUser.vendorId);
-      submitData.append('markCompleted', completionFormData.markCompleted);
-      submitData.append('completionDescription', completionFormData.completionDescription);
-
-      if (completionFormData.completionFiles) {
-        submitData.append('completionFiles', completionFormData.completionFiles);
-      }
-
-      const response = await invoiceFetch(`${config.VENDOR_BACKEND_URL}/api/workspace/project-completion`, {
-        method: 'POST',
-        headers: {
-          'x-user-info': JSON.stringify({
-            vendorId: currentUser.vendorId,
-            email: currentUser?.email,
-            role: 'vendor',
-            name: currentUser?.name
-          })
-        },
-        body: submitData
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to submit project completion request');
-      }
-
-      const result = await response.json();
-
-      if (result.success) {
-        // Reset completion form
-        setCompletionFormData({
-          markCompleted: false,
-          completionDescription: '',
-          completionFiles: null
-        });
-        setShowCompletionForm(false);
-
-        // Call onUpdate callback if provided
-        if (onUpdate) {
-          onUpdate(result.data);
-        }
-
-        onClose();
-      } else {
-        throw new Error(result.message || 'Failed to submit project completion request');
-      }
-    } catch (err) {
-      console.error('Error submitting project completion:', err);
-      setCompletionError(err.message || 'Failed to submit project completion request');
-    } finally {
-      setIsCompletionSubmitting(false);
-    }
-  };
-
   if (!isOpen) return null;
 
   return (
     <>
       <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
         <div className="bg-surface rounded-lg shadow-xl max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
-          {/* Modal Header with Toggle */}
+          {/* Modal Header */}
           <div className="flex items-center justify-between p-6 border-b border-line">
             <h2 className="text-xl font-semibold text-ink">
-              {showCompletionForm ? 'Project Completion' : 'Update Project Progress'}
+              Update Project Progress
             </h2>
             <div className="flex items-center space-x-4">
-              {/* Toggle Button */}
-              <button
-                onClick={() => setShowCompletionForm(!showCompletionForm)}
-                className={`relative inline-flex h-8 w-14 items-center rounded-full transition-colors ${
-                  showCompletionForm ? 'bg-success' : 'bg-surface-hover'
-                }`}
-                type="button"
-                title={showCompletionForm ? 'Back to Progress' : 'Mark Completion'}
-              >
-                <span
-                  className={`inline-block h-6 w-6 transform rounded-full bg-surface transition-transform ${
-                    showCompletionForm ? 'translate-x-7' : 'translate-x-1'
-                  }`}
-                />
-              </button>
               {/* Close Button */}
               <button
                 onClick={onClose}
@@ -378,7 +280,7 @@ const UpdateProgressModal = ({ isOpen, onClose, workspaceId, projectId, taskId, 
           </div>
 
           {/* Progress Update Form */}
-          {!showCompletionForm && (
+          {(
             <form onSubmit={handleSubmit} className="p-6 space-y-6">
               {successMessage && (
                 <div className="bg-success/10 border border-success/20 rounded-lg p-4 flex items-start space-x-3">
@@ -535,40 +437,42 @@ const UpdateProgressModal = ({ isOpen, onClose, workspaceId, projectId, taskId, 
           </div>
 
           <div>
-            <label htmlFor="proofOfCompletion" className="block text-sm font-medium text-ink mb-2">
-              Proof of Completion
+            <label htmlFor="file-upload" className="block text-sm font-medium text-ink mb-2">
+              Proof and documents
             </label>
-            <div className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-line border-dashed rounded-lg hover:border-line transition-colors">
-              <div className="space-y-1 text-center">
-                {formData.proofOfCompletion ? (
-                  <div className="flex items-center justify-center space-x-2">
-                    <FileText className="w-8 h-8 text-success" />
-                    <span className="text-sm text-dim">{formData.proofOfCompletion.name}</span>
-                  </div>
-                ) : (
-                  <>
-                    <Upload className="mx-auto h-12 w-12 text-dim" />
-                    <div className="flex text-sm text-dim">
-                      <label
-                        htmlFor="file-upload"
-                        className="relative cursor-pointer bg-surface rounded-md font-medium text-info hover:text-info focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-info"
-                      >
-                        <span>Upload a file</span>
-                        <input
-                          id="file-upload"
-                          name="file-upload"
-                          type="file"
-                          className="sr-only"
-                          onChange={handleFileChange}
-                          accept="image/*,.pdf,.doc,.docx"
-                        />
-                      </label>
-                      <p className="pl-1">or drag and drop</p>
-                    </div>
-                    <p className="text-xs text-dim">PNG, JPG, PDF, DOC up to 10MB</p>
-                  </>
-                )}
-              </div>
+            <p className="text-xs text-dim mb-2">
+              {selectedSubtaskId && selectedSubtaskId === subtaskId
+                ? 'A snapshot of the canvas is attached automatically. Add any other documents below.'
+                : 'Open this subtask’s canvas to have a canvas snapshot attached automatically. You can still add documents.'}
+            </p>
+            <div className="mt-1 px-4 py-4 border-2 border-line border-dashed rounded-lg">
+              {(formData.documents || []).length > 0 && (
+                <ul className="mb-3 space-y-1">
+                  {formData.documents.map((file, i) => (
+                    <li key={`${file.name}-${i}`} className="flex items-center justify-between gap-2 text-sm text-ink">
+                      <span className="flex items-center gap-2 min-w-0"><FileText className="w-4 h-4 text-success flex-shrink-0" /><span className="truncate">{file.name}</span></span>
+                      <button type="button" onClick={() => removeDocument(i)} className="text-xs text-danger flex-shrink-0">Remove</button>
+                    </li>
+                  ))}
+                </ul>
+              )}
+              <label
+                htmlFor="file-upload"
+                className="inline-flex items-center gap-2 cursor-pointer text-sm font-medium text-info"
+              >
+                <Upload className="h-4 w-4" />
+                <span>{(formData.documents || []).length ? 'Add more documents' : 'Upload documents'}</span>
+                <input
+                  id="file-upload"
+                  name="file-upload"
+                  type="file"
+                  multiple
+                  className="sr-only"
+                  onChange={handleFileChange}
+                  accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.csv,.ppt,.pptx,.txt"
+                />
+              </label>
+              <p className="text-xs text-dim mt-1">Up to 10 files. Images, PDF, Word, Excel, PowerPoint.</p>
             </div>
           </div>
 
@@ -613,128 +517,6 @@ const UpdateProgressModal = ({ isOpen, onClose, workspaceId, projectId, taskId, 
             </form>
           )}
 
-          {/* Project Completion Form */}
-          {showCompletionForm && (
-            <form onSubmit={(e) => {
-              e.preventDefault();
-              handleCompletionSubmit();
-            }} className="p-6 space-y-6">
-              {completionError && (
-                <div className="bg-danger/10 border border-danger/20 rounded-lg p-4">
-                  <p className="text-danger text-sm">{completionError}</p>
-                </div>
-              )}
-
-                <div className="flex items-center p-4 bg-success/10 border border-success/20 rounded-lg">
-                  <input
-                    type="checkbox"
-                    id="markCompleted"
-                    name="markCompleted"
-                    checked={completionFormData.markCompleted}
-                    onChange={handleCompletionInputChange}
-                    className="h-5 w-5 text-success focus:ring-success border-success/30 rounded"
-                  />
-                  <label htmlFor="markCompleted" className="ml-3 block text-sm font-medium text-ink">
-                    I certify this project is complete
-                  </label>
-                </div>
-
-                <div>
-                  <label htmlFor="completionDescription" className="block text-sm font-medium text-ink mb-2">
-                    Completion Details *
-                  </label>
-                  <textarea
-                    id="completionDescription"
-                    name="completionDescription"
-                    value={completionFormData.completionDescription}
-                    onChange={handleCompletionInputChange}
-                    rows={4}
-                    className="w-full px-3 py-2 border border-line rounded-lg focus:ring-2 focus:ring-success focus:border-success text-sm"
-                    placeholder="Describe the project completion and any final notes..."
-                    required
-                  />
-                </div>
-
-                <div>
-                  <label htmlFor="completionFiles" className="block text-sm font-medium text-ink mb-2">
-                    Final Documents
-                  </label>
-                  <div className="mt-1 flex justify-center px-4 pt-4 pb-4 border-2 border-line border-dashed rounded-lg hover:border-line transition-colors bg-canvas">
-                    <div className="space-y-2 text-center">
-                      {completionFormData.completionFiles ? (
-                        <div className="flex flex-col items-center justify-center space-y-2">
-                          <FileText className="w-6 h-6 text-success" />
-                          <div className="text-xs text-dim truncate max-w-full">{completionFormData.completionFiles.name}</div>
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setCompletionFormData({
-                                ...completionFormData,
-                                completionFiles: null
-                              });
-                            }}
-                            className="text-xs text-danger hover:text-danger underline"
-                          >
-                            Remove
-                          </button>
-                        </div>
-                      ) : (
-                        <>
-                          <Upload className="mx-auto h-8 w-8 text-dim" />
-                          <div className="flex flex-col text-xs text-dim">
-                            <label
-                              htmlFor="completion-file-upload"
-                              className="relative cursor-pointer font-medium text-success hover:text-success"
-                            >
-                              <span>Upload file</span>
-                              <input
-                                id="completion-file-upload"
-                                name="completion-file-upload"
-                                type="file"
-                                className="sr-only"
-                                onChange={handleCompletionFileChange}
-                                accept="image/*,.pdf,.doc,.docx"
-                              />
-                            </label>
-                            <p className="text-dim">or drag and drop</p>
-                          </div>
-                          <p className="text-xs text-dim">PNG, JPG, PDF, DOC up to 10MB</p>
-                        </>
-                      )}
-                    </div>
-                  </div>
-                </div>
-
-                <div className="flex flex-col space-y-3 pt-4 border-t border-line">
-                  <button
-                    type="button"
-                    onClick={() => setShowCompletionForm(false)}
-                    className="w-full px-4 py-2 text-sm font-medium text-ink bg-surface border border-line rounded-lg hover:bg-canvas focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-success"
-                    disabled={isCompletionSubmitting}
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="submit"
-                    className={`w-full px-4 py-3 text-sm font-medium text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-success transition-colors ${
-                      completionFormData.markCompleted &&
-                      completionFormData.completionDescription.trim() &&
-                      completionFormData.completionFiles
-                        ? 'bg-success hover:bg-success cursor-pointer'
-                        : 'bg-cta cursor-not-allowed opacity-50'
-                    }`}
-                    disabled={
-                      isCompletionSubmitting ||
-                      !completionFormData.markCompleted ||
-                      !completionFormData.completionDescription.trim() ||
-                      !completionFormData.completionFiles
-                    }
-                  >
-                    {isCompletionSubmitting ? 'Submitting...' : 'Submit Completion Request'}
-                  </button>
-                </div>
-            </form>
-          )}
         </div>
       </div>
 

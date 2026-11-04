@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useRef, useContext } from 'react';
 import { persistIsImportant, persistDeadline, persistNodeDataPatch, formatTimeLeft, getTimeLeft } from '../../utils/nodePersistence';
 import { getWorkspaceById, updateWorkspace, notifyWorkspaceEvent } from '../../utils/workspaceApi';
-import { Handle, Position, useReactFlow } from 'reactflow';
+import { useReactFlow } from 'reactflow';
+import NodeHandles from './NodeHandles';
 import { Calendar, X, User, Clock, MapPin, Check, Video, Link2, Users, Globe, Lock, Pencil } from 'lucide-react';
 import 'react-datepicker/dist/react-datepicker.css';
 import DatePicker from 'react-datepicker';
@@ -419,12 +420,11 @@ const CalendarNode = ({ id, data, isConnectable, selected }) => {
   if (!canSeeEvent && !stickyVisible) {
     return (
       <div className="w-[240px] relative">
-        <Handle type="target" position={Position.Top} isConnectable={isConnectable} />
+        <NodeHandles isConnectable={isConnectable} />
         <div className="bg-surface rounded-lg border border-dashed border-line p-3 flex items-center gap-2 opacity-70">
           <Lock className="w-4 h-4 text-dim flex-shrink-0" />
           <span className="text-xs text-dim truncate">Private meeting — you're not invited</span>
         </div>
-        <Handle type="source" position={Position.Bottom} isConnectable={isConnectable} />
       </div>
     );
   }
@@ -442,7 +442,7 @@ const CalendarNode = ({ id, data, isConnectable, selected }) => {
           {data.sequenceNumber}
         </div>
       )}
-      <Handle type="target" position={Position.Top} isConnectable={isConnectable} />
+      <NodeHandles isConnectable={isConnectable} />
       <div className={`${isImportant ? 'bg-info/10' : 'bg-surface'} rounded-lg border border-info/20 overflow-hidden`}>
 
       {/* Header */}
@@ -792,7 +792,6 @@ const CalendarNode = ({ id, data, isConnectable, selected }) => {
       </div>
       </div>
 
-      <Handle type="source" position={Position.Bottom} isConnectable={isConnectable} />
 
       {/* Video Call Modal */}
       {showVideoCall && (

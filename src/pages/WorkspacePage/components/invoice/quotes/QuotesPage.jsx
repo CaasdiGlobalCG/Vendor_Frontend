@@ -7,7 +7,7 @@ import QuotesPreviewPanel from './QuotesPreviewPanel';
 import config from '../../../../../config/env';
 import invoiceFetch from '../utils/invoiceFetch';
 
-const QuotesPage = ({ workspaceId, workspaceName, selectedTask, selectedSubtask, onRaisePOFromQuote }) => {
+const QuotesPage = ({ workspaceId, workspaceName, selectedTask, selectedSubtask, onRaisePOFromQuote, initialDocId, onDocConsumed }) => {
   const { currentUser } = useContext(VendorContext);
   // Per-role scoping — every actor manages their OWN documents (vendorId = owner)
   const actorOwnerId = resolveWorkspaceActor(currentUser).ownerId;
@@ -64,8 +64,12 @@ const QuotesPage = ({ workspaceId, workspaceName, selectedTask, selectedSubtask,
       const params = new URLSearchParams();
       params.append('vendorId', vendorId);
       if (workspaceId) params.append('workspaceId', workspaceId);
-      if (selectedTask?.id) params.append('taskId', selectedTask.id);
-      if (selectedSubtask?.id) params.append('subtaskId', selectedSubtask.id);
+      // When opening a specific doc for editing, skip the task/subtask scope —
+      // the doc may live on a different subtask's canvas.
+      if (!initialDocId) {
+        if (selectedTask?.id) params.append('taskId', selectedTask.id);
+        if (selectedSubtask?.id) params.append('subtaskId', selectedSubtask.id);
+      }
 
       const response = await invoiceFetch(`/api/workspace/quotations?${params.toString()}`, {
         headers: headers
@@ -108,6 +112,20 @@ const QuotesPage = ({ workspaceId, workspaceName, selectedTask, selectedSubtask,
   useEffect(() => {
     fetchQuotes();
   }, [actorOwnerId]);  // Only re-run when vendorId changes
+
+  // A canvas document node can ask for a specific quote to open in the editor
+  // (DocumentNode "Edit" → openInvoiceTool → initialDocId).
+  useEffect(() => {
+    if (!initialDocId || loading || quotesData.length === 0) return;
+    const target = quotesData.find(
+      (q) => (q.quotationId || q.id) === initialDocId
+    );
+    if (target) {
+      setEditingQuote(target);
+      setShowNewQuote(true);
+    }
+    onDocConsumed?.();
+  }, [initialDocId, loading, quotesData]);
 
   const filteredQuotes = quotesData.filter(quote => {
     const matchesSearch = quote.id.toLowerCase().includes(searchTerm.toLowerCase()) ||

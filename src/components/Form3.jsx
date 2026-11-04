@@ -4,15 +4,16 @@ import { UserContext } from "../context/UserContext";
 import { useNavigate } from "react-router-dom";
 import { uploadFileToS3, deleteFileFromS3 } from "../utils/fileUpload";
 import { resolveUserEmail } from "../utils/resolveUserIdentity";
+import { Wrench, Factory, Layers } from "lucide-react";
 import KycFormShell from "./KycFormShell";
 import ResubmitBanner from "./ResubmitBanner";
 import { isResubmitMode, isSectionEditable } from "../utils/resubmitPermissions";
 import { getKycMaxStep, setKycStep } from "./KycFormGuard";
 
 const VENDOR_TYPES = [
-  { id: "service_provider", label: "Service Provider", icon: "🛠️", desc: "Consulting, IT, logistics, HR, legal, and other service-based businesses" },
-  { id: "manufacturer", label: "Manufacturer", icon: "🏭", desc: "Raw material, semi-finished, or finished goods manufacturing & supply" },
-  { id: "both", label: "Both", icon: "🔄", desc: "Provides services and also manufactures or supplies products" },
+  { id: "service_provider", label: "Service Provider", Icon: Wrench, desc: "Consulting, IT, logistics, HR, legal, and other service-based businesses" },
+  { id: "manufacturer", label: "Manufacturer", Icon: Factory, desc: "Raw material, semi-finished, or finished goods manufacturing & supply" },
+  { id: "both", label: "Both", Icon: Layers, desc: "Provides services and also manufactures or supplies products" },
 ];
 
 const MFG_SUBTYPES = [
@@ -448,7 +449,7 @@ export default function Form3() {
                 {VENDOR_TYPES.map((type) => (
                   <button key={type.id} type="button" onClick={() => handleVendorTypeSelect(type.id)}
                     className={`p-5 border-2 rounded-xl text-left transition-all ${formData.vendorType === type.id ? "border-neutral-200 bg-neutral-100 " : "border-neutral-200 hover:border-neutral-200 hover:bg-neutral-50"}`}>
-                    <div className="text-2xl mb-2">{type.icon}</div>
+                    <div className="mb-3 flex h-9 w-9 items-center justify-center rounded-lg bg-neutral-100 text-neutral-700"><type.Icon size={18} strokeWidth={1.75} aria-hidden="true" /></div>
                     <div className="font-semibold text-neutral-900 text-sm mb-1">{type.label}</div>
                     <div className="text-xs text-neutral-500 leading-relaxed">{type.desc}</div>
                     {formData.vendorType === type.id && (

@@ -20,6 +20,8 @@ import { NotificationContext } from '../../context/NotificationContext';
 import { useRBAC } from '../../rbac';
 import { ThemeToggle } from '../ui';
 import AiPromptPanel from '../Header/AiPromptPanel';
+import TodayWindow from '../Today/TodayWindow';
+import OrdersWindow from '../Orders/OrdersWindow';
 import AuthSkeletonScreen from '../loading/AuthSkeletonScreen';
 import {
   BrandMark,
@@ -66,6 +68,8 @@ export function VendorHeader() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [showNotificationDropdown, setShowNotificationDropdown] = useState(false);
   const [isAiPromptOpen, setIsAiPromptOpen] = useState(false);
+  const [isTodayOpen, setIsTodayOpen] = useState(false);
+  const [isOrdersOpen, setIsOrdersOpen] = useState(false);
   const notificationDropdownRef = useRef(null);
 
   // ── Global keyboard shortcut: Cmd/Ctrl+K toggles the AI prompt panel ──
@@ -174,6 +178,8 @@ export function VendorHeader() {
             onSales={crossApp.openSales}
             onTender={crossApp.openTender}
             onPrompt={() => setIsAiPromptOpen(true)}
+            onToday={() => setIsTodayOpen(true)}
+            onOrders={() => setIsOrdersOpen(true)}
           />
 
           <div className="relative flex items-center" ref={notificationDropdownRef}>
@@ -244,6 +250,18 @@ export function VendorHeader() {
 
       {/* AI prompt panel — the real one, unchanged */}
       <AiPromptPanel isOpen={isAiPromptOpen} onClose={() => setIsAiPromptOpen(false)} />
+      <TodayWindow
+        isOpen={isTodayOpen}
+        onClose={() => setIsTodayOpen(false)}
+        onAsk={(text) => {
+          // Hand the question to the assistant: open it and put the text in its message box
+          setIsTodayOpen(false);
+          setIsAiPromptOpen(true);
+          setTimeout(() => window.dispatchEvent(new CustomEvent('ai-assistant-prefill', { detail: { text } })), 60);
+        }}
+      />
+
+      <OrdersWindow isOpen={isOrdersOpen} onClose={() => setIsOrdersOpen(false)} />
 
       <SearchOverlay
         isOpen={search.isSearchOpen}

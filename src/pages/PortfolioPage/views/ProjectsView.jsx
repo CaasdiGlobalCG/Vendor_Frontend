@@ -428,17 +428,20 @@ export default function ProjectsView({ editProfileSignal = 0 }) {
         }
         
         try {
+            const token = localStorage.getItem('authToken');
             const response = await fetch(`${config.VENDOR_BACKEND_URL}/api/vendor/projects/${projectId}`, {
                 method: 'DELETE',
+                credentials: 'include',
+                headers: token ? { Authorization: `Bearer ${token}` } : undefined,
             });
-            
+
             if (!response.ok) {
                 throw new Error(`Server responded with status: ${response.status}`);
             }
-            
+
             const result = await response.json();
             console.log("Project delete result:", result);
-            
+
             if (result.success) {
                 // Remove the project from state
                 setProjects(prev => prev.filter(proj => proj._id !== projectId));

@@ -9,6 +9,7 @@ import ElectricalBOQModal from './ElectricalBOQModal';
 import PlumbingBOQModal from './PlumbingBOQModal';
 import HVACBOQModal from './HVACBOQModal';
 import { DocumentThumbnail, getDocType } from './ElementDocumentPreview';
+import { getBasicsElements } from '../utils/blockElements';
 
 // Get file type icon
 const getFileIcon = (fileName) => {
@@ -210,7 +211,7 @@ const UploadsSection = () => {
       {/* Upload Button */}
       <button
         onClick={handleFileSelect}
-        className="w-full flex items-center justify-center space-x-1.5 p-2 bg-black text-white rounded-lg hover:from-black hover:to-black transition-all duration-200 "
+        className="w-full flex items-center justify-center space-x-1.5 p-2 bg-cta text-cta-foreground rounded-lg hover:from-black hover:to-black transition-all duration-200 "
       >
         <Upload className="w-3.5 h-3.5" />
         <span className="text-xs font-medium">Upload Files</span>
@@ -770,6 +771,11 @@ const ElementsPanel = ({
   
   // Element categories with their specific elements
   const categories = {
+    basics: {
+      name: 'Basics',
+      icon: <Square className="w-5 h-5" />,
+      elements: getBasicsElements()
+    },
     forms: {
       name: 'Forms',
       icon: <Grid className="w-5 h-5" />,
@@ -1435,7 +1441,7 @@ const ElementsPanel = ({
                     e.stopPropagation();
                     setShowCustomBOQ(true);
                   }}
-                  className="w-full flex items-center justify-center space-x-1.5 p-2 bg-black text-white rounded-lg hover:bg-slate-800 transition-all duration-200"
+                  className="w-full flex items-center justify-center space-x-1.5 p-2 bg-cta text-cta-foreground rounded-lg hover:opacity-90 transition-all duration-200"
                 >
                   <Plus className="w-3.5 h-3.5" />
                   <span className="text-xs font-medium">Custom BOQ</span>

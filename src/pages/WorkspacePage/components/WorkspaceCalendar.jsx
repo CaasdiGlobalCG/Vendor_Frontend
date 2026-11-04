@@ -409,7 +409,7 @@ const WorkspaceCalendar = ({
             <button
               type="button"
               onClick={() => openCreate(selectedKey)}
-              className="flex items-center gap-1.5 px-4 py-2 text-xs font-semibold text-white bg-black rounded-full hover:bg-slate-800 transition-colors"
+              className="flex items-center gap-1.5 px-4 py-2 text-xs font-semibold bg-cta text-cta-foreground rounded-full hover:opacity-90 transition-colors"
             >
               <Plus className="w-3.5 h-3.5" />
               Create
@@ -569,7 +569,7 @@ const WorkspaceCalendar = ({
                       onClick={() => setKind(k)}
                       className={`flex-1 py-2 text-[11px] font-medium transition-colors ${
                         form.kind === k
-                          ? 'bg-black text-white'
+                          ? 'bg-cta text-cta-foreground'
                           : 'bg-surface text-ink hover:bg-canvas'
                       }`}
                     >
@@ -780,7 +780,7 @@ const WorkspaceCalendar = ({
                           onClick={() => setForm((f) => ({ ...f, visibility: v }))}
                           className={`flex-1 py-2 text-[11px] font-medium transition-colors ${
                             form.visibility === v
-                              ? 'bg-black text-white'
+                              ? 'bg-cta text-cta-foreground'
                               : 'bg-surface text-ink hover:bg-canvas'
                           }`}
                         >
@@ -834,7 +834,7 @@ const WorkspaceCalendar = ({
                     type="button"
                     onClick={submitCreate}
                     disabled={!form.title.trim() || !form.date}
-                    className="flex-1 py-2 text-xs font-semibold text-white bg-black rounded-lg hover:bg-slate-800 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                    className="flex-1 py-2 text-xs font-semibold bg-cta text-cta-foreground rounded-lg hover:opacity-90 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
                   >
                     {editingId ? 'Update' : 'Save'}
                   </button>

@@ -806,7 +806,7 @@ const TaskCardRenderer = ({ data, nodeId, workspaceId, setNodes }) => {
             <button
               type="button"
               onClick={() => setExpanded(true)}
-              className="w-full flex items-center justify-center gap-1.5 pt-1 px-2 py-1.5 text-[11px] font-semibold text-white bg-black hover:bg-slate-800 rounded-lg transition-colors"
+              className="w-full flex items-center justify-center gap-1.5 pt-1 px-2 py-1.5 text-[11px] font-semibold bg-cta text-cta-foreground hover:opacity-90 rounded-lg transition-colors"
             >
               <Pencil className="w-3 h-3" />
               Update task

@@ -39,6 +39,20 @@ export function hasStartedVendorForm(record) {
  * Resolve the correct vendor app destination based on user state.
  * Team members are always routed to dashboard.
  */
+// Statuses after the vendor submitted: online review, Legal & Compliance review, and the
+// on-site phase. The vendor waits on the status page for all of them.
+const WAITING_STATUSES = new Set([
+  'legal_compliance_review',
+  'compliance_cleared',
+  'compliance_flagged',
+  'initial_approved',
+  'onsite_pending',
+  'onsite_verified',
+  'physical_kyc_scheduled',
+  'physical_kyc_in_progress',
+  'physical_kyc_review',
+]);
+
 export function getVendorDestination({ status, hasFilledForm, isTeamMember, hasStartedForm }) {
   if (isTeamMember === true) return '/VendorDashboard';
 
@@ -47,6 +61,7 @@ export function getVendorDestination({ status, hasFilledForm, isTeamMember, hasS
 
   if (normalizedStatus === 'approved') return '/VendorDashboard';
   if (normalizedStatus === 'pending' && filled) return '/Auditorapprove';
+  if (WAITING_STATUSES.has(normalizedStatus)) return '/Auditorapprove';
   // Auditor granted re-edit access to specific KYC sections — send the vendor
   // back into the form flow (per-section edit gating happens in the forms).
   if (normalizedStatus === 'resubmit_requested') return '/Form1';

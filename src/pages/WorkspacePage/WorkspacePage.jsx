@@ -1,3 +1,5 @@
+import { WorkspaceSkeleton } from './components/ui/Skeleton';
+import { taskToOpen } from './utils/taskProgress';
 import React, { useState, useEffect, useContext, useMemo, useCallback, useRef } from 'react';
 import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import { 
@@ -18,7 +20,7 @@ import {
 } from './components';
 import './components/WorkspaceShell.css';
 import ShareProgressModal from '../../components/ShareProgressModal';
-import { Sparkles, FileText, Calendar, CheckCircle, StickyNote, ClipboardCheck, PanelLeft, PanelRight, Maximize2, ZoomIn, Eye, Layout, HelpCircle, Keyboard } from 'lucide-react';
+import { Sparkles, FileText, Calendar, CheckCircle, StickyNote, ClipboardCheck, PanelLeft, PanelRight, Maximize2, Presentation, UserCheck, Focus, LayoutTemplate, ZoomIn, Eye, Layout, HelpCircle, Keyboard } from 'lucide-react';
 import ManageBOQModal from './components/ManageBOQModal';
 import CustomBOQModal from './components/CustomBOQModal';
 import CivilBOQModal from './components/CivilBOQModal';
@@ -42,6 +44,8 @@ import ProgressTimelineModal from './components/modals/ProgressTimelineModal';
 import ProgressSidebar from './components/ProgressSidebar';
 import DayReportModal from './components/modals/DayReportModal';
 import ProjectCompleteModal from './components/modals/ProjectCompleteModal';
+import ProjectCompletionModal from './components/modals/ProjectCompletionModal';
+import SubtaskProgressModal from './components/modals/SubtaskProgressModal';
 import PermissionsModal from './components/PermissionsModal';
 import InviteCASModal from './components/InviteCASModal';
 import InviteVendorsModal from './components/InviteVendorsModal';
@@ -52,6 +56,8 @@ import StartCallModal from './components/modals/StartCallModal';
 import IncomingCallNotification from './components/modals/IncomingCallNotification';
 import ActiveCallInterface from './components/modals/ActiveCallInterface';
 import ProcurementRFQModal from './components/modals/ProcurementRFQModal';
+import { listOrders as listWorkspaceOrders } from '../../utils/workspaceOrdersApi';
+import { readDismissedOrderDocs, rememberDismissedFromServer } from './utils/b2bDismissedDocs';
 import ExecutionRequestModal from './components/modals/ExecutionRequestModal';
 import WorkflowBuilderModal from './components/modals/WorkflowBuilderModal';
 import useVideoCall from '../../hooks/useVideoCall';
@@ -116,6 +122,7 @@ const WorkspacePage = () => {
   useEffect(() => {
     const handler = (e) => {
       if (e.detail?.tab) setInvoiceToolTab(e.detail.tab);
+      if (e.detail?.docId) setInvoiceToolDocId(e.detail.docId);
       handleTemplateSelect('quotations-invoices');
     };
     document.addEventListener('openInvoiceTool', handler);
@@ -269,16 +276,17 @@ const WorkspacePage = () => {
       sessionStorage.setItem('externalAuthSession', '1');
 
       const u = data.user || {};
-      const role = u.role === 'cas' ? 'cas' : 'pm';
+      const role = ['pm', 'cas', 'client'].includes(u.role) ? u.role : 'pm';
       setUser({
         id: u.userId,
         userId: u.userId,
         pmId: role === 'pm' ? u.userId : undefined,
-        name: u.name || (role === 'pm' ? 'Project Manager' : 'CAS User'),
+        clientId: role === 'client' ? u.userId : undefined,
+        name: u.name || (role === 'pm' ? 'Project Manager' : role === 'client' ? 'Client' : 'CAS User'),
         email: u.email || '',
         role,
         external: true,
-        accessedFrom: role === 'pm' ? 'pm-dashboard' : 'trunky-dashboard',
+        accessedFrom: role === 'pm' ? 'pm-dashboard' : role === 'client' ? 'client-dashboard' : 'trunky-dashboard',
         timestamp: Date.now()
       });
 
@@ -464,6 +472,8 @@ const WorkspacePage = () => {
   const [showTextPanel, setShowTextPanel] = useState(false);
   const [showInvoiceTool, setShowInvoiceTool] = useState(false);
   const [invoiceToolTab, setInvoiceToolTab] = useState(null);
+  // Specific doc a canvas node asked the invoice tool to open for editing
+  const [invoiceToolDocId, setInvoiceToolDocId] = useState(null);
   const [selectedTextElement, setSelectedTextElement] = useState(null);
   const [showManageBOQModal, setShowManageBOQModal] = useState(false);
   const [showCustomBOQModal, setShowCustomBOQModal] = useState(false);
@@ -473,6 +483,7 @@ const WorkspacePage = () => {
   const [showPlumbingBOQModal, setShowPlumbingBOQModal] = useState(false);
   const [showHVACBOQModal, setShowHVACBOQModal] = useState(false);
   const [showProcurementRFQModal, setShowProcurementRFQModal] = useState(false);
+  const [rfqPrefill, setRfqPrefill] = useState(null);
   const [showExecutionRequestModal, setShowExecutionRequestModal] = useState(false);
   const [showWorkflowBuilderModal, setShowWorkflowBuilderModal] = useState(false);
   const [executionTemplateType, setExecutionTemplateType] = useState('execution-work-order');
@@ -532,6 +543,8 @@ const workspaceForProgress = useMemo(() => {
 }, [workspace, selectedSubtask, liveCanvasNodes]);
   const [showClientReviewProgressModal, setShowClientReviewProgressModal] = useState(false);
   const [showProjectCompleteModal, setShowProjectCompleteModal] = useState(false);
+  const [showProjectCompletionModal, setShowProjectCompletionModal] = useState(false);
+  const [showSubtaskProgress, setShowSubtaskProgress] = useState(false);
   const [showCostCalculatorsModal, setShowCostCalculatorsModal] = useState(false);
   
   // Redesign shell states
@@ -601,7 +614,47 @@ const workspaceForProgress = useMemo(() => {
       ut => ut.taskId === selectedTask.id && ut.subtaskId === selectedSubtask.id
     );
   }, [isWorkspaceCompleted, selectedTask, selectedSubtask, workspace?.unlockedTasks]);
-  const shouldDisableEditing = isWorkspaceCompleted && detectedUserRole === 'vendor' && !isCurrentTaskUnlocked;
+  // Once the PM locks the project (workspace.projectCompletion.lock) the vendor AND the
+  // client are view-only; only the PM can change anything.
+  const completionState = workspace?.projectCompletion?.state || 'none';
+  const completionLockState = workspace?.projectCompletion?.lock?.state || 'unlocked';
+  const isProjectLocked = completionLockState === 'locked';
+  // A completed-and-locked subtask (or task) is view-only for the vendor and the client.
+  const liveTask = (workspace?.tasks || []).find((t) => t.id === selectedTask?.id);
+  const liveSubtask = (liveTask?.subtasks || []).find((st) => st.id === selectedSubtask?.id);
+  const isSubtaskLocked = selectedSubtask ? liveSubtask?.locked === true : liveTask?.locked === true;
+  const shouldDisableEditing =
+    (isWorkspaceCompleted && detectedUserRole === 'vendor' && !isCurrentTaskUnlocked) ||
+    (isProjectLocked && (detectedUserRole === 'client' || detectedUserRole === 'vendor')) ||
+    (isSubtaskLocked && (detectedUserRole === 'client' || detectedUserRole === 'vendor'));
+
+  // Marketplace order documents (quotation, receipt voucher, PO, invoice) appear on the canvas the order
+  // was raised from, side by side. Only the buyer and the PM can read them, so only they place them.
+  useEffect(() => {
+    const subtaskId = selectedSubtask?.id;
+    if (!workspaceId || !subtaskId) return undefined;
+    if (detectedUserRole !== 'pm' && detectedUserRole !== 'vendor') return undefined;
+    let cancelled = false;
+    const place = async () => {
+      try {
+        const { orders, dismissedDocs } = await listWorkspaceOrders({ workspaceId });
+        if (cancelled) return;
+        // Documents someone already took off the canvas are not placed again
+        rememberDismissedFromServer(workspaceId, dismissedDocs);
+        const dismissed = readDismissedOrderDocs(workspaceId);
+        const docs = (orders || [])
+          .filter((o) => o.subtaskId === subtaskId)
+          .flatMap((o) => (o.documents || []).map((d) => ({ orderId: o.orderId, docId: d.id, kind: d.kind, rfqRequestId: o.rfqRequestId })))
+          .filter((d) => !dismissed.has(`b2b-doc-${d.orderId}-${d.docId}`));
+        if (docs.length) window?.canvasWorkspaceRef?.current?.addB2BOrderDocs?.(docs);
+      } catch {
+        // Not being able to reach orders must never get in the way of the canvas.
+      }
+    };
+    place();
+    const timer = setInterval(place, 20000);
+    return () => { cancelled = true; clearInterval(timer); };
+  }, [workspaceId, selectedSubtask?.id, detectedUserRole]);
 
   // Listen to external dock tab triggers (e.g. from canvas empty state link)
   useEffect(() => {
@@ -1735,6 +1788,9 @@ const workspaceForProgress = useMemo(() => {
 
   // Build command palette commands list
   const paletteCommands = useMemo(() => [
+    { id: 'client-view', label: 'Client View', category: 'Canvas', icon: <UserCheck className="w-4 h-4" />, keywords: ['client', 'view', 'preview', 'customer', 'read only', 'hide tools'], action: () => window.dispatchEvent(new CustomEvent('workspace-client-view')) },
+    { id: 'zoom-selection', label: 'Zoom to Selection', category: 'Canvas', icon: <Focus className="w-4 h-4" />, shortcut: 'Shift+2', keywords: ['zoom', 'selection', 'selected', 'focus', 'fit', 'frame'], action: () => window.dispatchEvent(new CustomEvent('workspace-zoom-selection')) },
+    { id: 'present', label: 'Present Canvas', category: 'Canvas', icon: <Presentation className="w-4 h-4" />, keywords: ['present', 'presentation', 'slideshow', 'fullscreen', 'demo', 'show'], action: () => window.dispatchEvent(new CustomEvent('workspace-present')) },
     { id: 'focus-mode', label: focusMode ? 'Exit Focus Mode' : 'Enter Focus Mode', category: 'Layout', icon: <Maximize2 className="w-4 h-4" />, shortcut: 'Ctrl+Shift+H', keywords: ['focus', 'hide', 'panels', 'canvas'], action: () => setFocusMode(p => !p) },
     { id: 'pin-left', label: leftPanelPinned ? 'Unpin Left Panel' : 'Pin Left Panel', category: 'Layout', icon: <PanelLeft className="w-4 h-4" />, shortcut: 'Ctrl+Shift+L', keywords: ['left', 'sidebar', 'pin', 'tasks'], action: () => setLeftPanelPinned(p => !p) },
     { id: 'pin-right', label: rightPanelPinned ? 'Unpin Right Panel' : 'Pin Right Panel', category: 'Layout', icon: <PanelRight className="w-4 h-4" />, shortcut: 'Ctrl+Shift+R', keywords: ['right', 'sidebar', 'pin', 'activity'], action: () => setRightPanelPinned(p => !p) },
@@ -1743,7 +1799,8 @@ const workspaceForProgress = useMemo(() => {
     { id: 'add-subtask', label: 'Add Subtask', category: 'Tasks', icon: <FileText className="w-4 h-4" />, keywords: ['create', 'subtask', 'new'], action: () => selectedTask && setShowAddSubtaskModal(true) },
     { id: 'elements', label: 'Open Elements Panel', category: 'Panels', icon: <Layout className="w-4 h-4" />, keywords: ['elements', 'sidebar', 'components', 'drag'], action: () => handleElementsClick() },
     { id: 'text', label: 'Open Text Panel', category: 'Panels', icon: <FileText className="w-4 h-4" />, keywords: ['text', 'annotation', 'label'], action: () => handleTextClick() },
-    { id: 'templates', label: 'Open Templates Panel', category: 'Panels', icon: <Sparkles className="w-4 h-4" />, keywords: ['templates', 'flowchart', 'preset'], action: () => handleTemplatesClick() },
+    { id: 'templates', label: 'Open Tools Panel', category: 'Panels', icon: <Sparkles className="w-4 h-4" />, keywords: ['tools', 'forms', 'boq', 'calculator', 'rfq', 'invoice', 'quotation'], action: () => handleTemplatesClick() },
+    { id: 'template-library', label: 'Browse Templates', category: 'Panels', icon: <LayoutTemplate className="w-4 h-4" />, keywords: ['templates', 'template', 'starter', 'preset', 'construction', 'interiors', 'manufacturing', 'retail'], action: () => window.dispatchEvent(new CustomEvent('workspace-open-panel', { detail: { tab: 'template-library' } })) },
     { id: 'post-services', label: 'Post Service', category: 'Actions', icon: <FileText className="w-4 h-4" />, keywords: ['post', 'service', 'publish'], action: () => setShowPostServicesModal(true) },
     { id: 'shortcuts', label: 'Show Keyboard Shortcuts', category: 'Help', icon: <Keyboard className="w-4 h-4" />, shortcut: '?', keywords: ['keyboard', 'shortcuts', 'help', 'keys'], action: () => setShowShortcutsOverlay(true) },
     { id: 'ai-canvas-builder', label: 'AI Canvas Builder', category: 'Canvas', icon: <Sparkles className="w-4 h-4" />, keywords: ['ai', 'generate', 'flow', 'build', 'canvas', 'agent', 'auto'], action: () => setShowAIBuilder(true) },
@@ -1776,6 +1833,40 @@ const workspaceForProgress = useMemo(() => {
         action: () => document.dispatchEvent(new CustomEvent('zoomToElement', { detail: { elementId: n.id } }))
       })),
   ], [focusMode, leftPanelPinned, rightPanelPinned, selectedTask, canvasNodes]);
+
+  // A template brought tasks: show them straight away
+  useEffect(() => {
+    const onCreated = (event) => {
+      const next = event.detail?.workspace;
+      if (!next?.tasks) return;
+      setWorkspace(next);
+      setTasks(next.tasks);
+      // Open the canvas that was just made (a first task or a template's overview)
+      const pick = event.detail?.select;
+      if (pick) {
+        const task = next.tasks.find((t) => t.id === pick.taskId);
+        const subtask = task?.subtasks?.find((s) => s.id === pick.subtaskId);
+        if (task && subtask) {
+          setSelectedTask(task);
+          setSelectedSubtask(subtask);
+        }
+      }
+    };
+    window.addEventListener('workspace-tasks-created', onCreated);
+    return () => window.removeEventListener('workspace-tasks-created', onCreated);
+  }, []);
+
+  // Other parts of the page (the empty canvas) can open a panel tab
+  useEffect(() => {
+    const open = (event) => {
+      const tab = event.detail?.tab;
+      if (!tab) return;
+      setDockActiveTab(tab);
+      setIsContextPanelOpen(true);
+    };
+    window.addEventListener('workspace-open-panel', open);
+    return () => window.removeEventListener('workspace-open-panel', open);
+  }, []);
 
   // Add keyboard shortcuts and ensure full-page display
   React.useEffect(() => {
@@ -1844,6 +1935,23 @@ const workspaceForProgress = useMemo(() => {
   // Use workspace tasks or empty array
   const [tasks, setTasks] = useState([]);
 
+  // A status / progress block linked to a task was clicked: go to that task (its steps), or to the Tasks list for "the whole project"
+  useEffect(() => {
+    const openTask = (event) => {
+      const { scope, taskId, taskName } = event.detail || {};
+      if (scope === 'workspace') {
+        setDockActiveTab('tasks');
+        setIsContextPanelOpen(true);
+        return;
+      }
+      const task = taskToOpen(tasks, { scope, taskId, taskName });
+      if (task) handleTaskClick(task);
+    };
+    window.addEventListener('workspace-open-task', openTask);
+    return () => window.removeEventListener('workspace-open-task', openTask);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tasks]);
+
   const taskMemberOptions = useMemo(() => {
     const members = Array.isArray(workspaceCollaborators) ? workspaceCollaborators : [];
     const normalized = members
@@ -1875,6 +1983,24 @@ const workspaceForProgress = useMemo(() => {
   const hasAutoSelectedTaskRef = useRef(false);
   useEffect(() => { hasAutoSelectedTaskRef.current = false; }, [workspace?.workspaceId]);
 
+  // Locate the canvas that holds a document released to the client
+  // (workflowStage 'client') — on the root canvas or any subtask canvas.
+  // Returns { root: true } | { task, subtask } | null.
+  const findClientDocTarget = useCallback((tasksList, rootNodes) => {
+    const DOC_TYPES = new Set(['quotation', 'invoice', 'purchaseOrder', 'creditNote']);
+    const isClientDoc = (n) =>
+      DOC_TYPES.has(n?.type) && (n?.data?.workflowStage || 'vendor') === 'client';
+
+    if ((rootNodes || []).some(isClientDoc)) return { root: true };
+    for (const task of tasksList || []) {
+      for (const subtask of task.subtasks || []) {
+        const nodes = subtask.canvasData?.nodes || [];
+        if (nodes.some(isClientDoc)) return { task, subtask };
+      }
+    }
+    return null;
+  }, []);
+
   // Update tasks when workspace loads
   useEffect(() => {
     if (workspace?.tasks) {
@@ -1882,6 +2008,18 @@ const workspaceForProgress = useMemo(() => {
       // Auto-select initial task and subtask if none currently selected
       if (!hasAutoSelectedTaskRef.current && !selectedTask && workspace.tasks.length > 0) {
         hasAutoSelectedTaskRef.current = true;
+        // Client viewers: land on the canvas that actually contains a doc
+        // released to them instead of blindly opening tasks[0]/subtasks[0].
+        if (urlUserRole === 'client' || detectedUserRole === 'client') {
+          const target = findClientDocTarget(workspace.tasks, workspace.nodes);
+          if (target) {
+            if (!target.root) {
+              setSelectedTask(target.task);
+              setSelectedSubtask(target.subtask);
+            }
+            return;
+          }
+        }
         const firstTask = workspace.tasks[0];
         setSelectedTask(firstTask);
         if (firstTask.subtasks && firstTask.subtasks.length > 0) {
@@ -1889,7 +2027,7 @@ const workspaceForProgress = useMemo(() => {
         }
       }
     }
-  }, [workspace, selectedTask]);
+  }, [workspace, selectedTask, urlUserRole, detectedUserRole, findClientDocTarget]);
 
   // Handle incoming call notifications - just log, don't mark as processed
   // Notifications are marked as processed only when user accepts or declines
@@ -1976,7 +2114,7 @@ const workspaceForProgress = useMemo(() => {
         body: JSON.stringify({
       name: subtaskData.title,
           description: subtaskData.description || '',
-          dependsOnSubtaskId: subtaskData.dependsOnSubtaskId || 'auto-previous',
+          dependsOnSubtaskId: subtaskData.dependsOnSubtaskId || 'none', // independent unless the user chooses otherwise
           flowOrder: subtaskData.flowOrder ? Number(subtaskData.flowOrder) : undefined,
           assignedUserId: subtaskData.assignedTo || null,
           userId: currentUser?.id || 'unknown',
@@ -2124,6 +2262,23 @@ const workspaceForProgress = useMemo(() => {
   // canvas node (deletion requests etc.) navigate to the owning subtask and
   // focus/select the node so the PM can immediately review it.
   const handleNotificationClick = async (notification) => {
+    // Completion / lock / re-open notifications open their own screen
+    const openTarget = notification?.data?.openTarget;
+    if (openTarget === 'project_completion') {
+      refetchWorkspace();
+      setShowProjectCompletionModal(true);
+      return;
+    }
+    if (openTarget === 'post_services') {
+      refetchWorkspace();
+      setShowPostServicesModal(true);
+      return;
+    }
+    if (openTarget === 'subtask_progress') {
+      refetchWorkspace();
+      setShowSubtaskProgress(true);
+      return;
+    }
     const nodeId = notification?.data?.nodeId || notification?.data?.elementId;
     if (!nodeId) return;
 
@@ -2540,18 +2695,12 @@ const workspaceForProgress = useMemo(() => {
     }
   };
 
-  // Show loading state
+  // Show loading state: the shape of the workspace, not a spinner
   if (workspaceLoading) {
     return (
-      <div className="flex items-center justify-center h-screen bg-canvas">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-info mx-auto mb-4"></div>
-          <h2 className="text-xl font-semibold text-ink mb-2">Loading Workspace</h2>
-          <p className="text-dim">
-            {leadDetails?.name ? `Loading workspace for "${leadDetails.name}"` : 'Preparing your collaborative workspace...'}
-          </p>
-        </div>
-      </div>
+      <WorkspaceSkeleton
+        message={leadDetails?.name ? `Loading workspace for "${leadDetails.name}"` : 'Loading workspace'}
+      />
     );
   }
 
@@ -2674,10 +2823,16 @@ const workspaceForProgress = useMemo(() => {
           onOpenPostServices={() => setShowPostServicesModal(true)}
           onOpenAIBuilder={() => setShowAIBuilder(true)}
           onOpenUpdateProgress={() => setShowUpdateProgressModal(true)}
-          onOpenReviewProgress={() => setShowReviewProgressModal(true)}
+          onOpenReviewProgress={() => setShowSubtaskProgress(true)}
+          onOpenSubtaskProgress={() => setShowSubtaskProgress(true)}
+          subtaskLocked={isSubtaskLocked}
           onShowProgress={() => setShowProgressTimelineModal(true)}
-          onOpenClientReviewProgress={() => setShowClientReviewProgressModal(true)}
-          onOpenProjectComplete={() => setShowProjectCompleteModal(true)}
+          onRequestMarketplaceQuote={(prefill) => { setRfqPrefill(prefill || null); setShowProcurementRFQModal(true); }}
+          onOpenClientReviewProgress={() => setShowSubtaskProgress(true)}
+          onOpenProjectComplete={() => setShowProjectCompletionModal(true)}
+          onOpenProjectCompletion={() => setShowProjectCompletionModal(true)}
+          completionState={completionState}
+          completionLockState={completionLockState}
           onOpenDeletionHistory={() => setRightPanelPinned(true)}
           isWorkspaceCompleted={workspace?.status === 'completed'}
           shouldDisableEditing={shouldDisableEditing}
@@ -2746,6 +2901,7 @@ const workspaceForProgress = useMemo(() => {
               memberOptions={taskMemberOptions}
               workspace={workspace}
               userRole={detectedUserRole}
+              canEditCanvas={detectedUserRole === 'pm' || !!userPermissions?.canEdit}
               onLeaveWorkspace={handleLeaveWorkspace}
               canvasElements={canvasNodes}
               onZoomToElement={(elementId) => {
@@ -2962,7 +3118,8 @@ const workspaceForProgress = useMemo(() => {
 
       <ProcurementRFQModal
         isOpen={showProcurementRFQModal}
-        onClose={() => setShowProcurementRFQModal(false)}
+        prefill={rfqPrefill}
+        onClose={() => { setShowProcurementRFQModal(false); setRfqPrefill(null); }}
         workspaceId={workspaceId}
         workspace={workspace}
         currentUser={currentUser}
@@ -3114,13 +3271,25 @@ const workspaceForProgress = useMemo(() => {
       />
 
       {/* Project Complete Request Modal */}
-      <ProjectCompleteModal
-        isOpen={showProjectCompleteModal}
-        onClose={() => setShowProjectCompleteModal(false)}
-        workspace={workspace}
-        userRole={userRole}
-        isPM={isPM}
-        isClient={isClientUser}
+      <SubtaskProgressModal
+        isOpen={showSubtaskProgress}
+        onClose={() => setShowSubtaskProgress(false)}
+        workspace={workspace ? { ...workspace, workspaceId: workspace.workspaceId || workspaceId } : { workspaceId }}
+        role={isPM ? 'pm' : isClientUser ? 'client' : 'vendor'}
+        taskId={selectedTask?.id || ''}
+        subtaskId={selectedSubtask?.id || ''}
+        currentUser={currentUser}
+        onChanged={() => refetchWorkspace()}
+      />
+
+      <ProjectCompletionModal
+        isOpen={showProjectCompletionModal}
+        onClose={() => setShowProjectCompletionModal(false)}
+        workspace={workspace ? { ...workspace, workspaceId: workspace.workspaceId || workspaceId } : { workspaceId }}
+        role={isPM ? 'pm' : isClientUser ? 'client' : 'vendor'}
+        currentUser={currentUser}
+        onChanged={() => refetchWorkspace()}
+        onOpenPostServices={() => setShowPostServicesModal(true)}
       />
 
       {/* Invoice Tool Full Screen */}
@@ -3136,6 +3305,8 @@ const workspaceForProgress = useMemo(() => {
             selectedTask={selectedTask}
             selectedSubtask={selectedSubtask}
             initialTab={invoiceToolTab}
+            initialDocId={invoiceToolDocId}
+            onDocConsumed={() => setInvoiceToolDocId(null)}
           />
         </div>
       )}

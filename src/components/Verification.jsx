@@ -54,7 +54,7 @@ function Verification() {
     event.preventDefault();
     const normalizedCode = verificationCode.trim();
     if (!email || !/^\d{6}$/.test(normalizedCode)) {
-      setVerificationError("Enter the six-digit code from the Cognito email.");
+      setVerificationError("Enter the six-digit code from us.");
       return;
     }
 
@@ -115,7 +115,7 @@ function Verification() {
             aria-hidden="true"
           />
           <p className="text-sm font-semibold text-ink">Confirming your email</p>
-          <p className="mt-1 text-xs text-dim">Please wait while Cognito completes verification.</p>
+          <p className="mt-1 text-xs text-dim">Please wait while we complete verification.</p>
         </div>
       </div>
     );
@@ -133,7 +133,7 @@ function Verification() {
               Check Your Email
             </h1>
             <p className="mx-auto mt-3 max-w-[38ch] text-sm leading-6 text-dim">
-              Verify your email. Cognito sent a six-digit verification code to{' '}
+              Verify your email. We sent a six-digit verification code to{' '}
               <span className="font-medium text-ink">{email || "your email"}</span>.
               Enter it below to activate your account.
             </p>

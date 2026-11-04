@@ -103,3 +103,24 @@ describe('elements palette — Cost Calculators registry', () => {
     }
   });
 });
+
+describe('elements palette — Basics', () => {
+  it('lists heading, divider, status, progress and KPI under Basics', () => {
+    renderElementsTab();
+    fireEvent.click(screen.getAllByText(/^basics$/i)[0]);
+    for (const name of [/^heading$/i, /^divider$/i, /status badge/i, /progress bar/i, /kpi card/i]) {
+      expect(screen.getAllByText(name).length, String(name)).toBeGreaterThan(0);
+    }
+  });
+
+  it('a dragged Basics element carries the node type and its settings', () => {
+    renderElementsTab();
+    fireEvent.click(screen.getAllByText(/^basics$/i)[0]);
+    const card = screen.getAllByText(/kpi card/i)[0].closest('[draggable="true"]');
+    const store = {};
+    fireEvent.dragStart(card, { dataTransfer: { setData: (k, v) => { store[k] = v; }, setDragImage() {}, effectAllowed: '' } });
+    const dropped = JSON.parse(store['application/json']);
+    expect(dropped.nodeType).toBe('blockNode');
+    expect(dropped.data.kind).toBe('kpi');
+  });
+});

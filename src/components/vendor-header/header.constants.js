@@ -97,6 +97,8 @@ export const COPY = {
   sales: 'Sales',
   tender: 'Tender',
   prompt: 'Prompt',
+  today: 'Today',
+  orders: 'Orders',
   crossAppGroup: 'Switch app',
   promptPanelTitle: 'AI prompt',
   promptPanelNote:

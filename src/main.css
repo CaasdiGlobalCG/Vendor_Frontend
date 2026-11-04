@@ -11,6 +11,15 @@
 
 @layer base {
   :root {
+    /* Chart palette — categorical series colours for canvas charts.
+       Distinct under colour-blindness, readable on paper and on ink. */
+    --chart-1: 37 99 235;    /* blue   */
+    --chart-2: 16 185 129;   /* green  */
+    --chart-3: 245 158 11;   /* amber  */
+    --chart-4: 139 92 246;   /* violet */
+    --chart-5: 236 72 153;   /* pink   */
+    --chart-6: 14 165 233;   /* sky    */
+
     /* Surfaces & text — light mode (Operon brand: closed monochrome) */
     --canvas-bg: 255 255 255;      /* paper #FFFFFF — 55% default canvas */
     --surface-card: 255 255 255;   /* paper — cards read via hairline, not fill */
@@ -35,6 +44,13 @@
   }
 
   .dark {
+    --chart-1: 96 165 250;
+    --chart-2: 52 211 153;
+    --chart-3: 251 191 36;
+    --chart-4: 167 139 250;
+    --chart-5: 244 114 182;
+    --chart-6: 56 189 248;
+
     /* Surfaces & text — dark mode (brand reversed: ink canvas, paper steps) */
     --canvas-bg: 0 0 0;            /* ink #000000 */
     --surface-card: 16 16 16;      /* paper-06 — #101010 */
@@ -52,6 +68,35 @@
     --status-danger: 248 113 113;  /* #F87171 */
     --status-warning: 251 191 36;  /* #FBBF24 */
     --status-info: 96 165 250;     /* #60A5FA */
+  }
+}
+
+/* ============================================================
+   Agent themes. When a vendor opens an agent in the AI workspace the whole
+   window takes on that character's colour by remapping the surface/text/CTA
+   tokens (scoped to the .agent-* element, so nothing else on the page changes).
+   Archie (workspace builder): powder-blue surfaces with cornflower accents.
+   ============================================================ */
+@layer base {
+  .agent-archie {
+    --canvas-bg: 237 246 252;
+    --surface-card: 248 252 255;
+    --surface-hover: 214 231 247;
+    --border-subtle: 168 199 236;
+    --text-primary: 16 30 66;
+    --text-muted: 66 90 138;
+    --cta-action: 100 149 237;
+    --cta-text: 8 18 48;
+  }
+  .dark .agent-archie {
+    --canvas-bg: 8 14 30;
+    --surface-card: 14 24 48;
+    --surface-hover: 24 40 76;
+    --border-subtle: 46 70 122;
+    --text-primary: 224 236 255;
+    --text-muted: 148 172 214;
+    --cta-action: 100 149 237;
+    --cta-text: 8 14 30;
   }
 }
 

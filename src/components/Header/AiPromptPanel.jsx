@@ -1,953 +1,28 @@
-import React, { useState, useRef, useEffect, useCallback, useContext, useMemo } from "react";
+import React, { useState, useRef, useEffect, useCallback, useContext } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Paperclip, Smile, Star, MoreVertical, Plus, ExternalLink, Loader2, AlertCircle, MessageSquare, Trash2, ArrowLeft, Clock, ChevronRight, ThumbsUp, ThumbsDown, GripVertical, Maximize2, Minimize2, Zap, FileText, Users, Briefcase, TrendingUp, Hash, CalendarClock, Bell, ToggleLeft, ToggleRight, Repeat, FolderKanban, Globe, Search, Lightbulb, PenLine, Pin, PinOff, AtSign, Mic, MicOff, AlertTriangle, XCircle, Sparkles, FileDown, FileSpreadsheet, Expand, Shrink, RefreshCw, Mail, CheckCircle } from "lucide-react";
+import { PanelLeft, PanelRight, Bot, Activity, Sparkles, ChevronRight, X, Plus, Loader2, AlertCircle, MessageSquare, Trash2, Clock, ThumbsUp, ThumbsDown, CalendarClock, FolderKanban, Globe, Search, PenLine, Pin, PinOff, AtSign, FileDown, FileSpreadsheet, RefreshCw, Mail, CheckCircle } from "lucide-react";
 import { exportToPdf, exportToExcel } from "../../utils/exportUtils";
 import config from "../../config/env";
 import { VendorContext } from "../../context/VendorContext";
+import AiApprovalCard from "./AiApprovalCard";
+import { AgentAvatar } from "./AgentAvatars";
+import ArchieBuilder from "./ArchieBuilder";
+import { getAuthToken, apiFetch, AiSparkleIcon, TOOL_STATUS_LABELS, TypingIndicator, ToolBadge, renderMarkdown, SlashCommandMenu, SmartSuggestions, SchedulesView, MentionDropdown, PinnedMessagesStrip, ProactiveAlertsBar, InsightsList, countBySeverity, VoiceInputButton } from "./aiPanelParts";
 
-/**
- * AiPromptPanel
- *
- * A slide-in side panel for AI-powered chat/prompt interaction.
- * Connects to the backend /api/ai/* endpoints for real LLM responses
- * via Groq with DynamoDB-backed conversation memory.
- */
-
-// ── Helper: get auth token ──
-function getAuthToken() {
-  return localStorage.getItem("authToken") || "";
-}
-
-// ── Helper: API call ──
-async function apiFetch(path, options = {}) {
-  const token = getAuthToken();
-  const headers = {
-    "Content-Type": "application/json",
-    ...(token ? { Authorization: `Bearer ${token}` } : {}),
-    ...(options.headers || {}),
-  };
-  const res = await fetch(`${config.VENDOR_BACKEND_URL}${path}`, {
-    credentials: "include",
-    ...options,
-    headers,
-  });
-  return res;
-}
-
-// ── Sparkle / AI gradient icon ──
-const AiSparkleIcon = ({ size = 28 }) => (
-  <div
-    className="ai-sparkle-icon flex items-center justify-center rounded-full flex-shrink-0"
-    style={{
-      width: size,
-      height: size,
-      background: "linear-gradient(135deg, rgb(var(--text-ink)) 0%, rgb(var(--text-ink)) 40%, rgb(var(--success)) 100%)",
-    }}
-  >
-    <svg width={size * 0.55} height={size * 0.55} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <path d="M12 2L14.09 8.26L20 9.27L15.55 13.97L16.91 20L12 16.9L7.09 20L8.45 13.97L4 9.27L9.91 8.26L12 2Z" fill="white" fillOpacity="0.95" />
-    </svg>
-  </div>
-);
-
-// ── Tool name → human-readable status map ──
-const TOOL_STATUS_LABELS = {
-  __thinking: "Analyzing your request...",
-  listWorkspaces: "Searching workspaces...",
-  getWorkspaceTasks: "Fetching tasks...",
-  createTaskInWorkspace: "Creating task...",
-  addSubtaskToTask: "Adding subtask...",
-  searchInvoices: "Searching invoices...",
-  getInvoiceDetails: "Fetching invoice details...",
-  searchPurchaseOrders: "Searching purchase orders...",
-  getVendorProfile: "Loading vendor profile...",
-  searchProducts: "Searching products...",
-  getNotifications: "Checking notifications...",
-  getQuotations: "Fetching quotations...",
-  getInvoices: "Fetching invoices...",
-  getPurchaseOrders: "Fetching purchase orders...",
-  getCreditNotes: "Fetching credit notes...",
-  getSubscriptions: "Fetching subscriptions...",
-  getFinanceSummary: "Building finance summary...",
-  naturalLanguageFilter: "Filtering your data...",
-  searchConversationHistory: "Searching past conversations...",
-  createScheduleFromText: "Creating schedule...",
-  listSchedules: "Loading schedules...",
-  toggleSchedule: "Updating schedule...",
-  deleteSchedule: "Removing schedule...",
-  sendEmail: "Sending email...",
-};
-
-// ── Typing indicator with tool status ──
-const TypingIndicator = ({ toolStatus }) => (
-  <div className="flex gap-3 mb-5">
-    <AiSparkleIcon size={32} />
-    <div className="flex flex-col gap-1.5">
-      <div className="flex items-center gap-1.5 px-4 py-3 bg-canvas rounded-2xl rounded-tl-md">
-        <motion.div className="w-2 h-2 bg-cta rounded-full" animate={{ y: [0, -6, 0] }} transition={{ duration: 0.6, repeat: Infinity, delay: 0 }} />
-        <motion.div className="w-2 h-2 bg-cta rounded-full" animate={{ y: [0, -6, 0] }} transition={{ duration: 0.6, repeat: Infinity, delay: 0.15 }} />
-        <motion.div className="w-2 h-2 bg-cta rounded-full" animate={{ y: [0, -6, 0] }} transition={{ duration: 0.6, repeat: Infinity, delay: 0.3 }} />
-      </div>
-      {toolStatus && (
-        <motion.div
-          initial={{ opacity: 0, y: 4 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="flex items-center gap-2 px-3 py-1.5 text-[11px] text-ink font-medium"
-        >
-          <Loader2 size={12} className="animate-spin text-ink" />
-          <span>{TOOL_STATUS_LABELS[toolStatus] || `Running ${toolStatus}...`}</span>
-        </motion.div>
-      )}
-    </div>
-  </div>
-);
-
-// ── Human-readable tool labels for badges ──
-const TOOL_BADGE_LABELS = {
-  listWorkspaces: "Searched workspaces",
-  getWorkspaceTasks: "Fetched tasks",
-  createTaskInWorkspace: "Created task",
-  addSubtaskToTask: "Added subtask",
-  searchInvoices: "Searched invoices",
-  getInvoiceDetails: "Fetched invoice details",
-  searchPurchaseOrders: "Searched purchase orders",
-  getVendorProfile: "Loaded vendor profile",
-  searchProducts: "Searched products",
-  getNotifications: "Checked notifications",
-  getQuotations: "Fetched quotations",
-  getInvoices: "Fetched invoices",
-  getPurchaseOrders: "Fetched purchase orders",
-  getCreditNotes: "Fetched credit notes",
-  getSubscriptions: "Fetched subscriptions",
-  getFinanceSummary: "Built finance summary",
-  naturalLanguageFilter: "Filtered data",
-  searchConversationHistory: "Searched conversations",
-  createScheduleFromText: "Created schedule",
-  listSchedules: "Loaded schedules",
-  toggleSchedule: "Updated schedule",
-  deleteSchedule: "Removed schedule",
-  sendEmail: "Sent email",
-};
-
-// ── Tool call badge ──
-const ToolBadge = ({ tool }) => (
-  <motion.div
-    initial={{ opacity: 0, scale: 0.8 }}
-    animate={{ opacity: 1, scale: 1 }}
-    className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-surface-hover border border-line rounded-full text-[11px] text-ink font-medium mr-2 mb-1"
-  >
-    <svg className="w-2 h-2 text-ink flex-shrink-0" viewBox="0 0 8 8"><circle cx="4" cy="4" r="4" fill="currentColor" /></svg>
-    {TOOL_BADGE_LABELS[tool] || tool}
-  </motion.div>
-);
-
-// ── Parse a markdown table block (array of lines) into JSX ──
-function renderTable(tableLines, keyPrefix) {
-  if (tableLines.length < 2) return null;
-  const parseRow = (line) =>
-    line.replace(/^\|/, '').replace(/\|$/, '').split('|').map((c) => c.trim());
-  const headers = parseRow(tableLines[0]);
-  // Skip separator row (index 1), data starts at index 2
-  const dataRows = tableLines.slice(2).map(parseRow);
-
-  return (
-    <div key={keyPrefix} className="my-2 overflow-x-auto rounded-lg border border-line">
-      <table className="w-full text-[12px] border-collapse">
-        <thead>
-          <tr className="bg-surface-hover">
-            {headers.map((h, i) => (
-              <th key={i} className="px-3 py-2 text-left font-semibold text-ink border-b border-line whitespace-nowrap">
-                {renderInline(h)}
-              </th>
-            ))}
-          </tr>
-        </thead>
-        <tbody>
-          {dataRows.map((row, rIdx) => (
-            <tr key={rIdx} className={rIdx % 2 === 0 ? 'bg-surface' : 'bg-canvas'}>
-              {row.map((cell, cIdx) => (
-                <td key={cIdx} className="px-3 py-1.5 text-ink border-b border-line">
-                  {renderInline(cell)}
-                </td>
-              ))}
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
-  );
-}
-
-// ── Lightweight markdown renderer ──
-function renderMarkdown(text) {
-  if (!text) return null;
-
-  const lines = text.split('\n');
-  const result = [];
-  let tableBuffer = [];
-  let lineIdx = 0;
-
-  const flushTable = () => {
-    if (tableBuffer.length >= 2) {
-      result.push(renderTable(tableBuffer, `tbl-${lineIdx}`));
-    } else {
-      // Not a real table, render as normal lines
-      tableBuffer.forEach((tl) => result.push(<div key={`line-${lineIdx++}`}>{renderInline(tl)}</div>));
-    }
-    tableBuffer = [];
-  };
-
-  for (lineIdx = 0; lineIdx < lines.length; lineIdx++) {
-    const line = lines[lineIdx];
-
-    // Table line: starts and ends with | or contains | with content between
-    if (/^\s*\|.+\|\s*$/.test(line)) {
-      // Skip separator rows when not inside a table buffer yet
-      if (tableBuffer.length === 0 && /^\s*\|[\s:|-]+\|\s*$/.test(line)) {
-        result.push(<div key={lineIdx} className="h-2" />);
-        continue;
-      }
-      tableBuffer.push(line);
-      continue;
-    }
-
-    // Not a table line — flush any buffered table rows
-    if (tableBuffer.length > 0) flushTable();
-
-    // Heading: ### or ## or #
-    if (/^#{1,3}\s/.test(line)) {
-      const level = line.match(/^(#{1,3})/)[1].length;
-      const content = line.replace(/^#{1,3}\s*/, '');
-      const Tag = level === 1 ? 'h3' : level === 2 ? 'h4' : 'h5';
-      result.push(<Tag key={lineIdx} className="font-semibold text-ink mt-2 mb-1">{renderInline(content)}</Tag>);
-      continue;
-    }
-
-    // Bullet list item: - or * or •
-    if (/^\s*[-*•]\s/.test(line)) {
-      const content = line.replace(/^\s*[-*•]\s*/, '');
-      result.push(
-        <div key={lineIdx} className="flex gap-2 ml-1 my-0.5">
-          <span className="text-ink mt-0.5 flex-shrink-0">•</span>
-          <span>{renderInline(content)}</span>
-        </div>
-      );
-      continue;
-    }
-
-    // Numbered list: 1. or 1)
-    const numMatch = line.match(/^\s*(\d+)[.)\s]\s*(.*)/);
-    if (numMatch) {
-      result.push(
-        <div key={lineIdx} className="flex gap-2 ml-1 my-0.5">
-          <span className="text-ink font-medium flex-shrink-0">{numMatch[1]}.</span>
-          <span>{renderInline(numMatch[2])}</span>
-        </div>
-      );
-      continue;
-    }
-
-    // Empty line → spacer
-    if (!line.trim()) {
-      result.push(<div key={lineIdx} className="h-2" />);
-      continue;
-    }
-
-    // Regular paragraph
-    result.push(<div key={lineIdx}>{renderInline(line)}</div>);
-  }
-
-  // Flush any remaining table at end of text
-  if (tableBuffer.length > 0) flushTable();
-
-  return result;
-}
-
-// Render inline markdown: **bold**, *italic*, `code`, [Open Workspace: TITLE](workspace:ID)
-function renderInline(text) {
-  if (!text) return null;
-  const parts = [];
-  // Regex: workspace link | **bold** | `code` | *italic*
-  const regex = /(\[Open Workspace:\s*(.+?)\]\(workspace:([\w-]+)\))|(\*\*(.+?)\*\*)|(`(.+?)`)|(\*(.+?)\*)/g;
-  let lastIndex = 0;
-  let match;
-  let key = 0;
-
-  while ((match = regex.exec(text)) !== null) {
-    // Push plain text before this match
-    if (match.index > lastIndex) {
-      parts.push(<span key={key++}>{text.slice(lastIndex, match.index)}</span>);
-    }
-    if (match[2] && match[3]) {
-      // [Open Workspace: TITLE](workspace:ID) → clickable button
-      const wsTitle = match[2];
-      const wsId = match[3];
-      parts.push(
-        <button
-          key={key++}
-          onClick={() => window.open(`/VendorDashboard/workspace/${wsId}`, '_blank')}
-          className="inline-flex items-center gap-1.5 px-3 py-1.5 my-1 bg-surface-hover hover:bg-surface-hover text-ink text-xs font-semibold rounded-lg border border-line transition-all duration-200  cursor-pointer"
-          title={`Open ${wsTitle} in new tab`}
-        >
-          <ExternalLink size={12} />
-          Open {wsTitle}
-        </button>
-      );
-    } else if (match[5]) {
-      // **bold**
-      parts.push(<strong key={key++} className="font-semibold text-ink">{match[5]}</strong>);
-    } else if (match[7]) {
-      // `code`
-      parts.push(<code key={key++} className="px-1.5 py-0.5 bg-surface-hover rounded text-[12px] font-mono text-ink">{match[7]}</code>);
-    } else if (match[9]) {
-      // *italic*
-      parts.push(<em key={key++} className="italic">{match[9]}</em>);
-    }
-    lastIndex = match.index + match[0].length;
-  }
-
-  // Remaining text
-  if (lastIndex < text.length) {
-    parts.push(<span key={key++}>{text.slice(lastIndex)}</span>);
-  }
-
-  return parts.length > 0 ? parts : text;
-}
-
-// ── Slash commands definition ──
-const PROJECT_SLASH_COMMANDS = [
-  { command: '/summary', label: 'Dashboard Summary', description: 'Get complete overview of your dashboard', icon: FileText, query: 'Give me a complete summary of my dashboard — projects, leads, finance, and tasks' },
-  { command: '/finance', label: 'Finance Overview', description: 'Invoices, quotations, credit notes, subscriptions', icon: TrendingUp, query: 'Give me a detailed finance summary including invoices, quotations, purchase orders, credit notes, and subscriptions with their statuses and totals' },
-  { command: '/tasks', label: 'Pending Tasks', description: 'View pending tasks across all workspaces', icon: Hash, query: 'Show me all pending tasks across all my workspaces with their status and deadlines' },
-  { command: '/leads', label: 'Lead Status', description: 'Your lead invitations and conversion stats', icon: Users, query: 'Show me all my leads with their current status, PM decisions, and any response details' },
-  { command: '/projects', label: 'Project Status', description: 'All projects with completion progress', icon: Briefcase, query: 'List all my projects with their current status, progress percentage, and completion details' },
-  { command: '/profile', label: 'Vendor Profile', description: 'Your profile, team, products, customers', icon: Users, query: 'Show my vendor profile details including team members, products listed, and customer count' },
-  { command: '/schedule', label: 'Scheduled Reports', description: 'Set up recurring reports or deadline reminders', icon: CalendarClock, query: '__OPEN_SCHEDULES__' },
-  { command: '/reminders', label: 'My Reminders', description: 'View active deadline reminders', icon: Bell, query: 'Show me all my scheduled reports and reminders' },
+// Agents that can run inside the workspace.
+// status: 'coming-soon' agents are listed but do nothing yet.
+const AGENT_REGISTRY = [
+  {
+    id: 'archie',
+    name: 'Archie',
+    role: 'Workspace Builder',
+    description: 'Sets up the workspace once the PM accepts a lead and gives you collaborative access.',
+    status: 'preview', // opens the intake screens; it cannot build anything yet
+    themeClass: 'agent-archie', // remaps the colour tokens for the whole window (see main.css)
+    lightColor: '100, 149, 237',
+  },
 ];
 
-const PERSONAL_SLASH_COMMANDS = [
-  { command: '/research', label: 'Market Research', description: 'Help with industry or market analysis', icon: Search, query: 'Help me with market research: ' },
-  { command: '/draft', label: 'Write Draft', description: 'Draft an email, proposal, or document', icon: PenLine, query: 'Help me draft: ' },
-  { command: '/brainstorm', label: 'Brainstorm Ideas', description: 'Generate ideas or strategies', icon: Lightbulb, query: 'Let\'s brainstorm ideas for: ' },
-  { command: '/trends', label: 'Industry Trends', description: 'Latest trends and market insights', icon: TrendingUp, query: 'What are the latest trends in ' },
-  { command: '/competitor', label: 'Competitor Analysis', description: 'Help analyze competitors', icon: Users, query: 'Help me analyze competitors in: ' },
-  { command: '/news', label: 'Latest News', description: 'Get latest news on a topic', icon: Globe, query: 'What are the latest developments in ' },
-];
-
-// ── Slash command dropdown ──
-const SlashCommandMenu = ({ filter, onSelect, visible, activeSpace }) => {
-  if (!visible) return null;
-  const commands = activeSpace === 'personal' ? PERSONAL_SLASH_COMMANDS : PROJECT_SLASH_COMMANDS;
-  const filtered = commands.filter(
-    (c) => c.command.includes(filter.toLowerCase()) || c.label.toLowerCase().includes(filter.toLowerCase().replace('/', ''))
-  );
-  if (filtered.length === 0) return null;
-
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 8 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: 8 }}
-      className="absolute bottom-full left-0 right-0 mb-1 mx-2 bg-surface border border-line rounded-xl shadow-xl z-50 overflow-hidden"
-    >
-      <div className="px-3 py-2 border-b border-line">
-        <span className="text-[10px] font-semibold text-dim uppercase tracking-wider">Quick Commands</span>
-      </div>
-      <div className="max-h-[240px] overflow-y-auto py-1">
-        {filtered.map((cmd) => {
-          const Icon = cmd.icon;
-          return (
-            <button
-              key={cmd.command}
-              onClick={() => onSelect(cmd)}
-              className="w-full flex items-center gap-3 px-3 py-2.5 hover:bg-surface-hover transition-colors text-left group"
-            >
-              <div className="w-8 h-8 rounded-lg bg-black border border-line flex items-center justify-center flex-shrink-0 group-hover:from-black group-hover:to-black">
-                <Icon size={15} className="text-white" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2">
-                  <span className="text-xs font-mono font-semibold text-ink">{cmd.command}</span>
-                  <span className="text-[12px] font-medium text-ink">{cmd.label}</span>
-                </div>
-                <p className="text-[11px] text-dim truncate">{cmd.description}</p>
-              </div>
-              <Zap size={12} className="text-ink opacity-0 group-hover:opacity-100 transition-opacity" />
-            </button>
-          );
-        })}
-      </div>
-    </motion.div>
-  );
-};
-
-// ── Smart suggestions component ──
-const SmartSuggestions = ({ suggestions, onSelect, visible }) => {
-  if (!visible || !suggestions || suggestions.length === 0) return null;
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 8 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: 0.3 }}
-      className="flex flex-wrap gap-1.5 mt-3 mb-1"
-    >
-      {suggestions.map((s, i) => (
-        <motion.button
-          key={i}
-          initial={{ opacity: 0, scale: 0.9 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ delay: 0.4 + i * 0.1 }}
-          onClick={() => onSelect(s)}
-          className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-black border border-line rounded-full text-[11px] text-white font-medium hover:from-black hover:to-black hover:border-line transition-all duration-200 "
-        >
-          <Zap size={10} className="text-white" />
-          {s}
-        </motion.button>
-      ))}
-    </motion.div>
-  );
-};
-
-// ── Schedules / Reminders View ──
-const DAY_NAMES = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-const SCOPE_ICONS = {
-  finance_summary: '💰',
-  dashboard_summary: '📊',
-  invoice: '🧾',
-  quotation: '📝',
-  payment: '💳',
-  workspace_task: '📋',
-  project: '🚀',
-  purchase_order: '📦',
-  credit_note: '📄',
-  subscription: '🔁',
-  lead: '🎯',
-};
-
-const SchedulesView = ({ schedules, loading, onToggle, onDelete, onBack, onCreateViaChat }) => {
-  const reports = schedules.filter(s => s.type === 'report');
-  const reminders = schedules.filter(s => s.type === 'reminder');
-
-  const ScheduleCard = ({ schedule }) => {
-    const icon = SCOPE_ICONS[schedule.scope] || '📌';
-    const scopeLabel = (schedule.scope || '').replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
-    const freq = schedule.recurrence === 'once' ? 'One-time' : schedule.recurrence?.charAt(0).toUpperCase() + schedule.recurrence?.slice(1);
-    const day = schedule.dayOfWeek !== null && schedule.dayOfWeek !== undefined ? DAY_NAMES[schedule.dayOfWeek] : null;
-    const nextRun = schedule.nextRunAt ? new Date(schedule.nextRunAt) : null;
-    const isActive = schedule.enabled;
-
-    return (
-      <motion.div
-        initial={{ opacity: 0, y: 8 }}
-        animate={{ opacity: 1, y: 0 }}
-        className={`group relative p-3.5 rounded-xl border transition-all duration-200 ${
-          isActive
-            ? 'bg-surface border-line hover:border-line '
-            : 'bg-canvas border-line opacity-70'
-        }`}
-      >
-        <div className="flex items-start gap-3">
-          {/* Icon */}
-          <div className={`w-10 h-10 rounded-xl flex items-center justify-center text-lg flex-shrink-0 ${
-            isActive
-              ? 'bg-black border border-line'
-              : 'bg-surface-hover border border-line'
-          }`}>
-            {icon}
-          </div>
-
-          {/* Content */}
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2">
-              <span className="text-[13px] font-medium text-ink truncate">{schedule.title}</span>
-              <span className={`px-1.5 py-0.5 rounded text-[9px] font-semibold uppercase tracking-wider ${
-                schedule.type === 'report'
-                  ? 'bg-info/10 text-info'
-                  : 'bg-warning/10 text-warning'
-              }`}>
-                {schedule.type}
-              </span>
-            </div>
-
-            <div className="flex items-center gap-2 mt-1 text-[11px] text-dim">
-              <span>{scopeLabel}</span>
-              <span className="text-dim">·</span>
-              <span className="flex items-center gap-1">
-                <Repeat size={10} />
-                {freq}{day ? ` (${day})` : ''} at {schedule.timeOfDay}
-              </span>
-            </div>
-
-            {schedule.dueDate && (
-              <div className="text-[11px] text-warning mt-1 flex items-center gap-1">
-                <CalendarClock size={10} />
-                Due: {new Date(schedule.dueDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
-              </div>
-            )}
-
-            {schedule.entityName && (
-              <div className="text-[11px] text-dim mt-0.5">
-                Entity: {schedule.entityName}
-              </div>
-            )}
-
-            {nextRun && isActive && (
-              <div className="text-[10px] text-ink mt-1.5 flex items-center gap-1">
-                <Clock size={9} />
-                Next: {nextRun.toLocaleString('en-IN', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
-              </div>
-            )}
-          </div>
-
-          {/* Actions */}
-          <div className="flex items-center gap-1 flex-shrink-0">
-            {/* Toggle */}
-            <button
-              onClick={() => onToggle(schedule.scheduleId)}
-              className={`p-1.5 rounded-lg transition-colors ${
-                isActive ? 'text-ink hover:bg-surface-hover' : 'text-dim hover:bg-surface-hover'
-              }`}
-              title={isActive ? 'Pause' : 'Resume'}
-            >
-              {isActive ? <ToggleRight size={18} /> : <ToggleLeft size={18} />}
-            </button>
-            {/* Delete */}
-            <button
-              onClick={(e) => onDelete(schedule.scheduleId, e)}
-              className="p-1.5 rounded-lg text-dim hover:text-danger hover:bg-danger/10 opacity-0 group-hover:opacity-100 transition-all"
-              title="Delete"
-            >
-              <Trash2 size={14} />
-            </button>
-          </div>
-        </div>
-      </motion.div>
-    );
-  };
-
-  return (
-    <div className="flex-1 overflow-y-auto ai-prompt-messages-scroll">
-      <div className="p-4">
-        {/* Header */}
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center gap-2">
-            <button onClick={onBack} className="p-1 hover:bg-surface-hover rounded-lg transition-colors">
-              <ArrowLeft size={16} className="text-dim" />
-            </button>
-            <h3 className="text-sm font-semibold text-ink font-['Montserrat']">Schedules & Reminders</h3>
-          </div>
-          <button
-            onClick={onCreateViaChat}
-            className="flex items-center gap-1.5 px-3 py-1.5 bg-black text-white text-[11px] font-medium rounded-lg hover:from-black hover:to-black transition-all "
-          >
-            <Plus size={13} />
-            New
-          </button>
-        </div>
-
-        {/* Tip */}
-        <div className="mb-4 px-3 py-2.5 bg-black border border-line rounded-xl">
-          <p className="text-[11px] text-white/80 leading-relaxed">
-            <strong>Tip:</strong> Type naturally in the chat, like <em>"Send me a finance summary every Monday at 9am"</em> or <em>"Remind me about invoice INV-001 due March 15"</em>.
-          </p>
-        </div>
-
-        {loading ? (
-          <div className="flex items-center justify-center py-16">
-            <Loader2 size={24} className="text-ink animate-spin" />
-          </div>
-        ) : schedules.length === 0 ? (
-          <div className="text-center py-16">
-            <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-black flex items-center justify-center">
-              <CalendarClock size={28} className="text-white" />
-            </div>
-            <p className="text-sm font-medium text-dim mb-1">No schedules yet</p>
-            <p className="text-[11px] text-dim mb-4">Set up recurring reports or deadline reminders</p>
-            <button
-              onClick={onCreateViaChat}
-              className="px-5 py-2.5 bg-black text-white text-xs font-medium rounded-xl hover:from-black hover:to-black transition-all "
-            >
-              Create via chat
-            </button>
-          </div>
-        ) : (
-          <div className="space-y-5">
-            {/* Reports section */}
-            {reports.length > 0 && (
-              <div>
-                <div className="flex items-center gap-2 mb-2.5">
-                  <FileText size={12} className="text-info" />
-                  <span className="text-[11px] font-semibold text-dim uppercase tracking-wider">Scheduled Reports</span>
-                  <span className="text-[10px] text-dim bg-surface-hover px-1.5 py-0.5 rounded-full">{reports.length}</span>
-                  <div className="flex-1 h-px bg-surface-hover" />
-                </div>
-                <div className="space-y-2">
-                  {reports.map(s => <ScheduleCard key={s.scheduleId} schedule={s} />)}
-                </div>
-              </div>
-            )}
-
-            {/* Reminders section */}
-            {reminders.length > 0 && (
-              <div>
-                <div className="flex items-center gap-2 mb-2.5">
-                  <Bell size={12} className="text-warning" />
-                  <span className="text-[11px] font-semibold text-dim uppercase tracking-wider">Deadline Reminders</span>
-                  <span className="text-[10px] text-dim bg-surface-hover px-1.5 py-0.5 rounded-full">{reminders.length}</span>
-                  <div className="flex-1 h-px bg-surface-hover" />
-                </div>
-                <div className="space-y-2">
-                  {reminders.map(s => <ScheduleCard key={s.scheduleId} schedule={s} />)}
-                </div>
-              </div>
-            )}
-          </div>
-        )}
-      </div>
-    </div>
-  );
-};
-
-// ── @ Mention Dropdown ──
-const MENTION_ENTITY_TYPES = [
-  { type: 'workspace', label: 'Workspace', icon: '📋' },
-  { type: 'project', label: 'Project', icon: '🚀' },
-  { type: 'invoice', label: 'Invoice', icon: '🧾' },
-  { type: 'quotation', label: 'Quotation', icon: '📝' },
-  { type: 'lead', label: 'Lead', icon: '🎯' },
-  { type: 'purchase_order', label: 'Purchase Order', icon: '📦' },
-  { type: 'credit_note', label: 'Credit Note', icon: '📄' },
-  { type: 'subscription', label: 'Subscription', icon: '🔁' },
-];
-
-const MentionDropdown = ({ query, visible, onSelect, results, loading, showTypeSelector, onTypeSelect }) => {
-  if (!visible) return null;
-
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 8 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: 8 }}
-      className="absolute bottom-full left-0 right-0 mb-1 mx-2 bg-surface border border-line rounded-xl shadow-xl z-50 overflow-hidden"
-    >
-      <div className="px-3 py-2 border-b border-line flex items-center gap-2">
-        <AtSign size={12} className="text-info" />
-        <span className="text-[10px] font-semibold text-dim uppercase tracking-wider">
-          {showTypeSelector ? 'Select Entity Type' : `Mention — ${query || '...'}`}
-        </span>
-        {loading && <Loader2 size={12} className="text-ink animate-spin ml-auto" />}
-      </div>
-
-      <div className="max-h-[220px] overflow-y-auto py-1">
-        {showTypeSelector ? (
-          // Step 1: Show entity type selector
-          MENTION_ENTITY_TYPES.map((t) => (
-            <button
-              key={t.type}
-              onClick={() => onTypeSelect(t.type)}
-              className="w-full flex items-center gap-3 px-3 py-2.5 hover:bg-info/10 transition-colors text-left group"
-            >
-              <span className="text-lg">{t.icon}</span>
-              <div className="flex-1">
-                <span className="text-xs font-medium text-ink">@{t.type}</span>
-                <span className="text-[11px] text-dim ml-2">{t.label}</span>
-              </div>
-              <ChevronRight size={12} className="text-dim group-hover:text-info" />
-            </button>
-          ))
-        ) : results.length === 0 && !loading ? (
-          <div className="px-3 py-4 text-center text-[11px] text-dim">
-            {query ? 'No matching entities found' : 'Type to search...'}
-          </div>
-        ) : (
-          // Step 2: Show search results
-          results.map((r) => (
-            <button
-              key={`${r.type}-${r.id}`}
-              onClick={() => onSelect(r)}
-              className="w-full flex items-center gap-3 px-3 py-2 hover:bg-info/10 transition-colors text-left group"
-            >
-              <span className="text-base">{r.icon}</span>
-              <div className="flex-1 min-w-0">
-                <div className="text-xs font-medium text-ink truncate">{r.name}</div>
-                <div className="flex items-center gap-2 text-[10px] text-dim">
-                  <span>{r.type.replace(/_/g, ' ')}</span>
-                  {r.status && <><span className="text-dim">·</span><span>{r.status}</span></>}
-                  {r.extra && <><span className="text-dim">·</span><span>{r.extra}</span></>}
-                </div>
-              </div>
-            </button>
-          ))
-        )}
-      </div>
-    </motion.div>
-  );
-};
-
-// ── Pinned Messages Strip ──
-const PinnedMessagesStrip = ({ pinnedMessages, onUnpin, onScrollTo }) => {
-  const [expanded, setExpanded] = useState(false);
-
-  if (!pinnedMessages || pinnedMessages.length === 0) return null;
-
-  return (
-    <div className="flex-shrink-0 border-b border-warning/10 bg-black">
-      <button
-        onClick={() => setExpanded(!expanded)}
-        className="w-full flex items-center gap-2 px-4 py-2 text-left hover:bg-warning/10 transition-colors"
-      >
-        <Pin size={12} className="text-warning flex-shrink-0" />
-        <span className="text-[11px] font-semibold text-warning">
-          {pinnedMessages.length} Pinned
-        </span>
-        <ChevronRight size={12} className={`text-warning transition-transform duration-200 ml-auto ${expanded ? 'rotate-90' : ''}`} />
-      </button>
-
-      <AnimatePresence>
-        {expanded && (
-          <motion.div
-            initial={{ height: 0, opacity: 0 }}
-            animate={{ height: 'auto', opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }}
-            transition={{ duration: 0.2 }}
-            className="overflow-hidden"
-          >
-            <div className="px-3 pb-2 space-y-1.5 max-h-[160px] overflow-y-auto">
-              {pinnedMessages.map((pin) => (
-                <div
-                  key={pin.id}
-                  className="group flex items-start gap-2 px-2.5 py-2 bg-white/80 rounded-lg border border-warning/10 cursor-pointer hover:border-warning/20 transition-colors"
-                  onClick={() => { onScrollTo(pin.id); setExpanded(false); }}
-                >
-                  <AiSparkleIcon size={18} />
-                  <div className="flex-1 min-w-0">
-                    <p className="text-[11px] text-dim line-clamp-2 leading-relaxed">
-                      {pin.text?.slice(0, 120)}{pin.text?.length > 120 ? '...' : ''}
-                    </p>
-                    <span className="text-[9px] text-dim">{pin.timestamp ? new Date(pin.timestamp).toLocaleString('en-IN', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) : ''}</span>
-                  </div>
-                  <button
-                    onClick={(e) => { e.stopPropagation(); onUnpin(pin.id); }}
-                    className="p-1 rounded opacity-0 group-hover:opacity-100 hover:bg-danger/10 transition-all"
-                    title="Unpin"
-                  >
-                    <PinOff size={11} className="text-danger" />
-                  </button>
-                </div>
-              ))}
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </div>
-  );
-};
-
-// ── Proactive Alerts Bar ──
-const SEVERITY_STYLES = {
-  critical: { bg: 'bg-danger/10', border: 'border-danger/20', text: 'text-danger', badge: 'bg-danger/10 text-danger' },
-  warning: { bg: 'bg-warning/10', border: 'border-warning/20', text: 'text-warning', badge: 'bg-warning/10 text-warning' },
-  info: { bg: 'bg-info/10', border: 'border-info/20', text: 'text-info', badge: 'bg-info/10 text-info' },
-};
-
-const ProactiveAlertsBar = ({ alerts, onDismiss, onActOnAlert, expanded, onToggle }) => {
-  if (!alerts || alerts.length === 0) return null;
-
-  const criticalCount = alerts.filter((a) => a.severity === 'critical').length;
-  const warningCount = alerts.filter((a) => a.severity === 'warning').length;
-
-  return (
-    <div className="flex-shrink-0 border-b border-line">
-      <button
-        onClick={onToggle}
-        className="w-full flex items-center gap-2 px-4 py-2.5 text-left hover:bg-canvas transition-colors"
-      >
-        <div className="relative">
-          <Sparkles size={14} className="text-warning" />
-          {criticalCount > 0 && (
-            <span className="absolute -top-1 -right-1 w-2 h-2 bg-danger rounded-full animate-pulse" />
-          )}
-        </div>
-        <span className="text-[11px] font-semibold text-dim">
-          {alerts.length} Insight{alerts.length !== 1 ? 's' : ''}
-        </span>
-        {criticalCount > 0 && (
-          <span className="px-1.5 py-0.5 rounded-full text-[9px] font-bold bg-danger/10 text-danger">
-            {criticalCount} urgent
-          </span>
-        )}
-        {warningCount > 0 && (
-          <span className="px-1.5 py-0.5 rounded-full text-[9px] font-bold bg-warning/10 text-warning">
-            {warningCount} warning{warningCount > 1 ? 's' : ''}
-          </span>
-        )}
-        <ChevronRight
-          size={12}
-          className={`text-dim transition-transform duration-200 ml-auto ${expanded ? 'rotate-90' : ''}`}
-        />
-      </button>
-
-      <AnimatePresence>
-        {expanded && (
-          <motion.div
-            initial={{ height: 0, opacity: 0 }}
-            animate={{ height: 'auto', opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }}
-            transition={{ duration: 0.2 }}
-            className="overflow-hidden"
-          >
-            <div className="px-3 pb-3 space-y-2 max-h-[250px] overflow-y-auto">
-              {alerts.map((alert) => {
-                const style = SEVERITY_STYLES[alert.severity] || SEVERITY_STYLES.info;
-                return (
-                  <motion.div
-                    key={alert.id}
-                    initial={{ opacity: 0, x: -8 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    className={`group relative px-3 py-2.5 rounded-xl border ${style.bg} ${style.border}`}
-                  >
-                    <div className="flex items-start gap-2">
-                      <span className="text-base flex-shrink-0 mt-0.5">{alert.icon}</span>
-                      <div className="flex-1 min-w-0">
-                        <p className={`text-[11px] font-semibold ${style.text} leading-snug`}>
-                          {alert.title}
-                        </p>
-                        {alert.message && (
-                          <p className="text-[10px] text-dim mt-0.5 leading-relaxed">{alert.message}</p>
-                        )}
-                        {alert.suggestion && (
-                          <button
-                            onClick={() => onActOnAlert(alert)}
-                            className="mt-1.5 inline-flex items-center gap-1 px-2 py-1 bg-white/80 border border-line rounded-lg text-[10px] font-medium text-ink hover:bg-surface-hover hover:border-line transition-all"
-                          >
-                            <Sparkles size={10} />
-                            {alert.suggestion.length > 50 ? alert.suggestion.slice(0, 50) + '...' : alert.suggestion}
-                          </button>
-                        )}
-                      </div>
-                      <button
-                        onClick={() => onDismiss(alert.id)}
-                        className="p-0.5 rounded opacity-0 group-hover:opacity-100 hover:bg-white/60 transition-all flex-shrink-0"
-                        title="Dismiss"
-                      >
-                        <XCircle size={14} className="text-dim" />
-                      </button>
-                    </div>
-                  </motion.div>
-                );
-              })}
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </div>
-  );
-};
-
-// ── Voice Input Button ──
-const VoiceInputButton = ({ onTranscript, disabled }) => {
-  const [isListening, setIsListening] = useState(false);
-  const [speechSupported, setSpeechSupported] = useState(true);
-  const recognitionRef = useRef(null);
-
-  useEffect(() => {
-    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-    if (!SpeechRecognition) {
-      setSpeechSupported(false);
-      return;
-    }
-
-    const recognition = new SpeechRecognition();
-    recognition.continuous = false;
-    recognition.interimResults = true;
-    recognition.lang = 'en-IN';
-
-    recognition.onresult = (event) => {
-      let finalTranscript = '';
-      let interimTranscript = '';
-      for (let i = event.resultIndex; i < event.results.length; i++) {
-        const transcript = event.results[i][0].transcript;
-        if (event.results[i].isFinal) {
-          finalTranscript += transcript;
-        } else {
-          interimTranscript += transcript;
-        }
-      }
-      if (finalTranscript) {
-        onTranscript(finalTranscript);
-      } else if (interimTranscript) {
-        onTranscript(interimTranscript, true); // true = interim
-      }
-    };
-
-    recognition.onend = () => {
-      setIsListening(false);
-    };
-
-    recognition.onerror = (event) => {
-      console.warn('Speech recognition error:', event.error);
-      setIsListening(false);
-      if (event.error === 'not-allowed') {
-        setSpeechSupported(false);
-      }
-    };
-
-    recognitionRef.current = recognition;
-
-    return () => {
-      if (recognitionRef.current) {
-        try { recognitionRef.current.abort(); } catch {}
-      }
-    };
-  }, [onTranscript]);
-
-  const toggleListening = () => {
-    if (!recognitionRef.current) return;
-    if (isListening) {
-      recognitionRef.current.stop();
-      setIsListening(false);
-    } else {
-      try {
-        recognitionRef.current.start();
-        setIsListening(true);
-      } catch (err) {
-        console.warn('Failed to start speech recognition:', err);
-      }
-    }
-  };
-
-  if (!speechSupported) return null;
-
-  return (
-    <motion.button
-      onClick={toggleListening}
-      disabled={disabled}
-      className={`p-2 rounded-full transition-all duration-200 relative ${
-        isListening
-          ? 'bg-danger/10 text-danger hover:bg-danger/10 ring-2 ring-danger/20'
-          : 'hover:bg-surface-hover text-dim'
-      }`}
-      whileTap={{ scale: 0.9 }}
-      aria-label={isListening ? 'Stop listening' : 'Voice input'}
-      title={isListening ? 'Tap to stop' : 'Voice input'}
-    >
-      {isListening ? (
-        <>
-          <MicOff size={18} />
-          {/* Pulsing ring animation */}
-          <span className="absolute inset-0 rounded-full animate-ping bg-danger" />
-        </>
-      ) : (
-        <Mic size={18} />
-      )}
-    </motion.button>
-  );
-};
-
-// ────────────────────────────────────────────────────────────
-// MAIN COMPONENT
-// ────────────────────────────────────────────────────────────
 const AiPromptPanel = ({ isOpen, onClose }) => {
   // State
   const [messages, setMessages] = useState([]);
@@ -974,7 +49,7 @@ const AiPromptPanel = ({ isOpen, onClose }) => {
 
   // ── Spotlight Email Compose state ──
   const [showEmailCompose, setShowEmailCompose] = useState(false);
-  const [emailTo, setEmailTo] = useState('tech@caasdiglobal.in');
+  const [emailTo, setEmailTo] = useState('');
   const [emailSubject, setEmailSubject] = useState('');
   const [emailBody, setEmailBody] = useState('');
 
@@ -993,11 +68,9 @@ const AiPromptPanel = ({ isOpen, onClose }) => {
   const mentionSearchTimer = useRef(null);
 
   // ── Pin Messages state ──
-  const [pinnedMessages, setPinnedMessages] = useState(() => {
-    try {
-      return JSON.parse(localStorage.getItem('ai_pinned_messages') || '[]');
-    } catch { return []; }
-  });
+  // Pins live on the server (per vendor) so they follow you across browsers and devices.
+  const [pinnedMessages, setPinnedMessages] = useState([]);
+  const pendingScrollText = useRef(null); // set when a pin points into a conversation we still have to open
 
   // ── Voice Input state ──
   const [interimTranscript, setInterimTranscript] = useState('');
@@ -1008,24 +81,20 @@ const AiPromptPanel = ({ isOpen, onClose }) => {
   const [alertsLoaded, setAlertsLoaded] = useState(false);
   const wsRef = useRef(null);
 
-  // ── Resize & drag state ──
-  const DEFAULT_WIDTH = 480;
-  const MIN_WIDTH = 340;
-  const MAX_WIDTH = Math.min(900, typeof window !== 'undefined' ? window.innerWidth * 0.85 : 900);
-  const MIN_HEIGHT = 400;
-  const [panelWidth, setPanelWidth] = useState(DEFAULT_WIDTH);
-  const [panelHeight, setPanelHeight] = useState(typeof window !== 'undefined' ? window.innerHeight : 800);
-  const [panelTop, setPanelTop] = useState(0);
-  const [isFloating, setIsFloating] = useState(false); // false = docked right, true = detached window
-  const [isFullscreen, setIsFullscreen] = useState(false); // fullscreen mode
-  const [fullscreenTransitioning, setFullscreenTransitioning] = useState(false); // true during fullscreen animation
-  const [panelPos, setPanelPos] = useState({ x: 0, y: 0 }); // For floating mode position
-  const preFullscreenState = useRef({ width: DEFAULT_WIDTH, height: 0, floating: false, pos: { x: 0, y: 0 } }); // snapshot before entering fullscreen
-  const isResizingX = useRef(false);
-  const isResizingY = useRef(false);
-  const isDragging = useRef(false);
-  const dragStart = useRef({ x: 0, y: 0, panelX: 0, panelY: 0 });
-  const resizeStart = useRef({ x: 0, y: 0, width: DEFAULT_WIDTH, height: 0 });
+  // ── Workspace layout state ──
+  const [sidebarOpen, setSidebarOpen] = useState(() => typeof window === 'undefined' || window.innerWidth >= 1024);
+  const [railOpen, setRailOpen] = useState(true);
+  const [railTab, setRailTab] = useState('agents'); // 'agents' | 'activity'
+  const [historyQuery, setHistoryQuery] = useState('');
+  const [insightFilter, setInsightFilter] = useState('all');
+  const [activeAgent, setActiveAgent] = useState(null); // id of the agent whose screen is open
+  const [archieSession, setArchieSession] = useState(null); // a saved Archie conversation being reopened
+  const [archieConvoId, setArchieConvoId] = useState(null); // the Archie conversation on screen (highlighted in history)
+  const [historyStatus, setHistoryStatus] = useState('loading'); // loading | ready | error
+  const [lightUp, setLightUp] = useState(null); // { key, x, y } origin of the colour wash when an agent opens
+  const [usage, setUsage] = useState(null); // { used, limit, remaining }
+  const [corrections, setCorrections] = useState([]);
+
 
   const messagesEndRef = useRef(null);
   const inputRef = useRef(null);
@@ -1045,10 +114,6 @@ const AiPromptPanel = ({ isOpen, onClose }) => {
         if (data.success) {
           setProactiveAlerts(data.data || []);
           setAlertsLoaded(true);
-          // Auto-expand if there are critical alerts
-          if ((data.data || []).some((a) => a.severity === 'critical')) {
-            setAlertsExpanded(true);
-          }
         }
       } catch (err) {
         console.warn('Failed to fetch proactive alerts:', err);
@@ -1079,8 +144,6 @@ const AiPromptPanel = ({ isOpen, onClose }) => {
                 const unique = newAlerts.filter((a) => !existingIds.has(a.id));
                 if (unique.length === 0) return prev;
                 const updated = [...unique, ...prev];
-                // Auto-expand on new critical alerts
-                if (unique.some((a) => a.severity === 'critical')) setAlertsExpanded(true);
                 return updated;
               });
             }
@@ -1146,96 +209,6 @@ const AiPromptPanel = ({ isOpen, onClose }) => {
     }
   }, [isOpen, showConversationList]);
 
-  // ── Reset panel dimensions when switching modes ──
-  useEffect(() => {
-    if (!isFloating) {
-      setPanelHeight(window.innerHeight);
-      setPanelTop(0);
-      setPanelPos({ x: 0, y: 0 });
-    } else {
-      // Detach: center-ish with a nice height
-      const w = panelWidth;
-      const h = Math.min(700, window.innerHeight - 80);
-      setPanelHeight(h);
-      setPanelTop(Math.max(40, (window.innerHeight - h) / 2));
-      setPanelPos({ x: window.innerWidth - w - 24, y: Math.max(40, (window.innerHeight - h) / 2) });
-    }
-  }, [isFloating]);
-
-  // ── Resize handlers ──
-  useEffect(() => {
-    const handleMouseMove = (e) => {
-      if (isResizingX.current) {
-        e.preventDefault();
-        const delta = resizeStart.current.x - e.clientX;
-        const newWidth = Math.max(MIN_WIDTH, Math.min(MAX_WIDTH, resizeStart.current.width + delta));
-        setPanelWidth(newWidth);
-        if (isFloating) {
-          setPanelPos((prev) => ({ ...prev, x: resizeStart.current.panelX - delta }));
-        }
-      }
-      if (isResizingY.current && isFloating) {
-        e.preventDefault();
-        const delta = resizeStart.current.y - e.clientY;
-        const newHeight = Math.max(MIN_HEIGHT, Math.min(window.innerHeight - 40, resizeStart.current.height + delta));
-        setPanelHeight(newHeight);
-        setPanelPos((prev) => ({ ...prev, y: resizeStart.current.panelY - delta }));
-      }
-      if (isDragging.current && isFloating) {
-        e.preventDefault();
-        const dx = e.clientX - dragStart.current.x;
-        const dy = e.clientY - dragStart.current.y;
-        setPanelPos({
-          x: Math.max(0, Math.min(window.innerWidth - 200, dragStart.current.panelX + dx)),
-          y: Math.max(0, Math.min(window.innerHeight - 100, dragStart.current.panelY + dy)),
-        });
-      }
-    };
-
-    const handleMouseUp = () => {
-      if (isResizingX.current || isResizingY.current || isDragging.current) {
-        isResizingX.current = false;
-        isResizingY.current = false;
-        isDragging.current = false;
-        document.body.style.cursor = '';
-        document.body.style.userSelect = '';
-      }
-    };
-
-    window.addEventListener('mousemove', handleMouseMove);
-    window.addEventListener('mouseup', handleMouseUp);
-    return () => {
-      window.removeEventListener('mousemove', handleMouseMove);
-      window.removeEventListener('mouseup', handleMouseUp);
-    };
-  }, [isFloating]);
-
-  const startResizeX = useCallback((e) => {
-    e.preventDefault();
-    isResizingX.current = true;
-    resizeStart.current = { x: e.clientX, y: e.clientY, width: panelWidth, height: panelHeight, panelX: panelPos.x, panelY: panelPos.y };
-    document.body.style.cursor = 'col-resize';
-    document.body.style.userSelect = 'none';
-  }, [panelWidth, panelHeight, panelPos]);
-
-  const startResizeY = useCallback((e) => {
-    e.preventDefault();
-    isResizingY.current = true;
-    resizeStart.current = { x: e.clientX, y: e.clientY, width: panelWidth, height: panelHeight, panelX: panelPos.x, panelY: panelPos.y };
-    document.body.style.cursor = 'row-resize';
-    document.body.style.userSelect = 'none';
-  }, [panelWidth, panelHeight, panelPos]);
-
-  const startDrag = useCallback((e) => {
-    if (!isFloating) return;
-    // Only start drag from header area, ignore button clicks
-    if (e.target.closest('button')) return;
-    e.preventDefault();
-    isDragging.current = true;
-    dragStart.current = { x: e.clientX, y: e.clientY, panelX: panelPos.x, panelY: panelPos.y };
-    document.body.style.cursor = 'grabbing';
-    document.body.style.userSelect = 'none';
-  }, [isFloating, panelPos]);
 
   // ── Check AI service health on mount ──
   useEffect(() => {
@@ -1272,30 +245,69 @@ const AiPromptPanel = ({ isOpen, onClose }) => {
     try {
       const res = await apiFetch("/api/ai/conversations");
       const data = await res.json();
-      if (data.success) {
-        setConversations(data.data || []);
-      }
+      if (!res.ok || !data.success) throw new Error(data.message || `HTTP ${res.status}`);
+      setConversations(data.data || []);
+      setHistoryStatus('ready');
     } catch (err) {
       console.error("Failed to load conversations:", err);
+      setHistoryStatus('error'); // say so, instead of pretending there are no chats
     }
+  };
+
+  // ── Bring drafts back after a reload / conversation switch ──
+  const restoreDrafts = async (ids) => {
+    if (!ids.length) return;
+    let byId = {};
+    try {
+      const res = await apiFetch(`/api/ai/actions?ids=${encodeURIComponent(ids.slice(-20).join(','))}`);
+      const body = await res.json();
+      byId = Object.fromEntries((body.data || []).map((d) => [d.id, d]));
+    } catch { /* leave them as expired below */ }
+    setMessages((prev) => prev.map((m) => (m.approvals
+      ? { ...m, approvals: m.approvals.map((a) => (a.state === 'loading' ? (byId[a.id] ? { ...a, ...byId[a.id] } : { ...a, state: 'expired' }) : a)) }
+      : m)));
   };
 
   // ── Load a specific conversation ──
   const loadConversation = async (convoId) => {
+    setActiveAgent(null);
     try {
       const res = await apiFetch(`/api/ai/conversations/${convoId}`);
       const data = await res.json();
+      if (data.success && data.data && data.data.agent === 'archie') {
+        // A saved Archie session: reopen it as it was (lead, what was said, the plan, whether it was created)
+        const d = data.data;
+        setArchieSession({
+          conversationId: convoId,
+          title: d.title || '',
+          leadId: d.archieLeadId || null,
+          startDate: d.archieStartDate || null,
+          brief: d.archieBrief || '',
+          plan: d.archiePlan || null,
+          warnings: d.archieWarnings || [],
+          workspace: d.archieWorkspace || null,
+          created: d.archieCreated || null,
+          messages: (d.messages || []).map((m) => ({ role: m.role === 'user' ? 'user' : 'archie', text: m.content })),
+        });
+        setArchieConvoId(convoId);
+        setShowSchedules(false);
+        setActiveAgent('archie');
+        return;
+      }
       if (data.success && data.data) {
+        setArchieConvoId(null);
         setConversationId(convoId);
         setConversationTitle(data.data.title || null);
-        setMessages(
-          (data.data.messages || []).map((m) => ({
-            id: m.id,
-            type: m.role === "user" ? "user" : "ai",
-            text: m.content,
-            timestamp: m.timestamp,
-          }))
-        );
+        const loaded = (data.data.messages || []).map((m) => ({
+          id: m.id,
+          type: m.role === "user" ? "user" : "ai",
+          text: m.content,
+          timestamp: m.timestamp,
+          // Drafts the assistant prepared in this message: shown as "checking" until the server tells us how they stand.
+          ...(m.approvalIds?.length ? { approvals: m.approvalIds.map((id) => ({ id, kind: 'task', summary: 'Draft', details: {}, expiresAt: 0, state: 'loading' })) } : {}),
+        }));
+        setMessages(loaded);
+        restoreDrafts(loaded.flatMap((m) => (m.approvals || []).map((a) => a.id)));
         setShowConversationList(false);
         setToolsUsed([]);
         setError(null);
@@ -1341,6 +353,9 @@ const AiPromptPanel = ({ isOpen, onClose }) => {
   // ── New conversation (+ button) ──
   // Saves current chat context and opens a fresh blank chat
   const startNewConversation = () => {
+    setActiveAgent(null);
+    setArchieSession(null);
+    setArchieConvoId(null);
     setConversationId(null);
     setConversationTitle(null);
     setMessages([]);
@@ -1440,11 +455,20 @@ const AiPromptPanel = ({ isOpen, onClose }) => {
       });
 
       if (!res.ok) {
-        throw new Error(`HTTP ${res.status}`);
+        // Limits, validation and auth failures come back as JSON with a readable message.
+        let message = `The assistant could not answer (error ${res.status}).`;
+        try {
+          const body = await res.json();
+          if (body?.message) message = body.message;
+        } catch { /* keep the generic message */ }
+        const failure = new Error(message);
+        failure.userMessage = message;
+        throw failure;
       }
 
       const reader = res.body.getReader();
       const decoder = new TextDecoder();
+      let sseBuffer = ""; // an SSE line can be split across network chunks
       let aiText = "";
       let aiMsgId = Date.now() + 1;
       let newConvoId = conversationId;
@@ -1458,8 +482,9 @@ const AiPromptPanel = ({ isOpen, onClose }) => {
         const { done, value } = await reader.read();
         if (done) break;
 
-        const chunk = decoder.decode(value, { stream: true });
-        const lines = chunk.split("\n");
+        sseBuffer += decoder.decode(value, { stream: true });
+        const lines = sseBuffer.split("\n");
+        sseBuffer = lines.pop() ?? "";
 
         for (const line of lines) {
           if (!line.startsWith("data: ")) continue;
@@ -1504,8 +529,19 @@ const AiPromptPanel = ({ isOpen, onClose }) => {
                   prev.map((m) => (m.id === aiMsgId ? { ...m, text: aiText } : m))
                 );
                 break;
+              case "reset":
+                // The assistant spoke, then decided to call a tool: drop that preamble.
+                aiText = "";
+                setMessages((prev) => prev.map((m) => (m.id === aiMsgId ? { ...m, text: "" } : m)));
+                break;
               case "done":
                 setCurrentToolStatus(null);
+                // The server's final text is authoritative (the stream may have been trimmed).
+                if (typeof event.response === "string" && event.response && event.response !== aiText) {
+                  aiText = event.response;
+                  setIsLoading(false);
+                  setMessages((prev) => prev.map((m) => (m.id === aiMsgId ? { ...m, text: aiText } : m)));
+                }
                 if (event.conversationId) {
                   newConvoId = event.conversationId;
                 }
@@ -1528,6 +564,15 @@ const AiPromptPanel = ({ isOpen, onClose }) => {
                         )
                       );
                     }
+                    if (action.type === 'APPROVAL_REQUIRED') {
+                      setMessages((prev) =>
+                        prev.map((m) =>
+                          m.id === aiMsgId
+                            ? { ...m, approvals: [...(m.approvals || []), { ...action, state: 'pending' }] }
+                            : m
+                        )
+                      );
+                    }
                     if (action.type === 'EMAIL_SENT') {
                       // Attach email sent action for confirmation banner
                       setMessages((prev) =>
@@ -1541,6 +586,9 @@ const AiPromptPanel = ({ isOpen, onClose }) => {
                 break;
               case "error":
                 setError(event.message || "An error occurred");
+                setIsLoading(false);
+                // Remove the empty placeholder bubble left by a failed answer.
+                setMessages((prev) => prev.filter((m) => m.id !== aiMsgId || m.text));
                 break;
             }
           } catch {
@@ -1551,6 +599,10 @@ const AiPromptPanel = ({ isOpen, onClose }) => {
 
       if (newConvoId && newConvoId !== conversationId) {
         setConversationId(newConvoId);
+        // Show the new chat in the history straight away; the real title replaces this shortly
+        setConversations((prev) => (prev.some((c) => c.conversationId === newConvoId)
+          ? prev
+          : [{ conversationId: newConvoId, title: userMsg.slice(0, 60), messageCount: 2, agent: null, metadata: { updatedAt: new Date().toISOString() } }, ...prev]));
       }
     } catch (err) {
       if (err.name === 'AbortError') {
@@ -1558,7 +610,7 @@ const AiPromptPanel = ({ isOpen, onClose }) => {
         console.log("[AI] Stream aborted by user");
       } else {
         console.error("Chat error:", err);
-        setError("Failed to get AI response. Please try again.");
+        setError(err.userMessage || "Failed to get AI response. Please try again.");
         setMessages((prev) =>
           prev.filter((m) => m.type !== "ai" || m.text !== "")
         );
@@ -1567,10 +619,89 @@ const AiPromptPanel = ({ isOpen, onClose }) => {
       setIsLoading(false);
       setIsStreaming(false);
       abortControllerRef.current = null;
-      // Refresh learning stats after each interaction
+      // Refresh learning stats and the daily allowance after each interaction
       fetchLearningStats();
+      loadUsage();
+      // The chat is saved on the server: pull the history so it (and its generated title) shows up
+      loadConversations();
+      setTimeout(loadConversations, 3000);
     }
   }, [inputText, isLoading, conversationId, activeMentions, activeSpace]);
+
+  // ── Approve / discard a drafted action ──
+  const patchApproval = useCallback((msgId, approvalId, patch) => {
+    setMessages((prev) => prev.map((m) => (
+      m.id === msgId
+        ? { ...m, approvals: (m.approvals || []).map((a) => (a.id === approvalId ? { ...a, ...patch } : a)) }
+        : m
+    )));
+  }, []);
+
+  const handleApprove = useCallback(async (msgId, approval) => {
+    patchApproval(msgId, approval.id, { state: 'working', error: null });
+    try {
+      const res = await apiFetch(`/api/ai/actions/${approval.id}/approve`, { method: 'POST' });
+      const body = await res.json().catch(() => ({}));
+      if (!res.ok || !body.success) {
+        const expired = body.code === 'EXPIRED';
+        patchApproval(msgId, approval.id, { state: expired ? 'expired' : 'failed', error: body.message || 'The action did not complete.' });
+        return;
+      }
+      patchApproval(msgId, approval.id, { state: 'done' });
+      for (const action of body.data?.actions || []) {
+        if (action.type === 'OPEN_WORKSPACE' && action.workspaceId) {
+          setMessages((prev) => prev.map((m) => (m.id === msgId ? { ...m, workspaceAction: action } : m)));
+        }
+        if (action.type === 'EMAIL_SENT') {
+          setMessages((prev) => prev.map((m) => (m.id === msgId ? { ...m, emailAction: action } : m)));
+        }
+      }
+    } catch {
+      patchApproval(msgId, approval.id, { state: 'failed', error: 'Could not reach the server. Nothing was changed. Try again.' });
+    }
+  }, [patchApproval]);
+
+  const handleDiscard = useCallback(async (msgId, approval) => {
+    patchApproval(msgId, approval.id, { state: 'working' });
+    try {
+      const res = await apiFetch(`/api/ai/actions/${approval.id}/reject`, { method: 'POST' });
+      const body = await res.json().catch(() => ({}));
+      patchApproval(msgId, approval.id, res.ok && body.success ? { state: 'discarded' } : { state: 'failed', error: body.message || 'Could not discard it.' });
+    } catch {
+      patchApproval(msgId, approval.id, { state: 'failed', error: 'Could not reach the server.' });
+    }
+  }, [patchApproval]);
+
+  // ── Daily allowance + saved corrections (shown in the Activity tab) ──
+  const loadUsage = useCallback(async () => {
+    try {
+      const res = await apiFetch('/api/ai/usage');
+      const body = await res.json();
+      if (body.success) setUsage(body.data);
+    } catch { /* optional */ }
+  }, []);
+
+  const loadCorrections = useCallback(async () => {
+    try {
+      const res = await apiFetch('/api/ai/corrections');
+      const body = await res.json();
+      if (body.success) setCorrections(body.data || []);
+    } catch { /* optional */ }
+  }, []);
+
+  const removeCorrection = useCallback(async (timestamp) => {
+    setCorrections((prev) => prev.filter((c) => c.timestamp !== timestamp));
+    try {
+      await apiFetch(`/api/ai/corrections/${encodeURIComponent(timestamp)}`, { method: 'DELETE' });
+    } catch { loadCorrections(); }
+  }, [loadCorrections]);
+
+  const clearAllCorrections = useCallback(async () => {
+    setCorrections([]);
+    try {
+      await apiFetch('/api/ai/corrections', { method: 'DELETE' });
+    } catch { loadCorrections(); }
+  }, [loadCorrections]);
 
   // ── Stop streaming ──
   const handleStopStreaming = useCallback(() => {
@@ -1620,7 +751,8 @@ const AiPromptPanel = ({ isOpen, onClose }) => {
     const body = emailBody.trim();
     if (!body) return;
 
-    const to = emailTo.trim() || 'tech@caasdiglobal.in';
+    const to = emailTo.trim();
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(to)) return;
     const subject = emailSubject.trim();
     const prompt = subject
       ? `Send an email to ${to} with subject "${subject}" and message: ${body}`
@@ -1628,7 +760,7 @@ const AiPromptPanel = ({ isOpen, onClose }) => {
 
     // Close email compose & send as normal AI message
     setShowEmailCompose(false);
-    setEmailTo('tech@caasdiglobal.in');
+    setEmailTo('');
     setEmailSubject('');
     setEmailBody('');
     setInputText('');
@@ -1824,28 +956,77 @@ const AiPromptPanel = ({ isOpen, onClose }) => {
     handleSend(userMsg.text, { skipUserMsg: true });
   }, [messages, handleSend]);
 
-  // ── Pin / Unpin messages ──
-  const pinMessage = (msg) => {
-    setPinnedMessages((prev) => {
-      if (prev.find((p) => p.id === msg.id)) return prev;
-      const updated = [...prev, { id: msg.id, text: msg.text, timestamp: msg.timestamp }];
-      localStorage.setItem('ai_pinned_messages', JSON.stringify(updated));
-      return updated;
-    });
+  // ── Pin / Unpin messages (saved to the account) ──
+  const loadPins = useCallback(async () => {
+    try {
+      // Pins from before this change lived in this browser only: move them into the account once.
+      let local = [];
+      try { local = JSON.parse(localStorage.getItem('ai_pinned_messages') || '[]'); } catch { /* ignore */ }
+      const res = local.length
+        ? await apiFetch('/api/ai/pins/import', { method: 'POST', body: JSON.stringify({ pins: local }) })
+        : await apiFetch('/api/ai/pins');
+      const body = await res.json();
+      if (!body.success) return;
+      setPinnedMessages(body.data || []);
+      if (local.length) { try { localStorage.removeItem('ai_pinned_messages'); } catch { /* ignore */ } }
+    } catch { /* pins are optional */ }
+  }, []);
+
+  const findPin = (msg) =>
+    pinnedMessages.find((p) => (p.sourceMessageId != null && String(p.sourceMessageId) === String(msg.id)) || (p.conversationId === conversationId && p.text === msg.text));
+
+  const pinMessage = async (msg) => {
+    const temp = { id: `tmp-${msg.id}`, text: msg.text, timestamp: msg.timestamp, conversationId, sourceMessageId: String(msg.id) };
+    setPinnedMessages((prev) => (prev.find((p) => p.id === temp.id) ? prev : [...prev, temp]));
+    try {
+      const res = await apiFetch('/api/ai/pins', { method: 'POST', body: JSON.stringify({ text: msg.text, timestamp: msg.timestamp, conversationId, sourceMessageId: msg.id }) });
+      const body = await res.json();
+      if (!res.ok || !body.success) throw new Error(body.message || 'Could not pin this answer.');
+      setPinnedMessages((prev) => prev.map((p) => (p.id === temp.id ? body.data : p)));
+    } catch (err) {
+      setPinnedMessages((prev) => prev.filter((p) => p.id !== temp.id));
+      setError(err.message || 'Could not pin this answer.');
+    }
   };
 
-  const unpinMessage = (msgId) => {
-    setPinnedMessages((prev) => {
-      const updated = prev.filter((p) => p.id !== msgId);
-      localStorage.setItem('ai_pinned_messages', JSON.stringify(updated));
-      return updated;
-    });
+  const unpinPin = async (pinId) => {
+    const before = pinnedMessages;
+    setPinnedMessages((prev) => prev.filter((p) => p.id !== pinId));
+    if (String(pinId).startsWith('tmp-')) return;
+    try {
+      const res = await apiFetch(`/api/ai/pins/${pinId}`, { method: 'DELETE' });
+      if (!res.ok && res.status !== 404) throw new Error('failed');
+    } catch {
+      setPinnedMessages(before);
+      setError('Could not unpin this answer.');
+    }
   };
 
   const scrollToMessage = (msgId) => {
     const el = document.getElementById(`msg-${msgId}`);
     if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
   };
+
+  // A pin can point at an answer in another conversation: open it, then scroll to the text.
+  const scrollToPin = (pinId) => {
+    const pin = pinnedMessages.find((p) => p.id === pinId);
+    if (!pin) return;
+    const here = messages.find((m) => (pin.sourceMessageId != null && String(m.id) === String(pin.sourceMessageId)) || m.text === pin.text);
+    if (here) return scrollToMessage(here.id);
+    if (pin.conversationId && pin.conversationId !== conversationId) {
+      pendingScrollText.current = pin.text;
+      loadConversation(pin.conversationId);
+    }
+  };
+
+  useEffect(() => {
+    if (!pendingScrollText.current) return;
+    const target = messages.find((m) => m.text === pendingScrollText.current);
+    if (target) {
+      pendingScrollText.current = null;
+      setTimeout(() => scrollToMessage(target.id), 50);
+    }
+  }, [messages]);
 
   // ── Submit feedback (thumbs up/down) ──
   const handleFeedback = async (msgId, feedbackType) => {
@@ -1886,59 +1067,55 @@ const AiPromptPanel = ({ isOpen, onClose }) => {
     exit: { x: "100%", opacity: 0, transition: { type: "spring", damping: 35, stiffness: 400 } },
   };
 
-  // ── Fullscreen toggle ──
-  const toggleFullscreen = useCallback(() => {
-    setFullscreenTransitioning(true);
-    if (!isFullscreen) {
-      // Save current state before going fullscreen
-      preFullscreenState.current = {
-        width: panelWidth,
-        height: panelHeight,
-        floating: isFloating,
-        pos: { ...panelPos },
-      };
-      setIsFullscreen(true);
-      setIsFloating(false);
-      setPanelWidth(window.innerWidth);
-      setPanelHeight(window.innerHeight);
-      setPanelPos({ x: 0, y: 0 });
-    } else {
-      // Restore previous state
-      setIsFullscreen(false);
-      const prev = preFullscreenState.current;
-      setIsFloating(prev.floating);
-      setPanelWidth(prev.width);
-      if (prev.floating) {
-        setPanelHeight(prev.height);
-        setPanelPos(prev.pos);
-      } else {
-        setPanelHeight(window.innerHeight);
-        setPanelPos({ x: 0, y: 0 });
-      }
-    }
-    // Clear transitioning flag after animation completes
-    setTimeout(() => setFullscreenTransitioning(false), 600);
-  }, [isFullscreen, panelWidth, panelHeight, isFloating, panelPos]);
+  // ── Something else in the app (e.g. the Today view) hands the assistant a question to put in the box ──
+  useEffect(() => {
+    const onPrefill = (e) => {
+      const text = e.detail?.text;
+      if (typeof text !== 'string' || !text.trim()) return;
+      setActiveAgent(null);
+      setInputText(text);
+      setTimeout(() => inputRef.current?.focus(), 150);
+    };
+    window.addEventListener('ai-assistant-prefill', onPrefill);
+    return () => window.removeEventListener('ai-assistant-prefill', onPrefill);
+  }, []);
 
-  // ── Global keyboard shortcuts for the panel ──
+  // ── Load chat history whenever the workspace opens ──
+  useEffect(() => {
+    if (isOpen) {
+      loadConversations();
+      loadUsage();
+      loadCorrections();
+      loadPins();
+    }
+  }, [isOpen]);
+
+  // ── Global keyboard shortcuts for the workspace ──
   useEffect(() => {
     if (!isOpen) return;
-    const handlePanelShortcuts = (e) => {
-      // Cmd/Ctrl + Shift + F → toggle fullscreen
-      if ((e.metaKey || e.ctrlKey) && e.shiftKey && e.key.toLowerCase() === 'f') {
+    const handleShortcuts = (e) => {
+      // Cmd/Ctrl + K → new chat
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
         e.preventDefault();
-        toggleFullscreen();
+        startNewConversation();
         return;
       }
-      // Escape → close panel (only if no dropdown menus are open)
+      // Cmd/Ctrl + B → toggle history sidebar
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'b') {
+        e.preventDefault();
+        setSidebarOpen((v) => !v);
+        return;
+      }
+      // Escape → leave an open agent first, otherwise close (only if no dropdown menus are open)
       if (e.key === 'Escape' && !showSlashMenu && !showMentionMenu) {
         e.preventDefault();
-        onClose();
+        if (activeAgent) setActiveAgent(null);
+        else onClose();
       }
     };
-    window.addEventListener('keydown', handlePanelShortcuts);
-    return () => window.removeEventListener('keydown', handlePanelShortcuts);
-  }, [isOpen, toggleFullscreen, onClose, showSlashMenu, showMentionMenu]);
+    window.addEventListener('keydown', handleShortcuts);
+    return () => window.removeEventListener('keydown', handleShortcuts);
+  }, [isOpen, onClose, showSlashMenu, showMentionMenu, activeAgent]);
 
   // ── Relative time helper ──
   const timeAgo = (dateStr) => {
@@ -1984,245 +1161,227 @@ const AiPromptPanel = ({ isOpen, onClose }) => {
     visible: { opacity: 1, y: 0, transition: { type: "spring", damping: 25, stiffness: 200 } },
   };
 
+  const filteredConversations = historyQuery.trim()
+    ? conversations.filter((c) => (c.title || 'Untitled chat').toLowerCase().includes(historyQuery.trim().toLowerCase()))
+    : conversations;
+  const activeAgentDef = AGENT_REGISTRY.find((a) => a.id === activeAgent) || null;
+  const openAgent = (agent, e) => {
+    setArchieSession(null); // a fresh session
+    setArchieConvoId(null);
+    setLightUp({ key: Date.now(), x: e?.clientX ?? window.innerWidth - 160, y: e?.clientY ?? 160, color: agent.lightColor });
+    setShowSchedules(false);
+    setRailOpen(true);
+    setRailTab('agents');
+    setActiveAgent(agent.id);
+  };
+
+  // Wide screens show insights in the side panel; narrow ones expand them under the banner.
+  const openInsights = () => {
+    if (typeof window !== 'undefined' && window.matchMedia?.('(min-width: 1280px)').matches) {
+      setAlertsExpanded(false);
+      setRailOpen(true);
+      setRailTab('insights');
+    } else {
+      setAlertsExpanded((v) => !v);
+    }
+  };
+  const insightCounts = countBySeverity(proactiveAlerts);
+  const railButton = (id, label, Icon, badge) => (
+    <button
+      key={id}
+      onClick={() => setRailTab(id)}
+      className={`flex flex-1 items-center justify-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors ${
+        railTab === id ? 'bg-surface text-ink border border-line' : 'text-dim hover:text-ink'
+      }`}
+    >
+      <Icon size={13} />
+      {label}
+      {badge > 0 && <span className="rounded-full bg-warning/15 px-1.5 text-[10px] font-bold text-warning">{badge}</span>}
+    </button>
+  );
+
   return (
     <AnimatePresence>
       {isOpen && (
-        <>
-          {/* Backdrop */}
-          <motion.div
-            className={`fixed inset-0 z-[9998] ${isFloating ? 'bg-black/10' : 'bg-black/30 backdrop-blur-[2px]'}`}
-            variants={backdropVariants} initial="hidden" animate="visible" exit="exit"
-            onClick={onClose} transition={{ duration: 0.25 }}
-          />
-
-          {/* Panel */}
-          <motion.div
-            ref={panelRef}
-            className={`fixed z-[9999] flex flex-col shadow-2xl overflow-hidden ${
-              !isFloating ? 'top-0 right-0' : ''
-            }`}
-            style={{
-              background: "rgb(var(--surface-hover))",
-              borderLeft: isFullscreen ? 'none' : (isFloating ? 'none' : "1px solid rgba(0,0,0,0.08)"),
-              border: isFullscreen ? 'none' : (isFloating ? '1px solid rgba(0,0,0,0.12)' : undefined),
-              ...(isFloating && !isFullscreen
-                ? { left: `${panelPos.x}px`, top: `${panelPos.y}px` }
-                : {}),
-            }}
-            initial={{ x: "100%", opacity: 0.5 }}
-            animate={{
-              x: 0,
-              opacity: 1,
-              width: isFullscreen ? window.innerWidth : panelWidth,
-              height: isFullscreen ? window.innerHeight : (isFloating ? panelHeight : window.innerHeight),
-              borderRadius: isFullscreen ? 0 : (isFloating ? 12 : 0),
-            }}
-            exit={{ x: "100%", opacity: 0 }}
-            transition={{
-              // Default spring for open/close (x, opacity)
-              type: "spring", damping: 30, stiffness: 300, mass: 0.8,
-              // Width/height: smooth spring during fullscreen toggle, instant during resize
-              width: fullscreenTransitioning
-                ? { type: "spring", damping: 28, stiffness: 170, mass: 1 }
-                : { duration: 0 },
-              height: fullscreenTransitioning
-                ? { type: "spring", damping: 28, stiffness: 170, mass: 1 }
-                : { duration: 0 },
-              borderRadius: fullscreenTransitioning
-                ? { type: "spring", damping: 25, stiffness: 200 }
-                : { duration: 0 },
-            }}
-          >
-            {/* ── Left-edge resize handle (hidden in fullscreen) ── */}
-            {!isFullscreen && (
-              <div
-                className="absolute left-0 top-0 bottom-0 w-[5px] z-[10000] cursor-col-resize group"
-                onMouseDown={startResizeX}
-              >
-                <div className="absolute left-0 top-0 bottom-0 w-[3px] bg-transparent group-hover:bg-cta transition-colors duration-150" />
-              </div>
-            )}
-
-            {/* ── Top-edge resize handle (floating mode, hidden in fullscreen) ── */}
-            {isFloating && !isFullscreen && (
-              <div
-                className="absolute left-0 right-0 top-0 h-[5px] z-[10000] cursor-row-resize group"
-                onMouseDown={startResizeY}
-              >
-                <div className="absolute left-0 right-0 top-0 h-[3px] bg-transparent group-hover:bg-cta transition-colors duration-150" />
-              </div>
-            )}
-            {/* ===== Gradient Header ===== */}
-            <div
-              className={`relative px-5 pt-5 pb-4 flex-shrink-0 ${isFloating ? 'cursor-grab active:cursor-grabbing' : ''}`}
-              style={{ background: "linear-gradient(135deg, rgb(var(--success)) 0%, rgb(var(--success)) 30%, rgb(var(--success)) 50%, rgb(var(--success)) 70%, rgb(var(--success)) 100%)" }}
-              onMouseDown={isFloating ? startDrag : undefined}
-            >
-              <div className="absolute inset-0 opacity-20 pointer-events-none" style={{
-                backgroundImage: "radial-gradient(circle at 20% 50%, rgba(20,184,166,0.3) 0%, transparent 50%), radial-gradient(circle at 80% 20%, rgba(163,230,53,0.15) 0%, transparent 50%)",
-              }} />
-
-              <div className="relative flex items-center justify-between">
-                {/* Left: Close or Back */}
-                <button
-                  onClick={showConversationList || showSchedules ? () => { setShowConversationList(false); setShowSchedules(false); } : onClose}
-                  className="w-8 h-8 rounded-full flex items-center justify-center text-white/70 hover:text-white hover:bg-white/10 transition-all duration-200"
-                  aria-label={showConversationList || showSchedules ? "Back" : "Close panel"}
-                >
-                  {showConversationList || showSchedules ? <ArrowLeft size={18} /> : <X size={18} />}
-                </button>
-
-                {/* Center: Status */}
-                <div className="flex items-center gap-2">
-                  <AiSparkleIcon size={22} />
-                  <div className="flex flex-col items-start">
-                    <span className="text-white text-sm font-medium font-['Montserrat']">CG Assistant</span>
-                    {learningStats && learningStats.totalInteractions > 0 && (
-                      <span className="text-ink text-[9px] font-medium leading-tight">
-                        {learningStats.totalInteractions} interaction{learningStats.totalInteractions !== 1 ? 's' : ''} learned
-                      </span>
-                    )}
-                  </div>
-                  {activeSpace === 'personal' && (
-                    <span className="px-2 py-0.5 bg-info border border-info rounded-full text-[9px] text-info font-semibold uppercase tracking-wider">
-                      Personal
-                    </span>
-                  )}
-                  {aiHealthy === false && (
-                    <span className="text-danger text-[10px]">(offline)</span>
-                  )}
-                </div>
-
-                {/* Right controls */}
-                <div className="flex items-center gap-2">
-                  {/* Schedules button — project space only */}
-                  {activeSpace === 'project' && (
-                    <button
-                      onClick={() => { setShowSchedules(true); setShowConversationList(false); loadSchedules(); }}
-                      className="w-8 h-8 rounded-full flex items-center justify-center bg-white/10 hover:bg-white/20 text-white transition-all duration-200 border border-white/10"
-                      aria-label="Schedules & Reminders"
-                      title="Schedules & Reminders"
-                    >
-                      <CalendarClock size={14} />
-                    </button>
-                  )}
-                  <button
-                    onClick={() => { setShowConversationList(true); setShowSchedules(false); loadConversations(); }}
-                    className="px-3 py-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-white text-xs font-medium transition-all duration-200 backdrop-blur-sm border border-white/10"
-                  >
-                    Recent chats
-                  </button>
-                  {/* Float / Dock toggle */}
-                  {!isFullscreen && (
-                    <button
-                      onClick={() => setIsFloating((f) => !f)}
-                      className="w-8 h-8 rounded-full flex items-center justify-center bg-white/10 hover:bg-white/20 text-white transition-all duration-200 border border-white/10"
-                      aria-label={isFloating ? 'Dock panel' : 'Float panel'}
-                      title={isFloating ? 'Dock to side' : 'Pop out as window'}
-                    >
-                      {isFloating ? <Minimize2 size={14} /> : <Maximize2 size={14} />}
-                    </button>
-                  )}
-                  {/* Fullscreen toggle */}
-                  <button
-                    onClick={toggleFullscreen}
-                    className={`w-8 h-8 rounded-full flex items-center justify-center transition-all duration-200 border border-white/10 ${
-                      isFullscreen
-                        ? 'bg-white/25 hover:bg-white/35 text-white'
-                        : 'bg-white/10 hover:bg-white/20 text-white'
-                    }`}
-                    aria-label={isFullscreen ? 'Exit fullscreen' : 'Fullscreen'}
-                    title={isFullscreen ? 'Exit fullscreen' : 'Fullscreen'}
-                  >
-                    {isFullscreen ? <Shrink size={14} /> : <Expand size={14} />}
-                  </button>
-                  <button
-                    onClick={startNewConversation}
-                    className="w-8 h-8 rounded-full flex items-center justify-center bg-white/10 hover:bg-white/20 text-white transition-all duration-200 border border-white/10"
-                    aria-label="New chat"
-                  >
-                    <Plus size={16} />
-                  </button>
-                </div>
-              </div>
-            </div>
-
-            {/* ===== Space Switcher Tabs ===== */}
-            <div className="flex-shrink-0 bg-surface border-b border-line px-3 py-2">
-              <div className="flex items-center bg-surface-hover rounded-xl p-1 gap-1">
-                <button
-                  onClick={() => switchSpace('project')}
-                  className={`flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-lg text-xs font-semibold transition-all duration-200 ${
-                    activeSpace === 'project'
-                      ? 'bg-surface text-ink  border border-line'
-                      : 'text-dim hover:text-ink hover:bg-canvas'
-                  }`}
-                >
-                  <FolderKanban size={14} className={activeSpace === 'project' ? 'text-ink' : 'text-dim'} />
-                  Project Space
-                </button>
-                <button
-                  onClick={() => switchSpace('personal')}
-                  className={`flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-lg text-xs font-semibold transition-all duration-200 ${
-                    activeSpace === 'personal'
-                      ? 'bg-surface text-info  border border-line'
-                      : 'text-dim hover:text-ink hover:bg-canvas'
-                  }`}
-                >
-                  <Globe size={14} className={activeSpace === 'personal' ? 'text-info' : 'text-dim'} />
-                  Personal Space
-                </button>
-              </div>
-            </div>
-
-            {/* ===== Pinned Messages Strip ===== */}
-            <PinnedMessagesStrip
-              pinnedMessages={pinnedMessages}
-              onUnpin={unpinMessage}
-              onScrollTo={scrollToMessage}
-            />
-
-            {/* ===== Proactive Alerts Bar (Project Space only) ===== */}
-            {activeSpace === 'project' && (
-              <ProactiveAlertsBar
-                alerts={proactiveAlerts}
-                onDismiss={dismissAlert}
-                onActOnAlert={actOnAlert}
-                expanded={alertsExpanded}
-                onToggle={() => setAlertsExpanded((e) => !e)}
-              />
-            )}
-
-            {/* ===== Schedules View ===== */}
-            {showSchedules ? (
-              <SchedulesView
-                schedules={schedules}
-                loading={schedulesLoading}
-                onToggle={toggleSchedule}
-                onDelete={deleteScheduleItem}
-                onBack={() => setShowSchedules(false)}
-                onCreateViaChat={() => {
-                  setShowSchedules(false);
-                  setInputText('Set up a ');
-                  setTimeout(() => inputRef.current?.focus(), 100);
+        <motion.div
+          className={`fixed inset-0 z-[9999] flex flex-col overflow-hidden bg-canvas text-ink font-['Montserrat'] ${activeAgentDef?.themeClass || ''}`}
+          role="dialog"
+          aria-modal="true"
+          aria-label="CG Assistant workspace"
+          initial={{ opacity: 0, scale: 0.985 }}
+          animate={{ opacity: 1, scale: 1 }}
+          exit={{ opacity: 0, scale: 0.985 }}
+          transition={{ duration: 0.18, ease: 'easeOut' }}
+        >
+          {/* Colour wash that "lights up" the window from the agent card that was clicked */}
+          <AnimatePresence>
+            {lightUp && (
+              <motion.div
+                key={lightUp.key}
+                aria-hidden="true"
+                className="pointer-events-none absolute inset-0 z-[60]"
+                style={{
+                  transformOrigin: `${lightUp.x}px ${lightUp.y}px`,
+                  background: `radial-gradient(circle at ${lightUp.x}px ${lightUp.y}px, rgba(${lightUp.color || '100, 149, 237'}, 0.95) 0%, rgba(${lightUp.color || '100, 149, 237'}, 0.5) 30%, rgba(${lightUp.color || '100, 149, 237'}, 0) 65%)`,
                 }}
+                initial={{ opacity: 1, scale: 0.15 }}
+                animate={{ opacity: 0, scale: 2.4 }}
+                transition={{ duration: 0.9, ease: 'easeOut' }}
+                onAnimationComplete={() => setLightUp(null)}
               />
-            ) : showConversationList ? (
-              <div className="flex-1 overflow-y-auto ai-prompt-messages-scroll">
-                <div className="p-4">
-                  {/* Header with new chat button */}
-                  <div className="flex items-center justify-between mb-4">
-                    <h3 className="text-sm font-semibold text-ink font-['Montserrat']">Recent Chats</h3>
+            )}
+          </AnimatePresence>
+          {/* ===== Top bar ===== */}
+          <header className="flex h-14 flex-shrink-0 items-center gap-3 border-b border-line bg-surface px-4">
+            <button
+              onClick={() => setSidebarOpen((v) => !v)}
+              className="flex h-8 w-8 items-center justify-center rounded-lg text-dim transition-colors hover:bg-surface-hover hover:text-ink"
+              aria-label={sidebarOpen ? 'Hide chat history' : 'Show chat history'}
+              title="Chat history (Ctrl/Cmd + B)"
+            >
+              <PanelLeft size={17} />
+            </button>
+
+            {activeAgentDef ? (
+              <div className="flex items-center gap-2.5">
+                <div className="overflow-hidden rounded-xl shadow-sm"><AgentAvatar id={activeAgentDef.id} size={32} /></div>
+                <div className="leading-tight">
+                  <div className="text-sm font-semibold text-ink">{activeAgentDef.name}</div>
+                  <div className="text-[10px] text-dim">{activeAgentDef.role}</div>
+                </div>
+              </div>
+            ) : (
+            <div className="flex items-center gap-2.5">
+              <AiSparkleIcon size={24} />
+              <div className="leading-tight">
+                <div className="text-sm font-semibold text-ink">CG Assistant</div>
+                <div className="flex items-center gap-1.5 text-[10px] text-dim">
+                  <span className={`h-1.5 w-1.5 rounded-full ${aiHealthy === false ? 'bg-danger' : aiHealthy ? 'bg-success' : 'bg-dim'}`} />
+                  {aiHealthy === false ? 'Offline' : aiHealthy ? 'Online' : 'Connecting'}
+                  {learningStats && learningStats.totalInteractions > 0 && (
+                    <span>· {learningStats.totalInteractions} interaction{learningStats.totalInteractions !== 1 ? 's' : ''} learned</span>
+                  )}
+                </div>
+              </div>
+            </div>
+            )}
+
+            {/* Space switcher (hidden while an agent is open: agents have their own flow) */}
+            {activeAgentDef ? <div className="mx-auto" /> : (
+            <div className="mx-auto flex items-center gap-1 rounded-xl bg-surface-hover p-1">
+              <button
+                onClick={() => switchSpace('project')}
+                className={`flex items-center gap-2 rounded-lg px-3.5 py-1.5 text-xs font-semibold transition-colors ${
+                  activeSpace === 'project' ? 'bg-surface text-ink border border-line' : 'text-dim hover:text-ink'
+                }`}
+              >
+                <FolderKanban size={13} />
+                Project
+              </button>
+              <button
+                onClick={() => switchSpace('personal')}
+                className={`flex items-center gap-2 rounded-lg px-3.5 py-1.5 text-xs font-semibold transition-colors ${
+                  activeSpace === 'personal' ? 'bg-surface text-info border border-line' : 'text-dim hover:text-ink'
+                }`}
+              >
+                <Globe size={13} />
+                Personal
+              </button>
+            </div>
+            )}
+
+            <div className="flex items-center gap-1.5">
+              {activeSpace === 'project' && !activeAgentDef && (
+                <button
+                  onClick={() => { setShowSchedules(true); loadSchedules(); }}
+                  className={`flex h-8 items-center gap-1.5 rounded-lg px-3 text-xs font-medium transition-colors ${
+                    showSchedules ? 'bg-surface-hover text-ink' : 'text-dim hover:bg-surface-hover hover:text-ink'
+                  }`}
+                  title="Schedules & reminders"
+                >
+                  <CalendarClock size={14} />
+                  <span className="hidden md:inline">Schedules</span>
+                </button>
+              )}
+              <button
+                onClick={() => setRailOpen((v) => !v)}
+                className="hidden h-8 w-8 items-center justify-center rounded-lg text-dim transition-colors hover:bg-surface-hover hover:text-ink xl:flex"
+                aria-label={railOpen ? 'Hide agents panel' : 'Show agents panel'}
+                title="Agents panel"
+              >
+                <PanelRight size={17} />
+              </button>
+              <div className="mx-1 h-5 w-px bg-line" />
+              <button
+                onClick={onClose}
+                className="flex h-8 items-center gap-2 rounded-lg border border-line px-3 text-xs font-medium text-ink transition-colors hover:bg-surface-hover"
+                aria-label="Close workspace"
+              >
+                <X size={14} />
+                <span className="hidden sm:inline">Close</span>
+                <kbd className="hidden rounded border border-line bg-surface-hover px-1.5 py-0.5 text-[9px] font-semibold text-dim sm:inline">Esc</kbd>
+              </button>
+            </div>
+          </header>
+
+          <div className="relative flex min-h-0 flex-1">
+            {/* ===== Left sidebar: history ===== */}
+            {sidebarOpen && (
+              <>
+                <div className="absolute inset-0 z-10 bg-black/30 lg:hidden" onClick={() => setSidebarOpen(false)} />
+                <aside className="absolute inset-y-0 left-0 z-20 flex w-72 flex-shrink-0 flex-col border-r border-line bg-surface lg:relative lg:z-auto">
+                  <div className="space-y-3 p-3">
                     <button
                       onClick={startNewConversation}
-                      className="flex items-center gap-1.5 px-3 py-1.5 bg-black text-white text-[11px] font-medium rounded-lg hover:from-black hover:to-black transition-all "
+                      className="flex w-full items-center justify-between rounded-xl bg-cta px-3.5 py-2.5 text-xs font-semibold text-cta-foreground transition-opacity hover:opacity-90"
                     >
-                      <Plus size={13} />
-                      New Chat
+                      <span className="flex items-center gap-2"><Plus size={15} />New chat</span>
+                      <kbd className="rounded bg-white/15 px-1.5 py-0.5 text-[9px] font-semibold">⌘K</kbd>
                     </button>
+                    <div className="relative">
+                      <Search size={13} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-dim" />
+                      <input
+                        value={historyQuery}
+                        onChange={(e) => setHistoryQuery(e.target.value)}
+                        placeholder="Search chats"
+                        className="w-full rounded-lg border border-line bg-canvas py-2 pl-8 pr-3 text-xs text-ink outline-none placeholder:text-dim focus:border-ink/30"
+                      />
+                    </div>
                   </div>
-
-                  {conversations.length === 0 ? (
+                  {/* Only a fallback: the right-hand panel lists agents whenever it is visible (wide screens, panel open). */}
+                  <div className={`px-3 pb-2 ${railOpen ? 'xl:hidden' : ''}`}>
+                    <p className="mb-1.5 px-1 text-[10px] font-semibold uppercase tracking-wider text-dim">Agents</p>
+                    {AGENT_REGISTRY.map((agent) => (
+                      <button
+                        key={agent.id}
+                        type="button"
+                        onClick={(e) => openAgent(agent, e)}
+                        aria-pressed={activeAgent === agent.id}
+                        className={`flex w-full items-center gap-2.5 rounded-xl border px-2.5 py-2 text-left transition-colors ${activeAgent === agent.id ? 'border-cta bg-surface-hover' : 'border-transparent hover:bg-surface-hover'}`}
+                      >
+                        <span className="flex-shrink-0 overflow-hidden rounded-lg"><AgentAvatar id={agent.id} size={28} /></span>
+                        <span className="min-w-0 flex-1">
+                          <span className="block truncate text-[12px] font-semibold text-ink">{agent.name}</span>
+                          <span className="block truncate text-[10px] text-dim">{agent.role}</span>
+                        </span>
+                      </button>
+                    ))}
+                  </div>
+                  <div className="min-h-0 flex-1 overflow-y-auto px-3 pb-4 ai-prompt-messages-scroll">
+                    {historyStatus === 'error' && conversations.length === 0 ? (
+                      <div role="alert" className="mx-1 mt-4 rounded-xl border border-danger/40 bg-danger/5 p-3 text-center">
+                        <p className="text-xs font-semibold text-ink">Couldn't load your chats</p>
+                        <p className="mt-0.5 text-[11px] text-dim">They are still saved. Check your connection and try again.</p>
+                        <button onClick={loadConversations} className="mt-2 rounded-lg border border-line px-3 py-1 text-[11px] font-medium text-ink hover:bg-surface-hover">Try again</button>
+                      </div>
+                    ) : historyStatus === 'loading' && conversations.length === 0 ? (
+                      <div className="space-y-2 pt-3" aria-hidden="true">
+                        {[0, 1, 2].map((i) => <div key={i} className="h-12 animate-pulse rounded-xl bg-surface-hover" />)}
+                      </div>
+                    ) : historyQuery.trim() && filteredConversations.length === 0 ? (
+                      <p className="py-10 text-center text-xs text-dim">No chats match “{historyQuery.trim()}”</p>
+                    ) : (
+                  conversations.length === 0 ? (
                     <div className="text-center py-16">
                       <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-gradient-to-br from-surface-hover to-surface-hover flex items-center justify-center">
                         <MessageSquare size={28} className="text-dim" />
@@ -2231,14 +1390,14 @@ const AiPromptPanel = ({ isOpen, onClose }) => {
                       <p className="text-[11px] text-dim mb-4">Start a chat to see it here</p>
                       <button
                         onClick={startNewConversation}
-                        className="px-5 py-2.5 bg-black text-white text-xs font-medium rounded-xl hover:from-black hover:to-black transition-all "
+                        className="px-5 py-2.5 bg-cta text-cta-foreground text-xs font-medium rounded-xl hover:opacity-90 transition-all"
                       >
                         Start a new chat
                       </button>
                     </div>
                   ) : (
                     (() => {
-                      const grouped = groupConversations(conversations);
+                      const grouped = groupConversations(filteredConversations);
                       const sections = [
                         { label: "Today", items: grouped.today },
                         { label: "Yesterday", items: grouped.yesterday },
@@ -2260,7 +1419,7 @@ const AiPromptPanel = ({ isOpen, onClose }) => {
                               {/* Conversation cards */}
                               <div className="space-y-1.5">
                                 {section.items.map((convo, idx) => {
-                                  const isActive = conversationId === convo.conversationId;
+                                  const isActive = conversationId === convo.conversationId || archieConvoId === convo.conversationId;
                                   const updatedAt = convo.metadata?.updatedAt || convo.metadata?.createdAt;
                                   return (
                                     <motion.div
@@ -2281,7 +1440,9 @@ const AiPromptPanel = ({ isOpen, onClose }) => {
                                           ? "bg-black "
                                           : "bg-surface-hover group-hover:bg-gradient-to-br group-hover:from-black group-hover:to-black"
                                       }`}>
-                                        <MessageSquare size={15} className={isActive ? "text-white" : "text-dim group-hover:text-white"} />
+                                        {convo.agent === 'archie'
+                                          ? <AgentAvatar id="archie" size={22} />
+                                          : <MessageSquare size={15} className={isActive ? "text-white" : "text-dim group-hover:text-white"} />}
                                       </div>
 
                                       {/* Title & meta */}
@@ -2317,19 +1478,57 @@ const AiPromptPanel = ({ isOpen, onClose }) => {
                         </div>
                       );
                     })()
+                  )
+                    )}
+                  </div>
+                </aside>
+              </>
+            )}
+
+            {/* ===== Center: conversation ===== */}
+            <main className="flex min-w-0 flex-1 flex-col bg-canvas">
+              {activeAgent === 'archie' ? (
+                <ArchieBuilder key={archieSession?.conversationId || 'new'} session={archieSession} onSession={(id) => { setArchieConvoId(id); loadConversations(); }} onExit={() => setActiveAgent(null)} />
+              ) : showSchedules ? (
+                <SchedulesView
+                  schedules={schedules}
+                  loading={schedulesLoading}
+                  onToggle={toggleSchedule}
+                  onDelete={deleteScheduleItem}
+                  onBack={() => setShowSchedules(false)}
+                  onCreateViaChat={() => {
+                    setShowSchedules(false);
+                    setInputText('Set up a ');
+                    setTimeout(() => inputRef.current?.focus(), 100);
+                  }}
+                />
+              ) : (
+                <>
+                  <div className="flex h-11 flex-shrink-0 items-center gap-3 border-b border-line bg-surface px-6">
+                    <MessageSquare size={14} className="text-dim" />
+                    <h2 className="truncate text-[13px] font-semibold text-ink">{conversationTitle || 'New conversation'}</h2>
+                    {activeSpace === 'personal' && (
+                      <span className="rounded-full border border-info bg-info px-2 py-0.5 text-[9px] font-semibold uppercase tracking-wider text-info">Personal</span>
+                    )}
+                  </div>
+                  <PinnedMessagesStrip pinnedMessages={pinnedMessages} onUnpin={unpinPin} onScrollTo={scrollToPin} />
+                  {activeSpace === 'project' && (
+                    <ProactiveAlertsBar
+                      alerts={proactiveAlerts}
+                      onDismiss={dismissAlert}
+                      onActOnAlert={actOnAlert}
+                      expanded={alertsExpanded}
+                      onOpen={openInsights}
+                    />
                   )}
-                </div>
-              </div>
-            ) : (
-              <>
-                {/* ===== Messages Area ===== */}
                 <motion.div
-                  className="flex-1 overflow-y-auto px-4 py-4 ai-prompt-messages-scroll"
+                  className="flex-1 min-h-0 overflow-y-auto ai-prompt-messages-scroll"
                   variants={containerVariants} initial="hidden" animate="visible"
                 >
+                  <div className="mx-auto flex min-h-full w-full max-w-3xl flex-col px-6 py-8">
                   {/* Empty state */}
                   {messages.length === 0 && !isLoading && (
-                    <div className="flex flex-col items-center justify-center h-full text-center px-6">
+                    <div className="flex flex-1 flex-col items-center justify-center text-center px-6 py-10">
                       <motion.div
                         initial={{ scale: 0 }} animate={{ scale: 1 }}
                         transition={{ type: "spring", damping: 12, delay: 0.2 }}
@@ -2357,10 +1556,10 @@ const AiPromptPanel = ({ isOpen, onClose }) => {
                       <motion.p
                         initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: 0.45 }}
-                        className="mt-2 text-xs text-dim leading-relaxed max-w-[280px]"
+                        className="mt-2 text-xs text-dim leading-relaxed max-w-md"
                       >
                         {activeSpace === 'personal'
-                          ? "Use this space for market research, brainstorming, writing, industry trends, and anything beyond your CaaS data."
+                          ? "Use this space for brainstorming, writing, analysis and general questions. It has no live internet access, so it cannot look up today's news or prices."
                           : "Ask me about your workspaces, tasks, leads, invoices, quotations, or anything about your vendor data."}
                       </motion.p>
                       {/* Quick suggestions */}
@@ -2371,7 +1570,7 @@ const AiPromptPanel = ({ isOpen, onClose }) => {
                       >
                         {(activeSpace === 'personal'
                           ? [
-                              "Latest trends in SaaS industry",
+                              "Explain common SaaS pricing models",
                               "Help me draft a business proposal",
                               "Brainstorm marketing ideas",
                             ]
@@ -2537,6 +1736,15 @@ const AiPromptPanel = ({ isOpen, onClose }) => {
                               </motion.div>
                             )}
 
+                            {(msg.approvals || []).map((approval) => (
+                              <AiApprovalCard
+                                key={approval.id}
+                                approval={approval}
+                                onApprove={(a) => handleApprove(msg.id, a)}
+                                onDiscard={(a) => handleDiscard(msg.id, a)}
+                              />
+                            ))}
+
                             {msg.timestamp && (
                               <div className="flex items-center gap-1 mt-2">
                                 <span className="text-[11px] text-dim mr-auto">
@@ -2547,17 +1755,17 @@ const AiPromptPanel = ({ isOpen, onClose }) => {
                                   <>
                                     {/* Pin / Unpin */}
                                     <motion.button
-                                      onClick={() => pinnedMessages.find((p) => p.id === msg.id) ? unpinMessage(msg.id) : pinMessage(msg)}
+                                      onClick={() => (findPin(msg) ? unpinPin(findPin(msg).id) : pinMessage(msg))}
                                       className={`p-1.5 rounded-full transition-all duration-200 ${
-                                        pinnedMessages.find((p) => p.id === msg.id)
+                                        findPin(msg)
                                           ? "bg-warning/10 text-warning"
                                           : "text-dim hover:text-warning hover:bg-warning/10"
                                       }`}
                                       whileHover={{ scale: 1.15 }}
                                       whileTap={{ scale: 0.9 }}
-                                      title={pinnedMessages.find((p) => p.id === msg.id) ? "Unpin" : "Pin this response"}
+                                      title={findPin(msg) ? "Unpin" : "Pin this response"}
                                     >
-                                      {pinnedMessages.find((p) => p.id === msg.id)
+                                      {findPin(msg)
                                         ? <PinOff size={14} />
                                         : <Pin size={14} />}
                                     </motion.button>
@@ -2648,14 +1856,15 @@ const AiPromptPanel = ({ isOpen, onClose }) => {
                   {(isLoading || currentToolStatus) && <TypingIndicator toolStatus={currentToolStatus} />}
 
                   <div ref={messagesEndRef} />
+                  </div>
                 </motion.div>
 
-                {/* ===== Compose Area ===== */}
                 <motion.div
-                  className="flex-shrink-0 border-t border-line bg-surface relative"
+                  className="flex-shrink-0 relative px-6 pb-5 pt-2"
                   initial={{ y: 40, opacity: 0 }} animate={{ y: 0, opacity: 1 }}
                   transition={{ delay: 0.3, type: "spring", damping: 25 }}
                 >
+                  <div className="relative mx-auto w-full max-w-3xl rounded-2xl border border-line bg-surface shadow-sm focus-within:border-ink/30 transition-colors">
                   {/* AI service offline warning */}
                   {aiHealthy === false && (
                     <div className="px-4 py-2 bg-warning/10 border-b border-warning/10 flex items-center gap-2">
@@ -2744,7 +1953,7 @@ const AiPromptPanel = ({ isOpen, onClose }) => {
                             value={emailTo}
                             onChange={(e) => setEmailTo(e.target.value)}
                             className="flex-1 text-[13px] text-ink bg-transparent border-none outline-none focus:ring-0 p-0 placeholder-dim font-['Montserrat']"
-                            placeholder="tech@caasdiglobal.in"
+                            placeholder="name@company.com"
                           />
                         </div>
 
@@ -2775,11 +1984,11 @@ const AiPromptPanel = ({ isOpen, onClose }) => {
                         {/* Send button */}
                         <div className="flex items-center justify-between px-4 pb-3">
                           <span className="text-[10px] text-dim">
-                            Powered by AWS SES
+                            You'll review the draft before it is sent
                           </span>
                           <motion.button
                             onClick={handleSpotlightEmailSend}
-                            disabled={!emailBody.trim()}
+                            disabled={!emailBody.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailTo.trim())}
                             className="flex items-center gap-2 px-4 py-2 bg-black text-white text-[12px] font-semibold rounded-xl disabled:opacity-40 disabled:cursor-not-allowed"
                             whileHover={emailBody.trim() ? { scale: 1.03 } : {}}
                             whileTap={emailBody.trim() ? { scale: 0.97 } : {}}
@@ -2816,9 +2025,6 @@ const AiPromptPanel = ({ isOpen, onClose }) => {
                   {/* Bottom toolbar */}
                   <div className="flex items-center justify-between px-4 pb-4 pt-1">
                     <div className="flex items-center gap-2">
-                      <button className="p-2 hover:bg-surface-hover rounded-full transition-colors" aria-label="Attach file">
-                        <Paperclip size={18} className="text-dim" />
-                      </button>
                       {activeSpace === 'project' && (
                         <button
                           onClick={() => {
@@ -2839,9 +2045,6 @@ const AiPromptPanel = ({ isOpen, onClose }) => {
                           <AtSign size={18} />
                         </button>
                       )}
-                      <button className="p-2 hover:bg-surface-hover rounded-full transition-colors" aria-label="Add emoji">
-                        <Smile size={18} className="text-dim" />
-                      </button>
                       <VoiceInputButton onTranscript={handleVoiceTranscript} disabled={isStreaming} />
                     </div>
 
@@ -2881,14 +2084,167 @@ const AiPromptPanel = ({ isOpen, onClose }) => {
                       </motion.button>
                     )}
                   </div>
+                  </div>
+                  <p className="mx-auto mt-2 max-w-3xl text-center text-[10px] text-dim">AI can make mistakes. Check important figures before acting on them.</p>
                 </motion.div>
-              </>
+                </>
+              )}
+            </main>
+
+            {/* ===== Right rail: agents & activity ===== */}
+            {railOpen && (
+              <aside className="hidden w-80 flex-shrink-0 flex-col border-l border-line bg-surface xl:flex">
+                <div className="p-3">
+                  <div className="flex items-center gap-1 rounded-xl bg-surface-hover p-1">
+                    {railButton('agents', 'Agents', Bot)}
+                    {activeSpace === 'project' && railButton('insights', 'Insights', Sparkles, proactiveAlerts.length)}
+                    {railButton('activity', 'Activity', Activity)}
+                  </div>
+                </div>
+                <div className="min-h-0 flex-1 overflow-y-auto px-3 pb-4 ai-prompt-messages-scroll">
+                  {railTab === 'insights' && activeSpace === 'project' ? (
+                    <div className="space-y-3">
+                      <div className="flex flex-wrap gap-1.5" role="group" aria-label="Filter insights">
+                        {[['all', 'All', proactiveAlerts.length], ['critical', 'Urgent', insightCounts.critical], ['warning', 'Warnings', insightCounts.warning], ['info', 'Info', insightCounts.info]].map(([id, label, n]) => (
+                          <button
+                            key={id}
+                            type="button"
+                            onClick={() => setInsightFilter(id)}
+                            aria-pressed={insightFilter === id}
+                            className={`rounded-full border px-2.5 py-1 text-[11px] font-medium transition-colors ${insightFilter === id ? 'border-ink bg-ink text-canvas' : 'border-line text-dim hover:text-ink'}`}
+                          >
+                            {label} <span className="opacity-70">{n}</span>
+                          </button>
+                        ))}
+                      </div>
+                      <InsightsList alerts={proactiveAlerts} filter={insightFilter} onDismiss={dismissAlert} onActOnAlert={actOnAlert} />
+                    </div>
+                  ) : railTab === 'agents' ? (
+                    AGENT_REGISTRY.length === 0 ? (
+                      <div className="rounded-2xl border border-dashed border-line px-5 py-10 text-center">
+                        <div className="mx-auto mb-3 flex h-11 w-11 items-center justify-center rounded-xl bg-surface-hover">
+                          <Bot size={20} className="text-dim" />
+                        </div>
+                        <p className="text-[13px] font-semibold text-ink">No agents yet</p>
+                        <p className="mx-auto mt-1.5 max-w-[210px] text-[11px] leading-relaxed text-dim">
+                          Agents that run tasks for you, like drafting quotations or chasing invoices, will appear here once they are added.
+                        </p>
+                      </div>
+                    ) : (
+                      <div className="space-y-2">
+                        {AGENT_REGISTRY.map((agent) => {
+                          const open = activeAgent === agent.id;
+                          return (
+                            <button
+                              key={agent.id}
+                              type="button"
+                              onClick={(e) => (open ? setActiveAgent(null) : openAgent(agent, e))}
+                              aria-pressed={open}
+                              className={`block w-full rounded-2xl border bg-canvas p-3.5 text-left transition-all hover:shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-cta ${open ? 'border-cta ring-2 ring-cta/40 shadow-md' : 'border-line hover:border-cta/60'}`}
+                            >
+                              <div className="flex items-center gap-3">
+                                <div className="flex-shrink-0 overflow-hidden rounded-2xl shadow-sm"><AgentAvatar id={agent.id} size={52} /></div>
+                                <div className="min-w-0 flex-1">
+                                  <div className="flex items-center gap-2">
+                                    <span className="text-[14px] font-semibold text-ink">{agent.name}</span>
+                                    <span className={`rounded-full border px-2 py-0.5 text-[9px] font-semibold uppercase tracking-wider ${open ? 'border-cta bg-cta text-cta-foreground' : 'border-line bg-surface-hover text-dim'}`}>
+                                      {open ? 'Open' : agent.status === 'preview' ? 'Preview' : 'Not active yet'}
+                                    </span>
+                                  </div>
+                                  <p className="text-[11px] font-medium text-dim">{agent.role}</p>
+                                </div>
+                                <ChevronRight size={14} className="flex-shrink-0 text-dim" />
+                              </div>
+                              {agent.description && <p className="mt-3 text-[11px] leading-relaxed text-dim">{agent.description}</p>}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    )
+                  ) : (
+                    <div className="space-y-4">
+                      <div>
+                        <p className="mb-2 text-[10px] font-semibold uppercase tracking-wider text-dim">This conversation</p>
+                        <div className="grid grid-cols-2 gap-2">
+                          <div className="rounded-xl border border-line bg-canvas p-3">
+                            <div className="text-lg font-semibold text-ink">{messages.length}</div>
+                            <div className="text-[10px] text-dim">Messages</div>
+                          </div>
+                          <div className="rounded-xl border border-line bg-canvas p-3">
+                            <div className="text-lg font-semibold text-ink">{pinnedMessages.length}</div>
+                            <div className="text-[10px] text-dim">Pinned</div>
+                          </div>
+                        </div>
+                      </div>
+                      <div>
+                        <p className="mb-2 text-[10px] font-semibold uppercase tracking-wider text-dim">Data sources used</p>
+                        {currentToolStatus && (
+                          <div className="mb-2 flex items-center gap-2 rounded-lg bg-surface-hover px-3 py-2 text-[11px] text-ink">
+                            <Loader2 size={12} className="animate-spin" />
+                            {TOOL_STATUS_LABELS[currentToolStatus] || 'Working…'}
+                          </div>
+                        )}
+                        {toolsUsed.length > 0 ? (
+                          <div className="flex flex-wrap">{toolsUsed.map((tool, i) => <ToolBadge key={i} tool={tool} />)}</div>
+                        ) : (
+                          <p className="text-[11px] leading-relaxed text-dim">Nothing yet. When the assistant looks up your tasks, leads or invoices, they are listed here.</p>
+                        )}
+                      </div>
+                      {usage && (
+                        <div>
+                          <p className="mb-2 text-[10px] font-semibold uppercase tracking-wider text-dim">Messages today</p>
+                          <div className="h-1.5 overflow-hidden rounded-full bg-surface-hover" role="progressbar" aria-valuemin={0} aria-valuemax={usage.limit} aria-valuenow={usage.used}>
+                            <div
+                              className={`h-full rounded-full ${usage.remaining <= Math.max(5, usage.limit * 0.1) ? 'bg-danger' : 'bg-cta'}`}
+                              style={{ width: `${Math.min(100, (usage.used / Math.max(1, usage.limit)) * 100)}%` }}
+                            />
+                          </div>
+                          <p className="mt-1.5 text-[11px] text-dim">{usage.used} of {usage.limit} used · resets at midnight UTC</p>
+                        </div>
+                      )}
+                      <div>
+                        <div className="mb-2 flex items-center justify-between">
+                          <p className="text-[10px] font-semibold uppercase tracking-wider text-dim">Saved corrections</p>
+                          {corrections.length > 0 && (
+                            <button onClick={clearAllCorrections} className="text-[10px] font-medium text-dim hover:text-danger">Clear all</button>
+                          )}
+                        </div>
+                        {corrections.length === 0 ? (
+                          <p className="text-[11px] leading-relaxed text-dim">When you correct the assistant ("No, that's wrong…"), it remembers. Those notes show up here so you can review or remove them.</p>
+                        ) : (
+                          <ul className="space-y-1.5">
+                            {corrections.slice(0, 10).map((c) => (
+                              <li key={c.timestamp} className="group flex items-start gap-2 rounded-lg border border-line bg-canvas p-2.5">
+                                <p className="min-w-0 flex-1 text-[11px] leading-relaxed text-ink break-words">{c.correct}</p>
+                                <button
+                                  onClick={() => removeCorrection(c.timestamp)}
+                                  className="flex-shrink-0 rounded p-1 text-dim opacity-0 transition-opacity hover:text-danger group-hover:opacity-100 focus:opacity-100"
+                                  aria-label="Remove this correction"
+                                >
+                                  <Trash2 size={12} />
+                                </button>
+                              </li>
+                            ))}
+                          </ul>
+                        )}
+                      </div>
+                      {activeSpace === 'project' && (
+                        <div>
+                          <p className="mb-2 text-[10px] font-semibold uppercase tracking-wider text-dim">Alerts</p>
+                          <p className="text-[11px] text-dim">{proactiveAlerts.length ? `${proactiveAlerts.length} active alert${proactiveAlerts.length !== 1 ? 's' : ''}` : 'No active alerts'}</p>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              </aside>
             )}
-          </motion.div>
-        </>
+          </div>
+        </motion.div>
       )}
     </AnimatePresence>
   );
+
 };
 
 export default AiPromptPanel;

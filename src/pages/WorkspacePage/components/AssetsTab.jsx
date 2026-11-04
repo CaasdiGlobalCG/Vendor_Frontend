@@ -11,12 +11,13 @@ const AssetsTab = ({ selectedSubtask, workspaceId }) => {
   });
   const [uploading, setUploading] = useState({});
   const [uploadStatus, setUploadStatus] = useState({});
+  const [uploadError, setUploadError] = useState('');
   const [loading, setLoading] = useState(true);
 
   const categories = [
     { id: 'images', name: 'Images', label: 'IMG', bgColor: 'bg-info/10', textColor: 'text-info', ext: ['.jpg', '.jpeg', '.png', '.gif', '.webp'] },
-    { id: 'documents', name: 'Documents', label: 'DOC', bgColor: 'bg-success/10', textColor: 'text-success', ext: ['.pdf', '.doc', '.docx'] },
-    { id: 'icons', name: 'Icons', label: 'ICON', bgColor: 'bg-surface-hover', textColor: 'text-ink', ext: ['.svg', '.png', '.jpeg'] },
+    { id: 'documents', name: 'Documents', label: 'DOC', bgColor: 'bg-success/10', textColor: 'text-success', ext: ['.pdf', '.doc', '.docx', '.docm', '.txt', '.xls', '.xlsx', '.xlsm', '.csv', '.ppt', '.pptx', '.pptm', '.odt', '.ods', '.odp', '.rtf'] },
+    { id: 'icons', name: 'Icons', label: 'ICON', bgColor: 'bg-surface-hover', textColor: 'text-ink', ext: ['.svg'] },
     { id: 'fonts', name: 'Fonts', label: 'FONT', bgColor: 'bg-warning/10', textColor: 'text-warning', ext: ['.ttf', '.otf', '.woff', '.woff2'] }
   ];
 
@@ -66,8 +67,11 @@ const AssetsTab = ({ selectedSubtask, workspaceId }) => {
     const input = document.createElement('input');
     input.type = 'file';
     input.multiple = true;
+    const allowed = categories.find((c) => c.id === categoryId)?.ext;
+    if (allowed) input.accept = allowed.join(',');
     input.onchange = async (e) => {
       const files = Array.from(e.target.files);
+      setUploadError('');
       
       setUploading(prev => ({
         ...prev,
@@ -116,8 +120,9 @@ const AssetsTab = ({ selectedSubtask, workspaceId }) => {
               }));
             }, 2000);
           } else {
-            const error = await response.json();
+            const error = await response.json().catch(() => ({}));
             console.error('Upload error:', error);
+            setUploadError(`${file.name}: ${error.message || `upload failed (${response.status})`}`);
             setUploadStatus(prev => ({
               ...prev,
               [file.name]: 'error'
@@ -125,6 +130,7 @@ const AssetsTab = ({ selectedSubtask, workspaceId }) => {
           }
         } catch (error) {
           console.error('Upload error:', error);
+          setUploadError(`${file.name}: could not reach the server`);
           setUploadStatus(prev => ({
             ...prev,
             [file.name]: 'error'
@@ -225,12 +231,23 @@ const AssetsTab = ({ selectedSubtask, workspaceId }) => {
         </div>
       ) : (
         <div className="space-y-2 flex-1 overflow-y-auto">
+          {uploadError && (
+            <div className="flex items-start gap-2 p-2.5 rounded-lg bg-danger/10 border border-danger/20 text-xs text-danger">
+              <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />
+              <span className="flex-1">{uploadError}</span>
+              <button onClick={() => setUploadError('')} className="text-danger font-medium">Dismiss</button>
+            </div>
+          )}
           {categories.map(category => (
             <div key={category.id} className="border border-line rounded-lg overflow-hidden">
               {/* Category Header */}
-              <button
+              {/* a div, not a button: the upload button below must not sit inside another button */}
+              <div
+                role="button"
+                tabIndex={0}
                 onClick={() => toggleCategory(category.id)}
-                className="w-full p-3 bg-canvas hover:bg-surface-hover transition-colors flex items-center justify-between"
+                onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggleCategory(category.id); } }}
+                className="w-full p-3 bg-canvas hover:bg-surface-hover transition-colors flex items-center justify-between cursor-pointer"
               >
                 <div className="flex items-center gap-3">
                   {expandedCategories[category.id] ? (
@@ -261,7 +278,7 @@ const AssetsTab = ({ selectedSubtask, workspaceId }) => {
                     <Upload className="w-4 h-4 text-info" />
                   )}
                 </button>
-              </button>
+              </div>
 
               {/* Expanded Content */}
               {expandedCategories[category.id] && (

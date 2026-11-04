@@ -26,7 +26,7 @@ import PurchaseOrdersPage from './invoice/purchase-orders/PurchaseOrdersPage';
 import OrdersPage from './invoice/orders/OrdersPage';
 import ActivityFullScreen from './ActivityFullScreen';
 
-const InvoiceToolReplica = ({ onClose, workspaceId, workspaceName, selectedTask, selectedSubtask, initialTab }) => {
+const InvoiceToolReplica = ({ onClose, workspaceId, workspaceName, selectedTask, selectedSubtask, initialTab, initialDocId, onDocConsumed }) => {
   const { currentUser } = useContext(VendorContext);
   // Per-role scoping — every actor manages their OWN documents (vendorId = owner)
   const actorOwnerId = resolveWorkspaceActor(currentUser).ownerId;
@@ -731,6 +731,8 @@ const InvoiceToolReplica = ({ onClose, workspaceId, workspaceName, selectedTask,
             selectedTask={selectedTask}
             selectedSubtask={selectedSubtask}
             onRaisePOFromQuote={handleRaisePOFromQuote}
+            initialDocId={initialDocId}
+            onDocConsumed={onDocConsumed}
           />
         );
       case 'invoices':
@@ -742,6 +744,8 @@ const InvoiceToolReplica = ({ onClose, workspaceId, workspaceName, selectedTask,
             selectedSubtask={selectedSubtask}
             sourcePo={invoiceSourcePo}
             onSourceConsumed={() => setInvoiceSourcePo(null)}
+            initialDocId={initialDocId}
+            onDocConsumed={onDocConsumed}
           />
         );
       case 'orders':

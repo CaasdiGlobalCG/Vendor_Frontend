@@ -38,6 +38,27 @@ export const STATUS_TONE = {
     dot: "bg-info",
     text: "text-info",
   },
+  legal_compliance_review: {
+    label: "Legal & compliance check",
+    headline: "Legal & Compliance Check in Progress",
+    chip: "border-warning/25 bg-warning/10 text-warning",
+    dot: "bg-warning",
+    text: "text-warning",
+  },
+  compliance_cleared: {
+    label: "Cleared by legal & compliance",
+    headline: "Cleared by Legal & Compliance",
+    chip: "border-info/25 bg-info/10 text-info",
+    dot: "bg-info",
+    text: "text-info",
+  },
+  compliance_flagged: {
+    label: "Under further review",
+    headline: "Under Further Review",
+    chip: "border-warning/25 bg-warning/10 text-warning",
+    dot: "bg-warning",
+    text: "text-warning",
+  },
   initial_approved: {
     label: "Visit pending",
     headline: "Online KYC Approved",

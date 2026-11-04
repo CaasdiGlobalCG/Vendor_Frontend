@@ -1,6 +1,8 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Auth } from 'aws-amplify';
 import authFetch from '../../../../utils/authFetch';
+import { getActiveCanvasScope } from '../../utils/nodePersistence';
+import { describeRfq } from '../../../../utils/rfqDescription';
 import {
   X,
   ChevronLeft,
@@ -81,7 +83,8 @@ const ProcurementRFQModal = ({
   workspaceId,
   workspace,
   currentUser,
-  onSubmitted
+  onSubmitted,
+  prefill = null
 }) => {
   const [step, setStep] = useState(1);
   const [formData, setFormData] = useState(INITIAL_FORM);
@@ -108,6 +111,29 @@ const ProcurementRFQModal = ({
   const queryScrollRef = useRef(null);
 
   const workspaceName = workspace?.name || workspace?.title || 'Workspace';
+
+  // Opened from the marketplace drawer with a product already chosen: start the form from it.
+  const prefillKey = prefill ? JSON.stringify(prefill) : '';
+  useEffect(() => {
+    if (!isOpen || !prefill) return;
+    setFormData((prev) => ({
+      ...prev,
+      productDetails: {
+        ...prev.productDetails,
+        title: prefill.title || prev.productDetails.title || (prefill.productName ? `Quote for ${prefill.productName}` : ''),
+        productName: prefill.productName || prev.productDetails.productName,
+        category: prefill.category || prev.productDetails.category,
+        productDescription: prefill.description || prev.productDetails.productDescription,
+        brandPreference: prefill.brand || prev.productDetails.brandPreference
+      },
+      quantityPricing: {
+        ...prev.quantityPricing,
+        quantity: prefill.quantity ? String(prefill.quantity) : prev.quantityPricing.quantity,
+        quantityUnit: prefill.unit || prev.quantityPricing.quantityUnit
+      }
+    }));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen, prefillKey]);
 
   const userInfoHeader = useMemo(
     () => ({
@@ -235,7 +261,8 @@ const ProcurementRFQModal = ({
       }
     };
 
-    return JSON.stringify(payload);
+    // Plain, labelled lines: this is what procurement and the vendors it goes to read.
+    return describeRfq(payload);
   };
 
   const askProductAi = async () => {
@@ -547,7 +574,9 @@ const ProcurementRFQModal = ({
         requiredByDate: formData.tradeLogistics.requiredByDate || null,
         source: 'workspace-rfq',
         status: 'Pending',
-        workspaceId
+        workspaceId,
+        // which canvas it was raised from, so its documents land there
+        ...(() => { const { taskId, subtaskId } = getActiveCanvasScope(); return { taskId: taskId || null, subtaskId: subtaskId || null }; })()
       };
 
       const response = await authFetch('/api/procurement-requests', {

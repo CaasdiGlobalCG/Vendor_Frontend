@@ -21,6 +21,18 @@ import authFetch from '../../../../../utils/authFetch';
  * @returns {Promise<string|null>} JWT string or null
  */
 export async function getIdToken() {
+  // An external PM/CAS/client handoff session is not Cognito-backed. When one is
+  // active, its own token must win: a Cognito session left over in this browser
+  // (for example the vendor's) would otherwise be sent and the backend would see
+  // the wrong person.
+  try {
+    if (sessionStorage.getItem('externalAuthSession') === '1') {
+      const external = sessionStorage.getItem('authToken') || localStorage.getItem('authToken');
+      if (external) return external;
+    }
+  } catch {
+    // storage unavailable — fall through to the Cognito session
+  }
   try {
     const session = await Auth.currentSession();
     const token = session?.getIdToken?.()?.getJwtToken?.();

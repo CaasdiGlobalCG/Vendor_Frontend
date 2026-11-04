@@ -141,15 +141,11 @@ function Form1() {
     }
   }, []);
 
-  // Update cities when state changes
+  // Update cities when state changes. A city saved earlier stays selected for the state it was saved
+  // with, even when it is spelled differently from the list; picking another state clears it.
   useEffect(() => {
     if (formData.state) {
-      const cityList = getCitiesByState(formData.state);
-      setCities(cityList);
-      // Reset city if it's not in the new list
-      if (!cityList.includes(formData.city)) {
-        setFormData(prev => ({ ...prev, city: "" }));
-      }
+      setCities(getCitiesByState(formData.state));
     } else {
       setCities([]);
     }
@@ -158,6 +154,11 @@ function Form1() {
   // Handle input changes
   const handleInputChange = (e) => {
     const { name, value } = e.target;
+
+    if (name === "state") {
+      setFormData((prev) => ({ ...prev, state: value, city: "" }));
+      return;
+    }
     
     if (name === "phoneNumber") {
       const currentCode = formData.countryCode || "+91";
@@ -455,7 +456,7 @@ function Form1() {
                     <option value="" className="text-neutral-500">
                       {!formData.state ? "Select State first" : "Select City"}
                     </option>
-                    {cities.map((city) => (
+                    {(formData.city && !cities.includes(formData.city) ? [formData.city, ...cities] : cities).map((city) => (
                       <option key={city} value={city} className="text-neutral-900">
                         {city}
                       </option>

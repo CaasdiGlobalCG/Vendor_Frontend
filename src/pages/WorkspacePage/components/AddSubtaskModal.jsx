@@ -14,7 +14,7 @@ const AddSubtaskModal = ({
     description: '',
     assignedTo: '',
     priority: 'medium',
-    dependsOnSubtaskId: 'auto-previous',
+    dependsOnSubtaskId: 'none',
     flowOrder: ''
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -26,7 +26,7 @@ const AddSubtaskModal = ({
     description: '',
     assignedTo: '',
     priority: 'medium',
-    dependsOnSubtaskId: 'auto-previous',
+    dependsOnSubtaskId: 'none',
     flowOrder: ''
   });
 
@@ -213,8 +213,8 @@ const AddSubtaskModal = ({
                       disabled={isSubmitting}
                       className="w-full px-4 py-3 border border-line rounded-xl focus:ring-2 focus:ring-info focus:border-info transition-all duration-200 bg-surface hover:bg-canvas appearance-none cursor-pointer text-sm"
                     >
-                      <option value="auto-previous">Auto: previous subtask</option>
                       <option value="none">None: independent</option>
+                      <option value="auto-previous">After the previous subtask</option>
                       {existingSubtasks.map((subtask) => (
                         <option key={subtask.id} value={subtask.id}>
                           {subtask.name}
@@ -227,7 +227,7 @@ const AddSubtaskModal = ({
                       </svg>
                     </div>
                   </div>
-                  <p className="text-[11px] text-dim">Use this only when you need custom dependency ordering.</p>
+                  <p className="text-[11px] text-dim">New subtasks are independent unless you choose something here.</p>
                 </div>
 
                 <div className="space-y-2">

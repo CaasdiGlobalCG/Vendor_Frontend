@@ -80,7 +80,10 @@ export default function GoogleOAuthCallback() {
         } else if (String(status).toLowerCase() === 'rejected') {
           alert('Your vendor application has been rejected. Please contact support.');
           navigate('/Form1', { replace: true });
-        } else if (String(status).toLowerCase() === 'pending' && hasFilledForm) {
+        } else if (
+          (String(status).toLowerCase() === 'pending' && hasFilledForm)
+          || ['legal_compliance_review', 'compliance_cleared', 'compliance_flagged', 'initial_approved', 'onsite_pending', 'onsite_verified'].includes(String(status).toLowerCase())
+        ) {
           navigate('/Auditorapprove', { replace: true });
         } else if (hasStartedVendorForm(v)) {
           navigate('/Form1', { replace: true });

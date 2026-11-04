@@ -154,6 +154,9 @@ export default {
       boxShadow: {
         pop: '0 4px 12px rgba(0,0,0,0.08)',
         modal: '0 8px 32px rgba(0,0,0,0.12)',
+        // Canvas element shell: two soft layers instead of one heavy drop shadow
+        node: '0 1px 2px rgba(0,0,0,0.05), 0 4px 12px rgba(0,0,0,0.04)',
+        'node-hover': '0 1px 2px rgba(0,0,0,0.06), 0 8px 20px rgba(0,0,0,0.07)',
       },
       animation: {
         drawLine: 'drawLine 1.5s cubic-bezier(0.8, 0, 1, 1) forwards',

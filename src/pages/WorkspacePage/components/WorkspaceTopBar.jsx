@@ -9,6 +9,7 @@ import {
   MoreHorizontal,
   Zap,
   CheckCircle,
+  Lock,
   Link2,
   RotateCw,
   Shield,
@@ -18,12 +19,18 @@ import {
   Sparkles,
   Bell,
   Send,
-  Calendar
+  Calendar,
+  PackageCheck,
+  X
 } from 'lucide-react';
 import config from '../../../config/env';
 import { Auth } from 'aws-amplify';
 import operonLogo from '../../../assets/operon-symbol-black.png';
 import WorkspaceCalendar from './WorkspaceCalendar';
+import WorkspaceThemeToggle from './WorkspaceThemeToggle';
+import MarketplaceDrawer from '../../../components/Marketplace/MarketplaceDrawer';
+import OrdersPanel from '../../../components/Orders/OrdersPanel';
+import { isMarketplaceConfigured } from '../../../components/Marketplace/marketplaceApi';
 
 const WorkspaceTopBar = ({
   workspace,
@@ -56,12 +63,21 @@ const WorkspaceTopBar = ({
   onOpenReviewProgress,
   onOpenClientReviewProgress,
   onOpenProjectComplete,
+  onOpenProjectCompletion,
+  onOpenSubtaskProgress,
+  subtaskLocked = false,
+  completionState = 'none',
+  completionLockState = 'unlocked',
   onOpenDeletionHistory,
   onShowProgress,
   isWorkspaceCompleted = false,
   shouldDisableEditing = false,
+  onRequestMarketplaceQuote,
 }) => {
   const [showOverflow, setShowOverflow] = useState(false);
+  const [showMarketplace, setShowMarketplace] = useState(false);
+  const [showProjectOrders, setShowProjectOrders] = useState(false);
+  const [focusOrderId, setFocusOrderId] = useState(null);
   const overflowRef = useRef(null);
   const [showNotifications, setShowNotifications] = useState(false);
   const notificationsRef = useRef(null);
@@ -525,6 +541,26 @@ const WorkspaceTopBar = ({
     return days < 7 ? `${days}d ago` : d.toLocaleDateString();
   };
 
+  // A document on the canvas asks to open its order.
+  useEffect(() => {
+    const open = (e) => {
+      setFocusOrderId(e?.detail?.orderId || null);
+      setShowProjectOrders(true);
+    };
+    window.addEventListener('b2b-orders:open', open);
+    return () => window.removeEventListener('b2b-orders:open', open);
+  }, []);
+
+  // Vendors with the marketplace connected shop from a drawer; everyone else keeps the old link.
+  const handleOpenMarketplace = () => {
+    setShowOverflow(false);
+    if (userRole === 'vendor' && isMarketplaceConfigured()) {
+      setShowMarketplace(true);
+      return;
+    }
+    handleB2BClick();
+  };
+
   const handleB2BClick = async () => {
     setShowOverflow(false);
     const targetHome = config.B2B_MARKETPLACE_URL;
@@ -618,6 +654,10 @@ const WorkspaceTopBar = ({
 
       {/* Collaborators Avatar Stack — click to see the full list (all roles) */}
       {workspaceCollaborators && workspaceCollaborators.length > 0 && (() => {
+        // A vendor is never shown who the client is: just "Client"
+        const people = workspaceCollaborators.map((c) => (c.isClient && userRole === 'vendor'
+          ? { ...c, name: 'Client', email: '' }
+          : c));
         const colors = ['#3b82f6', '#8b5cf6', '#10b981', '#f59e0b', '#ec4899'];
         const currentUserId = currentUser?.vendorId || currentUser?.userId || currentUser?.pmId || currentUser?.id;
         const collaboratorRole = (c) =>
@@ -630,9 +670,9 @@ const WorkspaceTopBar = ({
             <button
               onClick={() => setShowCollaborators(prev => !prev)}
               className="ws-avatars cursor-pointer"
-              title={`${workspaceCollaborators.length} collaborator(s) — click to view`}
+              title={`${people.length} collaborator(s) — click to view`}
             >
-              {workspaceCollaborators.slice(0, 3).map((c, i) => {
+              {people.slice(0, 3).map((c, i) => {
                 const name = c.name || c.userName || 'Collaborator';
                 const initial = name.charAt(0).toUpperCase();
                 return (
@@ -646,9 +686,9 @@ const WorkspaceTopBar = ({
                   </div>
                 );
               })}
-              {workspaceCollaborators.length > 3 && (
+              {people.length > 3 && (
                 <div className="ws-avatar" style={{ backgroundColor: 'rgb(var(--info))', color: '#000000', zIndex: 0 }}>
-                  +{workspaceCollaborators.length - 3}
+                  +{people.length - 3}
                 </div>
               )}
             </button>
@@ -657,11 +697,11 @@ const WorkspaceTopBar = ({
               <div className="absolute right-0 top-full mt-2 w-72 bg-surface border border-line rounded-xl shadow-xl z-50 overflow-hidden">
                 <div className="px-3.5 py-2.5 border-b border-line">
                   <span className="text-xs font-semibold text-ink">
-                    Collaborators ({workspaceCollaborators.length})
+                    Collaborators ({people.length})
                   </span>
                 </div>
                 <div className="max-h-72 overflow-y-auto divide-y divide-line">
-                  {workspaceCollaborators.map((c, i) => {
+                  {people.map((c, i) => {
                     const name = c.name || c.userName || 'Collaborator';
                     const initial = name.charAt(0).toUpperCase();
                     const role = collaboratorRole(c);
@@ -806,6 +846,9 @@ const WorkspaceTopBar = ({
         <Calendar className="w-4 h-4" />
       </button>
 
+      {/* Light / dark mode */}
+      <WorkspaceThemeToggle />
+
       {/* Help / Tutorial button */}
       <button
         data-tour="help-btn"
@@ -909,14 +952,25 @@ const WorkspaceTopBar = ({
 
             <div className="border-t border-line my-1" />
 
-            {/* B2B Marketplace Link */}
+            {/* B2B Marketplace: vendors browse and order from a drawer without leaving the project */}
             <button
-              onClick={handleB2BClick}
+              onClick={handleOpenMarketplace}
               className="w-full flex items-center gap-2 px-3.5 py-2 hover:bg-canvas text-ink font-medium transition-colors"
             >
               <Link2 className="w-4 h-4 text-ink" />
               <span>B2B Marketplace</span>
             </button>
+
+            {/* The orders raised from this project (direct orders and quote requests) */}
+            {!isClient && (
+              <button
+                onClick={() => { setShowOverflow(false); setShowProjectOrders(true); }}
+                className="w-full flex items-center gap-2 px-3.5 py-2 hover:bg-canvas text-ink font-medium transition-colors"
+              >
+                <PackageCheck className="w-4 h-4 text-ink" />
+                <span>B2B Orders</span>
+              </button>
+            )}
           </div>
         )}
       </div>
@@ -942,6 +996,39 @@ const WorkspaceTopBar = ({
         <Sparkles className="w-3.5 h-3.5 text-ink" />
         <span>AI Assistant</span>
       </button>
+
+      {/* Project completion: vendor submits, PM and client review (also reachable from the bell) */}
+      {onOpenProjectCompletion && (() => {
+        const waitingOnMe =
+          (isPM && (completionState === 'pending_pm' || completionLockState === 'requested')) ||
+          (isClient && (completionState === 'pending_client' || (completionState === 'approved' && completionLockState !== 'locked' && completionLockState !== 'requested'))) ||
+          (!isPM && !isClient && ['rejected', 'sent_back'].includes(completionState));
+        const label = isPM || isClient ? 'Completion Review' : completionLockState === 'locked' ? 'Project Locked' : 'Project Completion';
+        const Icon = completionLockState === 'locked' ? Lock : CheckCircle;
+        return (
+          <button
+            onClick={onOpenProjectCompletion}
+            className="ws-btn-secondary relative"
+            title={waitingOnMe ? 'Needs your attention' : label}
+          >
+            <Icon className="w-3.5 h-3.5 text-success" />
+            <span>{label}</span>
+            {waitingOnMe && <span className="absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full bg-danger" />}
+          </button>
+        );
+      })()}
+
+      {/* Locked subtask: the vendor can ask for it to be re-opened (PM, then client decide) */}
+      {!isPM && !isClient && subtaskLocked && onOpenSubtaskProgress && (
+        <button
+          onClick={onOpenSubtaskProgress}
+          className="ws-btn-secondary"
+          title="This subtask is completed and locked. Ask for it to be re-opened."
+        >
+          <Lock className="w-3.5 h-3.5 text-warning" />
+          <span>Request Re-open</span>
+        </button>
+      )}
 
       {/* Post Services - separate button */}
       {onOpenPostServices && (
@@ -1003,6 +1090,32 @@ const WorkspaceTopBar = ({
       myRole={currentUser?.role || currentUser?.userType || urlIdentityParams.get('userRole') || urlIdentityParams.get('userType') || 'vendor'}
       collaborators={workspaceCollaborators}
     />
+
+    {/* Marketplace drawer: browse, order, or ask for a quote, tied to this project */}
+    <MarketplaceDrawer
+      isOpen={showMarketplace}
+      onClose={() => setShowMarketplace(false)}
+      workspaceId={workspace?.workspaceId || workspace?.id}
+      workspaceTitle={workspace?.title || workspace?.name || ''}
+      onRequestQuote={(prefill) => { setShowMarketplace(false); onRequestMarketplaceQuote?.(prefill); }}
+      onOpenOrders={() => { setShowMarketplace(false); setShowProjectOrders(true); }}
+      onOpenFullMarketplace={handleB2BClick}
+    />
+
+    {/* This project's orders */}
+    {showProjectOrders && (
+      <aside className="fixed inset-y-0 right-0 z-[9998] flex w-full max-w-[960px] flex-col border-l border-line bg-canvas shadow-2xl" role="dialog" aria-label="B2B Orders">
+        <header className="flex h-12 flex-shrink-0 items-center gap-3 border-b border-line bg-surface px-4">
+          <PackageCheck size={16} className="text-ink" />
+          <h2 className="text-[14px] font-semibold text-ink">B2B Orders</h2>
+          <span className="truncate text-[11px] text-dim">{workspace?.title || workspace?.name || ''}</span>
+          <button type="button" onClick={() => { setShowProjectOrders(false); setFocusOrderId(null); }} aria-label="Close orders" className="ml-auto flex h-8 w-8 items-center justify-center rounded-lg text-dim hover:bg-surface-hover"><X size={16} /></button>
+        </header>
+        <div className="min-h-0 flex-1">
+          <OrdersPanel key={focusOrderId || 'all'} workspaceId={workspace?.workspaceId || workspace?.id} focusOrderId={focusOrderId} onOpenWorkspace={() => setShowProjectOrders(false)} />
+        </div>
+      </aside>
+    )}
     </>
   );
 };

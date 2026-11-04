@@ -1,11 +1,13 @@
 import React from 'react';
-import {
-  Grid,
-  Type,
-  LayoutTemplate,
-  GitBranch,
-  CheckSquare,
-  Layers,
+import { 
+  Grid, 
+  Type, 
+  LayoutTemplate, 
+  Wrench,
+  GitBranch, 
+  LayoutGrid, 
+  CheckSquare, 
+  Layers, 
   Paperclip,
   Sparkles
 } from 'lucide-react';
@@ -20,7 +22,8 @@ const WorkspaceDock = ({
   const topDockItems = [
     { id: 'elements', label: 'Elements', icon: Grid, title: 'Elements library' },
     { id: 'text', label: 'Text', icon: Type, title: 'Typography & text blocks' },
-    { id: 'templates', label: 'Templates', icon: LayoutTemplate, title: 'Workflow & document templates' },
+    { id: 'templates', label: 'Tools', icon: Wrench, title: 'Forms, BOQ, calculators & workflow tools' },
+    { id: 'template-library', label: 'Templates', icon: LayoutTemplate, title: 'Ready-made templates for your canvas' },
     { id: 'workflow', label: 'Flow', icon: GitBranch, title: 'Workflow builder' },
   ];
 

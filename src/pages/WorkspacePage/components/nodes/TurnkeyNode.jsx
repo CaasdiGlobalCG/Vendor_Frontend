@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { persistIsImportant, persistDeadline, formatTimeLeft, getTimeLeft } from '../../utils/nodePersistence';
 import { useReactFlow } from 'reactflow';
+import NodeHandles from './NodeHandles';
 import { createPortal } from 'react-dom';
 import { Users, Package, CheckCircle2, Clock, Droplets } from 'lucide-react';
 import TestCaseDetailModal from '../modals/TestCaseDetailModal';
@@ -228,7 +229,7 @@ const TurnkeyWorkflow = ({ data = {} }) => {
   );
 };
 
-const TurnkeyNode = ({ data, selected, id, ...props }) => {
+const TurnkeyNode = ({ data, selected, id, isConnectable = true, ...props }) => {
   const workspaceId = data.workspaceId;  // Get workspaceId from node data
   const { setNodes } = useReactFlow();
   const [saving, setSaving] = useState(false);
@@ -324,6 +325,7 @@ const TurnkeyNode = ({ data, selected, id, ...props }) => {
 
   return (
     <div className={`turnkey-node ${selected ? 'selected' : ''} relative group`}>
+      <NodeHandles isConnectable={isConnectable} />
       {/* Persistence Controls */}
       <div className="absolute top-2 right-2 flex gap-1 text-xs opacity-0 group-hover:opacity-100 transition-opacity z-30">
         <button

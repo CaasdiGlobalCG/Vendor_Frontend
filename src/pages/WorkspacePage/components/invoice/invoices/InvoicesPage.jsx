@@ -123,8 +123,12 @@ const InvoicesPage = (props) => {
       const params = new URLSearchParams();
       params.append('vendorId', vendorId);
       if (props?.workspaceId) params.append('workspaceId', props.workspaceId);
-      if (props?.selectedTask?.id) params.append('taskId', props.selectedTask.id);
-      if (props?.selectedSubtask?.id) params.append('subtaskId', props.selectedSubtask.id);
+      // When opening a specific doc for editing, skip the task/subtask scope —
+      // the doc may live on a different subtask's canvas.
+      if (!props?.initialDocId) {
+        if (props?.selectedTask?.id) params.append('taskId', props.selectedTask.id);
+        if (props?.selectedSubtask?.id) params.append('subtaskId', props.selectedSubtask.id);
+      }
 
       const response = await invoiceFetch(`/api/workspace/invoices?${params.toString()}`, {
         headers: headers
@@ -165,6 +169,21 @@ const InvoicesPage = (props) => {
   useEffect(() => {
     fetchInvoices();
   }, [fetchInvoices]);
+
+  // A canvas document node can ask for a specific invoice to open in the
+  // editor (DocumentNode "Edit" → openInvoiceTool → initialDocId).
+  useEffect(() => {
+    const initialDocId = props?.initialDocId;
+    if (!initialDocId || loading || invoicesData.length === 0) return;
+    const target = invoicesData.find(
+      (inv) => (inv.invoiceId || inv.id) === initialDocId
+    );
+    if (target) {
+      setEditingInvoice(target);
+      setShowNewInvoice(true);
+    }
+    props?.onDocConsumed?.();
+  }, [props?.initialDocId, loading, invoicesData]);
 
   const filteredInvoices = invoicesData.filter(invoice => {
     const matchesSearch = invoice.id.toLowerCase().includes(searchTerm.toLowerCase()) ||

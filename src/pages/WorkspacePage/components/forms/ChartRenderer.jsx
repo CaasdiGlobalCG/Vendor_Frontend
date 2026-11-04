@@ -1,502 +1,258 @@
-import React from 'react';
-import { BarChart3, LineChart, PieChart, TrendingUp } from 'lucide-react';
+import React, { useId, useMemo } from 'react';
+import {
+  ResponsiveContainer,
+  BarChart,
+  Bar,
+  LineChart,
+  Line,
+  AreaChart,
+  Area,
+  PieChart,
+  Pie,
+  Cell,
+  ScatterChart,
+  Scatter,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+} from 'recharts';
+import { useChartTheme, pickSeriesColors } from './chartTheme';
+
+const CHART_HEIGHT = 224;
+
+/** Dark tooltip pill: "label · value". */
+const ChartTooltip = ({ active, payload, theme, xAxisLabel }) => {
+  if (!active || !payload || payload.length === 0) return null;
+  const point = payload[0].payload || {};
+  const label = point.label ?? payload[0].name;
+  const value = payload[0].value;
+  return (
+    <div
+      className="rounded-lg px-2.5 py-1.5 text-xs shadow-pop"
+      style={{ background: theme.ink, color: theme.paper }}
+    >
+      <span className="font-medium">{label}</span>
+      {point.x !== undefined && xAxisLabel ? <span className="opacity-70"> · {xAxisLabel} {point.x}</span> : null}
+      <span className="opacity-70"> · </span>
+      <span className="font-semibold tabular-nums">{value}</span>
+    </div>
+  );
+};
 
 const ChartRenderer = ({ data, chartType }) => {
+  const theme = useChartTheme();
+  const gradientId = `${useId().replace(/:/g, '')}-area`;
+
   // Use custom chart data if available, otherwise use default
   const chartConfig = data?.customChartData || getDefaultChartData(chartType);
-  const { title, xAxisLabel, yAxisLabel, data: chartData, colors } = chartConfig;
+  const { title, xAxisLabel, yAxisLabel, data: rawData, colors: savedColors } = chartConfig;
 
-  // Calculate chart dimensions and scaling
-  const chartWidth = 300;
-  const chartHeight = 200;
-  const padding = 40;
-  const innerWidth = chartWidth - (padding * 2);
-  const innerHeight = chartHeight - (padding * 2);
+  // Keep the same array between renders unless the data really changed: the
+  // canvas re-renders nodes constantly (pan, zoom, selection ...), and a new
+  // array each time makes recharts treat it as new data.
+  const points = useMemo(
+    () =>
+      (Array.isArray(rawData) ? rawData : []).map((item) => ({
+        ...item,
+        value: Number(item.value) || 0,
+        ...(item.x !== undefined ? { x: Number(item.x) || 0 } : {}),
+      })),
+    [rawData]
+  );
 
-  // Get max value for scaling
-  const maxValue = Math.max(...chartData.map(item => item.value));
-  const maxX = chartType === 'scatter-plot' ? Math.max(...chartData.map(item => item.x || 0)) : 0;
+  const { colors, customised } = pickSeriesColors(savedColors, theme, points.length);
+  const primary = colors[0];
 
-  // Render different chart types
-  const renderBarChart = () => {
-    const barWidth = innerWidth / chartData.length * 0.8;
-    const barSpacing = innerWidth / chartData.length * 0.2;
+  const tick = { fontSize: 11, fill: theme.muted };
+  const grid = <CartesianGrid vertical={false} stroke={theme.grid} strokeDasharray="3 4" />;
+  const xLabel = xAxisLabel
+    ? { value: xAxisLabel, position: 'insideBottom', offset: -2, fill: theme.muted, fontSize: 11 }
+    : undefined;
+  const yLabel = yAxisLabel
+    ? { value: yAxisLabel, angle: -90, position: 'insideLeft', fill: theme.muted, fontSize: 11 }
+    : undefined;
+  const margin = { top: 8, right: 8, bottom: xAxisLabel ? 8 : 0, left: 0 };
+  const tooltip = (
+    <Tooltip
+      cursor={{ fill: theme.hover, fillOpacity: 0.6 }}
+      content={<ChartTooltip theme={theme} xAxisLabel={chartType === 'scatter-plot' ? xAxisLabel : undefined} />}
+    />
+  );
+  // `inset` keeps the first/last point of line and area charts off the plot edge
+  const categoryX = (inset = false) => (
+    <XAxis
+      dataKey="label"
+      padding={inset ? { left: 14, right: 14 } : undefined}
+      tick={tick}
+      tickLine={false}
+      axisLine={{ stroke: theme.grid }}
+      height={xAxisLabel ? 36 : 24}
+      label={xLabel}
+    />
+  );
+  const valueY = (
+    <YAxis tick={tick} tickLine={false} axisLine={false} width={yAxisLabel ? 44 : 32} label={yLabel} />
+  );
 
-    return (
-      <svg width={chartWidth} height={chartHeight} className="border border-line rounded">
-        {/* Background */}
-        <rect width={chartWidth} height={chartHeight} fill="#fafafa" />
-        
-        {/* Grid lines */}
-        {[0, 0.25, 0.5, 0.75, 1].map((ratio, i) => (
-          <line
-            key={i}
-            x1={padding}
-            y1={padding + innerHeight * ratio}
-            x2={chartWidth - padding}
-            y2={padding + innerHeight * ratio}
-            stroke="currentColor"
-            strokeWidth="1"
-          />
+  const renderBarChart = () => (
+    <BarChart data={points} margin={margin}>
+      {grid}
+      {categoryX()}
+      {valueY}
+      {tooltip}
+      <Bar dataKey="value" fill={primary} radius={[6, 6, 0, 0]} maxBarSize={36} isAnimationActive={false}>
+        {customised && points.map((_, i) => <Cell key={i} fill={colors[i]} />)}
+      </Bar>
+    </BarChart>
+  );
+
+  const renderLineChart = () => (
+    <LineChart data={points} margin={margin}>
+      {grid}
+      {categoryX(true)}
+      {valueY}
+      {tooltip}
+      <Line
+        type="monotone"
+        dataKey="value"
+        stroke={primary}
+        strokeWidth={2}
+        isAnimationActive={false}
+        dot={{ r: 3, fill: primary, stroke: theme.surface, strokeWidth: 2 }}
+        activeDot={{ r: 5, fill: primary, stroke: theme.surface, strokeWidth: 2 }}
+      />
+    </LineChart>
+  );
+
+  const renderAreaChart = () => (
+    <AreaChart data={points} margin={margin}>
+      <defs>
+        <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor={primary} stopOpacity={0.28} />
+          <stop offset="100%" stopColor={primary} stopOpacity={0} />
+        </linearGradient>
+      </defs>
+      {grid}
+      {categoryX(true)}
+      {valueY}
+      {tooltip}
+      <Area type="monotone" dataKey="value" stroke={primary} strokeWidth={2} fill={`url(#${gradientId})`} isAnimationActive={false} />
+    </AreaChart>
+  );
+
+  const renderPieChart = (donut) => (
+    <PieChart>
+      <Tooltip content={<ChartTooltip theme={theme} />} />
+      <Pie
+        data={points}
+        dataKey="value"
+        nameKey="label"
+        innerRadius={donut ? '58%' : 0}
+        outerRadius="86%"
+        paddingAngle={donut ? 2 : 0}
+        stroke={theme.surface}
+        strokeWidth={2}
+        isAnimationActive={false}
+      >
+        {points.map((_, i) => (
+          <Cell key={i} fill={colors[i]} />
         ))}
-        
-        {/* Bars */}
-        {chartData.map((item, index) => {
-          const barHeight = (item.value / maxValue) * innerHeight;
-          const x = padding + (index * (barWidth + barSpacing)) + barSpacing / 2;
-          const y = chartHeight - padding - barHeight;
-          
-          return (
-            <g key={index}>
-              <rect
-                x={x}
-                y={y}
-                width={barWidth}
-                height={barHeight}
-                fill={colors[index] || '#3B82F6'}
-                className="hover:opacity-80 transition-opacity"
-              />
-              <text
-                x={x + barWidth / 2}
-                y={chartHeight - padding + 15}
-                textAnchor="middle"
-                className="text-xs fill-dim"
-              >
-                {item.label}
-              </text>
-              <text
-                x={x + barWidth / 2}
-                y={y - 5}
-                textAnchor="middle"
-                className="text-xs fill-ink font-medium"
-              >
-                {item.value}
-              </text>
-            </g>
-          );
-        })}
-        
-        {/* Y-axis */}
-        <line x1={padding} y1={padding} x2={padding} y2={chartHeight - padding} stroke="rgb(var(--info))" strokeWidth="2" />
-        {/* X-axis */}
-        <line x1={padding} y1={chartHeight - padding} x2={chartWidth - padding} y2={chartHeight - padding} stroke="rgb(var(--info))" strokeWidth="2" />
-        
-        {/* Axis labels */}
-        {yAxisLabel && (
-          <text x={15} y={chartHeight / 2} textAnchor="middle" className="text-xs fill-ink" transform={`rotate(-90, 15, ${chartHeight / 2})`}>
-            {yAxisLabel}
-          </text>
-        )}
-        {xAxisLabel && (
-          <text x={chartWidth / 2} y={chartHeight - 5} textAnchor="middle" className="text-xs fill-ink">
-            {xAxisLabel}
-          </text>
-        )}
-      </svg>
-    );
-  };
+      </Pie>
+    </PieChart>
+  );
 
-  const renderLineChart = () => {
-    const points = chartData.map((item, index) => {
-      const x = padding + (index / (chartData.length - 1)) * innerWidth;
-      const y = chartHeight - padding - (item.value / maxValue) * innerHeight;
-      return `${x},${y}`;
-    }).join(' ');
+  const renderScatterPlot = () => (
+    <ScatterChart margin={margin}>
+      {grid}
+      <XAxis
+        type="number"
+        dataKey="x"
+        name={xAxisLabel || 'x'}
+        tick={tick}
+        tickLine={false}
+        axisLine={{ stroke: theme.grid }}
+        height={xAxisLabel ? 36 : 24}
+        label={xLabel}
+      />
+      <YAxis
+        type="number"
+        dataKey="value"
+        name={yAxisLabel || 'value'}
+        tick={tick}
+        tickLine={false}
+        axisLine={false}
+        width={yAxisLabel ? 44 : 32}
+        label={yLabel}
+      />
+      {tooltip}
+      <Scatter data={points} fill={primary} fillOpacity={0.85} isAnimationActive={false} />
+    </ScatterChart>
+  );
 
-    return (
-      <svg width={chartWidth} height={chartHeight} className="border border-line rounded">
-        {/* Background */}
-        <rect width={chartWidth} height={chartHeight} fill="#fafafa" />
-        
-        {/* Grid lines */}
-        {[0, 0.25, 0.5, 0.75, 1].map((ratio, i) => (
-          <line
-            key={i}
-            x1={padding}
-            y1={padding + innerHeight * ratio}
-            x2={chartWidth - padding}
-            y2={padding + innerHeight * ratio}
-            stroke="currentColor"
-            strokeWidth="1"
-          />
-        ))}
-        
-        {/* Line */}
-        <polyline
-          points={points}
-          fill="none"
-          stroke={colors[0] || '#3B82F6'}
-          strokeWidth="3"
-          className="hover:opacity-80 transition-opacity"
-        />
-        
-        {/* Data points */}
-        {chartData.map((item, index) => {
-          const x = padding + (index / (chartData.length - 1)) * innerWidth;
-          const y = chartHeight - padding - (item.value / maxValue) * innerHeight;
-          
-          return (
-            <g key={index}>
-              <circle
-                cx={x}
-                cy={y}
-                r="4"
-                fill={colors[index] || colors[0] || '#3B82F6'}
-                className="hover:r-6 transition-all"
-              />
-              <text
-                x={x}
-                y={chartHeight - padding + 15}
-                textAnchor="middle"
-                className="text-xs fill-dim"
-              >
-                {item.label}
-              </text>
-            </g>
-          );
-        })}
-        
-        {/* Axes */}
-        <line x1={padding} y1={padding} x2={padding} y2={chartHeight - padding} stroke="rgb(var(--info))" strokeWidth="2" />
-        <line x1={padding} y1={chartHeight - padding} x2={chartWidth - padding} y2={chartHeight - padding} stroke="rgb(var(--info))" strokeWidth="2" />
-        
-        {/* Axis labels */}
-        {yAxisLabel && (
-          <text x={15} y={chartHeight / 2} textAnchor="middle" className="text-xs fill-ink" transform={`rotate(-90, 15, ${chartHeight / 2})`}>
-            {yAxisLabel}
-          </text>
-        )}
-        {xAxisLabel && (
-          <text x={chartWidth / 2} y={chartHeight - 5} textAnchor="middle" className="text-xs fill-ink">
-            {xAxisLabel}
-          </text>
-        )}
-      </svg>
-    );
-  };
-
-  const renderPieChart = () => {
-    const total = chartData.reduce((sum, item) => sum + item.value, 0);
-    let currentAngle = 0;
-    const centerX = chartWidth / 2;
-    const centerY = chartHeight / 2;
-    const radius = Math.min(innerWidth, innerHeight) / 2;
-
-    return (
-      <svg width={chartWidth} height={chartHeight} className="border border-line rounded">
-        {/* Background */}
-        <rect width={chartWidth} height={chartHeight} fill="#fafafa" />
-        
-        {/* Pie slices */}
-        {chartData.map((item, index) => {
-          const sliceAngle = (item.value / total) * 360;
-          const startAngle = currentAngle;
-          const endAngle = currentAngle + sliceAngle;
-          
-          const startX = centerX + radius * Math.cos((startAngle - 90) * Math.PI / 180);
-          const startY = centerY + radius * Math.sin((startAngle - 90) * Math.PI / 180);
-          const endX = centerX + radius * Math.cos((endAngle - 90) * Math.PI / 180);
-          const endY = centerY + radius * Math.sin((endAngle - 90) * Math.PI / 180);
-          
-          const largeArcFlag = sliceAngle > 180 ? 1 : 0;
-          
-          const pathData = [
-            `M ${centerX} ${centerY}`,
-            `L ${startX} ${startY}`,
-            `A ${radius} ${radius} 0 ${largeArcFlag} 1 ${endX} ${endY}`,
-            'Z'
-          ].join(' ');
-          
-          currentAngle += sliceAngle;
-          
-          return (
-            <path
-              key={index}
-              d={pathData}
-              fill={colors[index] || '#3B82F6'}
-              className="hover:opacity-80 transition-opacity"
-            />
-          );
-        })}
-        
-        {/* Labels */}
-        {(() => {
-          let angle = 0;
-          return chartData.map((item, index) => {
-            const sliceAngle = (item.value / total) * 360;
-            const labelAngle = angle + sliceAngle / 2;
-            const labelRadius = radius * 0.7;
-            const labelX = centerX + labelRadius * Math.cos((labelAngle - 90) * Math.PI / 180);
-            const labelY = centerY + labelRadius * Math.sin((labelAngle - 90) * Math.PI / 180);
-            
-            angle += sliceAngle;
-            
-            return (
-              <text
-                key={index}
-                x={labelX}
-                y={labelY}
-                textAnchor="middle"
-                className="text-xs fill-white font-medium"
-              >
-                {Math.round((item.value / total) * 100)}%
-              </text>
-            );
-          });
-        })()}
-      </svg>
-    );
-  };
-
-  const renderAreaChart = () => {
-    const points = chartData.map((item, index) => {
-      const x = padding + (index / (chartData.length - 1)) * innerWidth;
-      const y = chartHeight - padding - (item.value / maxValue) * innerHeight;
-      return { x, y };
-    });
-
-    const pathData = [
-      `M ${padding} ${chartHeight - padding}`,
-      ...points.map(p => `L ${p.x} ${p.y}`),
-      `L ${chartWidth - padding} ${chartHeight - padding}`,
-      'Z'
-    ].join(' ');
-
-    return (
-      <svg width={chartWidth} height={chartHeight} className="border border-line rounded">
-        {/* Background */}
-        <rect width={chartWidth} height={chartHeight} fill="#fafafa" />
-        
-        {/* Grid lines */}
-        {[0, 0.25, 0.5, 0.75, 1].map((ratio, i) => (
-          <line
-            key={i}
-            x1={padding}
-            y1={padding + innerHeight * ratio}
-            x2={chartWidth - padding}
-            y2={padding + innerHeight * ratio}
-            stroke="currentColor"
-            strokeWidth="1"
-          />
-        ))}
-        
-        {/* Area */}
-        <path
-          d={pathData}
-          fill={colors[0] || '#3B82F6'}
-          fillOpacity="0.3"
-          className="hover:fill-opacity-40 transition-all"
-        />
-        
-        {/* Line */}
-        <polyline
-          points={points.map(p => `${p.x},${p.y}`).join(' ')}
-          fill="none"
-          stroke={colors[0] || '#3B82F6'}
-          strokeWidth="2"
-        />
-        
-        {/* Data points */}
-        {points.map((point, index) => (
-          <g key={index}>
-            <circle
-              cx={point.x}
-              cy={point.y}
-              r="3"
-              fill={colors[0] || '#3B82F6'}
-            />
-            <text
-              x={point.x}
-              y={chartHeight - padding + 15}
-              textAnchor="middle"
-              className="text-xs fill-dim"
-            >
-              {chartData[index].label}
-            </text>
-          </g>
-        ))}
-        
-        {/* Axes */}
-        <line x1={padding} y1={padding} x2={padding} y2={chartHeight - padding} stroke="rgb(var(--info))" strokeWidth="2" />
-        <line x1={padding} y1={chartHeight - padding} x2={chartWidth - padding} y2={chartHeight - padding} stroke="rgb(var(--info))" strokeWidth="2" />
-      </svg>
-    );
-  };
-
-  const renderDonutChart = () => {
-    const total = chartData.reduce((sum, item) => sum + item.value, 0);
-    let currentAngle = 0;
-    const centerX = chartWidth / 2;
-    const centerY = chartHeight / 2;
-    const outerRadius = Math.min(innerWidth, innerHeight) / 2;
-    const innerRadius = outerRadius * 0.5;
-
-    return (
-      <svg width={chartWidth} height={chartHeight} className="border border-line rounded">
-        {/* Background */}
-        <rect width={chartWidth} height={chartHeight} fill="#fafafa" />
-        
-        {/* Donut slices */}
-        {chartData.map((item, index) => {
-          const sliceAngle = (item.value / total) * 360;
-          const startAngle = currentAngle;
-          const endAngle = currentAngle + sliceAngle;
-          
-          const startOuterX = centerX + outerRadius * Math.cos((startAngle - 90) * Math.PI / 180);
-          const startOuterY = centerY + outerRadius * Math.sin((startAngle - 90) * Math.PI / 180);
-          const endOuterX = centerX + outerRadius * Math.cos((endAngle - 90) * Math.PI / 180);
-          const endOuterY = centerY + outerRadius * Math.sin((endAngle - 90) * Math.PI / 180);
-          
-          const startInnerX = centerX + innerRadius * Math.cos((startAngle - 90) * Math.PI / 180);
-          const startInnerY = centerY + innerRadius * Math.sin((startAngle - 90) * Math.PI / 180);
-          const endInnerX = centerX + innerRadius * Math.cos((endAngle - 90) * Math.PI / 180);
-          const endInnerY = centerY + innerRadius * Math.sin((endAngle - 90) * Math.PI / 180);
-          
-          const largeArcFlag = sliceAngle > 180 ? 1 : 0;
-          
-          const pathData = [
-            `M ${startOuterX} ${startOuterY}`,
-            `A ${outerRadius} ${outerRadius} 0 ${largeArcFlag} 1 ${endOuterX} ${endOuterY}`,
-            `L ${endInnerX} ${endInnerY}`,
-            `A ${innerRadius} ${innerRadius} 0 ${largeArcFlag} 0 ${startInnerX} ${startInnerY}`,
-            'Z'
-          ].join(' ');
-          
-          currentAngle += sliceAngle;
-          
-          return (
-            <path
-              key={index}
-              d={pathData}
-              fill={colors[index] || '#3B82F6'}
-              className="hover:opacity-80 transition-opacity"
-            />
-          );
-        })}
-        
-        {/* Center text */}
-        <text
-          x={centerX}
-          y={centerY}
-          textAnchor="middle"
-          className="text-sm fill-ink font-bold"
-        >
-          Total
-        </text>
-        <text
-          x={centerX}
-          y={centerY + 15}
-          textAnchor="middle"
-          className="text-xs fill-dim"
-        >
-          {total}
-        </text>
-      </svg>
-    );
-  };
-
-  const renderScatterPlot = () => {
-    return (
-      <svg width={chartWidth} height={chartHeight} className="border border-line rounded">
-        {/* Background */}
-        <rect width={chartWidth} height={chartHeight} fill="#fafafa" />
-        
-        {/* Grid lines */}
-        {[0, 0.25, 0.5, 0.75, 1].map((ratio, i) => (
-          <g key={i}>
-            <line
-              x1={padding}
-              y1={padding + innerHeight * ratio}
-              x2={chartWidth - padding}
-              y2={padding + innerHeight * ratio}
-              stroke="currentColor"
-              strokeWidth="1"
-            />
-            <line
-              x1={padding + innerWidth * ratio}
-              y1={padding}
-              x2={padding + innerWidth * ratio}
-              y2={chartHeight - padding}
-              stroke="currentColor"
-              strokeWidth="1"
-            />
-          </g>
-        ))}
-        
-        {/* Data points */}
-        {chartData.map((item, index) => {
-          const x = padding + ((item.x || 0) / maxX) * innerWidth;
-          const y = chartHeight - padding - (item.value / maxValue) * innerHeight;
-          
-          return (
-            <circle
-              key={index}
-              cx={x}
-              cy={y}
-              r="5"
-              fill={colors[index] || '#3B82F6'}
-              className="hover:r-7 transition-all"
-            />
-          );
-        })}
-        
-        {/* Axes */}
-        <line x1={padding} y1={padding} x2={padding} y2={chartHeight - padding} stroke="rgb(var(--info))" strokeWidth="2" />
-        <line x1={padding} y1={chartHeight - padding} x2={chartWidth - padding} y2={chartHeight - padding} stroke="rgb(var(--info))" strokeWidth="2" />
-      </svg>
-    );
-  };
-
-  // Render chart based on type
   const renderChart = () => {
     switch (chartType) {
-      case 'bar-chart':
-        return renderBarChart();
       case 'line-chart':
         return renderLineChart();
       case 'pie-chart':
-        return renderPieChart();
+        return renderPieChart(false);
       case 'area-chart':
         return renderAreaChart();
       case 'donut-chart':
-        return renderDonutChart();
+        return renderPieChart(true);
       case 'scatter-plot':
         return renderScatterPlot();
+      case 'bar-chart':
       default:
         return renderBarChart();
     }
   };
 
+  const isPie = chartType === 'pie-chart' || chartType === 'donut-chart';
+  const summary = `${title || 'Chart'}: ${points.map((p) => `${p.label} ${p.value}`).join(', ')}`;
+
   return (
     <div className="w-full">
-      {/* Chart Title */}
-      {title && (
-        <h3 className="text-lg font-semibold text-ink mb-4 text-center">{title}</h3>
-      )}
-      
-      {/* Chart */}
-      <div className="flex justify-center mb-4">
-        {renderChart()}
-      </div>
-      
-      {/* Legend for pie and donut charts */}
-      {(['pie-chart', 'donut-chart'].includes(chartType)) && (
-        <div className="flex flex-wrap justify-center gap-2 mt-4">
-          {chartData.map((item, index) => (
-            <div key={index} className="flex items-center space-x-2">
-              <div
-                className="w-3 h-3 rounded-full"
-                style={{ backgroundColor: colors[index] || '#3B82F6' }}
-              />
-              <span className="text-xs text-ink">{item.label}</span>
-            </div>
-          ))}
+      {title && <h3 className="mb-3 text-sm font-semibold text-ink">{title}</h3>}
+
+      {points.length === 0 ? (
+        <div
+          className="flex items-center justify-center rounded-lg border border-dashed border-line text-xs text-dim"
+          style={{ height: CHART_HEIGHT }}
+        >
+          No data yet
+        </div>
+      ) : (
+        <div role="img" aria-label={summary} className="w-full" style={{ height: CHART_HEIGHT }}>
+          <ResponsiveContainer
+            width="100%"
+            height="100%"
+            initialDimension={{ width: 320, height: CHART_HEIGHT }}
+          >
+            {renderChart()}
+          </ResponsiveContainer>
         </div>
       )}
-      
-      {/* Chart info */}
-      <div className="text-center text-xs text-dim mt-2">
-        {chartData.length} data points • Click to customize
+
+      {/* Legend for pie and donut charts */}
+      {isPie && points.length > 0 && (
+        <ul className="mt-3 flex flex-wrap gap-x-4 gap-y-1.5">
+          {points.map((item, index) => (
+            <li key={index} className="flex items-center gap-1.5 text-xs text-ink">
+              <span
+                className="h-2.5 w-2.5 rounded-full"
+                style={{ backgroundColor: colors[index] }}
+                aria-hidden="true"
+              />
+              {item.label}
+              <span className="tabular-nums text-dim">{item.value}</span>
+            </li>
+          ))}
+        </ul>
+      )}
+
+      <div className="mt-2 text-xs text-dim">
+        {points.length} data {points.length === 1 ? 'point' : 'points'} · click to customize
       </div>
     </div>
   );

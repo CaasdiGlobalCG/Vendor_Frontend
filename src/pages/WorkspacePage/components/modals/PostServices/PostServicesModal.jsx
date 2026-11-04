@@ -2,6 +2,7 @@ import React, { useMemo, useRef, useState, useEffect } from 'react';
 import { X, User, Plus, ChevronDown } from 'lucide-react';
 import PostComposer from './PostComposer';
 import PostList from './PostList';
+import ReopenRequestPanel from './ReopenRequestPanel';
 import { usePostServices } from './hooks/usePostServices';
 import { renderTextWithHighlights, formatSizeMB } from './utils/textUtils.jsx';
 import config from '../../../../../config/env.js';
@@ -405,7 +406,7 @@ const PostServicesModal = ({ isOpen, onClose, currentUser, workspaceId, subtaskI
           subtaskId,
           approved,
           approvedBy: currentUser?.id || currentUser?.userId || 'default-user-id',
-          approvedByName: displayUser.name
+          approvedByName: currentUser?.role === 'client' ? 'Client' : displayUser.name
         })
       });
 
@@ -560,6 +561,15 @@ const PostServicesModal = ({ isOpen, onClose, currentUser, workspaceId, subtaskI
         </div>
 
         <div className="flex-1 overflow-y-auto">
+          {/* Re-open requests for a locked project: vendor asks, PM then client decide */}
+          <ReopenRequestPanel
+            workspaceId={workspaceId}
+            role={['pm', 'cas'].includes(currentUser?.role) ? 'pm' : currentUser?.role === 'client' ? 'client' : 'vendor'}
+            isLocked={workspace?.projectCompletion?.lock?.state === 'locked'}
+            isOpen={isOpen}
+            onWorkspaceUpdate={onWorkspaceUpdate}
+          />
+
           {/* Post Composer - Only show for non-vendors */}
           {!isVendor && showComposer && (
             <PostComposer

@@ -33,6 +33,12 @@ const resolvedEmployeeBackendUrl =
   resolveEnvValue(import.meta.env.VITE_EMPLOYEE_BACKEND_URL) ||
   (isDevMode ? DEV_EMPLOYEE_BACKEND_URL : PROD_EMPLOYEE_BACKEND_URL);
 
+// The marketplace's API, called straight from the browser by the in-workspace
+// marketplace drawer. Left empty when not configured: the drawer then says so and
+// the menu falls back to opening the marketplace site, as before.
+const DEV_B2B_API_URL = 'http://localhost:5004';
+export const B2B_API_URL = (resolveEnvValue(import.meta.env.VITE_B2B_API_URL) || (isDevMode ? DEV_B2B_API_URL : '')).replace(/\/+$/, '');
+
 export const CLIENT_URL = resolvedClientUrl;
 export const SALES_URL = resolvedSalesUrl;
 export const B2B_MARKETPLACE_URL = `${resolvedB2BMarketplaceBaseUrl.replace(/\/+$/, '')}/home`;
@@ -46,6 +52,7 @@ const config = {
   SALES_URL,
   CLIENT_URL,
   B2B_MARKETPLACE_URL,
+  B2B_API_URL,
   EMPLOYEE_BACKEND_URL,
 };
 

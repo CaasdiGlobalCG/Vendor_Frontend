@@ -88,10 +88,9 @@ const CustomEdge = ({
             width={data.label.length * 8 + 20}
             height={24}
             rx={12}
-            fill="white"
             stroke={edgeColor}
             strokeWidth={1.5}
-            style={{ filter: 'drop-shadow(0 1px 3px rgba(0,0,0,0.1))' }}
+            style={{ fill: 'rgb(var(--surface-card))', filter: 'drop-shadow(0 1px 3px rgba(0,0,0,0.1))' }}
           />
           {/* Label text */}
           <text

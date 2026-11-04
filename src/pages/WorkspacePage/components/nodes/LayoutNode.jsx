@@ -1,9 +1,67 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
-import { persistIsImportant, persistDeadline, formatTimeLeft, getTimeLeft } from '../../utils/nodePersistence';
-import { Handle, Position, useReactFlow } from 'reactflow';
+import { persistIsImportant, persistDeadline, persistNodeDataPatch, formatTimeLeft, getTimeLeft } from '../../utils/nodePersistence';
+import { useReactFlow } from 'reactflow';
+import NodeHandles from './NodeHandles';
+import { isContainerLayoutData } from '../../utils/connectionUtils';
 import { Edit3 } from 'lucide-react';
 import LayoutRenderer from '../forms/LayoutRenderer';
+
+
+/**
+ * Name tag above a frame (like Figma). Double-click to rename; the name is
+ * also the frame's title in Present mode and the layers list.
+ */
+const FrameLabel = ({ id, data, setNodes, shifted }) => {
+  const name = data.name || 'Frame';
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState(name);
+  const editable = !data.readOnly;
+
+  useEffect(() => { if (!editing) setDraft(name); }, [name, editing]);
+
+  const save = () => {
+    setEditing(false);
+    const next = draft.trim();
+    if (!next || next === name) { setDraft(name); return; }
+    setNodes((nds) => nds.map((n) => (n.id === id ? { ...n, data: { ...n.data, name: next } } : n)));
+    if (data.workspaceId) persistNodeDataPatch(id, { name: next }, setNodes, data.workspaceId);
+  };
+
+  return (
+    <div
+      className={`nodrag absolute -top-7 z-10 max-w-full ${shifted ? 'left-6' : 'left-0'}`}
+      data-testid="frame-label"
+    >
+      {editing ? (
+        <input
+          autoFocus
+          value={draft}
+          maxLength={60}
+          onChange={(e) => setDraft(e.target.value)}
+          onBlur={save}
+          onKeyDown={(e) => {
+            e.stopPropagation();
+            if (e.key === 'Enter') e.currentTarget.blur();
+            if (e.key === 'Escape') { setDraft(name); setEditing(false); }
+          }}
+          className="h-6 w-40 rounded-md border border-info bg-surface px-1.5 text-xs font-medium text-ink outline-none ring-[3px] ring-info/20"
+          aria-label="Frame name"
+        />
+      ) : (
+        <span
+          className={`inline-block max-w-[260px] truncate rounded-md px-1.5 py-0.5 text-xs font-medium text-dim ${
+            editable ? 'cursor-text hover:bg-surface-hover hover:text-ink' : ''
+          }`}
+          onDoubleClick={(e) => { if (editable) { e.stopPropagation(); setEditing(true); } }}
+          title={editable ? 'Double-click to rename' : name}
+        >
+          {name}
+        </span>
+      )}
+    </div>
+  );
+};
 
 const LayoutNode = ({ id, data, isConnectable, selected }) => {
   const workspaceId = data.workspaceId;  // Get workspaceId from node data
@@ -17,6 +75,8 @@ const LayoutNode = ({ id, data, isConnectable, selected }) => {
 
   // Check if this is a group container
   const isGroupContainer = data.isGroupContainer || data.type === 'group-container';
+  // Frames, rows/columns/grids and group boxes only hold other nodes — never connection endpoints
+  const canConnectHere = isConnectable && !isContainerLayoutData(data);
   const containerStyle = data.containerStyle || {};
   const [containerName, setContainerName] = useState(data?.name || 'Group Container');
   const [isEditingName, setIsEditingName] = useState(false);
@@ -203,22 +263,7 @@ const LayoutNode = ({ id, data, isConnectable, selected }) => {
         </div>
         
         {/* Connection Handles */}
-        <Handle
-          type="source"
-          position={Position.Right}
-          id="right-out"
-          style={{ top: '50%' }}
-          className="w-3 h-3 !bg-info !border-2 !border-white opacity-0 group-hover:opacity-100 transition-opacity"
-          isConnectable={isConnectable}
-        />
-        <Handle
-          type="target"
-          position={Position.Left}
-          id="left-in"
-          style={{ top: '50%' }}
-          className="w-3 h-3 !bg-info !border-2 !border-white opacity-0 group-hover:opacity-100 transition-opacity"
-          isConnectable={isConnectable}
-        />
+        <NodeHandles isConnectable={canConnectHere} defaultSource="top" defaultTarget="top" />
       </div>
     );
   }
@@ -232,73 +277,11 @@ const LayoutNode = ({ id, data, isConnectable, selected }) => {
       }}
     >
       {/* Connection Handles - Same as ElementNode */}
-      <Handle
-        type="source"
-        position={Position.Top}
-        id="top-out"
-        style={{ left: '48%' }}
-        className="w-3 h-3 !bg-cta !border-2 !border-white opacity-0 group-hover:opacity-100 transition-opacity hover:!bg-cta"
-        isConnectable={isConnectable}
-      />
-      <Handle
-        type="target"
-        position={Position.Top}
-        id="top-in"
-        style={{ left: '52%' }}
-        className="w-3 h-3 !bg-cta !border-2 !border-white opacity-0 group-hover:opacity-100 transition-opacity hover:!bg-cta"
-        isConnectable={isConnectable}
-      />
-      
-      <Handle
-        type="source"
-        position={Position.Right}
-        id="right-out"
-        style={{ top: '48%' }}
-        className="w-3 h-3 !bg-cta !border-2 !border-white opacity-0 group-hover:opacity-100 transition-opacity hover:!bg-cta"
-        isConnectable={isConnectable}
-      />
-      <Handle
-        type="target"
-        position={Position.Right}
-        id="right-in"
-        style={{ top: '52%' }}
-        className="w-3 h-3 !bg-cta !border-2 !border-white opacity-0 group-hover:opacity-100 transition-opacity hover:!bg-cta"
-        isConnectable={isConnectable}
-      />
-      
-      <Handle
-        type="source"
-        position={Position.Bottom}
-        id="bottom-out"
-        style={{ left: '48%' }}
-        className="w-3 h-3 !bg-cta !border-2 !border-white opacity-0 group-hover:opacity-100 transition-opacity hover:!bg-cta"
-        isConnectable={isConnectable}
-      />
-      <Handle
-        type="target"
-        position={Position.Bottom}
-        id="bottom-in"
-        style={{ left: '52%' }}
-        className="w-3 h-3 !bg-cta !border-2 !border-white opacity-0 group-hover:opacity-100 transition-opacity hover:!bg-cta"
-        isConnectable={isConnectable}
-      />
-      
-      <Handle
-        type="source"
-        position={Position.Left}
-        id="left-out"
-        style={{ top: '48%' }}
-        className="w-3 h-3 !bg-cta !border-2 !border-white opacity-0 group-hover:opacity-100 transition-opacity hover:!bg-cta"
-        isConnectable={isConnectable}
-      />
-      <Handle
-        type="target"
-        position={Position.Left}
-        id="left-in"
-        style={{ top: '52%' }}
-        className="w-3 h-3 !bg-cta !border-2 !border-white opacity-0 group-hover:opacity-100 transition-opacity hover:!bg-cta"
-        isConnectable={isConnectable}
-      />
+      <NodeHandles isConnectable={canConnectHere} defaultSource="top" defaultTarget="top" />
+
+      {data.type === 'frame' && !data.flowchartGroup && (
+        <FrameLabel id={id} data={data} setNodes={setNodes} shifted={!!data.sequenceNumber} />
+      )}
       
       {/* Layout Content */}
       <div className="flex-1" style={{ height: 'calc(100% - 40px)' }}>
@@ -309,7 +292,7 @@ const LayoutNode = ({ id, data, isConnectable, selected }) => {
       </div>
       
       {/* Persistence Controls */}
-      <div className="absolute top-2 right-2 flex gap-1 text-xs opacity-0 group-hover:opacity-100 transition-opacity">
+      <div className="wk-client-hide absolute top-2 right-2 flex gap-1 text-xs opacity-0 group-hover:opacity-100 transition-opacity">
         <button
           onClick={async () => {
             setIsImportant(!isImportant);
@@ -361,7 +344,7 @@ const LayoutNode = ({ id, data, isConnectable, selected }) => {
       
       {/* Sequence Number Badge - Top left corner */}
       {data.sequenceNumber && (
-        <div className="absolute -top-4 -left-4 z-20 w-8 h-8 bg-black text-white rounded-full flex items-center justify-center text-sm font-bold shadow-lg border-2 border-white hover:shadow-xl transition-shadow">
+        <div className="wk-client-hide absolute -top-4 -left-4 z-20 w-8 h-8 bg-black text-white rounded-full flex items-center justify-center text-sm font-bold shadow-lg border-2 border-white hover:shadow-xl transition-shadow">
           {data.sequenceNumber}
         </div>
       )}

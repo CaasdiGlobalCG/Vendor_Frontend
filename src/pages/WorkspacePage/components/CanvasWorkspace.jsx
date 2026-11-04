@@ -1,5 +1,5 @@
-import React, { useState, useCallback, useEffect, useContext, useRef, useImperativeHandle, forwardRef } from 'react';
-import { Plus, Save, Eye, X, Users, Grid, Maximize2, Minimize2, Check, Gauge, Download, FileText, AlignHorizontalDistributeCenter, Sparkles, Trash2, TrendingUp, Link2 } from 'lucide-react';
+import React, { useState, useCallback, useEffect, useContext, useMemo, useRef, useImperativeHandle, forwardRef } from 'react';
+import { Presentation, UserCheck, Focus, Plus, Save, Eye, X, Users, Grid, Maximize2, Minimize2, Check, Gauge, Download, FileText, AlignHorizontalDistributeCenter, Sparkles, Trash2, TrendingUp, Link2 } from 'lucide-react';
 import { toJpeg } from 'html-to-image';
 import { VendorContext } from '../../../context/VendorContext';
 import ReactFlow, {
@@ -10,6 +10,7 @@ import ReactFlow, {
   Controls,
   MiniMap,
   Panel,
+  ControlButton,
   MarkerType,
   ConnectionMode
 } from 'reactflow';
@@ -30,6 +31,7 @@ import GroupingModal from './modals/GroupingModal';
 import GroupingToolbar from './GroupingToolbar';
 import ContextMenu from './ContextMenu';
 import HelperLines from './HelperLines';
+import { alignRects, findGuides } from '../utils/alignmentUtils';
 import { exportCanvasAsPng, exportCanvasAsPdf } from '../utils/canvasExport';
 import ProcurementRFQDetailsModal from './modals/ProcurementRFQDetailsModal';
 import ExecutionRequestDetailsModal from './modals/ExecutionRequestDetailsModal';
@@ -40,6 +42,29 @@ import { buildAuthorMeta } from '../utils/nodeAuthor';
 import { isLocked, isVisibleToRole } from '../utils/nodeVisibility';
 import config from '../../../config/env';
 import RemoteCursor from './RemoteCursor';
+import {
+  pickHandles,
+  createEdge,
+  toSourceHandleId,
+  resolveAnchorNode,
+  buildAutoEdge,
+  canConnect,
+  isConnectableNode,
+  isContainerNode,
+  targetHandleFor,
+  quickAddPosition,
+} from '../utils/connectionUtils';
+import QuickAddMenu from './QuickAddMenu';
+import PresentHUD from './PresentHUD';
+import {
+  findFreePosition,
+  hasCollision,
+  estimateElementSize,
+  getNodeSize,
+  isRectInViewport,
+} from '../utils/canvasPlacement';
+import { getPresentationStops, clampPresentIndex, nextPresentIndex, prevPresentIndex } from '../utils/presentationUtils';
+import { useIsDarkMode } from '../hooks/useIsDarkMode';
 import { useToast } from './ToastProvider';
 import {
   nodeChangesToOps,
@@ -74,10 +99,69 @@ const controlsCSS = `
       opacity: 0.3;
     }
   }
+
+  /* Present mode: hide every piece of editing chrome, make the canvas look-only */
+  .wk-presenting .wk-present-hide,
+  .wk-presenting .react-flow__panel,
+  .wk-presenting .react-flow__controls,
+  .wk-presenting .react-flow__minimap,
+  .wk-presenting .react-flow__handle,
+  .wk-presenting .react-flow__nodesselection,
+  .wk-presenting .react-flow__edge-interaction,
+  .wk-presenting .react-flow__edgeupdater {
+    display: none !important;
+  }
+  .wk-presenting .react-flow__node,
+  .wk-presenting .react-flow__edge {
+    pointer-events: none !important;
+  }
+  .wk-presenting .react-flow__pane {
+    cursor: grab !important;
+  }
+  .wk-presenting .react-flow__pane.dragging {
+    cursor: grabbing !important;
+  }
+
+  /* Client view: the canvas as a client sees it. Same takeover as Present, but
+     content stays scrollable; only editing chrome and fields are switched off. */
+  .wk-client-view .wk-present-hide,
+  .wk-client-view .wk-client-hide,
+  .wk-client-view .react-flow__handle,
+  .wk-client-view .react-flow__nodesselection,
+  .wk-client-view .react-flow__selection,
+  .wk-client-view .react-flow__edge-interaction,
+  .wk-client-view .react-flow__edgeupdater,
+  .wk-client-view .react-flow__panel:not(.react-flow__controls):not(.react-flow__minimap):not(.react-flow__attribution),
+  .wk-client-view .react-flow__controls-interactive,
+  .wk-client-view .react-flow__node button[title*="Important"],
+  .wk-client-view .react-flow__node button[title="Set Deadline"],
+  .wk-client-view .react-flow__node button[title="More options"],
+  .wk-client-view .react-flow__node button[title^="Comments"] {
+    display: none !important;
+  }
+  .wk-client-view .react-flow__node input,
+  .wk-client-view .react-flow__node textarea,
+  .wk-client-view .react-flow__node select,
+  .wk-client-view .react-flow__node [contenteditable="true"] {
+    pointer-events: none !important;
+  }
+  .wk-client-view .react-flow__pane {
+    cursor: grab !important;
+  }
 `;
 
 // Import custom nodes
 import SmartNoteNode from './nodes/SmartNoteNode';
+import BlockNode from './nodes/BlockNode';
+import B2BOrderDocNode from './nodes/B2BOrderDocNode';
+import { planB2BDocs, docNodeId } from '../utils/b2bDocLayout';
+import { readDismissedOrderDocs, dismissOrderDocs } from '../utils/b2bDismissedDocs';
+import ClientViewBar from './ClientViewBar';
+import { instantiateTemplate } from '../templates/templateEngine';
+import { WorkspaceProgressContext, rememberCanvas, forgetCanvases, rememberedCanvases } from '../utils/WorkspaceProgressContext';
+import EmptyCanvasState from './EmptyCanvasState';
+import { CanvasSkeleton, useDelayedFlag } from './ui/Skeleton';
+import { BLOCK_NODE_TYPE, isDecorativeBlock, isDecorativeBlockNode } from '../utils/blockElements';
 import CalendarNode from './nodes/CalendarNode';
 import ApprovalBoardNode from './nodes/ApprovalBoardNode';
 import AIHelperNode from './nodes/AIHelperNode';
@@ -89,12 +173,24 @@ import InfoCardNode from './nodes/InfoCardNode';
 import FormCardNode from './nodes/FormCardNode';
 
 // Node types
+// Grouped document-chain container — wraps the quote → PO → invoice nodes
+// that belong to the same transaction so they read as one connected unit.
+const DocGroupNode = ({ data }) => (
+  <div className="w-full h-full rounded-xl border-2 border-dashed border-cta/40 bg-cta/5 relative">
+    <div className="absolute -top-3 left-4 px-2 py-0.5 rounded-md bg-cta text-cta-foreground text-[10px] font-semibold shadow-sm whitespace-nowrap">
+      {data?.label || 'Document chain'}
+    </div>
+  </div>
+);
+
 const nodeTypes = {
+  docGroup: DocGroupNode,
   elementNode: ElementNode,
   layoutNode: LayoutNode,
   textNode: TextNode,
   turnkeyNode: TurnkeyNode,
   smartNote: SmartNoteNode,
+  blockNode: BlockNode,
   calendarNode: CalendarNode,
   approvalBoard: ApprovalBoardNode,
   aiHelper: AIHelperNode,
@@ -104,6 +200,7 @@ const nodeTypes = {
   purchaseOrder: PurchaseOrderNode,
   infoCard: InfoCardNode,
   formCard: FormCardNode,
+  b2bOrderDoc: B2BOrderDocNode,
 };
 
 // Edge types
@@ -133,6 +230,12 @@ const edgeTypes = {
   const { currentUser } = useContext(VendorContext);
 
   const [isFullscreen, setIsFullscreen] = useState(false);
+  // Present mode: read-only, chrome-free slideshow of the canvas. presentIndex -1 = overview.
+  const [isPresenting, setIsPresenting] = useState(false);
+  const [isClientView, setIsClientView] = useState(false);
+  const [isCanvasLoading, setIsCanvasLoading] = useState(false);
+  const [presentIndex, setPresentIndex] = useState(-1);
+  const presentRootRef = useRef(null);
   const [headerOffset, setHeaderOffset] = useState(0);
   const [showClearConfirmation, setShowClearConfirmation] = useState(false);
   const [deletionRequestTarget, setDeletionRequestTarget] = useState(null);
@@ -162,25 +265,72 @@ const edgeTypes = {
 
     setHeaderOffset(visibleBottom);
   }, []);
-  const autoPlacementIndexRef = useRef(0);
+  // Live references so the placement helpers (used from long-lived event
+  // handlers) always see the current nodes and viewport without being recreated.
+  const nodesRef = useRef([]);
+  const reactFlowInstanceRef = useRef(null);
+  // Elements you just added: placed using an estimated size, then watched for a
+  // few seconds while they lay out (a chart grows after its first render) and
+  // nudged if they end up overlapping a neighbour (see the settle effect).
+  const SETTLE_WINDOW_MS = 4000;
+  const SETTLE_MAX_MOVES = 3;
+  // Re-check on a timer too: an element can finish laying out (a chart, an
+  // image) without the node list changing, which is what the effect watches.
+  const SETTLE_RECHECK_MS = [250, 700, 1400, 2400, 3600];
+  const [settleTick, setSettleTick] = useState(0);
+  const settleQueueRef = useRef(new Map()); // id -> { until, moves }
+  const markForSettle = useCallback((id) => {
+    if (!id) return;
+    settleQueueRef.current.set(id, { until: Date.now() + SETTLE_WINDOW_MS, moves: 0 });
+    SETTLE_RECHECK_MS.forEach((ms) => setTimeout(() => setSettleTick((t) => t + 1), ms));
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const getAutoPlacementPosition = useCallback((basePosition) => {
-    const offsets = [
-      { x: 0, y: 0 },
-      { x: 40, y: 0 },
-      { x: 0, y: 40 },
-      { x: 40, y: 40 },
-      { x: 80, y: 0 },
-      { x: 0, y: 80 }
-    ];
-    const index = autoPlacementIndexRef.current % offsets.length;
-    autoPlacementIndexRef.current += 1;
-    const offset = offsets[index];
-    return {
-      x: basePosition.x + offset.x,
-      y: basePosition.y + offset.y
-    };
+  // Where the user is looking, in canvas coordinates, as the top-left of a new
+  // element of `size`. (The old code used the browser window's centre as if it
+  // were a canvas position, so after panning or zooming new elements landed
+  // somewhere off-screen.)
+  const getViewportAnchor = useCallback((size) => {
+    const instance = reactFlowInstanceRef.current;
+    const box = canvasContainerRef.current?.getBoundingClientRect();
+    if (!instance || !box) return null;
+    const center = instance.screenToFlowPosition({
+      x: box.left + box.width / 2,
+      y: box.top + box.height / 2,
+    });
+    return { x: center.x - size.w / 2, y: center.y - size.h / 2 };
   }, []);
+
+  // Nearest free spot for a new element: never on top of an existing one, and
+  // existing elements never move (see utils/canvasPlacement).
+  // Neither our node state nor React Flow's node list carries each element's
+  // real width/height, so read it from the rendered element. offsetWidth and
+  // offsetHeight ignore the canvas zoom, so they are already in canvas units.
+  const getMeasuredNodes = useCallback(() => {
+    const root = canvasContainerRef.current;
+    const nodes = nodesRef.current;
+    if (!root) return nodes;
+    const rendered = new Map();
+    root.querySelectorAll('.react-flow__node').forEach((el) => {
+      const id = el.getAttribute('data-id');
+      if (id && el.offsetWidth > 0 && el.offsetHeight > 0) {
+        rendered.set(id, { width: el.offsetWidth, height: el.offsetHeight });
+      }
+    });
+    return nodes.map((n) => (rendered.has(n.id) ? { ...n, ...rendered.get(n.id) } : n));
+  }, []);
+
+  const placeNode = useCallback(
+    (desired, size) => findFreePosition(desired, size, getMeasuredNodes()),
+    [getMeasuredNodes]
+  );
+
+  const getAutoPlacementPosition = useCallback(
+    (basePosition, size = estimateElementSize()) => {
+      const anchor = getViewportAnchor(size) || basePosition;
+      return placeNode(anchor, size);
+    },
+    [getViewportAnchor, placeNode]
+  );
 
   const safeClone = useCallback((value) => {
     try {
@@ -257,8 +407,16 @@ const edgeTypes = {
   // PMs always can edit.
   // If task is unlocked (post-completion), vendor can edit regardless of base canEdit permission.
   // If workspace is not completed, use normal permission check.
-  const canEdit = userRole === 'pm' ? true : 
-    (isCurrentTaskUnlocked || (!isWorkspaceCompleted && userPermissions?.canEdit));
+  // A subtask the PM completed and locked is view-only for everyone but the PM, whatever
+  // permissions they hold. Read from the live workspace so it applies as soon as it is locked.
+  const liveLockedTask = (workspace?.tasks || []).find((t) => t.id === selectedTask?.id);
+  const isSubtaskLocked = selectedSubtask
+    ? (liveLockedTask?.subtasks || []).find((st) => st.id === selectedSubtask.id)?.locked === true
+    : liveLockedTask?.locked === true;
+  const canEditBase = userRole === 'pm' ? true :
+    (!isSubtaskLocked && (isCurrentTaskUnlocked || (!isWorkspaceCompleted && userPermissions?.canEdit)));
+  // While presenting, the whole canvas is read-only regardless of permissions
+  const canEdit = canEditBase && !isPresenting && !isClientView;
   
   // Canvas permissions check complete
 
@@ -520,6 +678,7 @@ const edgeTypes = {
   // Clean up nodes on initialization to remove orphaned parent references
   const initialNodes = cleanupOrphanedNodesHelper(canvasData.nodes);
   const [nodes, setNodesRaw, onNodesChange] = useNodesState(initialNodes);
+  nodesRef.current = nodes;
   const [edges, setEdgesRaw, onEdgesChange] = useEdgesState(canvasData.edges);
   
   // Undo/Redo History Management
@@ -712,6 +871,18 @@ const edgeTypes = {
 
   // Track the last added element for auto-connection
   const lastAddedNodeIdRef = useRef(null);
+  // In-progress connection drag (for drop-on-node-body and handle highlighting)
+  const connectStartRef = useRef(null);
+  const connectionMadeRef = useRef(false);
+  const [isConnecting, setIsConnecting] = useState(false);
+  const isDarkMode = useIsDarkMode();
+  // "Add next element" menu opened by dropping a connection on empty canvas
+  const [quickAdd, setQuickAdd] = useState(null); // { clientX, clientY, flowPosition, sourceId, sourceHandle }
+  // Set when an element is added through that menu so the new node connects to
+  // the node the user dragged from (consumed by autoConnectNewNode)
+  const quickConnectRef = useRef(null);
+  // Edge currently being re-attached by dragging one of its ends
+  const reconnectingEdgeRef = useRef(null);
   // Keep a ref of workspaceCollaborators so the node-loading effect can inject them immediately
   const workspaceCollaboratorsRef = useRef(workspaceCollaborators || []);
   // Counter to re-trigger collabs sync after canvas data loads from DynamoDB
@@ -727,6 +898,9 @@ const edgeTypes = {
   // Function to clear all elements from canvas
   const clearCanvas = () => {
     if (nodes.length || edges.length) pushToHistory();
+    // Marketplace order documents are placed automatically; remember that the person
+    // removed them, or they would be put straight back on the next refresh.
+    dismissOrderDocs(workspace?.workspaceId, nodes.filter((n) => n.type === 'b2bOrderDoc').map((n) => n.id));
     isUpdatingNodesLocallyRef.current = true;
     // Emit delete ops so collaborators + persisted state clear too
     nodes.forEach(n => emitOpRef.current?.({
@@ -773,6 +947,7 @@ const edgeTypes = {
   }, [selectedSubtask, workspace]);
 
   const [reactFlowInstance, setReactFlowInstance] = useState(null);
+  reactFlowInstanceRef.current = reactFlowInstance;
   const [isDraggingOver, setIsDraggingOver] = useState(false);
   const [zoomLevel, setZoomLevelState] = useState(Number(canvasData.zoomLevel) || 100);
 
@@ -796,7 +971,7 @@ const edgeTypes = {
     updateZoomLevel(clampedZoom);
   }, [reactFlowInstance, updateZoomLevel]);
 
-  const captureWorkspaceSnapshot = useCallback(async () => {
+  const captureWorkspaceSnapshot = useCallback(async (options = {}) => {
     const container = canvasContainerRef.current;
     if (!container) return null;
 
@@ -819,11 +994,11 @@ const edgeTypes = {
       }
 
       return await toJpeg(target, {
-        quality: 0.55,
+        quality: options.quality || 0.55,
         pixelRatio: 1,
         backgroundColor: '#fbfcfe',
-        canvasWidth: 640,
-        canvasHeight: 360,
+        canvasWidth: options.width || 640,
+        canvasHeight: options.height || 360,
         cacheBust: true,
         filter: (node) => {
           const className = typeof node.className === 'string' ? node.className : '';
@@ -1021,8 +1196,8 @@ const edgeTypes = {
       })
       .map((node) => {
       let out = node;
-      if (isLocked(node.data)) {
-        out = { ...out, draggable: false, deletable: false };
+      if (node.type === BLOCK_NODE_TYPE || (node.type === 'layoutNode' && node.data?.type === 'frame')) {
+        out = { ...out, data: { ...out.data, readOnly: !canEdit } };
       }
       if (node.type === 'elementNode' && getCurrentUserRole() !== 'pm') {
         out = { ...out, deletable: false };
@@ -1065,7 +1240,7 @@ const edgeTypes = {
       }
       return out;
     });
-  }, [nodes, hiddenDocNodeIds, getCurrentUserRole, setNodes, setEdges]);
+  }, [nodes, hiddenDocNodeIds, getCurrentUserRole, setNodes, setEdges, canEdit]);
 
   // Wrapped cleanup function using the helper
   const cleanupOrphanedNodes = useCallback((nodesToClean) => {
@@ -1153,6 +1328,7 @@ const edgeTypes = {
       batcherRef.current?.flush();
       canvasWebSocket?.emitOperation?.({ type: 'FLUSH' });
       const targetSubtaskId = selectedSubtask?.id;
+      setIsCanvasLoading(true);
 
       (async () => {
         let freshCanvasData = null;
@@ -1198,7 +1374,10 @@ const edgeTypes = {
         lastAddedNodeIdRef.current = nodesWithCollabs.length > 0
           ? nodesWithCollabs[nodesWithCollabs.length - 1].id
           : null;
-      })();
+      })().finally(() => {
+        // A newer switch owns the flag now
+        if (canvasSyncRequestRef.current === requestId) setIsCanvasLoading(false);
+      });
       return;
     }
 
@@ -1614,7 +1793,9 @@ const edgeTypes = {
   // Helper function to create a node with sequence number
   const createElementNode = (element, position, customData = null) => {
     // Get the next sequence number (count of existing sequenced elements + 1)
-    const sequenceNum = (nodes.filter(n => n.data?.sequenceNumber !== undefined && n.data.sequenceNumber !== null).length) + 1;
+    // Read the live node list: this runs from long-lived event handlers whose
+    // closure holds a stale `nodes`, which numbered every new element "1"
+    const sequenceNum = (nodesRef.current.filter(n => n.data?.sequenceNumber !== undefined && n.data.sequenceNumber !== null).length) + 1;
     
     console.log('🏗️ createElementNode called with:', { element, position, customData, sequenceNum, totalNodes: nodes.length });
     
@@ -1633,6 +1814,7 @@ const edgeTypes = {
     const isPurchaseOrder = element.type === 'purchase-order' || element.nodeType === 'purchaseOrder';
     const isInfoCard = element.type === 'info-card' || element.nodeType === 'infoCard';
     const isFormCard = element.type === 'form-card' || element.nodeType === 'formCard';
+    const isBlock = element.nodeType === BLOCK_NODE_TYPE;
     
     console.log('🔍 Element type checks:', { isLayout, isText, isTurnkey, isSmartNote, isCalendarEvent, isApprovalBoard, isAIHelper, isCreditNote, isInvoice, isQuotation, isPurchaseOrder, isInfoCard, isFormCard });
     
@@ -1650,6 +1832,7 @@ const edgeTypes = {
     if (isPurchaseOrder) nodeType = 'purchaseOrder';
     if (isInfoCard) nodeType = 'infoCard';
     if (isFormCard) nodeType = 'formCard';
+    if (isBlock) nodeType = BLOCK_NODE_TYPE;
     
     const nodeId = `${element.type}_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`;
     const taskCardData = isTaskCard
@@ -1766,6 +1949,8 @@ const edgeTypes = {
         ...(element.type === 'cost-calculator' && element.data && { ...element.data }),
         // Store cost calculator summary data
         ...(element.type === 'cost-calculator-summary' && element.data && { data: element.data }),
+        // Heading / divider / status / progress / KPI settings
+        ...(isBlock && (element.data || {})),
         // Store Smart Note data
         ...(isSmartNote && {
           label: element.data?.label || element.name || 'Smart Note',
@@ -1829,7 +2014,7 @@ const edgeTypes = {
         isRecentlyUpdated: true,
         
         // Element sequence number - order in which it was added
-        sequenceNumber: sequenceNum,
+        sequenceNumber: isBlock && isDecorativeBlock(element.data?.kind, element.data) ? undefined : sequenceNum,
         
         // Approval workflow - initially pending
         approvalStatus: 'pending', // 'pending', 'approved', 'rejected'
@@ -1873,105 +2058,54 @@ const edgeTypes = {
     return newNode;
   };
 
-  // Helper function to auto-connect a newly added node to the previous element
+  // Auto-connect a newly added node: chain it from the selected node when
+  // exactly one is selected, otherwise from the most recently added node.
+  // The arrow always runs existing -> new; sides are chosen from geometry.
   const autoConnectNewNode = (newNode) => {
+    markForSettle(newNode.id);
     const previousNodeId = lastAddedNodeIdRef.current;
-    console.log('📌 Previous node ID stored:', previousNodeId);
-    
-    if (previousNodeId) {
+
+    // Created from the "add next element" menu: connect from the node (and
+    // side) the user dragged from, not from the selection / last added node.
+    const quick = quickConnectRef.current;
+    quickConnectRef.current = null;
+    if (quick && Date.now() - quick.ts < 120000) {
       setNodes((currentNodes) => {
-        // Find the previous node
-        const previousNode = currentNodes.find(node => node.id === previousNodeId);
-        
-        if (previousNode) {
-          console.log(`🎯 Found previous node: ${previousNodeId} at position (${previousNode.position.x}, ${previousNode.position.y})`);
-          
-          // Determine connection direction based on relative position
-          const dx = newNode.position.x - previousNode.position.x;
-          const dy = newNode.position.y - previousNode.position.y;
-          
-          let sourceId = previousNode.id;
-          let targetId = newNode.id;
-          let sourceHandle = 'right-out';
-          let targetHandle = 'left-in';
-          
-          // Adjust handles based on direction
-          if (Math.abs(dx) > Math.abs(dy)) {
-            // Horizontal layout
-            if (dx < 0) {
-              // New node is to the left, reverse direction
-              sourceId = newNode.id;
-              targetId = previousNode.id;
-            }
-          } else {
-            // Vertical layout
-            if (dy > 0) {
-              // New node is below - connect top to bottom
-              sourceId = previousNode.id;
-              targetId = newNode.id;
-              sourceHandle = 'bottom-out';
-              targetHandle = 'top-in';
-            } else {
-              // New node is above - connect bottom to top
-              sourceId = newNode.id;
-              targetId = previousNode.id;
-              sourceHandle = 'bottom-out';
-              targetHandle = 'top-in';
-            }
-          }
-          
-          // Queue the edge creation for after nodes are updated
-          setEdges((currentEdges) => {
-            console.log('📐 Creating edge from', sourceId, 'to', targetId);
-            
-            // Check if connection already exists
-            const connectionExists = currentEdges.some(
-              edge => (edge.source === sourceId && edge.target === targetId && 
-                       edge.sourceHandle === sourceHandle && edge.targetHandle === targetHandle) ||
-                      (edge.source === targetId && edge.target === sourceId)
-            );
-            
-            if (!connectionExists) {
-              const edgeId = `edge_auto_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
-              const newEdge = {
-                id: edgeId,
-                source: sourceId,
-                target: targetId,
-                sourceHandle: sourceHandle,
-                targetHandle: targetHandle,
-                type: 'custom',
-                animated: false,
-                style: {
-                  strokeWidth: 2,
-                  stroke: '#6b7280',
-                },
-                markerEnd: { type: MarkerType.ArrowClosed, width: 18, height: 18, color: '#6b7280' },
-                data: {
-                  label: '',
-                  isAutoConnected: true
-                }
-              };
-              
-              console.log(`✅ AUTO-CONNECTED: ${sourceId} → ${targetId}`);
-              return [...currentEdges, newEdge];
-            } else {
-              console.log(`⏭️ Connection already exists between: ${sourceId} ↔ ${targetId}`);
-              return currentEdges;
-            }
-          });
-        } else {
-          console.log(`⚠️ Previous node (${previousNodeId}) not found in current nodes`);
+        const sourceNode = currentNodes.find((n) => n.id === quick.sourceId);
+        if (sourceNode && isConnectableNode(sourceNode) && isConnectableNode(newNode)) {
+          setEdges((currentEdges) =>
+            currentEdges.some((e) => e.source === sourceNode.id && e.target === newNode.id)
+              ? currentEdges
+              : [
+                  ...currentEdges,
+                  createEdge({
+                    source: sourceNode.id,
+                    target: newNode.id,
+                    sourceHandle: quick.sourceHandle,
+                    targetHandle: targetHandleFor(quick.sourceHandle),
+                  }),
+                ]
+          );
         }
-        
         return currentNodes;
       });
-    } else {
-      console.log('ℹ️ No previous element - this is the first element');
+      if (!isDecorativeBlockNode(newNode)) lastAddedNodeIdRef.current = newNode.id; // headings/dividers never anchor a chain
+      return;
     }
-    
-    // Update the reference to track this new node as the last added
-    lastAddedNodeIdRef.current = newNode.id;
-    console.log('📌 Updated last added element to:', newNode.id);
+
+    setNodes((currentNodes) => {
+      const anchorNode = resolveAnchorNode(currentNodes, newNode.id, previousNodeId);
+      if (anchorNode) {
+        setEdges((currentEdges) => {
+          const autoEdge = buildAutoEdge(anchorNode, newNode, currentEdges);
+          return autoEdge ? [...currentEdges, autoEdge] : currentEdges;
+        });
+      }
+      return currentNodes;
+    });
+
+    // Track this node as the last added one
+    if (!isDecorativeBlockNode(newNode)) lastAddedNodeIdRef.current = newNode.id; // headings/dividers never anchor a chain
   };
 
   // Handle table configuration confirmation
@@ -2967,14 +3101,10 @@ const edgeTypes = {
 
   // Handle canvas click to hide flowchart toolbar and context menu
   const onPaneClick = useCallback((event) => {
-    // Clicking empty canvas cancels element link pick-mode
-    if (linkPickMode) {
-      document.dispatchEvent(new CustomEvent('activateElementLinkMode', {
-        detail: { active: false, sourceNodeId: linkPickMode.sourceNodeId }
-      }));
-      return;
-    }
-
+    // A pending "add next element" connection must not outlive the interaction.
+    // (Do not close the menu here: releasing a connection on the pane also
+    // fires a pane click, which would dismiss the menu the instant it opens.)
+    quickConnectRef.current = null;
     // If text mode is active, place a caption-style text node at the click
     // point and let the user type immediately (Figma-style text tool)
     if (isTextModeActive && reactFlowInstance) {
@@ -3467,7 +3597,8 @@ const edgeTypes = {
     }
   }, [isSelectionMode, handleManualNodeSelection, linkPickMode]);
 
-  const handleEdgeClick = useCallback((event, edge) => {
+  // Single click only selects the edge; double-click opens the label/style editor
+  const handleEdgeDoubleClick = useCallback((event, edge) => {
     event.stopPropagation();
     openEdgeLabelModal(edge.id, edge.data?.label || '');
   }, [openEdgeLabelModal]);
@@ -3479,57 +3610,73 @@ const edgeTypes = {
   const [aiReview, setAiReview] = useState(null);
   const aiGenTimersRef = useRef([]);
 
-  const getNodeSize = useCallback((n) => ({
-    w: n.width ?? n.measured?.width ?? n.style?.width ?? 200,
-    h: n.height ?? n.measured?.height ?? n.style?.height ?? 150
-  }), []);
+  // Real rendered sizes: neither our node state nor React Flow v11 carries
+  // width/height here, so read them from the DOM (cached for a drag).
+  const measuredSizesRef = useRef(new Map());
+  const getNodeSize = useCallback((n) => {
+    const cached = measuredSizesRef.current.get(n.id);
+    if (cached) return cached;
+    const el = canvasContainerRef.current?.querySelector(`.react-flow__node[data-id="${CSS.escape(String(n.id))}"]`);
+    if (el && el.offsetWidth > 0 && el.offsetHeight > 0) return { w: el.offsetWidth, h: el.offsetHeight };
+    return {
+      w: Number(n.width ?? n.measured?.width ?? n.style?.width) || 200,
+      h: Number(n.height ?? n.measured?.height ?? n.style?.height) || 150,
+    };
+  }, []);
+
+  const handleNodeDragStart = useCallback(() => {
+    const sizes = new Map();
+    canvasContainerRef.current?.querySelectorAll('.react-flow__node').forEach((el) => {
+      const id = el.getAttribute('data-id');
+      if (id && el.offsetWidth > 0 && el.offsetHeight > 0) sizes.set(id, { w: el.offsetWidth, h: el.offsetHeight });
+    });
+    measuredSizesRef.current = sizes;
+  }, []);
+
+  // Rects (own coordinate space) of the nodes a dragged node can align to:
+  // siblings only, since frame children are positioned relative to their frame.
+  const guideTargets = useCallback((node) =>
+    nodesRef.current
+      .filter((o) => o.id !== node.id && !o.selected && !o.hidden && (o.parentNode || null) === (node.parentNode || null))
+      .map((o) => ({ id: o.id, x: o.position.x, y: o.position.y, ...(() => { const s = getNodeSize(o); return { w: s.w, h: s.h }; })() })),
+  [getNodeSize]);
 
   const handleNodeDrag = useCallback((event, node) => {
     const { w, h } = getNodeSize(node);
     const zoom = reactFlowInstance?.getZoom?.() || 1;
-    const threshold = 6 / zoom;
-
-    const d = {
-      xs: [node.position.x, node.position.x + w / 2, node.position.x + w],
-      ys: [node.position.y, node.position.y + h / 2, node.position.y + h]
-    };
-
-    let vertical = null;
-    let horizontal = null;
-
-    for (const other of nodes) {
-      if (other.id === node.id) continue;
-      const os = getNodeSize(other);
-      const o = {
-        xs: [other.position.x, other.position.x + os.w / 2, other.position.x + os.w],
-        ys: [other.position.y, other.position.y + os.h / 2, other.position.y + os.h]
-      };
-
-      for (const dx of d.xs) {
-        for (const ox of o.xs) {
-          if (Math.abs(dx - ox) < threshold) vertical = ox;
-        }
-      }
-      for (const dy of d.ys) {
-        for (const oy of o.ys) {
-          if (Math.abs(dy - oy) < threshold) horizontal = oy;
-        }
-      }
-      if (vertical != null && horizontal != null) break;
-    }
-
+    const { vertical, horizontal } = findGuides(
+      { id: node.id, x: node.position.x, y: node.position.y, w, h },
+      guideTargets(node),
+      6 / zoom
+    );
     setHelperLines(prev =>
       prev.vertical === vertical && prev.horizontal === horizontal ? prev : { vertical, horizontal }
     );
-  }, [nodes, reactFlowInstance, getNodeSize]);
+  }, [reactFlowInstance, getNodeSize, guideTargets]);
 
-  const handleNodeDragStop = useCallback(() => {
+  const handleNodeDragStop = useCallback((event, node) => {
     setHelperLines({ horizontal: null, vertical: null });
+    // Release near a guide: settle exactly on it (single-node drags only)
+    if (node && nodesRef.current.filter((n) => n.selected).length <= 1) {
+      const { w, h } = getNodeSize(node);
+      const zoom = reactFlowInstance?.getZoom?.() || 1;
+      const { dx, dy } = findGuides(
+        { id: node.id, x: node.position.x, y: node.position.y, w, h },
+        guideTargets(node),
+        6 / zoom
+      );
+      if (dx || dy) {
+        const position = { x: node.position.x + dx, y: node.position.y + dy };
+        setNodes(nds => nds.map(n => (n.id === node.id ? { ...n, position } : n)));
+        emitOp(createNodeMoveOp(node.id, position, selectedTask?.id, selectedSubtask?.id));
+      }
+    }
+    measuredSizesRef.current = new Map();
     // Push the pending move op out of the 50ms batch window, then ask the
     // server to persist immediately so a refresh can't lose the new position.
     batcherRef.current?.flush();
     canvasWebSocket?.emitOperation?.({ type: 'FLUSH' });
-  }, [canvasWebSocket]);
+  }, [canvasWebSocket, getNodeSize, guideTargets, reactFlowInstance, setNodes, emitOp, selectedTask?.id, selectedSubtask?.id]);
 
   // ---- Align / distribute selected elements ----
   const alignSelectedNodes = useCallback((mode) => {
@@ -3537,52 +3684,17 @@ const edgeTypes = {
       notifyViewOnly('align elements');
       return;
     }
-    const sel = nodes.filter(n => n.selected);
+    // Frame children use frame-relative positions, so only align elements that share a parent
+    const picked = nodes.filter(n => n.selected);
+    const parent = picked[0]?.parentNode || null;
+    const sel = picked.filter(n => (n.parentNode || null) === parent);
     if (sel.length < 2) return;
 
-    pushToHistory();
-
-    const sizes = {};
-    sel.forEach(n => { sizes[n.id] = getNodeSize(n); });
-    const minX = Math.min(...sel.map(n => n.position.x));
-    const maxX = Math.max(...sel.map(n => n.position.x + sizes[n.id].w));
-    const minY = Math.min(...sel.map(n => n.position.y));
-    const maxY = Math.max(...sel.map(n => n.position.y + sizes[n.id].h));
-    const midX = (minX + maxX) / 2;
-    const midY = (minY + maxY) / 2;
-
-    const newPositions = {};
-    if (mode === 'distributeH' || mode === 'distributeV') {
-      const axis = mode === 'distributeH' ? 'x' : 'y';
-      const sizeKey = mode === 'distributeH' ? 'w' : 'h';
-      const sorted = [...sel].sort((a, b) => a.position[axis] - b.position[axis]);
-      if (sorted.length > 2) {
-        const first = sorted[0];
-        const last = sorted[sorted.length - 1];
-        const start = first.position[axis] + sizes[first.id][sizeKey] / 2;
-        const end = last.position[axis] + sizes[last.id][sizeKey] / 2;
-        const step = (end - start) / (sorted.length - 1);
-        sorted.forEach((n, i) => {
-          newPositions[n.id] = mode === 'distributeH'
-            ? { x: start + step * i - sizes[n.id].w / 2, y: n.position.y }
-            : { x: n.position.x, y: start + step * i - sizes[n.id].h / 2 };
-        });
-      }
-    } else {
-      sel.forEach(n => {
-        const { w, h } = sizes[n.id];
-        const pos = { ...n.position };
-        if (mode === 'left') pos.x = minX;
-        else if (mode === 'centerH') pos.x = midX - w / 2;
-        else if (mode === 'right') pos.x = maxX - w;
-        else if (mode === 'top') pos.y = minY;
-        else if (mode === 'centerV') pos.y = midY - h / 2;
-        else if (mode === 'bottom') pos.y = maxY - h;
-        newPositions[n.id] = pos;
-      });
-    }
-
+    const rects = sel.map(n => ({ id: n.id, x: n.position.x, y: n.position.y, ...getNodeSize(n) }));
+    const newPositions = alignRects(rects, mode);
     if (Object.keys(newPositions).length === 0) return;
+
+    pushToHistory();
     setNodes(nds => nds.map(n => newPositions[n.id] ? { ...n, position: newPositions[n.id] } : n));
     Object.entries(newPositions).forEach(([nodeId, position]) => {
       emitOp(createNodeMoveOp(nodeId, position, selectedTask?.id, selectedSubtask?.id));
@@ -3997,7 +4109,51 @@ const edgeTypes = {
     }
   }, [workspace?.workspaceId, selectedSubtask?.id, canvasWebSocket, updateZoomLevel]);
 
+  // Marketplace order documents (quotation, receipt voucher, PO, invoice). Each has a fixed id from
+  // its order and document, so adding one twice makes one node. They are placed beside the RFQ
+  // element the order was raised from and linked to it and to each other (see b2bDocLayout.js).
+  const addB2BOrderDocs = (docs = []) => {
+    if (!canEdit) return 0;
+    const dismissed = readDismissedOrderDocs(workspace?.workspaceId);
+    const wanted = (Array.isArray(docs) ? docs : []).filter((d) => !dismissed.has(docNodeId(d.orderId, d.docId)));
+    if (!wanted.length) return 0;
+    const plan = planB2BDocs({
+      nodes,
+      edges,
+      docs: wanted,
+      place: (position, size) => placeNode(position, size),
+      fallback: (size) => getAutoPlacementPosition({ x: 120, y: 120 }, size),
+    });
+    const changed = plan.addNodes.length + Object.keys(plan.movedNodes).length + plan.addEdges.length;
+    if (!changed) return 0;
+
+    setNodes((current) => {
+      const have = new Set(current.map((n) => n.id));
+      const moved = plan.movedNodes;
+      const updated = current.map((n) => (moved[n.id]
+        ? { ...n, position: moved[n.id].position, data: { ...n.data, placed: true } }
+        : n));
+      return [...updated, ...plan.addNodes.filter((n) => !have.has(n.id))];
+    });
+    if (plan.addEdges.length) {
+      setEdges((current) => {
+        const have = new Set(current.map((e) => e.id));
+        const fresh = plan.addEdges
+          .filter((e) => !have.has(e.id))
+          .map((e) => ({ ...e, markerEnd: { type: MarkerType.ArrowClosed, width: 18, height: 18, color: '#6b7280' } }));
+        return [...current, ...fresh];
+      });
+    }
+    // A document that has just arrived: bring it into view.
+    if (plan.focusId) {
+      setTimeout(() => document.dispatchEvent(new CustomEvent('zoomToElement', { detail: { elementId: plan.focusId } })), 400);
+    }
+    return changed;
+  };
+
   useImperativeHandle(ref, () => ({
+    addB2BOrderDocs,
+    captureSnapshot: (options) => captureWorkspaceSnapshot(options),
     zoomIn: handleZoomIn,
     zoomOut: handleZoomOut,
     fitView: handleFitView,
@@ -4124,11 +4280,18 @@ const edgeTypes = {
     };
 
     const addOneTable = async (table, index = 0) => {
-      // Compute a staggered position near center
-      const baseX = window.innerWidth / 2 - 250;
-      const baseY = window.innerHeight / 2 - 180;
-      const offset = 40;
-      const position = { x: baseX + (index % 3) * offset, y: baseY + Math.floor(index / 3) * offset };
+      // Imported tables go in a grid (3 per row) from the middle of the view,
+      // each nudged off anything already on the canvas
+      const tableSize = estimateElementSize({ type: 'table' });
+      const gridGap = 40;
+      const origin = getViewportAnchor(tableSize) || { x: window.innerWidth / 2 - 250, y: window.innerHeight / 2 - 180 };
+      const position = placeNode(
+        {
+          x: origin.x + (index % 3) * (tableSize.w + gridGap),
+          y: origin.y + Math.floor(index / 3) * (tableSize.h + gridGap),
+        },
+        tableSize
+      );
 
       const element = {
         id: 'basic-table',
@@ -4139,6 +4302,7 @@ const edgeTypes = {
 
       const customData = convertTableToCustomData(table);
       const newNode = createElementNode(element, position, customData);
+      markForSettle(newNode.id);
       setNodes((nds) => nds.concat(newNode));
 
       try {
@@ -4279,7 +4443,9 @@ const edgeTypes = {
         notifyViewOnly('element add');
         return;
       }
-      const element = event.detail;
+      const { __quickPosition: quickPosition, ...element } = event.detail || {};
+      // Only the quick-add menu may carry a pending connection into this path
+      if (!quickPosition) quickConnectRef.current = null;
       console.log('🖱️ Element double-click event received:', element);
       console.log('🔍 Element category:', element?.category);
       console.log('🔍 Element type:', element?.type);
@@ -4288,7 +4454,10 @@ const edgeTypes = {
       const centerX = window.innerWidth / 2 - 200; // Offset for element width
       const centerY = window.innerHeight / 2 - 150; // Offset for element height
       const basePosition = { x: centerX, y: centerY };
-      const targetPosition = getAutoPlacementPosition(basePosition);
+      const elementSize = estimateElementSize(element);
+      const targetPosition = quickPosition
+        ? placeNode(quickPosition, elementSize)
+        : getAutoPlacementPosition(basePosition, elementSize);
       
       // Check if it's a table element
       if (isTableElement(element)) {
@@ -4418,10 +4587,130 @@ const edgeTypes = {
     return () => {
       document.removeEventListener('elementDoubleClick', handleElementDoubleClick);
     };
-  },  [getAutoPlacementPosition, setNodes, canEdit, notifyViewOnly]);
+  },  [getAutoPlacementPosition, placeNode, setNodes, canEdit, notifyViewOnly]);
 
-  // (Task card "Edit" expands the card itself — handled inside
-  // TaskCardRenderer; the config modal is only for the drag-create flow.)
+  // Doc nodes (e.g. vendor "Convert to Invoice") ask the canvas to place a
+  // related document node next to them — keeps the quote → PO → invoice
+  // chain visually grouped on the canvas.
+  useEffect(() => {
+    const handleAddDocNode = (event) => {
+      if (!canEdit) {
+        notifyViewOnly('document node add');
+        return;
+      }
+      const { element, sourceNodeId } = event.detail || {};
+      if (!element) return;
+      // De-dupe: a linked doc clicked twice shouldn't spawn a second node —
+      // reveal the existing one instead. Match only the node's PRIMARY id for
+      // its doc type — chain members carry back-links (e.g. a PO node stores
+      // invoiceId once converted) which must not count as "already placed".
+      // Pick the element's primary id BY TYPE — chain records carry back-links
+      // (invoice rows store quotationId/purchaseOrderId) which would otherwise
+      // match an existing chain member and block placement.
+      const elType = element.nodeType || element.type;
+      const docKey =
+        elType === 'invoice' ? (element.invoiceId || element.customInvoiceId || element.id)
+        : (elType === 'purchaseOrder' || elType === 'purchase-order') ? (element.purchaseOrderId || element.customPoId || element.id)
+        : (elType === 'quotation' || elType === 'quote') ? (element.quotationId || element.customQuoteId || element.id)
+        : element.id;
+      const existing = nodes.find((n) => {
+        if (!docKey) return false;
+        const t = n.data?.nodeType || n.data?.type || n.type;
+        if (t === 'purchaseOrder' || t === 'purchase-order') {
+          return n.data?.purchaseOrderId === docKey || n.data?.customPoId === docKey;
+        }
+        if (t === 'quotation' || t === 'quote') return n.data?.quotationId === docKey;
+        if (t === 'invoice') return n.data?.invoiceId === docKey;
+        return false;
+      });
+      if (existing) {
+        document.dispatchEvent(new CustomEvent('zoomToElement', { detail: { elementId: existing.id } }));
+        return;
+      }
+
+      // Chain members live inside a shared docGroup box — wrap the source
+      // node in one if needed, then append the new doc to its right and link
+      // them with a directional arrow edge.
+      const PAD = 24;
+      const HEADER = 40;
+      const GAP = 48;
+      const src = nodes.find((n) => n.id === sourceNodeId);
+      const docW = src?.width || 620;
+      const docH = src?.height || 480;
+      const group = src?.parentNode
+        ? nodes.find((n) => n.id === src.parentNode && n.type === 'docGroup')
+        : null;
+      const groupId = group?.id || `docGroup_${Date.now()}`;
+
+      const siblings = nodes.filter((n) => n.parentNode === groupId);
+      const relX = siblings.length
+        ? Math.max(...siblings.map((s) => s.position.x + (s.width || docW))) + GAP
+        : PAD;
+      const groupWidth = Math.max(group?.style?.width || 0, relX + docW + PAD);
+      const groupHeight = Math.max(group?.style?.height || 0, HEADER + PAD + docH + PAD);
+
+      const newNode = createElementNode(element, { x: relX, y: HEADER + PAD });
+      newNode.parentNode = groupId;
+      newNode.extent = 'parent';
+
+      setNodes((currentNodes) => {
+        let next = currentNodes;
+        if (!group) {
+          const groupNode = {
+            id: groupId,
+            type: 'docGroup',
+            position: src
+              ? { x: src.position.x - PAD, y: src.position.y - HEADER - PAD }
+              : { x: 200, y: 200 },
+            data: { label: 'Quote → PO → Invoice' },
+            style: { width: groupWidth, height: groupHeight }
+          };
+          if (src) {
+            const srcIdx = next.findIndex((n) => n.id === sourceNodeId);
+            next = [
+              ...next.slice(0, srcIdx),
+              groupNode,
+              ...next.slice(srcIdx).map((n) =>
+                n.id === sourceNodeId
+                  ? { ...n, parentNode: groupId, extent: 'parent', position: { x: PAD, y: HEADER + PAD } }
+                  : n)
+            ];
+          } else {
+            next = [...next, groupNode];
+          }
+        } else {
+          next = next.map((n) => n.id === groupId
+            ? { ...n, style: { ...(n.style || {}), width: groupWidth, height: groupHeight } }
+            : n);
+        }
+        return [...next, newNode];
+      });
+
+      if (sourceNodeId) {
+        setEdges((currentEdges) => {
+          const already = currentEdges.some((e) => e.source === sourceNodeId && e.target === newNode.id);
+          if (already) return currentEdges;
+          return [...currentEdges, {
+            id: `edge_chain_${sourceNodeId}_${newNode.id}`,
+            source: sourceNodeId,
+            target: newNode.id,
+            sourceHandle: 'right-out',
+            targetHandle: 'left-in',
+            type: 'custom',
+            animated: true,
+            style: { strokeWidth: 2, stroke: '#6b7280' },
+            markerEnd: { type: MarkerType.ArrowClosed, width: 18, height: 18, color: '#6b7280' },
+            data: { label: '', isAutoConnected: true }
+          }];
+        });
+      }
+    };
+
+    window.addEventListener('workspace:addDocNode', handleAddDocNode);
+    return () => {
+      window.removeEventListener('workspace:addDocNode', handleAddDocNode);
+    };
+  }, [nodes, createElementNode, autoConnectNewNode, canEdit, notifyViewOnly, getAutoPlacementPosition]);
 
   useEffect(() => {
     const handleAddProcurementRFQNode = async (event) => {
@@ -4488,12 +4777,13 @@ const edgeTypes = {
       const element = event.detail;
       console.log('📊 Adding calculator element to canvas:', element);
       
-      const targetPosition = {
-        x: window.innerWidth / 2 - 150,
-        y: window.innerHeight / 2 - 150
-      };
+      const targetPosition = getAutoPlacementPosition(
+        { x: window.innerWidth / 2 - 150, y: window.innerHeight / 2 - 150 },
+        estimateElementSize(element)
+      );
       
       const newNode = createElementNode(element, targetPosition);
+      markForSettle(newNode.id);
       console.log('🆕 New calculator node created:', newNode);
       
       // Set flag to prevent workspace data refresh from overwriting this new node
@@ -4629,6 +4919,9 @@ const edgeTypes = {
       // text the user just placed and abandoned can self-delete.
       const isEmptyCaption = event.detail?.allowEmptyCaption && nodeToDelete.data?.caption === true;
       if (filterDirectlyDeletableNodes([nodeToDelete]).length === 0 && !isEmptyCaption) return;
+
+      // A marketplace order document that is deleted stays off the canvas for everyone
+      dismissOrderDocs(workspace?.workspaceId, [elementId]);
 
       const nodeData = nodeToDelete?.data || {};
       
@@ -4839,6 +5132,11 @@ const edgeTypes = {
     const deletableNodes = filterDirectlyDeletableNodes(nodesToDelete);
     if (deletableNodes.length === 0) return;
 
+    dismissOrderDocs(
+      workspace?.workspaceId,
+      deletableNodes.filter((n) => n.type === 'b2bOrderDoc' || String(n.id).startsWith('b2b-doc-')).map((n) => n.id)
+    );
+
     // Record deletion history for each deleted node before removing it
     deletableNodes.forEach((nodeToDelete) => {
       const fullNode = nodes.find(n => n.id === nodeToDelete.id);
@@ -4894,31 +5192,22 @@ const edgeTypes = {
     purgeDeletedFromCanvasCache(deletableNodes.map(n => n.id));
   }, [setNodes, recordDeletionHistory, nodes, filterDirectlyDeletableNodes, purgeDeletedFromCanvasCache, getCurrentUserRole]);
 
-  // Connection validation
-  const isValidConnection = useCallback((connection) => {
-    // Prevent self-connections
-    if (connection.source === connection.target) {
-      console.log('❌ Cannot connect node to itself');
-      return false;
-    }
-    
-    // Check if connection already exists
-    const existingConnection = edges.find(
-      (edge) => 
-        edge.source === connection.source && 
-        edge.target === connection.target &&
-        edge.sourceHandle === connection.sourceHandle &&
-        edge.targetHandle === connection.targetHandle
-    );
-    
-    if (existingConnection) {
-      console.log('❌ Connection already exists');
-      return false;
-    }
-    
-    console.log('✅ Valid connection');
-    return true;
-  }, [edges]);
+  // Connection validation (rules live in utils/connectionUtils.canConnect):
+  // both nodes exist and are not containers (frames/layouts/groups), no
+  // self-loops, and no second arrow in the same direction between two nodes.
+  const isValidConnection = useCallback(
+    (connection) => {
+      const reconnecting = reconnectingEdgeRef.current;
+      return canConnect(
+        nodes,
+        edges,
+        connection,
+        reconnecting?.id,
+        reconnecting ? [reconnecting.source, reconnecting.target] : []
+      ).ok;
+    },
+    [nodes, edges]
+  );
 
   // Handle text mode activation
   useEffect(() => {
@@ -5276,24 +5565,131 @@ const edgeTypes = {
 
   // Handle connections between nodes
   const onConnect = useCallback((params) => {
-    // Create custom edge with styling
-    const edgeId = `edge_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
-    const newEdge = {
-      ...params,
-      id: edgeId,
-      type: 'custom',
-      animated: false,
-      style: { strokeWidth: 2, stroke: '#6b7280' },
-      markerEnd: { type: MarkerType.ArrowClosed, width: 18, height: 18, color: '#6b7280' },
-      data: { label: '' }
-    };
-    
+    connectionMadeRef.current = true;
+
+    // Standard edge look; the label is optional and edited on double-click
+    const newEdge = createEdge({
+      source: params.source,
+      target: params.target,
+      sourceHandle: params.sourceHandle,
+      targetHandle: params.targetHandle,
+    });
+
     setEdges((eds) => addEdge(newEdge, eds));
     // EDGE_ADD is now auto-emitted by the setEdges wrapper — no manual emit needed
+  }, [setEdges]);
 
-    openEdgeLabelModal(edgeId);
-    console.log('✅ Connection created (awaiting label):', newEdge);
-  }, [setEdges, openEdgeLabelModal, emitOp, selectedTask?.id, selectedSubtask?.id]);
+  // Track an in-progress connection drag so handles can light up on every node
+  const onConnectStart = useCallback((_event, { nodeId, handleId, handleType }) => {
+    connectStartRef.current = { nodeId, handleId, handleType };
+    connectionMadeRef.current = false;
+    quickConnectRef.current = null;
+    setIsConnecting(true);
+  }, []);
+
+  // Dropping a connection anywhere on a node's body (not just on a handle)
+  // connects to that node, picking the facing side automatically.
+  const onConnectEnd = useCallback((event) => {
+    setIsConnecting(false);
+    const start = connectStartRef.current;
+    connectStartRef.current = null;
+    if (!start || connectionMadeRef.current || !canEdit) return;
+
+    const point = event?.changedTouches?.[0] || event;
+    if (point?.clientX == null) return;
+    const elementUnderPointer = document.elementFromPoint(point.clientX, point.clientY);
+    const nodeElement = elementUnderPointer?.closest?.('.react-flow__node');
+    const droppedOnId = nodeElement?.getAttribute('data-id');
+
+    // Released over empty canvas (or over a frame/layout container, which can't
+    // be connected to): offer "add next element" from the dragged side
+    const droppedOnNode = droppedOnId ? nodes.find((n) => n.id === droppedOnId) : null;
+    if (!droppedOnId || isContainerNode(droppedOnNode)) {
+      const overEmptyCanvas = droppedOnId
+        ? true
+        : elementUnderPointer?.closest?.('.react-flow__pane, .react-flow__viewport, .react-flow__renderer') &&
+          !elementUnderPointer.closest('.react-flow__controls, .react-flow__minimap, .react-flow__panel');
+      const startNode = nodes.find((n) => n.id === start.nodeId);
+      if (overEmptyCanvas && start.handleType !== 'target' && isConnectableNode(startNode) && reactFlowInstance) {
+        setQuickAdd({
+          clientX: point.clientX,
+          clientY: point.clientY,
+          flowPosition: reactFlowInstance.screenToFlowPosition({ x: point.clientX, y: point.clientY }),
+          sourceId: start.nodeId,
+          sourceHandle: toSourceHandleId(start.handleId) || 'bottom-out',
+        });
+      }
+      return;
+    }
+    if (droppedOnId === start.nodeId) return;
+
+    // A drag that began on a target handle runs target -> source
+    const sourceId = start.handleType === 'target' ? droppedOnId : start.nodeId;
+    const targetId = start.handleType === 'target' ? start.nodeId : droppedOnId;
+    const sourceNode = nodes.find((n) => n.id === sourceId);
+    const targetNode = nodes.find((n) => n.id === targetId);
+    if (!sourceNode || !targetNode) return;
+
+    const facing = pickHandles(sourceNode, targetNode);
+    const connection = {
+      source: sourceId,
+      target: targetId,
+      // Keep the side the user dragged from; pick the target side from geometry
+      sourceHandle:
+        (start.handleType !== 'target' && toSourceHandleId(start.handleId)) || facing.sourceHandle,
+      targetHandle: facing.targetHandle,
+    };
+    if (isValidConnection(connection)) onConnect(connection);
+  }, [canEdit, nodes, isValidConnection, onConnect, reactFlowInstance]);
+
+  // Choose an element from the "add next element" menu: it goes through the
+  // normal element-add path (config modals included) and connects from the
+  // node the user dragged from.
+  const handleQuickAddPick = useCallback((element) => {
+    if (!quickAdd) return;
+    quickConnectRef.current = {
+      sourceId: quickAdd.sourceId,
+      sourceHandle: quickAdd.sourceHandle,
+      ts: Date.now(),
+    };
+    document.dispatchEvent(
+      new CustomEvent('elementDoubleClick', {
+        detail: {
+          ...element,
+          __quickPosition: quickAddPosition(quickAdd.sourceHandle, quickAdd.flowPosition),
+        },
+      })
+    );
+    setQuickAdd(null);
+  }, [quickAdd]);
+
+  // Re-attach an existing edge by dragging one of its ends to another node.
+  // Collaborators only auto-receive added edges, so the old edge's removal is
+  // emitted explicitly and the re-attached edge gets a fresh id.
+  const onEdgeUpdateStart = useCallback((_event, edge) => {
+    reconnectingEdgeRef.current = edge;
+  }, []);
+
+  const onEdgeUpdate = useCallback((oldEdge, newConnection) => {
+    if (!canConnect(nodes, edges, newConnection, oldEdge.id, [oldEdge.source, oldEdge.target]).ok) return;
+
+    const reattached = {
+      ...oldEdge,
+      id: `edge_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
+      source: newConnection.source,
+      target: newConnection.target,
+      sourceHandle: newConnection.sourceHandle,
+      targetHandle: newConnection.targetHandle,
+      selected: false,
+    };
+    edgeChangesToOps([{ type: 'remove', id: oldEdge.id }], selectedTask?.id, selectedSubtask?.id)
+      .forEach((op) => emitOp(op));
+    setEdges((eds) => [...eds.filter((e) => e.id !== oldEdge.id), reattached]);
+  }, [nodes, edges, emitOp, setEdges, selectedTask?.id, selectedSubtask?.id]);
+
+  const onEdgeUpdateEnd = useCallback(() => {
+    reconnectingEdgeRef.current = null;
+  }, []);
 
   // Handle drag over
   const onDragOver = useCallback((event) => {
@@ -5321,111 +5717,13 @@ const edgeTypes = {
   }, []);
 
   // Collision detection function - Enhanced to prevent ANY overlaps
-  const findNonCollidingPosition = (position, newNodeWidth = 300, newNodeHeight = 200) => {
-    const padding = 100; // Larger padding to prevent overlaps
-    const offset = 100; // Larger offset distance to try
-    const offsets = [
-      { x: offset, y: 0 },       // Right
-      { x: 0, y: offset },       // Down
-      { x: -offset, y: 0 },      // Left
-      { x: 0, y: -offset },      // Up
-      { x: offset, y: offset },  // Down-right
-      { x: -offset, y: offset }, // Down-left
-      { x: offset, y: -offset }, // Up-right
-      { x: -offset, y: -offset } // Up-left
-    ];
-
-    const hasCollision = (pos) => {
-      for (const node of nodes) {
-        if (!node.position) continue;
-        
-        // Use more generous dimension estimates
-        const nodeWidth = node.measured?.width || node.width || 350;
-        const nodeHeight = node.measured?.height || node.height || 250;
-        
-        // Check if position overlaps with this node (with generous padding)
-        const overlaps = 
-          pos.x < node.position.x + nodeWidth + padding &&
-          pos.x + newNodeWidth + padding > node.position.x &&
-          pos.y < node.position.y + nodeHeight + padding &&
-          pos.y + newNodeHeight + padding > node.position.y;
-        
-        if (overlaps) {
-          console.log(`⚠️ Collision detected with node at (${node.position.x}, ${node.position.y})`);
-          return true;
-        }
-      }
-      return false;
-    };
-
-    // If current position has no collision, use it
-    if (!hasCollision(position)) {
-      console.log(`✅ Current position is clear`);
-      return position;
-    }
-
-    console.log(`🔍 Current position has collision, searching for empty space...`);
-
-    // Try offsets in expanding circles - more aggressive search
-    let found = false;
-
-    for (let multiplier = 1; multiplier <= 10 && !found; multiplier++) {
-      for (const offset of offsets) {
-        const testPos = {
-          x: position.x + offset.x * multiplier,
-          y: position.y + offset.y * multiplier
-        };
-
-        if (!hasCollision(testPos)) {
-          console.log(`🎯 Found non-colliding position at distance multiplier ${multiplier}`);
-          console.log(`📍 New position: x=${testPos.x}, y=${testPos.y}`);
-          return testPos;
-        }
-      }
-    }
-
-    // If still no space found, find the node with most available space and move far from it
-    if (!found) {
-      console.log(`⚠️ Could not find position using standard search, using fallback strategy`);
-      
-      // Find the bottommost and rightmost node
-      let maxX = position.x;
-      let maxY = position.y;
-      let maxNodeWidth = 0;
-      let maxNodeHeight = 0;
-
-      for (const node of nodes) {
-        if (!node.position) continue;
-        const nodeWidth = node.measured?.width || node.width || 350;
-        const nodeHeight = node.measured?.height || node.height || 250;
-        
-        if (node.position.x + nodeWidth > maxX + maxNodeWidth) {
-          maxX = node.position.x;
-          maxNodeWidth = nodeWidth;
-        }
-        if (node.position.y + nodeHeight > maxY + maxNodeHeight) {
-          maxY = node.position.y;
-          maxNodeHeight = nodeHeight;
-        }
-      }
-
-      // Place new node below and to the right of the rightmost/bottommost node
-      const fallbackPos = {
-        x: maxX + maxNodeWidth + 150,
-        y: maxY + maxNodeHeight + 150
-      };
-
-      console.log(`📍 Using fallback position: x=${fallbackPos.x}, y=${fallbackPos.y}`);
-      return fallbackPos;
-    }
-
-    console.log(`📍 Final position: x=${position.x}, y=${position.y}`);
-    return position;
-  };
+  const findNonCollidingPosition = (position, newNodeWidth = 300, newNodeHeight = 200) =>
+    placeNode(position, { w: newNodeWidth, h: newNodeHeight });
 
   // Handle drop from ElementsPanel
   const onDrop = useCallback(
     async (event) => {
+      quickConnectRef.current = null;
       console.log('🎯🎯🎯 DROP EVENT FIRED - dataTransfer types:', event.dataTransfer?.types);
       event.preventDefault();
       event.stopPropagation();
@@ -5718,111 +6016,22 @@ const edgeTypes = {
         console.log('🔍 Node type:', newNode.type);
         console.log('🔍 Node data:', newNode.data);
         
-        // Auto-connect to the previously added element
-        // Get the previous node ID before adding the new one
+        // Auto-connect: chain from the selected node, else the last added one
         const previousNodeId = lastAddedNodeIdRef.current;
-        console.log('📌 Previous node ID stored:', previousNodeId);
-        
+
         // Add the new node and handle auto-connection in the same setState callback
         setNodes((currentNodes) => {
-          console.log('📊 Current nodes before adding new:', currentNodes.length, 'nodes');
-          
-          // Check if we should create a connection
-          if (previousNodeId && currentNodes.length > 0) {
-            console.log('🔗 Attempting to connect new element to previously added element:', previousNodeId);
-            
-            // Find the previous node
-            const previousNode = currentNodes.find(node => node.id === previousNodeId);
-            
-            if (previousNode) {
-              console.log(`🎯 Found previous node: ${previousNodeId} at position (${previousNode.position.x}, ${previousNode.position.y})`);
-              
-              // Determine connection direction based on relative position
-              const dx = newNode.position.x - previousNode.position.x;
-              const dy = newNode.position.y - previousNode.position.y;
-              
-              let sourceId = previousNode.id;
-              let targetId = newNode.id;
-              let sourceHandle = 'right-out';
-              let targetHandle = 'left-in';
-              
-              // Adjust handles based on direction if needed
-              if (Math.abs(dx) > Math.abs(dy)) {
-                // Horizontal layout - already set correctly
-                if (dx < 0) {
-                  // New node is to the left, reverse direction
-                  sourceId = newNode.id;
-                  targetId = previousNode.id;
-                  sourceHandle = 'right-out';
-                  targetHandle = 'left-in';
-                }
-              } else {
-                // Vertical layout
-                if (dy > 0) {
-                  // New node is below - connect top to bottom
-                  sourceId = previousNode.id;
-                  targetId = newNode.id;
-                  sourceHandle = 'bottom-out';
-                  targetHandle = 'top-in';
-                } else {
-                  // New node is above - connect bottom to top
-                  sourceId = newNode.id;
-                  targetId = previousNode.id;
-                  sourceHandle = 'bottom-out';
-                  targetHandle = 'top-in';
-                }
-              }
-              
-              // Queue the edge creation for after nodes are updated
-              setEdges((currentEdges) => {
-                console.log('📐 Creating edge from', sourceId, 'to', targetId);
-                
-                // Check if connection already exists
-                const connectionExists = currentEdges.some(
-                  edge => (edge.source === sourceId && edge.target === targetId && 
-                           edge.sourceHandle === sourceHandle && edge.targetHandle === targetHandle) ||
-                          (edge.source === targetId && edge.target === sourceId)
-                );
-                
-                if (!connectionExists) {
-                  const edgeId = `edge_auto_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
-                  const newEdge = {
-                    id: edgeId,
-                    source: sourceId,
-                    target: targetId,
-                    sourceHandle: sourceHandle,
-                    targetHandle: targetHandle,
-                    type: 'custom',
-                    animated: false,
-                    style: {
-                      strokeWidth: 2,
-                      stroke: '#6b7280',
-                    },
-                    markerEnd: { type: MarkerType.ArrowClosed, width: 18, height: 18, color: '#6b7280' },
-                    data: {
-                      label: '',
-                      isAutoConnected: true
-                    }
-                  };
-                  
-                  console.log(`✅ AUTO-CONNECTED: ${sourceId} → ${targetId}`);
-                  return [...currentEdges, newEdge];
-                } else {
-                  console.log(`⏭️ Connection already exists between: ${sourceId} ↔ ${targetId}`);
-                  return currentEdges;
-                }
-              });
-            } else {
-              console.log(`⚠️ Previous node (${previousNodeId}) not found in current nodes`);
-            }
-          } else {
-            console.log('ℹ️ First element dropped - no previous element to connect to');
+          const anchorNode = resolveAnchorNode(currentNodes, newNode.id, previousNodeId);
+          if (anchorNode) {
+            setEdges((currentEdges) => {
+              const autoEdge = buildAutoEdge(anchorNode, newNode, currentEdges);
+              return autoEdge ? [...currentEdges, autoEdge] : currentEdges;
+            });
           }
-          
-          // Update the reference to track this new node as the last added
-          lastAddedNodeIdRef.current = newNode.id;
-          console.log('📌 Updated last added element to:', newNode.id);
-          
+
+          // Track this node as the last added one
+          if (!isDecorativeBlockNode(newNode)) lastAddedNodeIdRef.current = newNode.id; // headings/dividers never anchor a chain
+
           // Set flag to prevent workspace data refresh from overwriting this new node
           isUpdatingNodesLocallyRef.current = true;
           
@@ -5896,7 +6105,7 @@ const edgeTypes = {
   }, [updateOffset]);
 
   useEffect(() => {
-    if (isFullscreen) {
+    if (isFullscreen || isPresenting) {
       previousOverflowRef.current = document.body.style.overflow;
       document.body.style.overflow = 'hidden';
     } else {
@@ -5906,27 +6115,325 @@ const edgeTypes = {
     return () => {
       document.body.style.overflow = previousOverflowRef.current || '';
     };
-  }, [isFullscreen]);
+  }, [isFullscreen, isPresenting]);
 
   useEffect(() => {
     updateOffset();
   }, [isFullscreen, updateOffset]);
 
-  const containerClasses = isFullscreen
-    ? 'fixed left-0 right-0 bottom-0 bg-surface z-50 flex flex-col'
-    : 'h-full relative flex flex-col';
+  // Settle: a new element is placed using an estimated size. While it lays out
+  // (for a few seconds after it was added), whenever it overlaps a neighbour at
+  // its real size, move it to the nearest free spot. One element per pass, so
+  // two that were added together do not both pick the same spot.
+  useEffect(() => {
+    const queue = settleQueueRef.current;
+    if (queue.size === 0 || isApplyingRemoteRef.current) return;
+    const now = Date.now();
 
-  const containerStyle = isFullscreen ? { top: `${headerOffset || 0}px` } : undefined;
+    const measured = getMeasuredNodes();
+    for (const [id, entry] of [...queue]) {
+      const node = measured.find((n) => n.id === id);
+      if (!node || now > entry.until || entry.moves >= SETTLE_MAX_MOVES) {
+        queue.delete(id); // removed, out of time, or moved enough
+        continue;
+      }
+      if (node.dragging) continue; // the user took over
+      if (!(node.width > 0 && node.height > 0)) continue; // not laid out yet
+
+      const size = { w: node.width, h: node.height };
+      // Only react to a real overlap, not to a snap-sized difference
+      if (!hasCollision(node.position, size, measured, { ignoreIds: [id] })) continue;
+
+      const position = findFreePosition(node.position, size, measured, { ignoreIds: [id] });
+      entry.moves += 1;
+      setNodesRaw((current) => current.map((n) => (n.id === id ? { ...n, position } : n)));
+      emitOpRef.current?.({
+        type: 'NODE_MOVE',
+        nodeId: id,
+        position,
+        taskId: taskIdRef.current,
+        subtaskId: subtaskIdRef.current,
+      });
+      break;
+    }
+  }, [nodes, setNodesRaw, getMeasuredNodes, settleTick]);
+
+  // Bring an element you just added into view if it landed off-screen. Only
+  // reacts to local adds (lastAddedNodeIdRef is set by them), never to
+  // collaborators' edits, and never while presenting.
+  const prevNodeCountRef = useRef(null);
+  const lastRevealedIdRef = useRef(null);
+  useEffect(() => {
+    const previousCount = prevNodeCountRef.current;
+    prevNodeCountRef.current = nodes.length;
+    if (previousCount === null || nodes.length <= previousCount) return;
+    if (isPresenting || !reactFlowInstance) return;
+
+    const addedId = lastAddedNodeIdRef.current;
+    if (!addedId || addedId === lastRevealedIdRef.current) return;
+    const added = getMeasuredNodes().find((n) => n.id === addedId);
+    const box = canvasContainerRef.current?.getBoundingClientRect();
+    if (!added || !box) return;
+    lastRevealedIdRef.current = addedId;
+
+    const { w, h } = getNodeSize(added);
+    const rect = { x: added.position.x, y: added.position.y, w, h };
+    if (!isRectInViewport(rect, reactFlowInstance.getViewport(), box)) {
+      reactFlowInstance.setCenter(rect.x + w / 2, rect.y + h / 2, {
+        zoom: reactFlowInstance.getZoom(),
+        duration: 400,
+      });
+    }
+  }, [nodes.length, reactFlowInstance, isPresenting]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // ── Present mode ─────────────────────────────────────────────
+  // Slides: frames if there are any, otherwise elements, in numbered order.
+  const presentStops = useMemo(
+    () => (isPresenting ? getPresentationStops(nodes) : []),
+    [isPresenting, nodes]
+  );
+  const presentStopCount = presentStops.length;
+  const presentStop = presentIndex >= 0 ? presentStops[presentIndex] : null;
+
+  const enterPresent = useCallback(() => {
+    if (nodes.length === 0) return;
+    // No selection rings in the show (raw setter: this is not a user edit to sync)
+    setNodesRaw((current) => current.map((n) => (n.selected ? { ...n, selected: false } : n)));
+    setPresentIndex(-1);
+    setIsPresenting(true);
+    // Best effort: also take over the whole screen. Esc then leaves both.
+    try {
+      const request = presentRootRef.current?.requestFullscreen?.();
+      if (request && typeof request.catch === 'function') request.catch(() => {});
+    } catch {
+      /* browser refused (no user gesture, unsupported): the in-page takeover still works */
+    }
+  }, [nodes.length, setNodesRaw]);
+
+  const exitPresent = useCallback(() => {
+    setIsPresenting(false);
+    setPresentIndex(-1);
+    try {
+      if (document.fullscreenElement) {
+        const exit = document.exitFullscreen?.();
+        if (exit && typeof exit.catch === 'function') exit.catch(() => {});
+      }
+    } catch {
+      /* already out of fullscreen */
+    }
+  }, []);
+
+  const goNext = useCallback(() => setPresentIndex((i) => nextPresentIndex(i, presentStopCount)), [presentStopCount]);
+  const goPrev = useCallback(() => setPresentIndex((i) => prevPresentIndex(i, presentStopCount)), [presentStopCount]);
+  const goFirst = useCallback(() => setPresentIndex(presentStopCount > 0 ? 0 : -1), [presentStopCount]);
+  const goLast = useCallback(() => setPresentIndex(presentStopCount - 1), [presentStopCount]);
+  const goOverview = useCallback(() => setPresentIndex(-1), []);
+
+  // Slides can disappear while presenting (live edits by collaborators)
+  useEffect(() => {
+    if (isPresenting) setPresentIndex((i) => clampPresentIndex(i, presentStopCount));
+  }, [isPresenting, presentStopCount]);
+
+  // Camera: overview fits everything; a slide zooms to that element/frame.
+  // Keyed on the slide id (not the node objects) so live edits do not
+  // yank the camera back mid-presentation.
+  const presentStopId = presentStop?.id || null;
+  useEffect(() => {
+    if (!isPresenting || !reactFlowInstance) return undefined;
+    // Wait a beat so the container has finished resizing to the full screen
+    const timer = setTimeout(() => {
+      if (presentStopId) {
+        reactFlowInstance.fitView({ nodes: [{ id: presentStopId }], padding: 0.2, duration: 600, maxZoom: 1.5 });
+      } else {
+        reactFlowInstance.fitView({ padding: 0.12, duration: 600 });
+      }
+    }, 90);
+    return () => clearTimeout(timer);
+  }, [isPresenting, presentStopId, reactFlowInstance]);
+
+  // Esc in browser fullscreen leaves fullscreen first; follow it out of Present mode
+  useEffect(() => {
+    if (!isPresenting) return undefined;
+    const onFullscreenChange = () => {
+      if (!document.fullscreenElement) setIsPresenting(false);
+    };
+    document.addEventListener('fullscreenchange', onFullscreenChange);
+    return () => document.removeEventListener('fullscreenchange', onFullscreenChange);
+  }, [isPresenting]);
+
+  // Other parts of the page (command palette) can start / stop a presentation
+  useEffect(() => {
+    const toggle = () => (isPresenting ? exitPresent() : enterPresent());
+    window.addEventListener('workspace-present', toggle);
+    return () => window.removeEventListener('workspace-present', toggle);
+  }, [isPresenting, enterPresent, exitPresent]);
+
+  // ---- Client view: see the canvas the way a client does (no editing tools) ----
+  const enterClientView = useCallback(() => {
+    if (isPresenting) return;
+    setNodesRaw((current) => current.map((n) => (n.selected ? { ...n, selected: false } : n)));
+    setIsPenMode(false);
+    setIsClientView(true);
+  }, [isPresenting, setNodesRaw]);
+
+  const exitClientView = useCallback(() => setIsClientView(false), []);
+
+  useEffect(() => {
+    const toggle = () => (isClientView ? exitClientView() : enterClientView());
+    window.addEventListener('workspace-client-view', toggle);
+    return () => window.removeEventListener('workspace-client-view', toggle);
+  }, [isClientView, enterClientView, exitClientView]);
+
+  // ---- Zoom to selection: frame the selected elements (or everything, with nothing selected) ----
+  const zoomToSelection = useCallback(() => {
+    if (!reactFlowInstance) return;
+    const selected = nodesRef.current.filter((n) => n.selected && !n.hidden);
+    if (selected.length === 0) {
+      if (nodesRef.current.length === 0) return;
+      reactFlowInstance.fitView({ padding: 0.15, duration: 400 });
+      return;
+    }
+    reactFlowInstance.fitView({
+      nodes: selected.map((n) => ({ id: n.id })),
+      padding: 0.25,
+      duration: 400,
+      maxZoom: 1.5,
+    });
+  }, [reactFlowInstance]);
+
+  useEffect(() => {
+    const onEvent = () => zoomToSelection();
+    // Shift+2 (Figma's shortcut); `code` so it works whatever character Shift+2 types on the keyboard
+    const onKey = (event) => {
+      if (event.code !== 'Digit2' || !event.shiftKey || event.ctrlKey || event.metaKey || event.altKey) return;
+      const tag = event.target?.tagName;
+      if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || event.target?.isContentEditable) return;
+      if (isPresenting) return;
+      event.preventDefault();
+      zoomToSelection();
+    };
+    window.addEventListener('workspace-zoom-selection', onEvent);
+    window.addEventListener('keydown', onKey);
+    return () => {
+      window.removeEventListener('workspace-zoom-selection', onEvent);
+      window.removeEventListener('keydown', onKey);
+    };
+  }, [zoomToSelection, isPresenting]);
+
+  // ---- Templates: add one to this canvas, and hand the canvas over for "Save as template" ----
+  const edgesRef = useRef([]);
+  edgesRef.current = edges;
+
+  const applyTemplate = useCallback((template, values) => {
+    if (!canEdit) {
+      notifyViewOnly('add a template');
+      return;
+    }
+    const sequenced = nodesRef.current.filter((n) => n.data?.sequenceNumber !== undefined && n.data.sequenceNumber !== null).length;
+    const { nodes: added, edges: addedEdges } = instantiateTemplate(template, {
+      values,
+      placeGroup: (size) => placeNode(getViewportAnchor(size) || { x: 0, y: 0 }, size),
+      startSequence: sequenced + 1,
+      workspace: {
+        workspaceId: workspace?.workspaceId,
+        taskId: selectedTask?.id,
+        subtaskId: selectedSubtask?.id,
+        taskName: selectedTask?.name || selectedTask?.title,
+        subtaskName: selectedSubtask?.name || selectedSubtask?.title,
+        collaborators: workspaceCollaboratorsRef.current,
+      },
+      author: { name: currentUser?.name, email: currentUser?.email, role: currentUser?.role || 'vendor' },
+    });
+    if (added.length === 0) return;
+
+    pushToHistory();
+    setNodes((current) => [...current.map((n) => (n.selected ? { ...n, selected: false } : n)), ...added]);
+    setEdges((current) => current.concat(addedEdges));
+    const lastConnectable = [...added].reverse().find((n) => isConnectableNode(n));
+    if (lastConnectable) lastAddedNodeIdRef.current = lastConnectable.id;
+
+    // Show what arrived once it has been drawn
+    setTimeout(() => {
+      reactFlowInstanceRef.current?.fitView({ nodes: added.map((n) => ({ id: n.id })), padding: 0.2, duration: 500, maxZoom: 1 });
+    }, 120);
+    toast.success(`Added “${template.name}” to the canvas. Undo with Ctrl+Z.`, 3500);
+  }, [canEdit, notifyViewOnly, placeNode, getViewportAnchor, workspace?.workspaceId, selectedTask, selectedSubtask, currentUser, pushToHistory, setNodes, setEdges, toast]);
+
+  useEffect(() => {
+    const onApply = (event) => {
+      const { template, values } = event.detail || {};
+      if (template) applyTemplate(template, values || {});
+    };
+    const onCollect = (event) => {
+      const respond = event.detail?.respond;
+      if (typeof respond !== 'function') return;
+      const all = nodesRef.current.filter((n) => !n.hidden);
+      respond({ all, selected: all.filter((n) => n.selected), edges: edgesRef.current });
+    };
+    window.addEventListener('workspace-apply-template', onApply);
+    window.addEventListener('workspace-collect-canvas', onCollect);
+    return () => {
+      window.removeEventListener('workspace-apply-template', onApply);
+      window.removeEventListener('workspace-collect-canvas', onCollect);
+    };
+  }, [applyTemplate]);
+
+  // For blocks linked to the tasks: the workspace's tasks plus this (fresher) canvas
+  const progressContext = useMemo(
+    () => ({
+      tasks: workspace?.tasks || [],
+      live: selectedSubtask?.id ? { subtaskId: selectedSubtask.id, nodes, others: rememberedCanvases() } : null,
+    }),
+    [workspace?.tasks, selectedSubtask?.id, nodes]
+  );
+
+  // Keep what this canvas holds, so blocks on other canvases can count its ticked items straight away
+  useEffect(() => {
+    if (selectedSubtask?.id) rememberCanvas(selectedSubtask.id, nodes);
+  }, [selectedSubtask?.id, nodes]);
+
+  // The tasks were reloaded from the server: those copies are the newest again.
+  // (Not on first render: this canvas may just have been opened again, and what it remembers is still good.)
+  const tasksSeenRef = useRef(workspace?.tasks);
+  useEffect(() => {
+    if (tasksSeenRef.current === workspace?.tasks) return;
+    tasksSeenRef.current = workspace?.tasks;
+    forgetCanvases(selectedSubtask?.id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [workspace?.tasks]);
+
+  // Tell the page a canvas is ready to receive elements (used when the first task was just made)
+  useEffect(() => {
+    if (reactFlowInstance) window.dispatchEvent(new CustomEvent('workspace-canvas-ready'));
+  }, [reactFlowInstance]);
+
+  const showCanvasSkeleton = useDelayedFlag(isCanvasLoading, 150);
+
+  useEffect(() => {
+    const onSaveFailed = () => toast.error?.('Could not save your change — it was undone. Check your connection and try again.', 4000);
+    window.addEventListener('workspace-save-failed', onSaveFailed);
+    return () => window.removeEventListener('workspace-save-failed', onSaveFailed);
+  }, [toast]);
+
+  const containerClasses = isPresenting
+    ? 'fixed inset-0 bg-canvas z-[1000] flex flex-col wk-presenting'
+    : isClientView
+      ? 'fixed inset-0 bg-canvas z-[1000] flex flex-col wk-client-view'
+      : isFullscreen
+      ? 'fixed left-0 right-0 bottom-0 bg-surface z-50 flex flex-col'
+      : 'h-full relative flex flex-col';
+
+  const containerStyle = isPresenting || isClientView ? undefined : isFullscreen ? { top: `${headerOffset || 0}px` } : undefined;
 
 
   return (
-    <>
+    <WorkspaceProgressContext.Provider value={progressContext}>
       <style>{controlsCSS}</style>
-      <div className={containerClasses} style={containerStyle}>
+      <div ref={presentRootRef} className={containerClasses} style={containerStyle}>
 
       
       {/* Subtask Header */}
-      <div className="pl-20 pr-6 py-3 md:pl-20 md:pr-8 bg-white/20 supports-[backdrop-filter]:bg-white/10 backdrop-blur-xl border-b border-white/30 ">
+      <div className="wk-present-hide pl-20 pr-6 py-3 md:pl-20 md:pr-8 bg-white/20 supports-[backdrop-filter]:bg-white/10 backdrop-blur-xl border-b border-white/30 ">
         <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
           <div>
           <h2 className="text-lg font-semibold text-ink">
@@ -5976,6 +6483,27 @@ const edgeTypes = {
             >
               <Eye className="w-5 h-5" />
               <span className="sr-only">Preview</span>
+            </button>
+
+            <button
+              onClick={enterPresent}
+              disabled={nodes.length === 0}
+              className="p-2 bg-white/40 supports-[backdrop-filter]:bg-white/20 backdrop-blur-md border border-white/40 hover:bg-white/55 text-ink rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-info disabled:opacity-40 disabled:cursor-not-allowed"
+              title={nodes.length === 0 ? 'Add elements to present' : 'Present — read-only slideshow of this canvas'}
+              aria-label="Present"
+            >
+              <Presentation className="w-5 h-5" />
+              <span className="sr-only">Present</span>
+            </button>
+
+            <button
+              onClick={enterClientView}
+              className="p-2 bg-white/40 supports-[backdrop-filter]:bg-white/20 backdrop-blur-md border border-white/40 hover:bg-white/55 text-ink rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-info"
+              title="Client view — see the canvas the way your client sees it"
+              aria-label="Client view"
+            >
+              <UserCheck className="w-5 h-5" />
+              <span className="sr-only">Client view</span>
             </button>
 
             <button
@@ -6063,6 +6591,10 @@ const edgeTypes = {
         </div>
       </div>
 
+      {isClientView && (
+        <ClientViewBar title={selectedSubtask?.name || workspace?.title || 'Workspace'} onExit={exitClientView} />
+      )}
+
       {/* React Flow Canvas */}
       <div 
         ref={canvasContainerRef}
@@ -6114,8 +6646,31 @@ const edgeTypes = {
           </svg>
         </div>
 
+        {isPresenting && (
+          <PresentHUD
+            index={presentIndex}
+            total={presentStopCount}
+            label={presentStop?.label}
+            onNext={goNext}
+            onPrev={goPrev}
+            onFirst={goFirst}
+            onLast={goLast}
+            onOverview={goOverview}
+            onExit={exitPresent}
+          />
+        )}
+
+        {quickAdd && canEdit && (
+          <QuickAddMenu
+            x={quickAdd.clientX}
+            y={quickAdd.clientY}
+            onPick={handleQuickAddPick}
+            onClose={() => setQuickAdd(null)}
+          />
+        )}
+
         {/* Remote Cursors Overlay */}
-        {!performanceMode && canvasWebSocket?.remoteCursors && Object.entries(canvasWebSocket.remoteCursors).map(([cursorUserId, cursor]) => (
+        {!performanceMode && !isPresenting && !isClientView && canvasWebSocket?.remoteCursors && Object.entries(canvasWebSocket.remoteCursors).map(([cursorUserId, cursor]) => (
           <RemoteCursor key={cursorUserId} userId={cursorUserId} userName={cursor.userName} x={cursor.x} y={cursor.y} />
         ))}
 
@@ -6159,9 +6714,18 @@ const edgeTypes = {
           onNodesDelete={canEdit ? onNodesDelete : undefined}
           onEdgesDelete={canEdit ? onEdgesDelete : undefined}
           onConnect={canEdit ? onConnect : undefined}
+          onConnectStart={canEdit ? onConnectStart : undefined}
+          onConnectEnd={canEdit ? onConnectEnd : undefined}
+          connectionRadius={40}
+          edgesUpdatable={canEdit}
+          onEdgeUpdate={canEdit ? onEdgeUpdate : undefined}
+          onEdgeUpdateStart={canEdit ? onEdgeUpdateStart : undefined}
+          onEdgeUpdateEnd={canEdit ? onEdgeUpdateEnd : undefined}
+          edgeUpdaterRadius={20}
           onNodeClick={onNodeClick}
-          onEdgeClick={canEdit ? handleEdgeClick : undefined}
+          onEdgeDoubleClick={canEdit ? handleEdgeDoubleClick : undefined}
           onNodeContextMenu={canEdit ? onNodeContextMenu : undefined}
+          onNodeDragStart={canEdit ? handleNodeDragStart : undefined}
           onNodeDrag={canEdit ? handleNodeDrag : undefined}
           onNodeDragStop={canEdit ? handleNodeDragStop : undefined}
           snapToGrid
@@ -6174,7 +6738,7 @@ const edgeTypes = {
             console.log('✅ ReactFlow instance initialized:', instance);
           }}
           onViewportChange={onViewportChange}
-          nodesDraggable={!isPenMode}
+          nodesDraggable={!isPenMode && !isClientView}
           nodesConnectable={canEdit && !isPenMode}
           elementsSelectable={canEdit && !isPenMode}
           onDragLeave={onDragLeave}
@@ -6183,7 +6747,7 @@ const edgeTypes = {
           defaultViewport={{ x: 0, y: 0, zoom: 1 }}
           minZoom={0.1}
           maxZoom={2}
-          panOnDrag={isPenMode ? false : [2]}
+          panOnDrag={isPenMode ? false : isPresenting || isClientView ? true : [2]}
           panOnScroll={!isPenMode}
           panOnScrollMode="free"
           panActivationKey={canEdit ? 'Space' : undefined}
@@ -6193,14 +6757,14 @@ const edgeTypes = {
           elevateEdgesOnSelect
           onlyRenderVisibleElements={performanceMode}
           deleteKeyCode={['Backspace', 'Delete']}
-          className={`bg-transparent transition-all duration-200 ${
+          className={`bg-transparent transition-all duration-200 ${isConnecting ? 'wk-connecting' : ''} ${
             isDraggingOver ? 'bg-info ring-4 ring-info/30' : ''
           }`}
         >
           {/* Grid Background — subtle Figma-style dots */}
           {!performanceMode && (
             <Background 
-              color="#cbd5e1" 
+              color={isDarkMode ? '#3a3a3a' : '#cbd5e1'}
               gap={22} 
               size={1.2}
               variant="dots"
@@ -6248,7 +6812,15 @@ const edgeTypes = {
             showFitView={true}
             showInteractive={true}
             fitViewOptions={{ padding: 0.1 }}
-          />
+          >
+            <ControlButton
+              onClick={zoomToSelection}
+              title="Zoom to selection (Shift+2)"
+              aria-label="Zoom to selection"
+            >
+              <Focus />
+            </ControlButton>
+          </Controls>
 
           {/* MiniMap — bottom-left overview of the canvas */}
           {!performanceMode && (
@@ -6260,6 +6832,7 @@ const edgeTypes = {
                   case 'layoutNode': return '#34d399';
                   case 'turnkeyNode': return '#f59e0b';
                   case 'smartNote': return '#fbbf24';
+                  case 'blockNode': return '#38bdf8';
                   case 'calendarNode': return '#60a5fa';
                   case 'approvalBoard': return '#f87171';
                   case 'aiHelper': return '#a78bfa';
@@ -6267,8 +6840,8 @@ const edgeTypes = {
                 }
               }}
               nodeStrokeWidth={3}
-              maskColor="rgba(0,0,0,0.08)"
-              style={{ width: 160, height: 100, borderRadius: 8, border: '1px solid #e5e7eb', background: 'rgb(var(--surface-hover))' }}
+              maskColor={isDarkMode ? 'rgba(0,0,0,0.55)' : 'rgba(0,0,0,0.08)'}
+              style={{ width: 160, height: 100, borderRadius: 8, border: '1px solid rgb(var(--border-subtle))', background: 'rgb(var(--surface-hover))' }}
               zoomable
               pannable
             />
@@ -6455,30 +7028,11 @@ const edgeTypes = {
             </Panel>
           )}
 
-          {/* Empty State Overlay */}
-          {nodes.length === 0 && !isDraggingOver && (
-            // <Panel position="center">
-            //   <div className="text-center pointer-events-none">
-            //     <div className="w-32 h-32 bg-surface-hover rounded-full flex items-center justify-center mx-auto mb-6 opacity-50">
-            //       <Plus className="w-16 h-16 text-dim" />
-            <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-              <div className="text-center space-y-2.5">
-                <div className="w-10 h-10 bg-surface-hover rounded-full flex items-center justify-center mx-auto opacity-50">
-                  <Plus className="w-8 h-8 text-dim" />
-                </div>
-                <div className="space-y-0.5">
-                  <h3 className="text-lg font-semibold text-dim">Start Creating</h3>
-                  <p className="text-dim text-xs">Drag elements from the Elements panel</p>
-                  <p className="text-dim text-[11px]">or double-click any element to add it</p>
-                </div>
-                {/* <h3 className="text-2xl font-bold text-dim mb-2">Start Creating</h3>
-                <p className="text-dim mb-2">Drag elements from the Elements panel</p>
-                <p className="text-dim text-sm">or double-click any element to add it</p>
-              </div> */}
-              </div>
-            {/* </Panel> */}
-            </div>
-          )}
+          {/* Empty state: one-click ways to start (hidden while a canvas is loading) */}
+          {nodes.length === 0 && !isDraggingOver && !isCanvasLoading && <EmptyCanvasState canEdit={canEdit} />}
+
+          {/* Loading: ghost cards instead of an empty or stale pane */}
+          {showCanvasSkeleton && <CanvasSkeleton />}
 
           {/* Keyboard shortcuts help
           {canEdit && nodes.length > 0 && (
@@ -6504,7 +7058,7 @@ const edgeTypes = {
         </ReactFlow>
         
         {/* Read-only overlay when user doesn't have edit permissions - but NOT for clients */}
-        {!canEdit && userRole !== 'client' && (
+        {!canEditBase && userRole !== 'client' && (
           <div className="absolute inset-0 bg-black bg-opacity-5 pointer-events-none z-10 flex items-center justify-center">
             <div className="bg-surface rounded-lg shadow-lg p-4 border border-line pointer-events-auto">
               <div className="flex items-center space-x-3">
@@ -6524,7 +7078,7 @@ const edgeTypes = {
         )}
         
         {/* Subtle read-only indicator for clients - they can view but not edit */}
-        {!canEdit && userRole === 'client' && (
+        {!canEditBase && userRole === 'client' && (
           <div className="absolute top-4 right-4 z-10 bg-canvas border border-line rounded-lg px-3 py-2 flex items-center space-x-2 text-xs text-dim">
             <Eye className="w-3 h-3" />
             <span>View only</span>
@@ -6631,7 +7185,7 @@ const edgeTypes = {
       {/* Grouping Toolbar */}
       <GroupingToolbar
         isVisible={showGroupingToolbar}
-        selectedCount={manuallySelectedNodes.length}
+        selectedCount={Math.max(manuallySelectedNodes.length, nodes.filter(n => n.selected).length)}
         onGroupIntoGrid={handleGroupIntoGrid}
         onAlign={alignSelectedNodes}
         onClose={() => {
@@ -6945,7 +7499,7 @@ const edgeTypes = {
       )}
 
       {/* Deletion History Modal - REMOVED: Now in WorkspaceRightSidebar */}
-    </>
+    </WorkspaceProgressContext.Provider>
   );
 });
 

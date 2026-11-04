@@ -2,7 +2,8 @@ import React, { useState, useRef, useEffect, useContext } from 'react';
 import { persistIsImportant, persistDeadline, persistNodeDataPatch, formatTimeLeft, getTimeLeft } from '../../utils/nodePersistence';
 import { getWorkspaceById, updateWorkspace } from '../../utils/workspaceApi';
 import { VendorContext } from '../../../../context/VendorContext';
-import { Handle, Position, useReactFlow } from 'reactflow';
+import { useReactFlow } from 'reactflow';
+import NodeHandles from './NodeHandles';
 import { Maximize2, Minimize2, X, Sparkles, Tag, Clock, Plus } from 'lucide-react';
 // Using a simple textarea for now to avoid dependency issues
 import Draggable from 'react-draggable';
@@ -537,18 +538,7 @@ const SmartNoteNode = ({ id, data, isConnectable, selected }) => {
         )}
 
         {/* Node Handles */}
-        <Handle
-          type="target"
-          position={Position.Top}
-          isConnectable={isConnectable}
-          className="w-2 h-2 bg-warning"
-        />
-        <Handle
-          type="source"
-          position={Position.Bottom}
-          isConnectable={isConnectable}
-          className="w-2 h-2 bg-warning"
-        />
+        <NodeHandles isConnectable={isConnectable} />
       </div>
     </Draggable>
   );

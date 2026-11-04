@@ -104,3 +104,41 @@ export const defaultTableData = [
 
 
 
+
+
+// ---- Tables that hold their own data (`data.customTableData`) -------------
+// Imported tables, tables made in the dialog and template tables keep their rows
+// in the element's data. These helpers work on that row list.
+
+/** Every row needs an id to be edited; rows without one get the next free number. */
+export const ensureRowIds = (rows) => {
+  const list = Array.isArray(rows) ? rows : [];
+  const numeric = list.map((r) => Number(r?.id)).filter(Number.isFinite);
+  const taken = new Set(list.map((r) => r?.id).filter((id) => id !== undefined && id !== null && id !== ''));
+  if (taken.size === list.length && taken.size === new Set(list.map((r) => String(r.id))).size) return list;
+  let next = numeric.length ? Math.max(...numeric) + 1 : 1;
+  const seen = new Set();
+  return list.map((row) => {
+    const id = row?.id;
+    if (id !== undefined && id !== null && id !== '' && !seen.has(String(id))) {
+      seen.add(String(id));
+      return row;
+    }
+    const fresh = next++;
+    seen.add(String(fresh));
+    return { ...row, id: fresh };
+  });
+};
+
+export const updateCustomCell = (rows, rowId, column, value) =>
+  rows.map((row) => (row.id === rowId ? { ...row, [column]: value } : row));
+
+/** A blank row at the end. Returns the new rows and the id of the new row. */
+export const addCustomRow = (rows, columns) => {
+  const ids = rows.map((r) => Number(r.id)).filter(Number.isFinite);
+  const newId = ids.length ? Math.max(...ids) + 1 : 1;
+  const blank = Object.fromEntries((columns || []).map((c) => [c, '']));
+  return { rows: [...rows, { ...blank, id: newId }], newId };
+};
+
+export const deleteCustomRow = (rows, rowId) => rows.filter((row) => row.id !== rowId);

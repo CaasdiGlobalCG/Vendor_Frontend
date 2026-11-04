@@ -43,6 +43,7 @@ import { cn } from "./ui";
 
 const STATUS_STEPS = [
   { key: "in_review", label: "Online KYC Review", icon: "📋" },
+  { key: "legal_compliance_review", label: "Legal & Compliance Check", icon: "⚖️" },
   { key: "physical_kyc_scheduled", label: "Physical Visit Scheduled", icon: "📅" },
   { key: "physical_kyc_in_progress", label: "Visit In Progress", icon: "🏢" },
   { key: "physical_kyc_review", label: "Compliance Review", icon: "🔍" },
@@ -57,13 +58,16 @@ const STATUS_STEP_INDEX = {
   pending: 0,
   in_review: 0,
   resubmit_requested: 0,
-  initial_approved: 1,
-  physical_kyc_scheduled: 1,
-  onsite_pending: 2,
-  physical_kyc_in_progress: 2,
-  onsite_verified: 3,
-  physical_kyc_review: 3,
-  approved: 4,
+  legal_compliance_review: 1,
+  compliance_cleared: 1,
+  compliance_flagged: 1,
+  initial_approved: 2,
+  physical_kyc_scheduled: 2,
+  onsite_pending: 3,
+  physical_kyc_in_progress: 3,
+  onsite_verified: 4,
+  physical_kyc_review: 4,
+  approved: 5,
 };
 
 function getStepIndex(status) {
@@ -575,6 +579,20 @@ export default function AuditorWaiting() {
             remarks={currentUser?.resubmitRemarks}
             onEditSubmission={() => navigate("/Form1")}
           />
+        );
+
+      case "legal_compliance_review":
+      case "compliance_cleared":
+      case "compliance_flagged":
+        return (
+          <div className="mt-4 flex items-start gap-2 rounded-xl border border-line bg-surface p-5 text-sm text-dim">
+            <span aria-hidden="true">⚖️</span>
+            <p>
+              Your application is with our Legal and Compliance team, who are checking your documents and
+              details. Once they finish, the verification team will review their report and arrange the
+              next step. You do not need to do anything right now.
+            </p>
+          </div>
         );
 
       case "initial_approved":

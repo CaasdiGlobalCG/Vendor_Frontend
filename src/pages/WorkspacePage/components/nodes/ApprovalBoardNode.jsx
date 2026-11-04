@@ -3,7 +3,8 @@ import { createPortal } from 'react-dom';
 import { persistIsImportant, persistDeadline, persistNodeDataPatch, formatTimeLeft, getTimeLeft } from '../../utils/nodePersistence';
 import { notifyWorkspaceEvent } from '../../utils/workspaceApi';
 import { VendorContext } from '../../../../context/VendorContext';
-import { Handle, Position, useReactFlow } from 'reactflow';
+import { useReactFlow } from 'reactflow';
+import NodeHandles from './NodeHandles';
 import { CheckCircle, Clock, AlertCircle, XCircle, X, Plus, User, Check, ChevronRight, FileText } from 'lucide-react';
 
 // Real workspace approval lifecycle — same statuses ElementNode stamps:
@@ -43,6 +44,8 @@ const ApprovalBoardNode = ({ id, data, isConnectable, selected }) => {
     currentUser?.vendorId || currentUser?.email || urlUserId || null;
   const myName = currentUser?.name || currentUser?.email || 'You';
   const myRole = currentUser?.role || currentUser?.userType || urlUserType || 'vendor';
+  // What goes on the board is visible to everyone: the client is never named, only "Client"
+  const stampName = myRole === 'client' ? 'Client' : myName;
   const myIds = [
     currentUser?.id, currentUser?.userId, currentUser?.pmId,
     currentUser?.vendorId, currentUser?.clientId, currentUser?.email, urlUserId,
@@ -163,12 +166,12 @@ const ApprovalBoardNode = ({ id, data, isConnectable, selected }) => {
       title: newItem.title.trim(),
       description: newItem.description.trim(),
       status: 'submitted',
-      submittedBy: myName,
+      submittedBy: stampName,
       submittedById: myUserId,
       submittedAt: new Date().toISOString(),
       dueDate: newItem.dueDate || '',
       history: [
-        { status: 'submitted', by: myName, role: myRole, at: new Date().toISOString() },
+        { status: 'submitted', by: stampName, role: myRole, at: new Date().toISOString() },
       ],
     };
     persistItems([...manualItems, item]);
@@ -205,7 +208,7 @@ const ApprovalBoardNode = ({ id, data, isConnectable, selected }) => {
             rejectReason: reason || undefined,
             history: [
               ...(i.history || []),
-              { status: toStatus, by: myName, role: myRole, at: new Date().toISOString(), reason: reason || undefined },
+              { status: toStatus, by: stampName, role: myRole, at: new Date().toISOString(), reason: reason || undefined },
             ],
           }
         : i
@@ -244,7 +247,7 @@ const ApprovalBoardNode = ({ id, data, isConnectable, selected }) => {
     const patch =
       to === 'rejected'
         ? { approvalStatus: 'rejected', rejectionReason: reason || '', rejectedBy: myName, rejectedAt: new Date().toISOString() }
-        : { approvalStatus: to, [`${to === 'pm_approved' ? 'pmApprovedBy' : 'clientApprovedBy'}`]: myName };
+        : { approvalStatus: to, [`${to === 'pm_approved' ? 'pmApprovedBy' : 'clientApprovedBy'}`]: stampName };
 
     if (item.source === 'element') {
       persistNodeDataPatch(item.nodeId, patch, setNodes, workspaceId);
@@ -288,7 +291,7 @@ const ApprovalBoardNode = ({ id, data, isConnectable, selected }) => {
           {data.sequenceNumber}
         </div>
       )}
-      <Handle type="target" position={Position.Top} isConnectable={isConnectable} />
+      <NodeHandles isConnectable={isConnectable} />
       <div className="bg-surface rounded-lg border border-line overflow-hidden">
       {/* Header */}
       <div className="bg-info text-white p-3 flex items-center justify-between">
@@ -489,7 +492,6 @@ const ApprovalBoardNode = ({ id, data, isConnectable, selected }) => {
       </div>
       </div>
 
-      <Handle type="source" position={Position.Bottom} isConnectable={isConnectable} />
 
       {/* Add Request Modal — portal escapes the node's transform/overflow */}
       {showAddModal && createPortal(
@@ -611,7 +613,7 @@ const ApprovalBoardNode = ({ id, data, isConnectable, selected }) => {
                       <div key={i} className="flex items-start gap-2 text-xs">
                         <span className={`w-1.5 h-1.5 rounded-full mt-1.5 ${columnFor(h.status).color.replace('text-', 'bg-')}`} />
                         <div>
-                          <span className="text-ink">{h.by}</span>
+                          <span className="text-ink">{h.role === 'client' ? 'Client' : h.by}</span>
                           <span className="text-dim"> → {columnFor(h.status).title}</span>
                           <span className="text-dim"> · {new Date(h.at).toLocaleString()}</span>
                           {h.reason && <p className="text-danger text-[10px] mt-0.5">{h.reason}</p>}

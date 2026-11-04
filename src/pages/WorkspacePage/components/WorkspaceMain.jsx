@@ -245,7 +245,7 @@ const WorkspaceMain = ({
       {/* Focus mode toggle button — always visible */}
       <button
         onClick={onToggleSidebars}
-        className="absolute top-20 left-3 z-10 p-2 bg-white/90 backdrop-blur-sm border border-line rounded-lg  hover:bg-canvas transition-colors group"
+        className="absolute top-20 left-3 z-10 p-2 bg-surface/90 backdrop-blur-sm border border-line rounded-lg  hover:bg-canvas transition-colors group"
         title={focusMode ? 'Show panels (Ctrl+Shift+H)' : 'Focus mode (Ctrl+Shift+H)'}
         aria-label={focusMode ? 'Exit focus mode' : 'Enter focus mode'}
       >
@@ -386,7 +386,7 @@ const WorkspaceMain = ({
               <span>Place a card</span>
             </button>
             <div className="ws-drop-or">
-              or <a onClick={() => window.dispatchEvent(new CustomEvent('openDockTab', { detail: 'templates' }))}>browse templates →</a>
+              or <a onClick={() => window.dispatchEvent(new CustomEvent('openDockTab', { detail: 'template-library' }))}>browse templates →</a>
             </div>
           </div>
         </div>
@@ -404,7 +404,7 @@ const WorkspaceMain = ({
             accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.dwg,.dxf,.step,.stp,.iges,.igs,.stl,.obj"
           />
 
-          <div className="absolute bottom-8 left-1/2 z-30 transform -translate-x-1/2 bg-white/95 backdrop-blur-sm border border-line rounded-xl shadow-xl px-3 py-2 flex items-center space-x-3">
+          <div className="absolute bottom-8 left-1/2 z-30 transform -translate-x-1/2 bg-surface/95 backdrop-blur-sm border border-line rounded-xl shadow-xl px-3 py-2 flex items-center space-x-3">
             {!isPenToolbarActive ? (
               <>
                 {/* Collaborators indicator — click to see the full list */}

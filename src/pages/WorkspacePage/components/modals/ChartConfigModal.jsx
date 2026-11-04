@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { X, Plus, Minus, BarChart3, LineChart, PieChart, TrendingUp, Palette, Upload } from 'lucide-react';
+import { csvToChartPoints } from '../../utils/chartCsv';
 
 const ChartConfigModal = ({ isOpen, onClose, onConfirm, chartType }) => {
   const [activeTab, setActiveTab] = useState('manual');
@@ -9,6 +10,7 @@ const ChartConfigModal = ({ isOpen, onClose, onConfirm, chartType }) => {
   const [yAxisLabel, setYAxisLabel] = useState('');
   const [colors, setColors] = useState([]);
   const [fileName, setFileName] = useState('');
+  const [importNotice, setImportNotice] = useState(null); // what the last CSV import did
   const [isProcessing, setIsProcessing] = useState(false);
 
   // Default colors palette
@@ -117,6 +119,7 @@ const ChartConfigModal = ({ isOpen, onClose, onConfirm, chartType }) => {
       setColors(defaultColors.slice(0, currentConfig.defaultData.length));
       setActiveTab('manual');
       setFileName('');
+      setImportNotice(null);
       setIsProcessing(false);
     }
   }, [isOpen, chartType]);
@@ -182,50 +185,35 @@ const ChartConfigModal = ({ isOpen, onClose, onConfirm, chartType }) => {
     }
   };
 
-  // Parse CSV data
+  // Parse CSV data (see utils/chartCsv.js: quotes, thousands separators, currency,
+  // other delimiters; rows that are not numbers are skipped and reported, never zeroed)
   const parseCsvData = async (file) => {
     try {
       const text = await file.text();
-      const lines = text.split('\n').filter(line => line.trim());
-      
-      if (lines.length < 2) {
-        alert('CSV file must have at least a header row and one data row.');
+      const result = csvToChartPoints(text, { scatter: chartType === 'scatter-plot' });
+
+      if (result.error || result.points.length === 0) {
+        alert(result.error || 'No valid data found in CSV file.');
+        setImportNotice(null);
         setIsProcessing(false);
         return;
       }
 
-      const headers = lines[0].split(',').map(h => h.trim().replace(/"/g, ''));
-      const dataRows = lines.slice(1);
+      setChartData(result.points);
+      setColors(defaultColors.slice(0, result.points.length));
 
-      // Assume first column is labels, second is values, third is x-values (for scatter plot)
-      const parsedData = dataRows.map(row => {
-        const values = row.split(',').map(v => v.trim().replace(/"/g, ''));
-        const dataPoint = {
-          label: values[0] || 'Unknown',
-          value: parseFloat(values[1]) || 0
-        };
-        
-        // Add x-value for scatter plots
-        if (chartType === 'scatter-plot' && values[2] !== undefined) {
-          dataPoint.x = parseFloat(values[2]) || 0;
-        }
-        
-        return dataPoint;
-      }).filter(item => !isNaN(item.value));
+      // Axis labels come from the columns that were actually used
+      const labelHeader = result.headers[result.labelColumn];
+      const valueHeader = result.headers[result.valueColumn];
+      if (labelHeader && !/^Column \d+$/.test(labelHeader)) setXAxisLabel(labelHeader);
+      if (valueHeader && !/^Column \d+$/.test(valueHeader)) setYAxisLabel(valueHeader);
 
-      if (parsedData.length === 0) {
-        alert('No valid data found in CSV file.');
-        setIsProcessing(false);
-        return;
-      }
-
-      setChartData(parsedData);
-      setColors(defaultColors.slice(0, parsedData.length));
-      
-      // Set labels from headers if available
-      if (headers[0]) setXAxisLabel(headers[0]);
-      if (headers[1]) setYAxisLabel(headers[1]);
-      
+      setImportNotice({
+        imported: result.imported,
+        skipped: result.skipped,
+        labelHeader: labelHeader || `Column ${result.labelColumn + 1}`,
+        valueHeader: valueHeader || `Column ${result.valueColumn + 1}`,
+      });
       setActiveTab('manual'); // Switch to manual tab to show the data
       setIsProcessing(false);
     } catch (error) {
@@ -353,6 +341,20 @@ const ChartConfigModal = ({ isOpen, onClose, onConfirm, chartType }) => {
 
           {activeTab === 'manual' && (
             <div>
+              {importNotice && (
+                <div className={`mb-3 p-3 rounded-lg border text-xs ${importNotice.skipped.length ? 'bg-warning/10 border-warning/30 text-ink' : 'bg-success/10 border-success/30 text-ink'}`}>
+                  <p className="font-medium">
+                    Imported {importNotice.imported} row{importNotice.imported === 1 ? '' : 's'} from {fileName || 'the file'}
+                    {' '}· labels from “{importNotice.labelHeader}”, values from “{importNotice.valueHeader}”
+                  </p>
+                  {importNotice.skipped.length > 0 && (
+                    <p className="mt-1 text-dim">
+                      Skipped {importNotice.skipped.length}: {importNotice.skipped.slice(0, 4).map((k) => `row ${k.row} (${k.reason})`).join('; ')}
+                      {importNotice.skipped.length > 4 ? `; and ${importNotice.skipped.length - 4} more` : ''}
+                    </p>
+                  )}
+                </div>
+              )}
               <div className="flex items-center justify-between mb-3">
                 <h3 className="text-sm font-semibold text-ink">Data Points</h3>
                 <button
@@ -457,11 +459,11 @@ const ChartConfigModal = ({ isOpen, onClose, onConfirm, chartType }) => {
               <div className="mt-4 p-3 bg-canvas rounded-lg">
                 <h4 className="font-medium text-xs text-ink mb-1.5">CSV Format Requirements:</h4>
                 <ul className="text-xs text-dim space-y-0.5">
-                  <li>• First row should contain headers</li>
-                  <li>• First column: Labels (text)</li>
-                  <li>• Second column: Values (numbers)</li>
-                  {chartType === 'scatter-plot' && <li>• Third column: X-Values (numbers, for scatter plots)</li>}
-                  <li>• Use commas to separate values</li>
+                  <li>• First row can hold headers</li>
+                  <li>• One column of labels (text) and one column of numbers; other columns are ignored</li>
+                  {chartType === 'scatter-plot' && <li>• For scatter plots, a second numbers column is used as the X value</li>}
+                  <li>• Commas, semicolons or tabs can separate columns; amounts like ₹1,20,000 or 12% are read as numbers</li>
+                  <li>• A row whose value is not a number is skipped and listed, never counted as 0</li>
                 </ul>
               </div>
             </div>

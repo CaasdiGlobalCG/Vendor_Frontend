@@ -16,7 +16,7 @@
 // comparison. Only Prompt acts, and it opens a local placeholder panel.
 // ============================================================
 
-import { FileText, ShoppingBag, Sparkles, TrendingUp } from 'lucide-react';
+import { CalendarCheck, FileText, PackageCheck, ShoppingBag, Sparkles, TrendingUp } from 'lucide-react';
 import { cn } from '../ui';
 import { COPY } from './header.constants';
 
@@ -40,6 +40,8 @@ const BASE =
  * @param {() => void} [props.onSales]
  * @param {() => void} [props.onTender]
  * @param {() => void} [props.onPrompt] opens the AI prompt panel
+ * @param {() => void} [props.onToday] opens the full-window Today view
+ * @param {() => void} [props.onOrders] opens the full-window Orders view
  * @param {boolean} [props.iconOnly] hide labels below the given breakpoint
  * @param {boolean} [props.inert] preview mode — no handlers are wired at all
  */
@@ -51,6 +53,8 @@ export function CrossAppButtons({
   onSales,
   onTender,
   onPrompt,
+  onToday,
+  onOrders,
   iconOnly = false,
   inert = false,
   className,
@@ -81,6 +85,30 @@ export function CrossAppButtons({
       {crossApp(COPY.graviyx, ShoppingBag, onGraviyx)}
       {canAccessSales && crossApp(COPY.sales, TrendingUp, onSales)}
       {canAccessSales && crossApp(COPY.tender, FileText, onTender)}
+
+      {onToday && (
+        <button
+          type="button"
+          onClick={onToday}
+          title={COPY.today}
+          className={cn(BASE, tone)}
+        >
+          <CalendarCheck size={treatment === 'compact' ? 13 : 15} aria-hidden="true" />
+          <span className={labelClass}>{COPY.today}</span>
+        </button>
+      )}
+
+      {onOrders && (
+        <button
+          type="button"
+          onClick={onOrders}
+          title={COPY.orders}
+          className={cn(BASE, tone)}
+        >
+          <PackageCheck size={treatment === 'compact' ? 13 : 15} aria-hidden="true" />
+          <span className={labelClass}>{COPY.orders}</span>
+        </button>
+      )}
 
       <button
         type="button"

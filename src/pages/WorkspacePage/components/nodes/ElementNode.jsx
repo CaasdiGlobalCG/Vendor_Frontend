@@ -1,9 +1,11 @@
-import React, { useState, useContext, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
+import React, { useState, useContext, useEffect, useRef, useMemo } from 'react';
 import { useParams } from 'react-router-dom';
 import { getWorkspaceById, notifyWorkspaceEvent } from '../../utils/workspaceApi';
 import { persistIsImportant, persistDeadline, persistTextContent, persistNodeDataPatch, persistNodeDeletion, getTimeLeft as calculateTimeLeft, formatTimeLeft } from '../../utils/nodePersistence';
-import { Handle, Position, useReactFlow, NodeResizer } from 'reactflow';
+import { useReactFlow, NodeResizer } from 'reactflow';
+import NodeHandles from './NodeHandles';
+import { TextInput, TextArea, Select } from '../ui/controls';
 import * as XLSX from 'xlsx';
 import { Download, Eye, ExternalLink, X, ArrowRight, Check, X as XIcon, Menu, Star, Heart, Info, HelpCircle, Lock, Send, MoreVertical, Copy, Edit2, Trash2, FileText, MessageCircle, FileSpreadsheet, FileDown, UserCheck, Link2 } from 'lucide-react';
 import { useToastOptional } from '../ToastProvider';
@@ -60,6 +62,12 @@ import LumberCalculator from '../forms/LumberCalculator';
 import RoofTrussCalculator from '../forms/RoofTrussCalculator';
 import SteelEstimationCalculator from '../forms/SteelEstimationCalculator';
 import VinylFlooringCalculator from '../forms/VinylFlooringCalculator';
+import TilingLabourCalculator from '../forms/TilingLabourCalculator';
+import FalseCeilingCalculator from '../forms/FalseCeilingCalculator';
+import PlumbingPipeCalculator from '../forms/PlumbingPipeCalculator';
+import UnitConverterCalculator from '../forms/UnitConverterCalculator';
+import LabourProductivityCalculator from '../forms/LabourProductivityCalculator';
+import GstMarginCalculator from '../forms/GstMarginCalculator';
 import PaintingEstimator from '../forms/PaintingEstimator';
 import ElectricalWiringEstimator from '../forms/ElectricalWiringEstimator';
 import BOQGenerator from '../forms/BOQGenerator';
@@ -688,8 +696,9 @@ const ElementNode = ({ id, data, isConnectable, selected }) => {
       approvalTimestamp: null,
       // Add the new nested approval object
       [approvalDataKey]: {
-        approvedBy: currentUser?.name || currentUser?.email || 'Unknown User',
-        approvedByEmail: currentUser?.email || null,
+        // The client is never named on a stamp everyone can see: just "Client"
+        approvedBy: currentUserRole === 'client' ? 'Client' : (currentUser?.name || currentUser?.email || 'Unknown User'),
+        approvedByEmail: currentUserRole === 'client' ? null : (currentUser?.email || null),
         approvedByRole: currentUserRole,
         approvalTimestamp: new Date().toISOString(),
         approvalReason: approvalReason.trim(),
@@ -774,7 +783,7 @@ const ElementNode = ({ id, data, isConnectable, selected }) => {
           excludeUserId: currentUser?.vendorId || currentUser?.userId || currentUser?.pmId || currentUser?.id,
           type: 'approval_result',
           title: `Element ${approvalAction === 'approve' ? 'approved' : 'rejected'}`,
-          message: `${currentUser?.name || currentUser?.email || 'A collaborator'} ${approvalAction}d "${data.name || data.type || 'an element'}"${newApprovalStatus === 'pm_approved' ? ' — awaiting client approval' : ''}`,
+          message: `${currentUserRole === 'client' ? 'The client' : (currentUser?.name || currentUser?.email || 'A collaborator')} ${approvalAction}d "${data.name || data.type || 'an element'}"${newApprovalStatus === 'pm_approved' ? ' — awaiting client approval' : ''}`,
           data: { nodeId: id, elementName: data.name, elementType: data.type, status: newApprovalStatus },
           priority: approvalAction === 'approve' ? 'medium' : 'high',
           actionRequired: newApprovalStatus === 'pm_approved',
@@ -1438,13 +1447,14 @@ const ElementNode = ({ id, data, isConnectable, selected }) => {
     setSheetsExport({ copied });
   };
 
-  // Editable field label shown above form controls — persisted as data.fieldLabel
+  // Editable field label shown above form controls — persisted as data.fieldLabel.
+  // Double-click to edit (pulled behaviour); label typography follows the UI refresh.
   const [isEditingLabel, setIsEditingLabel] = useState(false);
 
   const renderFieldLabel = (fallback) => {
     const text = fieldLabel || fallback;
     if (isElementLocked()) {
-      return text ? <div className="text-xs font-semibold text-dim mb-1">{text}</div> : null;
+      return text ? <div className="text-xs font-medium text-dim mb-1.5">{text}</div> : null;
     }
     if (isEditingLabel) {
       return (
@@ -1460,13 +1470,13 @@ const ElementNode = ({ id, data, isConnectable, selected }) => {
             if (e.key === 'Enter' || e.key === 'Escape') setIsEditingLabel(false);
           }}
           onClick={(e) => e.stopPropagation()}
-          className="text-xs font-semibold text-ink mb-1 w-full bg-transparent outline-none border-b border-info/40 placeholder-dim pb-0.5"
+          className="text-xs font-medium text-dim mb-1.5 w-full bg-transparent outline-none rounded-sm border-b border-info/40 placeholder:text-dim/70 pb-0.5 transition-colors"
         />
       );
     }
     return (
       <div
-        className="text-xs font-semibold text-ink mb-1 flex items-center gap-1.5 cursor-text group/flabel"
+        className="text-xs font-medium text-dim mb-1.5 flex items-center gap-1.5 cursor-text group/flabel"
         onClick={(e) => e.stopPropagation()}
         onDoubleClick={(e) => {
           e.stopPropagation();
@@ -1719,17 +1729,12 @@ const ElementNode = ({ id, data, isConnectable, selected }) => {
     switch (data.type) {
       case 'textarea':
         return (
-          <textarea
+          <TextArea
             value={textareaValue}
             onChange={(e) => !isLocked && setTextareaValue(e.target.value)}
-            className={`w-full h-32 p-4 border-2 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-info focus:border-info text-base ${
-              isLocked ? 'border-line bg-canvas text-dim cursor-not-allowed' : 'border-line'
-            }`}
+            className="h-32"
             placeholder={isLocked ? "Element is locked" : "Enter your text here..."}
-            onClick={(e) => e.stopPropagation()}
-            onKeyDown={(e) => e.stopPropagation()}
-            onFocus={(e) => e.stopPropagation()}
-            readOnly={isLocked}
+            locked={isLocked}
           />
         );
       
@@ -1754,27 +1759,20 @@ const ElementNode = ({ id, data, isConnectable, selected }) => {
         return (
           <div>
             {renderFieldLabel('Field label')}
-            <input
+            <TextInput
               ref={inputRef}
-              type="text"
               value={st.restricted ? '' : inputValue}
               onChange={(e) => answerable && setInputValue(e.target.value)}
               onBlur={() => {
                 if (fieldAccess && answerable && inputValue) recordFieldAnswer(inputValue);
               }}
-              className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-info focus:border-info text-sm bg-surface ${
-                !answerable ? 'border-line bg-canvas text-dim cursor-not-allowed' : 'border-line'
-              }`}
               placeholder={
                 isLocked ? 'Element is locked'
                   : st.restricted ? 'Answer restricted'
                   : st.assigned && !st.canAnswer ? `Waiting for ${st.waitingFor}`
                   : 'Enter value...'
               }
-              onClick={(e) => e.stopPropagation()}
-              onKeyDown={(e) => e.stopPropagation()}
-              onFocus={(e) => e.stopPropagation()}
-              readOnly={!answerable}
+              locked={!answerable}
             />
             {renderFieldAccessControl(false)}
           </div>
@@ -1845,20 +1843,14 @@ const ElementNode = ({ id, data, isConnectable, selected }) => {
               renderOptionsEditor(selectOptions, setSelectOptions)
             ) : (
               <>
-                <select
+                <Select
                   value={st.restricted ? '' : selectValue}
                   onChange={(e) => {
                     if (!answerable) return;
                     setSelectValue(e.target.value);
                     if (fieldAccess) recordFieldAnswer(e.target.value);
                   }}
-                  className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-info focus:border-info text-sm bg-surface ${
-                    !answerable ? 'border-line bg-canvas text-dim cursor-not-allowed' : 'border-line'
-                  }`}
-                  onClick={(e) => e.stopPropagation()}
-                  onKeyDown={(e) => e.stopPropagation()}
-                  onFocus={(e) => e.stopPropagation()}
-                  disabled={!answerable}
+                  locked={!answerable}
                 >
                   <option value="">
                     {isLocked ? 'Element is locked'
@@ -1871,7 +1863,7 @@ const ElementNode = ({ id, data, isConnectable, selected }) => {
                       {option}
                     </option>
                   ))}
-                </select>
+                </Select>
                 {renderEditOptionsLink()}
                 {renderFieldAccessControl(false)}
               </>
@@ -2138,7 +2130,21 @@ const ElementNode = ({ id, data, isConnectable, selected }) => {
         const lowerName = (data.name || '').toLowerCase();
         const lowerId = (data.id || '').toLowerCase();
         
-        if (lowerName.includes('vinyl') || lowerId.includes('vinyl')) {
+        // Site-ops calculators first: their names contain words ("tiling", "labour",
+        // "pipe") that must not fall through to a material calculator below.
+        if (lowerName.includes('tiling') || lowerId.includes('tiling')) {
+          return <TilingLabourCalculator data={data} nodeId={id} workspaceId={workspaceId} setNodes={setNodes} />;
+        } else if (lowerName.includes('false ceiling') || lowerId.includes('false-ceiling')) {
+          return <FalseCeilingCalculator data={data} nodeId={id} workspaceId={workspaceId} setNodes={setNodes} />;
+        } else if (lowerName.includes('plumbing') || lowerId.includes('plumbing')) {
+          return <PlumbingPipeCalculator data={data} nodeId={id} workspaceId={workspaceId} setNodes={setNodes} />;
+        } else if (lowerName.includes('unit converter') || lowerId.includes('unit-converter')) {
+          return <UnitConverterCalculator data={data} nodeId={id} workspaceId={workspaceId} setNodes={setNodes} />;
+        } else if (lowerName.includes('productivity') || lowerId.includes('productivity')) {
+          return <LabourProductivityCalculator data={data} nodeId={id} workspaceId={workspaceId} setNodes={setNodes} />;
+        } else if (lowerName.includes('gst') || lowerId.includes('gst-margin')) {
+          return <GstMarginCalculator data={data} nodeId={id} workspaceId={workspaceId} setNodes={setNodes} />;
+        } else if (lowerName.includes('vinyl') || lowerId.includes('vinyl')) {
           return <VinylFlooringCalculator data={data} nodeId={id} workspaceId={workspaceId} setNodes={setNodes} />;
         } else if (lowerName.includes('steel') || lowerId.includes('steel')) {
           return <SteelEstimationCalculator data={data} nodeId={id} workspaceId={workspaceId} setNodes={setNodes} />;
@@ -2335,9 +2341,9 @@ const ElementNode = ({ id, data, isConnectable, selected }) => {
       return 'border-info/30 hover:border-info cursor-pointer';
     }
     if (selected) {
-      return 'border-info ring-2 ring-info/20';
+      return 'border-info ring-1 ring-info/40';
     }
-    return 'border-info';
+    return 'border-line';
   };
 
   // Special rendering for icon type - just show the icon without card wrapper
@@ -2347,73 +2353,7 @@ const ElementNode = ({ id, data, isConnectable, selected }) => {
     return (
       <div className={`bg-transparent border-2 rounded-lg shadow-lg p-2 relative group transition-all min-w-[80px] max-w-[120px] ${getBorderStyle()}`}>
         {/* Connection Handles - All uniform gray, bidirectional */}
-        <Handle
-          type="source"
-          position={Position.Top}
-          id="top-out"
-          style={{ left: '50%' }}
-          className="w-3 h-3 !bg-cta !border-2 !border-white opacity-0 group-hover:opacity-100 transition-opacity hover:!bg-cta"
-          isConnectable={isConnectable}
-        />
-        <Handle
-          type="target"
-          position={Position.Top}
-          id="top-in"
-          style={{ left: '50%' }}
-          className="w-3 h-3 !bg-cta !border-2 !border-white opacity-0 group-hover:opacity-100 transition-opacity hover:!bg-cta"
-          isConnectable={isConnectable}
-        />
-        
-        <Handle
-          type="source"
-          position={Position.Right}
-          id="right-out"
-          style={{ top: '50%' }}
-          className="w-3 h-3 !bg-cta !border-2 !border-white opacity-0 group-hover:opacity-100 transition-opacity hover:!bg-cta"
-          isConnectable={isConnectable}
-        />
-        <Handle
-          type="target"
-          position={Position.Right}
-          id="right-in"
-          style={{ top: '50%' }}
-          className="w-3 h-3 !bg-cta !border-2 !border-white opacity-0 group-hover:opacity-100 transition-opacity hover:!bg-cta"
-          isConnectable={isConnectable}
-        />
-        
-        <Handle
-          type="source"
-          position={Position.Bottom}
-          id="bottom-out"
-          style={{ left: '50%' }}
-          className="w-3 h-3 !bg-cta !border-2 !border-white opacity-0 group-hover:opacity-100 transition-opacity hover:!bg-cta"
-          isConnectable={isConnectable}
-        />
-        <Handle
-          type="target"
-          position={Position.Bottom}
-          id="bottom-in"
-          style={{ left: '50%' }}
-          className="w-3 h-3 !bg-cta !border-2 !border-white opacity-0 group-hover:opacity-100 transition-opacity hover:!bg-cta"
-          isConnectable={isConnectable}
-        />
-        
-        <Handle
-          type="source"
-          position={Position.Left}
-          id="left-out"
-          style={{ top: '50%' }}
-          className="w-3 h-3 !bg-cta !border-2 !border-white opacity-0 group-hover:opacity-100 transition-opacity hover:!bg-cta"
-          isConnectable={isConnectable}
-        />
-        <Handle
-          type="target"
-          position={Position.Left}
-          id="left-in"
-          style={{ top: '50%' }}
-          className="w-3 h-3 !bg-cta !border-2 !border-white opacity-0 group-hover:opacity-100 transition-opacity hover:!bg-cta"
-          isConnectable={isConnectable}
-        />
+        <NodeHandles isConnectable={isConnectable} defaultSource="top" defaultTarget="top" />
         
         {/* Icon Element */}
         <div className="flex items-center justify-center">
@@ -2554,22 +2494,7 @@ const ElementNode = ({ id, data, isConnectable, selected }) => {
     return (
       <div className={`relative group ${selected ? 'z-10' : ''}`}>
         {/* Connection Handles - uniform gray, bidirectional */}
-        <Handle type="source" position={Position.Top} id="top-out" style={{ left: '50%' }}
-          className="w-2.5 h-2.5 !bg-cta !border-2 !border-white opacity-0 group-hover:opacity-100 transition-opacity" isConnectable={isConnectable} />
-        <Handle type="target" position={Position.Top} id="top-in" style={{ left: '50%' }}
-          className="w-2.5 h-2.5 !bg-cta !border-2 !border-white opacity-0 group-hover:opacity-100 transition-opacity" isConnectable={isConnectable} />
-        <Handle type="source" position={Position.Right} id="right-out" style={{ top: '50%' }}
-          className="w-2.5 h-2.5 !bg-cta !border-2 !border-white opacity-0 group-hover:opacity-100 transition-opacity" isConnectable={isConnectable} />
-        <Handle type="target" position={Position.Right} id="right-in" style={{ top: '50%' }}
-          className="w-2.5 h-2.5 !bg-cta !border-2 !border-white opacity-0 group-hover:opacity-100 transition-opacity" isConnectable={isConnectable} />
-        <Handle type="source" position={Position.Bottom} id="bottom-out" style={{ left: '50%' }}
-          className="w-2.5 h-2.5 !bg-cta !border-2 !border-white opacity-0 group-hover:opacity-100 transition-opacity" isConnectable={isConnectable} />
-        <Handle type="target" position={Position.Bottom} id="bottom-in" style={{ left: '50%' }}
-          className="w-2.5 h-2.5 !bg-cta !border-2 !border-white opacity-0 group-hover:opacity-100 transition-opacity" isConnectable={isConnectable} />
-        <Handle type="source" position={Position.Left} id="left-out" style={{ top: '50%' }}
-          className="w-2.5 h-2.5 !bg-cta !border-2 !border-white opacity-0 group-hover:opacity-100 transition-opacity" isConnectable={isConnectable} />
-        <Handle type="target" position={Position.Left} id="left-in" style={{ top: '50%' }}
-          className="w-2.5 h-2.5 !bg-cta !border-2 !border-white opacity-0 group-hover:opacity-100 transition-opacity" isConnectable={isConnectable} />
+        <NodeHandles isConnectable={isConnectable} defaultSource="top" defaultTarget="top" />
 
         {/* The button itself */}
         <button
@@ -2719,7 +2644,7 @@ const ElementNode = ({ id, data, isConnectable, selected }) => {
 
         {/* Sequence Number Badge */}
         {data.sequenceNumber && (
-          <div className="absolute -top-3 -left-3 z-20 w-6 h-6 bg-black text-white rounded-full flex items-center justify-center text-[10px] font-bold border-2 border-white">
+          <div className="wk-client-hide absolute -top-3 -left-3 z-20 w-6 h-6 bg-black text-white rounded-full flex items-center justify-center text-[10px] font-bold border-2 border-white">
             {data.sequenceNumber}
           </div>
         )}
@@ -2779,22 +2704,7 @@ const ElementNode = ({ id, data, isConnectable, selected }) => {
         style={{ width: 36, height: 36 }}
       >
         {/* Connection Handles */}
-        <Handle type="source" position={Position.Top} id="top-out" style={{ left: '50%' }}
-          className="w-2.5 h-2.5 !bg-cta !border-2 !border-white opacity-0 group-hover:opacity-100 transition-opacity" isConnectable={isConnectable} />
-        <Handle type="target" position={Position.Top} id="top-in" style={{ left: '50%' }}
-          className="w-2.5 h-2.5 !bg-cta !border-2 !border-white opacity-0 group-hover:opacity-100 transition-opacity" isConnectable={isConnectable} />
-        <Handle type="source" position={Position.Right} id="right-out" style={{ top: '50%' }}
-          className="w-2.5 h-2.5 !bg-cta !border-2 !border-white opacity-0 group-hover:opacity-100 transition-opacity" isConnectable={isConnectable} />
-        <Handle type="target" position={Position.Right} id="right-in" style={{ top: '50%' }}
-          className="w-2.5 h-2.5 !bg-cta !border-2 !border-white opacity-0 group-hover:opacity-100 transition-opacity" isConnectable={isConnectable} />
-        <Handle type="source" position={Position.Bottom} id="bottom-out" style={{ left: '50%' }}
-          className="w-2.5 h-2.5 !bg-cta !border-2 !border-white opacity-0 group-hover:opacity-100 transition-opacity" isConnectable={isConnectable} />
-        <Handle type="target" position={Position.Bottom} id="bottom-in" style={{ left: '50%' }}
-          className="w-2.5 h-2.5 !bg-cta !border-2 !border-white opacity-0 group-hover:opacity-100 transition-opacity" isConnectable={isConnectable} />
-        <Handle type="source" position={Position.Left} id="left-out" style={{ top: '50%' }}
-          className="w-2.5 h-2.5 !bg-cta !border-2 !border-white opacity-0 group-hover:opacity-100 transition-opacity" isConnectable={isConnectable} />
-        <Handle type="target" position={Position.Left} id="left-in" style={{ top: '50%' }}
-          className="w-2.5 h-2.5 !bg-cta !border-2 !border-white opacity-0 group-hover:opacity-100 transition-opacity" isConnectable={isConnectable} />
+        <NodeHandles isConnectable={isConnectable} defaultSource="top" defaultTarget="top" />
 
         {/* ── Avatar Pin (always visible) ── */}
         <div
@@ -2811,7 +2721,7 @@ const ElementNode = ({ id, data, isConnectable, selected }) => {
 
         {/* Sequence number badge */}
         {data.sequenceNumber && (
-          <div className="absolute -top-1.5 -right-1.5 z-30 w-5 h-5 bg-black text-white rounded-full flex items-center justify-center text-[9px] font-bold border-2 border-white">
+          <div className="wk-client-hide absolute -top-1.5 -right-1.5 z-30 w-5 h-5 bg-black text-white rounded-full flex items-center justify-center text-[9px] font-bold border-2 border-white">
             {data.sequenceNumber}
           </div>
         )}
@@ -2952,7 +2862,7 @@ const ElementNode = ({ id, data, isConnectable, selected }) => {
   const isTaskLikeElement = ['task-card', 'task-card-progress', 'task-board'].includes(data.type);
 
   const getWrapperClasses = () => {
-    const baseClasses = `${isImportant ? 'bg-warning/10' : 'bg-surface'} border-2 rounded-xl shadow-xl relative group transition-all`;
+    const baseClasses = `${isImportant ? 'bg-warning/10' : 'bg-surface'} border rounded-xl shadow-node hover:shadow-node-hover relative group transition-shadow duration-150`;
     const isOverdue = deadline && calculateTimeLeft(deadline)?.isExpired;
     const recentlyUpdatedClass = isOverdue
       ? 'ring-2 ring-danger ring-offset-1'
@@ -3076,76 +2986,10 @@ const ElementNode = ({ id, data, isConnectable, selected }) => {
       />
 
       {/* Connection Handles - All uniform gray, bidirectional */}
-      <Handle
-        type="source"
-        position={Position.Top}
-        id="top-out"
-        style={{ left: '50%' }}
-        className="w-3 h-3 !bg-cta !border-2 !border-white opacity-0 group-hover:opacity-100 transition-opacity hover:!bg-cta"
-        isConnectable={isConnectable}
-      />
-      <Handle
-        type="target"
-        position={Position.Top}
-        id="top-in"
-        style={{ left: '50%' }}
-        className="w-3 h-3 !bg-cta !border-2 !border-white opacity-0 group-hover:opacity-100 transition-opacity hover:!bg-cta"
-        isConnectable={isConnectable}
-      />
-      
-      <Handle
-        type="source"
-        position={Position.Right}
-        id="right-out"
-        style={{ top: '50%' }}
-        className="w-3 h-3 !bg-cta !border-2 !border-white opacity-0 group-hover:opacity-100 transition-opacity hover:!bg-cta"
-        isConnectable={isConnectable}
-      />
-      <Handle
-        type="target"
-        position={Position.Right}
-        id="right-in"
-        style={{ top: '50%' }}
-        className="w-3 h-3 !bg-cta !border-2 !border-white opacity-0 group-hover:opacity-100 transition-opacity hover:!bg-cta"
-        isConnectable={isConnectable}
-      />
-      
-      <Handle
-        type="source"
-        position={Position.Bottom}
-        id="bottom-out"
-        style={{ left: '50%' }}
-        className="w-3 h-3 !bg-cta !border-2 !border-white opacity-0 group-hover:opacity-100 transition-opacity hover:!bg-cta"
-        isConnectable={isConnectable}
-      />
-      <Handle
-        type="target"
-        position={Position.Bottom}
-        id="bottom-in"
-        style={{ left: '50%' }}
-        className="w-3 h-3 !bg-cta !border-2 !border-white opacity-0 group-hover:opacity-100 transition-opacity hover:!bg-cta"
-        isConnectable={isConnectable}
-      />
-      
-      <Handle
-        type="source"
-        position={Position.Left}
-        id="left-out"
-        style={{ top: '50%' }}
-        className="w-3 h-3 !bg-cta !border-2 !border-white opacity-0 group-hover:opacity-100 transition-opacity hover:!bg-cta"
-        isConnectable={isConnectable}
-      />
-      <Handle
-        type="target"
-        position={Position.Left}
-        id="left-in"
-        style={{ top: '50%' }}
-        className="w-3 h-3 !bg-cta !border-2 !border-white opacity-0 group-hover:opacity-100 transition-opacity hover:!bg-cta"
-        isConnectable={isConnectable}
-      />
+      <NodeHandles isConnectable={isConnectable} defaultSource="top" defaultTarget="top" />
       
       {/* Info & Help Icons - Top right corner */}
-      <div className="absolute -top-3 -right-3 z-20 flex items-center space-x-1">
+      <div className="wk-client-hide absolute -top-3 -right-3 z-20 flex items-center space-x-1">
         {/* Recently Updated Badge - Shows when element was added/updated within 5 minutes */}
         {isRecentlyUpdated() && (
           <div className="w-8 h-8 bg-warning text-white rounded-full flex items-center justify-center shadow-lg border-2 border-white font-bold text-lg animate-pulse" title="Recently updated" role="status" aria-label="Recently updated">
@@ -3252,7 +3096,7 @@ const ElementNode = ({ id, data, isConnectable, selected }) => {
             
             {/* Recently Updated Badge */}
             {isRecentlyUpdated() && (
-              <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-bold bg-warning/20 text-warning  border border-warning/30 whitespace-nowrap">
+              <span className="wk-client-hide inline-flex items-center px-2 py-1 rounded-full text-xs font-bold bg-warning/20 text-warning  border border-warning/30 whitespace-nowrap">
                 ✨ NEW
               </span>
             )}
@@ -3440,7 +3284,7 @@ const ElementNode = ({ id, data, isConnectable, selected }) => {
       </div>
       
       {/* Approval Status & Buttons Section */}
-      <div className="mt-4 pt-3 border-t border-line">
+      <div className="wk-client-hide mt-4 pt-3 border-t border-line">
         {/* Current Approval Status */}
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center space-x-2">
@@ -3551,7 +3395,7 @@ const ElementNode = ({ id, data, isConnectable, selected }) => {
                 ✓
               </span>
               <span className="text-xs font-medium text-ink">
-                {data.clientApproval.status === 'approved' ? '✅ Client Approved' : '❌ Client Rejected'} by {data.clientApproval.approvedBy}
+                {data.clientApproval.status === 'approved' ? '✅ Client Approved' : '❌ Client Rejected'}
               </span>
             </div>
             <p className="text-xs text-dim ml-7">
@@ -3617,19 +3461,19 @@ const ElementNode = ({ id, data, isConnectable, selected }) => {
       
       {/* Sequence Number Badge - Top left corner, always visible */}
       {data.sequenceNumber && (
-        <div className="absolute -top-4 -left-4 z-20 w-8 h-8 bg-black text-white rounded-full flex items-center justify-center text-sm font-bold shadow-lg border-2 border-white hover:shadow-xl transition-shadow">
+        <div className="wk-client-hide absolute -top-4 -left-4 z-20 w-8 h-8 bg-black text-white rounded-full flex items-center justify-center text-sm font-bold shadow-lg border-2 border-white hover:shadow-xl transition-shadow">
           {data.sequenceNumber}
         </div>
       )}
       
       {/* Element Type Label */}
       <div className="absolute -top-2 left-5 px-2 py-1 bg-info text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity">
-        {data.type.toUpperCase()}
+        {String(data.type || data.name || 'element').toUpperCase()}
       </div>
       
       {/* Selection indicator */}
       {selected && (
-        <div className="absolute -top-3 -right-3 w-6 h-6 bg-info text-white rounded-full flex items-center justify-center text-xs font-bold">
+        <div className="wk-client-hide absolute -top-3 -right-3 w-6 h-6 bg-info text-white rounded-full flex items-center justify-center text-xs font-bold">
           E
         </div>
       )}

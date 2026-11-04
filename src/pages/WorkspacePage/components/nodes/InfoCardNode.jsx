@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { Square, Edit2, Save, Info, AlertCircle, CheckCircle, Clock } from 'lucide-react';
+import NodeHandles from './NodeHandles';
 
-const InfoCardNode = ({ data, selected }) => {
+const InfoCardNode = ({ data, selected, isConnectable = true }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState({
     title: data.title || 'Info Card',
@@ -57,7 +58,8 @@ const InfoCardNode = ({ data, selected }) => {
   };
 
   return (
-    <div className={`rounded-lg  border-2 ${selected ? 'border-info' : 'border-line'} ${getCardStyle()} p-4 min-w-[280px]`}>
+    <div className={`relative rounded-lg  border-2 ${selected ? 'border-info' : 'border-line'} ${getCardStyle()} p-4 min-w-[280px]`}>
+      <NodeHandles isConnectable={isConnectable} />
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2">
           {getIcon()}

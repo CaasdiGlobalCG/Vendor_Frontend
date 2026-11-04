@@ -111,10 +111,16 @@ const FieldAccessPanel = ({
   const relatedName = relatedElement?.name || pickedName || (relatedNodeId ? 'Linked element' : '');
 
   return (
+    // "nodrag nopan nowheel" tells the canvas this popover is not part of the element's drag
+    // surface. Without it, pressing the person dropdown starts a drag and the browser's own
+    // dropdown swallows the release, so the element stays attached to the cursor.
     <div
-      className="absolute top-full left-1/2 -translate-x-1/2 mt-2 z-40 w-64 bg-surface border border-line rounded-lg shadow-xl p-3 space-y-3"
+      className="nodrag nopan nowheel absolute top-full left-1/2 -translate-x-1/2 mt-2 z-40 w-64 bg-surface border border-line rounded-lg shadow-xl p-3 space-y-3"
       onClick={(e) => e.stopPropagation()}
       onDoubleClick={(e) => e.stopPropagation()}
+      onMouseDown={(e) => e.stopPropagation()}
+      onPointerDown={(e) => e.stopPropagation()}
+      onTouchStart={(e) => e.stopPropagation()}
     >
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-1.5 text-xs font-semibold text-ink">
@@ -169,7 +175,7 @@ const FieldAccessPanel = ({
           value={selected[0] ? (selected[0].vendorId || selected[0].userId || selected[0].email || '') : ''}
           onChange={(e) => pickSingle(e.target.value)}
           onClick={(e) => e.stopPropagation()}
-          className="w-full px-2 py-1.5 border border-line rounded-md text-sm bg-surface focus:outline-none focus:ring-2 focus:ring-info"
+          className="nodrag w-full px-2 py-1.5 border border-line rounded-md text-sm bg-surface focus:outline-none focus:ring-2 focus:ring-info"
         >
           <option value="">Anyone can answer</option>
           {collaborators.map(c => (
